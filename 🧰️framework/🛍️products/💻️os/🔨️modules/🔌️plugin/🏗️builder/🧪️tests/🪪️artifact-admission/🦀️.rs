@@ -31,8 +31,8 @@ async fn publication_witness() -> Vec<bool> {
         witness.push(semio_framework_schema_registry::artifact_schema_descriptor_registered(id));
         witness.push(store::document_codec(codec).await.expect("registry available").is_some());
     }
-    witness.push(semio_framework::io::io_mechanism::io_entries().iter().any(|row| row.from.artifact_kind == "s.testkit.w1c-fixture" || row.into.artifact_kind == "s.testkit.w1c-fixture"));
-    witness.push(semio_framework::io::format_descriptor("s.testkit.w1c-fixture@1").expect("registry available").is_some());
+    witness.push(semio_framework_os_kernel::io::io_mechanism::io_entries().iter().any(|row| row.from.artifact_kind == "s.testkit.w1c-fixture" || row.into.artifact_kind == "s.testkit.w1c-fixture"));
+    witness.push(semio_framework_os_kernel::io::format_descriptor("s.testkit.w1c-fixture@1").expect("registry available").is_some());
     witness
 }
 

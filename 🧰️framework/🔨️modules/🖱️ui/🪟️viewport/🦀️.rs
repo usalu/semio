@@ -34,7 +34,7 @@ fn finite(value: f64, name: &str) -> Result<(), ValueError> {
 }
 
 fn zoom(value: f64) -> Result<(), ValueError> {
-    if value.is_finite() && value > 0.0 { Ok(()) } else { Err(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected positive finite zoom").under("zoom")) }
+    if value.is_finite() && value > 0.0 { Ok(()) } else { Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "zoom.expected positive finite zoom")) }
 }
 
 #[cfg(test)]

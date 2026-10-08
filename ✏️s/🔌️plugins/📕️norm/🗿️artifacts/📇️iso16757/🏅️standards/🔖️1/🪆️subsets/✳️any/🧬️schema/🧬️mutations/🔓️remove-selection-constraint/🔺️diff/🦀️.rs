@@ -2,15 +2,14 @@
 //! `mutation.target-missing`.
 
 use super::mutation::RemoveSelectionConstraint;
-use crate::{Iso16757Diff, Iso16757Snapshot};
+use crate::{Iso16757Snapshot};
+use crate::diff::{Iso16757Diff, Iso16757SelectionConstraintsRows};
 
 //#region 🔖️Diff
+
 pub fn diff(payload: &RemoveSelectionConstraint, base: &Iso16757Snapshot) -> protocol::MutationOutcome<Iso16757Diff> {
     if payload.index >= base.selection.constraints.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Selection constraint #{} does not exist.", payload.index), [payload.index.to_string()]);
     }
-    let mut selection = base.selection.clone();
-    selection.constraints.remove(payload.index);
-    protocol::MutationOutcome::new(Iso16757Diff { selection: Some(selection), ..Default::default() })
+    protocol::MutationOutcome::new(Iso16757Diff { selection_constraints: Some(Iso16757SelectionConstraintsRows { removed: vec![payload.index], ..Default::default() }), ..Default::default() })
 }
-//#endregion 🔖️Diff

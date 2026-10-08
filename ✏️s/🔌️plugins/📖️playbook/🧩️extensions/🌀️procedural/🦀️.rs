@@ -237,20 +237,92 @@ fn params_as_json(params: &DslValue) -> Value {
 mod mutations;
 pub use mutations::{ModulePayloadMutation, SetPayload};
 
+/// 🔺️ Sparse field delta over [`ModuleRenderPayload`]: every present slot is the new value of exactly that field.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub struct ModulePayloadDiff {
-    payload: Option<ModuleRenderPayload>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub example_id: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub params: Option<DslValue>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub question_id: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub controller_id: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub surface: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub interactive: Option<bool>,
 }
 
-impl MutationDiff<ModuleRenderPayload> for ModulePayloadDiff {
-    fn apply(&self, projection: &ModuleRenderPayload) -> protocol::MutationApplyResult<ModuleRenderPayload> {
-        Ok(self.payload.clone().unwrap_or_else(|| projection.clone()))
+impl protocol::MutationDiff<ModuleRenderPayload> for ModulePayloadDiff {
+    fn apply(&self, base: &ModuleRenderPayload, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<ModuleRenderPayload> {
+        let mut next = base.clone();
+        if let Some(value) = &self.example_id {
+            next.example_id = value.clone();
+        }
+        if let Some(value) = &self.params {
+            next.params = value.clone();
+        }
+        if let Some(value) = &self.question_id {
+            next.question_id = value.clone();
+        }
+        if let Some(value) = &self.controller_id {
+            next.controller_id = value.clone();
+        }
+        if let Some(value) = &self.surface {
+            next.surface = value.clone();
+        }
+        if let Some(value) = &self.interactive {
+            next.interactive = value.clone();
+        }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
-        if other.payload.is_some() {
-            *self = other;
+        if other.example_id.is_some() {
+            self.example_id = other.example_id;
         }
+        if other.params.is_some() {
+            self.params = other.params;
+        }
+        if other.question_id.is_some() {
+            self.question_id = other.question_id;
+        }
+        if other.controller_id.is_some() {
+            self.controller_id = other.controller_id;
+        }
+        if other.surface.is_some() {
+            self.surface = other.surface;
+        }
+        if other.interactive.is_some() {
+            self.interactive = other.interactive;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<ModuleRenderPayload> for ModulePayloadDiff {
+    fn inverse(&self, base: &ModuleRenderPayload) -> Self {
+        Self {
+            example_id: self.example_id.as_ref().map(|_| base.example_id.clone()),
+            params: self.params.as_ref().map(|_| base.params.clone()),
+            question_id: self.question_id.as_ref().map(|_| base.question_id.clone()),
+            controller_id: self.controller_id.as_ref().map(|_| base.controller_id.clone()),
+            surface: self.surface.as_ref().map(|_| base.surface.clone()),
+            interactive: self.interactive.as_ref().map(|_| base.interactive.clone()),
+        }
+    }
+    fn between(base: &ModuleRenderPayload, other: &ModuleRenderPayload) -> Self {
+        Self {
+            example_id: (base.example_id != other.example_id).then(|| other.example_id.clone()),
+            params: (base.params != other.params).then(|| other.params.clone()),
+            question_id: (base.question_id != other.question_id).then(|| other.question_id.clone()),
+            controller_id: (base.controller_id != other.controller_id).then(|| other.controller_id.clone()),
+            surface: (base.surface != other.surface).then(|| other.surface.clone()),
+            interactive: (base.interactive != other.interactive).then(|| other.interactive.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.example_id.is_none() && self.params.is_none() && self.question_id.is_none() && self.controller_id.is_none() && self.surface.is_none() && self.interactive.is_none()
     }
 }
 

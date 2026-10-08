@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `RemoveStreamFrame`. A missing stream or an out-of-range index ⇒
 //! Error `mutation.target-missing`.
-use crate::diff::{RemodelingDiff, RemodelingMediaStreamList};
+use crate::diff::{RemodelingDiff, RemodelingRow, MediaStreamPatch, RemodelingMembers};
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
@@ -11,10 +11,6 @@ pub fn diff(payload: &super::RemoveStreamFrame, base: &RemodelingSnapshot) -> pr
     if payload.frame_index as usize >= stream.frames.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Stream \"{}\" has no frame at index {}.", payload.id, payload.frame_index), [payload.id.clone()]);
     }
-    let mut streams = base.streams.clone();
-    if let Some(stream) = streams.iter_mut().find(|stream| stream.id == payload.id) {
-        stream.frames.remove(payload.frame_index as usize);
-    }
-    protocol::MutationOutcome::new(RemodelingDiff { streams: Some(RemodelingMediaStreamList { values: streams }), ..Default::default() })
+    protocol::MutationOutcome::new(RemodelingDiff::stream_rows(vec![RemodelingRow::Patch { key: payload.id.clone(), patch: MediaStreamPatch { frames: Some(RemodelingMembers { removed: vec![stream.frames[payload.frame_index as usize].clone()], added: Vec::new() }), ..Default::default() } }]))
 }
 //#endregion 🔖️Diff

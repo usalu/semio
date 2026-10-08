@@ -1,4 +1,4 @@
-use super::{oracle_apply_mutation, oracle_round_trip, oracle_snapshot_payload, project_ifc_2x3_any};
+use super::{oracle_apply_mutation, oracle_round_trip, project_ifc_2x3_any};
 use semio_repo_test_host::{parse_json, Json};
 
 const FIXTURE: &[u8] = include_bytes!("../../../🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc");
@@ -59,7 +59,7 @@ fn parses_the_real_fixture_and_projects_it() {
 fn every_feature_row_is_applied_from_its_wire_payload_and_moves_the_projection() {
     let baseline = project_ifc_2x3_any(&oracle_round_trip(FIXTURE).unwrap()).unwrap();
     let rows = feature_rows();
-    assert_eq!(rows.iter().map(|(kind, _)| kind.as_str()).collect::<Vec<_>>(), ["set-snapshot", "upsert-instance", "remove-instance", "set-header"]);
+    assert_eq!(rows.iter().map(|(kind, _)| kind.as_str()).collect::<Vec<_>>(), ["upsert-instance", "remove-instance", "set-header"]);
     for (kind, params) in rows {
         let mutated = oracle_apply_mutation(FIXTURE, &spec(&kind, params)).unwrap_or_else(|error| panic!("{kind} failed: {error}"));
         assert_ne!(project_ifc_2x3_any(&mutated).unwrap(), baseline, "{kind} left the projection unchanged");
@@ -71,19 +71,6 @@ fn round_trip_is_not_byte_identical_but_reparses() {
     let output = oracle_round_trip(FIXTURE).expect("identity round trip");
     assert_ne!(output, FIXTURE, "our own writer must not reproduce the source writer's exact bytes");
     assert_eq!(project_ifc_2x3_any(&output).unwrap(), project_ifc_2x3_any(FIXTURE).unwrap());
-}
-
-/// 📸️ `set-snapshot` replaces the whole building model with the row's snapshot record, and the untouched
-/// model — read back as a `set-snapshot` payload — restores it exactly.
-#[test]
-fn set_snapshot_replaces_the_model_and_the_read_back_snapshot_restores_it() {
-    let row = feature_rows().into_iter().find(|(kind, _)| kind == "set-snapshot").expect("set-snapshot row").1;
-    let mutated = oracle_apply_mutation(FIXTURE, &spec("set-snapshot", row)).expect("set-snapshot");
-    let projection = project_ifc_2x3_any(&mutated).expect("project");
-    assert_eq!(entity_count(&projection), 1.0);
-    assert!(find_entity(&projection, 120.0).is_some(), "the snapshot's own IFCPROJECT #120 is the whole model now");
-    let restored = oracle_apply_mutation(&mutated, &spec("set-snapshot", oracle_snapshot_payload(FIXTURE).unwrap())).expect("inverse set-snapshot");
-    assert_eq!(project_ifc_2x3_any(&restored).unwrap(), project_ifc_2x3_any(FIXTURE).unwrap());
 }
 
 #[test]

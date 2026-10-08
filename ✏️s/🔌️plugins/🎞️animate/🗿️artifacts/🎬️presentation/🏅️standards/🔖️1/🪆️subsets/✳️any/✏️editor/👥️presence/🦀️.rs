@@ -14,12 +14,27 @@ use store::ArtifactPack;
 #[dsl(layout = "lines")]
 pub struct PresentationPresence {}
 
-impl protocol::MutationDiff<PresentationPresence> for PresentationPresence {
-    fn apply(&self, _base: &PresentationPresence) -> protocol::MutationApplyResult<PresentationPresence> {
-        Ok(self.clone())
+/// 🔺️ Sparse delta over [`PresentationPresence`]: the presence record carries no field, so its delta names nothing.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct PresentationPresenceDiff {}
+
+impl protocol::MutationDiff<PresentationPresence> for PresentationPresenceDiff {
+    fn apply(&self, base: &PresentationPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<PresentationPresence> {
+        Ok(base.clone())
     }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
+    fn absorb(&mut self, _other: Self) {}
+}
+
+impl protocol::DiffAlgebra<PresentationPresence> for PresentationPresenceDiff {
+    fn inverse(&self, _base: &PresentationPresence) -> Self {
+        Self {}
+    }
+    fn between(_base: &PresentationPresence, _other: &PresentationPresence) -> Self {
+        Self {}
+    }
+    fn is_empty(&self) -> bool {
+        true
     }
 }
 

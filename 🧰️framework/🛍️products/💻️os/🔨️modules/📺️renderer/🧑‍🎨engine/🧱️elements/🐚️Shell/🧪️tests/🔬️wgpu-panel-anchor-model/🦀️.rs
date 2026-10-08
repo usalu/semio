@@ -123,6 +123,9 @@ pub(super) fn host_test_shell() -> ShellState {
     };
     let bridge = ProgramBridgeEntry::from_wasm("space".into(), None, None, std::path::PathBuf::from("missing-host-panel-guest.wasm"), manifest).expect("nonrunnable host bridge");
     let mut shell = ShellState::new(vec![bridge], "space".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    static HOST: PluginHostConfig = PluginHostConfig { plugin_id: "space", landing_app_id: "home", host_app_id: "studio" };
+    shell.host_capability = Some(&HOST);
+    shell.space_mode = true;
     let base = SpacePanelState {
         active_panel_tab: "s-play-catalogue".into(),
         spawned_apps: vec![

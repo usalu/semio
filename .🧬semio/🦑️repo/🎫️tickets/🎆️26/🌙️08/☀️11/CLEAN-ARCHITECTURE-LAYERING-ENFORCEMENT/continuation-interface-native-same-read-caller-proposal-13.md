@@ -1,0 +1,5 @@
+# Native same-read caller proposal
+
+Whole12 still shows actual Native owner-command scans before an invalid manifest can refuse. The current proposed NativeScript also reparses metadata with Bun TOML after the controlled Cargo operation has already admitted a document. This next source proposal reads the mandatory controlled document once, rejects a manifest without a package/workspace before preparation, and consumes the same current document for component metadata. Current full physical preimages and the original core12 proposal are retained; no production source changed.
+
+The original typed native wrapper/body law keeps its exact portable cases, expected preparation versions, two Bun/TypeScript transpilers, independent Node argv oracle, Nx target roster, and assertions. Its injected capability names now match the canonical asynchronous APIs and its command scopes use real Cargo CLI owners. The test ports continue to record the original same-version and fresh-version assertions. This proposal is unadmitted and unexecuted.

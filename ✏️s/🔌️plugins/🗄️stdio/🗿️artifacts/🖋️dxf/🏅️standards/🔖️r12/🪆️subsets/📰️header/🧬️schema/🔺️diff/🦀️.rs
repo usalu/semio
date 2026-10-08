@@ -49,6 +49,7 @@ trait DxfIndexElem: Clone + PartialEq {
     type Diff: Clone + PartialEq;
     fn diff_is_empty(d: &Self::Diff) -> bool;
     fn diff_between(a: &Self, b: &Self) -> Self::Diff;
+    fn diff_inverse(d: &Self::Diff, base: &Self) -> Self::Diff;
     fn diff_apply(d: &Self::Diff, item: &mut Self);
     fn diff_absorb(base: &mut Self::Diff, other: Self::Diff);
 }
@@ -89,6 +90,38 @@ fn generic_between<T: DxfIndexElem>(base: &[T], other: &[T]) -> IndexedDiffParts
     let removed: Vec<usize> = if base.len() > other.len() { (other.len()..base.len()).collect() } else { Vec::new() };
     let added: Vec<(usize, T)> = if other.len() > base.len() { (base.len()..other.len()).map(|i| (i, other[i].clone())).collect() } else { Vec::new() };
     (removed, modified, added)
+}
+
+/// ↩️ Negative rows of an index-keyed triple against its BASE items: added rows become removals at their final index, removed
+/// rows return at their base index, and each modified row restores its base fields at the index the row has after the diff.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn generic_inverse<T: DxfIndexElem>(removed: &[usize], modified: &[(usize, T::Diff)], added: &[(usize, T)], base: &[T]) -> IndexedDiffParts<T::Diff, T> {
+    let mut removed_sorted = removed.to_vec();
+    removed_sorted.sort_unstable();
+    removed_sorted.dedup();
+    let mut added_final: Vec<usize> = added.iter().map(|(index, _)| *index).collect();
+    added_final.sort_unstable();
+    let after_index = |index: usize| {
+        let survivor = index - removed_sorted.iter().filter(|dropped| **dropped < index).count();
+        added_final.iter().fold(survivor, |position, inserted| if *inserted <= position { position + 1 } else { position })
+    };
+    let mut inverse_modified: Vec<(usize, T::Diff)> = modified.iter().filter_map(|(index, diff)| base.get(*index).map(|item| (after_index(*index), T::diff_inverse(diff, item)))).collect();
+    inverse_modified.sort_by_key(|(index, _)| *index);
+    let inverse_added = removed_sorted.iter().filter_map(|index| base.get(*index).map(|item| (*index, item.clone()))).collect();
+    (added_final, inverse_modified, inverse_added)
+}
+
+/// ↩️ Negative rows of a name-keyed triple against its BASE items: added entries become removals by name, removed entries return
+/// at their base index, and each modified entry restores its base fields.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn named_inverse<T: DxfNamedElem>(removed: &[String], modified: &[(String, T::Diff)], added: &[(usize, T)], base: &[T]) -> NamedDiffParts<T::Diff, T> {
+    let mut added_ordered: Vec<&(usize, T)> = added.iter().collect();
+    added_ordered.sort_by_key(|(index, _)| *index);
+    let inverse_removed = added_ordered.iter().map(|(_, item)| item.key().to_string()).collect();
+    let inverse_modified = modified.iter().filter_map(|(key, diff)| base.iter().find(|item| item.key() == key).map(|item| (key.clone(), T::diff_inverse(diff, item)))).collect();
+    let mut inverse_added: Vec<(usize, T)> = removed.iter().filter_map(|key| base.iter().position(|item| item.key() == key).map(|index| (index, base[index].clone()))).collect();
+    inverse_added.sort_by_key(|(index, _)| *index);
+    (inverse_removed, inverse_modified, inverse_added)
 }
 
 /// 🏷️ Structural, base-free label used only inside [`generic_absorb_pair`] to simulate the
@@ -211,6 +244,7 @@ trait DxfNamedElem: Clone + PartialEq {
     type Diff: Clone + PartialEq + Default;
     fn key(&self) -> &str;
     fn diff_between(a: &Self, b: &Self) -> Self::Diff;
+    fn diff_inverse(d: &Self::Diff, base: &Self) -> Self::Diff;
     fn diff_apply(d: &Self::Diff, item: &mut Self);
     fn diff_absorb(base: &mut Self::Diff, other: Self::Diff);
 }
@@ -316,6 +350,9 @@ impl DxfNamedElem for DxfHeaderVar {
             extra_group_codes: (a.extra_group_codes != b.extra_group_codes).then(|| b.extra_group_codes.clone()),
         }
     }
+    fn diff_inverse(d: &Self::Diff, base: &Self) -> Self::Diff {
+        DxfHeaderVarDiff { group_code: d.group_code.map(|_| base.group_code), value: d.value.as_ref().map(|_| base.value.clone()), extra_group_codes: d.extra_group_codes.as_ref().map(|_| base.extra_group_codes.clone()) }
+    }
     fn diff_apply(d: &Self::Diff, item: &mut Self) {
         if let Some(v) = d.group_code {
             item.group_code = v;
@@ -373,6 +410,18 @@ impl DxfHeaderVarsDiff {
         named_apply(base, &self.removed, &modified, &added)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base: &[DxfHeaderVar]) -> Option<Self> {
+        let modified: Vec<(String, <DxfHeaderVar as DxfNamedElem>::Diff)> = self.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
+        let added: Vec<(usize, DxfHeaderVar)> = self.added.iter().map(|a| (a.index, a.header_var.clone())).collect();
+        let (removed, modified, added) = named_inverse(&self.removed, &modified, &added, base);
+        let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfHeaderVarModified { name, diff }).collect(), added: added.into_iter().map(|(index, header_var)| DxfHeaderVarAdded { index, header_var }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn between(base: &[DxfHeaderVar], other: &[DxfHeaderVar]) -> Option<Self> {
         let (removed, modified, added) = named_between(base, other);
         let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfHeaderVarModified { name, diff }).collect(), added: added.into_iter().map(|(index, header_var)| DxfHeaderVarAdded { index, header_var }).collect() };
@@ -424,6 +473,9 @@ impl DxfNamedElem for DxfLayer {
             flags: (a.flags != b.flags).then_some(b.flags),
             unknown_group_codes: (a.unknown_group_codes != b.unknown_group_codes).then(|| b.unknown_group_codes.clone()),
         }
+    }
+    fn diff_inverse(d: &Self::Diff, base: &Self) -> Self::Diff {
+        DxfLayerDiff { color: d.color.map(|_| base.color), linetype: d.linetype.as_ref().map(|_| base.linetype.clone()), flags: d.flags.map(|_| base.flags), unknown_group_codes: d.unknown_group_codes.as_ref().map(|_| base.unknown_group_codes.clone()) }
     }
     fn diff_apply(d: &Self::Diff, item: &mut Self) {
         if let Some(v) = d.color {
@@ -488,6 +540,18 @@ impl DxfLayersDiff {
         named_apply(base, &self.removed, &modified, &added)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base: &[DxfLayer]) -> Option<Self> {
+        let modified: Vec<(String, <DxfLayer as DxfNamedElem>::Diff)> = self.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
+        let added: Vec<(usize, DxfLayer)> = self.added.iter().map(|a| (a.index, a.layer.clone())).collect();
+        let (removed, modified, added) = named_inverse(&self.removed, &modified, &added, base);
+        let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfLayerModified { name, diff }).collect(), added: added.into_iter().map(|(index, layer)| DxfLayerAdded { index, layer }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn between(base: &[DxfLayer], other: &[DxfLayer]) -> Option<Self> {
         let (removed, modified, added) = named_between(base, other);
         let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfLayerModified { name, diff }).collect(), added: added.into_iter().map(|(index, layer)| DxfLayerAdded { index, layer }).collect() };
@@ -536,6 +600,9 @@ impl DxfNamedElem for DxfStyle {
             font_name: (a.font_name != b.font_name).then(|| b.font_name.clone()),
             unknown_group_codes: (a.unknown_group_codes != b.unknown_group_codes).then(|| b.unknown_group_codes.clone()),
         }
+    }
+    fn diff_inverse(d: &Self::Diff, base: &Self) -> Self::Diff {
+        DxfStyleDiff { flags: d.flags.map(|_| base.flags), font_name: d.font_name.as_ref().map(|_| base.font_name.clone()), unknown_group_codes: d.unknown_group_codes.as_ref().map(|_| base.unknown_group_codes.clone()) }
     }
     fn diff_apply(d: &Self::Diff, item: &mut Self) {
         if let Some(v) = d.flags {
@@ -594,6 +661,18 @@ impl DxfStylesDiff {
         named_apply(base, &self.removed, &modified, &added)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base: &[DxfStyle]) -> Option<Self> {
+        let modified: Vec<(String, <DxfStyle as DxfNamedElem>::Diff)> = self.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
+        let added: Vec<(usize, DxfStyle)> = self.added.iter().map(|a| (a.index, a.style.clone())).collect();
+        let (removed, modified, added) = named_inverse(&self.removed, &modified, &added, base);
+        let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfStyleModified { name, diff }).collect(), added: added.into_iter().map(|(index, style)| DxfStyleAdded { index, style }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn between(base: &[DxfStyle], other: &[DxfStyle]) -> Option<Self> {
         let (removed, modified, added) = named_between(base, other);
         let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfStyleModified { name, diff }).collect(), added: added.into_iter().map(|(index, style)| DxfStyleAdded { index, style }).collect() };
@@ -642,6 +721,9 @@ impl DxfNamedElem for DxfLinetype {
             description: (a.description != b.description).then(|| b.description.clone()),
             unknown_group_codes: (a.unknown_group_codes != b.unknown_group_codes).then(|| b.unknown_group_codes.clone()),
         }
+    }
+    fn diff_inverse(d: &Self::Diff, base: &Self) -> Self::Diff {
+        DxfLinetypeDiff { flags: d.flags.map(|_| base.flags), description: d.description.as_ref().map(|_| base.description.clone()), unknown_group_codes: d.unknown_group_codes.as_ref().map(|_| base.unknown_group_codes.clone()) }
     }
     fn diff_apply(d: &Self::Diff, item: &mut Self) {
         if let Some(v) = d.flags {
@@ -698,6 +780,18 @@ impl DxfLinetypesDiff {
         let modified: Vec<(String, DxfLinetypeDiff)> = self.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
         let added: Vec<(usize, DxfLinetype)> = self.added.iter().map(|a| (a.index, a.linetype.clone())).collect();
         named_apply(base, &self.removed, &modified, &added)
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base: &[DxfLinetype]) -> Option<Self> {
+        let modified: Vec<(String, <DxfLinetype as DxfNamedElem>::Diff)> = self.modified.iter().map(|m| (m.name.clone(), m.diff.clone())).collect();
+        let added: Vec<(usize, DxfLinetype)> = self.added.iter().map(|a| (a.index, a.linetype.clone())).collect();
+        let (removed, modified, added) = named_inverse(&self.removed, &modified, &added, base);
+        let d = Self { removed, modified: modified.into_iter().map(|(name, diff)| DxfLinetypeModified { name, diff }).collect(), added: added.into_iter().map(|(index, linetype)| DxfLinetypeAdded { index, linetype }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn between(base: &[DxfLinetype], other: &[DxfLinetype]) -> Option<Self> {
@@ -759,6 +853,19 @@ impl DxfTablesDiff {
                 Some(d) => d.apply(&base.linetypes),
                 None => base.linetypes.clone(),
             },
+        }
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base: &DxfTables) -> Option<Self> {
+        let d = Self {
+            layers: self.layers.as_ref().and_then(|layers| layers.inverse(&base.layers)),
+            styles: self.styles.as_ref().and_then(|styles| styles.inverse(&base.styles)),
+            linetypes: self.linetypes.as_ref().and_then(|linetypes| linetypes.inverse(&base.linetypes)),
+        };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
         }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -985,6 +1092,43 @@ fn entity_diff_between(a: &DxfEntity, b: &DxfEntity) -> DxfEntityDiff {
     }
 }
 
+/// ↩️ The entity patch restoring exactly the fields `d` sets back to their `base` values; a diff of another kind than the base
+/// entity restores the whole base entity.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_entity_diff(d: &DxfEntityDiff, base: &DxfEntity) -> DxfEntityDiff {
+    match (d, base) {
+        (DxfEntityDiff::Line(x), DxfEntity::Line { start, end, layer, unknown_group_codes }) => DxfEntityDiff::Line(DxfLineDiff { start: x.start.map(|_| *start), end: x.end.map(|_| *end), layer: x.layer.as_ref().map(|_| layer.clone()), unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()) }),
+        (DxfEntityDiff::Circle(x), DxfEntity::Circle { center, radius, layer, unknown_group_codes }) => DxfEntityDiff::Circle(DxfCircleDiff { center: x.center.map(|_| *center), radius: x.radius.map(|_| *radius), layer: x.layer.as_ref().map(|_| layer.clone()), unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()) }),
+        (DxfEntityDiff::Arc(x), DxfEntity::Arc { center, radius, start_angle, end_angle, layer, unknown_group_codes }) => DxfEntityDiff::Arc(DxfArcDiff {
+            center: x.center.map(|_| *center),
+            radius: x.radius.map(|_| *radius),
+            start_angle: x.start_angle.map(|_| *start_angle),
+            end_angle: x.end_angle.map(|_| *end_angle),
+            layer: x.layer.as_ref().map(|_| layer.clone()),
+            unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()),
+        }),
+        (DxfEntityDiff::Polyline(x), DxfEntity::Polyline { vertices, closed, layer, unknown_group_codes }) => DxfEntityDiff::Polyline(DxfPolylineDiff { vertices: x.vertices.as_ref().map(|_| vertices.clone()), closed: x.closed.map(|_| *closed), layer: x.layer.as_ref().map(|_| layer.clone()), unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()) }),
+        (DxfEntityDiff::Text(x), DxfEntity::Text { position, height, value, layer, unknown_group_codes }) => DxfEntityDiff::Text(DxfTextDiff {
+            position: x.position.map(|_| *position),
+            height: x.height.map(|_| *height),
+            value: x.value.as_ref().map(|_| value.clone()),
+            layer: x.layer.as_ref().map(|_| layer.clone()),
+            unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()),
+        }),
+        (DxfEntityDiff::Solid(x), DxfEntity::Solid { points, layer, unknown_group_codes }) => DxfEntityDiff::Solid(DxfSolidDiff { points: x.points.map(|_| *points), layer: x.layer.as_ref().map(|_| layer.clone()), unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()) }),
+        (DxfEntityDiff::Insert(x), DxfEntity::Insert { block_name, position, scale, rotation, layer, unknown_group_codes }) => DxfEntityDiff::Insert(DxfInsertDiff {
+            block_name: x.block_name.as_ref().map(|_| block_name.clone()),
+            position: x.position.map(|_| *position),
+            scale: x.scale.map(|_| *scale),
+            rotation: x.rotation.map(|_| *rotation),
+            layer: x.layer.as_ref().map(|_| layer.clone()),
+            unknown_group_codes: x.unknown_group_codes.as_ref().map(|_| unknown_group_codes.clone()),
+        }),
+        (DxfEntityDiff::Other(x), DxfEntity::Other { group_codes, .. }) => DxfEntityDiff::Other(DxfOtherDiff { group_codes: x.group_codes.as_ref().map(|_| group_codes.clone()) }),
+        _ => DxfEntityDiff::Replace { entity: base.clone() },
+    }
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn apply_line_diff(d: &DxfLineDiff, start: &mut [f64; 3], end: &mut [f64; 3], layer: &mut String, unknown: &mut Vec<(i32, DxfValue)>) {
     if let Some(v) = d.start {
@@ -1120,6 +1264,9 @@ impl DxfIndexElem for DxfEntity {
     }
     fn diff_between(a: &Self, b: &Self) -> Self::Diff {
         entity_diff_between(a, b)
+    }
+    fn diff_inverse(d: &Self::Diff, base: &Self) -> Self::Diff {
+        inverse_entity_diff(d, base)
     }
     fn diff_apply(d: &Self::Diff, item: &mut Self) {
         if let DxfEntityDiff::Replace { entity } = d {
@@ -1307,6 +1454,18 @@ impl DxfEntitiesDiff {
         generic_apply(base, &self.removed, &modified, &added)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base: &[DxfEntity]) -> Option<Self> {
+        let modified: Vec<(usize, <DxfEntity as DxfIndexElem>::Diff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
+        let added: Vec<(usize, DxfEntity)> = self.added.iter().map(|a| (a.index, a.entity.clone())).collect();
+        let (removed, modified, added) = generic_inverse(&self.removed, &modified, &added, base);
+        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| DxfEntityModified { index, diff }).collect(), added: added.into_iter().map(|(index, entity)| DxfEntityAdded { index, entity }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn between(base: &[DxfEntity], other: &[DxfEntity]) -> Option<Self> {
         let (removed, modified, added) = generic_between(base, other);
         let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| DxfEntityModified { index, diff }).collect(), added: added.into_iter().map(|(index, entity)| DxfEntityAdded { index, entity }).collect() };
@@ -1357,6 +1516,14 @@ impl DxfIndexElem for DxfBlock {
             base_point: (a.base_point != b.base_point).then_some(b.base_point),
             entities: DxfEntitiesDiff::between(&a.entities, &b.entities),
             unknown_group_codes: (a.unknown_group_codes != b.unknown_group_codes).then(|| b.unknown_group_codes.clone()),
+        }
+    }
+    fn diff_inverse(d: &Self::Diff, base: &Self) -> Self::Diff {
+        DxfBlockDiff {
+            name: d.name.as_ref().map(|_| base.name.clone()),
+            base_point: d.base_point.map(|_| base.base_point),
+            entities: d.entities.as_ref().and_then(|entities| entities.inverse(&base.entities)),
+            unknown_group_codes: d.unknown_group_codes.as_ref().map(|_| base.unknown_group_codes.clone()),
         }
     }
     fn diff_apply(d: &Self::Diff, item: &mut Self) {
@@ -1423,6 +1590,18 @@ impl DxfBlocksDiff {
         let modified: Vec<(usize, DxfBlockDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
         let added: Vec<(usize, DxfBlock)> = self.added.iter().map(|a| (a.index, a.block.clone())).collect();
         generic_apply(base, &self.removed, &modified, &added)
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base: &[DxfBlock]) -> Option<Self> {
+        let modified: Vec<(usize, <DxfBlock as DxfIndexElem>::Diff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
+        let added: Vec<(usize, DxfBlock)> = self.added.iter().map(|a| (a.index, a.block.clone())).collect();
+        let (removed, modified, added) = generic_inverse(&self.removed, &modified, &added, base);
+        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| DxfBlockModified { index, diff }).collect(), added: added.into_iter().map(|(index, block)| DxfBlockAdded { index, block }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn between(base: &[DxfBlock], other: &[DxfBlock]) -> Option<Self> {
@@ -1697,10 +1876,15 @@ impl MutationDiff<DxfSnapshot> for DxfDiff {
 }
 
 impl DiffAlgebra<DxfSnapshot> for DxfDiff {
-    /// 🔁️ Diff-level undo, derived generically (correct by construction) via `apply` + `between`.
+    /// ↩️ Concrete diff-level undo: every keyed collection turns into its negative rows against the base (removed rows return at
+    /// their base index) and the nested table diffs do the same one level down.
     fn inverse(&self, base: &DxfSnapshot) -> Self {
-        let mutated = apply_dxf_diff_unchecked(self, base);
-        Self::between(&mutated, base)
+        DxfDiff {
+            header_vars: self.header_vars.as_ref().and_then(|header_vars| header_vars.inverse(&base.header_vars)),
+            tables: self.tables.as_ref().and_then(|tables| tables.inverse(&base.tables)),
+            blocks: self.blocks.as_ref().and_then(|blocks| blocks.inverse(&base.blocks)),
+            entities: self.entities.as_ref().and_then(|entities| entities.inverse(&base.entities)),
+        }
     }
 
     fn between(base: &DxfSnapshot, other: &DxfSnapshot) -> Self {
@@ -1720,12 +1904,6 @@ impl DiffAlgebra<DxfSnapshot> for DxfDiff {
     }
 }
 
-/// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
-/// slot exists on `DxfDiff` to short-circuit into.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &DxfSnapshot, next: &DxfSnapshot) -> DxfDiff {
-    DxfDiff::between(base, next)
-}
 //#endregion 🔖️Diff
 
 //#region 🔖️MutationDiffBuilders

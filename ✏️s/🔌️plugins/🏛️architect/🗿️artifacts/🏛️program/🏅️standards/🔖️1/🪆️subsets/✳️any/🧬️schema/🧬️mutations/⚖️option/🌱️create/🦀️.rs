@@ -15,6 +15,9 @@ use protocol::{MutationKind, SemanticDescriptor};
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CreateOptionEvaluation {
     pub option_evaluation: OptionEvaluation,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    pub index: Option<usize>,
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateOptionEvaluation {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "option-evaluation", kind: "create-option-evaluation", record: "CreatedOptionEvaluation" };

@@ -12,6 +12,7 @@ pub fn inverse(payload: &super::MaskCell, base: &Grid2dSnapshot) -> Result<Vec<G
     if let Some(cell) = base.pinned.iter().find(|cell| cell.x == payload.x && cell.y == payload.y) {
         restore.push(pin_cell(cell.x, cell.y, cell.tile_id.clone()));
     }
+    restore.reverse();
     restore
 
     })())

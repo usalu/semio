@@ -165,15 +165,6 @@ fn triangles_of(value: &Json, key: &str) -> Option<Vec<triangle_soup::RefTriangl
 fn spec_of(kind: &str, params: Json) -> Json {
     Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params)])
 }
-/// 🩹️ A `patch-snapshot` row as the `set-snapshot` it amounts to: this oracle's own `stl_io` reading of `input` as a
-/// snapshot (its `set-snapshot` inverse), patched by the row's one pointer operation.
-#[cfg(feature = "oracles")]
-fn patched_spec(input: &[u8], params: &Json) -> Result<Json, String> {
-    let reading = oracle_inverse_spec(input, &spec_of("set-snapshot", Json::Object(Vec::new())))?.ok_or("patch-snapshot: no snapshot reading of the input")?;
-    let snapshot = reading.get("params").and_then(|params| params.get("snapshot")).ok_or("patch-snapshot: the reading carries no snapshot")?;
-    let patched = semio_repo_test_host::law::patched_snapshot(snapshot, params.get("patch").ok_or("patch-snapshot: missing `patch`")?)?;
-    Ok(spec_of("set-snapshot", Json::Object(vec![("snapshot".to_string(), patched)])))
-}
 //#endregion 🔖️SpecReaders
 
 //#region 🔖️Dispatch
@@ -219,11 +210,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             }
             ascii::write(&ascii::read_name(input)?, &triangles)
         }
-        "set-snapshot" => {
-            let snapshot = params.get("snapshot").cloned().unwrap_or(Json::Null);
-            ascii::write(&snapshot.str("solidName"), &triangles_of(&snapshot, "triangles").ok_or("set-snapshot: missing/malformed `snapshot.triangles`")?)
-        }
-        "patch-snapshot" => oracle_apply_mutation(input, &patched_spec(input, &params)?),
         kind => Err(format!("mutation kind {kind:?} has no oracle implementation ({} input byte(s))", input.len())),
     }
 }
@@ -282,16 +268,6 @@ pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Option<Json>, Str
                 None => return Ok(None),
             }
         }
-        "set-snapshot" => {
-            let triangles = triangle_soup::read(base)?;
-            let snapshot = Json::Object(vec![
-                ("schema".to_string(), Json::String("stdio.stl".to_string())),
-                ("solidName".to_string(), Json::String(ascii::read_name(base)?)),
-                ("triangles".to_string(), Json::Array(triangles.iter().map(triangle_json).collect())),
-            ]);
-            spec_of("set-snapshot", Json::Object(vec![("snapshot".to_string(), snapshot)]))
-        }
-        "patch-snapshot" => return oracle_inverse_spec(base, &spec_of("set-snapshot", Json::Object(Vec::new()))),
         kind => return Err(format!("mutation kind {kind:?} has no oracle implementation ({} base byte(s))", base.len())),
     }))
 }

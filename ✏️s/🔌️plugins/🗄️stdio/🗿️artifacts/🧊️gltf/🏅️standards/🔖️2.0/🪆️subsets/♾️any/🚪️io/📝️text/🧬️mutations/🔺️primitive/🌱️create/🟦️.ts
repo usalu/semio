@@ -3,8 +3,8 @@ import type {GltfCreatePrimitivePayload,CreatePrimitiveMutation} from "../../../
 export type * from "../../../../../🧬️schema/🧬️mutations/🔺️primitive/🌱️create/🟦️.ts";
 /** 🌱️ `create-primitive` wire twin: the flat `Apply` payload `GltfCreatePrimitivePayload` and the phase wire `CreatePrimitiveMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
-import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireIndex, gltfWireObject, gltfWireRequired, gltfWireOptional, parseGltfPrimitive } from "../../../📸️snapshot/🔣️json/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
-export const parseGltfCreatePrimitivePayload = gltfWireObject<GltfCreatePrimitivePayload>({ mesh: gltfWireRequired(gltfWireIndex), position: gltfWireRequired(gltfWireIndex) });
-export const parseCreatePrimitiveMutation = gltfWirePhase(parseGltfCreatePrimitivePayload, parseGltfDiff);
+export const parseGltfCreatePrimitivePayload = gltfWireObject<GltfCreatePrimitivePayload>({ mesh: gltfWireRequired(gltfWireIndex), position: gltfWireRequired(gltfWireIndex), primitive: gltfWireOptional(parseGltfPrimitive) });
+export const parseCreatePrimitiveMutation = gltfWireApplyPhase(parseGltfCreatePrimitivePayload);

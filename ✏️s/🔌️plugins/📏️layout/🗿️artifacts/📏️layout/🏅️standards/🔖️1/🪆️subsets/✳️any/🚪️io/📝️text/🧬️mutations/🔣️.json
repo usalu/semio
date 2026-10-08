@@ -775,6 +775,12 @@
             "string",
             "null"
           ]
+        },
+        "index": {
+          "type": [
+            "integer",
+            "null"
+          ]
         }
       },
       "required": [
@@ -1038,6 +1044,12 @@
         },
         "remove": {
           "type": "boolean"
+        },
+        "index": {
+          "type": [
+            "integer",
+            "null"
+          ]
         }
       },
       "required": [

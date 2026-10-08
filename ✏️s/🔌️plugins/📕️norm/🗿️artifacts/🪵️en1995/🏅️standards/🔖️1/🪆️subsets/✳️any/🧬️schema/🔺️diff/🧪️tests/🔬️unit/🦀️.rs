@@ -1,30 +1,52 @@
 use super::*;
 use crate::mutations::En1995Mutation;
-use protocol::{Mutation as _, MutationDiff};
+use protocol::{apply_diff, DiffAlgebra, Mutation as _, MutationDiff};
 
-/// 🔺️ A member-scoped change writes only the `members` list; annex and connections stay `None`.
+/// 🔺️ A member-scoped change patches only that member's field; annex and connections stay untouched.
 #[semio_framework_async_macros::async_test]
 async fn change_mutation_diff_updates_only_its_field() {
     let base = En1995Snapshot::default();
     let mutation = En1995Mutation::ChangeMemberH(crate::mutations::change_member_h::ChangeMemberH { member_id: base.members[0].id.clone(), new_value: 0.5 });
     let outcome = mutation.diff(&base);
     let diff = outcome.diff();
-    assert!(diff.annex.is_none() && diff.connections.is_none() && diff.artifact.is_none());
+    assert!(diff.annex.is_none() && diff.connections.is_empty());
+    assert_eq!((diff.members.removed.len(), diff.members.added.len(), diff.members.modified.len()), (0, 0, 1));
+    assert_eq!(diff.members.modified[0].patch.h_m, Some(0.5));
     let mut expected = base.clone();
     expected.members[0].h_m = 0.5;
-    assert_eq!(diff.apply(&base).expect("valid mutation diff"), expected);
+    assert_eq!(apply_diff(diff, &base).expect("valid mutation diff"), expected);
 }
 
-/// 🧲 `absorb` keeps the latest list per field and a whole-artifact replacement wins outright.
+/// 🧲 `absorb` coalesces patches per key: the latest value of a field wins and unrelated fields accumulate.
 #[semio_framework_async_macros::async_test]
-async fn absorb_takes_latest_field_and_replacement_wins() {
+async fn absorb_coalesces_per_key_and_keeps_the_sequential_result() {
     let base = En1995Snapshot::default();
-    let mut first = En1995Mutation::ChangeMemberH(crate::mutations::change_member_h::ChangeMemberH { member_id: base.members[0].id.clone(), new_value: 0.5 }).diff(&base).diff().clone();
-    let second = En1995Mutation::ChangeAnnex(crate::mutations::set_snapshot::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }).diff(&base).diff().clone();
+    let member_id = base.members[0].id.clone();
+    let mut first = En1995Mutation::ChangeMemberH(crate::mutations::change_member_h::ChangeMemberH { member_id: member_id.clone(), new_value: 0.5 }).diff(&base).diff().clone();
+    let mid = apply_diff(&first, &base).expect("first applies");
+    let second = En1995Mutation::ChangeMemberH(crate::mutations::change_member_h::ChangeMemberH { member_id: member_id.clone(), new_value: 0.6 }).diff(&mid).diff().clone();
+    let third = En1995Mutation::ChangeAnnex(crate::mutations::change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }).diff(&mid).diff().clone();
     first.absorb(second);
-    assert_eq!(first.annex, Some(crate::document::AnnexChoice::En));
-    assert!(first.members.is_some());
-    let applied = first.apply(&base).expect("absorbed diff applies");
+    first.absorb(third);
+    assert_eq!(first.members.modified.len(), 1, "patch∘patch is one patch");
+    let applied = apply_diff(&first, &base).expect("absorbed diff applies");
     assert_eq!(applied.annex, crate::document::AnnexChoice::En);
-    assert!((applied.members[0].h_m - 0.5).abs() < 1e-12);
+    assert!((applied.members[0].h_m - 0.6).abs() < 1e-12);
+}
+
+/// 🧭️ `between` carries a document to another and its `inverse` carries it back.
+#[test]
+fn between_carries_a_document_to_another_and_inverts() {
+    let base = En1995Snapshot::compliant_building_beam();
+    let mut target = base.clone();
+    target.members[0].span_m += 1.0;
+    target.members[0].actions.push(crate::CharacteristicAction { id: "extra".into(), kind: "imposed".into(), category: "A".into(), load_duration: "medium".into(), q_line_n_per_m: 1.0, f_point_n: 0.0, m_k_nm: 0.0, v_k_n: 0.0, n_k_n: 0.0, n_t_k_n: 0.0, f_c90_k_n: 0.0 });
+    let mut second = target.members[0].clone();
+    second.id = "beam-extra".into();
+    target.members.insert(0, second);
+    target.connections.clear();
+    let delta = En1995Diff::between(&base, &target);
+    assert_eq!(apply_diff(&delta, &base).expect("between applies"), target);
+    assert_eq!(apply_diff(&delta.inverse(&base), &target).expect("inverse applies"), base);
+    assert!(En1995Diff::between(&base, &base).is_empty());
 }

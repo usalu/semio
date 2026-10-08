@@ -1,6 +1,8 @@
 {
   "clock": {
-    "phase": 0.25,
-    "reverse": false
+    "clock": {
+      "phase": 0.25,
+      "reverse": false
+    }
   }
 }

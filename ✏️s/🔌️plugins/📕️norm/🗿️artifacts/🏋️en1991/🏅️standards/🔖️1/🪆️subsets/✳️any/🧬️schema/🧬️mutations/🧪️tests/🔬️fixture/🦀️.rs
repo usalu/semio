@@ -6,7 +6,7 @@
 
 use crate::{En1991Diff, En1991Mutation, En1991Snapshot};
 use semio_framework_value::ToValue;
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 //#region 🧾️Vector
 /// 🧾️ One committed vector: the semantic kind it witnesses and its five committed files.
@@ -17,6 +17,13 @@ pub(crate) struct Vector {
     pub(crate) after: &'static str,
     pub(crate) diff: &'static str,
     pub(crate) outcome: &'static str,
+}
+
+/// 🧾️ The committed op and before-snapshot of one vector, for the inverse-sum law.
+pub(crate) fn committed_op_and_before(vector: &Vector) -> (En1991Mutation, En1991Snapshot) {
+    let op: En1991Mutation = store::os_store::test_support::assert_wire_witness(vector.mutation);
+    let before: En1991Snapshot = semio_framework_pack_json::from_json_str(vector.before, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed before-snapshot decodes");
+    (op, before)
 }
 
 /// 🔣️ A committed file as the independent `serde_json` oracle reads it.
@@ -63,13 +70,13 @@ pub(crate) fn assert_vector(vector: Vector) {
         "rejected" => assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal), "{kind}: a rejected vector is accepted"),
         other => panic!("{kind}: unknown committed outcome status {other:?}"),
     }
-    let applied = MutationDiff::apply(outcome.diff(), &before).expect("the produced diff applies to the committed before-snapshot");
+    let applied = protocol::apply_diff(outcome.diff(), &before).expect("the produced diff applies to the committed before-snapshot");
     assert_eq!(applied, after, "{kind}: production dispatch does not land on the committed after-snapshot");
-    assert_eq!(MutationDiff::apply(&delta, &before).expect("the committed diff applies to the committed before-snapshot"), after, "{kind}: the committed diff does not carry before to after");
+    assert_eq!(protocol::apply_diff(&delta, &before).expect("the committed diff applies to the committed before-snapshot"), after, "{kind}: the committed diff does not carry before to after");
     assert_eq!(status == "applied", applied != before, "{kind}: an applied vector must move the document and only an applied one may");
     let inverse = op.inverse(&before).expect("valid retained mutation inverse fixture");
     assert_eq!(status == "applied", !inverse.is_empty(), "{kind}: an applied vector computes a non-empty inverse and only an applied one does");
-    let restored = inverse.iter().fold(applied, |current, step| MutationDiff::apply(step.diff(&current).diff(), &current).expect("an inverse step applies"));
+    let restored = inverse.iter().fold(applied, |current, step| protocol::apply_diff(step.diff(&current).diff(), &current).expect("an inverse step applies"));
     assert_eq!(restored, before, "{kind}: replaying the inverse does not restore the committed before-snapshot");
     let no_op = op.diff(&after).messages().iter().any(|message| message.code.0 == "mutation.no-op");
     let rejected = out_of_range(&op).is_some_and(|stray| stray.diff(&before).worst_level() >= Some(semio_framework_diagnostic::Severity::Error));

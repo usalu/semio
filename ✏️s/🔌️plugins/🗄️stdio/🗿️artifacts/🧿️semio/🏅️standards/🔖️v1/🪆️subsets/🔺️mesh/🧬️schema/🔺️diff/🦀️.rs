@@ -363,13 +363,14 @@ fn apply_texture(tex: &mut SemioTexture, diff: &SemioTextureDiff) {
 
 //#region 🔖️DiffAlgebra
 impl DiffAlgebra<SemioMeshSnapshot> for SemioMeshDiff {
-    /// 🔁️ Diff-level undo, derived generically from `between` (same accepted technique `value`'s
-    /// own `DiffAlgebra::inverse` uses — recomputing via a real `between()` call sidesteps having
-    /// to hand-derive `NamedAdded<T>` position math for the undo direction): `mid = self.apply(base)`,
-    /// then `between(mid, base)` is exactly the diff that restores `base` when applied to `mid`.
+    /// 🔁️ Concrete negative diff: every added row is removed, every removed row returns at its BASE position, and every modified row
+    /// inverts field by field against its base row.
     fn inverse(&self, base: &SemioMeshSnapshot) -> Self {
-        let mid = self.apply(base).unwrap();
-        Self::between(&mid, base)
+        SemioMeshDiff {
+            meshes: self.meshes.as_ref().map(|diff| inverse_named(diff, &base.meshes, |mesh| mesh.id.clone(), invert_mesh)),
+            materials: self.materials.as_ref().map(|diff| inverse_named(diff, &base.materials, |material| material.id.clone(), invert_material)),
+            textures: self.textures.as_ref().map(|diff| inverse_named(diff, &base.textures, |texture| texture.id.clone(), invert_texture)),
+        }
     }
 
     fn between(base: &SemioMeshSnapshot, other: &SemioMeshSnapshot) -> Self {
@@ -383,6 +384,54 @@ impl DiffAlgebra<SemioMeshSnapshot> for SemioMeshDiff {
     fn is_empty(&self) -> bool {
         self.meshes.is_none() && self.materials.is_none() && self.textures.is_none()
     }
+}
+
+/// ↩️ Negative of a key-indexed triple whose `added` rows carry their final position: the added keys are removed, every removed row
+/// returns at its BASE position, and every modified row inverts against its base row.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_named<K: PartialEq + Clone, T: Clone, D>(diff: &NamedTripleDiff<K, D, NamedAdded<T>>, base: &[T], key_of: impl Fn(&T) -> K, invert_row: impl Fn(&D, &T) -> D) -> NamedTripleDiff<K, D, NamedAdded<T>> {
+    let removed: Vec<K> = diff.added.iter().map(|a| key_of(&a.item)).collect();
+    let modified: Vec<NamedModified<K, D>> = diff.modified.iter().filter_map(|m| base.iter().find(|row| key_of(row) == m.key).map(|row| NamedModified { key: m.key.clone(), diff: invert_row(&m.diff, row) })).collect();
+    let mut added: Vec<NamedAdded<T>> = diff.removed.iter().filter_map(|key| base.iter().position(|row| key_of(row) == *key).map(|index| NamedAdded { index, item: base[index].clone() })).collect();
+    added.sort_by_key(|a| a.index);
+    NamedTripleDiff { removed, modified, added }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn invert_mesh(diff: &SemioMeshItemDiff, base: &SemioMesh) -> SemioMeshItemDiff {
+    SemioMeshItemDiff { primitives: diff.primitives.as_ref().map(|primitives| inverse_named(primitives, &base.primitives, |primitive| primitive.id.clone(), invert_primitive)) }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn invert_primitive(diff: &SemioPrimitiveDiff, base: &SemioPrimitive) -> SemioPrimitiveDiff {
+    SemioPrimitiveDiff {
+        topology: diff.topology.map(|_| base.topology),
+        positions: diff.positions.as_ref().map(|_| base.positions.clone()),
+        normals: diff.normals.as_ref().map(|_| base.normals.clone()),
+        uvs: diff.uvs.as_ref().map(|_| base.uvs.clone()),
+        colors: diff.colors.as_ref().map(|_| base.colors.clone()),
+        indices: diff.indices.as_ref().map(|_| base.indices.clone()),
+        material_id: diff.material_id.as_ref().map(|_| base.material_id.clone()),
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn invert_material(diff: &SemioMaterialDiff, base: &SemioMaterial) -> SemioMaterialDiff {
+    SemioMaterialDiff {
+        base_color: diff.base_color.map(|_| base.base_color),
+        metallic: diff.metallic.map(|_| base.metallic),
+        roughness: diff.roughness.map(|_| base.roughness),
+        base_color_texture: diff.base_color_texture.as_ref().map(|_| base.base_color_texture.clone()),
+        metallic_roughness_texture: diff.metallic_roughness_texture.as_ref().map(|_| base.metallic_roughness_texture.clone()),
+        normal_texture: diff.normal_texture.as_ref().map(|_| base.normal_texture.clone()),
+        occlusion_texture: diff.occlusion_texture.as_ref().map(|_| base.occlusion_texture.clone()),
+        emissive_texture: diff.emissive_texture.as_ref().map(|_| base.emissive_texture.clone()),
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn invert_texture(diff: &SemioTextureDiff, base: &SemioTexture) -> SemioTextureDiff {
+    SemioTextureDiff { mime: diff.mime.as_ref().map(|_| base.mime.clone()), bytes: diff.bytes.as_ref().map(|_| base.bytes.clone()) }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -535,11 +584,11 @@ pub(crate) fn texture_at<'a>(base: &'a SemioMeshSnapshot, id: &str) -> Option<&'
 /// natural append position — the current collection length — same convention `value`'s own
 /// `SetMapEntry`/`SetNode` diff constructors use).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_add_mesh(base: &SemioMeshSnapshot, mesh: SemioMesh) -> SemioMeshDiff {
+pub fn diff_add_mesh(base: &SemioMeshSnapshot, mesh: SemioMesh, at: Option<usize>) -> SemioMeshDiff {
     if mesh_at(base, &mesh.id).is_some() {
         return SemioMeshDiff::default();
     }
-    SemioMeshDiff { meshes: Some(SemioMeshesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: base.meshes.len(), item: mesh }] }), materials: None, textures: None }
+    SemioMeshDiff { meshes: Some(SemioMeshesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: at.map_or(base.meshes.len(), |at| at.min(base.meshes.len())), item: mesh }] }), materials: None, textures: None }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_remove_mesh(base: &SemioMeshSnapshot, id: &str) -> SemioMeshDiff {
@@ -549,12 +598,12 @@ pub fn diff_remove_mesh(base: &SemioMeshSnapshot, id: &str) -> SemioMeshDiff {
     SemioMeshDiff { meshes: Some(SemioMeshesDiff { removed: vec![id.to_string()], modified: Vec::new(), added: Vec::new() }), materials: None, textures: None }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_add_primitive(base: &SemioMeshSnapshot, mesh_id: &str, primitive: SemioPrimitive) -> SemioMeshDiff {
+pub fn diff_add_primitive(base: &SemioMeshSnapshot, mesh_id: &str, primitive: SemioPrimitive, at: Option<usize>) -> SemioMeshDiff {
     let Some(mesh) = mesh_at(base, mesh_id) else { return SemioMeshDiff::default() };
     if mesh.primitives.iter().any(|p| p.id == primitive.id) {
         return SemioMeshDiff::default();
     }
-    wrap_mesh_diff(mesh_id, SemioMeshItemDiff { primitives: Some(SemioPrimitivesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: mesh.primitives.len(), item: primitive }] }) })
+    wrap_mesh_diff(mesh_id, SemioMeshItemDiff { primitives: Some(SemioPrimitivesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: at.map_or(mesh.primitives.len(), |at| at.min(mesh.primitives.len())), item: primitive }] }) })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_remove_primitive(base: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &str) -> SemioMeshDiff {
@@ -605,11 +654,11 @@ pub fn diff_move_vertex(base: &SemioMeshSnapshot, mesh_id: &str, primitive_id: &
     wrap_primitive_diff(mesh_id, primitive_id, SemioPrimitiveDiff { positions: Some(positions), ..Default::default() })
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_add_material(base: &SemioMeshSnapshot, material: SemioMaterial) -> SemioMeshDiff {
+pub fn diff_add_material(base: &SemioMeshSnapshot, material: SemioMaterial, at: Option<usize>) -> SemioMeshDiff {
     if material_at(base, &material.id).is_some() {
         return SemioMeshDiff::default();
     }
-    SemioMeshDiff { meshes: None, materials: Some(SemioMaterialsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: base.materials.len(), item: material }] }), textures: None }
+    SemioMeshDiff { meshes: None, materials: Some(SemioMaterialsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: at.map_or(base.materials.len(), |at| at.min(base.materials.len())), item: material }] }), textures: None }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_remove_material(base: &SemioMeshSnapshot, id: &str) -> SemioMeshDiff {
@@ -662,11 +711,11 @@ pub fn diff_change_material_roughness(base: &SemioMeshSnapshot, id: &str, new_ro
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_add_texture(base: &SemioMeshSnapshot, texture: SemioTexture) -> SemioMeshDiff {
+pub fn diff_add_texture(base: &SemioMeshSnapshot, texture: SemioTexture, at: Option<usize>) -> SemioMeshDiff {
     if texture_at(base, &texture.id).is_some() {
         return SemioMeshDiff::default();
     }
-    SemioMeshDiff { meshes: None, materials: None, textures: Some(SemioTexturesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: base.textures.len(), item: texture }] }) }
+    SemioMeshDiff { meshes: None, materials: None, textures: Some(SemioTexturesDiff { removed: Vec::new(), modified: Vec::new(), added: vec![NamedAdded { index: at.map_or(base.textures.len(), |at| at.min(base.textures.len())), item: texture }] }) }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_remove_texture(base: &SemioMeshSnapshot, id: &str) -> SemioMeshDiff {
@@ -842,7 +891,7 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioMeshDiff> {
         SemioMeshDiff::default(),
         <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &b),
         <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&b, &a),
-        diff_add_mesh(&a, SemioMesh { id: "extra".into(), primitives: vec![] }),
+        diff_add_mesh(&a, SemioMesh { id: "extra".into(), primitives: vec![] }, None),
         diff_add_texture(&a, SemioTexture { id: "extra-tex".into(), mime: "image/gif".into(), bytes: vec![7, 7] }),
     ]
 }

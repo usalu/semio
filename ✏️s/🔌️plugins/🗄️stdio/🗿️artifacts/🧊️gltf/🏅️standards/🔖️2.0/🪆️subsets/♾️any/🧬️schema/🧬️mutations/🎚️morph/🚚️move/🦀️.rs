@@ -1,4 +1,7 @@
 //! 🧬️ Direct move-morph-target-attribute mutation owner: payload, validation, typed diff, inverse, and outcomes.
+use crate::schema::diff::*;
+use crate::schema::modules::mutation_support::top_level_collections::*;
+use crate::schema::snapshot::*;
 use crate::schema::modules::mutation_support::structure_geometry::checked_index;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
@@ -27,14 +30,23 @@ pub fn validate(payload: &GltfMoveMorphTargetAttributePayload, base: &GltfSnapsh
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfMoveMorphTargetAttributePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
-    let mut next = base.clone();
-    let attributes = &mut next.document.meshes[payload.mesh].primitives[payload.primitive].targets[payload.target].0;
-    let index = attributes.iter().position(|(semantic, _)| semantic == &payload.semantic).expect("validated semantic");
-    let entry = attributes.remove(index);
-    attributes.insert(payload.position, entry);
-    Ok(next)
+pub fn plan(p: &GltfMoveMorphTargetAttributePayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
+    validate(p, base)?;
+    let Some(index) = base.document.meshes[p.mesh].primitives[p.primitive].targets[p.target].0.iter().position(|(semantic, _)| semantic == &p.semantic) else {
+        return Err(reject("gltf.mutation.relation-absent", "document/meshes/primitives/targets", "semantic is not bound"));
+    };
+    let value = with_replaced(&base.document.meshes[p.mesh].primitives[p.primitive].targets, p.target, GltfMorphTarget(with_moved(&base.document.meshes[p.mesh].primitives[p.primitive].targets[p.target].0, index, p.position)));
+    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: (value != base.document.meshes[p.mesh].primitives[p.primitive].targets).then(|| value), ..Default::default() }), ..Default::default() })
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(p: &GltfMoveMorphTargetAttributePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    if validate(p, base).is_err() {
+        return Vec::new();
+    }
+    let Some(index) = base.document.meshes[p.mesh].primitives[p.primitive].targets[p.target].0.iter().position(|(semantic, _)| semantic == &p.semantic) else {
+        return Vec::new();
+    };
+    vec![super::move_morph_target_attribute::mutation(super::move_morph_target_attribute::GltfMoveMorphTargetAttributePayload { mesh: p.mesh, primitive: p.primitive, target: p.target, semantic: p.semantic.clone(), position: index })]
 }
 
 //#region 🧬️DirectMutation
@@ -43,7 +55,11 @@ pub fn apply(payload: &GltfMoveMorphTargetAttributePayload, base: &GltfSnapshot)
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum MoveMorphTargetAttributeMutation {
     Apply(GltfMoveMorphTargetAttributePayload),
-    Restore(Box<crate::schema::diff::GltfDiff>),
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutation(payload: GltfMoveMorphTargetAttributePayload) -> super::GltfMutation {
+    super::GltfMutation::MoveMorphTargetAttribute(MoveMorphTargetAttributeMutation::Apply(payload))
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveMorphTargetAttributeMutation {
@@ -51,28 +67,18 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveMorphTarg
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => match apply(payload, base) {
-                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Self::Apply(payload) => match plan(payload, base) {
+                Ok(diff) => protocol::MutationOutcome::new(diff),
                 Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
-            },
-            Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
-                Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-                Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
             },
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
-            return Vec::new();
+        match self {
+            Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::GltfMutation::MoveMorphTargetAttribute(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Move Morph Target Attribute", "Morphzielattribut verschieben")

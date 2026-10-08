@@ -1,0 +1,15 @@
+# Natural File Close Demand Review
+
+Current source read only; no native job dispatched. NaturalFileDecodeCursor now declares next_close_byte_demand. NaturalFileImportJob's InteractiveJob implementation delegates to a live controlled decoder, demands concrete erased frame size when that decoder is terminal, and demands typed retirement birth capacity before moving synchronous bytes/media/port into close owners. Its reserved close_step refuses zero or insufficient grants before changing those owners. Concrete decoder and erased retirement box drops report released_items=1 and actual size_of_val frame bytes. A controlled decoder reporting Complete while retaining a live owner is refused.
+
+These source changes align demand and released frame accounting without claiming actual Shared9 success. The latest actual Shared9 run is still pending. The observer must continue preserving fixed small-grant denial, original owner identity, and terminal release; dynamic demand queries alone do not establish those runtime laws.
+
+Actual Shared9 receipt SBNVdV/00 independently verified: nine exact command status0 records; each stdout one passed/zero failed/1125 filtered. Current executable SHA matches 10b0df55c1b097923f572142c0ad1504db181f5d206eddc97a3163f4199b9804; receipt file SHA is 90e92fb23b9c9df90adf53f5795e66fd760d8e135182139b3451bab46c61e7ae. The two natural-file laws are explicitly included. Helper current lines 900–929 retain zero-grant refusal, stable repeated demand query, fixed64 denial when demand>64, retained nonterminal owner after denial, exactly funded max(64,demand) turns, maximum one released item, byte releases bounded by actual grant, and final terminal-empty assertion. This is source plus actual exact-law evidence, not an allocation-free or complete production runtime assertion.
+
+## Receipt File and Executable Identity Correction
+
+Independent current hashing resolves the apparent discrepancy: **90e92fb23b9c9df90adf53f5795e66fd760d8e135182139b3451bab46c61e7ae is the receipt file SHA**, while **10b0df55c1b097923f572142c0ad1504db181f5d206eddc97a3163f4199b9804 is the JSON executable sha256 field and matching physical executable SHA**. This auditor previously mislabeled the receipt hash as executable hash; that statement above is corrected. No receipt replacement or writer attribution follows. Current input observation, receipt field, executable.json and actual executable agree. The original receipt owner confirms no rewrite in that lane.
+
+Current nine law command records still each status0/stdout1passed0failed1125filtered. Native result identity is therefore coherent; no rerun needed to resolve this metadata naming error. The retained source-observation JSON is audit metadata, not a production provenance ledger.
+
+Analogous Shared1 hash roles independently verified: jx5Zcq receipt file bytes SHA=b27a5ed2d1322999f6ca499a2f2c4a27e5459cdbd1ad75ff12ad7b3148d59060, JSON executable SHA=10b0df55c1b097923f572142c0ad1504db181f5d206eddc97a3163f4199b9804, actual physical executable SHA matches that field. Shared9 and Shared1 bind the same native executable; their receipt file hashes differ. No native rerun required.

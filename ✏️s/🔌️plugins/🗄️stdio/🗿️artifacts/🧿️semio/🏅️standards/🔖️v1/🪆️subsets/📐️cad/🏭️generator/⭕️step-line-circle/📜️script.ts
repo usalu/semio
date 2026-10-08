@@ -38,7 +38,7 @@ import { join } from "node:path";
 const FAMILY = "step-line-circle";
 const ROUTER = join(import.meta.dir, "..", "📜️script.ts");
 
-const RECIPES = ["step-no-mutation-identity", "step-set-snapshot-replaces-entities", "step-add-entity-circle", "step-remove-entity-line", "step-set-entity-geometry-circle-radius"] as const;
+const RECIPES = ["step-add-entity-circle", "step-remove-entity-line", "step-set-entity-geometry-circle-radius"] as const;
 
 function main(argv: readonly string[]): number {
   const onlyIndex = argv.indexOf("--only");

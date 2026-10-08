@@ -296,12 +296,14 @@ impl EvaluationInputPreparation {
 impl Drop for EvaluationInputPreparation {fn drop(&mut self) {assert!(std::thread::panicking()||self.terminal_is_empty(),"evaluation input candidate dropped before terminal-empty");}}
 struct EvaluationInputRetirement(EvaluationInputPreparation);
 impl semio_framework_value::retirement::RetirementCursor for EvaluationInputRetirement {
-    fn close_step(&mut self,maximum_bytes:usize)->semio_framework_value::retirement::RetirementStep {
+    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep {
         use semio_framework_value::retirement::RetirementStep;
-        let step=self.0.close_step(1,maximum_bytes);if self.0.terminal_is_empty(){return RetirementStep::Complete;}
-        match step {neural_engine::ValueRetirementStep::Pending {released_bytes,..}=>RetirementStep::Bytes(released_bytes),_=>RetirementStep::BudgetExhausted}
+        if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}
+        let step=self.0.close_step(1,grant.maximum_copy_bytes);if self.0.terminal_is_empty(){return RetirementStep::Complete;}
+        match step {neural_engine::ValueRetirementStep::Pending {released_bytes,..}=>RetirementStep::ProcessedBytes(released_bytes),_=>RetirementStep::BudgetExhausted}
     }
     fn terminal_is_empty(&self)->bool {self.0.terminal_is_empty()}
+    fn next_work_byte_demand(&self)->usize {usize::from(!self.terminal_is_empty())}
 }
 impl semio_framework_value::retirement::RetireOwned for EvaluationInputPreparation {
     fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {Box::new(EvaluationInputRetirement(self))}

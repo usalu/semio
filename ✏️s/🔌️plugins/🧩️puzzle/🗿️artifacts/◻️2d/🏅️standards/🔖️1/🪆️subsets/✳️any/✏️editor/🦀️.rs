@@ -2461,9 +2461,8 @@ fn puzzle2d_config_store_bounded_bytes(value: &Puzzle2dConfig) -> Result<usize, 
 }
 
 fn puzzle2d_config_store_mutation_bytes(mutation: &Puzzle2dConfigMutation) -> Option<usize> {
-    match mutation {
-        Puzzle2dConfigMutation::Snapshot { config } => puzzle2d_config_store_bounded_bytes(config).ok(),
-    }
+    let encoded = semio_framework_pack_json::to_json_string(mutation);
+    (encoded.len() <= PUZZLE2D_CONFIG_STORE_MAXIMUM_BYTES).then_some(encoded.len())
 }
 
 impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutation> for Puzzle2dConfigStorePreparation {
@@ -2484,7 +2483,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutati
                 }
                 let completed_bytes = puzzle2d_config_store_bounded_bytes(base.get())?;
                 let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-                let post = mutation.diff(base.get()).into_parts().0.apply(base.get()).map_err(|_| "Puzzle2d Config mutation could not produce its post root".to_string())?;
+                let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| "Puzzle2d Config mutation could not produce its post root".to_string())?;
                 self.candidate = Some((post, inverse, mutation, completed_bytes));
                 self.phase = 1;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: completed_bytes as u64, digest: [0; 32] };
@@ -2656,7 +2655,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutati
                 let base = self.base.as_ref().ok_or_else(|| "Puzzle2d Artifact preparation lost its exact base root".to_string())?;
                 let mutation = self.mutation.take().ok_or_else(|| "Puzzle2d Artifact preparation lost its mutation owner".to_string())?;
                 let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-                let post = mutation.diff(base.get()).into_parts().0.apply(base.get()).map_err(|_| "Puzzle2d Artifact mutation could not produce its post root".to_string())?;
+                let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| "Puzzle2d Artifact mutation could not produce its post root".to_string())?;
                 self.candidate = Some((post, inverse, mutation));
                 self.phase = 1;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: [0; 32] };
@@ -3002,7 +3001,7 @@ fn puzzle2d_dispatch_emit(
     // 🧮️ B1: only a REAL config change becomes a `Puzzle2dConfigMutation` — `PartialEq` (derived)
     // makes this cheap, and keeps a pure read-only action from creating a no-op undo entry.
     let (next_config, next_window_config, next_window_transient) = window::split(&scene.runtime, window_kind);
-    let config_mutations = if &next_config != config { vec![Puzzle2dConfigMutation::Snapshot { config: next_config }] } else { Vec::new() };
+    let config_mutations = config.mutations_to(&next_config);
     let window_config_mutations = if &next_window_config != window_config { vec![window::addressed_config(view_state.ok_or_else(|| Fault::from("puzzle2d-window-context-required"))?, next_window_config)?] } else { Vec::new() };
     let window_transient = if &next_window_transient != window_transient { vec![window::addressed_transient(view_state.ok_or_else(|| Fault::from("puzzle2d-window-context-required"))?, next_window_transient)?] } else { Vec::new() };
     // 🛠️ The first tool transaction an action commits stamps every op of its ONE edit — the yielded leaves and any
@@ -3198,7 +3197,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle2dPlayApp>> for 
             }
             Puzzle2dExampleStage::AddCompatibility => {
                 if let Some(row) = target.meta.kind_compatibility.get(self.target_cursor) {
-                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity));
+                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, None));
                     self.target_cursor += 1;
                     return Ok(Self::progress("puzzle2d-example-add-compatibility", "Adding kind relation", "Artbeziehung wird hinzugefügt"));
                 }
@@ -4614,7 +4613,7 @@ impl InteractiveJob for Puzzle2dImportJob {
                         Some(index) => self.compatibility[index] = parsed.clone(),
                         None => self.compatibility.push(parsed.clone()),
                     }
-                    if let Err(error) = self.push_mutation(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(parsed.source, parsed.target, parsed.bidirectional, parsed.important, parsed.specificity)) {
+                    if let Err(error) = self.push_mutation(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(parsed.source, parsed.target, parsed.bidirectional, parsed.important, parsed.specificity, None)) {
                         return puzzle2d_job_fault(cx, error);
                     }
                 }

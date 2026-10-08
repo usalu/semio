@@ -1,31 +1,3 @@
-import brepPrimitive from "./🔣️brep-primitive.json";
-import brepCurve from "./🔣️brep-curve.json";
-import brepSurface from "./🔣️brep-surface.json";
-import brepSolid from "./🔣️brep-solid.json";
-import brepBoolean from "./🔣️brep-boolean.json";
-import brepFeature from "./🔣️brep-feature.json";
-import brepTransform from "./🔣️brep-transform.json";
-import brepIntersect from "./🔣️brep-intersect.json";
-import brepEvaluate from "./🔣️brep-evaluate.json";
-import brepTopology from "./🔣️brep-topology.json";
-import brepInterchange from "./🔣️brep-interchange.json";
-import meshPrimitive from "./🔣️mesh-primitive.json";
-import meshConvert from "./🔣️mesh-convert.json";
-import meshTransform from "./🔣️mesh-transform.json";
-import meshComponent from "./🔣️mesh-component.json";
-import meshEdit from "./🔣️mesh-edit.json";
-import meshRepair from "./🔣️mesh-repair.json";
-import meshInspect from "./🔣️mesh-inspect.json";
-import meshInterchange from "./🔣️mesh-interchange.json";
-import meshShading from "./🔣️mesh-shading.json";
-import meshUv from "./🔣️mesh-uv.json";
-import analysisMeasure from "./🔣️analysis-measure.json";
-import analysisCheck from "./🔣️analysis-check.json";
-import mathValues from "./🔣️math-values.json";
-import mathArithmetic from "./🔣️math-arithmetic.json";
-import mathVector from "./🔣️math-vector.json";
-import mathList from "./🔣️math-list.json";
-
 /** 🗣️ A user-facing string in every supported language, English first and German second. */
 export type CatalogueText = { readonly en: string; readonly de: string };
 
@@ -94,13 +66,6 @@ export type CatalogueCategory = { readonly id: string; readonly emoji: string; r
 /** 📄️ One category file: the category and every kind it owns. */
 export type CatalogueCategoryFile = { readonly category: CatalogueCategory; readonly kinds: readonly CatalogueKind[] };
 
-/** 📚️ Every bundled category file, ordered by palette position. */
-export const CATALOGUE_CATEGORY_FILES: readonly CatalogueCategoryFile[] = ([
-  brepPrimitive, brepCurve, brepSurface, brepSolid, brepBoolean, brepFeature, brepTransform, brepIntersect, brepEvaluate, brepTopology, brepInterchange,
-  meshPrimitive, meshConvert, meshTransform, meshComponent, meshEdit, meshRepair, meshInspect, meshInterchange, meshShading, meshUv,
-  analysisMeasure, analysisCheck, mathValues, mathArithmetic, mathVector, mathList,
-] as unknown as CatalogueCategoryFile[]).sort((left, right) => left.category.order - right.category.order || (left.category.id < right.category.id ? -1 : 1));
-
 /** 📦️ The catalogue: category files in palette order with lookups by kind id and port name. */
 export type Catalogue = {
   readonly categories: readonly CatalogueCategoryFile[];
@@ -125,13 +90,6 @@ export function buildCatalogue(files: readonly CatalogueCategoryFile[]): Catalog
     category: id => byCategory.get(id),
     port: (kindId, name) => { const kind = index.get(kindId); return kind?.inputs.find(port => port.name === name) ?? kind?.outputs.find(port => port.name === name); },
   };
-}
-
-let bundled: Catalogue | undefined;
-
-/** 📦️ The process-wide bundled catalogue, built once. */
-export function catalogue(): Catalogue {
-  return bundled ??= buildCatalogue(CATALOGUE_CATEGORY_FILES);
 }
 
 /** 🌐️ The text for a BCP 47 locale such as `de` or `de-CH`; an unsupported language reads as the first language, English. */

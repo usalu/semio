@@ -15,6 +15,9 @@ use protocol::{MutationKind, SemanticDescriptor};
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CreateQuantityRequirement {
     pub quantity_requirement: QuantityRequirement,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    pub index: Option<usize>,
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateQuantityRequirement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "quantity-requirement", kind: "create-quantity-requirement", record: "CreatedQuantityRequirement" };

@@ -3,7 +3,7 @@
 //! Lowering allocates indirect objects through an [`ObjectSink`] wherever the spec requires a
 //! stream (sampled/PostScript functions, ICC profiles, mesh shadings, tiling patterns).
 
-use super::lexer::{dict_f64, dict_get, dict_i64, dict_name};
+use super::lexer::{dict_f64, dict_get, dict_i64, dict_name,PResult,PdfEngineError};
 use super::xref::ObjectSink;
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfColorSpace, PdfDictEntry, PdfExtGState, PdfFunction, PdfLineCap, PdfLineJoin, PdfMatrix, PdfObject, PdfRect, PdfShading, PdfShadingKind, PdfSoftMask};
@@ -55,6 +55,22 @@ pub fn extra_entries(dict: &[PdfDictEntry], known: &[&str]) -> Vec<PdfDictEntry>
 }
 //#endregion 🔖️Helpers
 
+
+fn sample_width(bits:u32)->PResult<usize>{if ![1,2,4,8,12,16,24,32].contains(&bits){return Err(PdfEngineError::Malformed("sampled function word width is invalid".into()));}Ok(bits as usize)}
+/// 🧮 Unpacks admitted native sampled-function bits into logical words.
+pub(crate) fn unpack_sample_words(data:&[u8],bits:u32,count:usize)->PResult<Vec<u32>>{
+    let width=sample_width(bits)?;let extent=count.checked_mul(width).and_then(|n|n.checked_add(7)).map(|n|n/8).ok_or_else(||PdfEngineError::Malformed("sampled function extent overflows".into()))?;
+    if data.len()!=extent{return Err(PdfEngineError::Malformed("sampled function byte extent differs from its declared words".into()));}
+    let mut words=Vec::new();words.try_reserve_exact(count).map_err(|_|PdfEngineError::Malformed("sampled function allocation failed".into()))?;
+    for index in 0..count{let mut word=0u32;for bit in index*width..(index+1)*width{word=(word<<1)|u32::from((data[bit/8]>>(7-bit%8))&1);}words.push(word);}Ok(words)
+}
+/// 🧵 Packs logical sampled-function words for native PDF output.
+pub(crate) fn pack_sample_words(words:&[u32],bits:u32)->PResult<Vec<u8>>{
+    let width=sample_width(bits)?;let extent=words.len().checked_mul(width).and_then(|n|n.checked_add(7)).map(|n|n/8).ok_or_else(||PdfEngineError::Malformed("sampled function extent overflows".into()))?;
+    let mut bytes=Vec::new();bytes.try_reserve_exact(extent).map_err(|_|PdfEngineError::Malformed("sampled function allocation failed".into()))?;bytes.resize(extent,0);
+    for(index,word)in words.iter().enumerate(){if bits<32&&*word>=(1u32<<bits){return Err(PdfEngineError::Malformed("sampled function logical word exceeds its declared width".into()));}for offset in 0..width{let bit=index*width+offset;bytes[bit/8]|=((word>>(width-1-offset))as u8&1)<<(7-bit%8);}}Ok(bytes)
+}
+
 //#region 🔖️Functions
 /// ⬇️ Lifts a function object (dictionary, stream, reference or array of functions).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -70,15 +86,18 @@ pub fn lift_function(value: &PdfObject, source: &mut dyn ObjectSource) -> Option
     match dict_i64(dict, "FunctionType")? {
         0 => {
             let PdfObject::Stream { data, .. } = &resolved else { return None };
+            let size:Vec<u32>=dict_get(dict,"Size")?.as_array()?.iter().map(|value|u32::try_from(value.as_i64()?).ok().filter(|value|*value>0)).collect::<Option<_>>()?;
+            let bits_per_sample=u32::try_from(dict_i64(dict,"BitsPerSample")?).ok()?;if range.is_empty()||range.len()%2!=0{return None;}let count=size.iter().try_fold(range.len()/2,|count,size|count.checked_mul(*size as usize))?;
+            let samples=unpack_sample_words(data,bits_per_sample,count).ok()?;
             Some(PdfFunction::Sampled {
                 domain,
                 range,
-                size: numbers_of(dict_get(dict, "Size")).iter().map(|v| *v as u32).collect(),
-                bits_per_sample: dict_i64(dict, "BitsPerSample").unwrap_or(8) as u32,
+                size,
+                bits_per_sample,
                 order: dict_i64(dict, "Order").map(|v| v as u32),
                 encode: dict_get(dict, "Encode").map(|v| numbers_of(Some(v))),
                 decode: dict_get(dict, "Decode").map(|v| numbers_of(Some(v))),
-                samples: data.clone(),
+                samples,
             })
         }
         2 => Some(PdfFunction::Exponential { domain, range: dict_get(dict, "Range").map(|v| numbers_of(Some(v))), c0: dict_get(dict, "C0").map(|v| numbers_of(Some(v))).unwrap_or_else(|| vec![0.0]), c1: dict_get(dict, "C1").map(|v| numbers_of(Some(v))).unwrap_or_else(|| vec![1.0]), n: dict_f64(dict, "N").unwrap_or(1.0) }),
@@ -97,14 +116,16 @@ pub fn lift_function(value: &PdfObject, source: &mut dyn ObjectSource) -> Option
 /// ⬆️ Lowers a function to the object a `/Function` entry holds (stream-based ones become
 /// indirect).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn lower_function(function: &PdfFunction, sink: &mut dyn ObjectSink) -> PdfObject {
-    match function {
+pub fn lower_function(function: &PdfFunction, sink: &mut dyn ObjectSink) -> PResult<PdfObject> {
+    Ok(match function {
         PdfFunction::Sampled { domain, range, size, bits_per_sample, order, encode, decode, samples } => {
+            let count=size.iter().try_fold(range.len()/2,|count,size|count.checked_mul(*size as usize)).filter(|count|*count==samples.len());
+            if size.is_empty()||size.contains(&0)||range.is_empty()||range.len()%2!=0||count.is_none(){return Err(PdfEngineError::Malformed("sampled function logical extent differs from its size and range".into()));}
             let mut dict = vec![entry("FunctionType", PdfObject::Int(0)), entry("Domain", PdfObject::numbers(domain)), entry("Range", PdfObject::numbers(range)), entry("Size", PdfObject::Array(size.iter().map(|v| PdfObject::Int(*v as i64)).collect())), entry("BitsPerSample", PdfObject::Int(*bits_per_sample as i64))];
             push_opt(&mut dict, "Order", order.map(|v| PdfObject::Int(v as i64)));
             push_opt(&mut dict, "Encode", encode.as_ref().map(|v| PdfObject::numbers(v)));
             push_opt(&mut dict, "Decode", decode.as_ref().map(|v| PdfObject::numbers(v)));
-            PdfObject::Ref(sink.add(stream(dict, samples.clone())))
+            PdfObject::Ref(sink.add(stream(dict, pack_sample_words(samples,*bits_per_sample)?)))
         }
         PdfFunction::Exponential { domain, range, c0, c1, n } => {
             let mut dict = vec![entry("FunctionType", PdfObject::Int(2)), entry("Domain", PdfObject::numbers(domain)), entry("C0", PdfObject::numbers(c0)), entry("C1", PdfObject::numbers(c1)), entry("N", PdfObject::number(*n))];
@@ -112,7 +133,7 @@ pub fn lower_function(function: &PdfFunction, sink: &mut dyn ObjectSink) -> PdfO
             PdfObject::Dict(dict)
         }
         PdfFunction::Stitching { domain, range, functions, bounds, encode } => {
-            let mut dict = vec![entry("FunctionType", PdfObject::Int(3)), entry("Domain", PdfObject::numbers(domain)), entry("Functions", PdfObject::Array(functions.iter().map(|f| lower_function(f, sink)).collect())), entry("Bounds", PdfObject::numbers(bounds)), entry("Encode", PdfObject::numbers(encode))];
+            let mut dict = vec![entry("FunctionType", PdfObject::Int(3)), entry("Domain", PdfObject::numbers(domain)), entry("Functions", PdfObject::Array(functions.iter().map(|f| lower_function(f, sink)).collect::<PResult<Vec<_>>>()?)), entry("Bounds", PdfObject::numbers(bounds)), entry("Encode", PdfObject::numbers(encode))];
             push_opt(&mut dict, "Range", range.as_ref().map(|v| PdfObject::numbers(v)));
             PdfObject::Dict(dict)
         }
@@ -120,8 +141,8 @@ pub fn lower_function(function: &PdfFunction, sink: &mut dyn ObjectSink) -> PdfO
             let dict = vec![entry("FunctionType", PdfObject::Int(4)), entry("Domain", PdfObject::numbers(domain)), entry("Range", PdfObject::numbers(range))];
             PdfObject::Ref(sink.add(stream(dict, code.as_bytes().to_vec())))
         }
-        PdfFunction::Array { functions } => PdfObject::Array(functions.iter().map(|f| lower_function(f, sink)).collect()),
-    }
+        PdfFunction::Array { functions } => PdfObject::Array(functions.iter().map(|f| lower_function(f, sink)).collect::<PResult<Vec<_>>>()?),
+    })
 }
 //#endregion 🔖️Functions
 
@@ -193,13 +214,13 @@ pub fn lift_colour_space_inline(value: &PdfObject) -> PdfColorSpace {
 
 /// ⬆️ Lowers a colour space to its COS form.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn lower_colour_space(space: &PdfColorSpace, sink: &mut dyn ObjectSink) -> PdfObject {
+pub fn lower_colour_space(space: &PdfColorSpace, sink: &mut dyn ObjectSink) -> PResult<PdfObject> {
     let cal = |white: &[f64; 3], black: &Option<[f64; 3]>| -> Vec<PdfDictEntry> {
         let mut dict = vec![entry("WhitePoint", PdfObject::numbers(white))];
         push_opt(&mut dict, "BlackPoint", black.as_ref().map(|v| PdfObject::numbers(v)));
         dict
     };
-    match space {
+    Ok(match space {
         PdfColorSpace::DeviceGray => PdfObject::name("DeviceGray"),
         PdfColorSpace::DeviceRgb => PdfObject::name("DeviceRGB"),
         PdfColorSpace::DeviceCmyk => PdfObject::name("DeviceCMYK"),
@@ -221,41 +242,41 @@ pub fn lower_colour_space(space: &PdfColorSpace, sink: &mut dyn ObjectSink) -> P
         }
         PdfColorSpace::IccBased { components, profile, alternate, range } => {
             let mut dict = vec![entry("N", PdfObject::Int(*components as i64))];
-            push_opt(&mut dict, "Alternate", alternate.as_ref().map(|alt| lower_colour_space(alt, sink)));
+            push_opt(&mut dict, "Alternate", alternate.as_ref().map(|alt| lower_colour_space(alt, sink)).transpose()?);
             push_opt(&mut dict, "Range", range.as_ref().map(|v| PdfObject::numbers(v)));
             PdfObject::Array(vec![PdfObject::name("ICCBased"), PdfObject::Ref(sink.add(stream(dict, profile.clone())))])
         }
-        PdfColorSpace::Indexed { base, hival, lookup } => PdfObject::Array(vec![PdfObject::name("Indexed"), lower_colour_space(base, sink), PdfObject::Int(*hival as i64), PdfObject::Str(lookup.clone())]),
-        PdfColorSpace::Separation { name, alternate, tint_transform } => PdfObject::Array(vec![PdfObject::name("Separation"), PdfObject::name(name), lower_colour_space(alternate, sink), lower_function(tint_transform, sink)]),
+        PdfColorSpace::Indexed { base, hival, lookup } => PdfObject::Array(vec![PdfObject::name("Indexed"), lower_colour_space(base, sink)?, PdfObject::Int(*hival as i64), PdfObject::Str(lookup.clone())]),
+        PdfColorSpace::Separation { name, alternate, tint_transform } => PdfObject::Array(vec![PdfObject::name("Separation"), PdfObject::name(name), lower_colour_space(alternate, sink)?, lower_function(tint_transform, sink)?]),
         PdfColorSpace::DeviceN { names, alternate, tint_transform, attributes } => {
-            let mut items = vec![PdfObject::name("DeviceN"), PdfObject::Array(names.iter().map(PdfObject::name).collect()), lower_colour_space(alternate, sink), lower_function(tint_transform, sink)];
+            let mut items = vec![PdfObject::name("DeviceN"), PdfObject::Array(names.iter().map(PdfObject::name).collect()), lower_colour_space(alternate, sink)?, lower_function(tint_transform, sink)?];
             if let Some(attributes) = attributes {
                 items.push(PdfObject::Dict(attributes.clone()));
             }
             PdfObject::Array(items)
         }
         PdfColorSpace::Pattern { base: None } => PdfObject::name("Pattern"),
-        PdfColorSpace::Pattern { base: Some(base) } => PdfObject::Array(vec![PdfObject::name("Pattern"), lower_colour_space(base, sink)]),
+        PdfColorSpace::Pattern { base: Some(base) } => PdfObject::Array(vec![PdfObject::name("Pattern"), lower_colour_space(base, sink)?]),
         PdfColorSpace::Named { name } => PdfObject::name(name),
-    }
+    })
 }
 
 /// ⬆️ Lowers an inline-image colour space (no indirect objects possible).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn lower_colour_space_inline(space: &PdfColorSpace) -> PdfObject {
+pub fn lower_colour_space_inline(space: &PdfColorSpace) -> PResult<PdfObject> {
     struct Inline;
     impl ObjectSink for Inline {
         fn add(&mut self, _value: PdfObject) -> crate::standards::v1_7::subsets::base::schema::snapshot::ObjRef {
             crate::standards::v1_7::subsets::base::schema::snapshot::ObjRef { num: 0, gen: 0 }
         }
     }
-    match space {
+    Ok(match space {
         PdfColorSpace::DeviceGray => PdfObject::name("G"),
         PdfColorSpace::DeviceRgb => PdfObject::name("RGB"),
         PdfColorSpace::DeviceCmyk => PdfObject::name("CMYK"),
-        PdfColorSpace::Indexed { base, hival, lookup } => PdfObject::Array(vec![PdfObject::name("I"), lower_colour_space_inline(base), PdfObject::Int(*hival as i64), PdfObject::Str(lookup.clone())]),
-        other => lower_colour_space(other, &mut Inline),
-    }
+        PdfColorSpace::Indexed { base, hival, lookup } => PdfObject::Array(vec![PdfObject::name("I"), lower_colour_space_inline(base)?, PdfObject::Int(*hival as i64), PdfObject::Str(lookup.clone())]),
+        other => lower_colour_space(other, &mut Inline)?,
+    })
 }
 //#endregion 🔖️ColourSpaces
 
@@ -284,22 +305,22 @@ pub fn lift_shading(id: &str, value: &PdfObject, source: &mut dyn ObjectSource) 
 
 /// ⬆️ Lowers a shading to an indirect object and returns its reference.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn lower_shading(shading: &PdfShading, sink: &mut dyn ObjectSink) -> PdfObject {
-    let mut dict = vec![entry("ColorSpace", lower_colour_space(&shading.color_space, sink))];
+pub fn lower_shading(shading: &PdfShading, sink: &mut dyn ObjectSink) -> PResult<PdfObject> {
+    let mut dict = vec![entry("ColorSpace", lower_colour_space(&shading.color_space, sink)?)];
     let extend_of = |extend: &[bool; 2]| PdfObject::Array(vec![PdfObject::Bool(extend[0]), PdfObject::Bool(extend[1])]);
     let object = match &shading.kind {
         PdfShadingKind::FunctionBased { domain, matrix, function } => {
             dict.insert(0, entry("ShadingType", PdfObject::Int(1)));
             push_opt(&mut dict, "Domain", domain.as_ref().map(|v| PdfObject::numbers(v)));
             push_opt(&mut dict, "Matrix", matrix.as_ref().map(|v| PdfObject::numbers(v)));
-            dict.push(entry("Function", lower_function(function, sink)));
+            dict.push(entry("Function", lower_function(function, sink)?));
             None
         }
         PdfShadingKind::Axial { coords, domain, function, extend } => {
             dict.insert(0, entry("ShadingType", PdfObject::Int(2)));
             dict.push(entry("Coords", PdfObject::numbers(coords)));
             push_opt(&mut dict, "Domain", domain.as_ref().map(|v| PdfObject::numbers(v)));
-            dict.push(entry("Function", lower_function(function, sink)));
+            dict.push(entry("Function", lower_function(function, sink)?));
             if *extend != [false, false] {
                 dict.push(entry("Extend", extend_of(extend)));
             }
@@ -309,7 +330,7 @@ pub fn lower_shading(shading: &PdfShading, sink: &mut dyn ObjectSink) -> PdfObje
             dict.insert(0, entry("ShadingType", PdfObject::Int(3)));
             dict.push(entry("Coords", PdfObject::numbers(coords)));
             push_opt(&mut dict, "Domain", domain.as_ref().map(|v| PdfObject::numbers(v)));
-            dict.push(entry("Function", lower_function(function, sink)));
+            dict.push(entry("Function", lower_function(function, sink)?));
             if *extend != [false, false] {
                 dict.push(entry("Extend", extend_of(extend)));
             }
@@ -322,7 +343,7 @@ pub fn lower_shading(shading: &PdfShading, sink: &mut dyn ObjectSink) -> PdfObje
             push_opt(&mut dict, "BitsPerFlag", bits_per_flag.map(|v| PdfObject::Int(v as i64)));
             push_opt(&mut dict, "VerticesPerRow", vertices_per_row.map(|v| PdfObject::Int(v as i64)));
             dict.push(entry("Decode", PdfObject::numbers(decode)));
-            push_opt(&mut dict, "Function", function.as_ref().map(|f| lower_function(f, sink)));
+            push_opt(&mut dict, "Function", function.as_ref().map(|f| lower_function(f, sink)).transpose()?);
             Some(data.clone())
         }
     };
@@ -332,10 +353,10 @@ pub fn lower_shading(shading: &PdfShading, sink: &mut dyn ObjectSink) -> PdfObje
         dict.push(entry("AntiAlias", PdfObject::Bool(true)));
     }
     dict.extend(shading.extra.iter().cloned());
-    match object {
+    Ok(match object {
         Some(data) => PdfObject::Ref(sink.add(stream(dict, data))),
         None => PdfObject::Ref(sink.add(PdfObject::Dict(dict))),
-    }
+    })
 }
 //#endregion 🔖️Shadings
 
@@ -397,7 +418,7 @@ pub fn lift_ext_g_state(id: &str, dict: &[PdfDictEntry], source: &mut dyn Object
 /// ⬆️ Lowers an extended graphics state to its dictionary; `form_ref_of`/`font_ref_of` resolve
 /// the ids the typed state names.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn lower_ext_g_state(state: &PdfExtGState, sink: &mut dyn ObjectSink, form_ref_of: &mut dyn FnMut(&str) -> Option<PdfObject>, font_ref_of: &mut dyn FnMut(&str) -> Option<PdfObject>) -> PdfObject {
+pub fn lower_ext_g_state(state: &PdfExtGState, sink: &mut dyn ObjectSink, form_ref_of: &mut dyn FnMut(&str) -> Option<PdfObject>, font_ref_of: &mut dyn FnMut(&str) -> Option<PdfObject>) -> PResult<PdfObject> {
     let mut dict = vec![entry("Type", PdfObject::name("ExtGState"))];
     push_opt(&mut dict, "LW", state.line_width.map(PdfObject::number));
     push_opt(&mut dict, "LC", state.line_cap.map(|v| PdfObject::Int(v as u8 as i64)));
@@ -420,14 +441,14 @@ pub fn lower_ext_g_state(state: &PdfExtGState, sink: &mut dyn ObjectSink, form_r
             PdfSoftMask::Alpha { group, transfer } => {
                 let mut mask_dict = vec![entry("Type", PdfObject::name("Mask")), entry("S", PdfObject::name("Alpha"))];
                 push_opt(&mut mask_dict, "G", form_ref_of(group));
-                push_opt(&mut mask_dict, "TR", transfer.as_ref().map(|f| lower_function(f, sink)));
+                push_opt(&mut mask_dict, "TR", transfer.as_ref().map(|f| lower_function(f, sink)).transpose()?);
                 PdfObject::Dict(mask_dict)
             }
             PdfSoftMask::Luminosity { group, backdrop, transfer } => {
                 let mut mask_dict = vec![entry("Type", PdfObject::name("Mask")), entry("S", PdfObject::name("Luminosity"))];
                 push_opt(&mut mask_dict, "G", form_ref_of(group));
                 push_opt(&mut mask_dict, "BC", backdrop.as_ref().map(|v| PdfObject::numbers(v)));
-                push_opt(&mut mask_dict, "TR", transfer.as_ref().map(|f| lower_function(f, sink)));
+                push_opt(&mut mask_dict, "TR", transfer.as_ref().map(|f| lower_function(f, sink)).transpose()?);
                 PdfObject::Dict(mask_dict)
             }
         };
@@ -441,7 +462,7 @@ pub fn lower_ext_g_state(state: &PdfExtGState, sink: &mut dyn ObjectSink, form_r
     push_opt(&mut dict, "SM", state.smoothness.map(PdfObject::number));
     push_opt(&mut dict, "TK", state.text_knockout.map(PdfObject::Bool));
     dict.extend(state.extra.iter().cloned());
-    PdfObject::Dict(dict)
+    Ok(PdfObject::Dict(dict))
 }
 //#endregion 🔖️ExtGState
 

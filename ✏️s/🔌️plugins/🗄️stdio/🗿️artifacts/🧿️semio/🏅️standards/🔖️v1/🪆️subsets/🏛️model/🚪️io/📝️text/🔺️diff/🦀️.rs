@@ -10,7 +10,7 @@ use crate::standards::v1::subsets::model::io::text::snapshot::{encode_option, de
 use crate::standards::v1::subsets::model::schema::diff::*;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
 use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_triple, enc_named_triple};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_added, dec_named_triple, enc_named_added, enc_named_triple};
 use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
 use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};
@@ -373,32 +373,32 @@ pub(crate) fn dec_relation_diff(s: &str) -> Result<ModelRelationDiff, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_spatial_diff(d: &SpatialDiff) -> String {
-    enc_named_triple(d, |k: &String| enc_str(k), enc_spatial_node_diff, enc_spatial_node)
+    enc_named_triple(d, |k: &String| enc_str(k), enc_spatial_node_diff, |a| enc_named_added(a, enc_spatial_node))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_spatial_diff(s: &str) -> Result<SpatialDiff, String> {
-    dec_named_triple(s, dec_str, dec_spatial_node_diff, dec_spatial_node)
+    dec_named_triple(s, dec_str, dec_spatial_node_diff, |t| dec_named_added(t, dec_spatial_node))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_elements_diff(d: &ElementsDiff) -> String {
-    enc_named_triple(d, |k: &String| enc_str(k), enc_element_diff, enc_element)
+    enc_named_triple(d, |k: &String| enc_str(k), enc_element_diff, |a| enc_named_added(a, enc_element))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_elements_diff(s: &str) -> Result<ElementsDiff, String> {
-    dec_named_triple(s, dec_str, dec_element_diff, dec_element)
+    dec_named_triple(s, dec_str, dec_element_diff, |t| dec_named_added(t, dec_element))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_relations_diff(d: &RelationsDiff) -> String {
-    enc_named_triple(d, |k: &String| enc_str(k), enc_relation_diff, enc_relation)
+    enc_named_triple(d, |k: &String| enc_str(k), enc_relation_diff, |a| enc_named_added(a, enc_relation))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_relations_diff(s: &str) -> Result<RelationsDiff, String> {
-    dec_named_triple(s, dec_str, dec_relation_diff, dec_relation)
+    dec_named_triple(s, dec_str, dec_relation_diff, |t| dec_named_added(t, dec_relation))
 }
 }
 pub use diff_codec::*;

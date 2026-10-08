@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../.."
 name = "semio-s-artifact-space-space"
 version.workspace = true
 edition.workspace = true
@@ -55,7 +55,7 @@ semio-framework-os = { path = "../../../../../../../🧰️framework/🛍️prod
 
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async-macros = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

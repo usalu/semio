@@ -16,11 +16,12 @@ pub struct CreateShadingSurface {
     pub name: String,
     pub vertices_m: Vec<[f64; 3]>,
     pub transmittance_schedule_id: Option<crate::model::ScheduleId>,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_shading_surface(id: crate::model::EntityId, name: String, vertices_m: Vec<[f64; 3]>, transmittance_schedule_id: Option<crate::model::ScheduleId>) -> EnergyModelMutation {
-    EnergyModelMutation::CreateShadingSurface(CreateShadingSurface { id, name, vertices_m, transmittance_schedule_id })
+pub fn create_shading_surface(id: crate::model::EntityId, name: String, vertices_m: Vec<[f64; 3]>, transmittance_schedule_id: Option<crate::model::ScheduleId>, index: Option<u32>) -> EnergyModelMutation {
+    EnergyModelMutation::CreateShadingSurface(CreateShadingSurface { id, name, vertices_m, transmittance_schedule_id, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateShadingSurface {

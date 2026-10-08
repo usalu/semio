@@ -102,7 +102,6 @@ Feature: Apply every typed semio KIT mutation to the Nakagin Capsule Tower kit o
       | add-design                | {"prepare":[],"mutation":{"AddDesign":{"id":"1RSTENTWURF000000000AA","name":"Kapselgeschoss"}}} |
       | remove-design             | {"prepare":[],"mutation":{"RemoveDesign":{"id":"1o$D5QcDP68vy1YIk$DDV$"}}} |
       | edit-design               | {"prepare":[],"mutation":{"EditDesign":{"id":"1o$D5QcDP68vy1YIk$DDV$","pieces":[{"id":"0POPlhUSnC1REPvcqnensi","typeId":"0UyxhWPMj1p983Bl6$TZEY","transform":{"translation":{"x":0.0,"y":0.0,"z":0.0},"rotation":{"x":0.0,"y":0.0,"z":0.0,"w":1.0},"scale":{"x":1.0,"y":1.0,"z":1.0}}},{"id":"1tZkmTaMP4R8yLkBdfebfl","typeId":"0X0Bv8cZnBrPiyH9U4$zNu","transform":{"translation":{"x":-15850.0,"y":-8100.0,"z":2735.0},"rotation":{"x":0.0,"y":0.0,"z":1.0,"w":0.0},"scale":{"x":1.0,"y":2.0,"z":1.0}}}],"connections":[{"id":"3NLh69tTrEpfV9iDbwoXYL","connectingPieceId":"1tZkmTaMP4R8yLkBdfebfl","connectingPort":"b6b3121a-252b-4ba7-ac8d-152c1d0fece6","connectedPieceId":"0POPlhUSnC1REPvcqnensi","connectedPort":"c5465220-19ba-4443-8f1d-617c832dd13c"}]}}} |
-      | patch-snapshot | {"prepare": [], "mutation": {"PatchSnapshot": {"patch": {"operation": "set", "path": "/types/0/name", "value": "Kapsel, gepatcht"}}}} |
 
   @id-inverse
   @level-exhaustive
@@ -131,7 +130,6 @@ Feature: Apply every typed semio KIT mutation to the Nakagin Capsule Tower kit o
       | add-design                | {"prepare":[],"mutation":{"AddDesign":{"id":"1RSTENTWURF000000000AA","name":"Kapselgeschoss"}}} |
       | remove-design             | {"prepare":[],"mutation":{"RemoveDesign":{"id":"1o$D5QcDP68vy1YIk$DDV$"}}} |
       | edit-design               | {"prepare":[],"mutation":{"EditDesign":{"id":"1o$D5QcDP68vy1YIk$DDV$","pieces":[{"id":"0POPlhUSnC1REPvcqnensi","typeId":"0UyxhWPMj1p983Bl6$TZEY","transform":{"translation":{"x":0.0,"y":0.0,"z":0.0},"rotation":{"x":0.0,"y":0.0,"z":0.0,"w":1.0},"scale":{"x":1.0,"y":1.0,"z":1.0}}},{"id":"1tZkmTaMP4R8yLkBdfebfl","typeId":"0X0Bv8cZnBrPiyH9U4$zNu","transform":{"translation":{"x":-15850.0,"y":-8100.0,"z":2735.0},"rotation":{"x":0.0,"y":0.0,"z":1.0,"w":0.0},"scale":{"x":1.0,"y":2.0,"z":1.0}}}],"connections":[{"id":"3NLh69tTrEpfV9iDbwoXYL","connectingPieceId":"1tZkmTaMP4R8yLkBdfebfl","connectingPort":"b6b3121a-252b-4ba7-ac8d-152c1d0fece6","connectedPieceId":"0POPlhUSnC1REPvcqnensi","connectedPort":"c5465220-19ba-4443-8f1d-617c832dd13c"}]}}} |
-      | patch-snapshot | {"prepare": [], "mutation": {"PatchSnapshot": {"patch": {"operation": "set", "path": "/types/0/name", "value": "Kapsel, gepatcht"}}}} |
 
   @id-spec-vector
   @level-exhaustive

@@ -38,13 +38,9 @@ Feature: Apply every typed semio CAD mutation to the real committed drawing, aga
   replaces a TEXT entity with a DIMENSION so a variant-preserving shortcut fails, and the four
   `*-block-entity` verbs reach `be1` INSIDE the `door` block rather than a top-level entity.
 
-  One honest boundary, exercised at its edge rather than hidden: the vocabulary's own inverse of a
-  removal is the matching `add-…`, and `add-…` APPENDS to its name-keyed collection. Undoing a
-  removal therefore restores the value but not the position unless the removed entry was the last
-  one. `inverse-remove-entity` consequently removes the FINAL entity `h8` where `mutate-remove-entity`
-  removes the middle `h2`; both implementations agree on this and both fail identically at `h2`, so
-  it is a property of the vocabulary rather than a disagreement between codecs, and it is recorded
-  here and in the oracle manifest instead of being papered over by a tail-only forward parameter.
+  Positions are restored exactly: the vocabulary's inverse of a removal is the matching `add-…` carrying the
+  removed index (`at`), so `inverse-remove-entity` removes the MIDDLE entity `h2` just like `mutate-remove-entity`
+  and both implementations put it back where it stood.
 
   `spec-vector-` keeps the evidence this case rested on before the oracle existed: the committed
   `(before, mutation, after)` vector for each kind in this case's own `🧫️fixtures/`, now applied by
@@ -74,7 +70,6 @@ Feature: Apply every typed semio CAD mutation to the real committed drawing, aga
     Then the independent implementation and the subject agree on the resulting snapshot
     Examples:
       | id                        | mutation                                                                                                                                                                                       |
-      | set-snapshot              | {"mutation":"setSnapshot","snapshot":{"schema":"stdio.semio.cad","layers":[{"name":"0","colorIndex":7,"lineType":"CONTINUOUS","visible":true}],"blocks":[],"entities":[]}}                     |
       | add-layer                 | {"mutation":"addLayer","layer":{"name":"hidden","colorIndex":8,"lineType":"HIDDEN","visible":false}}                                                                                           |
       | remove-layer              | {"mutation":"removeLayer","name":"dim"}                                                                                                                                                        |
       | set-layer                 | {"mutation":"setLayer","name":"0","colorIndex":5,"lineType":"DASHED","visible":false}                                                                                                          |
@@ -89,18 +84,6 @@ Feature: Apply every typed semio CAD mutation to the real committed drawing, aga
       | remove-block-entity       | {"mutation":"removeBlockEntity","blockName":"door","handle":"be1"}                                                                                                                             |
       | set-block-entity-layer    | {"mutation":"setBlockEntityLayer","blockName":"door","handle":"be1","layer":"dim"}                                                                                                             |
       | set-block-entity-geometry | {"mutation":"setBlockEntityGeometry","blockName":"door","handle":"be1","entity":{"kind":"arc","center":{"x":0.0,"y":0.0},"radius":1.0,"startAngle":0.0,"endAngle":90.0}}                       |
-      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/layers/0/colorIndex", "value": 5}} |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real committed drawing
-    Given the real committed drawing asset://📐️drawing/🗣️.dsl.semio
-    When the no-mutation mutation is applied to the drawing parsed from it
-      """
-      {"mutation":"noMutation"}
-      """
-    Then the independent implementation and the subject agree on the resulting snapshot
 
   @id-inverse
   @level-exhaustive
@@ -114,7 +97,6 @@ Feature: Apply every typed semio CAD mutation to the real committed drawing, aga
     Then both sides restore the drawing and agree on the mutated and the restored snapshot
     Examples:
       | id                        | mutation                                                                                                                                                                                       |
-      | set-snapshot              | {"mutation":"setSnapshot","snapshot":{"schema":"stdio.semio.cad","layers":[{"name":"0","colorIndex":7,"lineType":"CONTINUOUS","visible":true}],"blocks":[],"entities":[]}}                     |
       | add-layer                 | {"mutation":"addLayer","layer":{"name":"hidden","colorIndex":8,"lineType":"HIDDEN","visible":false}}                                                                                           |
       | remove-layer              | {"mutation":"removeLayer","name":"dim"}                                                                                                                                                        |
       | set-layer                 | {"mutation":"setLayer","name":"0","colorIndex":5,"lineType":"DASHED","visible":false}                                                                                                          |
@@ -122,25 +104,13 @@ Feature: Apply every typed semio CAD mutation to the real committed drawing, aga
       | remove-block              | {"mutation":"removeBlock","name":"door"}                                                                                                                                                       |
       | set-block-base-point      | {"mutation":"setBlockBasePoint","name":"door","basePoint":{"x":2.5,"y":-1.0}}                                                                                                                  |
       | add-entity                | {"mutation":"addEntity","entity":{"handle":"h9","layer":"dim","entity":{"kind":"circle","center":{"x":9.0,"y":9.0},"radius":0.5}}}                                                             |
-      | remove-entity             | {"mutation":"removeEntity","handle":"h8"}                                                                                                                                                      |
+      | remove-entity             | {"mutation":"removeEntity","handle":"h2"}                                                                                                                                                      |
       | set-entity-layer          | {"mutation":"setEntityLayer","handle":"h1","layer":"dim"}                                                                                                                                      |
       | set-entity-geometry       | {"mutation":"setEntityGeometry","handle":"h5","entity":{"kind":"dimension","defPoint":{"x":0.0,"y":0.0},"textPosition":{"x":1.0,"y":1.0},"measurement":4.2,"text":"4.20m"}}                    |
       | add-block-entity          | {"mutation":"addBlockEntity","blockName":"door","entity":{"handle":"be2","layer":"dim","entity":{"kind":"line","a":{"x":1.0,"y":0.0},"b":{"x":1.0,"y":1.0}}}}                                  |
       | remove-block-entity       | {"mutation":"removeBlockEntity","blockName":"door","handle":"be1"}                                                                                                                             |
       | set-block-entity-layer    | {"mutation":"setBlockEntityLayer","blockName":"door","handle":"be1","layer":"dim"}                                                                                                             |
       | set-block-entity-geometry | {"mutation":"setBlockEntityGeometry","blockName":"door","handle":"be1","entity":{"kind":"arc","center":{"x":0.0,"y":0.0},"radius":1.0,"startAngle":0.0,"endAngle":90.0}}                       |
-      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/layers/0/colorIndex", "value": 5}} |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing no-mutation restores the real committed drawing
-    Given the real committed drawing asset://📐️drawing/🗣️.dsl.semio
-    When the no-mutation mutation is applied to the drawing parsed from it and each side undoes it with its own computed inverse
-      """
-      {"mutation":"noMutation"}
-      """
-    Then both sides restore the drawing and agree on the mutated and the restored snapshot
 
   @id-spec-vector
   @level-exhaustive
@@ -151,8 +121,6 @@ Feature: Apply every typed semio CAD mutation to the real committed drawing, aga
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id | fixture |
-      | no-mutation | ⏸️no-mutation |
-      | set-snapshot | 📸️set-snapshot |
       | add-layer | 🗂️add-layer |
       | remove-layer | 🧹️remove-layer |
       | set-layer | 🎚️set-layer |
@@ -174,6 +142,6 @@ Feature: Apply every typed semio CAD mutation to the real committed drawing, aga
   Scenario: Re-emit both committed encodings of the real drawing from the parsed snapshot
     Given the real committed drawing asset://📐️drawing/🗣️.dsl.semio
     And its committed binary twin asset://📐️drawing/🎒️.pack.semio
-    And the committed specification vector shared://📐️mutate-semio-cad/⏸️no-mutation/🦠️mutation/🔣️.json whose before-snapshot is that artifact decoded
+    And the committed specification vector shared://📐️mutate-semio-cad/✂️remove-block-entity/🦠️mutation/🔣️.json whose before-snapshot is that artifact decoded
     When each implementation parses the text artifact, prints it back, decodes the binary twin and re-encodes it
     Then both reproduce the two committed files byte for byte and agree on the drawing and on the digests of what they emitted

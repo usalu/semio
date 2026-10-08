@@ -1,8 +1,15 @@
 {
-  "artifact": null,
   "annex": null,
   "members": {
-    "values": []
+    "removed": [
+      "beam-B1"
+    ],
+    "added": [],
+    "modified": []
   },
-  "connections": null
+  "connections": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

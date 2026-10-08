@@ -1,0 +1,651 @@
+
+use super::*;
+
+#[test]
+fn neutral_interaction_interfaces_agree_with_independent_serde_wires(){
+    fn agree<T:ToValue+serde::Serialize>(value:&T,expected:&serde_json::Value){assert_eq!(serde_json::to_value(value).unwrap(),*expected);assert_eq!(serde_json::to_value(value.to_value()).unwrap(),*expected);}
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🔌️ports/🔣️.json")).unwrap();
+    let selection=DomainSelection{granularity:"node".into(),ids:vec!["α".into(),"🧬".into()],anchor_id:Some("α".into())};agree(&selection,&fixture["selection"]);
+    let hover=DomainHover{channel:"pointer".into(),ids:vec!["🧬".into()]};agree(&hover,&fixture["hover"]);
+    for(method,expected)in[SelectionMethod::Pick,SelectionMethod::Rectangle,SelectionMethod::Lasso].iter().zip(fixture["methods"].as_array().unwrap()){agree(method,expected);}
+    agree(&Viewport2d{x:-12.5,y:8.0,zoom:1.25},&fixture["viewport"]);
+    println!("[DEBUG] neutral Surface interaction and viewport ports preserve their defining package wire contracts against independent Serde");
+}
+
+#[test]
+fn fixture_from_workflow_json() {
+    let nodes = r#"[{"id":"a","label":"Alpha","x":10,"y":20,"inputs":[],"outputs":[{"id":"out","label":"Out"}]}]"#;
+    let nodes: Vec<GraphNodeRecord> = serde_json::from_str(nodes).expect("independent JSON oracle");
+    let fixture = fixture_from_node_graph_records(&nodes, &[], Some(&Viewport2d::default()));
+    assert_eq!(fixture.nodes.len(), 1);
+    assert_eq!(fixture.nodes[0].id, "a");
+}
+
+#[test]
+fn graph_host_syncs_selection_from_framework_interaction_state() {
+    let mut host = GraphHost::default();
+    let payload = NodeGraphScenePayload {
+        nodes: vec![GraphNodeRecord { id: "a".into(), label: Some("A".into()), outputs: Some(vec![GraphPortRecord { id: "out".into(), ..Default::default() }]), ..Default::default() }],
+        edges: Vec::new(),
+        viewport: Some(Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 }),
+        ..Default::default()
+    };
+    host.sync_from_payload(&payload).expect("sync");
+    let selection = DomainSelection { granularity: "node".into(), ids: vec!["a".into()], anchor_id: None };
+    host.sync_interaction(Some(&selection), None);
+    assert_eq!(host.dag.selected_node_ids(), vec!["a"]);
+}
+
+#[test]
+fn graph_host_pointer_up_after_plain_click_gathers_one_pick_target() {
+    let mut host = GraphHost::default();
+    let payload = payload_with_node("a");
+    host.sync_from_payload(&payload).expect("sync");
+    host.set_viewport(400, 400, 1.0);
+    host.pointer_down_screen([200.0, 200.0], 0, false, false, false, false);
+    host.pointer_up_screen(200.0, 200.0, false, false, false);
+    let gather = host.take_selection_gather().expect("gather");
+    assert_eq!(gather.target_ids, vec!["a".to_string()]);
+    assert_eq!(gather.method, SelectionMethod::Pick);
+    assert!(host.take_selection_gather().is_none(), "gather is take-once");
+}
+
+#[test]
+fn set_canvas_theme_dark_applies_board_palette() {
+    let mut host = GraphHost::default();
+    host.set_canvas_theme_dark(true);
+    let dark_stroke = host.dag.canvas_theme.node_stroke.to_rgba8();
+    host.set_canvas_theme_dark(false);
+    let light_stroke = host.dag.canvas_theme.node_stroke.to_rgba8();
+    assert_ne!(dark_stroke.r, light_stroke.r);
+}
+
+//#region 🔖️PortHelpers
+#[test]
+fn port_label_uses_last_at_segment_when_label_missing() {
+    let port = GraphPortRecord { id: "node@channel@foo".into(), label: None, ..Default::default() };
+    assert_eq!(port_label(&port), "foo");
+}
+
+#[test]
+fn port_label_falls_back_to_full_id_without_at() {
+    let port = GraphPortRecord { id: "solo".into(), label: None, ..Default::default() };
+    assert_eq!(port_label(&port), "solo");
+}
+
+#[test]
+fn port_label_prefers_explicit_label() {
+    let port = GraphPortRecord { id: "node@out".into(), label: Some("Output".into()), ..Default::default() };
+    assert_eq!(port_label(&port), "Output");
+}
+
+#[test]
+fn port_to_io_copies_optional_metadata() {
+    let port = GraphPortRecord { id: "p1".into(), label: Some("Speed".into()), code: Some("SPD".into()), abbreviation: Some("Sp".into()), full_name: Some("Speed Value".into()), artifact_kind: Some("number".into()), ..Default::default() };
+    let spec = port_to_io(&port);
+    assert_eq!(spec.id, "p1");
+    assert_eq!(spec.label, "Speed");
+    assert_eq!(spec.code, "SPD");
+    assert_eq!(spec.abbreviation, "Sp");
+    assert_eq!(spec.full_name, "Speed Value");
+    assert_eq!(spec.artifact_kind.as_deref(), Some("number"));
+}
+
+#[test]
+fn port_to_io_uses_simple_defaults_when_optional_fields_absent() {
+    let port = GraphPortRecord { id: "p2".into(), ..Default::default() };
+    let spec = port_to_io(&port);
+    assert_eq!(spec.id, "p2");
+    assert!(spec.artifact_kind.is_none());
+}
+//#endregion 🔖️PortHelpers
+
+//#region 🔖️NodeRecordConversion
+#[test]
+fn node_record_to_spec_builds_app_instance_kind() {
+    let record = GraphNodeRecord { id: "n1".into(), label: Some("Widget".into()), instance_id: Some("inst-1".into()), plugin_id: None, app_id: None, ..Default::default() };
+    let spec = node_record_to_spec(&record);
+    match spec.kind {
+        DagNodeKind::AppInstance { instance_id, plugin_id, app_id, .. } => {
+            assert_eq!(instance_id, "inst-1");
+            assert_eq!(plugin_id, "app");
+            assert_eq!(app_id, "n1");
+        }
+        other => panic!("expected AppInstance kind, got {other:?}"),
+    }
+    assert_eq!(spec.abbreviation, "Wid");
+}
+
+#[test]
+fn node_record_to_spec_defaults_computation_kind_without_instance_id() {
+    let record = GraphNodeRecord { id: "n2".into(), label: Some("Compute".into()), ..Default::default() };
+    let spec = node_record_to_spec(&record);
+    assert!(matches!(spec.kind, DagNodeKind::Computation { .. }));
+}
+
+#[test]
+fn node_record_to_spec_defaults_position_when_missing() {
+    let record = GraphNodeRecord { id: "n3".into(), label: Some("Anchor".into()), ..Default::default() };
+    let spec = node_record_to_spec(&record);
+    assert_eq!(spec.x, 0.0);
+    assert_eq!(spec.y, 0.0);
+    assert_eq!(spec.icon, "emoji:🔷️");
+}
+
+#[test]
+fn node_record_to_spec_falls_back_to_id_when_label_missing() {
+    let record = GraphNodeRecord { id: "n4".into(), ..Default::default() };
+    let spec = node_record_to_spec(&record);
+    // 🔤️ Computation kind routes through `DagNodeSpec::computation`, which pascal-cases the display name.
+    assert_eq!(spec.name, "N4");
+}
+//#endregion 🔖️NodeRecordConversion
+
+//#region 🔖️FixtureFromRecords
+#[test]
+fn fixture_from_node_graph_records_uses_shared_default_viewport() {
+    let fixture = fixture_from_node_graph_records(&[], &[], None);
+    assert_eq!(fixture.schema, "dag.host_snapshot");
+    assert!(fixture.nodes.is_empty());
+    assert!(fixture.edges.is_empty());
+    assert_eq!(fixture.camera.zoom, 1.0);
+}
+
+#[test]
+fn fixture_from_node_graph_records_builds_composite_edge_endpoints() {
+    let nodes = r#"[{"id":"a","outputs":[{"id":"out"}]},{"id":"b","inputs":[{"id":"in"}]}]"#;
+    let edges = r#"[{"id":"e1","sourceNodeId":"a","sourcePortId":"out","targetNodeId":"b","targetPortId":"in"}]"#;
+    let nodes: Vec<GraphNodeRecord> = serde_json::from_str(nodes).expect("independent node oracle");
+    let edges: Vec<GraphEdgeRecord> = serde_json::from_str(edges).expect("independent edge oracle");
+    let fixture = fixture_from_node_graph_records(&nodes, &edges, None);
+    assert_eq!(fixture.edges.len(), 1);
+    assert_eq!(fixture.edges[0].source, "a@out");
+    assert_eq!(fixture.edges[0].target, "b@in");
+}
+
+#[test]
+fn graph_host_joins_node_prefixed_port_ids_onto_one_engine_edge() {
+    let nodes = r#"[{"id":"a","outputs":[{"id":"a@number"}]},{"id":"b","inputs":[{"id":"b@"}]}]"#;
+    let edges = r#"[{"id":"wire","sourceNodeId":"a","sourcePortId":"number","targetNodeId":"b","targetPortId":""}]"#;
+    let nodes: Vec<GraphNodeRecord> = serde_json::from_str(nodes).expect("independent node oracle");
+    let edges: Vec<GraphEdgeRecord> = serde_json::from_str(edges).expect("independent edge oracle");
+    let mut host = GraphHost::default();
+    host.sync_from_payload(&NodeGraphScenePayload {
+        nodes,
+        edges,
+        viewport: Some(Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 }),
+        ..Default::default()
+    })
+    .expect("sync");
+    assert_eq!(host.dag.host_snapshot.edges.len(), 1);
+    assert_eq!(host.dag.host_snapshot.edges[0].source, "a@number");
+    assert_eq!(host.dag.host_snapshot.edges[0].target, "b@");
+    assert_eq!(host.dag.engine.edges.len(), 1, "prefixed scene port ids must still create an engine edge");
+}
+
+#[test]
+fn graph_host_refuses_a_synapse_whose_port_is_missing_on_the_widget() {
+    let nodes = r#"[{"id":"a","outputs":[{"id":"a@number"}]},{"id":"b","inputs":[{"id":"b@"}]}]"#;
+    let edges = r#"[{"id":"dangling","sourceNodeId":"a","sourcePortId":"number","targetNodeId":"b","targetPortId":"missing"}]"#;
+    let nodes: Vec<GraphNodeRecord> = serde_json::from_str(nodes).expect("independent node oracle");
+    let edges: Vec<GraphEdgeRecord> = serde_json::from_str(edges).expect("independent edge oracle");
+    let mut host = GraphHost::default();
+    host.sync_from_payload(&NodeGraphScenePayload {
+        nodes,
+        edges,
+        viewport: Some(Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 }),
+        ..Default::default()
+    })
+    .expect("sync");
+    assert_eq!(host.dag.engine.edges.len(), 0, "missing target port must not paint a dangling wire");
+}
+
+#[test]
+fn node_graph_scene_payload_rejects_an_invalid_typed_viewport() {
+    let err = NodeGraphScenePayload::from_json(&serde_json::json!({ "viewport": { "x": 0.0, "y": 0.0, "zoom": 0.0 } })).unwrap_err();
+    assert!(matches!(err, NodeGraphError::Json(_)));
+}
+
+#[test]
+fn neutral_json_refusals_expose_only_the_defining_general_value_error() {
+    let corpus: Value = serde_json::from_str(include_str!("../../⚠️refusal/🧫️fixtures/🔣️.json")).expect("refusal corpus");
+    let rows = corpus["cases"].as_array().expect("refusal cases");
+    assert_eq!(rows.len(), 6);
+    for row in rows {
+        let text = row["text"].as_str().expect("JSON source");
+        let oracle = serde_json::from_str::<Value>(text).and_then(|value| {
+            value.get("viewport").map(|viewport| serde_json::from_value::<Viewport2d>(viewport.clone()).map(|_| ())).unwrap_or(Ok(()))
+        });
+        assert!(oracle.is_err(), "independent refusal {}", row["name"]);
+        let error = GraphHost::default().sync_from_scene_json(text).expect_err("neutral JSON refusal");
+        match &error {
+            NodeGraphError::Json(error) => assert_eq!(error.kind, ValueRefusalKind::InvalidValue),
+            other => panic!("unexpected first-party refusal {other}"),
+        }
+        assert!(!error.to_string().is_empty());
+        assert!(std::error::Error::source(&error).unwrap().downcast_ref::<ValueError>().is_some());
+    }
+    println!("[DEBUG] Six independent Serde JSON/viewport refusals expose the defining General ValueError through the Surface public error port");
+}
+
+#[test]
+fn node_graph_scene_viewport_matches_the_shared_neutral_contract() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../🖱️ui/🪟️viewport/🧫️fixtures/🪟️poses/🔣️.json")).expect("shared viewport fixture");
+    let mut cases = 0;
+    for row in fixture["cases"].as_array().expect("viewport cases").iter().filter(|row| row["dimension"] == "2d") {
+        let value = row["value"].clone();
+        let valid = row["valid"].as_bool().expect("valid flag");
+        let decoded = NodeGraphScenePayload::from_json(&serde_json::json!({ "viewport": value.clone() }));
+        let oracle = serde_json::from_value::<Viewport2d>(value);
+        assert_eq!(decoded.is_ok(), valid, "{}", row["name"]);
+        assert_eq!(decoded.is_ok(), oracle.is_ok(), "{} independent serde oracle", row["name"]);
+        cases += 1;
+    }
+    assert_eq!(cases, 8);
+}
+
+#[test]
+fn fixture_from_node_graph_records_reads_custom_viewport() {
+    let fixture = fixture_from_node_graph_records(&[], &[], Some(&Viewport2d { x: 5.0, y: -3.0, zoom: 2.5 }));
+    assert_eq!(fixture.camera.x, 5.0);
+    assert_eq!(fixture.camera.y, -3.0);
+    assert_eq!(fixture.camera.zoom, 2.5);
+}
+//#endregion 🔖️FixtureFromRecords
+
+//#region 🔖️ScenePayloadFromJson
+#[test]
+fn node_graph_scene_payload_from_json_defaults_missing_fields() {
+    let value = serde_json::json!({});
+    let payload = NodeGraphScenePayload::from_json(&value).expect("empty payload");
+    assert!(payload.nodes.is_empty());
+    assert!(payload.edges.is_empty());
+    assert!(payload.viewport.is_none());
+    assert!(payload.controls_json.is_none());
+}
+
+#[test]
+fn node_graph_scene_payload_from_json_reads_optional_fields() {
+    let value = serde_json::json!({
+        "nodes": [{"id": "1", "x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0}],
+        "edges": [{"id": "2", "sourceNodeId": "a", "sourcePortId": "out", "targetNodeId": "b", "targetPortId": "in"}],
+        "viewport": {"x": 0.0, "y": 0.0, "zoom": 1.0},
+        "previewOffJson": "[]",
+        "lodJson": "{}",
+        "controlsJson": "ctl",
+        "clustersJson": "clu",
+        "computingJson": "{}",
+        "capabilitiesJson": "cap",
+        "hostSnapshotJson": "fix",
+    });
+    let payload = NodeGraphScenePayload::from_json(&value).expect("typed payload");
+    assert_eq!(payload.nodes.len(), 1);
+    assert_eq!(payload.edges.len(), 1);
+    assert_eq!(payload.controls_json.as_deref(), Some("ctl"));
+    assert_eq!(payload.clusters_json.as_deref(), Some("clu"));
+    assert_eq!(payload.capabilities_json.as_deref(), Some("cap"));
+    assert_eq!(payload.host_snapshot_json.as_deref(), Some("fix"));
+}
+//#endregion 🔖️ScenePayloadFromJson
+
+//#region 🔖️GraphHostSync
+fn payload_with_node(id: &str) -> NodeGraphScenePayload {
+    NodeGraphScenePayload {
+        nodes: vec![GraphNodeRecord {
+            id: id.into(),
+            label: Some("A".into()),
+            x: Some(0.0),
+            y: Some(0.0),
+            outputs: Some(vec![GraphPortRecord { id: "out".into(), ..Default::default() }]),
+            inputs: Some(vec![GraphPortRecord { id: "in".into(), ..Default::default() }]),
+            ..Default::default()
+        }],
+        edges: Vec::new(),
+        viewport: Some(Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 }),
+        ..Default::default()
+    }
+}
+
+/// 🛍️ The app-static palette catalogue arrives on its OWN channel — never on a scene payload, whose
+/// fixed 32 KiB admission it would blow with real operator sets installed
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END §3.1) — and a scene sync must never clear it.
+#[test]
+fn graph_host_keeps_the_app_catalogue_across_scene_syncs() {
+    let mut host = GraphHost::default();
+    let payload = payload_with_node("a");
+    host.set_catalogue_json("first");
+    host.sync_from_payload(&payload).expect("sync");
+    assert_eq!(host.catalogue_json, "first");
+    host.set_catalogue_json("second");
+    host.sync_from_payload(&payload).expect("sync");
+    assert_eq!(host.catalogue_json, "second");
+}
+
+#[test]
+fn graph_host_sync_interaction_sets_hover_node_only() {
+    let mut host = GraphHost::default();
+    let payload = payload_with_node("a");
+    host.sync_from_payload(&payload).expect("sync");
+    let hover = DomainHover { channel: "pointer".into(), ids: vec!["a".into()] };
+    host.sync_interaction(None, Some(&hover));
+    assert_eq!(host.hovered_node_id().as_deref(), Some("a"));
+    assert_eq!(host.hovered_channel_json(), "null");
+}
+
+#[test]
+fn graph_host_sync_interaction_clears_hover_when_absent() {
+    let mut host = GraphHost::default();
+    let payload = payload_with_node("a");
+    host.sync_from_payload(&payload).expect("sync");
+    let hover = DomainHover { channel: "pointer".into(), ids: vec!["a".into()] };
+    host.sync_interaction(None, Some(&hover));
+    assert_eq!(host.hovered_node_id().as_deref(), Some("a"));
+    host.sync_interaction(None, None);
+    assert_eq!(host.hovered_node_id(), None);
+}
+
+#[test]
+fn graph_host_sync_from_payload_dims_preview_off_nodes() {
+    let mut host = GraphHost::default();
+    let mut payload = payload_with_node("a");
+    payload.preview_off_json = Some(r#"["a"]"#.into());
+    host.sync_from_payload(&payload).expect("sync");
+    assert_eq!(host.dag.dimmed_node_ids(), vec!["a".to_string()]);
+}
+
+#[test]
+fn graph_host_sync_from_payload_applies_lod_settings() {
+    let mut host = GraphHost::default();
+    let mut payload = payload_with_node("a");
+    payload.lod_json = Some(r#"{"automatic":false,"lod":"micro","proximityDistance":12.5,"gridVisible":false,"gridSnapEnabled":true,"gridFactor":2.0}"#.into());
+    host.sync_from_payload(&payload).expect("sync");
+    assert_eq!(host.dag.draw_lod_label(), "micro");
+}
+
+#[test]
+fn graph_host_sync_from_payload_applies_computing_progress() {
+    let mut host = GraphHost::default();
+    let mut payload = payload_with_node("a");
+    payload.computing_json = Some(r#"{"active":"a","stale":[]}"#.into());
+    host.sync_from_payload(&payload).expect("sync");
+    assert_eq!(host.dag.hovered_node_id(), None);
+}
+
+#[test]
+fn graph_host_sync_from_scene_json_parses_raw_json() {
+    let mut host = GraphHost::default();
+    let scene = r#"{"nodes":[{"id":"a","x":0.0,"y":0.0,"width":1.0,"height":1.0,"outputs":[{"id":"out"}]}],"edges":[],"viewport":{"x":0,"y":0,"zoom":1}}"#;
+    host.sync_from_scene_json(scene).expect("sync");
+    assert_eq!(host.dag.host_snapshot.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);
+}
+
+#[test]
+fn graph_host_sync_from_scene_pack_decodes_pack_shell() {
+    let mut host = GraphHost::default();
+    let scene = serde_json::json!({
+        "nodes": [{"id": "a", "x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0, "outputs": [{"id": "out"}]}],
+        "edges": [],
+        "viewport": {"x": 0.0, "y": 0.0, "zoom": 1.0}
+    });
+    let dsl = semio_framework_value::DslValue::from(&scene);
+    let bytes = store::pack_rt::encode_pack_value(&dsl);
+    host.sync_from_scene_pack(&bytes).expect("sync");
+    assert_eq!(host.dag.host_snapshot.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);
+}
+
+#[test]
+fn graph_host_sync_from_scene_json_rejects_invalid_json() {
+    let mut host = GraphHost::default();
+    let err = host.sync_from_scene_json("not json").unwrap_err();
+    assert!(matches!(err, NodeGraphError::Json(_)));
+}
+//#endregion 🔖️GraphHostSync
+
+//#region 🔖️GraphHostQueries
+#[test]
+fn graph_host_viewport_reflects_typed_initial_scene_viewport() {
+    let mut host = GraphHost::default();
+    let mut payload = payload_with_node("a");
+    payload.viewport = Some(Viewport2d { x: 11.0, y: 22.0, zoom: 3.0 });
+    host.sync_from_payload(&payload).expect("sync");
+    assert_eq!(host.viewport(), Viewport2d { x: 11.0, y: 22.0, zoom: 3.0 });
+}
+
+#[test]
+fn graph_host_keeps_live_viewport_when_the_scene_echo_lags() {
+    let mut host = GraphHost::default();
+    let mut payload = payload_with_node("a");
+    payload.viewport = Some(Viewport2d { x: 11.0, y: 22.0, zoom: 3.0 });
+    host.sync_from_payload(&payload).expect("initial sync");
+    host.set_viewport(400, 400, 1.0);
+    host.wheel_screen(200.0, 200.0, 0.0, -10.0, true);
+    let live = host.viewport();
+    host.sync_from_payload(&payload).expect("echo sync");
+    assert_eq!(host.viewport(), live);
+    payload.nodes.push(GraphNodeRecord { id: "b".into(), ..Default::default() });
+    host.sync_from_payload(&payload).expect("content sync");
+    assert_eq!(host.viewport(), live);
+}
+
+#[test]
+fn graph_host_selected_node_ids_json_matches_selection() {
+    let mut host = GraphHost::default();
+    let payload = payload_with_node("a");
+    host.sync_from_payload(&payload).expect("sync");
+    let selection = DomainSelection { granularity: "node".into(), ids: vec!["a".into()], anchor_id: None };
+    host.sync_interaction(Some(&selection), None);
+    assert_eq!(host.selected_node_ids_json(), r#"["a"]"#);
+}
+
+#[test]
+fn graph_host_wheel_screen_pan_without_zoom_gesture() {
+    let mut host = GraphHost::default();
+    host.set_viewport(400, 400, 1.0);
+    let before = host.dag.host_snapshot.camera.y;
+    host.wheel_screen(200.0, 200.0, 0.0, 10.0, false);
+    assert!(host.dag.host_snapshot.camera.y < before);
+    assert_eq!(host.dag.host_snapshot.camera.zoom, 1.0);
+}
+
+/// 🖱️ A sideways wheel (trackpad horizontal scroll, a two-finger pinch's sideways drift) pans the camera
+/// horizontally by the same law the vertical axis follows — the delta divided by zoom — and leaves the
+/// other axis and the zoom untouched. U4 measured the vertical half live (Δy = −80/2.8531); this is the
+/// horizontal half that the dropped `delta_x` used to lose.
+#[test]
+fn graph_host_wheel_screen_pans_horizontally_by_delta_x_over_zoom() {
+    let mut host = GraphHost::default();
+    host.set_viewport(400, 400, 1.0);
+    host.wheel_screen(200.0, 200.0, 0.0, -10.0, true);
+    let before = host.viewport();
+    host.wheel_screen(200.0, 200.0, 40.0, 0.0, false);
+    let after = host.viewport();
+    assert_eq!(after.x, before.x - 40.0 / before.zoom);
+    assert_eq!(after.y, before.y);
+    assert_eq!(after.zoom, before.zoom);
+}
+
+#[test]
+fn graph_host_wheel_screen_zoom_gesture_changes_zoom() {
+    let mut host = GraphHost::default();
+    host.set_viewport(400, 400, 1.0);
+    host.wheel_screen(200.0, 200.0, 0.0, -10.0, true);
+    assert!(host.dag.host_snapshot.camera.zoom > 1.0);
+}
+
+/// 🖱️ A whole scroll gesture is board work: every tick moves the camera here, and nothing needs to
+/// leave this host until the ticks stop.
+///
+/// The renderer used to read `viewport()` and publish `nodeGraphViewport` to the plugin on EVERY
+/// notch, which cost a guest invocation, a ui refresh and a React commit per tick and left the board
+/// painting once for a whole scroll (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+/// `📓️flow-scroll-render-perf-2026-09-15.md`). This pins the half that makes the host-side rule sound:
+/// the camera after N ticks is a pure function of the N ticks, so a reader that asks once at the end
+/// sees exactly what a reader that asked after every tick would have seen last.
+#[test]
+fn graph_host_wheel_ticks_accumulate_on_the_board_without_a_publication() {
+    let mut host = GraphHost::default();
+    host.set_viewport(400, 400, 1.0);
+    let mut zooms = Vec::new();
+    for _ in 0..30 {
+        host.wheel_screen(200.0, 200.0, 0.0, -10.0, true);
+        zooms.push(host.viewport().zoom);
+    }
+    assert!(zooms.windows(2).all(|pair| pair[1] >= pair[0]), "a zoom-in scroll never zooms out");
+    assert!(zooms.last().copied().unwrap() > 1.0);
+
+    let mut settled = GraphHost::default();
+    settled.set_viewport(400, 400, 1.0);
+    for _ in 0..30 {
+        settled.wheel_screen(200.0, 200.0, 0.0, -10.0, true);
+    }
+    assert_eq!(settled.viewport(), host.viewport(), "one read at settle equals the last of thirty reads");
+}
+
+/// 🖱️ A drag-pan is board work too: the camera the release publishes is the one the moves built.
+#[test]
+fn graph_host_pan_ticks_accumulate_on_the_board_without_a_publication() {
+    let mut host = GraphHost::default();
+    host.set_viewport(400, 400, 1.0);
+    let before = host.viewport().y;
+    for _ in 0..60 {
+        host.wheel_screen(200.0, 200.0, 0.0, 10.0, false);
+    }
+    assert!(host.viewport().y < before);
+    assert_eq!(host.viewport().zoom, 1.0, "a pan never changes zoom");
+}
+
+#[test]
+fn graph_wheel_plan_matches_direct_and_rejects_stale_revision() {
+    let mut direct = GraphHost::default();
+    let mut planned = GraphHost::default();
+    direct.set_viewport(400, 400, 1.0);
+    planned.set_viewport(400, 400, 1.0);
+    direct.wheel_screen(160.0, 190.0, 0.0, -10.0, true);
+    let plan = planned.plan_wheel(160.0, 190.0, 0.0, -10.0, true);
+    assert!(planned.commit_wheel(plan));
+    assert_eq!(direct.viewport(), planned.viewport());
+
+    let stale = planned.plan_wheel(160.0, 190.0, 0.0, -10.0, true);
+    planned.set_viewport(401, 400, 1.0);
+    let replacement = planned.viewport();
+    assert!(!planned.commit_wheel(stale));
+    assert_eq!(planned.viewport(), replacement);
+}
+
+#[test]
+fn graph_pointer_plan_matches_direct_click_and_rejects_stale_revision() {
+    let payload = payload_with_node("a");
+    let mut direct = GraphHost::default();
+    let mut planned = GraphHost::default();
+    direct.sync_from_payload(&payload).expect("direct sync");
+    planned.sync_from_payload(&payload).expect("planned sync");
+    direct.set_viewport(400, 400, 1.0);
+    planned.set_viewport(400, 400, 1.0);
+
+    direct.pointer_down_screen([200.0, 200.0], 0, false, false, false, false);
+    direct.pointer_up_screen(200.0, 200.0, false, false, false);
+    let down = planned.plan_pointer(dag::DagPointerIntent { phase: dag::DagPointerPhase::Down, x: 200.0, y: 200.0, button: 0, shift: false, ctrl_or_meta: false, alt: false, pan: false }).expect("down plan");
+    assert!(planned.commit_pointer(down));
+    let up = planned.plan_pointer(dag::DagPointerIntent { phase: dag::DagPointerPhase::Up, x: 200.0, y: 200.0, button: 0, shift: false, ctrl_or_meta: false, alt: false, pan: false }).expect("up plan");
+    assert!(planned.commit_pointer(up));
+    assert_eq!(direct.dag.selected_node_ids(), planned.dag.selected_node_ids());
+
+    let stale = planned.plan_pointer(dag::DagPointerIntent { phase: dag::DagPointerPhase::Down, x: 200.0, y: 200.0, button: 0, shift: false, ctrl_or_meta: false, alt: false, pan: true }).expect("stale plan");
+    planned.set_viewport(401, 400, 1.0);
+    let camera = planned.viewport();
+    assert!(!planned.commit_pointer(stale));
+    assert_eq!(planned.viewport(), camera);
+}
+
+#[test]
+fn graph_host_pointer_click_selects_node() {
+    let mut host = GraphHost::default();
+    let payload = payload_with_node("a");
+    host.sync_from_payload(&payload).expect("sync");
+    host.set_viewport(400, 400, 1.0);
+    host.pointer_down_screen([200.0, 200.0], 0, false, false, false, false);
+    host.pointer_up_screen(200.0, 200.0, false, false, false);
+    assert_eq!(host.dag.selected_node_ids(), vec!["a".to_string()]);
+}
+
+#[test]
+fn graph_host_pick_targets_at_screen_json_finds_node() {
+    let mut host = GraphHost::default();
+    let payload = payload_with_node("a");
+    host.sync_from_payload(&payload).expect("sync");
+    host.set_viewport(400, 400, 1.0);
+    let json = host.pick_targets_at_screen_json(200.0, 200.0);
+    assert!(json.contains("\"a\""));
+}
+
+#[test]
+fn graph_host_entity_screen_json_visible_for_known_node() {
+    let mut host = GraphHost::default();
+    let payload = payload_with_node("a");
+    host.sync_from_payload(&payload).expect("sync");
+    host.set_viewport(400, 400, 1.0);
+    let json = host.entity_screen_json("node", "a");
+    assert!(json.contains("\"visible\":true"));
+}
+
+#[test]
+fn graph_host_entity_screen_json_invisible_for_unknown_node() {
+    let host = GraphHost::default();
+    let json = host.entity_screen_json("node", "missing");
+    assert_eq!(json, r#"{"visible":false}"#);
+}
+
+#[test]
+fn graph_host_align_selection_errors_on_unknown_mode() {
+    let mut host = GraphHost::default();
+    let payload = payload_with_node("a");
+    host.sync_from_payload(&payload).expect("sync");
+    let selection = DomainSelection { granularity: "node".into(), ids: vec!["a".into()], anchor_id: None };
+    host.sync_interaction(Some(&selection), None);
+    let err = host.align_selection("bogusMode").unwrap_err();
+    assert!(matches!(err, NodeGraphError::Dag(_)));
+}
+
+#[test]
+fn graph_host_align_selection_ok_for_single_node() {
+    let mut host = GraphHost::default();
+    let payload = payload_with_node("a");
+    host.sync_from_payload(&payload).expect("sync");
+    let selection = DomainSelection { granularity: "node".into(), ids: vec!["a".into()], anchor_id: None };
+    host.sync_interaction(Some(&selection), None);
+    host.align_selection("alignLeft").expect("align");
+}
+
+#[test]
+fn graph_host_host_snapshot_json_round_trips_nodes() {
+    let mut host = GraphHost::default();
+    let payload = payload_with_node("a");
+    host.sync_from_payload(&payload).expect("sync");
+    let json = host.host_snapshot_json().expect("fixture json");
+    assert!(json.contains("\"a\""));
+}
+
+#[test]
+fn graph_host_label_overlay_paint_state_json_includes_camera() {
+    let mut host = GraphHost::default();
+    let payload = payload_with_node("a");
+    host.sync_from_payload(&payload).expect("sync");
+    let json = host.label_overlay_paint_state_json().expect("labels");
+    assert!(json.contains("\"camera\""));
+}
+//#endregion 🔖️GraphHostQueries
+
+/// 📐️ The label overlay is painted by the host from `label_overlay_paint_state_json`'s own
+/// `width`/`height`, while the GPU paints at the session size. A content change rebuilds `dag` from
+/// scratch, and a fresh `DagHost` starts at `1×1`: every caption of the dag, trinity-jack and
+/// mathematical play panes was drawn half a canvas away from its node (measured live 2026-09-23 —
+/// the overlay state read `"width":1,"height":1` beside an 852×807 canvas).
+#[test]
+fn a_content_rebuild_keeps_the_session_viewport() {
+    let mut host = GraphHost::default();
+    host.set_viewport(852, 807, 2.0);
+    host.sync_from_payload(&payload_with_node("a")).expect("sync");
+    host.sync_from_payload(&payload_with_node("b")).expect("content change rebuilds the dag");
+    let state: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().expect("label state")).expect("independent JSON oracle");
+    assert_eq!((state["width"].as_u64(), state["height"].as_u64()), (Some(852), Some(807)));
+}

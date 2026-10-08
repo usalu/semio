@@ -1,104 +1,21 @@
 {
   "artifact": null,
-  "schema": null,
   "camera": null,
-  "nodes": null,
   "edges": null,
-  "targetRegions": null,
   "meta": {
-    "manifestId": "nakagin",
-    "kindCompatibility": [
-      {
-        "source": "core circular bottom",
-        "target": "core circular top",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "core rectangular bottom",
-        "target": "core rectangular top",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "door capsule right",
-        "target": "door tambour right",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "door capsule left",
-        "target": "door tambour left",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "door tambour left",
-        "target": "door capsule left",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "door tambour left",
-        "target": "platform left",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "door tambour right",
-        "target": "door capsule right",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "door tambour right",
-        "target": "platform right",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "platform right",
-        "target": "door tambour right",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "platform left",
-        "target": "door tambour left",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "roof circular bottom",
-        "target": "roof circular top",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "roof rectangular bottom",
-        "target": "roof rectangular top",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "tambour circular bottom",
-        "target": "tambour circular top",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      }
-    ]
-  }
+    "kindCompatibility": {
+      "added": [],
+      "patched": [],
+      "removed": [
+        {
+          "source": "tambour rectangular bottom",
+          "target": "tambour rectangular top"
+        }
+      ],
+      "reordered": null
+    }
+  },
+  "nodes": null,
+  "schema": null,
+  "targetRegions": null
 }

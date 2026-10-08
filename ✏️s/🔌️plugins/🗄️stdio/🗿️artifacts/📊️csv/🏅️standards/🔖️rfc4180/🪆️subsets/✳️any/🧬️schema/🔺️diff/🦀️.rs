@@ -42,6 +42,11 @@ impl CsvFieldDiff {
     pub fn between(base: &CsvField, other: &CsvField) -> Self {
         Self { value: (base.value != other.value).then(|| other.value.clone()), quoted: (base.quoted != other.quoted).then_some(other.quoted) }
     }
+    /// ↩️ The patch restoring exactly the sub-fields this patch sets back to their `base` values.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn inverse(&self, base: &CsvField) -> Self {
+        Self { value: self.value.as_ref().map(|_| base.value.clone()), quoted: self.quoted.map(|_| base.quoted) }
+    }
     /// ➕️ LWW field-level absorb: `other`'s populated sub-fields win.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn absorb(&mut self, other: Self) {
@@ -104,6 +109,11 @@ impl CsvRecordDiff {
                 CsvRecord { fields }
             }
         }
+    }
+    /// ↩️ The positional patch restoring exactly the fields this patch sets back to their `base` values.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn inverse(&self, base: &CsvRecord) -> Self {
+        Self { fields: self.fields.as_ref().map(|patches| patches.iter().enumerate().map(|(index, patch)| patch.as_ref().and_then(|patch| base.fields.get(index).map(|field| patch.inverse(field)))).collect()) }
     }
     /// 🧭️ State delta between two records with the SAME field count (positional patch).
     /// Callers with differing field counts must instead express the change as a
@@ -241,8 +251,7 @@ fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize
 //#endregion 🔖️IndexTransport
 
 //#region 🔖️Diff
-/// 🔺️ Diff for `stdio.csv`. No `snapshot: Option<CsvSnapshot>` full-replace slot — even
-/// `SetSnapshot`'s diff is `CsvDiff::between(base, next)`.
+/// 🔺️ Diff for `stdio.csv`. No `snapshot: Option<CsvSnapshot>` full-replace slot — every diff is sparse.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.csv.diff")]
@@ -466,10 +475,29 @@ fn absorb_records(d1: CsvRecordsDiff, d2: CsvRecordsDiff) -> CsvRecordsDiff {
     CsvRecordsDiff { removed: final_removed, modified: final_modified, added: final_added }
 }
 
+/// ↩️ Negative rows for the records triple against its BASE records: added rows become removals at their final index, removed
+/// rows return at their base index, and each modified row restores its base fields at the index the row has after the diff.
+/// Every list comes back ascending, the normal form [`absorb_records`] emits.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_records(diff: &CsvRecordsDiff, base: &[CsvRecord]) -> CsvRecordsDiff {
+    let mut removed_sorted = diff.removed.clone();
+    removed_sorted.sort_unstable();
+    removed_sorted.dedup();
+    let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
+    added_final.sort_unstable();
+    let after_index = |index: usize| {
+        let survivor = index - removed_sorted.iter().filter(|dropped| **dropped < index).count();
+        added_final.iter().fold(survivor, |position, inserted| if *inserted <= position { position + 1 } else { position })
+    };
+    let mut modified: Vec<CsvRecordModified> = diff.modified.iter().filter_map(|row| base.get(row.index).map(|record| CsvRecordModified { index: after_index(row.index), diff: row.diff.inverse(record) })).collect();
+    modified.sort_by_key(|row| row.index);
+    let added = removed_sorted.iter().filter_map(|index| base.get(*index).map(|record| CsvRecordAdded { index: *index, record: record.clone() })).collect();
+    CsvRecordsDiff { removed: added_final, modified, added }
+}
+
 impl DiffAlgebra<CsvSnapshot> for CsvDiff {
     fn inverse(&self, base: &CsvSnapshot) -> Self {
-        let applied = apply_csv_diff_unchecked(self, base);
-        Self::between(&applied, base)
+        Self { has_header: self.has_header.map(|_| base.has_header), records: self.records.as_ref().map(|records| inverse_records(records, &base.records)).filter(|records| !records.is_empty()) }
     }
 
     fn between(base: &CsvSnapshot, other: &CsvSnapshot) -> Self {
@@ -513,11 +541,6 @@ impl DiffAlgebra<CsvSnapshot> for CsvDiff {
     }
 }
 
-/// 🧩 Builds a set-snapshot diff (sparse field-by-field delta, never a full-replace slot).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &CsvSnapshot, next: &CsvSnapshot) -> CsvDiff {
-    CsvDiff::between(base, next)
-}
 //#endregion 🔖️Diff
 
 //#region 🧪️Tests

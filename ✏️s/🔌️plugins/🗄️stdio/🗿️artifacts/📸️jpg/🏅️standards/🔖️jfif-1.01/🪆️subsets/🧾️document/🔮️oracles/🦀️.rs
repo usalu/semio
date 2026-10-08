@@ -1,48 +1,5 @@
-//! 🔮️ Mutation oracle for this subset — every mutation kind the subset declares, performed by the
-//! registered reference implementation so the subject's own mutation has an independent result to
-//! be compared against instead of being checked against its own reading.
-//!
-//! The vocabulary is per SUBSET, not per artifact: two standards of the same format declare
-//! different mutations, and a subset that shares an implementation with another reaches it through
-//! the shared `raster` module rather than by copying it.
-//!
-//! # What this subset's own codec really writes, and what follows from it
-//!
-//! `../🚪️io/🦀️.rs` is a from-scratch baseline JPEG codec, not an `image` wrapper. On
-//! encode it regenerates fresh Annex K DQT/DHT tables scaled by `re_encode_quality` and never emits
-//! a DRI/restart marker at all — so `SetQuantTable`, `RemoveQuantTable`, `SetHuffmanTable`,
-//! `RemoveHuffmanTable` and `SetRestartInterval` mutate the typed snapshot and provably cannot
-//! reach the bytes. Those five are the only kinds this module treats as unobservable, they are
-//! stated in the feature description, and they are named in the adapter's observability-law
-//! exemption list so nothing else can quietly join them.
-//!
-//! `encode_jpg` DOES write a real JFIF APP0 from `jfif_version`/`jfif_density_units`/
-//! `jfif_x_density`/`jfif_y_density` and re-emits `other_segments` verbatim right after it
-//! (`🚪️io/🦀️.rs`, `encode_jfif_app0`). `SetJfifHeader`, `InsertOtherSegment` and
-//! `RemoveOtherSegment` are therefore genuinely byte-observable, and this module performs all three
-//! for real rather than passing the document through: the earlier revision folded them into the
-//! same decode → re-encode as the five table kinds, which meant the reference's answer for a header
-//! rewrite and for a 31 KB XMP packet removal was the identical file.
-//!
-//! # Where the reference library reaches, and where this module has to splice
-//!
-//! `image` 0.25's `JpegEncoder` writes its own APP0 from a `PixelDensity` (`set_pixel_density`),
-//! which covers the density unit and both density values — those go through the crate's own API.
-//! The two JFIF version bytes are hard-coded to `1.2` in its `build_jfif_header`, and it has no API
-//! for arbitrary APPn/COM segments at all, so this module patches the version bytes at their fixed
-//! APP0 offset and splices the other segments in immediately after APP0, in §B.2's own
-//! `FF marker | length | payload` layout. Same technique, same justification, as the GIF subsets'
-//! Logical Screen Descriptor patches.
-//!
-//! JPEG is LOSSY, so the raster half of the projection is a coarse luma histogram, never raw
-//! samples — this platform's comparison tolerance is per-number and absolute with no aggregate
-//! mode, so an exact sample claim through two independently written lossy codecs could only ever
-//! pass by accident. The metadata half is exact: JFIF fields and segment payload digests survive a
-//! re-encode unchanged or they are wrong.
-//!
-//! @see ../🔣️oracle.json — the mutation catalog this module is measured against.
-//! @see ../🧬️schema/🧬️mutations/🦀️.rs — the mutation vocabulary itself.
-
+//! 🔮️ Independent semantic JPEG image oracle through the image test interface.
+//! 🧾️ JFIF metadata and ordered APP/COM content use their specified marker layout.
 use semio_repo_test_host::Json;
 
 /// 🌓️ Independent JPEG luma output through the existing image test interface.
@@ -99,6 +56,18 @@ mod oracles {
         }
     }
 
+    fn thumbnail_of(value: Option<&Json>) -> Result<Option<(u8, u8, Vec<u8>)>, String> {
+        let Some(value) = value.filter(|value| !matches!(value, Json::Null)) else { return Ok(None) };
+        let width = number(value, "width", -1.0);
+        let height = number(value, "height", -1.0);
+        if !(0.0..=255.0).contains(&width) || !(0.0..=255.0).contains(&height) || width.fract() != 0.0 || height.fract() != 0.0 {
+            return Err("JFIF thumbnail dimensions must be bytes".into());
+        }
+        let rgb = bytes_of(value, "rgbData")?;
+        if rgb.len() != width as usize * height as usize * 3 { return Err("JFIF thumbnail extent is invalid".into()) }
+        Ok(Some((width as u8, height as u8, rgb)))
+    }
+
     fn hex_encode(bytes: &[u8]) -> String {
         bytes.iter().map(|byte| format!("{byte:02x}")).collect()
     }
@@ -121,6 +90,7 @@ mod oracles {
         pub density_units: u8,
         pub x_density: u16,
         pub y_density: u16,
+        pub thumbnail: Option<(u8, u8, Vec<u8>)>,
         pub other_segments: Vec<(u8, Vec<u8>)>,
         pub quality: u8,
     }
@@ -162,11 +132,14 @@ mod oracles {
     /// 🏷️ The five JFIF APP0 fields (T.871 §B.2.4.6.2), or `None` when the segment is an APP0 that
     /// is not a JFIF one — which the caller then retains verbatim as an ordinary other-segment,
     /// exactly as this subset's own `decode_jpg` does.
-    fn parse_jfif(payload: &[u8]) -> Option<((u8, u8), u8, u16, u16)> {
-        if payload.len() < 12 || &payload[0..5] != b"JFIF\0" {
+    fn parse_jfif(payload: &[u8]) -> Option<((u8, u8), u8, u16, u16, Option<(u8, u8, Vec<u8>)>)> {
+        if payload.len() < 14 || &payload[0..5] != b"JFIF\0" {
             return None;
         }
-        Some(((payload[5], payload[6]), payload[7], u16::from_be_bytes([payload[8], payload[9]]), u16::from_be_bytes([payload[10], payload[11]])))
+        let extent = usize::from(payload[12]) * usize::from(payload[13]) * 3;
+        let rgb = payload.get(14..14 + extent)?;
+        let thumbnail = if extent == 0 { None } else { Some((payload[12], payload[13], rgb.to_vec())) };
+        Some(((payload[5], payload[6]), payload[7], u16::from_be_bytes([payload[8], payload[9]]), u16::from_be_bytes([payload[10], payload[11]]), thumbnail))
     }
 
     /// 📇️ Whether a marker is one this subset's `other_segments` retains — APP1..APP15, COM, and a
@@ -184,15 +157,16 @@ mod oracles {
         let decoded = image::load_from_memory(input).map_err(|error| format!("independent reader could not parse the jpg: {error}"))?;
         let rgba = decoded.to_rgba8();
         let (width, height) = (rgba.width(), rgba.height());
-        let mut doc = OracleDoc { width, height, rgba: rgba.into_raw(), version: (1, 1), density_units: 0, x_density: 1, y_density: 1, other_segments: Vec::new(), quality: DEFAULT_QUALITY };
+        let mut doc = OracleDoc { width, height, rgba: rgba.into_raw(), version: (1, 1), density_units: 0, x_density: 1, y_density: 1, thumbnail: None, other_segments: Vec::new(), quality: DEFAULT_QUALITY };
         for (marker, payload) in scan_segments(input)? {
             if marker == 0xE0 {
                 match parse_jfif(&payload) {
-                    Some((version, units, x_density, y_density)) => {
+                    Some((version, units, x_density, y_density, thumbnail)) => {
                         doc.version = version;
                         doc.density_units = units;
                         doc.x_density = x_density;
                         doc.y_density = y_density;
+                        doc.thumbnail = thumbnail;
                     }
                     None => doc.other_segments.push((marker, payload)),
                 }
@@ -234,10 +208,23 @@ mod oracles {
         if out.get(2..4) != Some(&[0xFF, 0xE0]) || out.len() < 4 + app0_length || out.get(APP0_PAYLOAD..APP0_PAYLOAD + 5) != Some(b"JFIF\0") {
             return Err("reference encoder no longer writes a JFIF APP0 immediately after SOI — the version patch and the segment splice both key on that position".to_string());
         }
-        out[APP0_PAYLOAD + 5] = doc.version.0;
-        out[APP0_PAYLOAD + 6] = doc.version.1;
+        let mut jfif = b"JFIF\0".to_vec();
+        jfif.extend_from_slice(&[doc.version.0, doc.version.1, doc.density_units]);
+        jfif.extend_from_slice(&doc.x_density.to_be_bytes());
+        jfif.extend_from_slice(&doc.y_density.to_be_bytes());
+        match &doc.thumbnail {
+            Some((width, height, rgb)) if rgb.len() == usize::from(*width) * usize::from(*height) * 3 => {
+                jfif.extend_from_slice(&[*width, *height]);
+                jfif.extend_from_slice(rgb);
+            }
+            Some(_) => return Err("JFIF thumbnail extent is invalid".into()),
+            None => jfif.extend_from_slice(&[0, 0]),
+        }
+        let length = u16::try_from(jfif.len() + 2).map_err(|_| "JFIF thumbnail exceeds APP0 length")?;
         let mut spliced = Vec::with_capacity(out.len());
-        spliced.extend_from_slice(&out[..4 + app0_length]);
+        spliced.extend_from_slice(&[0xff, 0xd8, 0xff, 0xe0]);
+        spliced.extend_from_slice(&length.to_be_bytes());
+        spliced.extend_from_slice(&jfif);
         for (marker, payload) in &doc.other_segments {
             let length = payload.len() + 2;
             if length > 0xFFFF {
@@ -277,13 +264,11 @@ mod oracles {
                     "pixelsPerCm" => 2,
                     other => return Err(format!("{other:?} is no JFIF density unit")),
                 };
-                if !matches!(params.get("thumbnail"), None | Some(Json::Null)) {
-                    return Err("this oracle writes no JFIF thumbnail".to_string());
-                }
+                doc.thumbnail = thumbnail_of(params.get("thumbnail"))?;
                 doc.x_density = number(params, "xDensity", doc.x_density as f64) as u16;
                 doc.y_density = number(params, "yDensity", doc.y_density as f64) as u16;
             }
-            "replace-quant-table" | "remove-quant-table" | "replace-huffman-table" | "remove-huffman-table" | "change-restart-interval" => {}
+            "replace-image" => {*doc=from_image(params.get("image").ok_or("replace-image requires image content")?)?;}
             "insert-other-segment" => {
                 let at = (number(params, "index", 0.0).max(0.0) as usize).min(doc.other_segments.len());
                 let segment = params.get("segment").ok_or("insert-other-segment carries no segment")?;
@@ -302,12 +287,6 @@ mod oracles {
                 }
                 doc.rgba = rgba;
             }
-            "set-snapshot" => *doc = from_snapshot(params.get("snapshot").ok_or("set-snapshot carries no snapshot")?)?,
-            "patch-snapshot" => {
-                for (member, value) in patch_members(params)? {
-                    set_member(doc, &member, &value)?;
-                }
-            }
             other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
         }
         Ok(())
@@ -316,20 +295,17 @@ mod oracles {
     /// 📸️ A whole `JpgSnapshot` wire document as this model: the RGBA raster, the JFIF APP0 fields, the other marker
     /// segments and the re-encode quality. The quantization/Huffman tables, the SOF marker and the restart interval are
     /// regenerated by both encoders (module docstring), so the model has no slot for them; a thumbnail is refused.
-    fn from_snapshot(snapshot: &Json) -> Result<OracleDoc, String> {
+    fn from_image(snapshot: &Json) -> Result<OracleDoc, String> {
         let (width, height) = (number(snapshot, "width", 0.0) as u32, number(snapshot, "height", 0.0) as u32);
         let rgba = bytes_of(snapshot, "pixels")?;
         if rgba.len() != width as usize * height as usize * 4 {
-            return Err(format!("set-snapshot carries {} pixel bytes, not the {width}x{height} RGBA raster", rgba.len()));
+            return Err(format!("replace-image carries {} pixel bytes, not the {width}x{height} RGBA raster", rgba.len()));
         }
-        let mut doc = OracleDoc { width, height, rgba, version: (1, 1), density_units: 0, x_density: 1, y_density: 1, other_segments: Vec::new(), quality: DEFAULT_QUALITY };
+        let mut doc = OracleDoc { width, height, rgba, version: (1, 1), density_units: 0, x_density: 1, y_density: 1, thumbnail: thumbnail_of(snapshot.get("jfifThumbnail"))?, other_segments: Vec::new(), quality: DEFAULT_QUALITY };
         for member in ["jfifVersion", "jfifDensityUnits", "jfifXDensity", "jfifYDensity"] {
             if let Some(value) = snapshot.get(member) {
                 set_member(&mut doc, member, value)?;
             }
-        }
-        if !matches!(snapshot.get("jfifThumbnail"), None | Some(Json::Null)) {
-            return Err("this oracle writes no JFIF thumbnail".to_string());
         }
         for segment in snapshot.array("otherSegments") {
             doc.other_segments.push((number(&segment, "marker", 0.0) as u8, bytes_of(&segment, "data")?));
@@ -372,15 +348,7 @@ mod oracles {
 
     /// 🩹️ The `(member, value)` pairs of a `SnapshotPatch` whose operation sets (or inserts, when absent) one top-level member — the only
     /// edits this model has a slot for; any other path or operation is refused, never skipped.
-    fn patch_members(params: &Json) -> Result<Vec<(String, Json)>, String> {
-        params.get("patch").into_iter().map(|patch| {
-            let path = patch.str("path").split('/').skip(1).map(|segment| segment.replace("~1", "/").replace("~0", "~")).collect::<Vec<_>>();
-            match (path.as_slice(), patch.str("operation").as_str()) {
-                ([member], "set" | "insert") => Ok((member.clone(), patch.get("value").cloned().unwrap_or(Json::Null))),
-                (other, operation) => Err(format!("patch-snapshot {operation} at {other:?} has no oracle implementation")),
-            }
-        }).collect()
-    }
+
     //#endregion 🔖️Apply
 
     //#region 🔖️Dispatch
@@ -411,12 +379,13 @@ mod oracles {
         let original = decode(original_input)?;
         let mut doc = decode(mutated)?;
         match kind.as_str() {
-            "replace-quant-table" | "remove-quant-table" | "replace-huffman-table" | "remove-huffman-table" | "change-restart-interval" => {}
+            "replace-image" => {doc=original;}
             "change-jfif-header" => {
                 doc.version = original.version;
                 doc.density_units = original.density_units;
                 doc.x_density = original.x_density;
                 doc.y_density = original.y_density;
+                doc.thumbnail = original.thumbnail;
             }
             "insert-other-segment" => {
                 let at = (number(&params, "index", 0.0).max(0.0) as usize).min(original.other_segments.len());
@@ -429,18 +398,6 @@ mod oracles {
                 doc.rgba = original.rgba;
                 doc.width = original.width;
                 doc.height = original.height;
-            }
-            "set-snapshot" => doc = original,
-            "patch-snapshot" => {
-                for (member, _) in patch_members(&params)? {
-                    match member.as_str() {
-                        "jfifVersion" => doc.version = original.version,
-                        "jfifDensityUnits" => doc.density_units = original.density_units,
-                        "jfifXDensity" => doc.x_density = original.x_density,
-                        "jfifYDensity" => doc.y_density = original.y_density,
-                        other => return Err(format!("patch-snapshot member `{other}` has no oracle inverse")),
-                    }
-                }
             }
             other => return Err(format!("mutation kind {other:?} has no oracle inverse")),
         }
@@ -492,19 +449,14 @@ mod oracles {
             buckets[(luma / 32).min(7) as usize] += 1;
         }
         let segments: Vec<Json> = doc.other_segments.iter().map(|(marker, payload)| Json::String(format!("{marker:02x}:{}:{}", payload.len(), digest_hex(payload)))).collect();
-        let quant: Vec<Json> = scan_segments(input)?
-            .iter()
-            .filter(|(marker, _)| *marker == 0xDB)
-            .flat_map(|(_, payload)| payload.chunks(65).filter(|table| table.len() == 65).map(|table| Json::String(format!("{:x}:{}", table[0], digest_hex(&table[1..])))).collect::<Vec<_>>())
-            .collect();
         Ok(Json::Object(vec![
             ("format".to_string(), Json::String("jpg".to_string())),
             ("dimensions".to_string(), Json::String(format!("{}x{}", doc.width, doc.height))),
             ("lossy".to_string(), Json::Bool(true)),
             ("jfifVersion".to_string(), Json::String(format!("{}.{}", doc.version.0, doc.version.1))),
             ("jfifDensity".to_string(), Json::String(format!("unit{}:{}x{}", doc.density_units, doc.x_density, doc.y_density))),
+            ("jfifThumbnail".to_string(), doc.thumbnail.as_ref().map(|(width,height,rgb)| Json::String(format!("{width}x{height}:{}",digest_hex(rgb)))).unwrap_or(Json::Null)),
             ("otherSegments".to_string(), Json::Array(segments)),
-            ("quantTables".to_string(), Json::Array(quant)),
             ("lumaHistogram".to_string(), Json::Array(buckets.iter().map(|count| Json::Number(*count as f64)).collect())),
         ]))
     }

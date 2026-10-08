@@ -1,59 +1,25 @@
 {
-  "artifact": null,
   "manufacturerFile": null,
-  "catalog": null,
+  "products": null,
+  "catalogExtensions": null,
   "editionProfile": null,
   "correctionAsOf": null,
   "strictMode": null,
-  "index": null,
+  "indexEntries": null,
   "geometry": {
-    "geom-valve-50": {
-      "id": "geom-valve-50",
-      "bbox": {
-        "minX": 0.0,
-        "minY": 0.0,
-        "minZ": 0.0,
-        "maxX": 0.25,
-        "maxY": 0.5,
-        "maxZ": 0.125
-      },
-      "connections": [
-        {
-          "id": "in",
-          "medium": "water",
-          "position": [
-            0.0,
-            0.25,
-            0.0625
-          ],
-          "direction": [
-            -1.0,
-            0.0,
-            0.0
-          ],
-          "diameterMm": 50.0
+    "added": [],
+    "removed": [],
+    "modified": [
+      {
+        "key": "geom-valve-50",
+        "bbox": null,
+        "parameters": {
+          "clearance": 0.0625,
+          "scale": 0.5
         },
-        {
-          "id": "out",
-          "medium": "water",
-          "position": [
-            0.25,
-            0.25,
-            0.0625
-          ],
-          "direction": [
-            1.0,
-            0.0,
-            0.0
-          ],
-          "diameterMm": 50.0
-        }
-      ],
-      "parameters": {
-        "clearance": 0.0625,
-        "scale": 0.5
+        "connections": null
       }
-    }
+    ]
   },
   "curves": null,
   "limits": null

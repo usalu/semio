@@ -9,12 +9,12 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
   into the case work directory; the committed documents are never written to.
 
   `PngSnapshot` owns exact native samples, precision, color profile and metadata. Its five mutation
-  kinds edit those values: `set-snapshot`, `patch-snapshot`, `change-gamma`, `patch-pixels` and
+  kinds edit those values: `replace-image`, `change-gamma`, `patch-pixels` and
   `paint-native-samples`. Guarded kinds name the structural revision of the owned image. Native
   compression, filtering and chunk materialization belong to I/O. Every inverse restores the owned base.
 
-  The rows: on the real document, `change-gamma` inserts gAMA 45455 before PLTE, `set-snapshot`
-  installs the committed 2x2 RGBA swatch, and `patch-snapshot` sets its owned gamma value. On the
+  The rows: on the real document, `change-gamma` inserts gAMA 45455 before PLTE, `replace-image`
+  installs the committed typed image. Gamma edits carry an explicit gamma intent. On the
   committed 4x2 COLORMAP document (palette black, red,
   green, blue; both rows index 0, 1, 2, 3), `paint-native-samples` paints palette index 3 into the 2x2
   rectangle at (1, 0), its `result` carrying the painted exact index samples. On the committed
@@ -43,8 +43,6 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
     Examples:
       | id | params |
       | change-gamma | {"revision":"8a303b603d1fa1ff","gama":45455} |
-      | set-snapshot | {"snapshot":{"schema":"stdio.png","image":{"width":2,"height":2,"bitDepth":8,"colorType":"rgba","interlace":false,"samples":[255,0,0,255,0,255,0,255,0,0,255,255,255,255,255,128],"palette":null,"transparency":null,"gamma":null,"chromaticities":null,"srgb":null,"physicalDims":null,"timestamp":null,"background":null,"textChunks":[],"ancillaryChunks":[]}}} |
-      | patch-snapshot | {"patch":{"operation":"set","path":"/image/gamma","value":45455}} |
 
   @id-mutate
   @level-exhaustive
@@ -89,8 +87,6 @@ Feature: Apply every typed PNG 1.2 mutation to a real-world document
     Examples:
       | id | params |
       | change-gamma | {"revision":"8a303b603d1fa1ff","gama":45455} |
-      | set-snapshot | {"snapshot":{"schema":"stdio.png","image":{"width":2,"height":2,"bitDepth":8,"colorType":"rgba","interlace":false,"samples":[255,0,0,255,0,255,0,255,0,0,255,255,255,255,255,128],"palette":null,"transparency":null,"gamma":null,"chromaticities":null,"srgb":null,"physicalDims":null,"timestamp":null,"background":null,"textChunks":[],"ancillaryChunks":[]}}} |
-      | patch-snapshot | {"patch":{"operation":"set","path":"/image/gamma","value":45455}} |
 
   @id-inverse
   @level-exhaustive

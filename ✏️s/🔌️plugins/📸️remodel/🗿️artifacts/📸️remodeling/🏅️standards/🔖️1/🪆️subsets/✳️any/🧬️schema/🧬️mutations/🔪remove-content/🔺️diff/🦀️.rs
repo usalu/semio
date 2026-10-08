@@ -1,6 +1,6 @@
 //! 🔺️ Diff for `RemoveContent`. A missing entry ⇒ Error `mutation.target-missing`; `from` past the stored
 //! leaf count ⇒ Error `mutation.target-mismatch`; `from` equal to the stored leaf count ⇒ Warning `mutation.no-op`.
-use crate::diff::RemodelingDiff;
+use crate::diff::{RemodelingContentRow, RemodelingDiff};
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
@@ -16,12 +16,6 @@ pub fn diff(payload: &super::RemoveContent, base: &RemodelingSnapshot) -> protoc
     if payload.from == stored {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Content \"{}\" stores no leaf from {stored} on.", payload.content_id));
     }
-    let mut durable_artifacts = base.durable_artifacts.clone();
-    if payload.from == 0 {
-        durable_artifacts.remove(&payload.content_id);
-    } else if let Some(entry) = durable_artifacts.get_mut(&payload.content_id) {
-        entry.chunks.truncate(payload.from as usize);
-    }
-    protocol::MutationOutcome::new(RemodelingDiff { durable_artifacts: Some(durable_artifacts), ..Default::default() })
+    protocol::MutationOutcome::new(RemodelingDiff::content_rows(vec![RemodelingContentRow::Truncate { id: payload.content_id.clone(), from: payload.from }]))
 }
 //#endregion 🔖️Diff

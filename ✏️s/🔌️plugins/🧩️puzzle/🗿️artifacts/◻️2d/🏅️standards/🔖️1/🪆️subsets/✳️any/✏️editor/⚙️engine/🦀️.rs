@@ -24,6 +24,7 @@
 //! 🧭️ Placement rule for helpers reaching across nodes: a helper with exactly ONE consumer lives in
 //! that consumer's file; two or more consumers put it here.
 
+pub use semio_framework_canvas as canvas;
 pub use canvas::{CubicBez, Point, Vec2};
 pub use semio_framework_os_infinite::{self as graph, apply_redraw_layout_to_board_snapshot_json as apply_ported_redraw_layout_to_board_snapshot_json, *};
 

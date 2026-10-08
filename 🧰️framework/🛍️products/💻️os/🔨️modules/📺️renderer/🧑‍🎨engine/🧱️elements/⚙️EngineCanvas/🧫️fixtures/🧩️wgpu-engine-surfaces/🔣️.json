@@ -580,6 +580,8 @@
     "domainId": "graph",
     "domainGranularityId": "handle",
     "expect": {
+      "pickWorldPosition": [0.25, 0.25, 1.0],
+      "pickEdgeScreenTolerancePx": 18.0,
       "draws": 3,
       "drawMeshKey": "eval-extrude@solid#0",
       "triangles": 20,

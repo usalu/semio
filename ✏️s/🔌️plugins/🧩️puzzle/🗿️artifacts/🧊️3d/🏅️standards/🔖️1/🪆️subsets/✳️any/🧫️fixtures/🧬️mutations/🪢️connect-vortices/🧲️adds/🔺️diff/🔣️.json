@@ -1,29 +1,29 @@
 {
   "artifact": null,
-  "schema": null,
-  "domain": null,
-  "meta": null,
-  "objects": null,
   "attractions": {
     "added": [
       {
-        "id": "attraction-2",
-        "attracting": "object-a:vortex-spare",
         "attracted": "object-b:vortex-2",
+        "attracting": "object-a:vortex-spare",
         "gap": 0.0,
-        "shift": 0.5,
+        "id": "attraction-2",
         "rise": 0.0,
         "rotation": 0.0,
-        "turn": 0.0,
+        "shift": 0.5,
         "tilt": 0.0,
+        "turn": 0.0,
         "x": 1.0,
         "y": 2.0
       }
     ],
-    "removed": [],
     "patched": [],
+    "removed": [],
     "reordered": null
   },
-  "targetVolumes": null,
-  "references": null
+  "domain": null,
+  "meta": null,
+  "objects": null,
+  "references": null,
+  "schema": null,
+  "targetVolumes": null
 }

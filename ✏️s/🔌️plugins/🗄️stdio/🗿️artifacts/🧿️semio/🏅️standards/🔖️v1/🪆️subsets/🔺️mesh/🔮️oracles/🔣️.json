@@ -443,8 +443,6 @@
         }
       ],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "create-mesh",
         "delete-mesh",
         "create-primitive",
@@ -1131,59 +1129,6 @@
             "stl",
             "obj",
             "ply"
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "three-carrier-reader"
-            },
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "manifold-mesh-measure"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "semio-v1-mesh-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "three-carrier-reader"
-            },
-            {
-              "capability": "semio-v1-mesh-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "manifold-mesh-measure"
-            }
           ]
         }
       ]

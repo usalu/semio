@@ -23,6 +23,29 @@
         "group": "selection",
         "order": 10
       }
+    },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position; empty appends at the end.",
+          "de": "Nullbasierte Listenposition; leer hängt am Ende an."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "selection",
+        "order": 20
+      }
     }
   }
 }

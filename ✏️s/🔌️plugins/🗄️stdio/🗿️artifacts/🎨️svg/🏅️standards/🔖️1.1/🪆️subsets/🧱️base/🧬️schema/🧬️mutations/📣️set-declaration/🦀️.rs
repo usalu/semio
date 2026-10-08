@@ -3,7 +3,6 @@ use crate::schema::diff::SvgDiff;
 use crate::SvgSnapshot;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlDeclaration;
 
-
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -11,35 +10,20 @@ pub struct SetDeclarationPayload {
     pub declaration: Option<XmlDeclaration>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol, payload = Apply)]
-#[value(tag = "phase", content = "value", rename_all = "camelCase")]
-pub enum SetDeclarationMutation {
-    Apply(SetDeclarationPayload),
-    Restore(SvgDiff),
-}
-
-impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetDeclarationMutation {
+impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetDeclarationPayload {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "declaration", kind: "set-declaration", record: "SetDeclaration" };
 
-    fn diff(&self, _base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
-        match self {
-            Self::Apply(payload) => protocol::MutationOutcome::new(SvgDiff { prolog: None, epilog: None, declaration: Some(payload.declaration.clone()), doctype: None, root: None }),
-            Self::Restore(diff) => protocol::MutationOutcome::new(diff.clone()),
+    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
+        let Self { declaration } = self;
+        if *declaration == base.doc.declaration {
+            return protocol::MutationOutcome::new(SvgDiff::default());
         }
+        protocol::MutationOutcome::new(SvgDiff { declaration: Some(declaration.clone()), ..Default::default() })
     }
 
     fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<super::SvgMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<SvgSnapshot, super::SvgMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || <SvgDiff as protocol::DiffAlgebra<SvgSnapshot>>::is_empty(outcome.diff()) {
-            return Vec::new();
-        }
-        let inverse = <SvgDiff as protocol::DiffAlgebra<SvgSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::SvgMutation::SetDeclaration(Self::Restore(inverse))]
-    
-    })())
-}
+        Ok(vec![super::SvgMutation::SetDeclaration(Self { declaration: base.doc.declaration.clone() })])
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Declaration", "Deklaration setzen")

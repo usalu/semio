@@ -166,7 +166,7 @@ where M:Send+'static {
     fn retire_one(&mut self,maximum_bytes:usize)->Result<PluginCloseStep,Fault>{
         if let Some(error)=self.close_refusal.as_mut(){
             if !self.closing{return Err(retirement_refusal_fault(error));}
-            let bytes=error.message.capacity();
+            let bytes=match &error.message{std::borrow::Cow::Borrowed(_)=>0,std::borrow::Cow::Owned(message)=>message.capacity()};
             if bytes>maximum_bytes{return Ok(PluginCloseStep::Pending{released_items:0,released_bytes:0});}
             self.close_refusal.take();return Ok(PluginCloseStep::Pending{released_items:1,released_bytes:bytes});
         }
@@ -316,7 +316,7 @@ where M:Send+'static {
         self.remaining.is_none()&&self.owned_source.is_none()&&self.current.is_none()&&self.retirement.is_none()&&self.retired_schema.is_none()&&self.prefix.is_none()&&self.cause.is_none()&&self.close_refusal.is_none()&&self.factory.is_none()&&self.backing_bytes==0
     }
     fn next_close_byte_demand(&mut self)->usize{
-        if let Some(error)=self.close_refusal.as_ref(){return error.message.capacity().max(1);}
+        if let Some(error)=self.close_refusal.as_ref(){return match &error.message{std::borrow::Cow::Borrowed(_)=>0,std::borrow::Cow::Owned(message)=>message.capacity()}.max(1);}
         if let Some(schema)=self.retired_schema.as_ref(){return schema.capacity().max(1);}
         if let Some(retirement)=self.retirement.as_ref(){return retirement.next_close_byte_demand().max(std::mem::size_of_val(retirement.as_ref())).max(1);}
         if self.current.is_some()||self.owned_source.as_ref().is_some_and(|owner|!owner.is_empty())||self.remaining.as_ref().is_some_and(|owner|owner.len()!=0){return std::mem::size_of::<M>().max(1);}
@@ -346,7 +346,7 @@ fn protocol_owned_cause_text(cause:&mut ::protocol::ProtocolError)->Result<Optio
             store::PackError::TransportFailure(_)=>Err(()),
             store::PackError::Refusal(refusal)=>match refusal{
                 store::PackRefusal::Malformed{detail,..}=>Ok((detail.capacity()!=0).then_some(detail)),
-                store::PackRefusal::ValueRefusal(error)|store::PackRefusal::Io{error,..}=>Ok((error.message.capacity()!=0).then_some(&mut error.message)),
+                store::PackRefusal::ValueRefusal(error)|store::PackRefusal::Io{error,..}=>match &mut error.message{std::borrow::Cow::Borrowed(_)=>Ok(None),std::borrow::Cow::Owned(message)=>Ok((message.capacity()!=0).then_some(message))},
                 store::PackRefusal::TextRefusal(error)=>{
                     if error.message.capacity()!=0{return Ok(Some(&mut error.message));}
                     Ok(error.expected.as_mut().filter(|value|value.capacity()!=0))
@@ -372,5 +372,5 @@ pub(crate) fn close_protocol_owned_cause_one(cause:&mut Option<::protocol::Proto
 }
 
 pub(crate) fn retirement_refusal_fault(error:&semio_framework_value::ValueError)->Fault{
-    Fault::new(semio_framework_diagnostic::FaultOrigin::Framework,"interactive-job.child-emission-retirement-refused",&error.message).with_param("refusalKind",error.kind.as_str())
+    Fault::new(semio_framework_diagnostic::FaultOrigin::Framework,"interactive-job.child-emission-retirement-refused",error.message.as_ref()).with_param("refusalKind",error.kind.as_str())
 }

@@ -20,11 +20,11 @@ fn puzzle2d_delta_ops_are_granular_and_round_trip() {
     let mut inverses = Vec::new();
     for operation in &operations {
         inverses.extend(Mutation::<Value>::inverse(operation, &forward).expect("valid retained mutation inverse snapshot"));
-        forward = Mutation::<Value>::diff(operation, &forward).diff().apply(&forward).expect("valid mutation diff");
+        forward = protocol::apply_diff(Mutation::<Value>::diff(operation, &forward).diff(), &forward).expect("valid mutation diff");
     }
     assert_eq!(forward, canonical(&after));
     for inverse in inverses.iter().rev() {
-        forward = Mutation::<Value>::diff(inverse, &forward).diff().apply(&forward).expect("valid mutation diff");
+        forward = protocol::apply_diff(Mutation::<Value>::diff(inverse, &forward).diff(), &forward).expect("valid mutation diff");
     }
     assert_eq!(forward, canonical(&before), "backwards operations must restore the pre-edit document");
 }
@@ -48,7 +48,7 @@ fn create_delete_node_inverse_law() {
     let base = empty_puzzle2d_snapshot();
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&base, &create_node(node.clone(), None)));
-    let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node, None).diff(&base).diff(), &base).expect("valid mutation diff");
+    let with_node = protocol::apply_diff(create_node(node, None).diff(&base).diff(), &base).expect("valid mutation diff");
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &delete_node("n1".into())));
 }
 
@@ -57,10 +57,10 @@ fn move_node_inverse_and_absorb_law() {
     use crate::{Puzzle2dNode};
     let base = empty_puzzle2d_snapshot();
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
-    let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node, None).diff(&base).diff(), &base).expect("valid mutation diff");
+    let with_node = protocol::apply_diff(create_node(node, None).diff(&base).diff(), &base).expect("valid mutation diff");
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &move_node("n1".into(), 5.0, 6.0)));
     let d1 = move_node("n1".into(), 10.0, 10.0).diff(&with_node).into_parts().0;
-    let mid = MutationDiff::<Puzzle2dSnapshot>::apply(&d1, &with_node).expect("valid mutation diff");
+    let mid = protocol::apply_diff(&d1, &with_node).expect("valid mutation diff");
     let d2 = move_node("n1".into(), 20.0, 30.0).diff(&mid).into_parts().0;
     ::semio_framework_async::poll::resolve_ready(assert_mutation_diff_absorb_law(&with_node, d1, d2));
 }
@@ -70,7 +70,7 @@ fn node_field_mutations_inverse_law() {
     use crate::{Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor};
     let base = empty_puzzle2d_snapshot();
     let node = Puzzle2dNode { id: "n1".into(), handles: vec![Puzzle2dHandle { id: "h1".into(), ..Default::default() }].into(), ..Default::default() };
-    let with_node = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node, None).diff(&base).diff(), &base).expect("valid mutation diff");
+    let with_node = protocol::apply_diff(create_node(node, None).diff(&base).diff(), &base).expect("valid mutation diff");
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &replace_node_geometry("n1".into(), Some("rectangle".into()), None, Some(4.0), Some(2.0))));
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &change_node_kind("n1".into(), Some("core.capsule".into()))));
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&with_node, &edit_node_text("n1".into(), Some("hello".into()))));
@@ -92,10 +92,10 @@ fn connect_disconnect_handles_inverse_law() {
     let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }].into(), ..Default::default() };
     let node_b = Puzzle2dNode { id: "b".into(), handles: vec![Puzzle2dHandle { id: "hb".into(), ..Default::default() }].into(), ..Default::default() };
     let mut projection = base.clone();
-    projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_a, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
-    projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_b, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
+    projection = protocol::apply_diff(create_node(node_a, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
+    projection = protocol::apply_diff(create_node(node_b, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&projection, &connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, None)));
-    let connected = MutationDiff::<Puzzle2dSnapshot>::apply(connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
+    let connected = protocol::apply_diff(connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&connected, &disconnect_handles("e1".into())));
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&connected, &replace_edge_geometry("e1".into(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0)));
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&connected, &change_edge_kind("e1".into(), Some("core.link".into()))));
@@ -130,7 +130,7 @@ fn a_recorded_proximity_connect_warns_once_its_handles_drift_apart() {
         let reported: Vec<(semio_framework_diagnostic::Severity, &str, Vec<String>)> = outcome.messages().iter().map(|message| (message.level, message.code.0.as_str(), message.target.clone())).collect();
         assert_eq!(reported, vec![(semio_framework_diagnostic::Severity::Warning, "mutation.precondition-drifted", vec!["ha".to_string(), "hb".to_string()])], "{what}");
         assert!(outcome.messages()[0].message.contains("\"ha\"") && outcome.messages()[0].message.contains("\"hb\""), "{what}: the words name both handles: {}", outcome.messages()[0].message);
-        let connected = MutationDiff::<Puzzle2dSnapshot>::apply(outcome.diff(), state).expect("a drifted connection still applies");
+        let connected = protocol::apply_diff(outcome.diff(), state).expect("a drifted connection still applies");
         assert!(connected.edges.iter().any(|edge| edge.id == "e1" && edge.source == "ha" && edge.target == "hb"), "{what}: the edge is there");
     }
     let unconditional = connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, None);
@@ -155,12 +155,12 @@ fn delete_node_severs_and_reconnects_edges() {
     let node_a = Puzzle2dNode { id: "a".into(), handles: vec![Puzzle2dHandle { id: "ha".into(), ..Default::default() }].into(), ..Default::default() };
     let node_b = Puzzle2dNode { id: "b".into(), handles: vec![Puzzle2dHandle { id: "hb".into(), ..Default::default() }].into(), ..Default::default() };
     let mut projection = base;
-    projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_a, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
-    projection = MutationDiff::<Puzzle2dSnapshot>::apply(create_node(node_b, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
-    projection = MutationDiff::<Puzzle2dSnapshot>::apply(connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
+    projection = protocol::apply_diff(create_node(node_a, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
+    projection = protocol::apply_diff(create_node(node_b, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
+    projection = protocol::apply_diff(connect_handles("e1".into(), "ha".into(), "hb".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None, None).diff(&projection).diff(), &projection).expect("valid mutation diff");
     assert!(projection.edges.iter().any(|edge| edge.id == "e1"));
     let removed = delete_node("a".into());
-    let after = MutationDiff::<Puzzle2dSnapshot>::apply(removed.diff(&projection).diff(), &projection).expect("valid mutation diff");
+    let after = protocol::apply_diff(removed.diff(&projection).diff(), &projection).expect("valid mutation diff");
     assert!(!after.edges.iter().any(|edge| edge.id == "e1"), "delete-node must sever edges touching its handles");
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&projection, &removed));
 }
@@ -170,8 +170,8 @@ fn meta_mutations_inverse_law() {
     use crate::{Puzzle2dCompatSpecificity, Puzzle2dKindCatalogs};
     let base = empty_puzzle2d_snapshot();
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&base, &change_manifest_id(Some("manifest-1".into()))));
-    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle2dCompatSpecificity::Handle)));
-    let connected = MutationDiff::<Puzzle2dSnapshot>::apply(connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle2dCompatSpecificity::Handle).diff(&base).diff(), &base).expect("valid mutation diff");
+    ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&base, &connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle2dCompatSpecificity::Handle, None)));
+    let connected = protocol::apply_diff(connect_kind_compatibility("a".into(), "b".into(), true, false, Puzzle2dCompatSpecificity::Handle, None).diff(&base).diff(), &base).expect("valid mutation diff");
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&connected, &disconnect_kind_compatibility("a".into(), "b".into())));
     ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&base, &replace_kind_catalogs(Some(Puzzle2dKindCatalogs::default()))));
 }
@@ -274,7 +274,7 @@ fn selection_transforms_skip_missing_and_locked_members_as_partial() {
     assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Warning));
     let reported: Vec<(&str, Vec<String>)> = outcome.messages().iter().map(|message| (message.code.0.as_str(), message.target.clone())).collect();
     assert_eq!(reported, vec![("mutation.partial", vec!["ghost".to_string()]), ("mutation.partial", vec!["b".to_string()])]);
-    let moved = MutationDiff::<Puzzle2dSnapshot>::apply(outcome.diff(), &base).expect("partial drag applies");
+    let moved = protocol::apply_diff(outcome.diff(), &base).expect("partial drag applies");
     assert_eq!((moved.nodes[0].x, moved.nodes[0].y), (0.1 + 1.0, 0.2 + 2.0), "node a moves by the offset");
     assert_eq!((moved.nodes[1].x, moved.nodes[1].y), (7.3, -2.9), "the locked node stays");
 }
@@ -309,8 +309,8 @@ fn identity_selection_transforms_are_no_ops() {
 #[test]
 fn selection_diff_replays_on_a_moved_base() {
     let base = selection_board();
-    let moved_base = MutationDiff::<Puzzle2dSnapshot>::apply(move_node("a".into(), 10.0, 20.0).diff(&base).diff(), &base).expect("move applies");
-    let replayed = MutationDiff::<Puzzle2dSnapshot>::apply(drag_selection(vec!["a".into()].into(), 1.0, -1.0).diff(&moved_base).diff(), &moved_base).expect("drag applies");
+    let moved_base = protocol::apply_diff(move_node("a".into(), 10.0, 20.0).diff(&base).diff(), &base).expect("move applies");
+    let replayed = protocol::apply_diff(drag_selection(vec!["a".into()].into(), 1.0, -1.0).diff(&moved_base).diff(), &moved_base).expect("drag applies");
     assert_eq!((replayed.nodes[0].x, replayed.nodes[0].y), (11.0, 19.0));
 }
 
@@ -423,4 +423,25 @@ fn play_snapshot_pack_shares_the_typed_record_identity_and_round_trips() {
     let bytes = store::ArtifactPack::encode_pack(&play);
     assert_eq!(bytes, store::ArtifactPack::encode_pack(play.typed()));
     assert_eq!(<Puzzle2dPlaySnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode play pack"), play);
+}
+
+/// 📍️ LAW (design wave-2 ruling): deleting or disconnecting a MIDDLE row restores it at its original position, and the
+/// inverse diffs sum to the negative diff.
+#[test]
+fn middle_row_removals_restore_their_position() {
+    use crate::{Puzzle2dCompatSpecificity, Puzzle2dHandle, Puzzle2dNode, Puzzle2dTargetRegion};
+    use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
+    let step = |base: Puzzle2dSnapshot, mutation: Puzzle2dMutation| protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
+    let mut base = empty_puzzle2d_snapshot();
+    for id in ["a", "b", "c"] {
+        let handles = ["h1", "h2", "h3"].map(|handle| Puzzle2dHandle { id: format!("{id}:{handle}").into(), ..Default::default() });
+        base = step(base, create_node(Puzzle2dNode { id: id.into(), handles: handles.to_vec().into(), ..Default::default() }, None));
+        base = step(base, create_target_region(Puzzle2dTargetRegion { id: id.into(), ..Default::default() }, None));
+        base = step(base, connect_kind_compatibility(id.into(), "z".into(), false, false, Puzzle2dCompatSpecificity::General, None));
+    }
+    let removals = [delete_node("b".into()), delete_target_region("b".into()), disconnect_kind_compatibility("b".into(), "z".into()), remove_node_handle("b".into(), "b:h2".into())];
+    for mutation in &removals {
+        ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_law(&base, mutation));
+        ::semio_framework_async::poll::resolve_ready(assert_mutation_inverse_sum_law(mutation, &base));
+    }
 }

@@ -1,10 +1,6 @@
 {
   "workingGraph": null,
   "lhs": {
-    "pattern": {
-      "leftVar": "c",
-      "leftKind": "Piece"
-    },
     "whereClause": "c.name != 'shaft'"
   },
   "rhs": null,

@@ -5,12 +5,12 @@ import { Tree, catalogueTreeDragController } from "@semio-tech/ui-react";
 import fixture from "../../🧫️fixtures/🖱️input-contract/🔣️.json";
 const seam = vi.hoisted(() => ({ sessions: [] as any[] }));
 
-vi.mock("@semio-tech/infinite-canvas-react-renderer", async (importOriginal) => {
+vi.mock("@semio-tech/canvas-react-renderer", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
   const React = await import("react");
   return {
     ...actual,
-    GraphWasmCanvas: ({ className, sessionFactory }: { readonly className?: string; readonly sessionFactory: () => any }) => {
+    WasmCanvas: ({ className, sessionFactory }: { readonly className?: string; readonly sessionFactory: () => any }) => {
       const session = React.useMemo(sessionFactory, [sessionFactory]);
       React.useEffect(() => {
         session.setSize(fixture.surface.width, fixture.surface.height, 1);

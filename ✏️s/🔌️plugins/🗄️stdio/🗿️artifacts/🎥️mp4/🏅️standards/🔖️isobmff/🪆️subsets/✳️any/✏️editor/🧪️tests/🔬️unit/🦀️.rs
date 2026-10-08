@@ -94,12 +94,12 @@ fn large_payload_metadata_edit_uses_compact_native_event_and_exact_inverse_admis
     assert_eq!(payload.ftyp.minor_version, 42);
     let bytes = <Mp4Mutation as protocol::OpBinary>::encode_op(&emit.artifact_mutations[0]).expect("compact event encodes");
     assert!(bytes.len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
-    let next = protocol::MutationDiff::apply(<Mp4Mutation as protocol::Mutation<Mp4Snapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("compact event applies");
+    let next = protocol::apply_diff(<Mp4Mutation as protocol::Mutation<Mp4Snapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("compact event applies");
     assert_eq!(next.ftyp.minor_version, 42);
     assert_eq!(next.tracks[0].samples[0].data, snapshot.tracks[0].samples[0].data);
     let inverse = <Mp4Mutation as protocol::Mutation<Mp4Snapshot>>::inverse(&emit.artifact_mutations[0], &snapshot).expect("valid retained mutation inverse fixture");
     assert!(inverse.iter().all(|mutation| <Mp4Mutation as protocol::OpBinary>::encode_op(mutation).is_ok_and(|bytes| bytes.len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES)));
-    let restored = inverse.into_iter().fold(next.clone(), |current, mutation| protocol::MutationDiff::apply(<Mp4Mutation as protocol::Mutation<Mp4Snapshot>>::diff(&mutation, &current).diff(), &current).expect("ftyp inverse applies"));
+    let restored = inverse.into_iter().fold(next.clone(), |current, mutation| protocol::apply_diff(<Mp4Mutation as protocol::Mutation<Mp4Snapshot>>::diff(&mutation, &current).diff(), &current).expect("ftyp inverse applies"));
     assert_eq!(restored, snapshot);
     let native = crate::standards::isobmff::subsets::any::io::encode_mp4(&next);
     let reopened = crate::standards::isobmff::subsets::any::io::decode_mp4(&native).expect("edited native MP4 reopens");
@@ -130,7 +130,7 @@ fn payload_detail_edits_publish_the_exact_requested_value() {
         let emitted = <Mp4Editor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).unwrap_or_else(|error| panic!("{}: {error:?}", row["id"]));
         let mut next = snapshot.clone();
         for mutation in emitted.artifact_mutations {
-            next = protocol::MutationDiff::apply(<Mp4Mutation as protocol::Mutation<Mp4Snapshot>>::diff(&mutation, &next).diff(), &next).unwrap();
+            next = protocol::apply_diff(<Mp4Mutation as protocol::Mutation<Mp4Snapshot>>::diff(&mutation, &next).diff(), &next).unwrap();
         }
         let mut expected = base.clone();
         *expected.pointer_mut("/tracks/0/samples/0/data").unwrap() = row["expected"].clone();

@@ -13,6 +13,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "create-node")]
 pub struct CreateNode {
     pub node: FemNode,
+    /// 📍 Zero-based insertion position among the siblings; `None` or past the end appends.
+    pub index: Option<usize>,
 }
 
 impl MutationKind<Fem2dSnapshot, Fem2dMutation> for CreateNode {

@@ -1,29 +1,26 @@
 {
   "artifact": null,
-  "schema": null,
   "domain": null,
-  "label": null,
-  "meta": null,
-  "kindCatalogs": null,
-  "kindCatalogsExtra": null,
-  "kindCompatibility": null,
-  "parts": null,
   "fasteners": null,
+  "kindCompatibility": null,
+  "meta": null,
+  "parts": null,
+  "schema": null,
   "targetVolumes": {
     "added": [
       {
+        "hidden": false,
         "id": "volume-2",
+        "locked": false,
         "origin": [
           6.0,
           0.0,
           0.0
-        ],
-        "hidden": false,
-        "locked": false
+        ]
       }
     ],
-    "removed": [],
     "patched": [],
+    "removed": [],
     "reordered": null
   }
 }

@@ -1,4 +1,6 @@
 //! 🧬️ Direct change-primitive-topology-mode mutation owner: payload, validation, typed diff, inverse, and outcomes.
+use crate::schema::diff::*;
+use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::modules::mutation_support::structure_geometry::checked_index;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
@@ -9,23 +11,33 @@ pub const ID: &str = "s.stdio.gltf.mutation.change-primitive-topology-mode.v1";
 pub struct GltfChangePrimitiveTopologyModePayload {
     pub mesh: usize,
     pub primitive: usize,
-    pub mode: u64,
+    #[value(required)]
+    pub mode: Option<u64>,
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate(payload: &GltfChangePrimitiveTopologyModePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
     checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
     checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
-    if payload.mode > 6 {
+    if payload.mode.is_some_and(|mode| mode > 6) {
         return Err(reject("gltf.mutation.invalid-topology-mode", "document/meshes/primitives/mode", "mode must be in the glTF topology domain"));
     }
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfChangePrimitiveTopologyModePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
-    let mut next = base.clone();
-    next.document.meshes[payload.mesh].primitives[payload.primitive].mode = Some(payload.mode);
-    Ok(next)
+pub fn plan(p: &GltfChangePrimitiveTopologyModePayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
+    validate(p, base)?;
+    let value = p.mode;
+    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { mode: (value != base.document.meshes[p.mesh].primitives[p.primitive].mode).then(|| value), ..Default::default() }), ..Default::default() })
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(p: &GltfChangePrimitiveTopologyModePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    if validate(p, base).is_err() {
+        return Vec::new();
+    }
+    if base.document.meshes[p.mesh].primitives[p.primitive].mode == p.mode {
+        return Vec::new();
+    }
+    vec![super::change_primitive_topology_mode::mutation(super::change_primitive_topology_mode::GltfChangePrimitiveTopologyModePayload { mesh: p.mesh, primitive: p.primitive, mode: base.document.meshes[p.mesh].primitives[p.primitive].mode })]
 }
 
 //#region 🧬️DirectMutation
@@ -34,7 +46,11 @@ pub fn apply(payload: &GltfChangePrimitiveTopologyModePayload, base: &GltfSnapsh
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangePrimitiveTopologyModeMutation {
     Apply(GltfChangePrimitiveTopologyModePayload),
-    Restore(Box<crate::schema::diff::GltfDiff>),
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutation(payload: GltfChangePrimitiveTopologyModePayload) -> super::GltfMutation {
+    super::GltfMutation::ChangePrimitiveTopologyMode(ChangePrimitiveTopologyModeMutation::Apply(payload))
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangePrimitiveTopologyModeMutation {
@@ -42,28 +58,18 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangePrimiti
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => match apply(payload, base) {
-                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Self::Apply(payload) => match plan(payload, base) {
+                Ok(diff) => protocol::MutationOutcome::new(diff),
                 Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
-            },
-            Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
-                Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-                Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
             },
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
-            return Vec::new();
+        match self {
+            Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::GltfMutation::ChangePrimitiveTopologyMode(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change Primitive Topology Mode", "Topologiemodus des Primitivs ändern")

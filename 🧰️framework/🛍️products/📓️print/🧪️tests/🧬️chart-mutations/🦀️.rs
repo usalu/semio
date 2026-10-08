@@ -65,6 +65,25 @@ fn array_removal_inverse_restores_shifted_elements() {
     assert_eq!(restored, base);
 }
 
+#[semio_framework_async_macros::async_test]
+async fn change_chart_value_inverse_diffs_sum_to_the_negative_diff() {
+    use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law as law;
+    let base = snapshot();
+    let source = fixture();
+    for value in source["mutations"].as_array().unwrap() {
+        law(&ChangeChartValue::from_value(DslValue::from(value.clone())).unwrap(), &base).await;
+    }
+    let first_layer = match base.chart.get("layers") { Some(DslValue::Array(items)) => items[0].clone(), other => panic!("fixture layers {other:?}") };
+    law(&ChangeChartValue { path: vec!["layers".into(), "1".into()], value: Some(first_layer) }, &base).await;
+    let mut layered = base.clone();
+    if let DslValue::Object(entries) = &mut layered.chart {
+        let layers = entries.iter_mut().find(|(name, _)| name == "layers").unwrap();
+        if let DslValue::Array(items) = &mut layers.1 { items.extend([items[0].clone(), items[0].clone()]); }
+    }
+    law(&ChangeChartValue { path: vec!["layers".into(), "0".into()], value: None }, &layered).await;
+    law(&ChangeChartValue { path: vec!["layers".into(), "2".into()], value: None }, &layered).await;
+}
+
 #[test]
 fn native_registry_dispatch_is_deterministic_and_controlled() {
     use semio_framework_plugin::*;

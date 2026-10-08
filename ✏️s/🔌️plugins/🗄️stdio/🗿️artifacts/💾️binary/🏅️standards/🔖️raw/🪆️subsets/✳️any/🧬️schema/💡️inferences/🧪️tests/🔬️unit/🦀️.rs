@@ -79,9 +79,9 @@ async fn field_sweep_covers_every_byte_level_change() {
     let b = sweep_b();
 
     let ab = BinaryDiff::between(&a, &b);
-    assert_eq!(ab.apply(&a).unwrap(), b, "between(a,b).apply(a) must equal b");
+    assert_eq!(protocol::apply_diff(&ab, &a).unwrap(), b, "between(a,b).apply(a) must equal b");
     let ba = BinaryDiff::between(&b, &a);
-    assert_eq!(ba.apply(&b).unwrap(), a, "between(b,a).apply(b) must equal a");
+    assert_eq!(protocol::apply_diff(&ba, &b).unwrap(), a, "between(b,a).apply(b) must equal a");
     assert!(!ab.splices.is_empty(), "sweep diff must carry at least one splice");
 
     // 🔬️ Exercise insert/remove/replace explicitly via hand-built splices (not just the
@@ -92,7 +92,7 @@ async fn field_sweep_covers_every_byte_level_change() {
             crate::standards::v_raw::subsets::any::schema::diff::ByteSplice { offset: 7, remove_len: 1, insert: vec![88] },  // pure replace
         ],
     };
-    assert_eq!(hand_built.apply(&a).unwrap(), b);
+    assert_eq!(protocol::apply_diff(&hand_built, &a).unwrap(), b);
 
     assert!(BinaryDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 }

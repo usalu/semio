@@ -4,7 +4,7 @@ use crate::schema::mutations::JpgMutation;
 use crate::schema::snapshot::*;
 
 //#region Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ChangeJfifHeaderMutation {
@@ -27,17 +27,10 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ChangeJfifHeaderMutati
         protocol::MutationOutcome::new(contribute(base, *version, *density_units, *x_density, *y_density, thumbnail.clone()))
     }
     fn inverse(&self, base: &JpgSnapshot) -> Result<Vec<JpgMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<JpgSnapshot, JpgMutation>>::diff(self, base);
-        if <JpgDiff as protocol::DiffAlgebra<JpgSnapshot>>::is_empty(outcome.diff()) {
-            return Vec::new();
-        }
-        {
-            vec![JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation { version: base.jfif_version, density_units: base.jfif_density_units, x_density: base.jfif_x_density, y_density: base.jfif_y_density, thumbnail: base.jfif_thumbnail.clone() })]
-        }
-    
-    })())
-}
+        let image = &base.image;
+        let unchanged = image.jfif_version == self.version && image.jfif_density_units == self.density_units && image.jfif_x_density == self.x_density && image.jfif_y_density == self.y_density && image.jfif_thumbnail == self.thumbnail;
+        Ok((!unchanged).then(|| JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation { version: image.jfif_version, density_units: image.jfif_density_units, x_density: image.jfif_x_density, y_density: image.jfif_y_density, thumbnail: image.jfif_thumbnail.clone() })).into_iter().collect())
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change JFIF header", "JFIF-Header ändern")
     }
@@ -47,14 +40,12 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ChangeJfifHeaderMutati
 }
 pub fn contribute(base: &JpgSnapshot, version: (u8, u8), density_units: JfifDensityUnits, x_density: u16, y_density: u16, thumbnail: Option<JfifThumbnail>) -> JpgDiff {
     JpgDiff {
-        jfif_version: (base.jfif_version != version).then_some(version),
-        jfif_density_units: (base.jfif_density_units != density_units).then_some(density_units),
-        jfif_x_density: (base.jfif_x_density != x_density).then_some(x_density),
-        jfif_y_density: (base.jfif_y_density != y_density).then_some(y_density),
-        jfif_thumbnail: (base.jfif_thumbnail != thumbnail).then_some(thumbnail),
+        jfif_version: (base.image.jfif_version != version).then_some(version),
+        jfif_density_units: (base.image.jfif_density_units != density_units).then_some(density_units),
+        jfif_x_density: (base.image.jfif_x_density != x_density).then_some(x_density),
+        jfif_y_density: (base.image.jfif_y_density != y_density).then_some(y_density),
+        jfif_thumbnail: (base.image.jfif_thumbnail != thumbnail).then_some(thumbnail),
         ..Default::default()
     }
 }
 //#endregion Semantics
-
-

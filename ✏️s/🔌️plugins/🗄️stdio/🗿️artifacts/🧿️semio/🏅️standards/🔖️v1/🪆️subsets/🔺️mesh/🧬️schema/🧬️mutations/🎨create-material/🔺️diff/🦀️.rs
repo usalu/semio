@@ -14,6 +14,6 @@ pub fn diff(payload: &super::CreateMaterial, base: &SemioMeshSnapshot) -> protoc
             return protocol::MutationOutcome::error("mutation.target-missing", format!("Material texture {id:?} does not exist."), [payload.material.id.clone(), id.to_owned()]);
         }
     }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::mesh::schema::diff::diff_add_material(base, payload.material.clone()))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::mesh::schema::diff::diff_add_material(base, payload.material.clone(), payload.at))
 }
 //#endregion 🔖️Diff

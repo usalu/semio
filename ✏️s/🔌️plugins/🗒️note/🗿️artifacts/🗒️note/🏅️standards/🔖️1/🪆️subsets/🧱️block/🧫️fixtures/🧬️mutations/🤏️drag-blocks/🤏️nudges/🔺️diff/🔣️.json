@@ -1,80 +1,85 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "title": null,
   "blocks": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "rows": [
       {
-        "id": "blk-ink",
+        "row": "patch",
+        "id": "blk-group",
         "patch": {
-          "block": {
-            "kind": "stroke",
-            "id": "blk-ink",
-            "name": "Sketch",
-            "x": 32.0,
-            "y": 152.0,
-            "width": 80.0,
-            "height": 40.0,
-            "rotation": 0.0,
-            "visible": true,
-            "locked": false,
-            "points": [
-              [
-                0.0,
-                0.0
-              ],
-              [
-                10.0,
-                10.0
-              ]
-            ],
-            "strokeWidth": 2.0,
-            "color": [
-              0.0,
-              0.0,
-              0.0,
-              1.0
-            ]
-          }
+          "name": null,
+          "x": 352.0,
+          "y": 192.0,
+          "width": null,
+          "height": null,
+          "rotation": null,
+          "visible": null,
+          "locked": null,
+          "content": null,
+          "fontSize": null,
+          "fontWeight": null,
+          "align": null,
+          "imageKey": null,
+          "table": null,
+          "tex": null,
+          "displayMode": null,
+          "points": null,
+          "strokeWidth": null,
+          "color": null
         }
       },
       {
-        "id": "blk-group",
+        "row": "patch",
+        "id": "blk-ink",
         "patch": {
-          "block": {
-            "kind": "group",
-            "id": "blk-group",
-            "name": "Callout",
-            "x": 352.0,
-            "y": 192.0,
-            "width": 280.0,
-            "height": 120.0,
-            "rotation": 0.0,
-            "visible": true,
-            "locked": false,
-            "children": [
-              {
-                "kind": "image",
-                "id": "blk-nested",
-                "name": "Badge",
-                "x": 362.0,
-                "y": 202.0,
-                "width": 60.0,
-                "height": 60.0,
-                "rotation": 0.0,
-                "visible": true,
-                "locked": false,
-                "imageKey": "asset-logo"
-              }
-            ]
-          }
+          "name": null,
+          "x": 32.0,
+          "y": 152.0,
+          "width": null,
+          "height": null,
+          "rotation": null,
+          "visible": null,
+          "locked": null,
+          "content": null,
+          "fontSize": null,
+          "fontWeight": null,
+          "align": null,
+          "imageKey": null,
+          "table": null,
+          "tex": null,
+          "displayMode": null,
+          "points": null,
+          "strokeWidth": null,
+          "color": null
+        }
+      },
+      {
+        "row": "patch",
+        "id": "blk-nested",
+        "patch": {
+          "name": null,
+          "x": 362.0,
+          "y": 202.0,
+          "width": null,
+          "height": null,
+          "rotation": null,
+          "visible": null,
+          "locked": null,
+          "content": null,
+          "fontSize": null,
+          "fontWeight": null,
+          "align": null,
+          "imageKey": null,
+          "table": null,
+          "tex": null,
+          "displayMode": null,
+          "points": null,
+          "strokeWidth": null,
+          "color": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "gridVisible": null,
   "gridSpacing": null,

@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "nodes": null,
   "elements": null,
   "materials": null,
@@ -12,33 +11,26 @@
     "patched": [
       {
         "id": "wind_x",
-        "item": {
-          "id": "wind_x",
-          "name": "Wind X",
-          "loads": [
-            {
-              "kind": "nodal",
-              "id": "ld_wx_0",
-              "nodeId": "el_0",
-              "dof": "Tx",
-              "value": 6750.0
-            },
-            {
-              "kind": "nodal",
-              "id": "ld_wx_1",
-              "nodeId": "el_1",
-              "dof": "Tx",
-              "value": 10800.0
-            },
-            {
-              "kind": "nodal",
-              "id": "ld_wx_spare",
-              "nodeId": "el_2",
-              "dof": "Tx",
-              "value": 5400.0
-            }
-          ],
-          "selfWeight": false
+        "patch": {
+          "name": null,
+          "selfWeight": null,
+          "loads": {
+            "added": [],
+            "removed": [],
+            "patched": [
+              {
+                "id": "ld_wx_0",
+                "item": {
+                  "kind": "nodal",
+                  "id": "ld_wx_0",
+                  "nodeId": "el_0",
+                  "dof": "Tx",
+                  "value": 6750.0
+                }
+              }
+            ],
+            "reordered": null
+          }
         }
       }
     ],

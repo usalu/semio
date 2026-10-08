@@ -1,0 +1,30 @@
+{
+  "scene": {
+    "nodes": [{"id": "雪😀", "label": "Mesh 雪 😀", "x": 0, "y": 8.5, "width": 180, "height": 72, "outputs": [{"id": "out"}]}],
+    "edges": [],
+    "viewport": {"x": 8.5, "y": -0.25, "zoom": 2}
+  },
+  "embedded": [
+    {"field": "previewOffJson", "value": ["雪😀"], "nativeJson": "[\"雪😀\"]"},
+    {"field": "lodJson", "value": {"automatic": false, "lod": "normal", "gridFactor": 1.25}, "nativeJson": "{\"automatic\":false,\"gridFactor\":1.25,\"lod\":\"normal\"}"},
+    {"field": "controlsJson", "value": [{"id": "size", "value": 7}], "nativeJson": "[{\"id\":\"size\",\"value\":7.0}]"},
+    {"field": "clustersJson", "value": [], "nativeJson": "[]"},
+    {"field": "computingJson", "value": {"active": "雪😀", "stale": []}, "nativeJson": "{\"active\":\"雪😀\",\"stale\":[]}"},
+    {"field": "statusJson", "value": {"雪😀": "ready"}, "nativeJson": "{\"雪😀\":\"ready\"}"},
+    {"field": "capabilitiesJson", "value": null, "nativeJson": "null"},
+    {"field": "hostSnapshotJson", "value": {"integer": -7, "fraction": 1.25, "text": "日本 雪 😀"}, "nativeJson": "{\"fraction\":1.25,\"integer\":-7.0,\"text\":\"日本 雪 😀\"}"}
+  ],
+  "structural": [
+    {"id": "absent", "scene": {}, "nodes": 0, "edges": 0, "viewport": null},
+    {"id": "malformed-nodes", "scene": {"nodes": [{"id": "kept-until-invalid"}, {"id": 7}], "edges": []}, "nodes": 0, "edges": 0, "viewport": null},
+    {"id": "malformed-edges", "scene": {"nodes": [], "edges": [{"id": "edge"}]}, "nodes": 0, "edges": 0, "viewport": null},
+    {"id": "null-viewport", "scene": {"viewport": null}, "refusal": "InvalidValue"},
+    {"id": "malformed-viewport", "scene": {"viewport": {"x": "bad", "y": 0, "zoom": 1}}, "refusal": "InvalidValue"},
+    {"id": "zero-zoom", "scene": {"viewport": {"x": 0, "y": 0, "zoom": 0}}, "refusal": "InvalidValue", "refusalMessage": "zoom.expected positive finite zoom"},
+    {"id": "negative-zoom", "scene": {"viewport": {"x": 0, "y": 0, "zoom": -1}}, "refusal": "InvalidValue", "refusalMessage": "zoom.expected positive finite zoom"}
+  ],
+  "malformedBase64": ["pk:?", "pk:AA=", "pk:AAAA=AAA", "pk:AB=="],
+  "cancelStages": ["input", "base64", "pack", "projection", "json-measure", "json-write", "retirement"],
+  "copyUnits": [0, 1, 3, 256],
+  "ownershipOffsets": [-1, 0, 1]
+}

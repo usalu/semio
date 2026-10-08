@@ -9,76 +9,28 @@
       {
         "id": "object-a",
         "patch": {
-          "replacement": {
-            "anchor": "fixed",
-            "hidden": false,
-            "id": "object-a",
-            "label": "Alpha",
-            "locked": false,
-            "meshUrl": "mesh://alpha",
-            "objectKind": "object-kind-a",
-            "orientation": [
-              1.0,
-              0.0,
-              0.0,
-              6.123233995736766e-17
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "scale": 1.0,
-            "vortices": [
-              {
-                "hidden": false,
-                "id": "vortex-1",
-                "locked": false,
-                "position": [
-                  1.0,
-                  0.0,
-                  0.0
-                ],
-                "vortexKind": "vortex-kind-a"
-              }
-            ]
-          }
+          "orientation": [
+            1.0,
+            0.0,
+            0.0,
+            6.123233995736766e-17
+          ]
         }
       },
       {
         "id": "object-b",
         "patch": {
-          "replacement": {
-            "anchor": "fixed",
-            "hidden": false,
-            "id": "object-b",
-            "locked": false,
-            "objectKind": "object-kind-b",
-            "orientation": [
-              6.123233995736766e-17,
-              -6.123233995736766e-17,
-              1.0,
-              3.749399456654644e-33
-            ],
-            "origin": [
-              2.220446049250313e-16,
-              0.0,
-              1.0
-            ],
-            "vortices": [
-              {
-                "hidden": false,
-                "id": "vortex-2",
-                "locked": false,
-                "position": [
-                  -1.0,
-                  0.0,
-                  0.0
-                ],
-                "vortexKind": "vortex-kind-b"
-              }
-            ]
-          }
+          "orientation": [
+            6.123233995736766e-17,
+            -6.123233995736766e-17,
+            1.0,
+            3.749399456654644e-33
+          ],
+          "origin": [
+            2.220446049250313e-16,
+            0.0,
+            1.0
+          ]
         }
       }
     ],
@@ -93,27 +45,12 @@
       {
         "id": "volume-1",
         "patch": {
-          "replacement": {
-            "hidden": false,
-            "id": "volume-1",
-            "locked": false,
-            "orientation": [
-              1.0,
-              0.0,
-              0.0,
-              6.123233995736766e-17
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "scale": [
-              2.0,
-              2.0,
-              2.0
-            ]
-          }
+          "orientation": [
+            1.0,
+            0.0,
+            0.0,
+            6.123233995736766e-17
+          ]
         }
       }
     ],

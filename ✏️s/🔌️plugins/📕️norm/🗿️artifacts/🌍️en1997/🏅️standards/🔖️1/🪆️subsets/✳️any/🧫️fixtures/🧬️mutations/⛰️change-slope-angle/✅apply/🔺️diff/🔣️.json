@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "structureId": null,
   "geotechnicalCategory": null,
   "designSituation": null,
@@ -12,15 +11,15 @@
   "piles": null,
   "retainingWalls": null,
   "slopes": {
-    "values": [
+    "added": [],
+    "removed": [],
+    "modified": [
       {
         "id": "slope-S1",
-        "angleDeg": 30.0,
-        "height": 6.0,
-        "length": 14.0,
-        "governingLayerId": "layer-sand"
+        "angleDeg": 30.0
       }
-    ]
+    ],
+    "order": null
   },
   "upliftCases": null
 }

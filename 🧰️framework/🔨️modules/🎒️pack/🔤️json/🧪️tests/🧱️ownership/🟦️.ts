@@ -8,6 +8,18 @@ import { JsonMemberPolicy } from "../../🧩️members/🟦️.ts";
 
 const owner = resolve(import.meta.dir, "../.."), read = (path: string): string => readFileSync(resolve(owner, path), "utf8");
 
+test("controlled JSON retirement retains neutral independent grants and original syntax", () => {
+  const fixture = JSON.parse(read("🧫️fixtures/🎮️retirement/🔣️.json"));
+  const errors: ParseError[] = [], tree = parseTree(fixture.source, errors, {disallowComments: true, allowTrailingComma: false});
+  expect(errors).toEqual([]);
+  expect(getNodeValue(tree!)).toEqual(JSON.parse(fixture.source));
+});
+
+test("completed JSON frame conserves original admission with independently parsed retained output",()=>{
+  const fixture=JSON.parse(read("🧫️fixtures/📦️completed-frame/🔣️.json"));
+  const errors:ParseError[]=[],tree=parseTree(fixture.source,errors,{disallowComments:true,allowTrailingComma:false});expect(errors).toEqual([]);expect(getNodeValue(tree!)).toEqual(JSON.parse(fixture.source));
+});
+
 test("owned member authority has exactly two schema-admitted explicit selections", () => {
   const validate = new Ajv({strict: true}).compile(JSON.parse(read("🧬️schema/🧩️members/🔣️.json")));
   expect(Object.values(JsonMemberPolicy)).toEqual(["Reject", "Replace"]);

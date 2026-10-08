@@ -14,7 +14,7 @@
 //! authored here — per the exemplar's mandate, an empty dispatch with no triad dirs, reasoned and
 //! flagged, is correct where there is no dispatch to author.
 
-pub use infinite_canvas::{self as canvas, *};
+pub use canvas::{self, *};
 pub use std::sync::Arc;
 
 pub use canvas::camera::Camera;
@@ -1141,14 +1141,14 @@ impl RasterSession {
         }
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let (render_ctx, renderer, surface) = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+            let admission = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
             let mut g = inner.borrow_mut();
             if g.gpu.gpu_ready() {
                 g.set_logical_size(lw, lh, dpr, pw, ph);
                 return Ok(JsValue::UNDEFINED);
             }
             g.set_logical_size(lw, lh, dpr, pw, ph);
-            g.gpu.finish_attach(canvas, render_ctx, renderer, surface);
+            g.gpu.finish_attach(admission);
             Ok(JsValue::UNDEFINED)
         })
     }

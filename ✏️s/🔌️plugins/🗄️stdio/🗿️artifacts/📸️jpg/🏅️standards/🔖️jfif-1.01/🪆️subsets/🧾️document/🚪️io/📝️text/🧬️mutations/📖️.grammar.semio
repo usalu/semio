@@ -1,46 +1,17 @@
-# Direct identities: set-snapshot, patch-snapshot, change-jfif-header, replace-quant-table, remove-quant-table, replace-huffman-table, remove-huffman-table, change-restart-interval, insert-other-segment, remove-other-segment, replace-pixels
 dialect grammar
 grammar stdio.jpg.mutations
 extension jpg
 start document
 comment none
 
-document = set-snapshot-op | patch-snapshot-op | change-jfif-header | replace-quant-table | remove-quant-table | replace-huffman-table | remove-huffman-table | change-restart-interval | insert-other-segment | remove-other-segment | replace-pixels
-
-patch-snapshot-op = "patch-snapshot" "patch" "=" hex
-
+document = change-jfif-header | insert-other-segment | remove-other-segment | replace-pixels | replace-image
 change-jfif-header = "change-jfif-header" "version" "=" version-lit "density-units" "=" INT "x-density" "=" INT "y-density" "=" INT "thumbnail" "=" opt-thumbnail
-replace-quant-table = "replace-quant-table" "table" "=" quant-table-lit
-remove-quant-table = "remove-quant-table" "id" "=" INT
-replace-huffman-table = "replace-huffman-table" "table" "=" huffman-table-lit
-remove-huffman-table = "remove-huffman-table" "key" "=" huffman-key-lit
-change-restart-interval = "change-restart-interval" "restart-interval" "=" opt-u16
 insert-other-segment = "insert-other-segment" "index" "=" INT "segment" "=" segment-lit
 remove-other-segment = "remove-other-segment" "index" "=" INT
 replace-pixels = "replace-pixels" "pixels" "=" hex
-
-opt-u8 = "[" "0" "]" | "[" "1" "," INT "]"
-opt-u16 = "[" "0" "]" | "[" "1" "," INT "]"
 opt-thumbnail = "[" "0" "]" | "[" "1" "," thumbnail-lit "]"
-
 version-lit = "[" INT "," INT "]"
 thumbnail-lit = "[" INT "," INT "," hex "]"
-
-quant-table-lit = "[" INT "," INT "," "[" quant-value* "]" "]"
-quant-value = INT ","?
-
-huffman-table-lit = "[" INT "," INT "," hex "," hex "]"
-huffman-key-lit = "[" INT "," INT "]"
-
 segment-lit = "[" INT "," hex "]"
-
-snapshot-lit = "[" hex "," INT "," INT "," hex "," opt-u8 "," version-lit "," INT "," INT "," INT "," opt-thumbnail "," opt-frame-header "," INT "," INT "," "[" quant-table-item* "]" "," "[" huffman-table-item* "]" "," opt-u16 "," "[" segment-item* "]" "]"
-quant-table-item = quant-table-lit ","?
-huffman-table-item = huffman-table-lit ","?
+replace-image = "replace-image" "width" "=" INT "height" "=" INT "pixels" "=" hex "version" "=" version-lit "density-units" "=" INT "x-density" "=" INT "y-density" "=" INT "thumbnail" "=" opt-thumbnail "segments" "=" "[" segment-item* "]"
 segment-item = segment-lit ","?
-
-opt-frame-header = "[" "0" "]" | "[" "1" "," frame-header-lit "]"
-frame-header-lit = "[" INT "," INT "," INT "," "[" frame-component* "]" "]"
-frame-component = "[" INT "," INT "," INT "," INT "]" ","?
-
-set-snapshot-op = "set-snapshot" "snapshot" "=" hex

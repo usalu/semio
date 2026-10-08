@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "title": null,
@@ -13,12 +12,16 @@
   "pencilWidth": null,
   "eraserRadius": null,
   "assets": {
-    "entries": {
-      "asset-sketch": {
-        "mime": "image/jpeg",
-        "data": "c2tldGNo"
+    "rows": [
+      {
+        "row": "insert",
+        "key": "asset-sketch",
+        "asset": {
+          "mime": "image/jpeg",
+          "data": "c2tldGNo"
+        }
       }
-    }
+    ]
   },
   "linkedArtifact": null
 }

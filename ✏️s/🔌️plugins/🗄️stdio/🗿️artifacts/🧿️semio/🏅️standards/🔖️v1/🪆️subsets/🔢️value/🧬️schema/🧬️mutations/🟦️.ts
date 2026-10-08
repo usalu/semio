@@ -7,9 +7,9 @@ export type SemioValuePath = SemioValuePathSegment[];
 
 export type SemioValueMutation =
   | { mutation: "setValue"; path: SemioValuePath; value: SemioValue }
-  | { mutation: "setMapEntry"; path: SemioValuePath; key: string; value: SemioValue }
+  | { mutation: "setMapEntry"; path: SemioValuePath; key: string; value: SemioValue; at?: number }
   | { mutation: "removeMapEntry"; path: SemioValuePath; key: string }
   | { mutation: "insertListItem"; path: SemioValuePath; index: number; value: SemioValue }
   | { mutation: "removeListItem"; path: SemioValuePath; index: number }
-  | { mutation: "setNode"; id: ValueId; value: SemioValue }
+  | { mutation: "setNode"; id: ValueId; value: SemioValue; at?: number }
   | { mutation: "removeNode"; id: ValueId };

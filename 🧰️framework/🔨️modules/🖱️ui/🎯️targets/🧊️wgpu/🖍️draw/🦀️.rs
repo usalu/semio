@@ -378,6 +378,8 @@ pub struct World3dGlobals {
     pub material: [f32; 4],
     pub material_emissive: [f32; 4],
     pub shadow: [f32; 4],
+    /// ✂️ The section plane (`n · p + constant < 0` is discarded) for instances flagged `SECTION_CLIP_FLAG`; all zeros clips nothing.
+    pub clip_plane: [f32; 4],
 }
 
 impl World3dGlobals {
@@ -397,6 +399,7 @@ impl World3dGlobals {
                 0.0,
                 1.0,
             ],
+            clip_plane: pass.section_clip.unwrap_or([0.0; 4]),
         }
     }
 }
@@ -420,6 +423,12 @@ impl World3dGridUniforms {
         }
     }
 }
+
+/// ✂️ The one stencil bit the section cap borrows (the high bit; the UI clip masks use `0` and `1`): a cut solid's parity toggles it, the cap plane draws where it is set, and a second toggle pass restores it to zero.
+pub const SECTION_STENCIL_BIT: u32 = 0x80;
+
+/// ✂️ The policy bit of `World3dGpuInstance::flags.x` that makes the lit mesh shader test the fragment against `World3dGlobals::clip_plane`.
+pub const SECTION_CLIP_FLAG: f32 = 32.0;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -474,6 +483,14 @@ impl World3dGpuInstance {
             flags: [policy as f32, emissive_intensity, metalness, roughness],
             emissive_cutoff: [0.0, 0.0, 0.0, -1.0],surface_parameters:[1.0,1.0,1.0,0.0],
         }
+    }
+
+    /// ✂️ Flags the instance for the pass's section plane when its section role clips (policy bit [`SECTION_CLIP_FLAG`]).
+    pub fn with_section(mut self, role: crate::wgpu::kernel_3d_scene::SceneSectionRole3d) -> Self {
+        if role.clips() {
+            self.flags[0] += SECTION_CLIP_FLAG;
+        }
+        self
     }
 
     pub fn from_authored(model: [f32; 16], material: &crate::wgpu::kernel_3d_scene::SceneAuthoredMaterial3d, receives_shadow: bool) -> Self {
@@ -675,7 +692,7 @@ impl MeshGpuTable {
             let schema = lease.schema().map_err(|_| "mesh upload lease was stale")?;
             let vertex_bytes = u64::from(schema.vertices).checked_mul(size_of::<World3dVertex>() as u64).ok_or("mesh upload vertex byte credits overflowed")?;
             let index_bytes = u64::from(schema.indices).checked_mul(size_of::<u32>() as u64).ok_or("mesh upload index byte credits overflowed")?;
-            if vertex_bytes == 0 || index_bytes == 0 {
+            if vertex_bytes == 0 {
                 return Err("mesh upload schema was empty");
             }
             let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor { label: Some("world3d_vertices"), size: vertex_bytes, usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, mapped_at_creation: false });
@@ -2790,6 +2807,8 @@ pub(crate) struct UiPipelines {
     vector_pipeline: wgpu::RenderPipeline,
     world_pipeline: wgpu::RenderPipeline,
     world_pipeline_translucent: wgpu::RenderPipeline,
+    world_section_stencil_pipeline: wgpu::RenderPipeline,
+    world_section_cap_pipeline: wgpu::RenderPipeline,
     world_authored_front_pipeline: wgpu::RenderPipeline,
     world_authored_double_translucent_pipeline: wgpu::RenderPipeline,
     world_standard_translucent_pipeline: wgpu::RenderPipeline,
@@ -3315,6 +3334,52 @@ impl UiPipelines {
             }),
             primitive: wgpu::PrimitiveState { cull_mode: Some(wgpu::Face::Back), ..Default::default() },
             depth_stencil: translucent_depth_state,
+            multisample: wgpu::MultisampleState::default(),
+            multiview_mask: None,
+            cache: None,
+        });
+        let section_toggle_face = wgpu::StencilFaceState { compare: wgpu::CompareFunction::Equal, fail_op: wgpu::StencilOperation::Keep, depth_fail_op: wgpu::StencilOperation::Invert, pass_op: wgpu::StencilOperation::Invert };
+        let world_section_stencil_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("world3d_section_stencil_pipeline"),
+            layout: Some(&world_mesh_pipeline_layout),
+            vertex: wgpu::VertexState { module: &world_shader, entry_point: Some("vs_main"), buffers: &[world_vertex_layout(), world_instance_layout()], compilation_options: Default::default() },
+            fragment: Some(wgpu::FragmentState {
+                module: &world_shader,
+                entry_point: Some("fs_section_stencil"),
+                targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: None, write_mask: wgpu::ColorWrites::empty() })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() },
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: wgpu::TextureFormat::Depth24PlusStencil8,
+                depth_write_enabled: Some(false),
+                depth_compare: Some(wgpu::CompareFunction::Always),
+                stencil: wgpu::StencilState { front: section_toggle_face, back: section_toggle_face, read_mask: !SECTION_STENCIL_BIT & 0xff, write_mask: SECTION_STENCIL_BIT },
+                bias: wgpu::DepthBiasState::default(),
+            }),
+            multisample: wgpu::MultisampleState::default(),
+            multiview_mask: None,
+            cache: None,
+        });
+        let section_cap_face = wgpu::StencilFaceState { compare: wgpu::CompareFunction::Equal, fail_op: wgpu::StencilOperation::Keep, depth_fail_op: wgpu::StencilOperation::Keep, pass_op: wgpu::StencilOperation::Keep };
+        let world_section_cap_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("world3d_section_cap_pipeline"),
+            layout: Some(&world_mesh_pipeline_layout),
+            vertex: wgpu::VertexState { module: &world_shader, entry_point: Some("vs_main"), buffers: &[world_vertex_layout(), world_instance_layout()], compilation_options: Default::default() },
+            fragment: Some(wgpu::FragmentState {
+                module: &world_shader,
+                entry_point: Some("fs_section_cap"),
+                targets: &[Some(wgpu::ColorTargetState { format: world_encoded_format, blend: Some(wgpu::BlendState::REPLACE), write_mask: wgpu::ColorWrites::ALL })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState { cull_mode: None, ..Default::default() },
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: wgpu::TextureFormat::Depth24PlusStencil8,
+                depth_write_enabled: Some(true),
+                depth_compare: Some(wgpu::CompareFunction::LessEqual),
+                stencil: wgpu::StencilState { front: section_cap_face, back: section_cap_face, read_mask: 0xff, write_mask: 0x00 },
+                bias: wgpu::DepthBiasState::default(),
+            }),
             multisample: wgpu::MultisampleState::default(),
             multiview_mask: None,
             cache: None,
@@ -3867,6 +3932,8 @@ impl UiPipelines {
             vector_pipeline,
             world_pipeline,
             world_pipeline_translucent,
+            world_section_stencil_pipeline,
+            world_section_cap_pipeline,
             world_authored_front_pipeline,
             world_authored_double_translucent_pipeline,
             world_standard_translucent_pipeline,
@@ -4106,6 +4173,7 @@ impl UiPipelines {
         let Some(mesh) = mesh_store.get_versioned(&draw_call.mesh_key, draw_call.mesh_version) else {
             return;
         };
+        if mesh.index_count == 0 || draw_call.instance_count == 0 { return; }
         let byte_offset = draw_call.instance_offset as u64 * instance_stride;
         pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
         pass.set_vertex_buffer(1, instance_buffer.slice(byte_offset..byte_offset + draw_call.instance_count as u64 * instance_stride));
@@ -4486,6 +4554,7 @@ impl UiPipelines {
             return Err("prepared world shadow map was not begun");
         }
         let Some(mesh) = mesh_store.get_versioned(mesh_key, mesh_version) else { return Ok(false) };
+        if mesh.index_count == 0 { return Ok(false); }
         let globals = World3dGlobals::from_pass(pass_owner);
         self.world_globals_ring.ensure_slots(device, &self.world_bind_group_layout, 1);
         self.world_globals_ring.write_passes(queue, std::slice::from_ref(&globals));
@@ -4542,11 +4611,12 @@ impl UiPipelines {
         height: f32,
     ) -> Result<bool, &'static str> {
         let Some(mesh) = mesh_store.get_versioned(mesh_key, mesh_version) else { return Ok(false) };
+        if mesh.index_count == 0 { return Ok(false); }
         let globals = World3dGlobals::from_pass(pass_owner);
         self.world_globals_ring.ensure_slots(device, &self.world_bind_group_layout, 1);
         self.world_globals_ring.write_passes(queue, std::slice::from_ref(&globals));
         let gpu_instance =
-            World3dGpuInstance::from_instance(instance.model.to_cols_array_m(), instance.color, instance.material.preserve_vertex_color, instance.material.emissive_intensity, instance.material.metalness, instance.material.roughness, receives_shadow);
+            World3dGpuInstance::from_instance(instance.model.to_cols_array_m(), instance.color, instance.material.preserve_vertex_color, instance.material.emissive_intensity, instance.material.metalness, instance.material.roughness, receives_shadow).with_section(instance.material.section);
         let Some(instance_buffer) = frame_buffers.world_instances.upload(device, queue, std::slice::from_ref(&gpu_instance), wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_world_instance") else {
             return Err("prepared world instance buffer admission failed");
         };
@@ -4566,7 +4636,14 @@ impl UiPipelines {
         });
         pass.set_viewport(viewport[0] * scale, viewport[1] * scale, viewport[2] * scale, viewport[3] * scale, 0.0, 1.0);
         pass.set_scissor_rect(scene_scissor.x, scene_scissor.y, scene_scissor.w, scene_scissor.h);
-        pass.set_pipeline(if translucent { &self.world_pipeline_translucent } else { &self.world_pipeline });
+        match instance.material.section {
+            crate::wgpu::kernel_3d_scene::SceneSectionRole3d::StencilToggle => pass.set_pipeline(&self.world_section_stencil_pipeline),
+            crate::wgpu::kernel_3d_scene::SceneSectionRole3d::Cap => {
+                pass.set_pipeline(&self.world_section_cap_pipeline);
+                pass.set_stencil_reference(SECTION_STENCIL_BIT);
+            }
+            _ => pass.set_pipeline(if translucent { &self.world_pipeline_translucent } else { &self.world_pipeline }),
+        }
         pass.set_bind_group(0, &self.world_globals_ring.bind_group, &[self.world_globals_ring.offset_for_slot(0)]);
         pass.set_bind_group(1, &self.world_shadow_target.bind_group, &[]);
         pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
@@ -4596,6 +4673,7 @@ impl UiPipelines {
         height: f32,
     ) -> Result<bool, &'static str> {
         let Some(mesh) = mesh_store.get_versioned(&draw_owner.mesh_key, draw_owner.mesh_version) else { return Ok(false) };
+        if mesh.index_count == 0 { return Ok(false); }
         let globals = World3dGlobals::from_pass(pass_owner);
         self.world_globals_ring.ensure_slots(device, &self.world_bind_group_layout, 1);
         self.world_globals_ring.write_passes(queue, std::slice::from_ref(&globals));
@@ -4611,7 +4689,8 @@ impl UiPipelines {
                     instance.material.metalness,
                     instance.material.roughness,
                     pass_owner.shadow.enabled,
-                );
+                )
+                .with_section(instance.material.section);
                 frame_buffers
                     .world_instances
                     .upload(device, queue, std::slice::from_ref(&gpu_instance), wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_world_standard_translucent")
@@ -4632,7 +4711,8 @@ impl UiPipelines {
                     instance.material.metalness,
                     instance.material.roughness,
                     pass_owner.shadow.enabled,
-                );
+                )
+                .with_section(instance.material.section);
                 frame_buffers.world_instances.upload(device, queue, std::slice::from_ref(&gpu_instance), wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_world_painted").ok_or("prepared world painted buffer admission failed")?
             }
             crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Celebration { stops, angle } => {
@@ -4656,7 +4736,7 @@ impl UiPipelines {
                     }
                     Some(device.create_bind_group(&wgpu::BindGroupDescriptor { label: Some("world3d_authored_bind_group"), layout: &self.world_authored_bind_group_layout, entries: &entries }))
                 } else { None };
-                let gpu_instance = World3dGpuInstance::from_authored(instance.model.to_cols_array_m(), material, pass_owner.shadow.enabled);
+                let gpu_instance = World3dGpuInstance::from_authored(instance.model.to_cols_array_m(), material, pass_owner.shadow.enabled).with_section(instance.material.section);
                 frame_buffers.world_instances.upload(device, queue, std::slice::from_ref(&gpu_instance), wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, "prepared_world_authored").ok_or("prepared world authored buffer admission failed")?
             }
         };

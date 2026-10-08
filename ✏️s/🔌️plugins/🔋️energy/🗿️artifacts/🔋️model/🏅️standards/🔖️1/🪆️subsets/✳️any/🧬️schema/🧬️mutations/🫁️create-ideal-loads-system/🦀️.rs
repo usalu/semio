@@ -22,6 +22,7 @@ pub struct CreateIdealLoadsSystem {
     pub max_cooling_capacity_w: f64,
     pub outdoor_air_per_person_m3_s: f64,
     pub outdoor_air_per_area_m3_s_m2: f64,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
@@ -36,6 +37,7 @@ pub fn create_ideal_loads_system(
     max_cooling_capacity_w: f64,
     outdoor_air_per_person_m3_s: f64,
     outdoor_air_per_area_m3_s_m2: f64,
+    index: Option<u32>,
 ) -> EnergyModelMutation {
     EnergyModelMutation::CreateIdealLoadsSystem(CreateIdealLoadsSystem {
         id,
@@ -47,8 +49,7 @@ pub fn create_ideal_loads_system(
         max_cooling_capacity_present,
         max_cooling_capacity_w,
         outdoor_air_per_person_m3_s,
-        outdoor_air_per_area_m3_s_m2,
-    })
+        outdoor_air_per_area_m3_s_m2, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateIdealLoadsSystem {

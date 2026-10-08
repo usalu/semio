@@ -40,7 +40,7 @@ pub use super::change_title::{change_title_operation, ChangeTitle};
 /// ▶️ Applies `mutation` via its diff. External call site: `derived_construction`'s
 /// `ArtifactBuilder::mutate` (`../🦀️.rs`).
 pub fn apply_playbook_mutation(snapshot: &PlaybookSnapshot, mutation: &PlaybookMutation) -> protocol::MutationApplyResult<PlaybookSnapshot> {
-    protocol::MutationDiff::apply(protocol::Mutation::diff(mutation, snapshot).diff(), snapshot)
+    protocol::apply_diff(protocol::Mutation::diff(mutation, snapshot).diff(), snapshot)
 }
 
 /// ↩️ Computes `mutation`'s inverse from the pre-state `snapshot`.
@@ -65,7 +65,10 @@ pub const KINDS: &[&str] = &["change-title"];
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
 pub fn apply_playbook_mutation_outcome(snapshot: &mut PlaybookSnapshot, mutation: &PlaybookMutation) -> protocol::MutationOutcome<PlaybookDiff> {
     let outcome = <PlaybookMutation as protocol::Mutation<PlaybookSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    if let Ok(next) = protocol::apply_diff(outcome.diff(), &*snapshot) {
+        *snapshot = next;
+    }
+    outcome
 }
 
 /// ↩️ `mutation`'s own inverse against `base`, as the step LIST `protocol::Mutation::inverse`

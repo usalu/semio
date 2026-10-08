@@ -45,6 +45,22 @@
         "group": "value",
         "order": 20
       }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "label": {
+          "en": "Index",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Position to create the variable at; absent appends. Ignored when the name already exists.",
+          "de": "Position, an der die Variable angelegt wird; ohne Angabe wird angehängt. Wird ignoriert, wenn der Name bereits existiert."
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   },
   "$defs": {

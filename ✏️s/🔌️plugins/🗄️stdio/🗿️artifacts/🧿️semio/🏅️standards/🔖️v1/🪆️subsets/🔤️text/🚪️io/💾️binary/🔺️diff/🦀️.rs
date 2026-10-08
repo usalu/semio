@@ -45,4 +45,5 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     Ok(SemioTextDiff { runs })
 }
 }
+}
 pub use diff_codec::*;

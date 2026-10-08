@@ -16,7 +16,7 @@ use super::*;
 use crate::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
 use crate::standards::v1_7::subsets::base::schema::diff::PdfPageBox;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 //#region 🔖️Harness
 /// 🧬️ The typed model alone, without the retained COS carrier.
@@ -29,7 +29,7 @@ fn lanes(snapshot: &PdfSnapshot) -> PdfSnapshot {
 
 fn applied(base: &PdfSnapshot, mutation: &PdfMutation) -> PdfSnapshot {
     let outcome = mutation.diff(base);
-    MutationDiff::apply(outcome.diff(), base).unwrap_or_else(|error| panic!("{mutation:?} must apply: {error:?}"))
+    protocol::apply_diff(outcome.diff(), base).unwrap_or_else(|error| panic!("{mutation:?} must apply: {error:?}"))
 }
 
 /// 💾️ Writes the snapshot with this subset's writer and reads the bytes back.
@@ -124,29 +124,29 @@ lopdf_vector!(set_annotation, "📝️set-annotation", |_, a| PdfMutation::SetAn
 //#endregion 🔖️PageKinds
 
 //#region 🔖️ResourceKinds
-lopdf_vector!(set_font, "🔤️set-font", |b, a| PdfMutation::SetFont(SetFont { font: added(&b.fonts, &a.fonts) }));
+lopdf_vector!(set_font, "🔤️set-font", |b, a| PdfMutation::SetFont(SetFont { font: added(&b.fonts, &a.fonts), index: None }));
 lopdf_vector!(remove_font, "🅾️remove-font", |b, a| PdfMutation::RemoveFont(RemoveFont { id: removed(&b.fonts, &a.fonts).id }));
-lopdf_vector!(set_image, "🏞️set-image", |b, a| PdfMutation::SetImage(SetImage { image: added(&b.images, &a.images) }));
+lopdf_vector!(set_image, "🏞️set-image", |b, a| PdfMutation::SetImage(SetImage { image: added(&b.images, &a.images), index: None }));
 lopdf_vector!(remove_image, "🌫️remove-image", |b, a| PdfMutation::RemoveImage(RemoveImage { id: removed(&b.images, &a.images).id }));
-lopdf_vector!(set_form, "📄️set-form", |b, a| PdfMutation::SetForm(SetForm { form: added(&b.forms, &a.forms) }));
+lopdf_vector!(set_form, "📄️set-form", |b, a| PdfMutation::SetForm(SetForm { form: added(&b.forms, &a.forms), index: None }));
 lopdf_vector!(remove_form, "🗞️remove-form", |b, a| PdfMutation::RemoveForm(RemoveForm { id: removed(&b.forms, &a.forms).id }));
-lopdf_vector!(set_ext_g_state, "🎛️set-ext-g-state", |b, a| PdfMutation::SetExtGState(SetExtGState { state: added(&b.ext_g_states, &a.ext_g_states) }));
+lopdf_vector!(set_ext_g_state, "🎛️set-ext-g-state", |b, a| PdfMutation::SetExtGState(SetExtGState { state: added(&b.ext_g_states, &a.ext_g_states), index: None }));
 lopdf_vector!(remove_ext_g_state, "🎚️remove-ext-g-state", |b, a| PdfMutation::RemoveExtGState(RemoveExtGState { id: removed(&b.ext_g_states, &a.ext_g_states).id }));
-lopdf_vector!(set_shading, "🌅️set-shading", |b, a| PdfMutation::SetShading(SetShading { shading: added(&b.shadings, &a.shadings) }));
+lopdf_vector!(set_shading, "🌅️set-shading", |b, a| PdfMutation::SetShading(SetShading { shading: added(&b.shadings, &a.shadings), index: None }));
 lopdf_vector!(remove_shading, "🌄️remove-shading", |b, a| PdfMutation::RemoveShading(RemoveShading { id: removed(&b.shadings, &a.shadings).id }));
-lopdf_vector!(set_pattern, "🧩️set-pattern", |b: &PdfSnapshot, a: &PdfSnapshot| [PdfMutation::SetShading(SetShading { shading: added(&b.shadings, &a.shadings) }), PdfMutation::SetPattern(SetPattern { pattern: added(&b.patterns, &a.patterns) })]);
+lopdf_vector!(set_pattern, "🧩️set-pattern", |b: &PdfSnapshot, a: &PdfSnapshot| [PdfMutation::SetShading(SetShading { shading: added(&b.shadings, &a.shadings), index: None }), PdfMutation::SetPattern(SetPattern { pattern: added(&b.patterns, &a.patterns), index: None })]);
 lopdf_vector!(remove_pattern, "🪡️remove-pattern", |b: &PdfSnapshot, a: &PdfSnapshot| [PdfMutation::RemovePattern(RemovePattern { id: removed(&b.patterns, &a.patterns).id }), PdfMutation::RemoveShading(RemoveShading { id: removed(&b.shadings, &a.shadings).id })]);
-lopdf_vector!(set_color_space, "🌈️set-color-space", |b, a| PdfMutation::SetColorSpace(SetColorSpace { color_space: added(&b.color_spaces, &a.color_spaces) }));
+lopdf_vector!(set_color_space, "🌈️set-color-space", |b, a| PdfMutation::SetColorSpace(SetColorSpace { color_space: added(&b.color_spaces, &a.color_spaces), index: None }));
 lopdf_vector!(remove_color_space, "🎨️remove-color-space", |b, a| PdfMutation::RemoveColorSpace(RemoveColorSpace { name: removed(&b.color_spaces, &a.color_spaces).name }));
-lopdf_vector!(set_properties, "🏷️set-properties", |b, a| PdfMutation::SetProperties(SetProperties { properties: added(&b.properties, &a.properties) }));
+lopdf_vector!(set_properties, "🏷️set-properties", |b, a| PdfMutation::SetProperties(SetProperties { properties: added(&b.properties, &a.properties), index: None }));
 lopdf_vector!(remove_properties, "🔖️remove-properties", |b, a| PdfMutation::RemoveProperties(RemoveProperties { name: removed(&b.properties, &a.properties).name }));
 //#endregion 🔖️ResourceKinds
 
 //#region 🔖️CatalogKinds
-lopdf_vector!(set_embedded_file, "📎️set-embedded-file", |b, a| PdfMutation::SetEmbeddedFile(SetEmbeddedFile { file: added(&b.embedded_files, &a.embedded_files) }));
+lopdf_vector!(set_embedded_file, "📎️set-embedded-file", |b, a| PdfMutation::SetEmbeddedFile(SetEmbeddedFile { file: added(&b.embedded_files, &a.embedded_files), index: None }));
 lopdf_vector!(remove_embedded_file, "🗃️remove-embedded-file", |b, a| PdfMutation::RemoveEmbeddedFile(RemoveEmbeddedFile { id: removed(&b.embedded_files, &a.embedded_files).id }));
 lopdf_vector!(set_outlines, "📑️set-outlines", |_, a| PdfMutation::SetOutlines(SetOutlines { outlines: a.outlines.clone() }));
-lopdf_vector!(set_named_destination, "🎯️set-named-destination", |b, a| PdfMutation::SetNamedDestination(SetNamedDestination { destination: added(&b.named_destinations, &a.named_destinations) }));
+lopdf_vector!(set_named_destination, "🎯️set-named-destination", |b, a| PdfMutation::SetNamedDestination(SetNamedDestination { destination: added(&b.named_destinations, &a.named_destinations), index: None }));
 lopdf_vector!(remove_named_destination, "🎪️remove-named-destination", |b, a| PdfMutation::RemoveNamedDestination(RemoveNamedDestination { name: removed(&b.named_destinations, &a.named_destinations).name }));
 lopdf_vector!(set_page_labels, "🔢️set-page-labels", |_, a| PdfMutation::SetPageLabels(SetPageLabels { labels: a.page_labels.clone() }));
 lopdf_vector!(set_output_intents, "🏳️set-output-intents", |_, a| PdfMutation::SetOutputIntents(SetOutputIntents { intents: a.output_intents.clone() }));
@@ -157,11 +157,11 @@ lopdf_vector!(set_page_mode, "🖥️set-page-mode", |_, a| PdfMutation::SetPage
 lopdf_vector!(set_viewer_preferences, "🛠️set-viewer-preferences", |_, a| PdfMutation::SetViewerPreferences(SetViewerPreferences { preferences: a.viewer_preferences.clone() }));
 lopdf_vector!(set_open_action, "🚪️set-open-action", |_, a| PdfMutation::SetOpenAction(SetOpenAction { action: a.open_action.clone() }));
 lopdf_vector!(set_language, "🗣️set-language", |_, a| PdfMutation::SetLanguage(SetLanguage { language: a.language.clone() }));
-lopdf_vector!(set_mark_info, "🔏️set-mark-info", |_, a| PdfMutation::SetMarkInfo(SetMarkInfo { info: a.mark_info.clone() }));
+lopdf_vector!(set_mark_info, "🔏️set-mark-info", |_, a| PdfMutation::SetMarkInfo(SetMarkInfo { info: a.mark_info.clone(), entry_index: None }));
 lopdf_vector!(set_metadata, "🧾️set-metadata", |_, a| PdfMutation::SetMetadata(SetMetadata { xmp: a.metadata.clone() }));
 lopdf_vector!(set_catalog_entry, "🗂️set-catalog-entry", |b, a| {
     let entry = added(&b.catalog_extra, &a.catalog_extra);
-    PdfMutation::SetCatalogEntry(SetCatalogEntry { key: entry.key, value: entry.value })
+    PdfMutation::SetCatalogEntry(SetCatalogEntry { key: entry.key, value: entry.value, index: None })
 });
 lopdf_vector!(remove_catalog_entry, "🧺️remove-catalog-entry", |b, a| PdfMutation::RemoveCatalogEntry(RemoveCatalogEntry { key: removed(&b.catalog_extra, &a.catalog_extra).key }));
 //#endregion 🔖️CatalogKinds

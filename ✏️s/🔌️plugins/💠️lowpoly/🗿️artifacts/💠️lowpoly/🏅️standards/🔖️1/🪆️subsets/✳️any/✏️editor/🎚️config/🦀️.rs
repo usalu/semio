@@ -142,7 +142,30 @@ pub fn default_utility_params_json() -> String {
     .to_string()
 }
 
-store::impl_whole_record_config!(LowpolyConfig);
+store::config_diff! {
+    record: LowpolyConfig,
+    diff: LowpolyConfigDiff,
+    fields: {
+        active_object_id: String,
+        paint_utility: String,
+        active_paint_layer: u32,
+        utility_params_json: String,
+        paint_color_r: u8,
+        paint_color_g: u8,
+        paint_color_b: u8,
+        paint_color_a: u8,
+        world_camera_position: [f64; 3],
+        world_camera_target: [f64; 3],
+        world_camera_fov: f64,
+        engagement_input: String,
+        show_edges: bool,
+        sun_enabled: bool,
+        sun_azimuth: f64,
+        sun_elevation: f64,
+        sun_intensity: f64,
+        sun_color: String,
+    },
+}
 
 /// 🌞️ Reads `LowpolyConfig`'s flattened sun fields back into a `WorldSunConfig` — the boundary where
 /// the framework's shared sun toggle/slider helper (`apply_world3d_sun_action`) can operate on it.
@@ -152,22 +175,10 @@ pub fn lowpoly_sun_config(config: &LowpolyConfig) -> WorldSunConfig {
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutations
-/// 🧮️ B1: `LowpolyConfig`'s operation enum — one variant per settled interaction (mirrors the
-/// pre-B1 `LowpolyPlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()`
-/// returns — mirrors `shooting_op::ShootingConfigOperation`'s identical pattern: a config-only dispatch
-/// is always a plain `Apply`, so "undo this tick" = "restore the whole-config
-/// snapshot from just before it", the simplest correct inverse.
+/// 🧮️ B1: `LowpolyConfig`'s operation enum — one variant per settled interaction (mirrors the pre-B1 `LowpolyPlayRuntime` field
+/// writes); each variant's inverse is the same variant carrying the base value of exactly the fields it owns.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, value_derive::ToValue, value_derive::FromValue)]
-#[allow(
-    clippy::large_enum_variant,
-    reason = "Snapshot must carry the whole LowpolyConfig by value (not boxed) so its dsl(block)-derived wire encoding stays byte-identical to the pre-migration wire format; every variant is dispatched rarely (config-only ticks), never in a hot allocation path"
-)]
 pub enum LowpolyConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: LowpolyConfig,
-    },
     #[dsl(key = "active-object")]
     SetActiveObject { object_id: String },
     #[dsl(key = "paint-utility")]
@@ -250,29 +261,13 @@ impl protocol::OpBinary for LowpolyConfigMutation {
 //#endregion 🔖️OpCodec
 
 impl Mutation<LowpolyConfig> for LowpolyConfigMutation {
-    type Diff = LowpolyConfig;
+    type Diff = LowpolyConfigDiff;
 
     /// 🧷️ Provisional per-variant leaf metadata for this hand-written (non-derived) aggregate —
     /// `diff`/`inverse` dispatch here is a plain `match`, not the derive's per-leaf `MutationKind`
     /// shape. One entry per variant, in declaration order, mirroring `generation2d`'s identical
     /// precedent for its own hand-written config aggregate.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor {
-            schema_version: 1,
-            owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set",
-            semantic_kind: "set-snapshot",
-            display_name: "Set Snapshot",
-            emoji: "⚙️",
-            aggregate_variant: "Snapshot",
-            payload_schema: "🧬️schema/🔣️.json",
-            text_opcode: None,
-            binary_tag: None,
-            invertibility: protocol::MutationInvertibility::ExplicitMutation,
-            diff_participation: protocol::MutationDiffParticipation::Detect,
-            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-            composition: protocol::MutationComposition::Atomic,
-            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-        },
         protocol::MutationLeafDescriptor {
             schema_version: 1,
             owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-active-object",
@@ -421,60 +416,59 @@ impl Mutation<LowpolyConfig> for LowpolyConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            LowpolyConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
-            LowpolyConfigMutation::SetActiveObject { .. } => &Self::DESCRIPTORS[1],
-            LowpolyConfigMutation::SetPaintUtility { .. } => &Self::DESCRIPTORS[2],
-            LowpolyConfigMutation::SetActivePaintLayer { .. } => &Self::DESCRIPTORS[3],
-            LowpolyConfigMutation::SetUtilityParams { .. } => &Self::DESCRIPTORS[4],
-            LowpolyConfigMutation::SetPaintColor { .. } => &Self::DESCRIPTORS[5],
-            LowpolyConfigMutation::SetWorldCamera { .. } => &Self::DESCRIPTORS[6],
-            LowpolyConfigMutation::SetEngagementInput { .. } => &Self::DESCRIPTORS[7],
-            LowpolyConfigMutation::SetShowEdges { .. } => &Self::DESCRIPTORS[8],
-            LowpolyConfigMutation::SetSun { .. } => &Self::DESCRIPTORS[9],
+            LowpolyConfigMutation::SetActiveObject { .. } => &Self::DESCRIPTORS[0],
+            LowpolyConfigMutation::SetPaintUtility { .. } => &Self::DESCRIPTORS[1],
+            LowpolyConfigMutation::SetActivePaintLayer { .. } => &Self::DESCRIPTORS[2],
+            LowpolyConfigMutation::SetUtilityParams { .. } => &Self::DESCRIPTORS[3],
+            LowpolyConfigMutation::SetPaintColor { .. } => &Self::DESCRIPTORS[4],
+            LowpolyConfigMutation::SetWorldCamera { .. } => &Self::DESCRIPTORS[5],
+            LowpolyConfigMutation::SetEngagementInput { .. } => &Self::DESCRIPTORS[6],
+            LowpolyConfigMutation::SetShowEdges { .. } => &Self::DESCRIPTORS[7],
+            LowpolyConfigMutation::SetSun { .. } => &Self::DESCRIPTORS[8],
         }
     }
 
-    /// 📦️ Whole-config field-setter/snapshot — every variant addresses the single always-present
-    /// `LowpolyConfig` by value, so there is no target to be missing; message-free outcome per the
-    /// contract's root-scoped shrink-only allowlist.
-    fn diff(&self, base: &LowpolyConfig) -> protocol::MutationOutcome<LowpolyConfig> {
-        let mut next = base.clone();
-        match self {
-            LowpolyConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
-            LowpolyConfigMutation::SetActiveObject { object_id } => next.active_object_id = object_id.clone(),
-            LowpolyConfigMutation::SetPaintUtility { value } => next.paint_utility = value.clone(),
-            LowpolyConfigMutation::SetActivePaintLayer { value } => next.active_paint_layer = *value,
-            LowpolyConfigMutation::SetUtilityParams { json } => next.utility_params_json = json.clone(),
-            LowpolyConfigMutation::SetPaintColor { r, g, b, a } => {
-                next.paint_color_r = *r;
-                next.paint_color_g = *g;
-                next.paint_color_b = *b;
-                next.paint_color_a = *a;
-            }
-            LowpolyConfigMutation::SetWorldCamera { position, target, fov } => {
-                next.world_camera_position = *position;
-                next.world_camera_target = *target;
-                next.world_camera_fov = *fov;
-            }
-            LowpolyConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
-            LowpolyConfigMutation::SetShowEdges { value } => next.show_edges = *value,
-            LowpolyConfigMutation::SetSun { enabled, azimuth, elevation, intensity, color } => {
-                next.sun_enabled = *enabled;
-                next.sun_azimuth = *azimuth;
-                next.sun_elevation = *elevation;
-                next.sun_intensity = *intensity;
-                next.sun_color = color.clone();
-            }
-        }
-        protocol::MutationOutcome::new(next)
+    /// 📦️ Each variant sets only the slots of the fields it owns.
+    fn diff(&self, base: &LowpolyConfig) -> protocol::MutationOutcome<LowpolyConfigDiff> {
+        protocol::MutationOutcome::new(match self {
+            LowpolyConfigMutation::SetActiveObject { object_id } => LowpolyConfigDiff { active_object_id: Some(object_id.clone()), ..Default::default() },
+            LowpolyConfigMutation::SetPaintUtility { value } => LowpolyConfigDiff { paint_utility: Some(value.clone()), ..Default::default() },
+            LowpolyConfigMutation::SetActivePaintLayer { value } => LowpolyConfigDiff { active_paint_layer: Some(*value), ..Default::default() },
+            LowpolyConfigMutation::SetUtilityParams { json } => LowpolyConfigDiff { utility_params_json: Some(json.clone()), ..Default::default() },
+            LowpolyConfigMutation::SetPaintColor { r, g, b, a } => LowpolyConfigDiff { paint_color_r: Some(*r), paint_color_g: Some(*g), paint_color_b: Some(*b), paint_color_a: Some(*a), ..Default::default() },
+            LowpolyConfigMutation::SetWorldCamera { position, target, fov } => LowpolyConfigDiff { world_camera_position: Some(*position), world_camera_target: Some(*target), world_camera_fov: Some(*fov), ..Default::default() },
+            LowpolyConfigMutation::SetEngagementInput { value } => LowpolyConfigDiff { engagement_input: Some(value.clone()), ..Default::default() },
+            LowpolyConfigMutation::SetShowEdges { value } => LowpolyConfigDiff { show_edges: Some(*value), ..Default::default() },
+            LowpolyConfigMutation::SetSun { enabled, azimuth, elevation, intensity, color } => LowpolyConfigDiff {
+                sun_enabled: Some(*enabled),
+                sun_azimuth: Some(*azimuth),
+                sun_elevation: Some(*elevation),
+                sun_intensity: Some(*intensity),
+                sun_color: Some(color.clone()),
+                ..Default::default()
+            },
+        })
     }
 
     fn inverse(&self, base: &LowpolyConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![LowpolyConfigMutation::Snapshot { config: base.clone() }]
-    
-    })())
-}
+        Ok(vec![match self {
+            LowpolyConfigMutation::SetActiveObject { .. } => LowpolyConfigMutation::SetActiveObject { object_id: base.active_object_id.clone() },
+            LowpolyConfigMutation::SetPaintUtility { .. } => LowpolyConfigMutation::SetPaintUtility { value: base.paint_utility.clone() },
+            LowpolyConfigMutation::SetActivePaintLayer { .. } => LowpolyConfigMutation::SetActivePaintLayer { value: base.active_paint_layer },
+            LowpolyConfigMutation::SetUtilityParams { .. } => LowpolyConfigMutation::SetUtilityParams { json: base.utility_params_json.clone() },
+            LowpolyConfigMutation::SetPaintColor { .. } => LowpolyConfigMutation::SetPaintColor { r: base.paint_color_r, g: base.paint_color_g, b: base.paint_color_b, a: base.paint_color_a },
+            LowpolyConfigMutation::SetWorldCamera { .. } => LowpolyConfigMutation::SetWorldCamera { position: base.world_camera_position, target: base.world_camera_target, fov: base.world_camera_fov },
+            LowpolyConfigMutation::SetEngagementInput { .. } => LowpolyConfigMutation::SetEngagementInput { value: base.engagement_input.clone() },
+            LowpolyConfigMutation::SetShowEdges { .. } => LowpolyConfigMutation::SetShowEdges { value: base.show_edges },
+            LowpolyConfigMutation::SetSun { .. } => LowpolyConfigMutation::SetSun {
+                enabled: base.sun_enabled,
+                azimuth: base.sun_azimuth,
+                elevation: base.sun_elevation,
+                intensity: base.sun_intensity,
+                color: base.sun_color.clone(),
+            },
+        }])
+    }
 }
 //#endregion 🔖️ConfigMutations
 

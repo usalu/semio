@@ -37,6 +37,7 @@ native-artifact-execution = ["dep:semio-s-artifact-stdio-json", "dep:semio-s-art
 integration-fixtures = ["native-artifact-execution"]
 
 [dependencies]
+semio-framework-artifact-reference = { path = "../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }

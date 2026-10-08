@@ -66,8 +66,8 @@ from semio_repo_test import Adapter, Context, Outcome
 # region 🔖️Input
 INPUT = "shared://🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc"
 
-#: 🧬️ The six kinds IfcOpenShell can genuinely PRODUCE, in this subset's own catalog order.
-KINDS = ["set-snapshot", "set-file-description", "set-file-name", "set-file-schema", "insert-entity", "set-entity-arg"]
+#: 🧬️ The five kinds IfcOpenShell can genuinely PRODUCE, in this subset's own catalog order.
+KINDS = ["set-file-description", "set-file-name", "set-file-schema", "insert-entity", "set-entity-arg"]
 
 
 def mutable_input(ctx: Context) -> str:
@@ -497,8 +497,6 @@ def apply_mutation(path: str, spec: dict) -> bytes:
     reports as a passing test."""
     kind = spec["kind"]
     params = spec["params"]
-    if kind == "set-snapshot":
-        return snapshot_model(params["snapshot"]).to_string().encode("utf-8")
     model = open_model(path)
     if kind == "set-file-schema":
         model.header.file_schema.schema_identifiers = schema_identifiers(params["values"])
@@ -529,8 +527,7 @@ def apply_mutation(path: str, spec: dict) -> bytes:
 def inverse_spec(kind: str) -> dict:
     """↩️ The inverse of one forward `(kind, params)` pair against this fixture's own real header
     and entity values, in the same `IfcValue` leaf wire the rows use — computed here from the committed
-    fixture rather than read from any implementation's `inverse()` method. `set-snapshot` has none
-    here: its inverse is the untouched model itself, which `inverse` restores by re-reading it."""
+    fixture rather than read from any implementation's `inverse()` method."""
     if kind == "set-file-schema":
         return {"kind": "set-file-schema", "params": {"values": [{"kind": "aggregate", "value": [{"kind": "string", "value": "IFC4"}]}]}}
     if kind == "set-file-description":
@@ -628,14 +625,13 @@ def mutate(ctx: Context) -> Outcome:
 def inverse(ctx: Context) -> Outcome:
     """↩️ The inverse law, checkable in role without a subject: IfcOpenShell applies the forward
     mutation and then the independently computed inverse, and the restored exchange structure MUST
-    project exactly as the untouched one does. `set-snapshot`'s inverse is the model it replaced:
-    IfcOpenShell re-reads the untouched fixture and writes it back."""
+    project exactly as the untouched one does."""
     path = mutable_input(ctx)
     spec = spec_of(ctx)
     kind = spec["kind"]
     baseline = project(rewrite(path).decode("utf-8"))
     mutated = apply_mutation(path, spec)
-    restored = rewrite(path) if kind == "set-snapshot" else apply_mutation_to_bytes(ctx, mutated, inverse_spec(kind))
+    restored = apply_mutation_to_bytes(ctx, mutated, inverse_spec(kind))
     projection = project(restored.decode("utf-8"))
     found = first_divergence("$", baseline, projection)
     if found:

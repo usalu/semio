@@ -5,7 +5,7 @@
 
 use crate::editor::tsv::modes::edit;
 use crate::editor::tsv::modes::edit::windows::main;
-use crate::standards::iana::subsets::any::schema::mutations::{insert_row,remove_row,set_cell,set_snapshot};
+use crate::standards::iana::subsets::any::schema::mutations::{insert_row,remove_row,set_cell};
 
 use crate::{TsvMutation, TsvSnapshot, STDIO_TSV_DOCUMENT_SCHEMA};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -333,7 +333,8 @@ fn tsv_emit_at_revision(command: &TsvEditorCommand, snapshot: &TsvSnapshot, cano
     if current_revision != *revision {
         return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.tsv.table-conflict"), "The TSV document changed before this table draft was applied."));
     }
-    let mutation = match command {
+    let replace_row = |index: usize, row: Vec<String>| [TsvMutation::RemoveRow(remove_row::RemoveRow { index }), TsvMutation::InsertRow(insert_row::InsertRow { index, row })];
+    let mutations: Vec<TsvMutation> = match command {
         TsvEditorCommand::SetCell { row, column, value, .. } => {
             let row_index = *row as usize;
             let current = snapshot
@@ -344,46 +345,53 @@ fn tsv_emit_at_revision(command: &TsvEditorCommand, snapshot: &TsvSnapshot, cano
             if current == value {
                 return Ok(Emit::default());
             }
-            TsvMutation::SetCell(set_cell::SetCell { row_index, field_index: *column as usize, value: value.clone() })
+            vec![TsvMutation::SetCell(set_cell::SetCell { row_index, field_index: *column as usize, value: value.clone() })]
         }
         TsvEditorCommand::AddRow { .. } => {
             let width = snapshot.records.iter().map(Vec::len).max().unwrap_or(0).max(1);
             let row = vec![String::new(); width];
-            TsvMutation::InsertRow(insert_row::InsertRow { index: snapshot.records.len(), row })
+            vec![TsvMutation::InsertRow(insert_row::InsertRow { index: snapshot.records.len(), row })]
         }
         TsvEditorCommand::RemoveRow { row, .. } => {
             let index = *row as usize;
             if snapshot.records.get(index).is_none() {
                 return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.tsv.row-stale"), format!("TSV row {row} no longer exists")));
             }
-            TsvMutation::RemoveRow(remove_row::RemoveRow { index })
+            vec![TsvMutation::RemoveRow(remove_row::RemoveRow { index })]
         }
-        TsvEditorCommand::AddColumn { .. } => {
-            let mut next = snapshot.clone();
-            if next.records.is_empty() {
-                next.records.push(Vec::new());
-            }
-            for record in &mut next.records {
-                record.push(String::new());
-            }
-            TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: next })
-        }
+        TsvEditorCommand::AddColumn { .. } => match snapshot.records.is_empty() {
+            true => vec![TsvMutation::InsertRow(insert_row::InsertRow { index: 0, row: vec![String::new()] })],
+            false => snapshot
+                .records
+                .iter()
+                .enumerate()
+                .flat_map(|(index, record)| {
+                    let mut widened = record.clone();
+                    widened.push(String::new());
+                    replace_row(index, widened)
+                })
+                .collect(),
+        },
         TsvEditorCommand::RemoveColumn { column, .. } => {
             let column = *column as usize;
             if !snapshot.records.iter().any(|record| column < record.len()) {
                 return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.tsv.column-stale"), format!("TSV column {column} no longer exists")));
             }
-            let mut next = snapshot.clone();
-            for record in &mut next.records {
-                if column < record.len() {
-                    record.remove(column);
-                }
-            }
-            TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: next })
+            snapshot
+                .records
+                .iter()
+                .enumerate()
+                .filter(|(_, record)| column < record.len())
+                .flat_map(|(index, record)| {
+                    let mut narrowed = record.clone();
+                    narrowed.remove(column);
+                    replace_row(index, narrowed)
+                })
+                .collect()
         }
         TsvEditorCommand::EditSnapshot { .. } | TsvEditorCommand::SetActiveExample { .. } => unreachable!(),
     };
-    Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() })
+    Ok(Emit { artifact_mutations: mutations, ..Default::default() })
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
@@ -491,8 +499,8 @@ impl ArtifactEditor for TsvEditor {
         Ok(crate::standards::iana::subsets::any::io::text::snapshot::decode_tsv(text))
     }
 
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
@@ -673,12 +681,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for TsvEdit
     }
 
     fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(
-            event,
-            snapshot,
-            |patch| TsvMutation::PatchSnapshot(crate::standards::iana::subsets::any::schema::mutations::patch_snapshot::PatchSnapshot { patch }),
-            Some(|snapshot| TsvMutation::SetSnapshot(crate::standards::iana::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot })),
-        )
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::iana::subsets::any::schema::mutations::net_mutations)
     }
 }
 //#endregion 🔖️Editor

@@ -1,67 +1,48 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "streams": null,
   "assets": null,
   "durableArtifacts": null,
   "calibration": {
-    "cameras": [
-      {
-        "id": "cam-a",
-        "label": "Front",
-        "model": "brownConrady",
-        "fx": 1000.0,
-        "fy": 1000.0,
-        "cx": 512.0,
-        "cy": 384.0,
-        "skew": 0.0,
-        "distortion": [
-          0.0625,
-          -0.03125,
-          0.0,
-          0.0,
-          0.0
-        ],
-        "rmsReprojectionPx": 0.5,
-        "locked": false
-      },
-      {
-        "id": "cam-b",
-        "label": "Side",
-        "model": "pinhole",
-        "fx": 800.0,
-        "fy": 800.0,
-        "cx": 320.0,
-        "cy": 240.0,
-        "skew": 0.0,
-        "distortion": [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
-        ],
-        "rmsReprojectionPx": null,
-        "locked": true
-      }
-    ],
-    "rig": [
-      {
-        "cameraId": "cam-a",
-        "rotationWxyz": [
-          1.0,
-          0.0,
-          0.0,
-          0.0
-        ],
-        "translationM": [
-          0.125,
-          -0.25,
-          0.5
-        ]
-      }
-    ]
+    "cameras": {
+      "rows": []
+    },
+    "rig": {
+      "rows": [
+        {
+          "row": "replace",
+          "entity": {
+            "cameraId": "cam-a",
+            "rotationWxyz": [
+              {
+                "bits": "3f800000"
+              },
+              {
+                "bits": "00000000"
+              },
+              {
+                "bits": "00000000"
+              },
+              {
+                "bits": "00000000"
+              }
+            ],
+            "translationM": [
+              {
+                "bits": "3e000000"
+              },
+              {
+                "bits": "be800000"
+              },
+              {
+                "bits": "3f000000"
+              }
+            ]
+          }
+        }
+      ]
+    }
   },
   "params": null,
   "gcps": null,

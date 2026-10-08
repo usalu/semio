@@ -25,6 +25,9 @@ pub fn inverse(payload: &super::CreateHumidistat, base: &EnergyModelSnapshot) ->
     {
         return Vec::new();
     }
+    if payload.index.is_some_and(|index| index as usize > base.model.humidistats.len()) {
+        return Vec::new();
+    }
     vec![vocabulary::delete_humidistat(payload.id)]
 
     })())

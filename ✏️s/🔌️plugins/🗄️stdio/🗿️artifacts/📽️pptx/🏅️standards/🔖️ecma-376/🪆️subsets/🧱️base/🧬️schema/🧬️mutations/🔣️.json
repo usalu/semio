@@ -5,12 +5,6 @@
   "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/mutation/set-snapshot/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/mutation/patch-snapshot/schema.json"
-    },
-    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/mutation/insert-slide/schema.json"
     },
     {
@@ -30,6 +24,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/mutation/set-shape-position/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/mutation/replace-xml-node/schema.json"
     }
   ]
 }

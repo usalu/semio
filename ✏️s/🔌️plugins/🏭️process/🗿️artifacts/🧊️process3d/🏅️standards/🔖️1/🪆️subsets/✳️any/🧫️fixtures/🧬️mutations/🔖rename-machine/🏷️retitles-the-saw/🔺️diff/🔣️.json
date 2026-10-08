@@ -1,44 +1,16 @@
 {
-  "artifact": null,
   "workshop": {
-    "machines": [
+    "added": [],
+    "removed": [],
+    "patched": [
       {
         "id": "saw",
         "label": "Panel Saw",
-        "iconId": "scissors",
-        "capabilities": [
-          {
-            "id": "cut",
-            "label": "Cut",
-            "iconId": "scissors",
-            "recipe": {
-              "recipe": "bladeCut",
-              "kerf": "kerf",
-              "length": "length",
-              "depth": "depth"
-            },
-            "parameters": [
-              {
-                "id": "kerf",
-                "label": "Kerf",
-                "value": 0.0625
-              },
-              {
-                "id": "length",
-                "label": "Length",
-                "value": 0.5
-              },
-              {
-                "id": "depth",
-                "label": "Depth",
-                "value": 0.5
-              }
-            ],
-            "rules": []
-          }
-        ]
+        "iconId": null,
+        "capabilities": null
       }
-    ]
+    ],
+    "reordered": null
   },
   "stockId": null,
   "stockLabel": null,

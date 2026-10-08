@@ -5,9 +5,10 @@ use super::super::*;
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(payload: &super::AddBlockEntity, base: &SemioCadSnapshot) -> protocol::MutationOutcome<SemioCadDiff> {
-    let super::AddBlockEntity { block_name, entity } = payload;
+    let super::AddBlockEntity { block_name, entity, at } = payload;
+    let block_len = base.blocks.iter().find(|block| block.name == *block_name).map_or(0, |block| block.entities.len());
     protocol::MutationOutcome::new({
-        wrap_block_diff(block_name, CadBlockDiff { base_point: None, entities: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![entity.clone()] }) })
+        wrap_block_diff(block_name, CadBlockDiff { base_point: None, entities: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![crate::standards::v1::subsets::base::schema::triples::NamedAdded { index: at.map_or(block_len, |at| at.min(block_len)), item: entity.clone() }] }) })
     })
 }
 //#endregion 🔖️Diff

@@ -1,7 +1,4 @@
-//! 🏷️ `set-version-info` — authored as its own mutation leaf. The aggregate's original
-//! `diff`/`inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf
-//! reconstructs its aggregate value and delegates, so the semantics are preserved by construction
-//! rather than re-derived.
+//! 🏷️ `set-version-info` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -19,14 +16,16 @@ impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetVersionInfo {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "version-info", kind: "set-version-info", record: "SetVersionInfo" };
 
     fn diff(&self, base: &DwgSnapshot) -> protocol::MutationOutcome<<DwgMutation as Mutation<DwgSnapshot>>::Diff> {
-        agg_diff(&DwgMutation::SetVersionInfo(self.clone()), base)
+        let Self { version, maintenance_version, codepage } = self;
+        let next = diff::version_info_next(base, version, *maintenance_version, *codepage);
+        match crate::standards::v_ac1024::subsets::any::schema::snapshot::unwritable_version(&next) {
+            Some((_, message)) => protocol::MutationOutcome::fatal("mutation.invariant", message, Vec::<String>::new()),
+            None => protocol::MutationOutcome::new(diff::diff_set_version_info(base, version, *maintenance_version, *codepage)),
+        }
     }
     fn inverse(&self, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&DwgMutation::SetVersionInfo(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: base.version.clone(), maintenance_version: base.maintenance_version, codepage: base.codepage })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set version info", "Versionsinfo setzen")
     }

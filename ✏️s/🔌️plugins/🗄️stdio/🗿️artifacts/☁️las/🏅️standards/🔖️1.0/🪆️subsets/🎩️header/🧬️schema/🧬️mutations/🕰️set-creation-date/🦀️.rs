@@ -1,7 +1,4 @@
-//! 🕰️ `set-creation-date` — its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 🕰️ `set-creation-date` — its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 //!
 //! 🕰️ Sets the file creation day-of-year / year.
 use super::*;
@@ -19,14 +16,12 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetCreationDate {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "creation-date", kind: "set-creation-date", record: "SetCreationDate" };
 
     fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
-        agg_diff(&LasMutation::SetCreationDate(self.clone()), base)
+        let Self { day_of_year, year } = self;
+        protocol::MutationOutcome::new(diff::diff_set_creation_date(*day_of_year, *year))
     }
     fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&LasMutation::SetCreationDate(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![LasMutation::SetCreationDate(set_creation_date::SetCreationDate { day_of_year: base.header.creation_day_of_year, year: base.header.creation_year })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set creation date", "Erstellungsdatum setzen")
     }

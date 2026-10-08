@@ -30,16 +30,14 @@ const snapshot: WavSnapshot = {
   chunkOrder: [{ kind: "format" }, { kind: "other", value: 0n }, { kind: "samples" }],
 };
 const operations = [
-  { mutation: "setSnapshot", snapshot },
-  { mutation: "patchSnapshot", patch: { operation: "set", path: "/fmt/sampleRate", value: 22_050 } },
   { mutation: "setFmt", fmt },
   { mutation: "setData", data },
   { mutation: "patchData", index: 1, removeCount: 2, data: { kind: "pcm16", value: [3_000] }, moveTo: 0 },
-  { mutation: "setOtherChunks", chunks: [{ fourcc: "LIST", data: [1, 2, 3, 4], padByte: 0 }] },
+  { mutation: "setOtherChunks", chunks: [{ fourcc: "LIST", data: [1, 2, 3, 4], padByte: 0 }], chunkOrder: [{ kind: "format" }, { kind: "samples" }, { kind: "other", value: 0n }] },
 ] satisfies readonly WavMutation[];
-const tags = ["setSnapshot", "patchSnapshot", "setFmt", "setData", "patchData", "setOtherChunks"] as const satisfies readonly WavMutation["mutation"][];
+const tags = ["setFmt", "setData", "patchData", "setOtherChunks"] as const satisfies readonly WavMutation["mutation"][];
 const fields: Readonly<Record<WavMutation["mutation"], readonly string[]>> = {
-  setSnapshot: ["mutation", "snapshot"], patchSnapshot: ["mutation", "patch"], setFmt: ["mutation", "fmt"], setData: ["mutation", "data"], patchData: ["mutation", "index", "removeCount", "data", "moveTo"], setOtherChunks: ["mutation", "chunks"],
+  setFmt: ["mutation", "fmt"], setData: ["mutation", "data"], patchData: ["mutation", "index", "removeCount", "data", "moveTo"], setOtherChunks: ["mutation", "chunks", "chunkOrder"],
 };
 
 describe("WAV mutation TypeScript facets", () => {
@@ -47,7 +45,7 @@ describe("WAV mutation TypeScript facets", () => {
     expect(facets).toEqual([true, true]);
     expect(operations.map(({ mutation }) => mutation)).toEqual(Array.from(tags));
     for (const operation of operations) expect(Object.keys(operation)).toEqual(Array.from(fields[operation.mutation]));
-    const wireOperations = operations.map(operation => operation.mutation === "setSnapshot" ? {...operation, snapshot: {...operation.snapshot, chunkOrder: operation.snapshot.chunkOrder.map(reference => reference.kind === "other" ? {...reference, value: Number(reference.value)} : reference)}} : operation);
+    const wireOperations = operations.map(operation => operation.mutation === "setOtherChunks" ? {...operation, chunkOrder: operation.chunkOrder?.map(reference => reference.kind === "other" ? {...reference, value: Number(reference.value)} : reference)} : operation);
     expect(JSON.parse(JSON.stringify(wireOperations))).toEqual(wireOperations);
     expect(snapshot.chunkOrder?.[1]).toEqual({kind: "other", value: 0n});
   });

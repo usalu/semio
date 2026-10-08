@@ -495,17 +495,17 @@ export async function ensureDevLocalHub(
   return { hubUrl, dataDir, profileId, userId: session.userId };
 }
 
-//#region 🔖️DevServeFixture
+//#region 🔖️DevServeOwnership
 /** 🛎️ How long {@link ensureDevServe} waits for a serve it started to answer (a cold `s` Vite boot measured 55 s under a
  * busy fleet, ticket 26/09/23 S18). */
 export const DEV_SERVE_BOOT_BOUND_MS = 300_000;
 /** 📣️ How often a booting serve is reported. */
 export const DEV_SERVE_STATUS_INTERVAL_MS = 5_000;
-/** 🚫️ Ports a serve fixture never binds: the canonical hub's. */
+/** 🚫️ Ports a serve owner never binds: the canonical hub's. */
 export const DEV_SERVE_REFUSED_PORTS: readonly number[] = [7800];
 const DEV_SERVE_STOP_BOUND_MS = 15_000;
 
-/** 🧭️ What the fixture does with a port: `reuse` a serve that already answers (and never stops it), `spawn` one on a free
+/** 🧭️ What the serve owner does with a port: `reuse` a serve that already answers (and never stops it), `spawn` one on a free
  * port, refuse the canonical hub port, refuse a port someone else holds without answering as a serve. */
 export type DevServePlanV1 = "reuse" | "spawn" | "refuse-hub-port" | "refuse-occupied";
 
@@ -525,7 +525,7 @@ export function devServePortV1(serveUrl: string): number {
   return port;
 }
 
-/** 📣️ Everything the fixture reports, as data; the line is {@link devServeStatusTextV1}. */
+/** 📣️ Everything the serve owner reports, as data; the line is {@link devServeStatusTextV1}. */
 export type DevServeStatusV1 =
   | { readonly kind: "reusing"; readonly url: string }
   | { readonly kind: "spawning"; readonly url: string; readonly pid: number; readonly logPath: string }
@@ -554,7 +554,7 @@ export function devServeStatusTextV1(status: DevServeStatusV1, locale: DevHubLoc
 export type DevServeRendererV1 = "react" | "wgpu";
 export type DevServeProfileV1 = "dev" | "release";
 
-/** 🧾️ What the fixture asks its world to start (`DevServeSpawnRequestV1`, `🧑‍💻dev/🧬️schema/🔣️.json`): one shell serve on
+/** 🧾️ What the serve owner asks its world to start (`DevServeSpawnRequestV1`, `🧑‍💻dev/🧬️schema/🔣️.json`): one shell serve on
  * `port`, local-only unless `hubUrl` names the hub it joins, output in `logPath`. */
 export type DevServeSpawnRequestV1 = Readonly<{ port: number; variant: string; renderer: DevServeRendererV1; profile: DevServeProfileV1; hubUrl: string | null; logPath: string }>;
 
@@ -574,7 +574,7 @@ export function devServeCommandV1(request: DevServeSpawnRequestV1): DevServeComm
     : { script: DEV_SERVE_WGPU_SCRIPT, args: ["serve", request.variant, request.profile, "--port", String(request.port)], cwd: dirname(DEV_SERVE_WGPU_SCRIPT), env };
 }
 
-/** 🔌️ The world the fixture acts on — the real one by default, a double in the laws. */
+/** 🔌️ The world the serve owner acts on — the real one by default, a double in the laws. */
 export type DevServeWorldV1 = Readonly<{
   answers: (url: string) => Promise<boolean>;
   portInUse: (port: number) => Promise<boolean>;
@@ -585,7 +585,7 @@ export type DevServeWorldV1 = Readonly<{
 }>;
 
 /** 🛎️ A serve a harness runs against: `url` to drive, `reused` when it was already there, `stop()` ends only what the
- * fixture itself started. */
+ * owner itself started. */
 export type DevServerV1 = Readonly<{ url: string; reused: boolean; stop: () => Promise<void> }>;
 
 export type DevServeOptionsV1 = Readonly<{
@@ -655,7 +655,7 @@ export function devServeWorldV1(repoRoot: string): DevServeWorldV1 {
   };
 }
 
-/** 🛎️ The ONE shared serve fixture every browser harness runs against (ticket 26/09/23 S18, R10's productization
+/** 🛎️ The shared development serve owner every browser harness uses (ticket 26/09/23 S18, R10's productization
  * contract): reuses a serve that already answers on `port` (and never stops it), otherwise starts the shell serve there
  * ({@link devServeCommandV1}: `renderer` react or wgpu, `profile` dev or release; default the `s` React dev serve) —
  * local-only, or joined to `hubUrl` — reports its boot with progress, honours `signal` (a cancelled boot stops what
@@ -722,4 +722,4 @@ export async function ensureDevServe(options: DevServeOptionsV1): Promise<DevSer
     throw error;
   }
 }
-//#endregion 🔖️DevServeFixture
+//#endregion 🔖️DevServeOwnership

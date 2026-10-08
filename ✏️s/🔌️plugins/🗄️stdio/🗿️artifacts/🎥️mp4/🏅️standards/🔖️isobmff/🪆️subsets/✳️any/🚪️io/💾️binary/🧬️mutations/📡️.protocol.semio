@@ -11,8 +11,6 @@ framing record
 header fixed 2
 field format u8
 field tag varint
-record set-snapshot tag=0
-field payload bytes
 record set-ftyp tag=1
 field payload bytes
 record insert-track tag=2
@@ -29,5 +27,5 @@ record remove-sample tag=7
 field payload bytes
 record set-sample-sync tag=8
 field payload bytes
-record patch-snapshot tag=9
+record set-movie tag=9
 field payload bytes

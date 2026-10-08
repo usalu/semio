@@ -12,6 +12,8 @@ pub struct BindRepresentation {
     pub target: semio_framework_artifact_reference::ArtifactRef,
     pub pin: store::LinkPin,
     pub role: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for BindRepresentation {

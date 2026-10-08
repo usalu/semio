@@ -3,4 +3,5 @@ import type { ObjRef, PdfBaseEncoding, PdfCMap, PdfCcittParameters, PdfCharProc,
 export interface SetFontMutation {
   mutation: 'setFont';
   font: PdfFont;
+  index?: number | null;
 }

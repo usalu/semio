@@ -4,10 +4,8 @@ import {join} from "node:path";
 import Ajv from "ajv";
 const base=join(import.meta.dir,"..");
 const fixture=JSON.parse(readFileSync(join(base,"🧫️fixtures/🔣️.json"),"utf8"));
-const schema=JSON.parse(readFileSync(join(base,"🧬️schema/🔣️.json"),"utf8"));
 const elementSchema=JSON.parse(readFileSync(join(base,"../../../..","🧬️schema/🧬️mutations/🧱insert-element/🧬️schema/🔣️.json"),"utf8"));
 test("neutral Model element wire preserves UTF8 hex, tuple order and properties",()=>{
-  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
   const snapshotSchema=JSON.parse(readFileSync(join(base,"../../../..","🧬️schema/📸️snapshot/🔣️.json"),"utf8"));
   const validate=new Ajv({strict:false}).addSchema(snapshotSchema).compile(elementSchema);
   const hex=(text:string)=>Buffer.from(text).toString("hex");

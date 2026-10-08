@@ -1,6 +1,4 @@
-//! 🎬️ `set-main-header` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🎬️ `set-main-header` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,14 +14,12 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for SetMainHeader {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "main-header", kind: "set-main-header", record: "SetMainHeader" };
 
     fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
-        agg_diff(&AviMutation::SetMainHeader(self.clone()), base)
+        let Self { main_header } = self;
+        protocol::MutationOutcome::new(AviDiff { main_header: Some(main_header.clone()), ..AviDiff::default() })
     }
     fn inverse(&self, base: &AviSnapshot) -> Result<Vec<AviMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&AviMutation::SetMainHeader(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![AviMutation::SetMainHeader(set_main_header::SetMainHeader { main_header: base.main_header.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set main header", "Haupt-Header setzen")
     }

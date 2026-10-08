@@ -1,7 +1,5 @@
-//! 🏷️ `set-entity-name` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 🏷️ `set-entity-name` — authored as its own mutation leaf. It builds its own sparse diff and concrete
+//! inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,15 +14,18 @@ pub struct SetEntityName {
 impl protocol::MutationKind<IfcSnapshot, IfcMutation> for SetEntityName {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entity-name", kind: "set-entity-name", record: "SetEntityName" };
 
-    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<<IfcMutation as Mutation<IfcSnapshot>>::Diff> {
-        agg_diff(&IfcMutation::SetEntityName(self.clone()), base)
+    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<IfcDiff> {
+        let Self { id, name } = self;
+        protocol::MutationOutcome::new(diff::diff_set_entity_name(*id, name))
     }
     fn inverse(&self, base: &IfcSnapshot) -> Result<Vec<IfcMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&IfcMutation::SetEntityName(self.clone()), base)?
-    
-    })
-}
+        let entity = |id: u64| base.entities.iter().find(|e| e.id == id);
+        let Self { id, .. } = self;
+        Ok(vec![match entity(*id) {
+            Some(e) => IfcMutation::SetEntityName(set_entity_name::SetEntityName { id: *id, name: e.name.clone() }),
+            None => return Ok(Vec::new()),
+        }])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set entity name", "Entitätsname setzen")
     }

@@ -1,5 +1,5 @@
 //! 🧊️ Inserts an exact owned topology sibling at its declared document position.
-use crate::{CadSnapshot, mutations::CadMutation, diff::{CadDiff, CadBrepChildList}};
+use crate::{CadSnapshot, mutations::CadMutation, diff::{CadDiff, CadBrepsDelta}};
 use protocol::MutationKind;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value_derive::RetireOwned)]
@@ -22,9 +22,12 @@ impl MutationKind<CadSnapshot, CadMutation> for CreateBrep {
         if self.index as usize > base.breps.len() || base.breps.iter().any(|child| child.child_id == self.child_id) {
             return protocol::MutationOutcome::fatal("mutation.invariant", "topology sibling index or identity is invalid", [self.child_id.clone()]);
         }
-        let mut values = base.breps.clone();
-        values.insert(self.index as usize, child);
-        protocol::MutationOutcome::new(CadDiff { breps: Some(CadBrepChildList { values }), ..Default::default() })
+        let reordered = (self.index as usize != base.breps.len()).then(|| {
+            let mut order: Vec<String> = base.breps.iter().map(|sibling| sibling.child_id.clone()).collect();
+            order.insert(self.index as usize, self.child_id.clone());
+            order
+        });
+        protocol::MutationOutcome::new(CadDiff { breps: Some(CadBrepsDelta { added: vec![child], reordered, ..Default::default() }), ..Default::default() })
     }
     fn inverse(&self, _base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
         Ok(vec![CadMutation::DeleteBrep(super::delete_brep::DeleteBrep { child_id: self.child_id.clone() })])

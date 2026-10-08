@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🖼️replace-image",
+  "semanticKind": "replace-image",
+  "displayName": "Replace Image",
+  "emoji": "🖼️",
+  "aggregateVariant": "ReplaceImage",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "replace-image",
+  "binaryTag": 5,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ],
+  "editable": true
+}

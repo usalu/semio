@@ -1,6 +1,4 @@
-//! 🎛️ `set-track-codec` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🎛️ `set-track-codec` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -18,14 +16,18 @@ pub struct SetTrackCodec {
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetTrackCodec {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "track-codec", kind: "set-track-codec", record: "SetTrackCodec" };
     fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
-        agg_diff(&Mp4Mutation::SetTrackCodec(self.clone()), base)
+        let Self { track_index, codec } = self;
+        protocol::MutationOutcome::new(track_diff_for(*track_index, Mp4TrackDiff { codec: Some(codec.clone()), ..Mp4TrackDiff::default() }))
     }
     fn inverse(&self, base: &Mp4Snapshot) -> Result<Vec<Mp4Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&Mp4Mutation::SetTrackCodec(self.clone()), base)?
-    
-    })
-}
+        let Self { track_index, .. } = self;
+        Ok({
+            match base.tracks.get(*track_index) {
+                Some(track) => vec![Mp4Mutation::SetTrackCodec(set_track_codec::SetTrackCodec { track_index: *track_index, codec: track.codec.clone() })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set track codec", "Codec der Spur setzen")
     }

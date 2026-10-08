@@ -1,29 +1,14 @@
 {
-  "artifact": null,
-  "catalogue": null,
-  "dictionary": {
-    "reference": {
-      "id": "bsdd.fixture",
-      "version": "2026-01"
-    },
-    "subjects": [
-      {
-        "id": "subject.radiator",
-        "kind": "ProductClass",
-        "names": {
-          "preferred": {
-            "locale": "en",
-            "text": "Radiator"
-          },
-          "shortName": null,
-          "alternatives": []
-        },
-        "definition": {
-          "locale": "en",
-          "text": "Space heating emitter"
-        },
-        "parentId": null
-      },
+  "catalogueName": null,
+  "manufacturerName": null,
+  "productGroups": null,
+  "productClasses": null,
+  "productSeries": null,
+  "products": null,
+  "productIndexes": null,
+  "propertyDefinitions": null,
+  "subjects": {
+    "added": [
       {
         "id": "subject.towel-radiator",
         "kind": "ProductSpecialization",
@@ -42,13 +27,13 @@
         "parentId": "subject.radiator"
       }
     ],
-    "relationships": [],
-    "properties": [],
-    "controlledLists": [],
-    "metaSubjects": []
+    "removed": [],
+    "order": null
   },
-  "geometry": null,
-  "selection": null,
+  "geometryObjects": null,
+  "selectionClassId": null,
+  "selectionSeriesId": null,
+  "selectionConstraints": null,
   "partNumberRule": null,
   "partNumberInputs": null,
   "scriptLimits": null,

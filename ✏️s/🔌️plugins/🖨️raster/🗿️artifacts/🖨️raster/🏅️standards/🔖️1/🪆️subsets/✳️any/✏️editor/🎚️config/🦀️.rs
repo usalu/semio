@@ -107,20 +107,124 @@ impl RasterConfig {
     }
 }
 
-store::impl_whole_record_config!(RasterConfig);
+impl store::ConfigRecord for RasterConfig {}
+
+/// 🧭️ Explicit set-or-clear of the optional pixel selection (an absent patch field leaves it untouched, `value: None` clears it).
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct RasterPixelSelectionSet {
+    pub value: Option<RasterPixelSelection>,
+}
+
+/// 🧭️ Explicit set-or-clear of the optional composite viewport size.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct RasterViewportSet {
+    pub value: Option<RasterConfigViewportSize>,
+}
+
+/// 🔺️ Sparse delta of the session preferences: only the fields a mutation actually changes.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct RasterConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub brush_size: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub brush_opacity: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub brush_color: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub brush_hardness: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub paint_target: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub mask_value: Option<u32>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub fill_tolerance: Option<u32>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub pixel_selection: Option<RasterPixelSelectionSet>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub composite_viewport: Option<RasterViewportSet>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera: Option<RasterCamera>,
+}
+
+impl protocol::MutationDiff<RasterConfig> for RasterConfigDiff {
+    fn apply(&self, base: &RasterConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RasterConfig> {
+        Ok(RasterConfig {
+            brush_size: self.brush_size.unwrap_or(base.brush_size),
+            brush_opacity: self.brush_opacity.unwrap_or(base.brush_opacity),
+            brush_color: self.brush_color.clone().unwrap_or_else(|| base.brush_color.clone()),
+            brush_hardness: self.brush_hardness.unwrap_or(base.brush_hardness),
+            paint_target: self.paint_target.clone().unwrap_or_else(|| base.paint_target.clone()),
+            mask_value: self.mask_value.unwrap_or(base.mask_value),
+            fill_tolerance: self.fill_tolerance.unwrap_or(base.fill_tolerance),
+            pixel_selection: self.pixel_selection.as_ref().map_or_else(|| base.pixel_selection.clone(), |set| set.value.clone()),
+            composite_viewport: self.composite_viewport.as_ref().map_or_else(|| base.composite_viewport.clone(), |set| set.value.clone()),
+            camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()),
+        })
+    }
+    fn absorb(&mut self, other: Self) {
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(brush_size);
+        take!(brush_opacity);
+        take!(brush_color);
+        take!(brush_hardness);
+        take!(paint_target);
+        take!(mask_value);
+        take!(fill_tolerance);
+        take!(pixel_selection);
+        take!(composite_viewport);
+        take!(camera);
+    }
+}
+
+impl protocol::DiffAlgebra<RasterConfig> for RasterConfigDiff {
+    fn inverse(&self, base: &RasterConfig) -> Self {
+        Self {
+            brush_size: self.brush_size.map(|_| base.brush_size),
+            brush_opacity: self.brush_opacity.map(|_| base.brush_opacity),
+            brush_color: self.brush_color.as_ref().map(|_| base.brush_color.clone()),
+            brush_hardness: self.brush_hardness.map(|_| base.brush_hardness),
+            paint_target: self.paint_target.as_ref().map(|_| base.paint_target.clone()),
+            mask_value: self.mask_value.map(|_| base.mask_value),
+            fill_tolerance: self.fill_tolerance.map(|_| base.fill_tolerance),
+            pixel_selection: self.pixel_selection.as_ref().map(|_| RasterPixelSelectionSet { value: base.pixel_selection.clone() }),
+            composite_viewport: self.composite_viewport.as_ref().map(|_| RasterViewportSet { value: base.composite_viewport.clone() }),
+            camera: self.camera.as_ref().map(|_| base.camera.clone()),
+        }
+    }
+    fn between(base: &RasterConfig, other: &RasterConfig) -> Self {
+        Self {
+            brush_size: (base.brush_size != other.brush_size).then_some(other.brush_size),
+            brush_opacity: (base.brush_opacity != other.brush_opacity).then_some(other.brush_opacity),
+            brush_color: (base.brush_color != other.brush_color).then(|| other.brush_color.clone()),
+            brush_hardness: (base.brush_hardness != other.brush_hardness).then_some(other.brush_hardness),
+            paint_target: (base.paint_target != other.paint_target).then(|| other.paint_target.clone()),
+            mask_value: (base.mask_value != other.mask_value).then_some(other.mask_value),
+            fill_tolerance: (base.fill_tolerance != other.fill_tolerance).then_some(other.fill_tolerance),
+            pixel_selection: (base.pixel_selection != other.pixel_selection).then(|| RasterPixelSelectionSet { value: other.pixel_selection.clone() }),
+            composite_viewport: (base.composite_viewport != other.composite_viewport).then(|| RasterViewportSet { value: other.composite_viewport.clone() }),
+            camera: (base.camera != other.camera).then(|| other.camera.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+}
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutations
-/// 🧮️ B1: `RasterConfig`'s operation enum — one variant per settled interaction (mirrors the
-/// pre-B1 `RasterPlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()`
-/// returns — mirrors `shooting_op::ShootingConfigMutation`'s identical shape.
+/// 🧮️ `RasterConfig`'s operation enum — one variant per settled interaction (mirrors the pre-B1 `RasterPlayRuntime` field
+/// writes); each variant's diff carries only the fields it changes and its inverse is the absolute setter of the base values.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum RasterConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: RasterConfig,
-    },
     #[dsl(key = "brush-size")]
     SetBrushSize { value: f64 },
     #[dsl(key = "brush-opacity")]
@@ -205,27 +309,11 @@ impl protocol::OpBinary for RasterConfigMutation {
 //#endregion 🔖️OpCodec
 
 impl Mutation<RasterConfig> for RasterConfigMutation {
-    type Diff = RasterConfig;
+    type Diff = RasterConfigDiff;
 
     /// 🧷️ Hand-written (no `dsl::Mutations` derive on this enum) — config authorities are session
     /// state, not document leaves, so the `owner` paths are registry metadata only.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor {
-            schema_version: 1,
-            owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot",
-            semantic_kind: "snapshot",
-            display_name: "Snapshot",
-            emoji: "📄",
-            aggregate_variant: "Snapshot",
-            payload_schema: "🧬️schema/🔣️.json",
-            text_opcode: None,
-            binary_tag: None,
-            invertibility: protocol::MutationInvertibility::ExplicitMutation,
-            diff_participation: protocol::MutationDiffParticipation::Detect,
-            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-            composition: protocol::MutationComposition::Atomic,
-            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-        },
         protocol::MutationLeafDescriptor {
             schema_version: 1,
             owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🖌️brush-size",
@@ -389,54 +477,100 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
-            Self::SetBrushSize { .. } => &Self::DESCRIPTORS[1],
-            Self::SetBrushOpacity { .. } => &Self::DESCRIPTORS[2],
-            Self::SetCompositeViewport { .. } => &Self::DESCRIPTORS[3],
-            Self::SetCamera { .. } => &Self::DESCRIPTORS[4],
-            Self::SetBrushColor { .. } => &Self::DESCRIPTORS[5],
-            Self::SetBrushHardness { .. } => &Self::DESCRIPTORS[6],
-            Self::SetPaintTarget {..}=>&Self::DESCRIPTORS[7],
-            Self::SetMaskValue {..}=>&Self::DESCRIPTORS[8],
-            Self::SetPixelSelection {..}=>&Self::DESCRIPTORS[9],
-            Self::SetFillTolerance { .. } => &Self::DESCRIPTORS[10],
+            Self::SetBrushSize { .. } => &Self::DESCRIPTORS[0],
+            Self::SetBrushOpacity { .. } => &Self::DESCRIPTORS[1],
+            Self::SetCompositeViewport { .. } => &Self::DESCRIPTORS[2],
+            Self::SetCamera { .. } => &Self::DESCRIPTORS[3],
+            Self::SetBrushColor { .. } => &Self::DESCRIPTORS[4],
+            Self::SetBrushHardness { .. } => &Self::DESCRIPTORS[5],
+            Self::SetPaintTarget {..}=> &Self::DESCRIPTORS[6],
+            Self::SetMaskValue {..}=> &Self::DESCRIPTORS[7],
+            Self::SetPixelSelection {..}=> &Self::DESCRIPTORS[8],
+            Self::SetFillTolerance { .. } => &Self::DESCRIPTORS[9],
         }
     }
 
-    fn diff(&self, base: &RasterConfig) -> protocol::MutationOutcome<RasterConfig> {
-        let mut next = base.clone();
+    fn diff(&self, base: &RasterConfig) -> protocol::MutationOutcome<RasterConfigDiff> {
+        let mut diff = RasterConfigDiff::default();
         match self {
-            RasterConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
             RasterConfigMutation::SetBrushSize { value } => {
-                if value.is_finite() && (1.0..=2048.0).contains(value) { next.brush_size = *value; }
-            },
+                if value.is_finite() && (1.0..=2048.0).contains(value) && base.brush_size != *value {
+                    diff.brush_size = Some(*value);
+                }
+            }
             RasterConfigMutation::SetBrushOpacity { value } => {
-                if value.is_finite() && (0.0..=1.0).contains(value) { next.brush_opacity = *value; }
-            },
+                if value.is_finite() && (0.0..=1.0).contains(value) && base.brush_opacity != *value {
+                    diff.brush_opacity = Some(*value);
+                }
+            }
             RasterConfigMutation::SetBrushColor { value } => {
-                if valid_brush_color(value) { next.brush_color = value.clone(); }
-            },
+                if valid_brush_color(value) && base.brush_color != *value {
+                    diff.brush_color = Some(value.clone());
+                }
+            }
             RasterConfigMutation::SetBrushHardness { value } => {
-                if value.is_finite() && (0.0..=1.0).contains(value) { next.brush_hardness = *value; }
-            },
-            RasterConfigMutation::SetPaintTarget {value}=>{if matches!(value.as_str(),"pixels"|"mask"){if next.paint_target!=*value{next.pixel_selection=None;}next.paint_target=value.clone();}},
-            RasterConfigMutation::SetPixelSelection {selection}=>{if selection.as_ref().is_none_or(|value|value.target==base.paint_target&&value.validate().is_ok()){next.pixel_selection=selection.clone();}},
-            RasterConfigMutation::SetMaskValue {value}=>{if *value<=255{next.mask_value=*value;}},
+                if value.is_finite() && (0.0..=1.0).contains(value) && base.brush_hardness != *value {
+                    diff.brush_hardness = Some(*value);
+                }
+            }
+            RasterConfigMutation::SetPaintTarget { value } => {
+                if matches!(value.as_str(), "pixels" | "mask") && base.paint_target != *value {
+                    diff.paint_target = Some(value.clone());
+                    if base.pixel_selection.is_some() {
+                        diff.pixel_selection = Some(RasterPixelSelectionSet { value: None });
+                    }
+                }
+            }
+            RasterConfigMutation::SetPixelSelection { selection } => {
+                if selection.as_ref().is_none_or(|value| value.target == base.paint_target && value.validate().is_ok()) && base.pixel_selection != *selection {
+                    diff.pixel_selection = Some(RasterPixelSelectionSet { value: selection.clone() });
+                }
+            }
+            RasterConfigMutation::SetMaskValue { value } => {
+                if *value <= 255 && base.mask_value != *value {
+                    diff.mask_value = Some(*value);
+                }
+            }
             RasterConfigMutation::SetFillTolerance { value } => {
-                if *value <= 255 { next.fill_tolerance = *value; }
-            },
-            RasterConfigMutation::SetCompositeViewport { viewport } => next.composite_viewport = viewport.clone(),
-            RasterConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
+                if *value <= 255 && base.fill_tolerance != *value {
+                    diff.fill_tolerance = Some(*value);
+                }
+            }
+            RasterConfigMutation::SetCompositeViewport { viewport } => {
+                if base.composite_viewport != *viewport {
+                    diff.composite_viewport = Some(RasterViewportSet { value: viewport.clone() });
+                }
+            }
+            RasterConfigMutation::SetCamera { camera } => {
+                if base.camera != *camera {
+                    diff.camera = Some(camera.clone());
+                }
+            }
         }
-        protocol::MutationOutcome::new(next)
+        protocol::MutationOutcome::new(diff)
     }
 
     fn inverse(&self, base: &RasterConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![RasterConfigMutation::Snapshot { config: base.clone() }]
-    
-    })())
-}
+        Ok(match self {
+            RasterConfigMutation::SetBrushSize { .. } => vec![RasterConfigMutation::SetBrushSize { value: base.brush_size }],
+            RasterConfigMutation::SetBrushOpacity { .. } => vec![RasterConfigMutation::SetBrushOpacity { value: base.brush_opacity }],
+            RasterConfigMutation::SetBrushColor { .. } => vec![RasterConfigMutation::SetBrushColor { value: base.brush_color.clone() }],
+            RasterConfigMutation::SetBrushHardness { .. } => vec![RasterConfigMutation::SetBrushHardness { value: base.brush_hardness }],
+            RasterConfigMutation::SetPaintTarget { .. } => vec![RasterConfigMutation::SetPaintTarget { value: base.paint_target.clone() }, RasterConfigMutation::SetPixelSelection { selection: base.pixel_selection.clone() }],
+            RasterConfigMutation::SetPixelSelection { .. } => vec![RasterConfigMutation::SetPixelSelection { selection: base.pixel_selection.clone() }],
+            RasterConfigMutation::SetMaskValue { .. } => vec![RasterConfigMutation::SetMaskValue { value: base.mask_value }],
+            RasterConfigMutation::SetFillTolerance { .. } => vec![RasterConfigMutation::SetFillTolerance { value: base.fill_tolerance }],
+            RasterConfigMutation::SetCompositeViewport { .. } => vec![RasterConfigMutation::SetCompositeViewport { viewport: base.composite_viewport.clone() }],
+            RasterConfigMutation::SetCamera { .. } => vec![RasterConfigMutation::SetCamera { camera: base.camera.clone() }],
+        })
+    }
+
+    fn inverse_rows(&self) -> usize {
+        match self {
+            RasterConfigMutation::SetPaintTarget { .. } => 2,
+            _ => 1,
+        }
+    }
 }
 //#endregion 🔖️ConfigMutations
 

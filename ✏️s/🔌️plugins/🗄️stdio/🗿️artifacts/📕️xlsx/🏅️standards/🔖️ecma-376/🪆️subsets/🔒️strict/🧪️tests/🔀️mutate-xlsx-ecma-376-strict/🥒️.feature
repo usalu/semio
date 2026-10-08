@@ -51,10 +51,10 @@ Feature: Apply every typed XLSX ECMA-376 Strict conformance-class mutation to a 
   writes, and `set-worksheet-content-type` names its member `content_type` exactly as the leaf does.
   Both implementations read that one wire: the reference engine by field name, the subject through
   `Mutation::from_payload_value`, whose re-emitted payload must equal the row exactly; the subject
-  undoes every row with `Mutation::inverse` itself. `set-snapshot` replaces the whole package, so its
-  payload is the entire stamped package and no table cell: it is the plain `mutate-set-snapshot`/
-  `inverse-set-snapshot` pair, in which the subject records `stamp_conformance_class_mutation` — one
-  `set-snapshot` of its own strict-class stamp — and the reference stamps with its own engine.
+  undoes every row with `Mutation::inverse` itself. The strict-class stamp has no table cell: it is the plain
+  `mutate-stamp-strict-class`/`inverse-stamp-strict-class` pair, in which the subject records the namespace,
+  relationship-base and conformance-attribute mutations of `stamp_conformance_class_mutations` and the reference
+  stamps with its own engine.
 
   @id-mutate
   @level-exhaustive
@@ -70,6 +70,7 @@ Feature: Apply every typed XLSX ECMA-376 Strict conformance-class mutation to a 
       | id                           | params                                                                                                                                                        |
       | set-main-namespace           | {"namespace": "http://purl.oclc.org/ooxml/spreadsheetml/main"}                                                                                                |
       | set-relationships-namespace  | {"namespace": "http://purl.oclc.org/ooxml/officeDocument/relationships"}                                                                                      |
+      | set-relationship-base       | {"base": "http://purl.oclc.org/ooxml/officeDocument/relationships"} |
       | set-conformance-attribute    | {"value": "strict"}                                                                                                                                           |
       | remove-conformance-attribute | {}                                                                                                                                                            |
       | insert-vml-part              | {"path": "xl/drawings/vmlDrawing1.vml", "document": {"root": {"kind": "element", "name": "xml", "attrs": [{"name": "xmlns:v", "value": "urn:schemas-microsoft-com:vml"}], "children": [{"kind": "element", "name": "v:shape", "attrs": [{"name": "id", "value": "legacyShape"}, {"name": "type", "value": "#_x0000_t202"}], "children": []}]}}} |
@@ -91,26 +92,27 @@ Feature: Apply every typed XLSX ECMA-376 Strict conformance-class mutation to a 
       | id                           | params                                                                                                                                                        |
       | set-main-namespace           | {"namespace": "http://purl.oclc.org/ooxml/spreadsheetml/main"}                                                                                                |
       | set-relationships-namespace  | {"namespace": "http://purl.oclc.org/ooxml/officeDocument/relationships"}                                                                                      |
+      | set-relationship-base       | {"base": "http://purl.oclc.org/ooxml/officeDocument/relationships"} |
       | set-conformance-attribute    | {"value": "strict"}                                                                                                                                           |
       | remove-conformance-attribute | {}                                                                                                                                                            |
       | insert-vml-part              | {"path": "xl/drawings/vmlDrawing1.vml", "document": {"root": {"kind": "element", "name": "xml", "attrs": [{"name": "xmlns:v", "value": "urn:schemas-microsoft-com:vml"}], "children": [{"kind": "element", "name": "v:shape", "attrs": [{"name": "id", "value": "legacyShape"}, {"name": "type", "value": "#_x0000_t202"}], "children": []}]}}} |
       | remove-vml-part              | {"path": "xl/drawings/vmlDrawing1.vml"}                                                                                                                       |
       | set-worksheet-content-type   | {"path": "xl/worksheets/sheet1.xml", "content_type": "application/xml"}                                                                                       |
 
-  @id-mutate-set-snapshot
+  @id-mutate-stamp-strict-class
   @level-exhaustive
   @mode-differential
-  Scenario: Replace the real workbook package with its own strict-class stamp
+  Scenario: Stamp the real workbook package into the strict class through its concrete conformance mutations
     Given the real input package shared://📕️reuse-marketplaces.xlsx
-    When the whole package is replaced by its own stamp into the strict conformance class
+    When the package is stamped strict through the namespace, relationship-base and conformance-attribute mutations
     Then the oracle and the subject agree on the conformance-class projection
 
-  @id-inverse-set-snapshot
+  @id-inverse-stamp-strict-class
   @level-exhaustive
   @mode-property
-  Scenario: Undoing the strict-class stamp restores the real workbook package
+  Scenario: Undoing the strict stamp restores the real workbook package
     Given the real input package shared://📕️reuse-marketplaces.xlsx
-    When the whole package is replaced by its own strict-class stamp and that replacement is undone
+    When the package is stamped strict through those mutations and then stamped back
     Then the oracle and the subject agree on the conformance-class projection of the original package
 
   @id-identity-round-trip

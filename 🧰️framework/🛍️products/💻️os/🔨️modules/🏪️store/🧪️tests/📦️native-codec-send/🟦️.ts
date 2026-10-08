@@ -9,12 +9,12 @@ import _ from "lodash";
 //#region 🧵️CodecSendOracle
 export function testNativeCodecSendFixture(): void {
   const fixture = JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json", testSourceUrl.href), "utf8"));
-  const contract = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", testSourceUrl.href), "utf8"));
+  const contract = JSON.parse(readFileSync(new URL("../../🧪️testing/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
   ajv.addSchema(contract);
-  const validate = ajv.getSchema(`${contract.$id}#/$defs/CodecSend`)!;
-  assert(validate(fixture), JSON.stringify(validate.errors));
+  const validate = ajv.getSchema(`${contract.$id}#/$defs/NullableI32`)!;
   for (const snapshot of fixture.snapshots) {
+    assert(validate(snapshot.n), JSON.stringify(validate.errors));
     assert.deepEqual(JSON.parse(JSON.stringify(snapshot)), _.cloneDeep(snapshot));
     if (snapshot.n !== null) {
       const bytes = Buffer.alloc(4);
@@ -23,6 +23,9 @@ export function testNativeCodecSendFixture(): void {
     }
   }
   assert.deepEqual(fixture.slots.map((slot: { name: string }) => slot.name), ["compile_dsl", "print_mirror"]);
-  for (const hostile of [{ ...fixture, snapshots: [{ n: 2147483648 }, ...fixture.snapshots.slice(1)] }, { ...fixture, snapshots: [{ n: -2147483649 }, ...fixture.snapshots.slice(1)] }, { ...fixture, snapshots: [{ n: 0.5 }, ...fixture.snapshots.slice(1)] }, { ...fixture, slots: [{ ...fixture.slots[0], send: false }, fixture.slots[1]] }, { ...fixture, invariants: { ...fixture.invariants, localExecutorFallback: true } }]) assert.equal(validate(hostile), false);
+  for (const hostile of [2147483648, -2147483649, 0.5]) assert.equal(validate(hostile), false);
+  assert(fixture.slots.every((slot: { send: boolean }) => slot.send));
+  assert.equal(fixture.invariants.localExecutorFallback, false);
+  console.log("[DEBUG] native codec Send laws preserve real nullable I32 Ajv admission, Buffer and lodash snapshot identity");
 }
 //#endregion 🧵️CodecSendOracle

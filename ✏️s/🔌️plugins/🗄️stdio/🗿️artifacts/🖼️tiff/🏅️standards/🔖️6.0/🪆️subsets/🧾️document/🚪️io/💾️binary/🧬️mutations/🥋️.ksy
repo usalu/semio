@@ -18,5 +18,4 @@ enums:
     5: replace_tag
     6: remove_tag
     7: paint_region
-    8: set_snapshot
-    9: patch_snapshot
+    8: replace_samples

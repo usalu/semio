@@ -1,5 +1,6 @@
 //! 📨️ A repeated identical response is a no-op; conflicting identities are rejected.
 use super::mutation::CommitResponse;
+use crate::schema::diff::{forms_diff_from_responses_delta, FormsResponsesDelta};
 use crate::{FormsDiff, FormsSnapshot};
 
 pub fn diff(payload: &CommitResponse, base: &FormsSnapshot) -> protocol::MutationOutcome<FormsDiff> {
@@ -8,8 +9,10 @@ pub fn diff(payload: &CommitResponse, base: &FormsSnapshot) -> protocol::Mutatio
         if existing == &payload.response { return protocol::MutationOutcome::empty(); }
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", "A different response has this id.", [payload.response.id.clone()]);
     }
-    let mut responses = base.responses.clone();
-    responses.insert(payload.index.unwrap_or(responses.len()).min(responses.len()), payload.response.clone());
-    let results = crate::forms_results_child(&responses);
-    protocol::MutationOutcome::new(FormsDiff { responses: Some(responses), results: Some(results), ..Default::default() })
+    let reordered = payload.index.filter(|index| *index < base.responses.len()).map(|index| {
+        let mut order: Vec<String> = base.responses.iter().map(|response| response.id.clone()).collect();
+        order.insert(index, payload.response.id.clone());
+        order
+    });
+    protocol::MutationOutcome::new(forms_diff_from_responses_delta(&FormsResponsesDelta { added: vec![payload.response.clone()], reordered, ..Default::default() }, base))
 }

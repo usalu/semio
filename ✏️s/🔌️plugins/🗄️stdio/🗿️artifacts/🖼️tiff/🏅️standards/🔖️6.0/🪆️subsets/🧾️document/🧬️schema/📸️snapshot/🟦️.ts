@@ -81,7 +81,7 @@ export function parseTiffValues(value:unknown,at="$"):TiffValues{
  case "sLong":return {kind,value:ints(-2147483648,2147483647)};
  }
 }
-export function parseTiffTag(value:unknown,at="$"):TiffTag{const row=exact(value,["tag","values"],at);const tag=integer(row.tag,at+".tag",0,65535);if([259,266,273,278,279,284,317,322,323,324,325,292,293,347,513,514,515,517,518,519,520,521,530].includes(tag))return stdioTiff60DocumentSnapshotGuardReject(at+".tag","native layout policy has no semantic tag");return {tag,values:parseTiffValues(row.values,at+".values")}}
+export function parseTiffTag(value:unknown,at="$"):TiffTag{const row=exact(value,["tag","values"],at);const tag=integer(row.tag,at+".tag",0,65535);if([259,266,273,278,279,284,317,322,323,324,325,292,293,347,512,513,514,515,517,518,519,520,521,530].includes(tag))return stdioTiff60DocumentSnapshotGuardReject(at+".tag","native layout policy has no semantic tag");return {tag,values:parseTiffValues(row.values,at+".values")}}
 export function parseTiffSampleBlock(value:unknown,at="$"):TiffSampleBlock{const row=exact(value,["x","y","width","height","channels","samples"],at);const block={x:integer(row.x,at+".x"),y:integer(row.y,at+".y"),width:integer(row.width,at+".width",1),height:integer(row.height,at+".height",1),channels:integer(row.channels,at+".channels",1,65535),samples:sequence(row.samples,at+".samples").map((v,i)=>parseTiffWord64(v,at+".samples["+i+"]"))};if(BigInt(block.width)*BigInt(block.height)*BigInt(block.channels)!==BigInt(block.samples.length))return stdioTiff60DocumentSnapshotGuardReject(at,"block sample cardinality differs");return block}
 export function tiffIntegers(page:TiffIfd,tag:number):number[]{const value=page.entries.find(v=>v.tag===tag)?.values;return value&&["byte","short","long"].includes(value.kind)?(value.value as number[]):[]}
 export function parseTiffIfd(value:unknown,at="$"):TiffIfd{
@@ -92,7 +92,7 @@ export function validateTiffIfd(page:TiffIfd,at="$"):void{
  exact(page,["entries","blocks"],at);sequence(page.entries,at+".entries");sequence(page.blocks,at+".blocks");
  for(let i=0;i<page.entries.length;i++){
   const tag=page.entries[i]!,path=at+".entries["+i+"]";exact(tag,["tag","values"],path);integer(tag.tag,path+".tag",0,65535);
-  if([259,266,273,278,279,284,317,322,323,324,325,292,293,347,513,514,515,517,518,519,520,521,530].includes(tag.tag))return stdioTiff60DocumentSnapshotGuardReject(path,"native layout policy has no semantic tag");
+  if([259,266,273,278,279,284,317,322,323,324,325,292,293,347,512,513,514,515,517,518,519,520,521,530].includes(tag.tag))return stdioTiff60DocumentSnapshotGuardReject(path,"native layout policy has no semantic tag");
   exact(tag.values,["kind","value"],path+".values");const kind=parseTiffFieldType(tag.values.kind,path+".values.kind"),values=sequence(tag.values.value,path+".values.value");
   for(let j=0;j<values.length;j++){const value=values[j],position=path+".values.value["+j+"]";
    if(kind==='ascii'){if(typeof value!=='string')stdioTiff60DocumentSnapshotGuardReject(position,"ASCII value is not text");for(let n=0;n<(value as string).length;n++){const code=(value as string).charCodeAt(n);if(code===0||code>127)stdioTiff60DocumentSnapshotGuardReject(position,"ASCII text contains a native terminator or non-ASCII code unit");}}

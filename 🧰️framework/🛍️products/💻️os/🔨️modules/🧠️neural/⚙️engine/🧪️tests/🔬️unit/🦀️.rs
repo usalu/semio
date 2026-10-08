@@ -1075,11 +1075,17 @@ fn compact_pending_extension_uses_the_existing_progress_authority_before_seriali
 
 #[test]
 fn dictionary_writer_source_retirement_uses_the_existing_exact_domain_authority() {
+    use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🚦️owned-controls.json")).unwrap();let text=fixture["dictionaryText"].as_str().unwrap();let law=&fixture["writerSourceRetirement"];let units=law["maximumUnits"].as_u64().unwrap()as usize;let bytes=law["grantBytes"].as_u64().unwrap()as usize;
     let oracle:serde_json::Value=serde_json::from_str(text).unwrap();let source:Dictionary=semio_framework_pack_json::from_json_str(text,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&source)).unwrap(),oracle);
-    let mut direct=ValueRetirement::from_dictionary(semio_framework_pack_json::from_json_str(text,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());let mut original_bytes=0;let mut original_turns=0;while !direct.terminal_is_empty(){original_turns+=1;assert!(original_turns<10000);if let ValueRetirementStep::Pending {released_items,released_bytes}=direct.close_step(units,bytes){assert!(released_items<=units);assert!(released_bytes<=bytes);original_bytes+=released_bytes;}}
-    let mut retained=semio_framework_value::retirement::RetireOwned::retirement(source);assert!(matches!(retained.close_step(0),semio_framework_value::retirement::RetirementStep::BudgetExhausted));assert!(!retained.terminal_is_empty());let mut released=0;let mut turns=0;while !retained.terminal_is_empty(){turns+=1;assert!(turns<10000);if let semio_framework_value::retirement::RetirementStep::Bytes(released_bytes)=retained.close_step(bytes){assert!(released_bytes<=bytes);released+=released_bytes;}}
-    assert_eq!(released,original_bytes);assert!(released>0);println!("[DEBUG] Dictionary writer source uses exact existing retirement, bytes={released}, turns={turns}, direct_turns={original_turns}");
+    let mut retained=ControlledRetirement::new(source).map_err(|(error,_)|error).unwrap();let mut released=0;let mut turns=0;
+    while !retained.terminal_is_empty() {
+        turns+=1;assert!(turns<10000);
+        let grant=RetainedCloneGrant {maximum_items:units,maximum_copy_bytes:bytes,maximum_capacity_bytes:retained.next_capacity_byte_demand(bytes).unwrap(),maximum_release_bytes:retained.next_release_byte_demand().unwrap(),maximum_depth:retained.next_depth_demand().unwrap()};
+        assert_eq!(retained.step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap().progress().copied_items,0);
+        let progress=retained.step(grant).unwrap().progress();assert!(progress.copied_items<=units);assert!(progress.copied_bytes<=bytes);assert!(progress.released_bytes<=grant.maximum_release_bytes);released+=progress.released_bytes;
+    }
+    assert!(released>0);println!("[DEBUG] Dictionary writer source preserved independent serde identity and explicit physical retirement, bytes={released}, turns={turns}");
 }
 
 #[test]

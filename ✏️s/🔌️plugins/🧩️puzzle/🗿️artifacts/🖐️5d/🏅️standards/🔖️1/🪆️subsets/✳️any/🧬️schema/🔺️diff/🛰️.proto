@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.puzzle.puzzle5d.diff;
 
-// 🧬️ Puzzle5d diff schema — sparse field delta.
+// 🧬️ Puzzle5d diff schema — sparse typed delta.
 
 message Puzzle5dDiff {
   // @state artifact
@@ -13,42 +13,52 @@ message Puzzle5dDiff {
   // @state artifact
   optional string label = 4;
   // @state artifact
-  optional Puzzle5dMeta meta = 5;
+  optional Puzzle5dMetaPatch meta = 5;
   // @state artifact
-  optional Puzzle5dKindCatalogs kind_catalogs = 6;
+  optional ArtifactChildHandle kind_catalogs = 6;
   // @state artifact
-  optional Puzzle5dKindCatalogsExtra kind_catalogs_extra = 10;
+  optional Puzzle5dKindCatalogsExtra kind_catalogs_extra = 7;
   // @state artifact
-  optional Puzzle5dKindCompatibilityDelta kind_compatibility = 7;
+  optional Puzzle5dKindCompatibilityDelta kind_compatibility = 8;
   // @state artifact
-  optional Puzzle5dPartsDelta parts = 8;
+  optional Puzzle5dPartsDelta parts = 9;
   // @state artifact
-  optional Puzzle5dFastenersDelta fasteners = 9;
+  optional Puzzle5dFastenersDelta fasteners = 10;
   // @state artifact
   optional Puzzle5dTargetVolumesDelta target_volumes = 11;
-  // @state config
 }
 
 message Puzzle5dArtifact { string schema = 1; }
-message Puzzle5dStringList { repeated string values = 1; }
+message Puzzle5dKindCompatibilityKey { string source = 1; string target = 2; }
+message Puzzle5dPart2dPatch { optional double x = 1; optional double y = 2; optional string shape = 3; optional double radius = 4; optional double width = 5; optional double height = 6; optional string text = 7; optional string icon_kind = 8; optional bool hidden = 9; optional bool locked = 10; }
+message Puzzle5dPart3dPatch { repeated double origin = 1; optional string mesh_url = 2; repeated double orientation = 3; optional Puzzle5dScale scale = 4; optional string label = 5; }
+message Puzzle5dGrip2dPatch { optional double angle = 1; optional string grip_kind = 2; optional double radius = 3; }
+message Puzzle5dGrip3dPatch { repeated double position = 1; repeated double direction = 2; optional double radius = 3; optional string label = 4; }
+message Puzzle5dGripPatch { optional string grip_kind = 1; optional Puzzle5dGrip2dPatch grip_2d = 2; optional Puzzle5dGrip3dPatch grip_3d = 3; }
+message Puzzle5dPartPatch { optional string part_kind = 1; optional Puzzle5dPartAnchor anchor = 2; optional Puzzle5dPart2dPatch part_2d = 3; optional Puzzle5dPart3dPatch part_3d = 4; optional Puzzle5dGripsDelta grips = 5; }
+message Puzzle5dFastenerPatch { optional string source = 1; optional string target = 2; optional string fastener_kind = 3; optional double gap = 4; optional double shift = 5; optional double rise = 6; optional double rotation = 7; optional double turn = 8; optional double tilt = 9; optional double x = 10; optional double y = 11; }
+message Puzzle5dTargetVolumePatch { repeated double origin = 1; repeated double orientation = 2; optional Puzzle5dScale scale = 3; optional bool hidden = 4; optional bool locked = 5; }
+message Puzzle5dKindCompatibilityPatch { optional bool bidirectional = 1; optional bool important = 2; optional Puzzle5dCompatSpecificity specificity = 3; }
+message Puzzle5dMetaPatch { optional string description = 1; }
+message Puzzle5dGripsDelta { repeated Puzzle5dGrip added = 1; repeated string removed = 2; repeated Puzzle5dGripPatchEntry patched = 3; repeated string reordered = 4; }
+message Puzzle5dGripPatchEntry { string id = 1; Puzzle5dGripPatch patch = 2; }
 message Puzzle5dPartsDelta { repeated Puzzle5dPart added = 1; repeated string removed = 2; repeated Puzzle5dPartPatchEntry patched = 3; repeated string reordered = 4; }
 message Puzzle5dPartPatchEntry { string id = 1; Puzzle5dPartPatch patch = 2; }
-message Puzzle5dPartPatch { optional Puzzle5dPart replacement = 1; }
-message Puzzle5dPart { string id = 1; optional string part_kind = 2; Puzzle5dPartAnchor anchor = 3; }
 message Puzzle5dFastenersDelta { repeated Puzzle5dFastener added = 1; repeated string removed = 2; repeated Puzzle5dFastenerPatchEntry patched = 3; repeated string reordered = 4; }
 message Puzzle5dFastenerPatchEntry { string id = 1; Puzzle5dFastenerPatch patch = 2; }
-message Puzzle5dFastenerPatch { optional Puzzle5dFastener replacement = 1; }
-message Puzzle5dFastener { string id = 1; string source = 2; string target = 3; double gap = 4; double shift = 5; double rise = 6; double rotation = 7; double turn = 8; double tilt = 9; double x = 10; double y = 11; }
 message Puzzle5dTargetVolumesDelta { repeated Puzzle5dTargetVolume added = 1; repeated string removed = 2; repeated Puzzle5dTargetVolumePatchEntry patched = 3; repeated string reordered = 4; }
 message Puzzle5dTargetVolumePatchEntry { string id = 1; Puzzle5dTargetVolumePatch patch = 2; }
-message Puzzle5dTargetVolumePatch { optional Puzzle5dTargetVolume replacement = 1; }
+message Puzzle5dKindCompatibilityDelta { repeated Puzzle5dKindCompatibility added = 1; repeated Puzzle5dKindCompatibilityKey removed = 2; repeated Puzzle5dKindCompatibilityPatchEntry patched = 3; repeated Puzzle5dKindCompatibilityKey reordered = 4; }
+message Puzzle5dKindCompatibilityPatchEntry { Puzzle5dKindCompatibilityKey id = 1; Puzzle5dKindCompatibilityPatch patch = 2; }
+
+message Puzzle5dPart { string id = 1; optional string part_kind = 2; Puzzle5dPartAnchor anchor = 3; }
+message Puzzle5dFastener { string id = 1; string source = 2; string target = 3; double gap = 4; double shift = 5; double rise = 6; double rotation = 7; double turn = 8; double tilt = 9; double x = 10; double y = 11; }
 message Puzzle5dTargetVolume { string id = 1; repeated double origin = 2; repeated double orientation = 3; repeated double scale = 4; bool hidden = 5; bool locked = 6; }
 message Puzzle5dKindCompatibility { string source = 1; string target = 2; bool bidirectional = 3; bool important = 4; Puzzle5dCompatSpecificity specificity = 5; }
 message Puzzle5dMeta { bool _placeholder = 1; }
 message Puzzle5dKindCatalogs { bool _placeholder = 1; }
 message Puzzle5dKindCatalogsExtra { bool _placeholder = 1; }
 
-message Puzzle5dKindCompatibilityList { repeated Puzzle5dKindCompatibility values = 1; }
 
 enum Puzzle5dPartAnchor { PUZZLE5D_PART_ANCHOR_FIXED = 0; PUZZLE5D_PART_ANCHOR_DERIVED = 1; }
 enum Puzzle5dCompatSpecificity {

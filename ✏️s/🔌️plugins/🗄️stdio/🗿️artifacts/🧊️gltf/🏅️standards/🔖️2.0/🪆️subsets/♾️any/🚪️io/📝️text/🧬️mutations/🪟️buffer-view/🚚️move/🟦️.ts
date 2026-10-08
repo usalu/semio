@@ -4,7 +4,7 @@ export type * from "../../../../../🧬️schema/🧬️mutations/🪟️buffer-
 /** 🚚️ `move-buffer-view` wire twin: the flat `Apply` payload `GltfMoveBufferViewPayload` and the phase wire `MoveBufferViewMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
 export const parseGltfMoveBufferViewPayload = gltfWireObject<GltfMoveBufferViewPayload>({ index: gltfWireRequired(gltfWireIndex), position: gltfWireRequired(gltfWireIndex) });
-export const parseMoveBufferViewMutation = gltfWirePhase(parseGltfMoveBufferViewPayload, parseGltfDiff);
+export const parseMoveBufferViewMutation = gltfWireApplyPhase(parseGltfMoveBufferViewPayload);

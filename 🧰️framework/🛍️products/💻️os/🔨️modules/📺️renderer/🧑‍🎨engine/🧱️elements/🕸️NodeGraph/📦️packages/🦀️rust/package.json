@@ -1,0 +1,11 @@
+{
+  "name": "@semio-tech/framework-os-node-graph-rs",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "includedScripts": []
+  },
+  "exports": {
+    ".": "./🕸️bindings/framework_os_node_graph.js"
+  }
+}

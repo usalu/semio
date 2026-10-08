@@ -1,6 +1,4 @@
-//! 🏷️ `set-header-var` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🏷️ `set-header-var` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -11,20 +9,28 @@ use super::*;
 pub struct SetHeaderVar {
     pub name: String,
     pub header_var: DxfHeaderVar,
+    pub index: Option<usize>,
 }
 
 impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetHeaderVar {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "header-var", kind: "set-header-var", record: "SetHeaderVar" };
 
     fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
-        agg_diff(&DxfMutation::SetHeaderVar(self.clone()), base)
+        let Self { name, header_var, index } = self;
+        protocol::MutationOutcome::new({
+            let existed = base.header_vars.iter().any(|v| &v.name == name);
+            diff_set_header_var(index.unwrap_or(base.header_vars.len()).min(base.header_vars.len()), name, header_var.clone(), existed)
+        })
     }
     fn inverse(&self, base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&DxfMutation::SetHeaderVar(self.clone()), base)?
-    
-    })
-}
+        let Self { name, .. } = self;
+        Ok({
+            match base.header_vars.iter().find(|v| &v.name == name) {
+                Some(v) => vec![DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: name.clone(), header_var: v.clone(), index: None })],
+                None => vec![DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name: name.clone() })],
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set header var", "Header-Variable setzen")
     }

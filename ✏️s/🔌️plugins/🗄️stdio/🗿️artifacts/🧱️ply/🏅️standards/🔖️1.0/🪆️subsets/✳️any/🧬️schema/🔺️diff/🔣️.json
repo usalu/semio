@@ -158,6 +158,59 @@
           }
         }
       }
+    },
+    "PlyCommentsDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "diff"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "diff": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "item"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "item": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "properties": {
@@ -170,10 +223,7 @@
       ]
     },
     "comments": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "$ref": "#/$defs/PlyCommentsDiff"
     },
     "elements": {
       "$ref": "#/$defs/PlyElementsDiff"

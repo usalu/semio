@@ -16,6 +16,9 @@ pub fn inverse(payload: &super::CreateShadingSurface, base: &EnergyModelSnapshot
     {
         return Vec::new();
     }
+    if payload.index.is_some_and(|index| index as usize > base.model.shading_surfaces.len()) {
+        return Vec::new();
+    }
     vec![vocabulary::delete_shading_surface(payload.id)]
 
     })())

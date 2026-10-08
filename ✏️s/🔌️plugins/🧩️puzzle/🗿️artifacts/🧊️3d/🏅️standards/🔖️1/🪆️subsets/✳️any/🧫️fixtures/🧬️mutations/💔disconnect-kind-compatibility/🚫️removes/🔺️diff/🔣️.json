@@ -1,12 +1,22 @@
 {
   "artifact": null,
-  "schema": null,
+  "attractions": null,
   "domain": null,
   "meta": {
-    "kindCompatibility": []
+    "kindCompatibility": {
+      "added": [],
+      "patched": [],
+      "removed": [
+        {
+          "source": "vortex-kind-a",
+          "target": "vortex-kind-b"
+        }
+      ],
+      "reordered": null
+    }
   },
   "objects": null,
-  "attractions": null,
-  "targetVolumes": null,
-  "references": null
+  "references": null,
+  "schema": null,
+  "targetVolumes": null
 }

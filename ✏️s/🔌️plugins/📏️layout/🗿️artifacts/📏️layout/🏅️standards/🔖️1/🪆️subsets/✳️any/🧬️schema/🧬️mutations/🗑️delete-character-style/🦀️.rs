@@ -38,9 +38,10 @@ pub fn diff_delete_character_style(payload: &DeleteCharacterStyle, base: &Layout
 
 pub fn inverse_delete_character_style(payload: &DeleteCharacterStyle, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    let Some(style) = base.character_styles.iter().find(|style| style.id == payload.id) else { return Vec::new() };
+    let Some(at) = base.character_styles.iter().position(|style| style.id == payload.id) else { return Vec::new() };
+    let style = &base.character_styles[at];
     vec![
-        LayoutMutation::CreateCharacterStyle(create_character_style::CreateCharacterStyle { id: style.id.clone(), name: style.name.clone() }),
+        LayoutMutation::CreateCharacterStyle(create_character_style::CreateCharacterStyle { id: style.id.clone(), name: style.name.clone(), index: Some(at) }),
         LayoutMutation::UpdateCharacterStyle(update_character_style::UpdateCharacterStyle { id: style.id.clone(), name: style.name.clone(), font_family: style.font_family.clone(), font_size: style.font_size, font_weight: style.font_weight, italic: style.italic, color: style.color, tracking: style.tracking }),
     ]
 

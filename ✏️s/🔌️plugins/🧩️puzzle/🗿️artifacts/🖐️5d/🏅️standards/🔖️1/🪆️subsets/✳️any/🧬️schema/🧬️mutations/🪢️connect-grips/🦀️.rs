@@ -26,12 +26,13 @@ pub struct ConnectGrips {
     pub tilt: f64,
     pub x: f64,
     pub y: f64,
+    pub index: Option<usize>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 #[allow(clippy::too_many_arguments)]
-pub fn connect_grips(id: String, source: String, target: String, fastener_kind: Option<String>, gap: f64, shift: f64, rise: f64, rotation: f64, turn: f64, tilt: f64, x: f64, y: f64) -> Puzzle5dMutation {
-    Puzzle5dMutation::ConnectGrips(ConnectGrips { id, source, target, fastener_kind, gap, shift, rise, rotation, turn, tilt, x, y })
+pub fn connect_grips(id: String, source: String, target: String, fastener_kind: Option<String>, gap: f64, shift: f64, rise: f64, rotation: f64, turn: f64, tilt: f64, x: f64, y: f64, index: Option<usize>) -> Puzzle5dMutation {
+    Puzzle5dMutation::ConnectGrips(ConnectGrips { id, source, target, fastener_kind, gap, shift, rise, rotation, turn, tilt, x, y, index })
 }
 
 impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ConnectGrips {

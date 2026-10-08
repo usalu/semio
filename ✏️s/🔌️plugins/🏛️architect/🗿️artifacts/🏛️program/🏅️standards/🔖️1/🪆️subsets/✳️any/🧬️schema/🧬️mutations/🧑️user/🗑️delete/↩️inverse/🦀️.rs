@@ -8,8 +8,8 @@ use crate::ProgramSnapshot;
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::DeleteUserProfile, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    match base.users.iter().find(|row| row.header.id == payload.id) {
-        Some(existing) => vec![ProgramMutation::CreateUserProfile(super::super::create_user_profile::CreateUserProfile { user_profile: existing.clone() })],
+    match base.users.iter().position(|row| row.header.id == payload.id) {
+        Some(position) => vec![ProgramMutation::CreateUserProfile(super::super::create_user_profile::CreateUserProfile { user_profile: base.users[position].clone(), index: Some(position) })],
         None => Vec::new(),
     }
 

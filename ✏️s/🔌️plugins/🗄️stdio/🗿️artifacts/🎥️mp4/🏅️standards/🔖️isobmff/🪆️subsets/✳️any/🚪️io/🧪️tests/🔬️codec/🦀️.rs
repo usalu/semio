@@ -114,7 +114,7 @@ async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
         mutations::{apply_mp4_mutation, Mp4Mutation},
     };
     use protocol::{DiffBinary,DiffCodec,DiffText, Mutation, OpBinary, OpText};
-    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};
+    use semio_framework_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactComposition, io::ComposeSource};
 
     let bytes = include_bytes!("../../../🧫️fixtures/🎬️.mp4").to_vec();
     let snapshot = decode_mp4(&bytes).expect("decode exact MP4 fixture");
@@ -138,24 +138,18 @@ async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
 
     let self_diff = Mp4Diff::between(&snapshot, &snapshot);
     let text_diff = Mp4Diff::parse_diff(&self_diff.print_diff()).expect("parse MP4 diff text");
-    assert_eq!(encode_mp4(&text_diff.apply(&snapshot).unwrap()), bytes);
+    assert_eq!(encode_mp4(&protocol::apply_diff(&text_diff, &snapshot).unwrap()), bytes);
     let binary_diff = Mp4Diff::decode_diff(&self_diff.encode_diff().expect("encode MP4 diff")).expect("decode MP4 diff");
-    assert_eq!(encode_mp4(&binary_diff.apply(&snapshot).unwrap()), bytes);
+    assert_eq!(encode_mp4(&protocol::apply_diff(&binary_diff, &snapshot).unwrap()), bytes);
 
     let mut no_op = snapshot.clone();
-    let no_op_mutation = Mp4Mutation::SetSnapshot(crate::standards::isobmff::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot: no_op.clone() });
-    assert!(apply_mp4_mutation(&mut no_op, &no_op_mutation).diff().is_empty());
+    let no_op_mutation = Mp4Mutation::SetMovie(crate::standards::isobmff::subsets::any::schema::mutations::set_movie::SetMovie { movie: no_op.movie.clone() });
+    apply_mp4_mutation(&mut no_op, &no_op_mutation);
     assert_eq!(encode_mp4(&no_op), bytes);
 
-    let set_snapshot = Mp4Mutation::SetSnapshot(crate::standards::isobmff::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot: snapshot.clone() });
-    let text_op = Mp4Mutation::parse_op(&set_snapshot.print_op()).expect("parse MP4 operation text");
-    let mut from_text_op = Mp4Snapshot::default();
-    apply_mp4_mutation(&mut from_text_op, &text_op);
-    assert_eq!(encode_mp4(&from_text_op), bytes);
-    let binary_op = Mp4Mutation::decode_op(&set_snapshot.encode_op().expect("encode MP4 operation")).expect("decode MP4 operation");
-    let mut from_binary_op = Mp4Snapshot::default();
-    apply_mp4_mutation(&mut from_binary_op, &binary_op);
-    assert_eq!(encode_mp4(&from_binary_op), bytes);
+    let set_movie = Mp4Mutation::SetMovie(crate::standards::isobmff::subsets::any::schema::mutations::set_movie::SetMovie { movie: snapshot.movie.clone() });
+    assert_eq!(Mp4Mutation::parse_op(&set_movie.print_op()).expect("parse MP4 operation text"), set_movie);
+    assert_eq!(Mp4Mutation::decode_op(&set_movie.encode_op().expect("encode MP4 operation")).expect("decode MP4 operation"), set_movie);
 
     let mut changed = snapshot.clone();
     let mutation = Mp4Mutation::SetTrackDimensions(crate::standards::isobmff::subsets::any::schema::mutations::set_track_dimensions::SetTrackDimensions { track_index: 0, width: snapshot.tracks[0].width + 1, height: snapshot.tracks[0].height });
@@ -164,8 +158,8 @@ async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
     assert_ne!(changed_bytes, bytes, "semantic mutation must materialize changed logical state");
 
     let diff = Mp4Diff::between(&snapshot, &changed);
-    let after = diff.apply(&snapshot).unwrap();
-    let restored = diff.inverse(&snapshot).apply(&after).unwrap();
+    let after = protocol::apply_diff(&diff, &snapshot).unwrap();
+    let restored = protocol::apply_diff(&diff.inverse(&snapshot), &after).unwrap();
     assert_eq!(restored, snapshot, "mutation inverse must reconstruct the logical snapshot");
     assert_eq!(encode_mp4(&restored), bytes, "restored logical state must materialize the imported MP4 exactly");
     for inverse in mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture") {
@@ -178,10 +172,10 @@ async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
 //#region chunk_grouping_reconciliation
 /// 🧮️ `chunk_sample_counts` is a RETAINED `stsc`/`stco` layout hint, and the sample list is the
 /// truth. When the two disagree the encoder normalizes to one chunk per track instead of
-/// aborting — reachable by construction, not a defensive nicety: `SetSnapshot` carries a whole
-/// caller-supplied document and a caller that drops a sample cannot be expected to restate a
+/// aborting — reachable by construction, not a defensive nicety: a caller supplying a whole
+/// document (a natural-file open) and a sample leaf that drops a sample cannot be expected to restate a
 /// writer's chunking. Ticket 26/08/23/END-TO-END-TESTING-REFACTOR: `mutate-mp4-isobmff`'s
-/// `set-snapshot` row drops the first track's last sample, and this encoder used to panic on it
+/// whole-document row dropped the first track's last sample, and this encoder used to panic on it
 /// (`MP4 chunk sample counts must cover every sample`, left 47 right 46), taking the whole
 /// subject host down before a single scenario could report.
 #[test]

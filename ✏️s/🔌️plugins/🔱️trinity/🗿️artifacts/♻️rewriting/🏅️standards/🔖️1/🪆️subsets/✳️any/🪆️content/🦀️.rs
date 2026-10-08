@@ -50,7 +50,13 @@ pub(crate) fn admit(work: &mut SemioGraphSnapshot, leaf: &SemioGraphMutation) ->
     if refused(outcome.messages()) {
         return false;
     }
-    !refused(outcome.apply_to(work).messages())
+    match protocol::apply_diff(outcome.diff(), work) {
+        Ok(next) => {
+            *work = next;
+            true
+        }
+        Err(_) => false,
+    }
 }
 
 /// 📢️ The localized notices of rewriting's own refusal codes (design §20.12).

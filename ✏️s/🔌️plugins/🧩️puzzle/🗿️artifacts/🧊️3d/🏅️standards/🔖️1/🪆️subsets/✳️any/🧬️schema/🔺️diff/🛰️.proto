@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.puzzle.puzzle3d.diff;
 
-// 🧬️ Puzzle3d diff schema — sparse field delta.
+// 🧬️ Puzzle3d diff schema — sparse typed delta.
 
 message Puzzle3dDiff {
   // @state artifact
@@ -11,7 +11,7 @@ message Puzzle3dDiff {
   // @state artifact
   optional string domain = 3;
   // @state artifact
-  optional Puzzle3dMeta meta = 4;
+  optional Puzzle3dMetaPatch meta = 4;
   // @state artifact
   optional Puzzle3dObjectsDelta objects = 5;
   // @state artifact
@@ -20,17 +20,30 @@ message Puzzle3dDiff {
   optional Puzzle3dTargetVolumesDelta target_volumes = 7;
   // @state artifact
   optional Puzzle3dReferencesDelta references = 8;
-  // @state config
 }
 
 message Puzzle3dArtifact { string schema = 1; }
-message Puzzle3dStringList { repeated string values = 1; }
+message Puzzle3dKindCompatibilityKey { string source = 1; string target = 2; }
+message Puzzle3dVortexPatch { optional string vortex_kind = 1; optional string label = 2; repeated double position = 3; repeated double direction = 4; optional double radius = 5; optional bool hidden = 6; optional bool locked = 7; }
+message Puzzle3dObjectPatch { optional string label = 1; optional string object_kind = 2; optional Puzzle3dObjectAnchor anchor = 3; repeated double origin = 4; repeated double orientation = 5; optional Puzzle3dScale scale = 6; optional string mesh_url = 7; optional Puzzle3dVorticesDelta vortices = 8; optional bool hidden = 9; optional bool locked = 10; }
+message Puzzle3dAttractionPatch { optional string attracting = 1; optional string attracted = 2; optional double gap = 3; optional double shift = 4; optional double rise = 5; optional double rotation = 6; optional double turn = 7; optional double tilt = 8; optional double x = 9; optional double y = 10; }
+message Puzzle3dTargetVolumePatch { repeated double origin = 1; repeated double orientation = 2; optional Puzzle3dScale scale = 3; optional bool hidden = 4; optional bool locked = 5; }
+message Puzzle3dReferencePatch { optional Puzzle3dReferenceSource source = 1; repeated double origin = 2; optional double width_world = 3; optional bool locked = 4; optional bool hidden = 5; }
+message Puzzle3dKindCompatibilityPatch { optional bool bidirectional = 1; optional bool important = 2; optional Puzzle3dCompatSpecificity specificity = 3; }
+message Puzzle3dMetaPatch { optional Puzzle3dKindCatalogs kind_catalogs = 1; optional Puzzle3dKindCompatibilityDelta kind_compatibility = 2; }
+message Puzzle3dVorticesDelta { repeated Puzzle3dVortex added = 1; repeated string removed = 2; repeated Puzzle3dVortexPatchEntry patched = 3; repeated string reordered = 4; }
+message Puzzle3dVortexPatchEntry { string id = 1; Puzzle3dVortexPatch patch = 2; }
 message Puzzle3dObjectsDelta { repeated Puzzle3dObject added = 1; repeated string removed = 2; repeated Puzzle3dObjectPatchEntry patched = 3; repeated string reordered = 4; }
 message Puzzle3dObjectPatchEntry { string id = 1; Puzzle3dObjectPatch patch = 2; }
-message Puzzle3dObjectPatch { optional Puzzle3dObject replacement = 1; }
 message Puzzle3dAttractionsDelta { repeated Puzzle3dAttraction added = 1; repeated string removed = 2; repeated Puzzle3dAttractionPatchEntry patched = 3; repeated string reordered = 4; }
 message Puzzle3dAttractionPatchEntry { string id = 1; Puzzle3dAttractionPatch patch = 2; }
-message Puzzle3dAttractionPatch { optional Puzzle3dAttraction replacement = 1; }
+message Puzzle3dTargetVolumesDelta { repeated Puzzle3dTargetVolume added = 1; repeated string removed = 2; repeated Puzzle3dTargetVolumePatchEntry patched = 3; repeated string reordered = 4; }
+message Puzzle3dTargetVolumePatchEntry { string id = 1; Puzzle3dTargetVolumePatch patch = 2; }
+message Puzzle3dReferencesDelta { repeated Puzzle3dReference added = 1; repeated string removed = 2; repeated Puzzle3dReferencePatchEntry patched = 3; repeated string reordered = 4; }
+message Puzzle3dReferencePatchEntry { string id = 1; Puzzle3dReferencePatch patch = 2; }
+message Puzzle3dKindCompatibilityDelta { repeated Puzzle3dKindCompatibility added = 1; repeated Puzzle3dKindCompatibilityKey removed = 2; repeated Puzzle3dKindCompatibilityPatchEntry patched = 3; repeated Puzzle3dKindCompatibilityKey reordered = 4; }
+message Puzzle3dKindCompatibilityPatchEntry { Puzzle3dKindCompatibilityKey id = 1; Puzzle3dKindCompatibilityPatch patch = 2; }
+
 enum Puzzle3dObjectAnchor {
   PUZZLE3D_OBJECT_ANCHOR_FIXED = 0;
   PUZZLE3D_OBJECT_ANCHOR_DERIVED = 1;
@@ -87,13 +100,6 @@ message Puzzle3dKindCompatibility {
 message Puzzle3dMeta {
   repeated Puzzle3dKindCompatibility kind_compatibility = 1;
 }
-message Puzzle3dTargetVolumesDelta { repeated Puzzle3dTargetVolume added = 1; repeated string removed = 2; repeated Puzzle3dTargetVolumePatchEntry patched = 3; repeated string reordered = 4; }
-message Puzzle3dTargetVolumePatchEntry { string id = 1; Puzzle3dTargetVolumePatch patch = 2; }
-message Puzzle3dTargetVolumePatch { optional Puzzle3dTargetVolume replacement = 1; }
 message Puzzle3dTargetVolume { string id = 1; }
-message Puzzle3dReferencesDelta { repeated Puzzle3dReference added = 1; repeated string removed = 2; repeated Puzzle3dReferencePatchEntry patched = 3; repeated string reordered = 4; }
-message Puzzle3dReferencePatchEntry { string id = 1; Puzzle3dReferencePatch patch = 2; }
-message Puzzle3dReferencePatch { optional Puzzle3dReference replacement = 1; }
 message Puzzle3dReference { string id = 1; }
 message Puzzle3dMeta { bool _placeholder = 1; }
-

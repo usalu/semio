@@ -17,19 +17,21 @@ pub struct SetDictEntry {
     pub path: Vec<PdfPathSegment>,
     pub key: String,
     pub value: PdfObject,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfMutation> for SetDictEntry {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "dict-entry", kind: "set-dict-entry", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::graph_edit(diff::diff_set_dict_entry(base, self.id, &self.path, &self.key, self.value.clone())))
+        MutationOutcome::new(diff::graph_edit(diff::diff_set_dict_entry(base, self.id, &self.path, &self.key, self.value.clone(), self.index)))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         match original_dict_value(base, self.id, &self.path, &self.key) {
-            Some(value) => vec![PdfMutation::SetDictEntry(SetDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone(), value })],
+            Some((_, value)) => vec![PdfMutation::SetDictEntry(SetDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone(), value, index: None })],
             None => vec![PdfMutation::RemoveDictEntry(RemoveDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone() })],
         }
     
@@ -45,7 +47,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetDictEntry {
     }
 }
 
-fn original_dict_value(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], key: &str) -> Option<PdfObject> {
+fn original_dict_value(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], key: &str) -> Option<(usize, PdfObject)> {
     let object = base.objects.iter().find(|object| object.id == id)?;
     let mut current = &object.value;
     for segment in path {
@@ -61,7 +63,7 @@ fn original_dict_value(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], 
         PdfObject::Stream { dict, .. } => dict,
         _ => return None,
     };
-    entries.iter().find(|entry| entry.key == key).map(|entry| entry.value.clone())
+    entries.iter().position(|entry| entry.key == key).map(|position| (position, entries[position].value.clone()))
 }
 
 //#endregion 🔖️Mutation

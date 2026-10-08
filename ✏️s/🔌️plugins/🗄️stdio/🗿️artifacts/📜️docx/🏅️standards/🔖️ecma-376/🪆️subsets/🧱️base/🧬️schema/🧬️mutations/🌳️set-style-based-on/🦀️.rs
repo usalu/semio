@@ -1,6 +1,4 @@
-//! 🔗️ `set-style-based-on` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🔗️ `set-style-based-on` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,15 +13,14 @@ pub struct SetStyleBasedOn {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetStyleBasedOn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "style-based-on", kind: "set-style-based-on", record: "SetStyleBasedOn" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as Mutation<DocxSnapshot>>::Diff> {
-        agg_diff(&DocxMutation::SetStyleBasedOn(self.clone()), base)
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
+        optional_plan_outcome(style_based_on_plan(base, &self.id, self.based_on.as_deref()))
     }
+
     fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&DocxMutation::SetStyleBasedOn(self.clone()), base)?
-    
-    })
-}
+        Ok(optional_plan_inverse(style_based_on_plan(base, &self.id, self.based_on.as_deref())))
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set style based on", "Basis der Formatvorlage setzen")
     }

@@ -7,7 +7,7 @@ pub type QuantizedImage = (Vec<Rgb>, Vec<u8>, Option<u8>);
 pub mod derived_composition {
     use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
     use crate::standards::v87a::subsets::any::io::GifAnalyzer;
-    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("87a"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
@@ -635,14 +635,14 @@ pub fn decode_gif(data: &[u8]) -> Result<GifSnapshot, String> {
 /// version string (`GIF87a`/`GIF89a`); a mismatch or too-short/malformed source is Low, never a
 /// constant — replaces the prior stub that discarded `source` and always answered `Medium`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn sniff_magic(source: &semio_framework_plugin::AnalyzeSource<'_>, magic: &[u8; 6]) -> semio_framework_plugin::IoConfidence {
-    use semio_framework_plugin::{AnalyzeSource, IoConfidence};
+pub fn sniff_magic(source: &semio_framework_plugin::io::AnalyzeSource<'_>, magic: &[u8; 6]) -> semio_framework_plugin::io::Confidence {
+    use semio_framework_plugin::io::AnalyzeSource;
     match source {
         AnalyzeSource::Binary(bytes) => {
             if bytes.len() >= 6 && &bytes[0..6] == magic {
-                IoConfidence::High
+                semio_framework_plugin::io::Confidence::High
             } else {
-                IoConfidence::Low
+                semio_framework_plugin::io::Confidence::Low
             }
         }
         AnalyzeSource::Text(text) => {
@@ -652,19 +652,19 @@ pub fn sniff_magic(source: &semio_framework_plugin::AnalyzeSource<'_>, magic: &[
             };
             let hex: String = body.chars().filter(|c| !c.is_whitespace()).take(12).collect();
             if hex.len() < 12 {
-                return IoConfidence::Low;
+                return semio_framework_plugin::io::Confidence::Low;
             }
             let mut bytes = [0u8; 6];
             for (i, byte) in bytes.iter_mut().enumerate() {
                 match u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16) {
                     Ok(b) => *byte = b,
-                    Err(_) => return IoConfidence::Low,
+                    Err(_) => return semio_framework_plugin::io::Confidence::Low,
                 }
             }
             if &bytes == magic {
-                IoConfidence::Medium
+                semio_framework_plugin::io::Confidence::Medium
             } else {
-                IoConfidence::Low
+                semio_framework_plugin::io::Confidence::Low
             }
         }
     }
@@ -781,7 +781,7 @@ mod tests;
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v87a::subsets::any::io::GifComposer as GifRawAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -831,7 +831,8 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<GifSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::standards::v87a::subsets::any::schema::mutations::apply_gif_mutation(&mut self.snapshot, &mutation);
+            let (next, diff) = store::apply_outcome(&self.snapshot, protocol::Mutation::diff(&mutation, &self.snapshot));
+            self.snapshot = next;
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -852,7 +853,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::standards::v87a::subsets::any::schema::snapshot::GifSnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.gif` parts.
@@ -870,27 +871,27 @@ pub mod derived_analysis {
         type Parts = GifParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gif", standard: StandardId("87a"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             crate::standards::v87a::subsets::any::io::sniff_magic(source, b"GIF87a")
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = GifParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
+            let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <GifSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <GifSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },

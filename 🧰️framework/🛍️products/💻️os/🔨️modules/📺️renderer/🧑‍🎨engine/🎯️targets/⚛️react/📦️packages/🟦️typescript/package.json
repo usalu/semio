@@ -23,14 +23,15 @@
     "@semio-tech/framework-os": "workspace:*",
     "@semio-tech/framework-editor-rs": "workspace:*",
     "@semio-tech/framework-surface-rs": "workspace:*",
-    "@semio-tech/infinite-canvas-react-renderer": "workspace:*",
+    "@semio-tech/canvas-react-renderer": "workspace:*",
     "@semio-tech/infinite-world-r3f": "workspace:*",
     "@semio-tech/assets": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "@semio-tech/ui-styling": "workspace:*",
     "katex": "^0.16.22",
     "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "react-dom": "^19.2.3",
+    "@semio-tech/framework-os-node-graph-rs": "workspace:*"
   },
   "devDependencies": {
     "@types/pngjs": "^6.0.5",

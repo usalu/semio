@@ -15,7 +15,7 @@ start diff
 # chain` workaround.
 #
 # `format` is FIXED-width (one byte, `PlyFormat`'s 3 unit variants) so its presence flag guards a
-# plain conditional field, no length prefix needed. `comments` (a `Vec<String>` whole-replace) and
+# plain conditional field, no length prefix needed. `comments` (the index-keyed triple) and
 # `elements` (`PlyElementsDiff` — the real name-keyed removed/modified + index-keyed added
 # triple, itself recursively nesting `PlyElement`/`PlyElementDiff`/`PlyRowsDiff`/`PlyProperty`/
 # `PlyValue`) are both length-prefixed opaque byte blobs (`<name>_len varint` +

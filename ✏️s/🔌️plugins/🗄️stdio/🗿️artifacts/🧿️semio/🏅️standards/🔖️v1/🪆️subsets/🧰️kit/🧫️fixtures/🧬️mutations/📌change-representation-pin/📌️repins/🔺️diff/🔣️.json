@@ -1,20 +1,14 @@
 {
   "representations": {
-    "values": [
+    "modified": [
       {
-        "target": {
-          "artifactId": "beam-plan",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "drawing"
+        "index": 0,
+        "diff": {
+          "pin": {
+            "kind": "checkpoint",
+            "id": "v3"
           }
-        },
-        "pin": {
-          "kind": "checkpoint",
-          "id": "v3"
-        },
-        "role": "t1"
+        }
       }
     ]
   }

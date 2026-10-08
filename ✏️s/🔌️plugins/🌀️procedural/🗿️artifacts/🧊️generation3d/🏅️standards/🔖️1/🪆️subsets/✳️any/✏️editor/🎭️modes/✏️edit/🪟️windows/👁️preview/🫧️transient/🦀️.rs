@@ -73,7 +73,7 @@ impl protocol::OpBinary for Generation3dPreviewWindowTransientMutation {
 }
 
 impl Mutation<Generation3dPreviewWindowTransient> for Generation3dPreviewWindowTransientMutation {
-    type Diff = Generation3dPreviewWindowTransient;
+    type Diff = Generation3dPreviewWindowTransientDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🫧️transient",
@@ -93,9 +93,7 @@ impl Mutation<Generation3dPreviewWindowTransient> for Generation3dPreviewWindowT
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
     fn diff(&self, base: &Generation3dPreviewWindowTransient) -> protocol::MutationOutcome<Self::Diff> {
         let Self::SetPreviewEval { eval_text } = self;
-        let mut next = base.clone();
-        next.preview_eval_text.clone_from(eval_text);
-        protocol::MutationOutcome::new(next)
+        protocol::MutationOutcome::new(Generation3dPreviewWindowTransientDiff { preview_eval_text: (base.preview_eval_text != *eval_text).then(|| Generation3dPreviewEvalText { value: eval_text.clone() }) })
     }
     fn inverse(&self, base: &Generation3dPreviewWindowTransient) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| { vec![Self::SetPreviewEval { eval_text: base.preview_eval_text.clone() }] 
@@ -103,9 +101,50 @@ impl Mutation<Generation3dPreviewWindowTransient> for Generation3dPreviewWindowT
 }
 }
 
-impl protocol::MutationDiff<Generation3dPreviewWindowTransient> for Generation3dPreviewWindowTransient {
-    fn apply(&self, _base: &Generation3dPreviewWindowTransient) -> protocol::MutationApplyResult<Generation3dPreviewWindowTransient> { Ok(self.clone()) }
-    fn absorb(&mut self, other: Self) { *self = other; }
+/// 🧱️ Carries an optional value as a present slot, so clearing it stays distinct from leaving it untouched on every wire.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Generation3dPreviewEvalText {
+    pub value: Option<String>,
+}
+
+/// 🔺️ Sparse field delta over [`Generation3dPreviewWindowTransient`]: every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Generation3dPreviewWindowTransientDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub preview_eval_text: Option<Generation3dPreviewEvalText>,
+}
+
+impl protocol::MutationDiff<Generation3dPreviewWindowTransient> for Generation3dPreviewWindowTransientDiff {
+    fn apply(&self, base: &Generation3dPreviewWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Generation3dPreviewWindowTransient> {
+        let mut next = base.clone();
+        if let Some(value) = &self.preview_eval_text {
+            next.preview_eval_text = value.value.clone();
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.preview_eval_text.is_some() {
+            self.preview_eval_text = other.preview_eval_text;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<Generation3dPreviewWindowTransient> for Generation3dPreviewWindowTransientDiff {
+    fn inverse(&self, base: &Generation3dPreviewWindowTransient) -> Self {
+        Self {
+            preview_eval_text: self.preview_eval_text.as_ref().map(|_| Generation3dPreviewEvalText { value: base.preview_eval_text.clone() }),
+        }
+    }
+    fn between(base: &Generation3dPreviewWindowTransient, other: &Generation3dPreviewWindowTransient) -> Self {
+        Self {
+            preview_eval_text: (base.preview_eval_text != other.preview_eval_text).then(|| Generation3dPreviewEvalText { value: other.preview_eval_text.clone() }),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.preview_eval_text.is_none()
+    }
 }
 
 semio_framework_value::artifact_retire_struct!(Generation3dPreviewWindowTransient { preview_eval_text });

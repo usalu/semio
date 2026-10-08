@@ -15,7 +15,7 @@
     ".": "./🟦️.ts"
   },
   "dependencies": {
-    "@semio-tech/s-3d-js": "workspace:*",
+    "@semio-tech/framework-3d-js": "workspace:*",
     "@semio-tech/framework": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "@semio-tech/ui-styling": "workspace:*",

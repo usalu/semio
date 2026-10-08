@@ -922,7 +922,7 @@ impl ArtifactEditor for Fem2dPlayApp {
                 let material_id = doc.snapshot.materials.first().map_or_else(|| "unassigned".into(), |material| material.id.clone());
                 let id = crate::app_surface::next_id(doc.snapshot.regions.iter().map(|r| r.id.clone()), "r");
                 let region = crate::FemRegion { id, name: "Imported Geometry".into(), outline, holes, thickness: 0.02, material_id, mesh_size: 0.25 };
-                Ok(Emit::mutations(vec![Fem2dMutation::CreateRegion(crate::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region })]))
+                Ok(Emit::mutations(vec![Fem2dMutation::CreateRegion(crate::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region, index: None })]))
             }
             _ => Err(MediaError::NotImplemented),
         }

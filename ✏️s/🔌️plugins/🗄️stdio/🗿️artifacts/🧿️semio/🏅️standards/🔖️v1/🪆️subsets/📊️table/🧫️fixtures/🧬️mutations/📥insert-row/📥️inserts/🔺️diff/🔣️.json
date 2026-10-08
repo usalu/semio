@@ -1,41 +1,20 @@
 {
   "rows": {
-    "values": [
+    "added": [
       {
-        "cells": [
-          {
-            "kind": "int",
-            "lexeme": "1"
-          },
-          {
-            "kind": "str",
-            "value": "Hannover"
-          }
-        ]
-      },
-      {
-        "cells": [
-          {
-            "kind": "int",
-            "lexeme": "2"
-          },
-          {
-            "kind": "str",
-            "value": "Hamburg"
-          }
-        ]
-      },
-      {
-        "cells": [
-          {
-            "kind": "int",
-            "lexeme": "3"
-          },
-          {
-            "kind": "str",
-            "value": "Berlin"
-          }
-        ]
+        "index": 1,
+        "item": {
+          "cells": [
+            {
+              "kind": "int",
+              "lexeme": "2"
+            },
+            {
+              "kind": "str",
+              "value": "Hamburg"
+            }
+          ]
+        }
       }
     ]
   }

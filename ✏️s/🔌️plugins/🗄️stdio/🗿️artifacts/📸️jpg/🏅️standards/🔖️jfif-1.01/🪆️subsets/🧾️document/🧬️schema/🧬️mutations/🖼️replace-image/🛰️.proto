@@ -1,0 +1,4 @@
+syntax = "proto3";
+package stdio.jpg;
+import "../../📸️snapshot/🛰️.proto";
+message ReplaceImage { JpgImage image = 1; }

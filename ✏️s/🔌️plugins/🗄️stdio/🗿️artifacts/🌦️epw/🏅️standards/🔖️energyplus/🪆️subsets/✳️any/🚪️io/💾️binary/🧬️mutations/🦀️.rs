@@ -7,7 +7,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod mutations_codec {
 use super::*;
 use crate::standards::energyplus::subsets::any::schema::mutations::*;
-use crate::standards::energyplus::subsets::any::schema::diff::{diff_set_snapshot, EpwDiff, EpwRecordAdded, EpwRecordDiff, EpwRecordModified, EpwRecordsDiff};
+use crate::standards::energyplus::subsets::any::schema::diff::{EpwDiff, EpwRecordAdded, EpwRecordDiff, EpwRecordModified, EpwRecordsDiff};
 use crate::standards::energyplus::subsets::any::io::text::diff::{dec_record};
 use crate::standards::energyplus::subsets::any::io::text::diff::{enc_record};
 use crate::standards::energyplus::subsets::any::io::text::diff::{strip_brackets};

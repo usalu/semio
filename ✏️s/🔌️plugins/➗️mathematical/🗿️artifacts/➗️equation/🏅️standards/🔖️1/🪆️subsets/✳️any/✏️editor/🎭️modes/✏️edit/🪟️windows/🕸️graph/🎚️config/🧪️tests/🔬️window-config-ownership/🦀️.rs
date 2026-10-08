@@ -1,7 +1,7 @@
 //! 🧪️ Exact Equation graph-window configuration publication and persistence laws.
 
 use super::*;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{Mutation, OpBinary, OpText};
 use semio_framework_plugin::WindowConfigOwner;
 
 fn block_on_equation_window_config<F: std::future::Future>(future: F) -> F::Output {
@@ -128,8 +128,8 @@ fn equation_graph_window_config_mutations_follow_the_neutral_trace_and_restore()
         let id = row["windowId"].as_str().unwrap();
         let mutation: EquationGraphWindowConfigMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let before = windows[id].clone();
-        let after = mutation.diff(&before).diff().apply(&before).unwrap();
-        let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+        let after = protocol::apply_diff(mutation.diff(&before).diff(), &before).unwrap();
+        let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, before);
         assert_eq!(EquationGraphWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(EquationGraphWindowConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);

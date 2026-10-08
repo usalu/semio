@@ -1,5 +1,5 @@
 //! 🔺️ `apply-paint-stroke` — sparse diff construction: the stroke's dabs stamped onto the base layer and written as
-//! pixel runs into `paintLayers.strokes`, the bucket `edit-paint-layer` writes too. Fatal `invariant` for a payload no
+//! pixel runs of one `stroke` paint edit, the edit `edit-paint-layer` writes too. Fatal `invariant` for a payload no
 //! stroke can satisfy (non-positive radius, hardness or opacity outside `[0, 1]`, no dab, a dab off the texture) or a
 //! layer buffer that is not a square RGBA texture; Error `target-missing` when the object or layer is absent; Warning
 //! `no-op` when the stroke changes no pixel (an eraser over a clear layer).

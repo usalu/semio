@@ -13,8 +13,6 @@
 
 use crate::editor::pdf17h::modes::edit;
 use crate::editor::pdf17h::modes::edit::windows::main;
-use crate::standards::v1_7::subsets::base::schema::mutations::set_snapshot;
-use crate::standards::v1_7::subsets::base::schema::mutations::patch_snapshot;
 use crate::{page_text_edit_mutation, PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF17_DOCUMENT_SCHEMA};
 use {semio_framework_plugin::built_to_component_tree,semio_framework_plugin::ArtifactEditor,semio_framework_plugin::ArtifactView,semio_framework_plugin::ComponentTree,semio_framework_plugin::ConfigView,semio_framework_artifact_reference::Dialect,semio_framework_plugin::DraftView,semio_framework_plugin::Editor,semio_framework_plugin::Emit,semio_framework_plugin::Fault,semio_framework_plugin::NoConfig,semio_framework_plugin::NoConfigMutation,semio_framework_plugin::NoDraft,semio_framework_plugin::NoDraftMutation,semio_framework_plugin::NoPresence,semio_framework_plugin::NoPresenceMutation,semio_framework_plugin::NoTransient,semio_framework_plugin::NoTransientMutation,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_2d::compute::EngineHandles;
@@ -217,7 +215,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for Pdf17HE
     }
 
     fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| PdfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| PdfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::v1_7::subsets::base::schema::mutations::net_mutations)
     }
 }
 

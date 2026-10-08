@@ -1,0 +1,25 @@
+# General Surface Interface Admission
+
+The current cut makes the four shared interaction and viewport imports resolve directly to their defining General packages. It does not remove Surface's remaining OS canvas, DAG host, or store dependencies. Deleting S, Hub, a plugin, or an artifact has not been qualified by this cut.
+
+The schema was authored first at Surface's canonical root `🧬️schema/🔣️.json`, with its canonical `$id`. A language-neutral corpus declares the four port names and provider package identities, Unicode selection/hover wire values, all three selection methods, and a fractional viewport.
+
+The permanent Bun provenance law interprets the actual Surface and provider manifests using both Bun TOML and the independent Iarna parser. It requires explicit direct dependencies and actual source imports from each defining crate. Strict Ajv independently validates the corpus and rejects a missing port. The Rust law compares the same first-party wire representations against independent Serde serialization and the neutral corpus.
+
+Actual `general-surface-native/source-1` returned Nx 1/Bun 1 with all 14 selected source bodies and the producer exact. The intended provenance assertion failed because the direct General provider dependency was absent. One selected law ran and the unrelated existing binding law was filtered; no whole Surface acceptance follows.
+
+The production node graph now imports DomainHover, DomainSelection, and SelectionMethod through General Replication's real crate name `protocol`, and Viewport2d through `semio_framework_ui_viewport`. Two explicit direct General dependencies and only the corresponding Surface entry of the root lockfile were updated. These are the original defining types; no duplicate declarations or Store compatibility facade is introduced.
+
+Actual `source-2` returned Nx 0/Bun 0 with the provenance law passing and all 14 selected sources/producer exact. The later native runner captures the root workspace and lockfile as two additional bodies. It uses the fleet's current shared target directory, Cargo's own locking, the real owning manifest, original long policy, and unfiltered `--all-targets`.
+
+Actual `native-1` returned Nx 1/Cargo 101 with all 16 selected source bodies and producer exact. Its full unit roster ran 263 tests: 261 passed, the new neutral wire law failed, and one existing test remained ignored. None were filtered. The actual failure was the new fixture spelling `8` as an integer while Viewport's f64 wire serializes `8.0`; the arithmetic value was unchanged. Both fixture and contract now explicitly spell that coordinate as `8.0`, preserving its declared floating point wire class. No production type or serialization behavior changed in response.
+
+Actual `source-3` closed Nx 0/Bun 0 with its one selected provenance law passing. Actual `native-2` closed Nx 0/Cargo 0: 262 unit laws and 7 integration laws passed, none failed or were filtered, and one original fixture law remained ignored. All 16 selected source bodies and the producer matched their captured bodies at the terminal, and the runner qualified all owning package targets. The new wire law printed its observed neutral wire agreement. This does not qualify the complete dependency graph or an atomic source snapshot.
+
+The previously ignored law and ten other tiled-map fixture readers depended on six PBF files in an old ticket directory. All six exact original byte sequences now belong to explicit tiled-map fixture keys. Original inputs remain preserved. Eleven reader sites borrow the declared compiled fixture roster; the directory-scan law still checks all six tiles. The original semantic assertions remain and the obsolete ignore is removed.
+
+Actual `fixture-source-1` failed with Nx 1/Bun 1 on the intended absent owner fixture after strict schema positive and missing-row negative assertions. After fixture publication, `fixture-source-2` closed Nx 0/Bun 0 and independently checked original byte counts, SHA256 and each layer's feature/geometry inventory with Protobuf.js. `source-4` closed Nx 0/Bun 0 with the current provenance law. Both captured all 27 selected bodies and the producer exactly.
+
+Actual `native-3` closed Nx 0/Cargo 0 with 264 unit laws and 7 integration laws passing, no ignored, filtered or failing laws. The previously ignored named-layer law and the new shared-corpus inventory law visibly ran. All 27 selected bodies—including the six binary sources captured as base64 with raw-byte SHA256—and the producer remained exact. The independent receipt audit recomputed these hashes against current bytes. Complete dependency closure and atomic graph acceptance remain unqualified.
+
+The next Pack payload cut must use the existing General Pack intrinsic decoder with an explicit physical format. Runtime TypeScript scene input is a Body; the original native Pack test encodes a Document. The old decoder retry hides this distinction. Every caller and foreign boundary must explicitly preserve its actual format before the retry and OS Store bridge can be removed.

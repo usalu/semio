@@ -1,0 +1,225 @@
+{
+  "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+  "environments": [
+    {
+      "kind": "python",
+      "commands": [
+        [
+          "uv",
+          "sync",
+          "--locked",
+          "--all-packages",
+          "--all-groups"
+        ]
+      ]
+    },
+    {
+      "kind": "cargo",
+      "commands": [
+        [
+          "cargo",
+          "update",
+          "--workspace",
+          "--manifest-path",
+          "Cargo.toml"
+        ],
+        [
+          "cargo",
+          "fetch",
+          "--locked",
+          "--manifest-path",
+          "Cargo.toml"
+        ]
+      ]
+    },
+    {
+      "kind": "go",
+      "commands": [
+        [
+          "go",
+          "mod",
+          "download"
+        ]
+      ],
+      "environment": {
+        "GOWORK": "{workspace}/go.work"
+      }
+    },
+    {
+      "kind": "dotnet",
+      "commands": []
+    },
+    {
+      "kind": "cpp",
+      "commands": []
+    },
+    {
+      "kind": "browsers",
+      "commands": [
+        [
+          "bun",
+          "{workspace}/node_modules/playwright/cli.js",
+          "install",
+          "chromium"
+        ]
+      ],
+      "environment": {
+        "PLAYWRIGHT_BROWSERS_PATH": "{workspace}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright"
+      }
+    },
+    {
+      "kind": "wasm",
+      "commands": [
+        [
+          "cargo",
+          "install",
+          "wasm-pack",
+          "--version",
+          "0.15.0",
+          "--locked"
+        ],
+        [
+          "cargo",
+          "install",
+          "wasm-bindgen-cli",
+          "--version",
+          "0.2.126",
+          "--locked"
+        ],
+        [
+          "rustup",
+          "target",
+          "add",
+          "wasm32-wasip2"
+        ]
+      ]
+    },
+    {
+      "kind": "trunk",
+      "commands": [
+        [
+          "cargo",
+          "install",
+          "trunk",
+          "--version",
+          "0.21.14",
+          "--locked"
+        ],
+        [
+          "cargo",
+          "install",
+          "wasm-bindgen-cli",
+          "--version",
+          "0.2.126",
+          "--locked"
+        ],
+        [
+          "rustup",
+          "target",
+          "add",
+          "wasm32-unknown-unknown"
+        ]
+      ]
+    },
+    {
+      "kind": "tools",
+      "commands": [
+        [
+          "cargo",
+          "install",
+          "cargo-nextest",
+          "--version",
+          "0.9.140",
+          "--locked"
+        ],
+        [
+          "cargo",
+          "install",
+          "cargo-llvm-cov",
+          "--version",
+          "0.8.7",
+          "--locked"
+        ]
+      ]
+    },
+    {
+      "kind": "cargo-lock",
+      "commands": [
+        [
+          "cargo",
+          "update",
+          "--workspace",
+          "--manifest-path",
+          "Cargo.toml"
+        ]
+      ]
+    }
+  ],
+  "forbiddenImports": [
+    "/🔍️discovery/",
+    "/🎮️playground/"
+  ],
+  "browserPaths": [
+    {
+      "input": null,
+      "expected": "{workspace}/.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright"
+    },
+    {
+      "input": "{workspace}/browser override",
+      "expected": "{workspace}/browser override"
+    },
+    {
+      "input": "0",
+      "expected": "0"
+    }
+  ],
+  "cargo": {
+    "package": "native-dependency-fixture",
+    "files": {
+      "Cargo.toml": "[package]\nname=\"native-dependency-fixture\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"🦀️.rs\"\n[workspace]\nmembers = [\".\"]\nexclude = []\n[workspace.metadata.semio.repository]\nschema-version = 1\nexclude-patterns = []\nowner-manifests = []\nmember-manifests = [\"Cargo.toml\"]\n",
+      "Cargo.lock": "version = 4\n\n[[package]]\nname = \"native-dependency-fixture\"\nversion = \"0.1.0\"\n",
+      "🦀️.rs": "pub fn answer() -> u32 { 42 }\n"
+    },
+    "invalidLock": "version = 4\n",
+    "expectedMembers": [
+      {
+        "directory": ".",
+        "manifest": "Cargo.toml",
+        "name": "native-dependency-fixture",
+        "workspace": "."
+      }
+    ],
+    "preparedFiles": {
+      "Cargo.toml": "[package]\nname=\"native-dependency-fixture\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"🦀️.rs\"\n[workspace]\nmembers = [\".\", \"generated\"] \nexclude = []\n[workspace.metadata.semio.repository]\nschema-version = 1\nexclude-patterns = []\nowner-manifests = []\nmember-manifests = [\"Cargo.toml\", \"generated/Cargo.toml\"]\n\n[dependencies]\ngenerated-dependency = { path = \"generated\" }\n\n[package.metadata.semio.preparation]\nscript=\"owned/📜️script.ts\"\ncommand=[\"prepare\"]\n",
+      "generated/Cargo.toml": "[package]\nname=\"generated-dependency\"\nversion=\"0.1.0\"\nedition=\"2021\"\n[lib]\npath=\"lib.rs\"\n",
+      "generated/lib.rs": "pub fn generated() -> u32 { 7 }\n"
+    },
+    "preparedPackages": [
+      "generated-dependency",
+      "native-dependency-fixture"
+    ],
+    "preparationMetadata": "\n[package.metadata.semio.preparation]\nscript=\"owned/📜️script.ts\"\ncommand=[\"prepare\"]\n",
+    "preparationScript": "import {mkdirSync,writeFileSync} from \"node:fs\";\nimport {dirname,resolve} from \"node:path\";\nif(process.argv[2]!==\"prepare\")throw Error(\"Unknown preparation command\");\nfor(const [path,content] of Object.entries({\"Cargo.toml\":\"[package]\\nname=\\\"native-dependency-fixture\\\"\\nversion=\\\"0.1.0\\\"\\nedition=\\\"2021\\\"\\n[lib]\\npath=\\\"🦀️.rs\\\"\\n[workspace]\\nmembers = [\\\".\\\", \\\"generated\\\"] \\nexclude = []\\n[workspace.metadata.semio.repository]\\nschema-version = 1\\nexclude-patterns = []\\nowner-manifests = []\\nmember-manifests = [\\\"Cargo.toml\\\", \\\"generated/Cargo.toml\\\"]\\n\\n[dependencies]\\ngenerated-dependency = { path = \\\"generated\\\" }\\n\\n[package.metadata.semio.preparation]\\nscript=\\\"owned/📜️script.ts\\\"\\ncommand=[\\\"prepare\\\"]\\n\",\"generated/Cargo.toml\":\"[package]\\nname=\\\"generated-dependency\\\"\\nversion=\\\"0.1.0\\\"\\nedition=\\\"2021\\\"\\n[lib]\\npath=\\\"lib.rs\\\"\\n\",\"generated/lib.rs\":\"pub fn generated() -> u32 { 7 }\\n\"})){const target=resolve(process.cwd(),path);mkdirSync(dirname(target),{recursive:true});writeFileSync(target,content);}\nconsole.log(\"[DEBUG] actual owner preparation introduced the current generated dependency\");\n"
+  },
+  "bindgenLock": "[[package]]\nname = \"wasm-bindgen\"\nversion = \"0.2.126\"\n",
+  "rejected": [
+    [],
+    [
+      "cargo",
+      "--force"
+    ],
+    [
+      "unknown"
+    ]
+  ],
+  "sourceEntrypoints": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs"
+  ],
+  "requiredPhysicalSources": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️bun/🟨️.cjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📦️payload/🟨️.cjs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🏃️invocation/🔣️.json"
+  ]
+}

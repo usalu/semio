@@ -19,17 +19,17 @@ op: addLayer
   | setBlockEntityGeometry
   ;
 
-addLayer: 'add-layer' 'layer' '=' layer;
+addLayer: 'add-layer' 'layer' '=' layer ('at' '=' INT)?;
 removeLayer: 'remove-layer' 'name' '=' HEX;
 setLayer: 'set-layer' 'name' '=' HEX 'color-index' '=' optionI32 'line-type' '=' optionHex 'visible' '=' optionBool;
-addBlock: 'add-block' 'block' '=' block;
+addBlock: 'add-block' 'block' '=' block ('at' '=' INT)?;
 removeBlock: 'remove-block' 'name' '=' HEX;
 setBlockBasePoint: 'set-block-base-point' 'name' '=' HEX 'base-point' '=' point2;
-addEntity: 'add-entity' 'entity' '=' entityRecord;
+addEntity: 'add-entity' 'entity' '=' entityRecord ('at' '=' INT)?;
 removeEntity: 'remove-entity' 'handle' '=' HEX;
 setEntityLayer: 'set-entity-layer' 'handle' '=' HEX 'layer' '=' HEX;
 setEntityGeometry: 'set-entity-geometry' 'handle' '=' HEX 'entity' '=' entity;
-addBlockEntity: 'add-block-entity' 'block-name' '=' HEX 'entity' '=' entityRecord;
+addBlockEntity: 'add-block-entity' 'block-name' '=' HEX 'entity' '=' entityRecord ('at' '=' INT)?;
 removeBlockEntity: 'remove-block-entity' 'block-name' '=' HEX 'handle' '=' HEX;
 setBlockEntityLayer: 'set-block-entity-layer' 'block-name' '=' HEX 'handle' '=' HEX 'layer' '=' HEX;
 setBlockEntityGeometry: 'set-block-entity-geometry' 'block-name' '=' HEX 'handle' '=' HEX 'entity' '=' entity;
@@ -38,7 +38,6 @@ optionI32: '[0]' | '[1,' I32 ']';
 optionHex: '[0]' | '[1,' HEX ']';
 optionBool: '[0]' | '[1,' bool ']';
 
-snapshotLit: '[' HEX ',' '[' (layer (',' layer)*)? ']' ',' '[' (block (',' block)*)? ']' ',' '[' (entityRecord (',' entityRecord)*)? ']' ']';
 
 layer: '[' HEX ',' I32 ',' HEX ',' bool ']';
 entityRecord: '[' HEX ',' HEX ',' entity ']';

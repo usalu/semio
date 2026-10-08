@@ -1,7 +1,7 @@
 // #region 🧲️Header
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
-/** 🧭️ `@semio-tech/geometry-brep-js` — brep WASM bridge and mesh contracts. */
+/** 🧭️ `@semio-tech/framework-3d-js` — brep WASM bridge and mesh contracts. */
 // #endregion 🧲️Header
 
 // #region 📐️Contracts
@@ -493,9 +493,11 @@ export function mergeMeshTransfers(meshes: readonly MeshTransfer[]): MeshTransfe
 
 // #region 🧪️Tests
 if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-geometry-brep-js/🟦️.ts");
+  const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-framework-3d-js/🟦️.ts");
   await registerTests1(import.meta.vitest, { isRenderableMeshTransfer, meshTransferToGeometryData, meshTransferFromPreviewPayload, mergeMeshTransfers }, { directory: import.meta.dir, url: import.meta.url });
   const { registerAnalysisOracleTests } = await import("./🧪️tests/🧪️analysis-oracles/🟦️.ts");
   await registerAnalysisOracleTests(import.meta.vitest, { directory: import.meta.dir, url: import.meta.url });
+  const { registerBooleanDifferentialTests } = await import("./📐️brep/🛠️operations/🔀️boolean/🧪️tests/🔬️differential/🟦️.ts");
+  await registerBooleanDifferentialTests(import.meta.vitest, { directory: import.meta.dir, url: import.meta.url });
 }
 // #endregion 🧪️Tests

@@ -1098,7 +1098,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts kernel-command test sqlite_snapshot_native_schema -- --nocapture",
+        "command": "bun ./📜️script.ts kernel-command test --lib sqlite_snapshot_native_schema -- --nocapture",
         "forwardAllArgs": true
       }
     },
@@ -1236,6 +1236,264 @@
       "options": {
         "command": "bun ./📜️script.ts root-service-current",
         "forwardAllArgs": true
+      }
+    },
+    "root-hub-reservation": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-owner-command \"🌎️hub/📦️packages/🦀️rust/📜️script.ts\" browser-actor-document-reservation-check",
+        "forwardAllArgs": true
+      }
+    },
+    "root-core-current": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts root-core-current",
+        "forwardAllArgs": true
+      }
+    },
+    "runtime-store-corpus-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts runtime-store-corpus-source",
+        "forwardAllArgs": true
+      }
+    },
+    "plugin-oct8-facets-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-facets/📜️script.ts\" source-integrity"
+      }
+    },
+    "plugin-oct8-facets-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-facets/📜️script.ts\" tests"
+      }
+    },
+    "root-remaining-corpus": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts root-remaining-corpus"
+      }
+    },
+    "root-dsl-inline-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts tests \"🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/🧪️tests/🧱️ownership/🟦️.ts\""
+      }
+    },
+    "root-dsl-inline-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts owner-command \"🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/📜️script.ts\" test-native --lib required_inline_statement_roundtrips_the_native_owner_and_refuses_zero_or_two -- --nocapture"
+      }
+    },
+    "root-sequence-oracles": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts root-sequence-oracles"
+      }
+    },
+    "plugin-oct8-catalog-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-owner-command .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-facets/📜️script.ts catalog-tests"
+      }
+    },
+    "root-final-corpus": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts root-final-corpus"
+      }
+    },
+    "root-admin-graph": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts root-admin-graph"
+      }
+    },
+    "root-schema-harness": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts root-schema-harness"
+      }
+    },
+    "runtime-directory-reader-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts\" directory-retained-home-bootstrap-source-check"
+      }
+    },
+    "runtime-temporal-reader-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts\" test-browser long 🧪️tests/🕰️wgpu-host-temporal-door/🟦️.ts"
+      }
+    },
+    "root-async-dsl-ghosts": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts root-async-dsl-ghosts"
+      }
+    },
+    "root-play-pane-ghost": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts root-play-pane-ghost"
+      }
+    },
+    "plugin-oct8-host-traces": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-owner-command 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/📜️script.ts guest-fault-check"
+      }
+    },
+    "root-schema-harness-full": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts root-schema-harness --full"
+      }
+    },
+    "root-dsl-schema-search-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts owner-command 🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/📜️script.ts test --lib mutation_schema_document_index_excludes_example_collections -- --nocapture"
+      }
+    },
+    "runtime-browser-catalog-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-owner-command \"🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts\" test-preview-generated long -t \"owns every static relative browser runtime import\""
+      }
+    },
+    "root-dsl-schema-search-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts tests \"🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧪️tests/🪪️mandatory-mutation-descriptor/🟦️.ts\""
+      }
+    },
+    "root-reintroduced-retirement-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts root-reintroduced-retirement-source"
+      }
+    },
+    "plugin-oct8-pack-observers-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" pack-observers-native"
+      }
+    },
+    "plugin-oct8-energy-editor-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" energy-editor-native"
+      }
+    },
+    "plugin-oct8-shared-frontier-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-owner-command \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts\" shared-frontier-native"
+      }
+    },
+    "root-corpus-port-boot-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts root-corpus-port-boot-source"
+      }
+    },
+    "runtime-callsite-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts runtime-callsite-source"
+      }
+    },
+    "distribution-source-fixtures": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts tests \"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📥️source/🧪️tests/🟦️.ts\""
+      }
+    },
+    "plugin-oct8-hub-provenance-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts plugin-oct8-hub-provenance-tests"
+      }
+    },
+    "mounted-runtime-http": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts mounted-runtime-http \".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️actual-mounted-runtime-input.json\""
+      }
+    },
+    "ticket-mcp-prepare": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts ticket-mcp prepare",
+        "forwardAllArgs": true
+      }
+    },
+    "ticket-mcp-probe": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts ticket-mcp probe",
+        "forwardAllArgs": true
+      }
+    },
+    "ticket-mcp-close-current": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts ticket-mcp close-current",
+        "forwardAllArgs": true
+      }
+    },
+    "plugin-oct8-protected-sweep-tests": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts plugin-oct8-protected-sweep-tests"
+      }
+    },
+    "root-canonical-process-preview": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts root-canonical-process-preview"
       }
     }
   }

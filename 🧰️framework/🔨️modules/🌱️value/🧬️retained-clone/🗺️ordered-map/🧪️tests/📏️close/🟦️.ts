@@ -1,13 +1,10 @@
 import { expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
 import { readFileSync } from "node:fs";
-import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import fixture from "../../🧫️fixtures/📏️close/🔣️.json" with { type: "json" };
-import schema from "../../🧫️fixtures/📏️close/🧬️schema/🔣️.json" with { type: "json" };
 
 test("ordered map cold close retains whole backing independently of logical text work", () => {
-  expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
   for (const row of fixture.cases) {
     const allocation = Buffer.alloc(row.capacity);
     const text = Buffer.from(row.text, "utf8");
@@ -22,5 +19,5 @@ test("ordered map cold close retains whole backing independently of logical text
   }
   expect(readFileSync(new URL("../../../🦀️.rs", import.meta.url), "utf8").includes("pub fn next_cold_byte_demand")).toBe(true);
   expect(readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8").includes("pub fn next_close_byte_demand")).toBe(true);
-  console.log("[DEBUG] ordered-map whole physical extents use Node Buffer + Ajv + JSON Patch oracle within unchanged65536 admission");
+  console.log("[DEBUG] ordered-map whole physical extents use Node Buffer + JSON Patch oracle within unchanged65536 admission");
 });

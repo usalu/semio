@@ -27,7 +27,7 @@ async fn embedded_parameters_use_the_parent_input_and_exact_window_without_mutat
 
 #[test]
 fn procedural_payload_vectors_match_the_json_oracle() {
-    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use protocol::{Mutation, OpBinary, OpText};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️payload-mutations.json")).expect("independent JSON parser");
     let base: ModuleRenderPayload = semio_framework_pack_json::from_json_str(&fixture["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned base");
     assert_eq!(ModulePayloadMutation::DESCRIPTORS.len(), 1);
@@ -38,11 +38,11 @@ fn procedural_payload_vectors_match_the_json_oracle() {
     for row in fixture["cases"].as_array().expect("mutation vectors") {
         let witness = WITNESSES.iter().find(|(case, _)| row["witness"] == *case).map(|(_, text)| *text).expect("case names a committed wire witness");
         let mutation: ModulePayloadMutation = store::os_store::test_support::assert_wire_witness(witness);
-        let post = mutation.diff(&base).diff().apply(&base).expect("apply mutation");
+        let post = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("apply mutation");
         assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&post)).expect("independent state oracle"), row["expected"]);
         assert_eq!(ModulePayloadMutation::parse_op(&mutation.print_op()).expect("operation text"), mutation);
         assert_eq!(ModulePayloadMutation::decode_op(&mutation.encode_op().expect("operation binary")).expect("decode binary"), mutation);
-        let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").iter().fold(post, |current, inverse| inverse.diff(&current).diff().apply(&current).expect("inverse"));
+        let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").iter().fold(post, |current, inverse| protocol::apply_diff(inverse.diff(&current).diff(), &current).expect("inverse"));
         assert_eq!(restored, base);
     }
 }
@@ -290,7 +290,7 @@ async fn module_payload_value_codec_round_trips() {
 
     let payload = default_payload();
     let mutation = ModulePayloadMutation::SetPayload(SetPayload { payload: payload.clone() });
-    let diff = ModulePayloadDiff { payload: Some(payload.clone()) };
+    let diff = ModulePayloadDiff { surface: Some("try".into()), interactive: Some(false), ..ModulePayloadDiff::default() };
 
     assert_eq!(ModuleRenderPayload::from_value(payload.to_value()).expect("first-party payload"), payload);
     assert_eq!(ModulePayloadMutation::from_value(mutation.to_value()).expect("first-party mutation"), mutation);

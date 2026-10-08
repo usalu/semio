@@ -8,4 +8,5 @@ import "../../🔺️diff/🛰️.proto";
 message InsertObjectMutation {
   ObjRef id = 1;
   PdfObject value = 2;
+  optional uint64 index = 3;
 }

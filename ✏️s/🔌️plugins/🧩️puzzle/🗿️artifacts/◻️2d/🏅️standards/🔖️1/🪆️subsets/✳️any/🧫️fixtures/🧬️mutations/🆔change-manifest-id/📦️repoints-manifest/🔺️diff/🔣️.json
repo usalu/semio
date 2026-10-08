@@ -1,20 +1,11 @@
 {
   "artifact": null,
-  "schema": null,
   "camera": null,
-  "nodes": null,
   "edges": null,
-  "targetRegions": null,
   "meta": {
-    "manifestId": "manifest-beta",
-    "kindCompatibility": [
-      {
-        "source": "handle-kind-a",
-        "target": "handle-kind-b",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      }
-    ]
-  }
+    "manifestId": "manifest-beta"
+  },
+  "nodes": null,
+  "schema": null,
+  "targetRegions": null
 }

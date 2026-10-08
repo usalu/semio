@@ -39,7 +39,7 @@ from __future__ import annotations
 import json
 import struct
 
-from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
+from semio_repo_test import Adapter, Context, Outcome, digest
 
 # endregion 🔖️Imports
 
@@ -48,9 +48,6 @@ from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
 #: 🏷️ Every variant of this subset's mutation vocabulary, in the order the mutations grammar's `op`
 #: production lists them, kebab-cased as the catalog spells them.
 KINDS = (
-    "no-mutation",
-    "set-snapshot",
-    "patch-snapshot",
     "set-sample-rate",
     "set-format",
     "insert-channel",
@@ -237,12 +234,6 @@ def apply_mutation(snapshot: dict, mutation: dict) -> dict:
     """🧬️ Applies one verb, returning a NEW snapshot."""
     result = clone(snapshot)
     kind, args = parts(mutation)
-    if kind == "no-mutation":
-        return result
-    if kind == "patch-snapshot":
-        return patched_snapshot(snapshot, args["patch"])
-    if kind == "set-snapshot":
-        return clone(args["snapshot"])
     if kind == "set-sample-rate":
         rate = args["sampleRate"]
         if not isinstance(rate, int) or isinstance(rate, bool) or rate < 0:
@@ -276,12 +267,6 @@ def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
     meanings — an insertion is undone by a removal at the position it took, and an overwrite by an
     overwrite with the value it displaced."""
     kind, args = parts(mutation)
-    if kind == "no-mutation":
-        return wire("no-mutation", {})
-    if kind == "patch-snapshot":
-        return wire("set-snapshot", {"snapshot": clone(snapshot)})
-    if kind == "set-snapshot":
-        return wire("set-snapshot", {"snapshot": clone(snapshot)})
     if kind == "set-sample-rate":
         return wire("set-sample-rate", {"sampleRate": snapshot["sampleRate"]})
     if kind == "set-format":
@@ -387,7 +372,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
     reproduce THAT, 8 000 real binary32 samples among them.
     """
     tone_report = carrier_once(ctx, TONE_DSL, "the committed tone")
-    declared = vector(ctx, "no-mutation")["before"]
+    declared = vector(ctx, "remove-tag")["before"]
     if tone_report["document"] != declared:
         raise AssertionError("the real committed tone does not decode to the before-snapshot every specification vector starts from\n     got: %s\nexpected: %s" % (json.dumps(tone_report["document"]), json.dumps(declared)))
     recording = carrier_once(ctx, RECORDING_DSL, "the recording")
@@ -407,7 +392,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
 def adapter() -> Adapter:
     """🧭️ Registration entry point the host calls. Handlers are registered under the Scenario Outline base
     ids, which the host resolves for every Examples row, and plain scenarios under their own ids."""
-    return Adapter("python").oracle("mutate", mutate).oracle("no-mutation-baseline-mutate", mutate).oracle("inverse", inverse).oracle("no-mutation-baseline-inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
+    return Adapter("python").oracle("mutate", mutate).oracle("inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

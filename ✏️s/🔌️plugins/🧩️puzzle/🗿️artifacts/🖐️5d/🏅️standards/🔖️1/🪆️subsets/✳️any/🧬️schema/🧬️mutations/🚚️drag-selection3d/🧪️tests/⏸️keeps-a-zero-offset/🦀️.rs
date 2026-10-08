@@ -80,7 +80,7 @@ fn produces_committed_diff() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: Puzzle5dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <Puzzle5dDiff as protocol::MutationDiff<Puzzle5dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "drag-selection3d/keeps-a-zero-offset: committed diff did not carry before to after");
 }
 

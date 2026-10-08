@@ -174,7 +174,7 @@ where
 #[test]
 fn strict_profile_is_an_io_rule_not_a_mutation_constraint() {
     use crate::app::declarations::fixture::{Std1StrictSnapshot, StrictFromAny};
-    let check = <StrictFromAny as semio_framework::io::io_mechanism::Deserializer<Std1StrictSnapshot>>::CONFORMANCE.expect("strict profile check");
+    let check = <StrictFromAny as semio_framework_os_kernel::io::io_mechanism::Deserializer<Std1StrictSnapshot>>::CONFORMANCE.expect("strict profile check");
     for row in cases()["conformance"].as_array().expect("conformance cases") {
         let snapshot = Std1StrictSnapshot { value: i32_value(&row["value"]) };
         assert_eq!(check(&snapshot).is_empty(), row["accept"].as_bool().expect("accept"));

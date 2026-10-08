@@ -67,7 +67,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: PlaybookDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <PlaybookDiff as protocol::MutationDiff<PlaybookSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-title/changes-the-playbook-title: committed diff did not carry before to after");
 }
 
@@ -112,4 +112,10 @@ async fn inverse_restores_the_base_title() {
     assert_eq!(undo.new_title, None, "the inverse restores the untitled base state");
     let restored = apply_playbook_mutation(&apply_playbook_mutation(&base, &mutation()).expect("forward applies"), &inverse[0]).expect("inverse step applies");
     assert_eq!(restored, base, "change-title/changes-the-playbook-title: inverse did not restore the before-snapshot");
+}
+
+/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

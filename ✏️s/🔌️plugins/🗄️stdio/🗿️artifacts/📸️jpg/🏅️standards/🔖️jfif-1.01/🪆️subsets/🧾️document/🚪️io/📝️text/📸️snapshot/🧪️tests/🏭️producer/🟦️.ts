@@ -1,11 +1,8 @@
 import {Database} from "bun:sqlite";
 import {expect,test} from "bun:test";
-import Ajv from "ajv/dist/2020.js";
 import fixture from "../../🧫️fixtures/🏭️producer/🔣️.json";
-import schema from "../../🧬️schema/🏭️producer/🔣️.json";
 
 test("scalar snapshot metadata agrees with the independent SQLite field roster",async()=>{
- expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
  const db=new Database(":memory:");try{
   db.run("CREATE TABLE field(id INTEGER PRIMARY KEY,key TEXT UNIQUE NOT NULL,shape TEXT NOT NULL,optional INTEGER NOT NULL CHECK(optional IN(0,1)))");
   for(const field of fixture.fields)db.run("INSERT INTO field VALUES(?,?,?,?)",field.id,field.key,field.shape,field.optional?1:0);

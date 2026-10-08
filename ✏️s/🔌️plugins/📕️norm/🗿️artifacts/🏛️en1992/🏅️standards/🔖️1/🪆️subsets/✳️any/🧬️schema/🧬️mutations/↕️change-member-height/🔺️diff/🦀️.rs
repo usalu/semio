@@ -1,15 +1,16 @@
-use crate::diff::{En1992Diff, En1992MemberList};
-use crate::mutations::change_member_height::ChangeMemberHeight;
+use crate::diff::{En1992Diff, En1992MembersRows, En1992MembersPatch};
+use super::ChangeMemberHeight;
 use crate::En1992Snapshot;
 
 pub fn diff(payload: &ChangeMemberHeight, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
-    let mut members = base.members.clone();
-    let Some(m) = members.iter_mut().find(|m| m.id == payload.member_id) else {
+    let Some(m) = base.members.iter().find(|m| m.id == payload.member_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Member {} not found.", payload.member_id), Vec::<String>::new());
     };
     if (m.height - payload.new_value).abs() < f64::EPSILON {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
-    m.height = payload.new_value;
-    protocol::MutationOutcome::new(En1992Diff { members: Some(En1992MemberList { values: members }), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff {
+        members: Some(En1992MembersRows { modified: vec![En1992MembersPatch { id: payload.member_id.clone(), height: Some(payload.new_value), ..Default::default() }], ..Default::default() }),
+        ..Default::default()
+    })
 }

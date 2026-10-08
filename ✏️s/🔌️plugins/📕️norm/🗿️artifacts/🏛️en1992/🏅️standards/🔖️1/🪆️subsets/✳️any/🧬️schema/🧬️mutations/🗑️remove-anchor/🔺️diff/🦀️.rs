@@ -1,4 +1,4 @@
-use crate::diff::{En1992AnchorList, En1992Diff};
+use crate::diff::{En1992Diff, En1992AnchorsRows};
 use super::RemoveAnchor;
 use crate::En1992Snapshot;
 
@@ -6,6 +6,5 @@ pub fn diff(payload: &RemoveAnchor, base: &En1992Snapshot) -> protocol::Mutation
     if !base.anchors.iter().any(|anchor| anchor.id == payload.anchor_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Anchor {} does not exist.", payload.anchor_id), [payload.anchor_id.clone()]);
     }
-    let anchors: Vec<_> = base.anchors.iter().filter(|a| a.id != payload.anchor_id).cloned().collect();
-    protocol::MutationOutcome::new(En1992Diff { anchors: Some(En1992AnchorList { values: anchors }), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff { anchors: Some(En1992AnchorsRows { removed: vec![payload.anchor_id.clone()], ..Default::default() }), ..Default::default() })
 }

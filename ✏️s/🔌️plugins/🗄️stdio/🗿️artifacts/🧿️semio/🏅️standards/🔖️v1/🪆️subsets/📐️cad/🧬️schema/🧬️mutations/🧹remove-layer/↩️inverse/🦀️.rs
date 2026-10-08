@@ -7,7 +7,7 @@ use super::super::*;
 pub fn inverse(payload: &super::RemoveLayer, base: &SemioCadSnapshot) -> Result<Vec<SemioCadMutation>, semio_framework_value::ValueError> {
     let super::RemoveLayer { name } = payload;
     Ok(match find_layer(base, name) {
-        Some(l) => vec![SemioCadMutation::AddLayer(add_layer::AddLayer { layer: l.clone() })],
+        Some(l) => vec![SemioCadMutation::AddLayer(add_layer::AddLayer { layer: l.clone(), at: base.layers.iter().position(|layer| layer.name == *name) })],
         None => Vec::new(),
     })
 }

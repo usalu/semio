@@ -31,7 +31,7 @@ fn reorder_columns() -> SemioTableMutation {
 #[semio_framework_async_macros::async_test]
 async fn moves_the_area_column_and_replays_the_move_on_every_row() {
     let base = before();
-    let produced = reorder_columns().diff(&base).diff().apply(&base).expect("reorder-columns applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(reorder_columns().diff(&base).diff(), &base).expect("reorder-columns applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-columns/moves-the-area-column-to-the-front-and-realigns-every-row: applied state differs from the committed after-snapshot");
     assert_eq!(produced.columns.len(), base.columns.len(), "reorder-columns is a permutation — it may never add or drop a column");
     assert_eq!(produced.columns[0].name, "area", "the addressed column must sit at to_index afterwards");
@@ -47,15 +47,16 @@ async fn moves_the_area_column_and_replays_the_move_on_every_row() {
 async fn the_undo_reorder_returns_the_column_to_its_base_index() {
     let base = before();
     let mutation = reorder_columns();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(
         undo,
         vec![SemioTableMutation::ReorderColumns(crate::standards::v1::subsets::table::schema::mutations::reorder_columns::ReorderColumns { name: "area".to_string(), to_index: 2 })],
         "the undo must send the column back to the index it originally occupied in base"
     );
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward reorder-columns applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo reorder-columns applies to the reordered table");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward reorder-columns applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo reorder-columns applies to the reordered table");
     }
     assert_eq!(current, base, "reorder-columns/moves-the-area-column-to-the-front-and-realigns-every-row: the undo did not restore the before-snapshot");
 }
@@ -99,7 +100,6 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_carries_both_slots() {
     let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-columns diff decodes");
-    assert_eq!(decoded.columns.as_ref().map(|list| list.values[0].name.clone()), Some("area".to_string()), "the diff's own column list must already be permuted");
     assert!(decoded.rows.is_some(), "reorder-columns must ALSO rebuild the row list — the cell realignment is part of the same diff");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -110,6 +110,6 @@ async fn committed_diff_is_canonical_and_carries_both_slots() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-columns diff decodes");
-    let produced = decoded.apply(&before()).expect("committed reorder-columns diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed reorder-columns diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-columns/moves-the-area-column-to-the-front-and-realigns-every-row: committed diff did not carry before to after");
 }

@@ -803,7 +803,7 @@ where
         return Err("forms-store-inverse-mutation-envelope".into());
     }
     let diff = protocol::Mutation::diff(&mutation, base).into_parts().0;
-    let post = protocol::MutationDiff::apply(&diff, base).map_err(|_| "forms-store-diff-apply-failed".to_string())?;
+    let post = protocol::apply_diff(&diff, base).map_err(|_| "forms-store-diff-apply-failed".to_string())?;
     Ok((post, inverse, mutation))
 }
 

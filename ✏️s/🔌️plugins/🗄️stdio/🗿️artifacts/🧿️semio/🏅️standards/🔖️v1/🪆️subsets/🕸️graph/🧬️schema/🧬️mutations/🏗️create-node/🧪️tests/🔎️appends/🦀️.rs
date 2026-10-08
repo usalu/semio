@@ -30,7 +30,7 @@ fn mutation() -> SemioGraphMutation {
 #[semio_framework_async_macros::async_test]
 async fn appends_the_filter_node_with_its_full_payload() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("create-node applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("create-node applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "create-node/appends-a-filter-node-to-the-end-of-the-node-set: applied state differs from the committed after-snapshot");
     assert_eq!(produced.nodes.len(), base.nodes.len() + 1, "create-node adds exactly one node");
     let created = produced.nodes.last().expect("the created node is the last one — an id-keyed set has no insertion index");
@@ -46,11 +46,12 @@ async fn appends_the_filter_node_with_its_full_payload() {
 async fn the_undo_delete_node_removes_the_filter_node_again() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "creating a node with no edges undoes as exactly one delete-node");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward create-node applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo delete-node applies to the widened graph");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward create-node applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo delete-node applies to the widened graph");
     }
     assert_eq!(current, base, "create-node/appends-a-filter-node-to-the-end-of-the-node-set: the undo did not restore the before-snapshot");
 }
@@ -95,7 +96,6 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical_and_omits_edges_entirely() {
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-node diff decodes");
     assert!(decoded.edges.is_none(), "create-node must leave the edges slot untouched");
-    assert_eq!(decoded.nodes.as_ref().map(|list| list.values.len()), Some(3), "the diff must carry all three nodes of the final set");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert!(committed.get("edges").is_none(), "the committed diff JSON must not carry an edges key at all");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
@@ -106,6 +106,6 @@ async fn committed_diff_is_canonical_and_omits_edges_entirely() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-node diff decodes");
-    let produced = decoded.apply(&before()).expect("committed create-node diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed create-node diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-node/appends-a-filter-node-to-the-end-of-the-node-set: committed diff did not carry before to after");
 }

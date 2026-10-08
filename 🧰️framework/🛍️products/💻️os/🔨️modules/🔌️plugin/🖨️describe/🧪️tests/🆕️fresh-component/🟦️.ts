@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync, cpSync } from "node:fs";
 import { isAbsolute, join, resolve } from "node:path";
 import { acquireCargoBuildLeaseV1 } from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
@@ -33,6 +33,8 @@ export function createFreshComponentTests() {
   type FreshProcessFixtureV1 = Readonly<{
     maxOutputBytes: number;
     diagnosticChars: number;
+    cargoProvenance: Readonly<{name:string;stdout:string;source:string;buildSource:string;compilerEnv:string}>;
+    cargoOwnership: Readonly<{rootName:string;nestedName:string;missingName:string;stdout:string;source:string}>;
     queuedCargoCases: readonly Readonly<{ name: string; mode: "cancel" | "timeout" }>[];
     cases: readonly Readonly<{ name: string; mode: "exit" | "missing" | "cancel" | "timeout" | "flood" | "pre-cancel"; stdout: string; stderr: string; exitCode: number; reason: "exit" | "spawn-error" | "cancelled" | "timeout" | "output-limit"; diagnostic: string }>[];
   }>;
@@ -436,6 +438,48 @@ export function createFreshComponentTests() {
       } finally { holder.release(); }
       const successor = await acquireCargoBuildLeaseV1(options); successor.release();
     }
+    const ownership=fixture.cargoOwnership, ownerRoot=join(evidence,"actual-selected-package-owner");mkdirSync(ownerRoot);
+    const ownerRows=[{directory:"root-package",name:ownership.rootName,workspace:"."},{directory:"nested/package",name:ownership.nestedName,workspace:"nested"}];
+    for(const row of ownerRows){const path=join(ownerRoot,row.directory);mkdirSync(path,{recursive:true});writeFileSync(join(path,"Cargo.toml"),`[package]\nname=${JSON.stringify(row.name)}\nversion="0.0.0"\nedition="2021"\n[[bin]]\nname=${JSON.stringify(row.name)}\npath="main.rs"\n`);writeFileSync(join(path,"main.rs"),ownership.source);}
+    writeFileSync(join(ownerRoot,"Cargo.toml"),'[workspace]\nresolver="2"\nmembers=["root-package"]\nexclude=["nested"]\n[workspace.metadata.semio.repository]\nschema-version=1\nowner-manifests=["nested/Cargo.toml"]\nmember-manifests=["root-package/Cargo.toml"]\nexclude-patterns=["nested"]\n');
+    writeFileSync(join(ownerRoot,"nested/Cargo.toml"),'[workspace]\nresolver="2"\nmembers=["package"]\n[workspace.metadata.semio.repository]\nschema-version=1\nmember-manifests=["package/Cargo.toml"]\nexclude-patterns=[]\n');
+    const ownerCompiler=join(ownerRoot,"compiler"),ownerTarget=join(ownerRoot,"target"),ownerEnv={...process.env,CARGO_TARGET_DIR:ownerTarget,CARGO_BUILD_BUILD_DIR:ownerCompiler},ownerControl={cancelled:()=>false,remainingMs:()=>60_000,checkpoint:()=>{}};
+    const ownerInvocation=await freshRun("cargo",["build","-p",ownership.nestedName],ownerRoot,ownerEnv,ownerControl,"selected-nested-owner",0,1);
+    assert(ownerInvocation);const ownerObserved=JSON.parse(readFileSync(ownerInvocation!,"utf8")),ownerManifest=join(ownerRoot,"nested/package/Cargo.toml");
+    assert.equal(ownerObserved.cwd,ownerRoot);assert.equal(ownerObserved.manifest,ownerManifest);assert.deepEqual(ownerObserved.args,["build","--manifest-path",ownerManifest,"-p",ownership.nestedName,"--message-format=json"]);
+    assert(ownerObserved.invocationInputs.some((input:any)=>input.path===join(ownerRoot,"nested/Cargo.toml")&&typeof input.sha256==="string"));assert.equal(await Bun.$`${join(ownerTarget,"debug",ownership.nestedName+(process.platform==="win32"?".exe":""))}`.text(),ownership.stdout);
+    const cargoMetadata=await Bun.$`cargo metadata --manifest-path ${ownerManifest} --no-deps --format-version 1`.json();assert.equal(cargoMetadata.workspace_root,join(ownerRoot,"nested"));assert.equal(cargoMetadata.packages.find((row:any)=>row.name===ownership.nestedName).manifest_path,ownerManifest);
+    await assert.rejects(freshRun("cargo",["build","-p",ownership.missingName],ownerRoot,ownerEnv,ownerControl,"missing-owner",0,1),/Unknown current repository Cargo package/);
+    await assert.rejects(freshRun("cargo",["build","-p",ownership.rootName,"-p",ownership.nestedName],ownerRoot,ownerEnv,ownerControl,"cross-workspace-owner",0,1),/different workspaces/);
+    console.log("fresh-component-package-ownership: actual-Cargo=1 metadata-oracle=1 unknown-refusal=1 cross-workspace-refusal=1 evidence="+ownerRoot);
+    const neutral=fixture.cargoProvenance;
+    const cargoRoot = join(evidence, "actual-cargo-provenance"); mkdirSync(cargoRoot);
+    const manifest = join(cargoRoot, "Cargo.toml");
+    writeFileSync(manifest, `[workspace]\n[package]\nname=${JSON.stringify(neutral.name)}\nversion="0.0.0"\nedition="2021"\n[[bin]]\nname=${JSON.stringify(neutral.name)}\npath="main.rs"\n`);
+    writeFileSync(join(cargoRoot,"main.rs"), neutral.source);writeFileSync(join(cargoRoot,"build.rs"),neutral.buildSource);
+    const compiler = join(cargoRoot,"compiler"), target = join(cargoRoot,"target");
+    const invocation = await freshRun("cargo",["build","--manifest-path",manifest],cargoRoot,{...process.env,CARGO_TARGET_DIR:target,CARGO_BUILD_BUILD_DIR:compiler},{cancelled:()=>false,remainingMs:()=>60_000,checkpoint:()=>{}},"neutral-build",0,1);
+    assert(invocation, "actual fresh Cargo must retain completed producer observation without diagnostic opt-in");
+    const observed = JSON.parse(readFileSync(invocation!,"utf8"));
+    assert.equal(observed.status,0); assert.equal(observed.command,"cargo");
+    assert.deepEqual(observed.args,["build","--manifest-path",manifest,"--message-format=json"]);
+    assert.equal(observed.manifest,manifest); assert.equal(observed.compilerResourceRoot,join(compiler,"semio-compiler-resources"));
+    assert(observed.units.some((unit:any)=>resolve(unit.message.target.src_path)===join(cargoRoot,"main.rs")));
+    assert(observed.units.every((unit:any)=>unit.inputs.every((input:any)=>typeof input.sha256==="string")));
+    assert(observed.buildScripts.some((row:any)=>row.env.some(([key,value]:[string,string])=>key===neutral.compilerEnv&&value===join(compiler,"semio-compiler-resources"))));
+    const binary=join(target,"debug",neutral.name+(process.platform==="win32"?".exe":""));
+    const actual=await Bun.$`${binary}`.text(); assert.equal(actual,neutral.stdout);
+    assert.equal(await crypto.subtle.digest("SHA-256",readFileSync(binary)).then(bytes=>Buffer.from(bytes).toString("hex")),observed.units.find((unit:any)=>unit.message.target.kind.includes("bin")).artifacts.find((row:any)=>row.path===binary).sha256);
+    const {retainTrustedCargoInvocationV1}=await import(join(repoRoot,"🌎️hub/🏗️bootstrap/🧾️provenance/🟦️.ts"));
+    const staged=join(cargoRoot,"staged"+ (process.platform==="win32"?".exe":""));cpSync(binary,staged,{errorOnExist:true,force:false});
+    const finalReceipt=join(cargoRoot,"final-invocation.json");retainTrustedCargoInvocationV1(invocation!,finalReceipt,new Map([[binary,staged]]));
+    const transferred=JSON.parse(readFileSync(finalReceipt,"utf8"));
+    assert.deepEqual(transferred.units.map((unit:any)=>unit.message),observed.units.map((unit:any)=>unit.message));
+    for(const key of ["args","invocationInputs","buildScripts","buildResources","compilerResources"])assert.deepEqual(transferred[key],observed[key]);
+    assert.deepEqual(transferred.units.map((unit:any)=>[unit.depInfo,unit.inputs]),observed.units.map((unit:any)=>[unit.depInfo,unit.inputs]));
+    const custody=transferred.units.flatMap((unit:any)=>unit.artifacts).find((row:any)=>row.path===binary);assert.equal(custody.stagedPath,staged);assert.equal(custody.stagedSha256,custody.sha256);
+    rmSync(target,{recursive:true,force:true});assert.equal(await Bun.$`${staged}`.text(),neutral.stdout);assert(!existsSync(binary));
+    const retainedStage=readFileSync(staged);writeFileSync(staged,"changed");assert.throws(()=>retainTrustedCargoInvocationV1(invocation!,join(cargoRoot,"must-not-exist.json"),new Map([[binary,staged]])));assert(!existsSync(join(cargoRoot,"must-not-exist.json")));writeFileSync(staged,retainedStage);
     console.log("fresh-component-process: fast-deep-equal=3 runtime-laws=" + (fixture.cases.length + fixture.queuedCargoCases.length) + " evidence=" + evidence);
   }
   return { testFreshComponentSourceEpochV1, testFreshComponentStagingV1, testFreshComponentProcessV1 };

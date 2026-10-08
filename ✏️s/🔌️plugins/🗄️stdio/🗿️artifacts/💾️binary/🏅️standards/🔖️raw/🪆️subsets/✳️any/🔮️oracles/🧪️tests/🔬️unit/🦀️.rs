@@ -20,14 +20,6 @@ fn round_trip_is_identity() {
 }
 
 #[test]
-fn set_snapshot_replaces_the_whole_buffer() {
-    let input = vec![1, 2, 3];
-    let params = obj(vec![("snapshot", obj(vec![("schema", Json::String("stdio.binary".to_string())), ("bytes", num_array(&[9, 9]))]))]);
-    let out = oracle_apply_mutation(&input, &spec("set-snapshot", params)).unwrap();
-    assert_eq!(out, vec![9, 9]);
-}
-
-#[test]
 fn replace_byte_range_replaces_the_named_range() {
     let input = vec![1, 2, 3, 4, 5];
     let params = obj(vec![("offset", Json::Number(1.0)), ("remove_len", Json::Number(2.0)), ("insert", num_array(&[0xAA, 0xBB, 0xCC]))]);

@@ -7,13 +7,92 @@ import "google/protobuf/struct.proto";
 
 message Generation3dDiff {
   // @state artifact
-  optional Generation3dArtifact artifact = 1;
+  optional string schema = 1;
   // @state artifact
-  optional FlowHostSnapshot host_snapshot = 2;
+  optional CameraJson camera = 2;
   // @state artifact
-  optional GenerationPlayState generation = 3;
-  // @state presence
-  // @state config
+  optional Generation3dWidgetsDelta widgets = 3;
+  // @state artifact
+  optional Generation3dSynapsesDelta synapses = 4;
+  // @state artifact
+  optional Generation3dLayoutDelta layout = 5;
+  // @state artifact
+  optional Generation3dGenerationsDelta generations = 6;
+  // @state artifact
+  optional Generation3dSelectionChange selected_generation = 7;
+  // @state artifact
+  optional Generation3dPreviewChange preview_text = 8;
+}
+
+message Generation3dWidgetsDelta {
+  repeated Widget added = 1;
+  repeated string removed = 2;
+  repeated Generation3dWidgetPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+message Generation3dWidgetPatchEntry {
+  string id = 1;
+  Generation3dWidgetPatch patch = 2;
+}
+message Generation3dWidgetPatch {
+  oneof patch {
+    Widget replace = 1;
+    Generation3dWidgetSlider slider = 2;
+  }
+}
+message Generation3dWidgetSlider {
+  double value = 1;
+  double min = 2;
+  double max = 3;
+  double step = 4;
+}
+message Generation3dSynapsesDelta {
+  repeated SynapseSpec added = 1;
+  repeated string removed = 2;
+  repeated Generation3dSynapsePatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+message Generation3dSynapsePatchEntry {
+  string id = 1;
+  SynapseSpec item = 2;
+}
+message Generation3dLayoutRow {
+  string id = 1;
+  WidgetLayout layout = 2;
+}
+message Generation3dLayoutDelta {
+  repeated Generation3dLayoutRow added = 1;
+  repeated string removed = 2;
+  repeated Generation3dLayoutRow patched = 3;
+}
+message Generation3dGenerationsDelta {
+  repeated FormGeneration added = 1;
+  repeated string removed = 2;
+  repeated Generation3dGenerationPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+message Generation3dGenerationPatchEntry {
+  string id = 1;
+  Generation3dGenerationPatch patch = 2;
+}
+message Generation3dGenerationPatch {
+  optional string name = 1;
+  optional Generation3dValuesDelta values = 2;
+}
+message Generation3dValueRow {
+  string question_id = 1;
+  google.protobuf.Value value = 2;
+}
+message Generation3dValuesDelta {
+  repeated Generation3dValueRow added = 1;
+  repeated string removed = 2;
+  repeated Generation3dValueRow patched = 3;
+}
+message Generation3dSelectionChange {
+  optional string id = 1;
+}
+message Generation3dPreviewChange {
+  optional string text = 1;
 }
 
 message CameraJson {

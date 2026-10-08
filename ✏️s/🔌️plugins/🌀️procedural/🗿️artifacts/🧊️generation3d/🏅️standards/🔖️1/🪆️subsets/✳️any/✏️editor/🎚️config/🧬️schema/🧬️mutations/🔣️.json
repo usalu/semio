@@ -7,18 +7,6 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
-      ],
-      "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/app/procedural/3d/config/mutation/set-snapshot/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
         "SetLodMode"
       ],
       "properties": {

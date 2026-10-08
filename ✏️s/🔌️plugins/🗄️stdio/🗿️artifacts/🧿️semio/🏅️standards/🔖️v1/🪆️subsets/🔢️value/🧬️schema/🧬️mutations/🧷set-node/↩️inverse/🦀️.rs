@@ -7,7 +7,7 @@ use super::super::*;
 pub fn inverse(payload: &super::SetNode, base: &SemioValueSnapshot) -> Result<Vec<SemioValueMutation>, semio_framework_value::ValueError> {
     let super::SetNode { id, .. } = payload;
     Ok(match base.nodes.iter().find(|n| &n.id == id) {
-        Some(existing) => vec![SemioValueMutation::SetNode(set_node::SetNode { id: id.clone(), value: existing.value.clone() })],
+        Some(existing) => vec![SemioValueMutation::SetNode(set_node::SetNode { id: id.clone(), value: existing.value.clone(), at: None })],
         None => vec![SemioValueMutation::RemoveNode(remove_node::RemoveNode { id: id.clone() })],
     })
 }

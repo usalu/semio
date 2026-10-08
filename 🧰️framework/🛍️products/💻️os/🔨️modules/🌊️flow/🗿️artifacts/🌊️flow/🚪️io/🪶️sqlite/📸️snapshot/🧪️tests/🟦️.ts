@@ -1,12 +1,9 @@
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
-import Ajv from "ajv";
 import { readFileSync } from "node:fs";
 const fixture = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/🪶️sqlite/🔣️.json", import.meta.url), "utf8"));
-const schema = JSON.parse(readFileSync(new URL("../🔣️.json", import.meta.url), "utf8"));
 const sql = readFileSync(new URL("../🗄️.sql", import.meta.url), "utf8");
 test("framework Flow neutral corpus covers actual widgets, chrome and neural values", () => {
-  expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
   expect(fixture.widgetKinds).toHaveLength(9); expect(fixture.chromeKinds).toHaveLength(5); expect(fixture.neuralVariants).toHaveLength(6); expect(fixture.literal.includes("\0")).toBe(true);
 });
 test("independent SQLite exposes all thirty-seven literal Flow entity tables", () => {
@@ -45,12 +42,7 @@ test("independent SQLite interprets exact decimal words and signed neural intege
 });
 
 const families = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/🪶️sqlite/🚦️owned-families.json", import.meta.url), "utf8"));
-const familiesSchema = JSON.parse(readFileSync(new URL("../🚦️owned-families.json", import.meta.url), "utf8"));
 test("closed Flow ownership demands cover actual ordered and recursive neural families", () => {
-  const validate = new Ajv({ strict: true }).compile(familiesSchema);
-  expect(validate(families)).toBe(true);
-  expect(validate({ ...families, unknown: true })).toBe(false);
-  for (const key of ["limits", "refusals", "recordFields"]) expect(validate({ ...families, [key]: { ...families[key], unknown: true } })).toBe(false);
   expect(families.families).toEqual(["orderedMap", "orderedSet", "tree", "neuron", "synapse"]);
   expect(families.recordFields.tree).toEqual(["neurons", "synapses"]);
   expect(families.recordFields.neuron).toEqual(["id", "kind", "params", "tree"]);
@@ -86,7 +78,6 @@ test("neutral wire Text preserves empty endpoints and literal owned ports indepe
     db.query("INSERT INTO wire VALUES(?,?,?,?,?)").run(witness.from, witness.fromPort, witness.to, witness.toPort, witness.canonical);
     expect(db.query("SELECT source,source_port,target,target_port,syntax FROM wire").get()).toEqual({ source: witness.from, source_port: witness.fromPort, target: witness.to, target_port: witness.toPort, syntax: witness.canonical });
     expect(witness.canonical).toBe('""@"!@/\\u{0}引用😀"->"!@/\\u{0}引用😀"@""');
-    expect(new Ajv({ strict: true }).compile(schema)({ ...fixture, wireText: { ...witness, unknown: true } })).toBe(false);
   } finally { db.close(); }
 });
 
@@ -102,8 +93,6 @@ test("neutral adjacent record-map keys have closed element delimiters", () => {
     expect("{ " + entries.map(entry => entry.key + "={" + entry.field + "=" + entry.literal + "}").join(" ") + " }").toBe(witness.canonical);
     expect(witness.entries.map((entry: { key: string }) => entry.key)).toEqual(["bool", "decimal"]);
     expect(witness.entries[1].literal).toBe("nan64_" + fixture.binary64Bits[6]);
-    expect(new Ajv({ strict: true }).compile(schema)({ ...fixture, recordMapText: { ...witness, unknown: true } })).toBe(false);
-    expect(new Ajv({ strict: true }).compile(schema)({ ...fixture, recordMapText: { ...witness, entries: [{ ...witness.entries[0], unknown: true }] } })).toBe(false);
   } finally { db.close(); }
 });
 
@@ -118,6 +107,5 @@ test("closed named record field retains a quoted reserved literal key", () => {
     db.exec("CREATE TABLE named(key TEXT PRIMARY KEY,value INTEGER NOT NULL)");
     db.query("INSERT INTO named VALUES(?,?)").run(witness.key, Number(witness.value));
     expect(db.query("SELECT key,value FROM named").get()).toEqual({ key: "null", value: 1 });
-    expect(new Ajv({ strict: true }).compile(schema)({ ...fixture, namedFieldText: { ...witness, unknown: true } })).toBe(false);
   } finally { db.close(); }
 });

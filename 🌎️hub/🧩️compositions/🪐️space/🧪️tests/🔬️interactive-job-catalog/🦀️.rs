@@ -249,7 +249,7 @@ async fn every_app_instance_constructs_against_its_registered_proof_catalog() {
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_composed_owner_census() {
     use semio_framework_os_kernel::{ArtifactCodec, ArtifactSqliteSnapshot};
-    use semio_framework::io::io_mechanism::{io_route, native_snapshot_sqlite_schema};
+    use directory::io::io_mechanism::{io_route, native_snapshot_sqlite_schema};
     use semio_framework::io_schema::{ArtifactDialect, IoFidelity, SQLITE_SNAPSHOT};
     use semio_s_artifact_space_home::{SHomeSnapshot,SHomeMutation};
     use semio_s_artifact_space_space::{SSpaceSnapshot,SSpaceMutation};

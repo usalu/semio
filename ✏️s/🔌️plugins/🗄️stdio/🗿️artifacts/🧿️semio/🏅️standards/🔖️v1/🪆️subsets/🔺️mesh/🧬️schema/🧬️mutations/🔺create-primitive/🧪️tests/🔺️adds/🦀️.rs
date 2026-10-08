@@ -31,7 +31,7 @@ fn mutation() -> SemioMeshMutation {
 #[semio_framework_async_macros::async_test]
 async fn adds_the_line_primitive_inside_the_addressed_mesh() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("create-primitive applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("create-primitive applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "create-primitive/adds-a-second-primitive-inside-the-existing-mesh: applied state differs from the committed after-snapshot");
     assert_eq!(produced.meshes.len(), base.meshes.len(), "create-primitive may never add a mesh");
     assert_eq!(produced.meshes[0].primitives.len(), base.meshes[0].primitives.len() + 1, "exactly one primitive is added inside the mesh");
@@ -44,13 +44,14 @@ async fn adds_the_line_primitive_inside_the_addressed_mesh() {
 async fn the_undo_delete_primitive_removes_the_line_primitive_again() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "create-primitive undoes as exactly one delete-primitive");
     let SemioMeshMutation::DeletePrimitive(remove) = &undo[0] else { panic!("create-primitive must undo as delete-primitive") };
     assert_eq!((remove.mesh_id.as_str(), remove.primitive_id.as_str()), ("mesh-a", "prim-b"), "a primitive is addressed by BOTH ids — it has no globally unique key");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward create-primitive applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo delete-primitive applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward create-primitive applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo delete-primitive applies");
     }
     assert_eq!(current, base, "create-primitive/adds-a-second-primitive-inside-the-existing-mesh: the undo did not restore the before-snapshot");
 }
@@ -108,6 +109,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-primitive diff decodes");
-    let produced = decoded.apply(&before()).expect("committed create-primitive diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed create-primitive diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-primitive/adds-a-second-primitive-inside-the-existing-mesh: committed diff did not carry before to after");
 }

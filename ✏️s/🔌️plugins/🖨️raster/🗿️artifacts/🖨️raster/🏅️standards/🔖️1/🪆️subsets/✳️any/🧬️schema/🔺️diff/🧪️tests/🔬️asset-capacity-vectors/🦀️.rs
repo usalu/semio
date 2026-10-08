@@ -11,30 +11,20 @@ fn raster_asset_capacity_matches_the_json_oracle() {
         let oracle: serde_json::Map<String, serde_json::Value> = (0..count).map(|index| (format!("asset-{index:03}"), serde_json::json!({"schema":"s.stdio.semio.image","width":0,"height":0,"colorspace":"rgb","bitDepth":0,"frames":[],"icc":null,"metadata":[]}))).collect();
         let delta: RasterAssetsDelta = semio_framework_pack_json::from_json_str(&serde_json::json!({"entries":oracle}).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("first-party input");
         let diff = RasterDiff { assets: Some(delta), ..Default::default() };
-        for full_artifact in [false, true] {
-            let base = RasterSnapshot::default();
-            let result = if full_artifact {
-                diff.apply_to_artifact(&RasterArtifact::default()).map(|artifact| {
-                    let RasterArtifact { schema, id, title, layers, assets, .. } = artifact;
-                    RasterSnapshot { schema, id, title, layers, assets }
-                })
-            } else {
-                diff.apply(&base)
-            };
-            match result {
-                Ok(snapshot) => {
-                    let observed = snapshot.assets.keys().cloned().collect::<Vec<_>>();
-                    retire_raster_snapshot(snapshot);
-                    assert_eq!(vector["accepted"], true, "oversized input must fail before creating an owner");
-                    assert_eq!(observed, oracle.keys().cloned().collect::<Vec<_>>());
-                }
-                Err(error) => {
-                    assert_eq!(vector["accepted"], false, "{error}");
-                    assert!(error.to_string().contains("raster-map.item-capacity"));
-                }
+        let base = RasterSnapshot::default();
+        match protocol::apply_diff(&diff, &base) {
+            Ok(snapshot) => {
+                let observed = snapshot.assets.keys().cloned().collect::<Vec<_>>();
+                retire_raster_snapshot(snapshot);
+                assert_eq!(vector["accepted"], true, "oversized input must fail before creating an owner");
+                assert_eq!(observed, oracle.keys().cloned().collect::<Vec<_>>());
             }
-            assert!(base.assets.is_empty());
+            Err(error) => {
+                assert_eq!(vector["accepted"], false, "{error}");
+                assert!(error.to_string().contains("raster-map.item-capacity"));
+            }
         }
+        assert!(base.assets.is_empty());
         assert_eq!(diff.assets.as_ref().expect("delta").entries.len(), count);
     }
     let unsupported = RasterImageAsset { mime: "application/octet-stream".into(), data: Vec::new() };

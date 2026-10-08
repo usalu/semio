@@ -1,17 +1,15 @@
 /** 🧬️ ProgramSnapshot diff schema — sparse field delta. */
 
-import { architectProgramArtifactGuardExactObject, parseArtifactChild, parseProgramArtifact, PROGRAM_ARTIFACT_FIELDS, type ArtifactChild } from "../🟦️.ts";
-import type { AccessRule, AccessibilityRequirement, Activity, Adjacency, AnalysisRecord, ApprovalRecord, ArtifactRecord, Assumption, AuditEvent, BenchmarkRecord, ChangeRecord, CollaborationRecord, CommunicationRequirement, ComplianceRecord, Conflict, ConstraintRecord, CostRequirement, Decision, DeliveryConstraint, EnvironmentalRequirement, Equipment, FlexibilityRequirement, FlowRequirement, Function, Governance, GrowthPlan, HumanFactorRequirement, InformationRequirement, InfrastructureRequirement, Issue, KnowledgeRecord, MeetingRecord, OperationalRequirement, OptionEvaluation, OrganizationalRequirement, PerformanceCriterion, PriorityRecord, PrivacyRequirement, Process, ProgramArtifact, ProgramElement, ProgramMeta, ProjectDefinition, QualityRecord, QuantityRequirement, RegulatoryRequirement, Relationship, ReportRecord, Requirement, ResilienceRequirement, Resource, Risk, SafetyRequirement, Scenario, ScheduleRequirement, SearchFilter, SecurityRequirement, ServiceRequirement, SiteContext, Stakeholder, StatusRecord, StorageRequirement, Survey, SustainabilityRequirement, TemplateRecord, TraceLink, UserProfile, ValidationRecord, WayfindingRequirement, Workshop } from "../🟦️.ts";
+import { architectProgramArtifactGuardExactObject, PROGRAM_ARTIFACT_FIELDS } from "../🟦️.ts";
+import type { AccessRule, AccessibilityRequirement, Activity, Adjacency, AnalysisRecord, ApprovalRecord, ArtifactRecord, Assumption, AuditEvent, BenchmarkRecord, ChangeRecord, CollaborationRecord, CommunicationRequirement, ComplianceRecord, Conflict, ConstraintRecord, CostRequirement, Decision, DeliveryConstraint, EnvironmentalRequirement, Equipment, FlexibilityRequirement, FlowRequirement, Function, Governance, GrowthPlan, HumanFactorRequirement, InformationRequirement, InfrastructureRequirement, Issue, KnowledgeRecord, MeetingRecord, OperationalRequirement, OptionEvaluation, OrganizationalRequirement, PerformanceCriterion, PriorityRecord, PrivacyRequirement, Process, ProgramElement, ProgramMeta, ProjectDefinition, QualityRecord, QuantityRequirement, RegulatoryRequirement, Relationship, ReportRecord, Requirement, ResilienceRequirement, Resource, Risk, SafetyRequirement, Scenario, ScheduleRequirement, SearchFilter, SecurityRequirement, ServiceRequirement, SiteContext, Stakeholder, StatusRecord, StorageRequirement, Survey, SustainabilityRequirement, TemplateRecord, TraceLink, UserProfile, ValidationRecord, WayfindingRequirement, Workshop } from "../🟦️.ts";
 
 export interface ProgramDiff {
   /** @state artifact */
-  artifact: ProgramArtifact | null;
-  /** @state artifact */
   schema: string | null;
   /** @state artifact */
-  meta: ProgramMeta | null;
+  meta: ProgramMetaEdit | null;
   /** @state artifact */
-  project: ProjectDefinition | null;
+  project: ProjectDefinitionEdit | null;
   /** @state artifact */
   stakeholders: ProgramStakeholdersDelta | null;
   /** @state artifact */
@@ -139,26 +137,19 @@ export interface ProgramDiff {
   /** @state artifact */
   templates: ProgramTemplatesDelta | null;
   /** @state artifact */
-  knowledgePayload: KnowledgeRecord[] | null;
+  knowledge: ProgramKnowledgeDelta | null;
   /** @state artifact */
-  knowledge: ArtifactChild | null;
-  /** @state artifact */
-  benchmarksPayload: BenchmarkRecord[] | null;
-  /** @state artifact */
-  benchmarks: ArtifactChild | null;
+  benchmarks: ProgramBenchmarksDelta | null;
   /** @state artifact */
   traces: ProgramTracesDelta | null;
   /** @state artifact */
-  governance: Governance | null;
+  governance: GovernanceEdit | null;
 }
 
-export const PROGRAM_DIFF_FIELDS = ["artifact", ...PROGRAM_ARTIFACT_FIELDS] as const;
+export const PROGRAM_DIFF_FIELDS = PROGRAM_ARTIFACT_FIELDS.filter((field) => field !== "knowledgePayload" && field !== "benchmarksPayload");
 
 export function parseProgramDiff(value: unknown, at = "$"): ProgramDiff {
   const row = architectProgramArtifactGuardExactObject(value, at, PROGRAM_DIFF_FIELDS);
-  if (row.artifact !== null) parseProgramArtifact(row.artifact, `${at}.artifact`);
-  if (row.knowledge !== null) parseArtifactChild(row.knowledge);
-  if (row.benchmarks !== null) parseArtifactChild(row.benchmarks);
   return row as unknown as ProgramDiff;
 }
 
@@ -1882,4 +1873,89 @@ export function parseProgramTracesPatchEntry(value: unknown, at = "$"): ProgramT
     id: architectProgramDiffGuardString(row["id"], `${at}.id`),
     patch: parseTraceLinkPatch(row["patch"], `${at}.patch`),
   };
+}
+
+export interface ProgramKnowledgeDelta {
+  added: KnowledgeRecord[];
+  removed: string[];
+  patched: ProgramKnowledgePatchEntry[];
+  reordered: string[] | null;
+}
+
+export interface ProgramKnowledgePatchEntry {
+  id: string;
+  patch: KnowledgeRecordPatch;
+}
+
+export interface ProgramBenchmarksDelta {
+  added: BenchmarkRecord[];
+  removed: string[];
+  patched: ProgramBenchmarksPatchEntry[];
+  reordered: string[] | null;
+}
+
+export interface ProgramBenchmarksPatchEntry {
+  id: string;
+  patch: BenchmarkRecordPatch;
+}
+
+export interface ProgramMetaEdit {
+  set: ProgramMeta | null;
+  patch: ProgramMetaPatch | null;
+}
+
+export interface ProjectDefinitionEdit {
+  set: ProjectDefinition | null;
+  patch: ProjectDefinitionPatch | null;
+}
+
+export interface GovernanceEdit {
+  set: Governance | null;
+  patch: GovernancePatch | null;
+}
+
+export type KnowledgeRecordPatch = Readonly<Record<string, unknown>>;
+
+export function parseKnowledgeRecordPatch(value: unknown, at = "$"): KnowledgeRecordPatch {
+  return architectProgramDiffGuardObject(value, `${at}`);
+}
+
+export function parseProgramKnowledgePatchEntry(value: unknown, at = "$"): ProgramKnowledgePatchEntry {
+  const row = architectProgramDiffGuardObject(value, at);
+  return {
+    id: architectProgramDiffGuardString(row["id"], `${at}.id`),
+    patch: parseKnowledgeRecordPatch(row["patch"], `${at}.patch`),
+  };
+}
+
+export type BenchmarkRecordPatch = Readonly<Record<string, unknown>>;
+
+export function parseBenchmarkRecordPatch(value: unknown, at = "$"): BenchmarkRecordPatch {
+  return architectProgramDiffGuardObject(value, `${at}`);
+}
+
+export function parseProgramBenchmarksPatchEntry(value: unknown, at = "$"): ProgramBenchmarksPatchEntry {
+  const row = architectProgramDiffGuardObject(value, at);
+  return {
+    id: architectProgramDiffGuardString(row["id"], `${at}.id`),
+    patch: parseBenchmarkRecordPatch(row["patch"], `${at}.patch`),
+  };
+}
+
+export type ProgramMetaPatch = Readonly<Record<string, unknown>>;
+
+export function parseProgramMetaPatch(value: unknown, at = "$"): ProgramMetaPatch {
+  return architectProgramDiffGuardObject(value, `${at}`);
+}
+
+export type ProjectDefinitionPatch = Readonly<Record<string, unknown>>;
+
+export function parseProjectDefinitionPatch(value: unknown, at = "$"): ProjectDefinitionPatch {
+  return architectProgramDiffGuardObject(value, `${at}`);
+}
+
+export type GovernancePatch = Readonly<Record<string, unknown>>;
+
+export function parseGovernancePatch(value: unknown, at = "$"): GovernancePatch {
+  return architectProgramDiffGuardObject(value, `${at}`);
 }

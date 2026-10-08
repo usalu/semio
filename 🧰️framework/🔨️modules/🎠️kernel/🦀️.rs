@@ -95,7 +95,7 @@ pub struct PluginInstanceId(pub String);
 // protocol-format concept), incompatible with this kernel's `String`-shaped version below, which
 // several external crates (`framework/sync`, semio_hub storage crates) still construct from plain
 // strings; moving it would be a breaking shape change out of this wave's scope.
-pub use protocol_core::{ActorId, ArtifactId, ArtifactVersion, MutationId, SchemaId};
+pub use ::replication::{ActorId, ArtifactId, ArtifactVersion, MutationId, SchemaId};
 
 /// 🪪️ Identifies one dispatched invocation — of an action *or* a command; both route through the same
 /// `KernelMutation`/`UndoGroup` history bookkeeping.
@@ -138,7 +138,7 @@ pub struct WindowKindId(pub String);
 // boundary end-to-end (W5's binary `protocol_wire` codec, its TS twin, and the fixture
 // byte-identity canary all speak `physical_ms`), so the wire-format reconciliation this note
 // deferred is verified, not assumed.
-pub use protocol_core::HybridLogicalTimestamp;
+pub use ::replication::HybridLogicalTimestamp;
 //#endregion 🔖️HybridLogicalTimestamp
 
 //#region 🔖️Capability
@@ -1579,12 +1579,12 @@ pub struct AppEvent {
 // this crate's own (now-deleted) OS JSON-patch kernel and `store`/`store_sync` (both repointed to
 // `protocol::ArtifactDiff` directly in this same wave) — verified by a repo-wide grep before this
 // change, not assumed.
-pub use protocol::ArtifactDiff;
+pub use ::replication::ArtifactDiff;
 
 // 🎯️ W6 kernel unification: re-exports `protocol_core::UndoPolicy` (identical variants; the old
 // CW3-era deferral note about a `#[serde(rename_all = "camelCase")]` mismatch no longer applies —
 // see `HybridLogicalTimestamp`'s doc above for the same reconciliation).
-pub use protocol_core::UndoPolicy;
+pub use ::replication::UndoPolicy;
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]

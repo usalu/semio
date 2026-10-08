@@ -702,7 +702,7 @@ fn apply_xml_part(part: &mut XlsxXmlPart, diff: &XlsxXmlPartDiff) -> MutationApp
         part.content_type.clone_from(content_type);
     }
     if let Some(document) = &diff.document {
-        part.document = document.apply(&xml_snapshot(&part.document))?.doc;
+        part.document = semio_framework_os_kernel::apply_diff(document, &xml_snapshot(&part.document))?.doc;
     }
     Ok(())
 }
@@ -779,15 +779,6 @@ impl DiffAlgebra<XlsxSnapshot> for XlsxDiff {
     }
 }
 //#endregion 🔖️DiffAlgebra
-
-//#region 🔖️MutationConstructors
-/// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
-/// Option<XlsxSnapshot>` full-replace slot — this IS `XlsxDiff::between`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &XlsxSnapshot, next: &XlsxSnapshot) -> XlsxDiff {
-    XlsxDiff::between(base, next)
-}
-//#endregion 🔖️MutationConstructors
 
 //#region 🔖️HandcraftedDiffCodec
 /// 🧪️ F6: **hand-rolled** `protocol::DiffCodec` for `XlsxDiff` — required per the doc comment on

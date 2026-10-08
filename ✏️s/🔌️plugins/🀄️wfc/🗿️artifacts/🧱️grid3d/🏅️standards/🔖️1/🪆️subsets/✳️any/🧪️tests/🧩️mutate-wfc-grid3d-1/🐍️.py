@@ -90,6 +90,35 @@ def resized_axis(sizes, extent):
     return out
 
 
+PATCH_FIELDS = {
+    "tiles": (("weight", False), ("media", False), ("label", True)),
+    "rules": (("tileAId", False), ("tileBId", False), ("direction", False), ("allowed", False)),
+    "pinned": (("tileId", False),),
+    "masked": (),
+}
+"""🩹 Per collection, the fields a row patch may set, in wire order; `True` marks an optional field wrapped as `{"value": …}`."""
+
+
+def rows(removed=None, added=None, patched=None):
+    """📂 One collection's delta: removed keys, added rows (landing at their canonical position) and per-row patches."""
+    return {"removed": removed or [], "added": added or [], "patched": patched or []}
+
+
+def patch(collection, identifier, **fields):
+    """🩹 One row patch: every field present, the unset ones `None`, optional fields wrapped."""
+    body = {}
+    for name, optional in PATCH_FIELDS[collection]:
+        body[name] = ({"value": fields[name]} if optional else fields[name]) if name in fields else None
+    return {"id": identifier, "patch": body}
+
+
+def axis_patch(sizes, target):
+    """📏 The axis patch from `sizes` to `target`: a new length when it differs, then one row per cell whose size differs or is new."""
+    changed = [{"index": index, "size": size} for index, size in enumerate(target) if index >= len(sizes) or sizes[index] != size]
+    patch_ = {"length": len(target) if len(sizes) != len(target) else None, "sizes": changed}
+    return patch_ if patch_["length"] is not None or patch_["sizes"] else None
+
+
 def empty_diff():
     return {
         "schema": None,
@@ -103,14 +132,10 @@ def empty_diff():
         "periodicX": None,
         "periodicY": None,
         "periodicZ": None,
-        "tilesRemoved": [],
-        "tilesUpserted": [],
-        "rulesRemoved": [],
-        "rulesUpserted": [],
-        "pinnedRemoved": [],
-        "pinnedUpserted": [],
-        "maskedRemoved": [],
-        "maskedUpserted": [],
+        "tiles": rows(),
+        "rules": rows(),
+        "pinned": rows(),
+        "masked": rows(),
     }
 
 
@@ -123,48 +148,45 @@ def diff_for(kind, payload, base):
         diff["width"] = payload["width"]
         diff["height"] = payload["height"]
         diff["depth"] = payload["depth"]
-        diff["cellSizesX"] = resized_axis(base["cellSizesX"], payload["width"])
-        diff["cellSizesY"] = resized_axis(base["cellSizesY"], payload["height"])
-        diff["cellSizesZ"] = resized_axis(base["cellSizesZ"], payload["depth"])
+        diff["cellSizesX"] = axis_patch(base["cellSizesX"], resized_axis(base["cellSizesX"], payload["width"]))
+        diff["cellSizesY"] = axis_patch(base["cellSizesY"], resized_axis(base["cellSizesY"], payload["height"]))
+        diff["cellSizesZ"] = axis_patch(base["cellSizesZ"], resized_axis(base["cellSizesZ"], payload["depth"]))
     elif kind == "change-cell-sizes":
-        diff["cellSizes" + payload["axis"].upper()] = list(payload["sizes"])
+        diff["cellSizes" + payload["axis"].upper()] = axis_patch(base["cellSizes" + payload["axis"].upper()], list(payload["sizes"]))
     elif kind == "change-periodicity":
         diff["periodicX"] = payload["periodicX"]
         diff["periodicY"] = payload["periodicY"]
         diff["periodicZ"] = payload["periodicZ"]
     elif kind == "create-tile":
-        tile = payload["tile"]
-        diff["tilesUpserted"] = [[ordered_index(base["tiles"], tile["id"], lambda item: item["id"]), tile]]
+        diff["tiles"] = rows(added=[payload["tile"]])
     elif kind == "delete-tile":
         target = payload["id"]
-        diff["tilesRemoved"] = [target]
-        diff["rulesRemoved"] = [rule["id"] for rule in base["rules"] if target in (rule["tileAId"], rule["tileBId"])]
-        diff["pinnedRemoved"] = [cell_key(cell) for cell in base["pinned"] if cell["tileId"] == target]
+        diff["tiles"] = rows(removed=[target])
+        diff["rules"] = rows(removed=[rule["id"] for rule in base["rules"] if target in (rule["tileAId"], rule["tileBId"])])
+        diff["pinned"] = rows(removed=[cell_key(cell) for cell in base["pinned"] if cell["tileId"] == target])
     elif kind == "change-tile-weight":
         index, tile = find(base["tiles"], lambda item: item["id"] == payload["tileId"])
-        tile = copy.deepcopy(tile)
-        tile["weight"] = payload["weight"]
-        diff["tilesUpserted"] = [[index, tile]]
+        diff["tiles"] = rows(patched=[patch("tiles", tile["id"], weight=payload["weight"])])
     elif kind == "change-tile-media":
         index, tile = find(base["tiles"], lambda item: item["id"] == payload["tileId"])
-        tile = copy.deepcopy(tile)
-        tile["media"] = payload["media"]
-        diff["tilesUpserted"] = [[index, tile]]
+        diff["tiles"] = rows(patched=[patch("tiles", tile["id"], media=payload["media"])])
     elif kind == "create-rule":
-        rule = payload["rule"]
-        diff["rulesUpserted"] = [[ordered_index(base["rules"], rule["id"], lambda item: item["id"]), rule]]
+        diff["rules"] = rows(added=[payload["rule"]])
     elif kind == "delete-rule":
-        diff["rulesRemoved"] = [payload["id"]]
+        diff["rules"] = rows(removed=[payload["id"]])
     elif kind == "pin-cell":
         pinned = payload["pinned"]
-        diff["pinnedUpserted"] = [[ordered_index(base["pinned"], cell_key(pinned), cell_key), pinned]]
+        key = cell_key(pinned)
+        if any(cell_key(cell) == key for cell in base["pinned"]):
+            diff["pinned"] = rows(patched=[patch("pinned", key, tileId=pinned["tileId"])])
+        else:
+            diff["pinned"] = rows(added=[pinned])
     elif kind == "unpin-cell":
-        diff["pinnedRemoved"] = [cell_key(payload)]
+        diff["pinned"] = rows(removed=[cell_key(payload)])
     elif kind == "mask-cell":
-        cell = payload["cell"]
-        diff["maskedUpserted"] = [[ordered_index(base["masked"], cell_key(cell), cell_key), cell]]
+        diff["masked"] = rows(added=[payload["cell"]])
     elif kind == "unmask-cell":
-        diff["maskedRemoved"] = [cell_key(payload)]
+        diff["masked"] = rows(removed=[cell_key(payload)])
     else:
         raise AssertionError("unknown kind " + kind)
     return diff
@@ -177,26 +199,60 @@ def find(items, predicate):
     raise AssertionError("no member matches")
 
 
-def apply_collection(base, removed, upserted, item_key):
-    items = [item for item in base if item_key(item) not in removed]
-    for index, value in upserted:
-        at = next((slot for slot, item in enumerate(items) if item_key(item) == item_key(value)), None)
+def apply_collection(base, delta, collection, item_key):
+    """📂 Removals first, then canonical-position insertions, then field patches; unknown targets are refused."""
+    items = list(base)
+    for key in delta["removed"]:
+        at = next((slot for slot, item in enumerate(items) if item_key(item) == key), None)
         if at is None:
-            items.insert(index, value)
-        else:
-            items[at] = value
+            raise AssertionError(f"removed {key!r} does not exist")
+        del items[at]
+    for row in delta["added"]:
+        if any(item_key(item) == item_key(row) for item in items):
+            raise AssertionError(f"added {item_key(row)!r} already exists")
+        items.insert(ordered_index(items, item_key(row), item_key), row)
+    optional = {name for name, wrapped in PATCH_FIELDS[collection] if wrapped}
+    for entry in delta["patched"]:
+        at = next((slot for slot, item in enumerate(items) if item_key(item) == entry["id"]), None)
+        if at is None:
+            raise AssertionError(f"patched {entry['id']!r} does not exist")
+        row = dict(items[at])
+        for name, value in entry["patch"].items():
+            if value is None:
+                continue
+            if name in optional:
+                if value["value"] is None:
+                    row.pop(name, None)
+                else:
+                    row[name] = value["value"]
+            else:
+                row[name] = value
+        items[at] = row
     return items
+
+
+def apply_axis(sizes, patch_):
+    """📏 The axis after the patch: resized, then every row's cell set."""
+    out = list(sizes)
+    if patch_["length"] is not None:
+        out = (out + [0.0] * patch_["length"])[: patch_["length"]]
+    for row in patch_["sizes"]:
+        out[row["index"]] = row["size"]
+    return out
 
 
 def apply_diff(base, diff):
     out = copy.deepcopy(base)
-    for scalar in ("schema", "seed", "width", "height", "depth", "cellSizesX", "cellSizesY", "cellSizesZ", "periodicX", "periodicY", "periodicZ"):
+    for scalar in ("schema", "seed", "width", "height", "depth", "periodicX", "periodicY", "periodicZ"):
         if diff[scalar] is not None:
             out[scalar] = diff[scalar]
-    out["tiles"] = apply_collection(out["tiles"], diff["tilesRemoved"], diff["tilesUpserted"], lambda item: item["id"])
-    out["rules"] = apply_collection(out["rules"], diff["rulesRemoved"], diff["rulesUpserted"], lambda item: item["id"])
-    out["pinned"] = apply_collection(out["pinned"], diff["pinnedRemoved"], diff["pinnedUpserted"], cell_key)
-    out["masked"] = apply_collection(out["masked"], diff["maskedRemoved"], diff["maskedUpserted"], cell_key)
+    for axis in ("cellSizesX", "cellSizesY", "cellSizesZ"):
+        if diff[axis] is not None:
+            out[axis] = apply_axis(out[axis], diff[axis])
+    out["tiles"] = apply_collection(out["tiles"], diff["tiles"], "tiles", lambda item: item["id"])
+    out["rules"] = apply_collection(out["rules"], diff["rules"], "rules", lambda item: item["id"])
+    out["pinned"] = apply_collection(out["pinned"], diff["pinned"], "pinned", cell_key)
+    out["masked"] = apply_collection(out["masked"], diff["masked"], "masked", cell_key)
     return out
 
 

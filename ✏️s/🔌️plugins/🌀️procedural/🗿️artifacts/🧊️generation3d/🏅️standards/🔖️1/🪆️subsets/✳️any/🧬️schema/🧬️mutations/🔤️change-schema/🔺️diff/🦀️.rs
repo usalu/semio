@@ -1,7 +1,7 @@
 //! 🔺️ `change-schema` sparse diff construction.
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::diff::{diff_snapshot_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+
 use crate::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema;
 use crate::Generation3dSnapshot;
 
@@ -14,5 +14,5 @@ pub fn diff(payload: &ChangeSchema, base: &Generation3dSnapshot) -> protocol::Mu
     if base.host_snapshot.schema == payload.new_schema {
         return protocol::MutationOutcome::new(Generation3dDiff::default()).warning("mutation.no-op", format!("Schema is already \"{}\".", payload.new_schema));
     }
-    protocol::MutationOutcome::new(diff_snapshot_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff::default(), None, Some(&payload.new_schema)))
+    protocol::MutationOutcome::new(Generation3dDiff { schema: Some(payload.new_schema.clone()), ..Default::default() })
 }

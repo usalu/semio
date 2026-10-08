@@ -12,42 +12,54 @@
   "inspectionLevel": null,
   "kFiDeclared": null,
   "betaComputed": null,
-  "permanents": null,
-  "variables": null,
-  "accidentals": null,
-  "seismics": null,
-  "members": [
-    {
-      "id": "beam-B1",
-      "labelEn": "Office beam B1",
-      "labelDe": "Büroträger B1",
-      "rdStr": 250000.0,
-      "rdGeo": 250000.0,
-      "rdEquStab": 200000.0,
-      "rdEquDestab": 180000.0,
-      "rdFat": 0.0,
-      "span": 6.0,
-      "deflectionW": 0.018,
-      "deflectionLimitRatio": 250.0,
-      "vibrationFrequency": 5.5,
-      "vibrationFrequencyMin": 3.0
-    },
-    {
-      "id": "beam-B2",
-      "labelEn": "Office beam B2",
-      "labelDe": "Büroträger B2",
-      "rdStr": 250000.0,
-      "rdGeo": 250000.0,
-      "rdEquStab": 200000.0,
-      "rdEquDestab": 180000.0,
-      "rdFat": 0.0,
-      "span": 7.5,
-      "deflectionW": 0.018,
-      "deflectionLimitRatio": 250.0,
-      "vibrationFrequency": 5.5,
-      "vibrationFrequencyMin": 3.0
-    }
-  ],
-  "bridgeSls": null,
-  "effects": null
+  "permanents": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "variables": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "accidentals": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "seismics": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "added": [
+      {
+        "after": "beam-B1",
+        "row": {
+          "id": "beam-B2",
+          "labelEn": "Office beam B2",
+          "labelDe": "Büroträger B2",
+          "rdStr": 250000.0,
+          "rdGeo": 250000.0,
+          "rdEquStab": 200000.0,
+          "rdEquDestab": 180000.0,
+          "rdFat": 0.0,
+          "span": 7.5,
+          "deflectionW": 0.018,
+          "deflectionLimitRatio": 250.0,
+          "vibrationFrequency": 5.5,
+          "vibrationFrequencyMin": 3.0
+        }
+      }
+    ],
+    "modified": []
+  },
+  "bridgeSls": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "effects": []
 }

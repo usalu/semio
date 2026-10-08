@@ -637,14 +637,23 @@ fn opened_dag_test_actor() -> ActorId {
 
 #[cfg(test)]
 fn close_dag_test_store(mut store: DagStore) {
+    let mut steps = 0usize;
+    let mut maximum_demand = 0usize;
     loop {
-        match store.close_owned_store_step(1, 4_096).expect("bounded DAG test-store close") {
+        let bytes = store.next_close_byte_demand().max(1);
+        maximum_demand = maximum_demand.max(bytes);
+        steps += 1;
+        assert!(steps <= 65_536, "DAG close did not finish: demand={bytes}/phase={}", store.close_owned_phase_witness());
+        match store.close_owned_store_step(1, bytes).expect("bounded DAG test-store close") {
             crate::os_store::SnapshotRetirementStep::Complete => break,
-            crate::os_store::SnapshotRetirementStep::Pending { .. } => {}
+            crate::os_store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                assert!(released_items <= 1 && released_bytes <= bytes);
+            }
             crate::os_store::SnapshotRetirementStep::Blocked => panic!("nonzero DAG test-store close grant blocked"),
         }
     }
     assert!(store.close_owned_store_terminal_is_empty());
+    println!("[DEBUG] Exact DAG store close completed steps={steps}/maximumDemand={maximum_demand}");
 }
 
 //#region 🔖️Dsl

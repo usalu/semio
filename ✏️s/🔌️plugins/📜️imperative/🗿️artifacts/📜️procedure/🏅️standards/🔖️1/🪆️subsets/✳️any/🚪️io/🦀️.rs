@@ -73,7 +73,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(text) => <ProcedureSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() })?,
                         AnalyzeSource::Binary(bytes) => <ProcedureSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() })?,
                     };
-                    return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::High, diagnostics: Vec::new() });
+                    return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::High, diagnostics: Vec::new() });
                 }
                 if source.dialect == DEP_JSON {
                     let bytes: Vec<u8> = match &source.payload {
@@ -81,7 +81,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
                 if source.dialect == DEP_TXT {
@@ -90,7 +90,7 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => b.to_vec(),
                     };
                     if let Ok(snapshot) = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::txt::v_utf_8::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::Medium, diagnostics: Vec::new() });
+                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
                 }
             }
@@ -108,7 +108,7 @@ pub use derived_composition::*;
 /// types; do not conflate them when qualifying paths.
 pub mod io_registry {
     use crate::standards::v1::subsets::any::io::ProcedureComposer as ProcedureAnyComposer;
-    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource,semio_framework_plugin::IoConfidence,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -151,7 +151,7 @@ pub mod io_registry {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let bytes = crate::standards::v1::subsets::any::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
-            Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::Medium })
+            Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
     //#endregion 🔖️ExportEntries
@@ -232,7 +232,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::ProcedureSnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct ProcedureParts {
@@ -245,27 +245,27 @@ pub mod derived_analysis {
         type Parts = ProcedureParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.imperative.procedure", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
+        fn sniff(_source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+            semio_framework_plugin::io::Confidence::Medium
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = ProcedureParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
+            let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <ProcedureSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <ProcedureSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },

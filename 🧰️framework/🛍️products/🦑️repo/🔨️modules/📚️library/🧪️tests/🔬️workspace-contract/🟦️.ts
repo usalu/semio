@@ -3016,14 +3016,16 @@ describe("loadTaxonomy", () => {
   test("routes native generator previews through their declared owner", async () => {
     const root = join(import.meta.dir, "../../🧫️fixtures/🏭️owned-generator-preview-inventory"), fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
     const discovery = await import("../../🔍️discovery/🟦️.ts");
-    const contract = { ownership: "owned" as const, ownerPath: "compiler", target: "@neutral/compiler:generate", previewTarget: "@neutral/compiler:preview-generated" };
+    const { default: parseArgv } = await import("yargs-parser");
     for (const row of fixture.ownerExecutionRoutes) {
+      const contract = { ownership: "owned" as const, ownerPath: row.ownerPath ?? "compiler", target: "@neutral/compiler:generate", previewTarget: "@neutral/compiler:preview-generated" };
       const target = { executor: "nx:run-commands", options: { cwd: row.cwd, command: row.command } };
       if (!row.valid) expect(() => discovery.generatorPreviewExecution(contract, target)).toThrow("exact owner JSON preview");
       else {
         const route = discovery.generatorPreviewExecution(contract, target);
         expect([route.command, ...route.args].join(" "), row.id).toBe(row.command);
         expect(route.cwd, row.id).toBe(row.cwd);
+        expect(parseArgv([route.command, ...route.args], { configuration: { "populate--": true, "camel-case-expansion": false, "parse-numbers": false } }), row.id).toEqual(parseArgv(row.command, { configuration: { "populate--": true, "camel-case-expansion": false, "parse-numbers": false } }));
       }
     }
   });
@@ -7479,19 +7481,20 @@ describe("schema scope catalog", () => {
     const library = await import("../../🔍️discovery/🟦️.ts");
     const taxonomy = library.loadCatalogTaxonomy();
     const casesPath = join(import.meta.dir, "../../🧫️fixtures/🧬️schema-scope-catalog/🔣️.json");
-    const cases = JSON.parse(readFileSync(casesPath, "utf8")) as { contract: string; cases: { id: string; files: Record<string, unknown>; expected: { scopes: Record<string, { path: string; level: string; exports: Record<string, { file: string; facet: string }>; dependsOn: string[] }>; diagnosticCodes: string[]; placementPaths: string[] } }[] };
+    const cases = JSON.parse(readFileSync(casesPath, "utf8")) as { contract: string; cases: { id: string; files: Record<string, unknown>; expected: { scopes: Record<string, { path: string; level: string; exports: Record<string, { file: string; facet: string }>; dependsOn: string[] }>; diagnosticCodes: string[]; placementPaths: string[] }; schemaGrammar?: Record<string, boolean> }[] };
     const authority = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🧬️schema-scope-catalog/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true });
     const admitScope = ajv.compile(authority);
     
     for (const row of cases.cases) {
-      const root = mkdtempSync(join(tmpdir(), "semio-schema-scope-"));
+      const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "semio-schema-scope-"));
       try {
         for (const [rel, body] of Object.entries(row.files)) {
           const abs = join(root, rel);
           mkdirSync(dirname(abs), { recursive: true });
           writeFileSync(abs, typeof body === "string" ? body : `${JSON.stringify(body, null, 2)}\n`);
         }
+        for (const [path, expected] of Object.entries(row.schemaGrammar ?? {})) expect(new Ajv({ strict: false }).validateSchema(row.files[path]), row.id).toBe(expected);
         const inventory = library.inventorySchemaScopes(root, taxonomy);
         const scopes = Object.fromEntries(Object.entries(inventory.catalog.scopes).map(([id, scope]) => [id, { path: scope.path, level: scope.level, exports: scope.exports, dependsOn: [...scope.dependsOn] }]));
         for (const scope of Object.values(scopes)) expect(admitScope(scope), JSON.stringify(admitScope.errors)).toBe(true);

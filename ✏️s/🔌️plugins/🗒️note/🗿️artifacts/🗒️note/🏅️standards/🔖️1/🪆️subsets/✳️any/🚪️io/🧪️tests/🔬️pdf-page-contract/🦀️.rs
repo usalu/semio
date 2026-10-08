@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework::io::io_mechanism::{Deserializer, Serializer};
+use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
 use semio_framework::io_schema::IoPayload as ForeignPayload;
 use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::{
     io::{decode_pdf, encode_pdf},
@@ -18,7 +18,7 @@ async fn note_pdf14_page_contract_matches_the_json_oracle() {
         let text: String = crate::note_block_text(content).iter().flat_map(|paragraph| paragraph.runs.iter().map(|run| run.text.as_str())).collect();
         let imported = serde_json::json!({"width": width, "height": height, "text": text});
         assert_eq!(imported, row["expectedImport"]);
-        let exported = crate::standards::v1::subsets::any::io::export::serializers::artifacts::pdf::v1_4::base::NoteIntoPdf::serialize(&note, &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("PDF export").value;
+        let exported = crate::standards::v1::subsets::any::io::export::serializers::artifacts::pdf::v1_4::base::NoteIntoPdf::serialize(&note, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("PDF export").value;
         let ForeignPayload::Binary(bytes) = exported else { panic!("binary PDF export") };
         assert!(bytes.starts_with(b"%PDF-1.4"));
         let pdf = decode_pdf(&bytes).expect("exported PDF decode");

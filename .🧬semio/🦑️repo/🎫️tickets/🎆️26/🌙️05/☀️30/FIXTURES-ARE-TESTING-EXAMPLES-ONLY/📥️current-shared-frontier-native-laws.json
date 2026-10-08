@@ -1,0 +1,15 @@
+{
+  "laws": [
+    "component::window_transient::transient_root_tests::the_snapshot_mutation_replaces_the_whole_root_and_inverts_to_the_base",
+    "component::window_transient::transient_root_tests::the_root_codecs_round_trip_through_their_envelope",
+    "component::window_transient::transient_root_tests::the_footprint_is_one_item_of_the_encoded_root",
+    "component::window_transient::transient_root_tests::the_window_owners_register_once_and_address_the_views_own_window",
+    "component::app::child_complete_group_candidate_tests::child_complete_actual_authored_typed_source_physical8194_grant4096",
+    "component::app::mounted_child_group_receipt_group::mounted_group_receipt_triple_prevalidation_retains_original8194_ids_until_exact_prefix_grants",
+    "component::local_interaction::mutations::set_state::tests::local_interaction_mutation_leaf_descriptor_and_exact_codecs_are_owned",
+    "component::app::mutation_fixture::surface::natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedly",
+    "component::app::mutation_fixture::surface::natural_file_controlled_decoder_crosses_turns_and_retires_its_owner"
+  ],
+  "mountedList": "🗑️generated/oct8-plugin-artifacts/exact-cargo-laws-z7YX2l/00/list.stdout",
+  "compiledReceipt": "🗑️generated/oct8-plugin-artifacts/exact-cargo-laws-z7YX2l/00/receipt.json"
+}

@@ -1,7 +1,66 @@
 
 use super::*;
 
+#[test]
+fn completed_json_projection_frame_reuses_inline_authority_without_transient_admission(){
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📦️completed-frame/🔣️.json")).unwrap();let source=law["source"].as_str().unwrap();let expected:serde_json::Value=serde_json::from_str(source).unwrap();let mut projection=JsonValueProjection::new(parse(source,JsonMemberPolicy::Reject).unwrap());let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut accepted);
+    for _ in 0..law["maximumTurns"].as_u64().unwrap(){if projection.retirement.is_some(){break;}assert!(projection.step(1,3,&mut control).unwrap().is_none());}assert!(projection.retirement.is_some());let admitted=control.owned_bytes();let mut released=0;
+    let original={let owner=projection.retirement.as_mut().unwrap();use semio_framework_value::{retirement::{RetirementCursor,RetirementStep},retained_clone::RetainedCloneGrant};let phase=owner.phase;let demand=owner.release_demand();assert!(demand>3);for grant in[RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:3,maximum_capacity_bytes:0,maximum_release_bytes:demand,maximum_depth:1},RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:3,maximum_capacity_bytes:0,maximum_release_bytes:demand-1,maximum_depth:1}]{let(step,born,physical)=test_allocation::observe_backing(||owner.close_step(grant));assert!(matches!(step,RetirementStep::BudgetExhausted));assert_eq!((born,physical),(0,0));assert_eq!(owner.phase,phase);assert_eq!(owner.release_demand(),demand);}owner.frame.values.allocation+owner.frame.entries.allocation+owner.frame.array.capacity()*std::mem::size_of::<DslValue>()+owner.frame.object.capacity()*std::mem::size_of::<(String,DslValue)>()};
+    for _ in 0..law["maximumTurns"].as_u64().unwrap(){if projection.retirement.is_none(){break;}let(result,born,physical)=test_allocation::observe_backing(||projection.step(1,3,&mut control));assert!(result.unwrap().is_none());assert_eq!(born,0,"completed input backing needs no fresh retirement scaffold");assert_eq!(control.owned_bytes(),admitted,"original source admission is conserved through physical input release");released+=physical;}
+    assert!(projection.retirement.is_none());assert_eq!(released,original);let value=projection.step(1,3,&mut control).unwrap().expect("original output survives physical source close");assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&value)).unwrap(),expected);retire_original_json(projection,3,65536);retire_original_json(value,3,65536);
+    eprintln!("[DEBUG] completed JSON frame owns original backing, born=0 physical={released} original-admission={admitted}; Serde output remains exact after reusable inline close");
+}
+
+fn retire_json_with_independent_grants<T: semio_framework_value::retirement::RetireOwned>(value: T, law: &serde_json::Value) {
+    use semio_framework_value::{retirement::controlled::ControlledRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneStep}};
+    let mut owner = match ControlledRetirement::new(value) { Ok(owner) => owner, Err((error, value)) => { std::mem::forget(value); panic!("original JSON owner lacks controlled authority: {error}"); } };
+    for turn in 0..law["maximumTurns"].as_u64().unwrap() {
+        let grant = RetainedCloneGrant { maximum_items: law["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: law["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: owner.next_capacity_byte_demand(3).unwrap(), maximum_release_bytes: owner.next_release_byte_demand().unwrap(), maximum_depth: owner.next_depth_demand().unwrap() };
+        assert!(grant.maximum_depth <= law["maximumDepth"].as_u64().unwrap() as usize);
+        assert_eq!(owner.step(RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 }).unwrap().progress(), Default::default());
+        assert_eq!(owner.next_capacity_byte_demand(3).unwrap(), grant.maximum_capacity_bytes);
+        assert_eq!(owner.next_release_byte_demand().unwrap(), grant.maximum_release_bytes);
+        assert_eq!(owner.next_depth_demand().unwrap(), grant.maximum_depth);
+        match owner.step(grant).unwrap() {
+            RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress) => {
+                assert!(progress.copied_items <= grant.maximum_items && progress.copied_bytes <= grant.maximum_copy_bytes);
+                assert!(progress.retained_capacity_bytes <= grant.maximum_capacity_bytes && progress.released_bytes <= grant.maximum_release_bytes);
+            }
+        }
+        if owner.terminal_is_empty() { eprintln!("[DEBUG] JSON controlled original owner closed turns={}", turn + 1); return; }
+    }
+    panic!("original JSON controlled retirement did not terminate");
+}
+
+#[test]
+fn original_json_parser_writer_and_value_retire_with_independent_physical_grants() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎮️retirement/🔣️.json")).unwrap();
+    let source = law["source"].as_str().unwrap();
+    let expected: serde_json::Value = serde_json::from_str(source).unwrap();
+    let value = parse(source, JsonMemberPolicy::Reject).unwrap();
+    assert_eq!(serde_json::from_str::<serde_json::Value>(&to_string(&value)).unwrap(), expected);
+    retire_json_with_independent_grants(value, &law);
+    for stop in law["cancelUnits"].as_array().unwrap() {
+        let mut parser = JsonParseCursor::new(JsonMemberPolicy::Reject);
+        let mut accepted = |_| true;
+        let mut control = semio_framework_value::NativeDecodeControl::new(1_000_000, &mut accepted);
+        for _ in 0..stop.as_u64().unwrap() { if let Some(value) = parser.step(source, 1, &mut control).unwrap() { retire_json_with_independent_grants(value, &law); break; } }
+        retire_json_with_independent_grants(parser, &law);
+        let mut writer = JsonWriteCursor::new(from_json_str::<semio_framework_value::DslValue>(source, JsonMemberPolicy::Reject).unwrap());
+        let mut accepted = |_| true;
+        let mut control = semio_framework_value::NativeEncodeControl::new(1_000_000, &mut accepted);
+        for _ in 0..stop.as_u64().unwrap() { if writer.step(1, &mut control).unwrap().is_some() { break; } }
+        retire_json_with_independent_grants(writer, &law);
+        let mut projection = JsonValueProjection::new(parse(source, JsonMemberPolicy::Reject).unwrap());
+        let mut accepted = |_| true;
+        let mut control = semio_framework_value::NativeDecodeControl::new(1_000_000, &mut accepted);
+        for _ in 0..stop.as_u64().unwrap() { if let Some(value) = projection.step(1, 3, &mut control).unwrap() { retire_json_with_independent_grants(value, &law); break; } }
+        retire_json_with_independent_grants(projection, &law);
+    }
+}
+
 fn owned_json_fixture()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🚦️owned-controls.json")).unwrap()}
+fn retire_original_json<T:semio_framework_value::retirement::RetireOwned>(value:T,maximum_copy_bytes:usize,maximum_turns:u64){let law=serde_json::json!({"maximumItems":1,"maximumCopyBytes":maximum_copy_bytes,"maximumDepth":4096,"maximumTurns":maximum_turns});retire_json_with_independent_grants(value,&law);}
 fn owned_json_text(f:&serde_json::Value)->String{f["textUnit"].as_str().unwrap().repeat(f["textRepeats"].as_u64().unwrap() as usize)}
 
 struct DirectJsonSource{member:String,text:String}
@@ -10,13 +69,15 @@ impl JsonWriteSource for DirectJsonSource{
     fn object_key_at_path(&self,path:&[usize],index:usize)->Result<&str,ValueError>{if path.is_empty()&&index==0{Ok(&self.member)}else{Err(ValueError::new(ValueRefusalKind::InvariantViolated,"direct authored source key"))}}
 }
 impl semio_framework_value::retirement::RetireOwned for DirectJsonSource{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::artifact_retirement_sequence!(self.member,self.text)}
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;sequence(vec![deferred(self.member),deferred(self.text)])}
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;sequence_birth_bytes(&[deferred_birth_bytes_for(&self.member),deferred_birth_bytes_for(&self.text)])}
+    fn controlled_retirement_supported()->bool{true}
 }
 #[test]
 fn retained_json_writer_reads_original_owned_source_without_projected_copy(){
     let fixture=owned_json_fixture();let law=&fixture["retainedWriting"];let source=||DirectJsonSource{member:law["directSourceMember"].as_str().unwrap().into(),text:owned_json_text(law)};let expected=serde_json::json!({law["directSourceMember"].as_str().unwrap():owned_json_text(law)}).to_string();
-    let retire=|writer:JsonWriteCursor<DirectJsonSource>|{let mut close=semio_framework_value::retirement::owned_retirement(writer);assert!(matches!(close.close_step(0,0).unwrap(),semio_framework_value::SnapshotRetirementStep::Pending{released_items:0,released_bytes:0}));while !close.terminal_is_empty(){if let semio_framework_value::SnapshotRetirementStep::Pending{released_bytes,..}=close.close_step(1,3).unwrap(){assert!(released_bytes<=3)}}};
-    for budget in law["budgets"].as_array().unwrap(){let original=source();let pointer=original.text.as_ptr();let mut writer=JsonWriteCursor::new(original);assert!(writer.take_source().is_none());let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut accepted);let mut turns=0;let output=loop{let before=writer.progress();assert!(writer.step(0,&mut control).unwrap().is_none());assert_eq!(writer.progress(),before);turns+=1;assert!(turns<100000);if let Some(output)=writer.step(budget.as_u64().unwrap()as usize,&mut control).unwrap(){break output}assert!(writer.take_source().is_none());};assert!(turns>1);assert_eq!(output,expected);let original=writer.take_source().unwrap();assert!(writer.take_source().is_none());assert_eq!(original.text.as_ptr(),pointer);retire(writer);let mut close=semio_framework_value::retirement::owned_retirement(original);while !close.terminal_is_empty(){close.close_step(1,3).unwrap();}}
+    let retire=|writer:JsonWriteCursor<DirectJsonSource>|retire_original_json(writer,3,100000);
+    for budget in law["budgets"].as_array().unwrap(){let original=source();let pointer=original.text.as_ptr();let mut writer=JsonWriteCursor::new(original);assert!(writer.take_source().is_none());let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut accepted);let mut turns=0;let output=loop{let before=writer.progress();assert!(writer.step(0,&mut control).unwrap().is_none());assert_eq!(writer.progress(),before);turns+=1;assert!(turns<100000);if let Some(output)=writer.step(budget.as_u64().unwrap()as usize,&mut control).unwrap(){break output}assert!(writer.take_source().is_none());};assert!(turns>1);assert_eq!(output,expected);let original=writer.take_source().unwrap();assert!(writer.take_source().is_none());assert_eq!(original.text.as_ptr(),pointer);retire(writer);retire_original_json(original,3,100000);}
     for stop in [0,1,32,512,4096]{let mut writer=JsonWriteCursor::new(source());let live=std::cell::Cell::new(true);let mut callback=|_|live.get();let mut control=semio_framework_value::NativeEncodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut callback);for _ in 0..stop{assert!(writer.step(1,&mut control).unwrap().is_none())}let before=writer.progress();live.set(false);assert_eq!(writer.step(1,&mut control).unwrap_err().kind,ValueRefusalKind::Canceled);assert_eq!(writer.progress(),before);retire(writer);}
     eprintln!("[DEBUG] Original owned JSON source pointer retained without projection; budgets1/8/256 exactSerde bytes zero/cancel3byte retirement passed");
 }
@@ -27,7 +88,7 @@ fn retained_json_projection_admits_exact_vectors_and_drains_consumed_input() {
     let input=||parse(&source,JsonMemberPolicy::Reject).unwrap();let mut projection=JsonValueProjection::new_ordered(input());let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut accepted);let mut phases=std::collections::BTreeSet::new();let mut turns=0;
     let value=loop{assert!(projection.step(0,0,&mut control).unwrap().is_none());phases.insert(projection.phase());turns+=1;assert!(turns<2000000);if let Some(value)=projection.step(law["maximumUnits"].as_u64().unwrap()as usize,law["retirementBytes"].as_u64().unwrap()as usize,&mut control).unwrap(){break value;}};assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&value)).unwrap(),oracle);assert!(projection.retirement.is_none());
     for phase in law["phases"].as_array().unwrap(){assert!(phases.contains(phase.as_str().unwrap()),"{phase}");}
-    let retire=|projection:JsonValueProjection|{let mut owner=semio_framework_value::retirement::owned_retirement(projection);while !owner.terminal_is_empty(){if let semio_framework_value::SnapshotRetirementStep::Pending {released_bytes,..}=owner.close_step(1,3).unwrap(){assert!(released_bytes<=3);}}};retire(projection);let mut owner=semio_framework_value::retirement::owned_retirement(value);while !owner.terminal_is_empty(){owner.close_step(1,3).unwrap();}
+    let retire=|projection:JsonValueProjection|retire_original_json(projection,3,4000000);retire(projection);retire_original_json(value,3,4000000);
     let mut projection=JsonValueProjection::new(input());let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(1,&mut accepted);assert_eq!(projection.step(1,3,&mut control).unwrap_err().kind,ValueRefusalKind::OwnershipLimit);retire(projection);
     for stop in law["cancelUnits"].as_array().unwrap(){let mut projection=JsonValueProjection::new(input());let canceled=std::cell::Cell::new(false);let mut accepted=|_|!canceled.get();let mut control=semio_framework_value::NativeDecodeControl::new(law["maximumBytes"].as_u64().unwrap()as usize,&mut accepted);for _ in 0..stop.as_u64().unwrap(){assert!(projection.step(1,3,&mut control).unwrap().is_none());}canceled.set(true);assert_eq!(projection.step(1,3,&mut control).unwrap_err().kind,ValueRefusalKind::Canceled);retire(projection);}
     eprintln!("[DEBUG] Same JSON typed projection admitted exact vectors, retained consumed input scaffold, oneunit/3byte frontier and independentSerde parity");
@@ -36,12 +97,12 @@ fn retained_json_projection_admits_exact_vectors_and_drains_consumed_input() {
 #[test]
 fn retained_json_parser_admits_storage_before_copying_and_resumes_one_owner() {
     let fixture=owned_json_fixture();let law=&fixture["retainedAdmission"];let label=owned_json_text(law);let length=label.len();let text=serde_json::to_string(&label).unwrap();
-    let retire=|parser:JsonParseCursor|{let mut owner=semio_framework_value::retirement::owned_retirement(parser);assert!(matches!(owner.close_step(0,0).unwrap(),semio_framework_value::SnapshotRetirementStep::Pending {released_items:0,released_bytes:0}));while !owner.terminal_is_empty(){if let semio_framework_value::SnapshotRetirementStep::Pending {released_bytes,..}=owner.close_step(1,law["retirementBytes"].as_u64().unwrap()as usize).unwrap(){assert!(released_bytes<=3);}}};
+    let retire=|parser:JsonParseCursor|retire_original_json(parser,law["retirementBytes"].as_u64().unwrap()as usize,4000000);
     let mut phases=std::collections::BTreeSet::new();
     for (source,maximum) in [(text.clone(),length),(serde_json::to_string(&vec![label.clone();law["collectionItems"].as_u64().unwrap()as usize/128]).unwrap(),law["maximumBytes"].as_u64().unwrap()as usize),(serde_json::json!({"labels":(0..law["collectionItems"].as_u64().unwrap()).collect::<Vec<_>>(),"object":(0..128).map(|index|(format!("key{index}"),serde_json::Value::from(index))).collect::<serde_json::Map<_,_>>(),"label":label}).to_string(),law["maximumBytes"].as_u64().unwrap()as usize)] {
         let oracle:serde_json::Value=serde_json::from_str(&source).unwrap();let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(maximum,&mut accepted);let mut turns=0;
         let value=loop{let before=(parser.position(),control.owned_bytes());assert!(parser.step(&source,0,&mut control).unwrap().is_none());assert_eq!((parser.position(),control.owned_bytes()),before);phases.insert(parser.phase());turns+=1;assert!(turns<4000000);if let Some(value)=parser.step(&source,law["maximumUnits"].as_u64().unwrap()as usize,&mut control).unwrap(){break value;}};
-        assert_eq!(serde_json::from_str::<serde_json::Value>(&to_string(&value)).unwrap(),oracle);assert!(control.owned_bytes()<=maximum);if source==text {assert_eq!(control.owned_bytes(),length);}retire(parser);let mut owner=semio_framework_value::retirement::owned_retirement(value);while !owner.terminal_is_empty(){owner.close_step(1,3).unwrap();}
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&to_string(&value)).unwrap(),oracle);assert!(control.owned_bytes()<=maximum);if source==text {assert_eq!(control.owned_bytes(),length);}retire(parser);retire_original_json(value,3,4000000);
     }
     for phase in law["phases"].as_array().unwrap(){assert!(phases.contains(phase.as_str().unwrap()),"{phase}");}
     let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(length-1,&mut accepted);let error=loop{match parser.step(&text,1,&mut control){Ok(None)=>{},Ok(Some(_))=>panic!("ownership limit admitted a string"),Err(error)=>break error}};assert_eq!(error.kind(),ValueRefusalKind::OwnershipLimit);assert_eq!(control.owned_bytes(),0);retire(parser);
@@ -55,7 +116,7 @@ fn retained_json_parser_admits_storage_before_copying_and_resumes_one_owner() {
 fn retained_json_projection_canonicalizes_nested_member_order_under_work_grants() {
     let fixture=owned_json_fixture();let law=&fixture["retainedCanonical"];let key=law["keyUnit"].as_str().unwrap().repeat(law["keyRepeats"].as_u64().unwrap()as usize);let label=owned_json_text(law);let text=to_string(&object([(format!("{key}z"),Value::String(label.clone())),("z".into(),parse("{\"z\":3,\"a\":1}",JsonMemberPolicy::Reject).unwrap()),(format!("{key}a"),Value::String(label)),("a".into(),parse("[{\"z\":false,\"a\":true}]",JsonMemberPolicy::Reject).unwrap())]));let oracle:serde_json::Value=serde_json::from_str(&text).unwrap();let canonical=serde_json::to_string(&oracle).unwrap();let input=||parse(&text,JsonMemberPolicy::Reject).unwrap();let mut projection=JsonValueProjection::new_ordered(input());let mut turns=0;let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4000000,&mut accepted);
     let actual=loop {assert!(projection.step(0,3,&mut control).unwrap().is_none());turns+=1;assert!(turns<100000);if let Some(value)=projection.step(law["maximumUnits"].as_u64().unwrap()as usize,3,&mut control).unwrap() {break value;}};assert_eq!(to_json_string(&actual),canonical);
-    for cutoff in law["cancelUnits"].as_array().unwrap() {let mut projection=JsonValueProjection::new_ordered(input());let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4000000,&mut accepted);for _ in 0..cutoff.as_u64().unwrap() {assert!(projection.step(1,3,&mut control).unwrap().is_none());}let mut retirement=semio_framework_value::retirement::owned_retirement(projection);while !retirement.terminal_is_empty() {if let semio_framework_value::SnapshotRetirementStep::Pending {released_bytes,..}=retirement.close_step(1,law["retirementBytes"].as_u64().unwrap()as usize).unwrap() {assert!(released_bytes<=3);}}}
+    for cutoff in law["cancelUnits"].as_array().unwrap() {let mut projection=JsonValueProjection::new_ordered(input());let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4000000,&mut accepted);for _ in 0..cutoff.as_u64().unwrap() {assert!(projection.step(1,3,&mut control).unwrap().is_none());}retire_original_json(projection,law["retirementBytes"].as_u64().unwrap()as usize,100000);}
     eprintln!("[DEBUG] Same JSON projection retained canonical nested key order, transitions={turns}");
 }
 
@@ -64,7 +125,7 @@ fn retained_json_writer_resumes_canonical_physical_bytes_and_retires_owned_sourc
     let fixture=owned_json_fixture(); let law=&fixture["retainedWriting"];
     let expected=serde_json::json!({"label":owned_json_text(law),"nested":[null,true,{"values":[1,2.5,-3]}]});
     let source=expected.to_string(); let maximum=law["maximumBytes"].as_u64().unwrap() as usize;
-    let retire=|writer:JsonWriteCursor<DslValue>| { let mut retirement=semio_framework_value::retirement::owned_retirement(writer); assert!(matches!(retirement.close_step(0,0).unwrap(),semio_framework_value::SnapshotRetirementStep::Pending {released_items:0,released_bytes:0})); let mut turns=0; while !retirement.terminal_is_empty() { turns+=1; assert!(turns<100000); if let semio_framework_value::SnapshotRetirementStep::Pending {released_bytes,..}=retirement.close_step(1,law["retirementBytes"].as_u64().unwrap() as usize).unwrap() {assert!(released_bytes<=3);} } };
+    let retire=|writer:JsonWriteCursor<DslValue>|retire_original_json(writer,law["retirementBytes"].as_u64().unwrap()as usize,100000);
     let mut final_turns=0;
     for budget in law["budgets"].as_array().unwrap() {
         let value=to_dsl_value(&parse(&source,JsonMemberPolicy::Reject).unwrap()); let mut writer=JsonWriteCursor::new(value); let mut callback=|_|true; let mut control=semio_framework_value::NativeEncodeControl::new(maximum,&mut callback); control.begin_stage(0).unwrap();
@@ -77,7 +138,7 @@ fn retained_json_writer_resumes_canonical_physical_bytes_and_retires_owned_sourc
         canceled.set(true); let before=writer.progress(); let error=writer.step(1,&mut control).unwrap_err(); assert_eq!(error.kind,ValueRefusalKind::Canceled); assert_eq!(writer.progress(),before); retire(writer);
     }
     let value=to_dsl_value(&parse(&source,JsonMemberPolicy::Reject).unwrap()); let mut writer=JsonWriteCursor::new(value); let mut callback=|_|true; let mut control=semio_framework_value::NativeEncodeControl::new(1,&mut callback); assert_eq!(writer.step(1,&mut control).unwrap_err().kind,ValueRefusalKind::OwnershipLimit); retire(writer);
-    let owned=DslValue::String(owned_json_text(law));let pointer=match &owned {DslValue::String(text)=>text.as_ptr(),_=>unreachable!()};let mut writer=JsonWriteCursor::new(owned);assert!(writer.take_source().is_none());let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(maximum,&mut accepted);let mut turns=0;while writer.step(8,&mut control).unwrap().is_none() {turns+=1;assert!(turns<100000);assert!(writer.take_source().is_none());}let owned=writer.take_source().unwrap();assert!(writer.take_source().is_none());match &owned {DslValue::String(text)=>assert_eq!(text.as_ptr(),pointer),_=>unreachable!()};retire(writer);let mut source=semio_framework_value::retirement::owned_retirement(owned);while !source.terminal_is_empty() {source.close_step(1,3).unwrap();}
+    let owned=DslValue::String(owned_json_text(law));let pointer=match &owned {DslValue::String(text)=>text.as_ptr(),_=>unreachable!()};let mut writer=JsonWriteCursor::new(owned);assert!(writer.take_source().is_none());let mut accepted=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(maximum,&mut accepted);let mut turns=0;while writer.step(8,&mut control).unwrap().is_none() {turns+=1;assert!(turns<100000);assert!(writer.take_source().is_none());}let owned=writer.take_source().unwrap();assert!(writer.take_source().is_none());match &owned {DslValue::String(text)=>assert_eq!(text.as_ptr(),pointer),_=>unreachable!()};retire(writer);retire_original_json(owned,3,100000);
     eprintln!("[DEBUG] retained JSON physical writer budgets=1/8/256 independentSerde=true cancellation=true boundedSourceRetirement=true");
 }
 
@@ -86,7 +147,7 @@ fn retained_json_parser_and_projection_resume_and_retire_bounded_candidates() {
     let fixture=owned_json_fixture();let law=&fixture["retainedParsing"];let expected=serde_json::json!({"label":owned_json_text(law),"nested":[null,true,{"values":[1,2.5,-3]}]});let text=expected.to_string();let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let mut turns=0;let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4000000,&mut accepted);
     let value=loop {let position=parser.position();assert!(parser.step(&text,0,&mut control).unwrap().is_none());assert_eq!(parser.position(),position);turns+=1;assert!(turns<100000);if let Some(value)=parser.step(&text,law["maximumUnits"].as_u64().unwrap()as usize,&mut control).unwrap() {break value;}};
     assert_eq!(serde_json::from_str::<serde_json::Value>(&to_string(&value)).unwrap(),expected);let mut projection=JsonValueProjection::new(value);let projected=loop {assert!(projection.step(0,3,&mut control).unwrap().is_none());if let Some(value)=projection.step(1,3,&mut control).unwrap() {break value;}};assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&projected)).unwrap(),expected);
-    for stop in [0,1,text.len()/2,text.len()-1] {let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4000000,&mut accepted);while parser.position()<stop {assert!(parser.step(&text,1,&mut control).unwrap().is_none());}let mut retirement=semio_framework_value::retirement::owned_retirement(parser);assert!(!retirement.terminal_is_empty());assert!(matches!(retirement.close_step(1,0).unwrap(),semio_framework_value::SnapshotRetirementStep::Pending {released_items:0,released_bytes:0}));let mut close_turns=0;while !retirement.terminal_is_empty() {close_turns+=1;assert!(close_turns<100000);if let semio_framework_value::SnapshotRetirementStep::Pending {released_bytes,..}=retirement.close_step(1,law["retirementBytes"].as_u64().unwrap()as usize).unwrap() {assert!(released_bytes<=3);}}}
+    for stop in [0,1,text.len()/2,text.len()-1] {let mut parser=JsonParseCursor::new(JsonMemberPolicy::Reject);let mut accepted=|_|true;let mut control=semio_framework_value::NativeDecodeControl::new(4000000,&mut accepted);while parser.position()<stop {assert!(parser.step(&text,1,&mut control).unwrap().is_none());}retire_original_json(parser,law["retirementBytes"].as_u64().unwrap()as usize,100000);}
     eprintln!("[DEBUG] Existing JSON grammar retained borrowed source and moved typed projection, transitions={turns}");
 }
 

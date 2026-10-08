@@ -34,7 +34,7 @@
       "vortices": [
         {
           "id": "vortex-1",
-          "vortexKind": "vortex-kind-a",
+          "vortexKind": "vortex-kind-c",
           "position": [
             1.0,
             0.0,

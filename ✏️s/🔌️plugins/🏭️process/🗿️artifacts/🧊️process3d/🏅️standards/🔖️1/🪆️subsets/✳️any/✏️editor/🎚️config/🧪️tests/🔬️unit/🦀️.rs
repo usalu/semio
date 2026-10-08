@@ -20,12 +20,12 @@ async fn process3d_config_operation_backwards_restores_the_same_field_from_base(
 #[semio_framework_async_macros::async_test]
 async fn process3d_config_operation_diff_applies_expected_fields() {
     let base = Process3dConfig::default();
-    let next = Process3dConfigMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 }.diff(&base).into_parts().0;
+    let next = protocol::apply_diff(&Process3dConfigMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.1, 0.2, 0.3], fov: 60.0 }.diff(&base).into_parts().0, &base).expect(\"the config diff applies\");
     assert_eq!(next.camera_position, [1.0, 2.0, 3.0]);
     assert_eq!(next.camera_target, [0.1, 0.2, 0.3]);
     assert_eq!(next.camera_fov, 60.0);
 
-    let next = Process3dConfigMutation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#123456".into() }.diff(&base).into_parts().0;
+    let next = protocol::apply_diff(&Process3dConfigMutation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#123456".into() }.diff(&base).into_parts().0, &base).expect(\"the config diff applies\");
     assert!(next.sun_enabled);
     assert_eq!(next.sun_azimuth, 10.0);
     assert_eq!(next.sun_elevation, 20.0);
@@ -50,7 +50,7 @@ async fn the_replay_cursor_is_view_state_in_the_config() {
     use store::ArtifactPack;
     let base = Process3dConfig::default();
     assert_eq!(base.resolved_up_to, None);
-    let next = Process3dConfigMutation::SetCursor { value: Some(2) }.diff(&base).into_parts().0;
+    let next = protocol::apply_diff(&Process3dConfigMutation::SetCursor { value: Some(2) }.diff(&base).into_parts().0, &base).expect(\"the config diff applies\");
     assert_eq!(next.resolved_up_to, Some(2));
     assert_eq!(Process3dConfigMutation::SetCursor { value: Some(2) }.inverse(&base).expect("valid retained mutation inverse fixture"), vec![Process3dConfigMutation::SetCursor { value: None }]);
     store::os_store::test_support::assert_dsl_round_trip(&next);

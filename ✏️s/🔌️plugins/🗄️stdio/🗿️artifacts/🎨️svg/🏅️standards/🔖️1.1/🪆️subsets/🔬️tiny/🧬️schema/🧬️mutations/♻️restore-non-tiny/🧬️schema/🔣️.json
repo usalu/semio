@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/restore-non-tiny/schema.json",
+  "title": "RestoreNonTiny",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "elements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "parent",
+          "index",
+          "node"
+        ],
+        "properties": {
+          "parent": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "node": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/snapshot.json#/$defs/SvgNode"
+          }
+        }
+      }
+    },
+    "attributes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "index",
+          "name",
+          "value"
+        ],
+        "properties": {
+          "path": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/snapshot.json#/$defs/SvgAttributeValue"
+          }
+        }
+      }
+    }
+  }
+}

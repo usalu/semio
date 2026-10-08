@@ -94,114 +94,83 @@
       "x-semio-state": "artifact"
     },
     "zones": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/Din16798ZoneEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Din16798ZoneDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "ventSystems": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/Din16798VentSystemEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Din16798VentSystemDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     }
   },
   "$defs": {
-    "Din16798RowOp": {
-      "enum": [
-        "Insert",
-        "Remove",
-        "Replace",
-        "Patch"
-      ]
-    },
-    "Din16798ZoneEdit": {
+    "Din16798ZoneDelta": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "op",
-        "index",
-        "id",
-        "value",
-        "patch"
-      ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/Din16798RowOp"
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din16798ZoneAddition"
+          }
         },
-        "id": {
-          "type": "string"
-        },
-        "value": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/snapshot.json#/$defs/ZoneDocument"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "patch": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Din16798ZonePatch"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din16798ZoneModification"
+          }
         }
       }
     },
-    "Din16798VentSystemEdit": {
+    "Din16798ZoneAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value",
+        "after",
+        "row"
+      ],
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/snapshot.json#/$defs/ZoneDocument"
+        }
+      }
+    },
+    "Din16798ZoneModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
         "patch"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/Din16798RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
+        "key": {
           "type": "string"
         },
-        "value": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/snapshot.json#/$defs/VentSystemDocument"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "patch": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Din16798VentSystemPatch"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/Din16798ZonePatch"
         }
       }
     },
@@ -209,6 +178,16 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "usageType": {
           "anyOf": [
             {
@@ -403,10 +382,83 @@
         }
       }
     },
+    "Din16798VentSystemDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din16798VentSystemAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din16798VentSystemModification"
+          }
+        }
+      }
+    },
+    "Din16798VentSystemAddition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after",
+        "row"
+      ],
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din16798/snapshot.json#/$defs/VentSystemDocument"
+        }
+      }
+    },
+    "Din16798VentSystemModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Din16798VentSystemPatch"
+        }
+      }
+    },
     "Din16798VentSystemPatch": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "systemType": {
           "anyOf": [
             {
@@ -481,10 +533,60 @@
             }
           ]
         },
+        "humidificationRequiredKgH": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "humidificationProvidedKgH": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fanQVM3S": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fanTRunH": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "ductClass": {
           "anyOf": [
             {
               "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ductTestPressurePa": {
+          "anyOf": [
+            {
+              "type": "number"
             },
             {
               "type": "null"

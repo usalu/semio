@@ -1122,7 +1122,7 @@ async fn publish_genesis_checkpoint_for_test(
     state: &HubState,
     actor: ArtifactCreationActorV1,
     catalog_generation: String,
-    parent_dialect: directory::os_io::ArtifactDialect,
+    parent_dialect: semio_framework_artifact_reference::ArtifactDialect,
     descriptor: DocumentDescriptor,
     pack: &[u8],
     spr: &[u8],
@@ -1213,7 +1213,7 @@ async fn publish_openable_document_for_test(state: &HubState, token: &str, space
     descriptor.bootstrap_snapshot_hash = os_directory::hex_lower(&Sha256::digest(pack));
     let session = state.directory.authenticate_session(&SessionCapability::parse(token).expect("document-open author capability")).await.expect("document-open author session read").expect("document-open author session");
     let actor = ArtifactCreationActorV1 { user_id: session.user_id, session_id: session.id, authorization_generation: session.authorization_generation };
-    let parent_dialect = directory::os_io::ArtifactDialect { artifact_kind: TEST_ARTIFACT_PARENT_DIALECT_KIND.into(), standard: "1".into(), subset: "*".into() };
+    let parent_dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: TEST_ARTIFACT_PARENT_DIALECT_KIND.into(), standard: "1".into(), subset: "*".into() };
     let checkpoint = publish_genesis_checkpoint_for_test(state, actor, "66".repeat(32), parent_dialect, descriptor.clone(), pack, spr).await;
     (descriptor, checkpoint)
 }
@@ -1247,7 +1247,7 @@ async fn seed_genesis_for_document_for_test(state: &HubState, token: &str, space
         .expect("genesis seed session read")
         .expect("genesis seed session");
     let actor = ArtifactCreationActorV1 { user_id: authenticated.user_id, session_id: authenticated.id, authorization_generation: authenticated.authorization_generation };
-    let parent_dialect = directory::os_io::ArtifactDialect { artifact_kind: TEST_ARTIFACT_PARENT_DIALECT_KIND.into(), standard: "1".into(), subset: "*".into() };
+    let parent_dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: TEST_ARTIFACT_PARENT_DIALECT_KIND.into(), standard: "1".into(), subset: "*".into() };
     publish_genesis_checkpoint_for_test(state, actor, "66".repeat(32), parent_dialect, descriptor, &pack, &spr).await
 }
 
@@ -3722,7 +3722,7 @@ async fn document_open_and_execution_target_refuse_descriptor_or_index_without_g
                 body: os_directory::DirectoryEventBody::DocumentIndexed {
                     scope: scope.clone(),
                     descriptor_digest_v1: os_directory::descriptor_digest_v1(&descriptor).expect("descriptor digest"),
-                    entry: os_directory::DocumentIndexEntryV1 { name: "Indexed without genesis".into(), dialect: directory::os_io::ArtifactDialect { artifact_kind: TEST_ARTIFACT_PARENT_DIALECT_KIND.into(), standard: "1".into(), subset: "*".into() } },
+                    entry: os_directory::DocumentIndexEntryV1 { name: "Indexed without genesis".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: TEST_ARTIFACT_PARENT_DIALECT_KIND.into(), standard: "1".into(), subset: "*".into() } },
                 },
             };
             state.directory.append_decided_events(&[event]).await.expect("corrupt indexed-only fixture");

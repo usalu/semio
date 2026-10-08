@@ -6,7 +6,6 @@ use semio_repo_test_host::parse_json;
 const FIXTURE: &[u8] = include_bytes!("../../../🖼️assets/🚏️bus-shelter/🖊️.dxf");
 
 const ROWS: &[(&str, &str)] = &[
-    ("set-snapshot", r#"{"snapshot": {"schema": "stdio.dxf", "headerVars": [{"name": "$ACADVER", "groupCode": 1, "value": {"kind": "str", "value": "AC1009"}}, {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [5, 5, 0]}}], "tables": {"layers": [{"name": "0", "color": 7, "linetype": "CONTINUOUS", "flags": 0}]}, "otherTables": [], "blocks": [], "entities": [{"circle": {"center": [0, 0, 0], "radius": 42, "layer": "0"}}]}}"#),
     ("set-header-var", r#"{"name": "$INSBASE", "headerVar": {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [15, 25, 0]}}}"#),
     ("remove-header-var", r#"{"name": "$INSBASE"}"#),
     ("insert-layer", r#"{"index": 1, "layer": {"name": "MARKERS", "color": 6, "linetype": "CONTINUOUS", "flags": 0}}"#),

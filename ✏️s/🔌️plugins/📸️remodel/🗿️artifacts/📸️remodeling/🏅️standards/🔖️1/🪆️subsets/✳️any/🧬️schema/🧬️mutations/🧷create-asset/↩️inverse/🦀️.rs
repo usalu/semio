@@ -5,20 +5,29 @@
 //! durable leaf for the overwritten handle (`remodeling_asset`, `🦀️.rs:258`), so this inverse is a
 //! pure function of `base`. A document that carries the handle but not its leaf ⇒ `Vec::new()`, never
 //! fabricated bytes.
-use crate::mutations::RemodelingMutation;
-use crate::{remodeling_asset, RemodelingSnapshot};
+use crate::mutations::{append_content, rebind_asset, remove_content, AppendContent, RemodelingMutation};
+use crate::{durable_remodeling_asset, store_remodeling_asset, RemodelingContentKind, RemodelingSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::CreateAsset, base: &RemodelingSnapshot) -> Result<Vec<RemodelingMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    match base.assets.get(&payload.key) {
-        Some(_) => match remodeling_asset(base, &payload.key) {
-            Some(old) => vec![super::create_asset(payload.key.clone(), old)],
-            None => Vec::new(),
-        },
-        None => vec![crate::mutations::delete_asset::delete_asset(payload.key.clone())],
+    let Some(artifact) = durable_remodeling_asset(&payload.asset) else {
+        return Ok(Vec::new());
+    };
+    let Some(previous) = base.assets.get(&payload.key) else {
+        return Ok(vec![crate::mutations::delete_asset::delete_asset(payload.key.clone())]);
+    };
+    let created = store_remodeling_asset(&payload.key, &payload.asset);
+    let released = base.durable_artifacts.get(&previous.child_id);
+    let shared = created.child_id != previous.child_id && base.durable_artifacts.get(&created.child_id) == Some(&artifact);
+    let mut undo = vec![rebind_asset(base, &payload.key, Some(&previous.child_id))];
+    if let Some(held) = released {
+        if let Some(kind) = RemodelingContentKind::parse(&held.kind) {
+            undo.push(append_content(AppendContent { content_id: previous.child_id.clone(), kind, mime: held.mime.clone(), width: held.width, height: held.height, first: 0, chunks: held.chunks.clone() }));
+        }
     }
-
-    })())
+    if !shared {
+        undo.push(remove_content(created.child_id, 0));
+    }
+    Ok(undo)
 }
 //#endregion 🔖️Inverse

@@ -514,6 +514,16 @@ pub(crate) struct EventFeedAccessibilityControl {
     pub(crate) action: Option<ActionDescriptor>,
 }
 
+/// ♿️ One node of a world surface's modelling-overlay accessibility tree (annotation list, scalar-field legend, mismatch status), staged by the paint and published with the frame.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct World3dAccessibilityControl {
+    pub(crate) key: String,
+    pub(crate) role: &'static str,
+    pub(crate) label: String,
+    pub(crate) depth: u8,
+    pub(crate) polite: bool,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct GraphTimelineAccessibilityControl {
     pub(crate) key: String,
@@ -612,6 +622,7 @@ struct SceneSurfaceState {
     vfs_accessibility: SceneAccessibilityPresentation<VfsAccessibilityControl>,
     block_list_accessibility: SceneAccessibilityPresentation<BlockListAccessibilityControl>,
     event_feed_accessibility: SceneAccessibilityPresentation<EventFeedAccessibilityControl>,
+    world3d_accessibility: SceneAccessibilityPresentation<World3dAccessibilityControl>,
     graph_timeline_accessibility: SceneAccessibilityPresentation<GraphTimelineAccessibilityControl>,
     /// 📏️ The label track this surface's last GraphTimeline paint measured — the one geometry its hit test reads.
     graph_timeline_label_track: f32,
@@ -3425,11 +3436,14 @@ pub struct SceneChromeLabels {
     pub virtual_file_system: VirtualFileSystemChromeLabels,
     pub block_list: BlockListChromeLabels,
     pub icon_render: IconRenderChromeLabels,
+    /// 🌍️ Whether the labels are the German bundle; the world surface writes its annotation and legend text in the same language.
+    pub german: bool,
 }
 
 impl SceneChromeLabels {
     pub const fn english() -> Self {
         Self {
+            german: false,
             virtual_file_system: VirtualFileSystemChromeLabels { name: "Name", no_file_system_nodes: "No file system nodes", expand: "Expand", collapse: "Collapse" },
             block_list: BlockListChromeLabels { steps: "Steps", add_step: "Add Step", delete: "Delete" },
             icon_render: IconRenderChromeLabels { empty_scene: "No scene", rendering: "Rendering…", failed: "Icon rendering failed" },
@@ -3779,7 +3793,12 @@ fn render_world3d_surface_step(scene: &UiComponentSceneNode, bounds: Rect, ctx: 
     if state.tool_run_trace_window_id.as_deref() != Some(hosts.window_id) {
         state.tool_run_trace_window_id = Some(hosts.window_id.to_string());
     }
+    state.set_modelling_locale(hosts.chrome_labels.german);
     infinite_world::world::render_world_3d(scene, bounds, ctx, state, hosts.world_resources, infinite_world::world::World3dShadowProfile::World);
+    stage_world3d_accessibility_controls(
+        &scene.host_id,
+        infinite_world::world::world3d_modelling_accessibility(state, scene).into_iter().map(|entry| World3dAccessibilityControl { key: entry.key, role: entry.role, label: entry.label, depth: entry.depth, polite: entry.polite }).collect(),
+    );
     engine_canvas::register_engine_surface(scene, hosts.window_id, bounds, engine_canvas::EngineSurfaceKindDetail::World3d { status_json: scene.world_3d.as_ref().and_then(|world| world.status_json.clone()) }, created, None);
     world3d_surface_debug_log(scene, bounds, ctx, state);
     if semio_framework_trace::runtime_diagnostics_enabled() {
@@ -5785,6 +5804,42 @@ pub(crate) fn discard_block_list_accessibility_candidates(epoch: u64) {
     SCENE_STATE.with(|cell| {
         for state in cell.borrow_mut().values_mut() {
             state.block_list_accessibility.discard(epoch);
+        }
+    });
+}
+
+pub(crate) fn stage_world3d_accessibility_controls(host_id: &str, controls: Vec<World3dAccessibilityControl>) {
+    mutate_scene_state(host_id, |state| {
+        if state.world3d_accessibility.candidate.as_ref().or(state.world3d_accessibility.queued_candidate.as_ref()).is_none_or(|staged| *staged != controls) && state.world3d_accessibility.accepted != controls {
+            state.world3d_accessibility.stage(controls);
+        }
+    });
+}
+
+pub(crate) fn accepted_world3d_accessibility_controls(host_id: &str) -> Vec<World3dAccessibilityControl> {
+    SCENE_STATE.with(|cell| cell.borrow().get(host_id).map(|state| state.world3d_accessibility.accepted.clone()).unwrap_or_default())
+}
+
+pub(crate) fn seal_world3d_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.world3d_accessibility.seal(epoch);
+        }
+    });
+}
+
+pub(crate) fn acknowledge_world3d_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.world3d_accessibility.acknowledge(epoch);
+        }
+    });
+}
+
+pub(crate) fn discard_world3d_accessibility_candidates(epoch: u64) {
+    SCENE_STATE.with(|cell| {
+        for state in cell.borrow_mut().values_mut() {
+            state.world3d_accessibility.discard(epoch);
         }
     });
 }
@@ -10060,7 +10115,7 @@ pub struct TiledMapSurface {
     pub window_id: String,
 }
 
-fn query_map_feature_hits(host: &framework_surface_tiled_map::tiled_map::MapHost, method: &str, points: &[(f32, f32)], crossing: bool) -> (Vec<String>, Vec<String>) {
+fn query_map_feature_hits(host: &semio_framework_surface::tiled_map::MapHost, method: &str, points: &[(f32, f32)], crossing: bool) -> (Vec<String>, Vec<String>) {
     if method == "lasso" && points.len() >= 3 {
         let payload: Vec<[f64; 2]> = points.iter().map(|(x, y)| [*x as f64, *y as f64]).collect();
         let points_json = serde_json::to_string(&payload).unwrap_or_else(|_| "[]".into());
@@ -10232,7 +10287,7 @@ pub fn tiled_map_touch_pointer_move(host_id: &str, inner: Rect, pointer_id: ui_r
                     current,
                     step,
                     [inner.w as f64, inner.h as f64],
-                    ZoomBounds { min: framework_surface_tiled_map::tiled_map::MAP_CAMERA_ZOOM_MIN, max: framework_surface_tiled_map::tiled_map::MAP_CAMERA_ZOOM_MAX },
+                    ZoomBounds { min: semio_framework_surface::tiled_map::MAP_CAMERA_ZOOM_MIN, max: semio_framework_surface::tiled_map::MAP_CAMERA_ZOOM_MAX },
                 );
                 engine_canvas::tiled_map_set_camera_silent(host_id, next);
             }
@@ -10284,7 +10339,7 @@ pub fn tiled_map_pointer_down_into(
         return Ok(true);
     }
     if button == 1 {
-        let published = engine_canvas::with_map_interaction_into(host_id, controller_id, input, framework_surface_tiled_map::tiled_map::MapInteractionIntent::PointerDown { sx, sy, button: 1 })?;
+        let published = engine_canvas::with_map_interaction_into(host_id, controller_id, input, semio_framework_surface::tiled_map::MapInteractionIntent::PointerDown { sx, sy, button: 1 })?;
         if published {
             mutate_scene_state(host_id, |state| {
                 state.drag = Some(SceneDrag { mode: SceneDragMode::MapPan });
@@ -10353,7 +10408,7 @@ pub fn tiled_map_pointer_move_into(
         let state = scene_state(host_id);
         if let Some(drag) = &state.drag {
             match &drag.mode {
-                SceneDragMode::MapPan => return engine_canvas::with_map_interaction_into(host_id, controller_id, input, framework_surface_tiled_map::tiled_map::MapInteractionIntent::PointerMove { sx, sy }),
+                SceneDragMode::MapPan => return engine_canvas::with_map_interaction_into(host_id, controller_id, input, semio_framework_surface::tiled_map::MapInteractionIntent::PointerMove { sx, sy }),
                 SceneDragMode::MapMarquee { start_x, start_y, method, .. } => {
                     let distance = ((sx as f32 - *start_x).powi(2) + (sy as f32 - *start_y).powi(2)).sqrt();
                     mutate_scene_state(host_id, |state| {
@@ -10405,7 +10460,7 @@ pub fn tiled_map_pointer_cancel_into(host_id: &str, controller_id: &str, inner: 
     match drag.mode {
         SceneDragMode::MapPan => {
             let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
-            let published = engine_canvas::with_map_interaction_into(host_id, controller_id, input, framework_surface_tiled_map::tiled_map::MapInteractionIntent::PointerUp { sx, sy })?;
+            let published = engine_canvas::with_map_interaction_into(host_id, controller_id, input, semio_framework_surface::tiled_map::MapInteractionIntent::PointerUp { sx, sy })?;
             if published {
                 clear_tiled_map_interaction(host_id);
             }
@@ -10443,7 +10498,7 @@ pub fn tiled_map_pointer_up_into(host_id: &str, surface_id: &str, controller_id:
     };
     match &drag.mode {
         SceneDragMode::MapPan => {
-            let published = engine_canvas::with_map_interaction_into(host_id, controller_id, input, framework_surface_tiled_map::tiled_map::MapInteractionIntent::PointerUp { sx, sy })?;
+            let published = engine_canvas::with_map_interaction_into(host_id, controller_id, input, semio_framework_surface::tiled_map::MapInteractionIntent::PointerUp { sx, sy })?;
             if published {
                 clear_tiled_map_interaction(host_id);
             }

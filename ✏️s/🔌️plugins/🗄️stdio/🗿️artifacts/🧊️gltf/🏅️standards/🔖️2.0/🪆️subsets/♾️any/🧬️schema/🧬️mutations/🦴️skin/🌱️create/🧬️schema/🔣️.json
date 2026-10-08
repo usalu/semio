@@ -26,45 +26,40 @@
         "group": "value",
         "order": 10
       }
+    },
+    "skin": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/snapshot.json#/$defs/GltfSkin",
+      "x-semio-ui": {
+        "label": {
+          "en": "Skin record",
+          "de": "Skin-Datensatz"
+        },
+        "description": {
+          "en": "Optional full record to insert instead of an empty one; its references address the document after the insert.",
+          "de": "Optionaler vollständiger Datensatz, der statt eines leeren eingefügt wird; seine Verweise adressieren das Dokument nach dem Einfügen."
+        },
+        "group": "value",
+        "order": 20
+      }
     }
   },
   "$defs": {
     "CreateSkinMutation": {
-      "description": "The whole wire of CreateSkinMutation: the editable apply payload (this document's root) or the inert restore.",
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "phase",
-            "value"
-          ],
-          "properties": {
-            "phase": {
-              "const": "apply"
-            },
-            "value": {
-              "$ref": "#"
-            }
-          }
+      "description": "The whole wire of CreateSkinMutation: the editable apply payload (this document's root).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "value"
+      ],
+      "properties": {
+        "phase": {
+          "const": "apply"
         },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "phase",
-            "value"
-          ],
-          "properties": {
-            "phase": {
-              "const": "restore"
-            },
-            "value": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
-            }
-          }
+        "value": {
+          "$ref": "#"
         }
-      ]
+      }
     }
   }
 }

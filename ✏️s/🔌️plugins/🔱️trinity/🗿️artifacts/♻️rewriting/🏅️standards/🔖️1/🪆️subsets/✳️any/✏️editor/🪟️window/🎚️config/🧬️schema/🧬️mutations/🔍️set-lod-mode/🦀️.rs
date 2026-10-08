@@ -1,6 +1,6 @@
 //! 🧬️ Sets lod mode on the addressed Rewriting window.
 
-use super::{RewritingWindowConfig, RewritingWindowConfigMutation};
+use super::{RewritingWindowConfig, RewritingWindowConfigDiff, RewritingWindowConfigMutation};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "set-lod-mode")]
@@ -12,10 +12,11 @@ pub struct SetLodMode {
 impl protocol::MutationKind<RewritingWindowConfig, RewritingWindowConfigMutation> for SetLodMode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "window-lod-mode", kind: "set-lod-mode", record: "SetLodMode" };
 
-    fn diff(&self, base: &RewritingWindowConfig) -> protocol::MutationOutcome<RewritingWindowConfig> {
-        let mut next = base.clone();
-        next.lod_mode.clone_from(&self.value);
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, base: &RewritingWindowConfig) -> protocol::MutationOutcome<RewritingWindowConfigDiff> {
+        if self.value == base.lod_mode {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The window lod mode is unchanged.");
+        }
+        protocol::MutationOutcome::new(RewritingWindowConfigDiff { lod_mode: Some(self.value.clone()), ..Default::default() })
     }
 
     fn inverse(&self, base: &RewritingWindowConfig) -> Result<Vec<RewritingWindowConfigMutation>, semio_framework_value::ValueError> {

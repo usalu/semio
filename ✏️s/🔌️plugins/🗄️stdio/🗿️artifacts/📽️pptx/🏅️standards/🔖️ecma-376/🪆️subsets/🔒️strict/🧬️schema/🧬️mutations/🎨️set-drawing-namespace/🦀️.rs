@@ -1,6 +1,4 @@
-//! ⚙️ `set-drawing-namespace` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! ⚙️ `set-drawing-namespace` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -14,15 +12,14 @@ pub struct SetDrawingNamespace {
 impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for SetDrawingNamespace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "drawing-namespace", kind: "set-drawing-namespace", record: "SetDrawingNamespace" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxStrictMutation as Mutation<PptxSnapshot>>::Diff> {
-        agg_diff(&PptxStrictMutation::SetDrawingNamespace(self.clone()), base)
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
+        protocol::MutationOutcome::new(diff_retarget_namespace(base, DRAWING_NAMESPACES, &self.namespace))
     }
+
     fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxStrictMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&PptxStrictMutation::SetDrawingNamespace(self.clone()), base)?
-    
-    })
-}
+        Ok(drawing_namespace_inverse(base))
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set drawing namespace", "Zeichnungsnamensraum setzen")
     }

@@ -13,6 +13,8 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[value(rename_all = "camelCase")]
 pub struct SetForm {
     pub form: PdfFormXObject,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfMutation> for SetForm {
@@ -20,13 +22,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetForm {
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         let _ = base;
-        MutationOutcome::new(diff::diff_set_form(base, self.form.clone()))
+        MutationOutcome::new(diff::diff_set_form(base, self.form.clone(), self.index))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        match base.forms.iter().find(|item| item.id == self.form.id) { Some(previous) => vec![PdfMutation::SetForm(SetForm { form: previous.clone() })], None => vec![PdfMutation::RemoveForm(super::remove_form::RemoveForm { id: self.form.id.clone() })] }
+        match base.forms.iter().find(|item| item.id == self.form.id) { Some(previous) => vec![PdfMutation::SetForm(SetForm { form: previous.clone(), index: None })], None => vec![PdfMutation::RemoveForm(super::remove_form::RemoveForm { id: self.form.id.clone() })] }
     
     })())
 }

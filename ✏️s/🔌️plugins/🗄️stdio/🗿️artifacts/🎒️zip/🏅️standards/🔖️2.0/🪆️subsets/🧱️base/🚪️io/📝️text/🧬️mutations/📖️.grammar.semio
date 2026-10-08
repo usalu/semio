@@ -3,11 +3,10 @@ grammar stdio.zip.mutations
 start op
 
 # 🧬 Generic DslVariants syntax for logical archive comment and name-keyed decompressed members.
-op = set-snapshot | patch-snapshot | set-archive-comment | add-entry | remove-entry | rename-entry | set-entry-data
+op = set-archive-comment | add-entry | remove-entry | rename-entry | set-entry-data
 text-value = IDENT | TEXT
 bool-value = "true" | "false"
 
-patch-snapshot = "patch-snapshot" "patch" "{" "{" patch-fields "}" "}"
 patch-fields = patch-set | patch-insert | patch-remove | patch-move | patch-rename | patch-splice
 patch-set = "operation" "=" "set" "path" "=" TEXT "value" "=" patch-value
 patch-insert = {"index" "=" U64}? "operation" "=" "insert" "path" "=" TEXT "value" "=" patch-value
@@ -21,7 +20,6 @@ patch-bytes = "bytes64" "(" TEXT ")"
 patch-array = "[" {patch-value}* "]"
 patch-object = "{" {patch-member}* "}"
 patch-member = text-value "=" patch-value
-set-snapshot = "set-snapshot" REST
 set-archive-comment = "set-archive-comment" "comment" "=" text-value "comment-utf8" "=" bool-value
 add-entry = "add-entry" REST
 remove-entry = "remove-entry" "name" "=" text-value

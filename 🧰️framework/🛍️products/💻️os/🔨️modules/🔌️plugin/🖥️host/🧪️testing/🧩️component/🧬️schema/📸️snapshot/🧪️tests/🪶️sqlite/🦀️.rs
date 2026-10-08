@@ -17,11 +17,11 @@ fn database(count:i32)->SqliteDatabase{
  database.table_mut("fixture_counter").unwrap().rows.push(SqliteRow{rowid:1,values:vec![SqliteValue::Integer(1),SqliteValue::Integer(i64::from(count))]});
  database
 }
-fn payload(owner:&Snapshot,encoding:SnapshotEncoding)->store::os_io::IoPayload{
- match encoding{SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(owner.encode_pack()),SnapshotEncoding::Text=>store::os_io::IoPayload::Text(owner.print_dsl())}
+fn payload(owner:&Snapshot,encoding:SnapshotEncoding)->store::io::IoPayload{
+ match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(owner.encode_pack()),SnapshotEncoding::Text=>store::io::IoPayload::Text(owner.print_dsl())}
 }
-fn decode(payload:store::os_io::IoPayload)->Snapshot{
- match payload{store::os_io::IoPayload::Binary(bytes)=>Snapshot::decode_pack(&bytes).unwrap(),store::os_io::IoPayload::Text(text)=>Snapshot::parse_dsl(&text).unwrap()}
+fn decode(payload:store::io::IoPayload)->Snapshot{
+ match payload{store::io::IoPayload::Binary(bytes)=>Snapshot::decode_pack(&bytes).unwrap(),store::io::IoPayload::Text(text)=>Snapshot::parse_dsl(&text).unwrap()}
 }
 #[test]
 fn sqlite_snapshot_host_count_actual_capability_and_both_declared_surfaces_share_the_owner(){
@@ -113,14 +113,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
  let coordinate=dialect().to_coordinate();
  assert_eq!(plugin_runtime::plugin_snapshot_sqlite_schema(&coordinate).unwrap(),SQL);
  for count in counts(){let source=Snapshot{count};for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
-  let native=payload(&source,encoding);let payload=match native{store::os_io::IoPayload::Binary(bytes)=>bytes,store::os_io::IoPayload::Text(text)=>text.into_bytes()};
+  let native=payload(&source,encoding);let payload=match native{store::io::IoPayload::Binary(bytes)=>bytes,store::io::IoPayload::Text(text)=>text.into_bytes()};
   let output=semio_framework_async::poll::resolve_ready(plugin_runtime::plugin_snapshot_sqlite_export(SnapshotInput{dialect:coordinate.clone(),encoding:encoding.as_str().into(),payload,limits:SnapshotLimits::from(SqliteDatabaseLimits::default())})).unwrap();
   let SnapshotFileResult::Done(file)=output else{panic!("actual published Count export must succeed")};assert_eq!(&file.bytes[..16],b"SQLite format 3\0");
   let database=import_sqlite_database(&file.bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
-  assert_eq!(store::os_io::io_mechanism::sqlite_snapshot_metadata(&database).unwrap(),(dialect(),encoding));
+  assert_eq!(store::io::io_mechanism::sqlite_snapshot_metadata(&database).unwrap(),(dialect(),encoding));
   let output=semio_framework_async::poll::resolve_ready(plugin_runtime::plugin_snapshot_sqlite_import(SnapshotInput{dialect:coordinate.clone(),encoding:encoding.as_str().into(),payload:file.bytes,limits:SnapshotLimits::from(SqliteDatabaseLimits::default())})).unwrap();
   let SnapshotPayloadResult::Done(output)=output else{panic!("actual published Count import must succeed")};assert_eq!(output.encoding,encoding.as_str());
-  assert_eq!(decode(match encoding{SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(output.bytes),SnapshotEncoding::Text=>store::os_io::IoPayload::Text(String::from_utf8(output.bytes).unwrap())}),source);
+  assert_eq!(decode(match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(output.bytes),SnapshotEncoding::Text=>store::io::IoPayload::Text(String::from_utf8(output.bytes).unwrap())}),source);
  }}
 }
 

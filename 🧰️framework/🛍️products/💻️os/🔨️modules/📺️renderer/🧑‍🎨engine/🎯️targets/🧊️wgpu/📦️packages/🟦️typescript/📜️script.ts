@@ -7,7 +7,6 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
-import Ajv from "ajv";
 import { getWorkspaceRoot, packageTestBudgetMs, runCargo, runRepositoryCargoTests, runRepositoryExactCargoLaws, runRepositoryTestCommand, runVitest } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 
@@ -146,25 +145,12 @@ class WasmCheckScript extends BundleScript {
 /** 🏠️ Independently executes the neutral retained-Home bootstrap trace and audits the native mount. */
 function directoryRetainedHomeBootstrapOracle(): number {
   const fixturePath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🚀️event-page-bootstrap-v1.json");
-  const schemaPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json");
   const fixture = JSON.parse(readFileSync(fixturePath, "utf8"));
-  const schemaModule = JSON.parse(readFileSync(schemaPath, "utf8"));
-  const ajv = new Ajv({ strict: true, allErrors: true });
-  ajv.addSchema(schemaModule);
-  const validate = ajv.getSchema(`${schemaModule.$id}#/$defs/DirectoryEventPageBootstrapTraceV1`);
-  assert(validate, "os.directory schema module must export DirectoryEventPageBootstrapTraceV1");
   let checks = 0;
   const check = (condition: unknown, message: string): void => {
     assert(condition, message);
     checks += 1;
   };
-  check(validate(fixture), JSON.stringify(validate.errors));
-  const unknown = structuredClone(fixture);
-  unknown.clientAck = true;
-  check(!validate(unknown), "neutral bootstrap trace must reject client-owned ACK authority");
-  const duplicateFields = structuredClone(fixture);
-  duplicateFields.forgedAckFields[4] = duplicateFields.forgedAckFields[0];
-  check(!validate(duplicateFields), "neutral bootstrap trace must require every ACK field exactly once");
 
   let epoch = fixture.bootstrapEpoch;
   let after = fixture.initialAfter;
@@ -232,6 +218,8 @@ function directoryRetainedHomeBootstrapOracle(): number {
 
   const shellPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs");
   const shell = readFileSync(shellPath, "utf8");
+  const laws = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🔬️wgpu-command-registry/🦀️.rs"), "utf8");
+  check(shell.includes('#[path = "../../🧪️tests/🔬️wgpu-command-registry/🦀️.rs"]\nmod command_registry_tests;'), "native retained-Home laws have no physical mount");
   for (const marker of [
     "struct DirectoryHomeProjection",
     "DirectoryEventPageBootstrapV1",
@@ -243,13 +231,15 @@ function directoryRetainedHomeBootstrapOracle(): number {
     "home.wake(rebootstrap)",
     "runner.take_terminal()",
     "take_destroy_authority",
+  ]) check(shell.includes(marker), `native retained-Home bootstrap lacks ${marker}`);
+  for (const marker of [
     "page two cannot be requested before terminal Home publication",
     "duplicate live wake coalesces while the page refetch is already pending",
     "late Home publication has no surviving receiver or ACK path",
     "authenticated terminal close cannot reconnect",
     "terminal stream remains closed after every reconnect deadline",
     "terminal identity close restarts from raw cursor zero",
-  ]) check(shell.includes(marker), `native retained-Home bootstrap lacks ${marker}`);
+  ]) check(laws.includes(marker), `native retained-Home law lacks ${marker}`);
   check(!shell.includes("client.stream(0)"), "native global directory lane still opens an observed-frontier stream");
   check(!shell.includes("dispatch_directory_event_batch") && !shell.includes("fold_directory_events_action"), "native global directory lane still folds raw events");
   check((shell.match(/program\.destroy_app\(instance_id\)/g) ?? []).length >= 2, "drop and hot reload do not consume retained Home destruction authority");

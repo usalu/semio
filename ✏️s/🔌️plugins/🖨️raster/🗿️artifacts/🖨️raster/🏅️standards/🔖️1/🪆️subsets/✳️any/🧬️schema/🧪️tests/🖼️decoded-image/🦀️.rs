@@ -9,7 +9,7 @@ fn decoded_image_assets_preserve_every_field_without_a_carrier() {
         assert_eq!(crate::raster_image_content_id("image", &image), case["contentId"].as_str().unwrap());
         let base = RasterSnapshot::default();
         let diff = crate::diff::diff_add_asset("image", image.clone());
-        let after = diff.apply(&base).unwrap();
+        let after = protocol::apply_diff(&diff, &base).unwrap();
         assert_eq!(crate::raster_image(&after.assets, "image"), Some(image.clone()));
         let inverse = crate::mutations::inverse_raster_mutation(&after, &crate::mutations::RasterMutation::RemoveLayerAsset(crate::mutations::remove_layer_asset::RemoveLayerAsset { asset_id: "image".into() })).unwrap();
         assert!(matches!(&inverse[0], crate::mutations::RasterMutation::AddLayerAsset(payload) if payload.asset == image));

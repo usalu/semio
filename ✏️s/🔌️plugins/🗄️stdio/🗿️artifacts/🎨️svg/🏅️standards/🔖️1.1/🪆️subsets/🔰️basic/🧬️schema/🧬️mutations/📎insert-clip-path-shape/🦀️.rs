@@ -1,7 +1,4 @@
-//! 📎️ `insert-clip-path-shape` — authored as its own mutation leaf. The aggregate's original
-//! `diff`/`inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf
-//! reconstructs its aggregate value and delegates, so the semantics are preserved by construction
-//! rather than re-derived.
+//! 📎️ `insert-clip-path-shape` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -18,15 +15,28 @@ pub struct InsertClipPathShape {
 impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for InsertClipPathShape {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "clip-path-shape", kind: "insert-clip-path-shape", record: "InsertClipPathShape" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgBasicMutation as Mutation<SvgSnapshot>>::Diff> {
-        agg_diff(&SvgBasicMutation::InsertClipPathShape(self.clone()), base)
+    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
+        let Self { clip_path_id, index, node } = self;
+        {
+            if carries_text(node) {
+                return protocol::MutationOutcome::error(CODE_REJECTED, "the inserted shape carries a text element -- SVG Basic 1.1 forbids clipping to text".to_string(), Vec::<String>::new());
+            }
+            if let Some(message) = subtree_profile_violation(node) {
+                return protocol::MutationOutcome::error(CODE_REJECTED, message, Vec::<String>::new());
+            }
+            match resolve_clip_path(base, clip_path_id) {
+                Ok(target) => protocol::MutationOutcome::new(insert_child_diff(&target, *index, node)),
+                Err(message) => protocol::MutationOutcome::error(CODE_REJECTED, message, Vec::<String>::new()),
+            }
+        }
     }
     fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgBasicMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&SvgBasicMutation::InsertClipPathShape(self.clone()), base)?
-    
-    })
-}
+        let Self { clip_path_id, index, .. } = self;
+        Ok(match path_of_id(base, clip_path_id) {
+            Some(target) => vec![SvgBasicMutation::RemoveElement(remove_element::RemoveElement { parent: target, index: *index })],
+            None => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert clip path shape", "Form des Beschneidungspfads einfügen")
     }

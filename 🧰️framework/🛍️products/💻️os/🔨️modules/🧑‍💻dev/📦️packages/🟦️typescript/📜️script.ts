@@ -40,7 +40,7 @@ const router = new ScriptRouter(import.meta.dir)
   .registerLazy("activate", async () => (await import("../../♻️activation/🏃️execution/🟦️.ts")).ActivationScript)
   .registerLazy("serve", async () => (await import("../../♻️activation/🌐️serve/🟦️.ts")).ServeScript)
   .register("serve-hold", class extends BundleScript {
-    /** 🛎️ `serve-hold --serve <url> [--hub <url>] [--variant <v>]`: holds the shared serve fixture (`ensureDevServe`) until
+    /** 🛎️ `serve-hold --serve <url> [--hub <url>] [--variant <v>]`: holds the shared development serve owner (`ensureDevServe`) until
      * SIGINT/SIGTERM, then stops only what it started — the zero-touch serve provider of the repository goal gate. */
     async run(segments: string[]): Promise<void> {
       const { devServePortV1, ensureDevServe } = await import("../../🚀️local-hub/🏃️execution/🟦️.ts");
@@ -56,9 +56,9 @@ const router = new ScriptRouter(import.meta.dir)
         process.once("SIGINT", release);
         process.once("SIGTERM", release);
       });
-      const fixture = await ensureDevServe({ repoRoot: this.repoRoot, port: devServePortV1(serveUrl), hubUrl: flag("--hub"), variant: flag("--variant"), signal: cancel.signal, onProgress: (_status, line) => console.log(line) });
+      const serve = await ensureDevServe({ repoRoot: this.repoRoot, port: devServePortV1(serveUrl), hubUrl: flag("--hub"), variant: flag("--variant"), signal: cancel.signal, onProgress: (_status, line) => console.log(line) });
       await released;
-      await fixture.stop();
+      await serve.stop();
     }
   })
   .registerLazy("cold-boot-check", async () => (await import("../../♻️activation/🩺️readiness/🟦️.ts")).ColdBootCheckScript)

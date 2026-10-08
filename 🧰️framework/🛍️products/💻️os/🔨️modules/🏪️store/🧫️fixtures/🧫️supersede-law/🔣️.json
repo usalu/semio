@@ -1,5 +1,4 @@
 {
-  "$schema": "../../🧬️schema/🔣️supersede-law/🔣️.json",
   "inputs": [
     { "name": "a-plain-operation-is-withdrawn", "original": "plain", "replacement": "withdrawn", "admitted": true, "folds": "noOp" },
     { "name": "a-plain-operation-takes-its-recorded-input", "original": "plain", "replacement": "recorded", "admitted": true, "folds": "replacement" },

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `UpdateRigExtrinsic`. A missing target ⇒ Error
 //! `mutation.target-missing`; a non-finite rotation or translation ⇒ Fatal `mutation.invariant`;
 //! an identical pose ⇒ Warning `mutation.no-op`.
-use crate::diff::RemodelingDiff;
+use crate::diff::{RemodelingDiff, RemodelingRow};
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
@@ -15,10 +15,6 @@ pub fn diff(payload: &super::UpdateRigExtrinsic, base: &RemodelingSnapshot) -> p
     if existing == &payload.extrinsic {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Rig extrinsic \"{}\" is unchanged.", payload.extrinsic.camera_id));
     }
-    let mut calibration = base.calibration.clone();
-    if let Some(existing) = calibration.rig.iter_mut().find(|extrinsic| extrinsic.camera_id == payload.extrinsic.camera_id) {
-        *existing = payload.extrinsic.clone();
-    }
-    protocol::MutationOutcome::new(RemodelingDiff { calibration: Some(calibration), ..Default::default() })
+    protocol::MutationOutcome::new(RemodelingDiff::rig_rows(vec![RemodelingRow::Replace { entity: payload.extrinsic.clone() }]))
 }
 //#endregion 🔖️Diff

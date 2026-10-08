@@ -4,7 +4,7 @@
 //! immediate child of this aggregate's own mutation root, so `dsl::Mutations`'s leaf-ownership
 //! contract holds without a single provisional descriptor.
 
-use super::{Generation3dViewCamera, Generation3dViewConfig};
+use super::{Generation3dViewConfigPatch, Generation3dViewCamera, Generation3dViewConfig};
 
 #[path = "👁️set-show-mode/🦀️.rs"]
 mod set_show_mode;
@@ -24,7 +24,7 @@ pub use set_show_mode::SetShowMode;
 pub use set_sun::SetSun;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
-#[mutations(snapshot = Generation3dViewConfig, diff = Generation3dViewConfig, schema = "generation3dviewcfg")]
+#[mutations(snapshot = Generation3dViewConfig, diff = Generation3dViewConfigPatch, schema = "generation3dviewcfg")]
 pub enum Generation3dViewConfigMutation {
     #[dsl(key = "show-mode")]
     SetShowMode(SetShowMode),

@@ -212,7 +212,7 @@ fn frame_bounds_contain(bounds: &LayoutBounds, x: f32, y: f32) -> bool {
 //#endregion 🖼️Display
 
 //#region ⚙️Scene
-pub static LAYOUT_SANS: &[u8] = include_bytes!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🖼️assets/🔤️MapLabelSans.ttf");
+pub static LAYOUT_SANS: &[u8] = include_bytes!("../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️canvas/🖼️assets/🔤️MapLabelSans.ttf");
 
 pub struct LayoutEngine {
     text: TextSystem,

@@ -1,6 +1,4 @@
-//! ➖️ `remove-track` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! ➖️ `remove-track` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,14 +13,18 @@ pub struct RemoveTrack {
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for RemoveTrack {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "track", kind: "remove-track", record: "RemoveTrack" };
     fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
-        agg_diff(&Mp4Mutation::RemoveTrack(self.clone()), base)
+        let Self { index } = self;
+        protocol::MutationOutcome::new(Mp4Diff { ftyp: None, movie: None, tracks: Some(IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }) })
     }
     fn inverse(&self, base: &Mp4Snapshot) -> Result<Vec<Mp4Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&Mp4Mutation::RemoveTrack(self.clone()), base)?
-    
-    })
-}
+        let Self { index } = self;
+        Ok({
+            match base.tracks.get(*index) {
+                Some(track) => vec![Mp4Mutation::InsertTrack(insert_track::InsertTrack { index: *index, track: track.clone() })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove track", "Spur entfernen")
     }

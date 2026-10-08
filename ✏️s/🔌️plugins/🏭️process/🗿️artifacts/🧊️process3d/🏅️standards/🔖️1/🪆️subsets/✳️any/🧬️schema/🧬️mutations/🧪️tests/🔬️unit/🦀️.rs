@@ -137,6 +137,26 @@ async fn reorder_steps_round_trips() {
     let after = round_trip(&base, &Process3dMutation::ReorderSteps(ReorderSteps { id: "step-b".into(), to_index: 0 }));
     assert_eq!(after.step_payloads.first().expect("first step present").id, "step-b");
 }
+
+#[semio_framework_async_macros::async_test]
+async fn middle_step_and_machine_edits_restore_their_original_index() {
+    let base = base_with_steps(vec![cut_step("step-a"), cut_step("step-b"), cut_step("step-c"), cut_step("step-d")]);
+    for mutation in [
+        Process3dMutation::DeleteStep(DeleteStep { id: "step-b".into() }),
+        Process3dMutation::CreateStep(CreateStep { index: 2, step: cut_step("step-x") }),
+        Process3dMutation::ReorderSteps(ReorderSteps { id: "step-b".into(), to_index: 3 }),
+        Process3dMutation::ReorderSteps(ReorderSteps { id: "step-c".into(), to_index: 0 }),
+    ] {
+        round_trip(&base, &mutation);
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+    let mut machines = empty_process3d_snapshot();
+    machines.workshop.machines = vec![saw_machine("machine-a"), saw_machine("machine-b"), saw_machine("machine-c")];
+    for mutation in [Process3dMutation::DeleteMachine(DeleteMachine { id: "machine-b".into() }), Process3dMutation::CreateMachine(CreateMachine { index: 1, machine: saw_machine("machine-x") })] {
+        round_trip(&machines, &mutation);
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &machines).await;
+    }
+}
 //#endregion 🔖️StepMutations
 
 #[semio_framework_async_macros::async_test]
@@ -220,6 +240,7 @@ async fn create_step_satisfies_the_inverse_and_absorb_laws() {
     let base = empty_process3d_snapshot();
     let mutation = Process3dMutation::CreateStep(CreateStep { index: 0, step: cut_step("step-fresh") });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() }).diff(&base).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
@@ -230,6 +251,7 @@ async fn create_machine_satisfies_the_inverse_and_absorb_laws() {
     let base = empty_process3d_snapshot();
     let mutation = Process3dMutation::CreateMachine(CreateMachine { index: 0, machine: saw_machine("machine-fresh") });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() }).diff(&base).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
@@ -240,6 +262,7 @@ async fn change_stock_label_satisfies_the_inverse_and_absorb_laws() {
     let base = empty_process3d_snapshot();
     let mutation = Process3dMutation::ChangeStockLabel(ChangeStockLabel { new_label: "Beam".into() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = Process3dMutation::MoveStock(MoveStock { new_pose: Pose { position: [0.0, 0.0, 1.0], ..Pose::default() } }).diff(&base).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;

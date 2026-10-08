@@ -1,3 +1,29 @@
 module Stdio_jpg_mutation;
-# Direct tags: change-jfif-header=2, replace-quant-table=3, remove-quant-table=4, replace-huffman-table=5, remove-huffman-table=6, change-restart-interval=7, insert-other-segment=8, remove-other-segment=9, replace-pixels=10
-public type Mutation = unit { format: uint8; tag: uint8; payload: bytes &eod; };
+type Varint = unit {
+    var value: uint64 = 0;
+    var shift: uint64 = 0;
+    groups: uint8[] &until=($$ & 128) == 0 {
+        assert(self.shift < 64 && (self.shift != 63 || $$ <= 1));
+        self.value |= uint64($$ & 127) << self.shift;
+        self.shift += 7;
+    }
+};
+type Blob = unit { length: Varint; data: bytes &size=self.length.value; };
+type Version = unit { major: uint8; minor: uint8; };
+type Thumbnail = unit { width: uint8; height: uint8; rgb_data: Blob; };
+type ThumbnailChange = unit { presence: uint8 { assert($$ <= 1); } thumbnail: Thumbnail if (self.presence == 1); };
+type Segment = unit { marker: uint8; data: Blob; };
+type ChangeJfifHeader = unit { version: Version; density_units: uint8 { assert($$ <= 2); } x_density: Varint; y_density: Varint; thumbnail: ThumbnailChange; };
+type InsertOtherSegment = unit { index: Varint; segment: Segment; };
+type RemoveOtherSegment = unit { index: Varint; };
+type ReplacePixels = unit { pixels: Blob; };
+type ReplaceImage = unit { width: Varint; height: Varint; pixels: Blob; jfif_version: Version; jfif_density_units: uint8 { assert($$ <= 2); } jfif_x_density: Varint; jfif_y_density: Varint; jfif_thumbnail: ThumbnailChange; segment_count: Varint; other_segments: Segment[self.segment_count.value]; };
+public type Mutation = unit {
+    format: uint8 { assert($$ == 1); }
+    tag: uint8 { assert($$ >= 1 && $$ <= 5); }
+    jfif: ChangeJfifHeader if (self.tag == 1);
+    insert: InsertOtherSegment if (self.tag == 2);
+    remove: RemoveOtherSegment if (self.tag == 3);
+    pixels: ReplacePixels if (self.tag == 4);
+    image: ReplaceImage if (self.tag == 5);
+};

@@ -47,7 +47,7 @@ fn produced() -> protocol::MutationOutcome<EquationDiff> {
 async fn applies_to_committed_after() {
     let base = before();
     assert_eq!(base.equation.find(COEFFICIENT).map(|node| node.kind.clone()), Some(EquationNodeKind::Integer { lexeme: "2".to_string() }), "raises-the-leading-coefficient-to-three-halves' base equation must carry the integer 2 at label 2");
-    let applied = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(produced().diff(), &base).expect("change-coefficient applies to its committed before-snapshot");
+    let applied = protocol::apply_diff(produced().diff(), &base).expect("change-coefficient applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "change-coefficient/raises-the-leading-coefficient-to-three-halves: applied state differs from committed after-snapshot");
     assert_eq!(applied.equation.find(COEFFICIENT).map(|node| node.kind.clone()), Some(EquationNodeKind::Rational { numer: "3".to_string(), denom: "2".to_string() }), "a denominator other than 1 lands as the Rational variant, not Integer");
     assert_eq!(applied.equation.next_label, base.equation.next_label, "a replace-in-place must not advance the label allocator");
@@ -75,10 +75,10 @@ async fn inverse_restores_before() {
     let base = before();
     let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![EquationMutation::ChangeCoefficient(ChangeCoefficient { label: COEFFICIENT, numer: "2".to_string(), denom: "1".to_string() })], "change-coefficient inverts to BASE's own numer/denom at the same label, got {inverse:?}");
-    let mut snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(produced().diff(), &base).expect("forward applies");
+    let mut snapshot = protocol::apply_diff(produced().diff(), &base).expect("forward applies");
     for step in &inverse {
         let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(step, &snapshot);
-        snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(outcome.diff(), &snapshot).expect("inverse step applies");
+        snapshot = protocol::apply_diff(outcome.diff(), &snapshot).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "change-coefficient/raises-the-leading-coefficient-to-three-halves: inverse did not restore the before-snapshot");
 }
@@ -135,7 +135,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: EquationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced_snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced_snapshot = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced_snapshot, expected_after(), "change-coefficient/raises-the-leading-coefficient-to-three-halves: committed diff did not carry before to after");
 }
 
@@ -162,4 +162,10 @@ async fn a_non_numeric_target_and_a_zero_denominator_are_refused() {
 
     let semantics = <EquationMutation as protocol::SemanticMutation<EquationSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("change", "coefficient", "change-coefficient", "ChangedCoefficient"), "the fixture must be bound to change-coefficient's own descriptor");
+}
+
+/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

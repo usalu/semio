@@ -6,7 +6,28 @@
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "selectedShotIds": { "type": "array", "items": { "type": "string" } },
-    "camera": { "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingCamera" }
+    "selectedShotIds": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "camera": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingCamera"
+        }
+      ]
+    }
   }
 }

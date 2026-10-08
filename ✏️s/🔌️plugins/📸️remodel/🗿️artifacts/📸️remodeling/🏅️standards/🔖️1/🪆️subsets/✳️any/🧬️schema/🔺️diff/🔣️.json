@@ -6,17 +6,6 @@
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "artifact": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/RemodelingArtifact"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "schema": {
       "type": [
         "string",
@@ -34,7 +23,7 @@
     "streams": {
       "anyOf": [
         {
-          "$ref": "#/$defs/RemodelingMediaStreamList"
+          "$ref": "#/$defs/RemodelingStreamsDelta"
         },
         {
           "type": "null"
@@ -43,29 +32,31 @@
       "x-semio-state": "artifact"
     },
     "assets": {
-      "type": [
-        "object",
-        "null"
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RemodelingAssetsDelta"
+        },
+        {
+          "type": "null"
+        }
       ],
-      "additionalProperties": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/RemodelingAssetChild"
-      },
       "x-semio-state": "artifact"
     },
     "durableArtifacts": {
-      "type": [
-        "object",
-        "null"
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RemodelingContentDelta"
+        },
+        {
+          "type": "null"
+        }
       ],
-      "additionalProperties": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/RemodelingDurableArtifact"
-      },
       "x-semio-state": "artifact"
     },
     "calibration": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/CalibrationState"
+          "$ref": "#/$defs/RemodelingCalibrationDelta"
         },
         {
           "type": "null"
@@ -76,7 +67,7 @@
     "params": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/ReconstructionParams"
+          "$ref": "#/$defs/RemodelingParamsDiff"
         },
         {
           "type": "null"
@@ -87,7 +78,7 @@
     "gcps": {
       "anyOf": [
         {
-          "$ref": "#/$defs/RemodelingGcpList"
+          "$ref": "#/$defs/RemodelingGcpsDelta"
         },
         {
           "type": "null"
@@ -98,7 +89,7 @@
     "results": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/ReconstructionResults"
+          "$ref": "#/$defs/RemodelingResultsDiff"
         },
         {
           "type": "null"
@@ -108,94 +99,958 @@
     }
   },
   "$defs": {
-    "RemodelingArtifact": {
+    "MediaStreamPatch": {
       "type": "object",
-      "title": "RemodelingArtifact",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "syncOffsetMs": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/Binary64Transport"
+            }
+          ]
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/VideoSource"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "frames": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/FrameRefMembers"
+            }
+          ]
+        }
+      },
+      "title": "MediaStreamPatch"
+    },
+    "FrameRefMembers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/FrameRef"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/FrameRef"
+          }
+        }
+      },
+      "title": "FrameRefMembers"
+    },
+    "GroundControlPointPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "observations": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/GcpObservationMembers"
+            }
+          ]
+        }
+      },
+      "title": "GroundControlPointPatch"
+    },
+    "GcpObservationMembers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/GcpObservation"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/GcpObservation"
+          }
+        }
+      },
+      "title": "GcpObservationMembers"
+    },
+    "RemodelingNoPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {},
+      "title": "RemodelingNoPatch"
+    },
+    "RemodelingAssetEntry": {
+      "type": "object",
       "additionalProperties": false,
       "required": [
-        "schema",
-        "id",
-        "streams",
-        "assets",
-        "durableArtifacts",
-        "calibration",
-        "params",
-        "gcps",
-        "results"
+        "key",
+        "child"
       ],
       "properties": {
-        "schema": {
+        "key": {
           "type": "string"
         },
-        "id": {
+        "child": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/RemodelingAssetChild"
+        }
+      },
+      "title": "RemodelingAssetEntry"
+    },
+    "RemodelingStreamRow": {
+      "title": "RemodelingStreamRow",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "entity"
+          ],
+          "properties": {
+            "row": {
+              "const": "insert"
+            },
+            "entity": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/MediaStream"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "entity"
+          ],
+          "properties": {
+            "row": {
+              "const": "replace"
+            },
+            "entity": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/MediaStream"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "key"
+          ],
+          "properties": {
+            "row": {
+              "const": "remove"
+            },
+            "key": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "key",
+            "patch"
+          ],
+          "properties": {
+            "row": {
+              "const": "patch"
+            },
+            "key": {
+              "type": "string"
+            },
+            "patch": {
+              "$ref": "#/$defs/MediaStreamPatch"
+            }
+          }
+        }
+      ]
+    },
+    "RemodelingGcpRow": {
+      "title": "RemodelingGcpRow",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "entity"
+          ],
+          "properties": {
+            "row": {
+              "const": "insert"
+            },
+            "entity": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/GroundControlPoint"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "entity"
+          ],
+          "properties": {
+            "row": {
+              "const": "replace"
+            },
+            "entity": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/GroundControlPoint"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "key"
+          ],
+          "properties": {
+            "row": {
+              "const": "remove"
+            },
+            "key": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "key",
+            "patch"
+          ],
+          "properties": {
+            "row": {
+              "const": "patch"
+            },
+            "key": {
+              "type": "string"
+            },
+            "patch": {
+              "$ref": "#/$defs/GroundControlPointPatch"
+            }
+          }
+        }
+      ]
+    },
+    "RemodelingCameraRow": {
+      "title": "RemodelingCameraRow",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "entity"
+          ],
+          "properties": {
+            "row": {
+              "const": "insert"
+            },
+            "entity": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/CameraCalibration"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "entity"
+          ],
+          "properties": {
+            "row": {
+              "const": "replace"
+            },
+            "entity": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/CameraCalibration"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "key"
+          ],
+          "properties": {
+            "row": {
+              "const": "remove"
+            },
+            "key": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "key",
+            "patch"
+          ],
+          "properties": {
+            "row": {
+              "const": "patch"
+            },
+            "key": {
+              "type": "string"
+            },
+            "patch": {
+              "$ref": "#/$defs/RemodelingNoPatch"
+            }
+          }
+        }
+      ]
+    },
+    "RemodelingRigRow": {
+      "title": "RemodelingRigRow",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "entity"
+          ],
+          "properties": {
+            "row": {
+              "const": "insert"
+            },
+            "entity": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/RigExtrinsic"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "entity"
+          ],
+          "properties": {
+            "row": {
+              "const": "replace"
+            },
+            "entity": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/RigExtrinsic"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "key"
+          ],
+          "properties": {
+            "row": {
+              "const": "remove"
+            },
+            "key": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "key",
+            "patch"
+          ],
+          "properties": {
+            "row": {
+              "const": "patch"
+            },
+            "key": {
+              "type": "string"
+            },
+            "patch": {
+              "$ref": "#/$defs/RemodelingNoPatch"
+            }
+          }
+        }
+      ]
+    },
+    "RemodelingAssetRow": {
+      "title": "RemodelingAssetRow",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "entity"
+          ],
+          "properties": {
+            "row": {
+              "const": "insert"
+            },
+            "entity": {
+              "$ref": "#/$defs/RemodelingAssetEntry"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "entity"
+          ],
+          "properties": {
+            "row": {
+              "const": "replace"
+            },
+            "entity": {
+              "$ref": "#/$defs/RemodelingAssetEntry"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "key"
+          ],
+          "properties": {
+            "row": {
+              "const": "remove"
+            },
+            "key": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "key",
+            "patch"
+          ],
+          "properties": {
+            "row": {
+              "const": "patch"
+            },
+            "key": {
+              "type": "string"
+            },
+            "patch": {
+              "$ref": "#/$defs/RemodelingNoPatch"
+            }
+          }
+        }
+      ]
+    },
+    "RemodelingStreamsDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows"
+      ],
+      "properties": {
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RemodelingStreamRow"
+          }
+        }
+      },
+      "title": "RemodelingStreamsDelta"
+    },
+    "RemodelingGcpsDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows"
+      ],
+      "properties": {
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RemodelingGcpRow"
+          }
+        }
+      },
+      "title": "RemodelingGcpsDelta"
+    },
+    "RemodelingCamerasDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows"
+      ],
+      "properties": {
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RemodelingCameraRow"
+          }
+        }
+      },
+      "title": "RemodelingCamerasDelta"
+    },
+    "RemodelingRigDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows"
+      ],
+      "properties": {
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RemodelingRigRow"
+          }
+        }
+      },
+      "title": "RemodelingRigDelta"
+    },
+    "RemodelingAssetsDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows"
+      ],
+      "properties": {
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RemodelingAssetRow"
+          }
+        }
+      },
+      "title": "RemodelingAssetsDelta"
+    },
+    "RemodelingCalibrationDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "cameras": {
+          "$ref": "#/$defs/RemodelingCamerasDelta"
+        },
+        "rig": {
+          "$ref": "#/$defs/RemodelingRigDelta"
+        }
+      },
+      "title": "RemodelingCalibrationDelta"
+    },
+    "RemodelingContentHeader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "kind": {
           "type": "string"
         },
-        "streams": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/MediaStream"
-          }
+        "mime": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
-        "assets": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/RemodelingAssetChild"
-          }
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
-        "durableArtifacts": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/RemodelingDurableArtifact"
-          }
-        },
-        "calibration": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/CalibrationState"
-        },
-        "params": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/ReconstructionParams"
-        },
-        "gcps": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/GroundControlPoint"
-          }
-        },
-        "results": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/ReconstructionResults"
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
-      }
+      },
+      "title": "RemodelingContentHeader"
     },
-    "RemodelingGcpList": {
+    "RemodelingContentRow": {
+      "title": "RemodelingContentRow",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "id",
+            "chunks"
+          ],
+          "properties": {
+            "row": {
+              "const": "append"
+            },
+            "id": {
+              "type": "string"
+            },
+            "header": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/$defs/RemodelingContentHeader"
+                }
+              ]
+            },
+            "chunks": {
+              "type": "array",
+              "items": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/ByteBuffer"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "row",
+            "id",
+            "from"
+          ],
+          "properties": {
+            "row": {
+              "const": "truncate"
+            },
+            "id": {
+              "type": "string"
+            },
+            "from": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/Unsigned64Transport"
+            }
+          }
+        }
+      ]
+    },
+    "RemodelingContentDelta": {
       "type": "object",
-      "title": "RemodelingGcpList",
       "additionalProperties": false,
       "required": [
-        "values"
+        "rows"
       ],
       "properties": {
-        "values": {
+        "rows": {
           "type": "array",
           "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/GroundControlPoint"
+            "$ref": "#/$defs/RemodelingContentRow"
           }
         }
-      }
+      },
+      "title": "RemodelingContentDelta"
     },
-    "RemodelingMediaStreamList": {
+    "RemodelingParamsDiff": {
       "type": "object",
-      "title": "RemodelingMediaStreamList",
       "additionalProperties": false,
-      "required": [
-        "values"
-      ],
+      "required": [],
       "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/MediaStream"
-          }
+        "ingest": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/IngestParams"
+            }
+          ]
+        },
+        "feature": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/FeatureParams"
+            }
+          ]
+        },
+        "matching": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/MatchParams"
+            }
+          ]
+        },
+        "sfm": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/SfmParams"
+            }
+          ]
+        },
+        "dense": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/DenseParams"
+            }
+          ]
+        },
+        "mesh": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/MeshParams"
+            }
+          ]
+        },
+        "motion": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/MotionParams"
+            }
+          ]
+        },
+        "geo": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/GeoParams"
+            }
+          ]
         }
-      }
+      },
+      "title": "RemodelingParamsDiff"
+    },
+    "RemodelingResultsDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "sparse": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/SparseCloud"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "dense": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/DenseCloud"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "mesh": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/RemodelingMesh"
+            }
+          ]
+        },
+        "trajectory": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/CameraTrajectory"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "tracks": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/MotionTrackSummary"
+              }
+            }
+          ]
+        },
+        "geo": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/GeoProducts"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "qc": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "https://json.schemas.assets.semio-tech.com/s/remodel/remodeling/artifact.json#/$defs/QcReportSnapshot"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "title": "RemodelingResultsDiff"
     }
   }
 }

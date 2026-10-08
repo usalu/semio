@@ -9,85 +9,10 @@
       {
         "id": "seed-left-001",
         "patch": {
-          "replacement": {
-            "anchor": "fixed",
-            "handles": [
-              {
-                "angle": -1.5707963267948966,
-                "handleKind": "b-l",
-                "id": "seed-left-001:v0",
-                "radius": 3.0
-              },
-              {
-                "angle": -0.9995976625058433,
-                "handleKind": "b-l-m",
-                "id": "seed-left-001:v1",
-                "radius": 3.0
-              },
-              {
-                "angle": -0.4283989982167899,
-                "handleKind": "b-l",
-                "id": "seed-left-001:v2",
-                "radius": 3.0
-              },
-              {
-                "angle": 0.14279966607226324,
-                "handleKind": "b-s-m",
-                "id": "seed-left-001:v3",
-                "radius": 3.0
-              },
-              {
-                "angle": 0.7139983303613167,
-                "handleKind": "b-s",
-                "id": "seed-left-001:v4",
-                "radius": 3.0
-              },
-              {
-                "angle": 1.28519699465037,
-                "handleKind": "b-s-m",
-                "id": "seed-left-001:v5",
-                "radius": 3.0
-              },
-              {
-                "angle": 1.856395658939423,
-                "handleKind": "b-s",
-                "id": "seed-left-001:v6",
-                "radius": 3.0
-              },
-              {
-                "angle": 2.4275943232284765,
-                "handleKind": "c-b",
-                "id": "seed-left-001:v7",
-                "radius": 3.0
-              },
-              {
-                "angle": 2.99879298751753,
-                "handleKind": "c-t",
-                "id": "seed-left-001:v8",
-                "radius": 3.0
-              },
-              {
-                "angle": -2.713193655373004,
-                "handleKind": "c-b",
-                "id": "seed-left-001:v9",
-                "radius": 3.0
-              },
-              {
-                "angle": -2.14199499108395,
-                "handleKind": "c-t",
-                "id": "seed-left-001:v10",
-                "radius": 3.0
-              }
-            ],
-            "height": 48.0,
-            "id": "seed-left-001",
-            "nodeKind": "Hexagonal Cut Concrete Forest Left",
-            "shape": "rectangle",
-            "text": "Hexagonal Cut Concrete Forest Left",
-            "width": 48.0,
-            "x": 230.72767272727273,
-            "y": 93.53074909090908
-          }
+          "height": 48.0,
+          "radius": null,
+          "shape": "rectangle",
+          "width": 48.0
         }
       }
     ],

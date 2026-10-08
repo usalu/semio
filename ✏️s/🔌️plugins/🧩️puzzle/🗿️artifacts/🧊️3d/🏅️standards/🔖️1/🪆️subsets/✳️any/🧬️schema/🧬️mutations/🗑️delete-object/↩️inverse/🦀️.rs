@@ -13,7 +13,7 @@ pub fn inverse(payload: &super::mutation::DeleteObject, base: &Puzzle3dSnapshot)
     let index = base.objects.iter().position(|entry| entry.id == payload.id);
     let vortex_ids: Vec<String> = object.vortices.iter().map(|vortex| format!("{}:{}", object.id, vortex.id)).collect();
     let mut mutations = vec![crate::standards::v1::subsets::any::schema::mutations::create_object::mutation::create_object(object.clone(), index)];
-    for attraction in base.attractions.iter().filter(|attraction| vortex_ids.contains(&attraction.attracting) || vortex_ids.contains(&attraction.attracted)) {
+    for (at, attraction) in base.attractions.iter().enumerate().filter(|(_, attraction)| vortex_ids.contains(&attraction.attracting) || vortex_ids.contains(&attraction.attracted)) {
         mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_vortices::mutation::connect_vortices(
             attraction.id.clone(),
             attraction.attracting.clone(),
@@ -25,7 +25,7 @@ pub fn inverse(payload: &super::mutation::DeleteObject, base: &Puzzle3dSnapshot)
             attraction.turn,
             attraction.tilt,
             attraction.x,
-            attraction.y,
+            attraction.y, Some(at),
         ));
     }
     mutations

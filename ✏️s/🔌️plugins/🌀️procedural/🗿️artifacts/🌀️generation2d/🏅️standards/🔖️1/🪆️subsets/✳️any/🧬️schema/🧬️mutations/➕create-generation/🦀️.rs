@@ -11,11 +11,13 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[value(rename_all = "camelCase")]
 pub struct CreateGeneration {
     pub generation: FormGeneration,
+    /// 📍 Zero-based insertion position among the generations; `None` or past the end appends.
+    pub index: Option<usize>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 pub fn create_generation(generation: FormGeneration) -> Generation2dMutation {
-    Generation2dMutation::CreateGeneration(CreateGeneration { generation })
+    Generation2dMutation::CreateGeneration(CreateGeneration { generation, index: None })
 }
 
 impl MutationKind<Generation2dSnapshot, Generation2dMutation> for CreateGeneration {

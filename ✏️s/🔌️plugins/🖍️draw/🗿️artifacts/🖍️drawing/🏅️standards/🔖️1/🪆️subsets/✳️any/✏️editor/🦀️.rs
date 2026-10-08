@@ -1431,7 +1431,7 @@ impl store::ArtifactStoreOneItemPreparation<DrawingSnapshot, DrawingMutation> fo
         let base = self.base.as_ref().ok_or_else(|| "drawing-artifact-base-owner-missing".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "drawing-artifact-mutation-owner-missing".to_string())?;
         let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-        let post = ::protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let post = ::protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "drawing-artifact-authority-missing".to_string())?;
         let edit = authority.next_edit(mutation, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;

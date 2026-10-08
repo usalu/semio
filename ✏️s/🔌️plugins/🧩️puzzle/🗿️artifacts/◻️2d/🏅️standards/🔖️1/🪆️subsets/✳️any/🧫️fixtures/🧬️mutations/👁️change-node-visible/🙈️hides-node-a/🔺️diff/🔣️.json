@@ -9,30 +9,7 @@
       {
         "id": "node-a",
         "patch": {
-          "replacement": {
-            "anchor": "fixed",
-            "handles": [
-              {
-                "angle": 0.0,
-                "handleKind": "handle-kind-a",
-                "id": "handle-1"
-              },
-              {
-                "angle": 1.5,
-                "handleKind": "handle-kind-a",
-                "id": "handle-spare"
-              }
-            ],
-            "iconKind": "icon-alpha",
-            "id": "node-a",
-            "nodeKind": "node-kind-a",
-            "radius": 10.0,
-            "shape": "circle",
-            "text": "Alpha",
-            "visible": false,
-            "x": 0.0,
-            "y": 0.0
-          }
+          "visible": false
         }
       }
     ],

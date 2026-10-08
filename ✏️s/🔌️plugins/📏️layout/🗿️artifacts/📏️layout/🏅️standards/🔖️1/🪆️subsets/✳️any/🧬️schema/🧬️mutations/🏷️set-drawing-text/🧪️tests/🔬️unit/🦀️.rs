@@ -26,12 +26,12 @@ fn plan(text: &str) -> LayoutSnapshot {
 fn set_drawing_text_replaces_the_label_and_inverse_restores_it() {
     let base = plan("Plan");
     let mutation = LayoutMutation::SetDrawingText(SetDrawingText { index: 0, text: "Title".into() });
-    let next = mutation.diff(&base).diff().apply(&base).expect("rename");
+    let next = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("rename");
     assert_eq!(first_drawing_text(&next).as_deref(), Some("Title"));
     let mut engine = crate::editor::layout::engine::scene::LayoutEngine::new();
     let list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &next, &next.pages[0], "", &[], None, false);
     assert!(list.text_runs.iter().any(|run| run.content == "Title"));
-    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff().apply(&next).expect("inverse");
+    let restored = protocol::apply_diff(mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff(), &next).expect("inverse");
     assert_eq!(first_drawing_text(&restored).as_deref(), Some("Plan"));
 }
 
@@ -58,12 +58,12 @@ fn set_drawing_text_replaces_a_later_label_and_leaves_the_first() {
     let mut base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     base.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
     let mutation = LayoutMutation::SetDrawingText(SetDrawingText { index: 1, text: "Caption".into() });
-    let next = mutation.diff(&base).diff().apply(&base).expect("rename");
+    let next = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("rename");
     assert_eq!(drawing_labels(&next), vec!["Plan".to_string(), "Caption".to_string()]);
     let mut engine = crate::editor::layout::engine::scene::LayoutEngine::new();
     let list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &next, &next.pages[0], "", &[], None, false);
     let contents: Vec<_> = list.text_runs.iter().map(|run| run.content.as_str()).collect();
     assert!(contents.contains(&"Plan") && contents.contains(&"Caption"), "{contents:?}");
-    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff().apply(&next).expect("inverse");
+    let restored = protocol::apply_diff(mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff(), &next).expect("inverse");
     assert_eq!(drawing_labels(&restored), vec!["Plan".to_string(), "Note".to_string()]);
 }

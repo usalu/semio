@@ -1,6 +1,4 @@
-//! 🧽️ `remove-style` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🧽️ `remove-style` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,14 +13,18 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveStyle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "style", kind: "remove-style", record: "RemoveStyle" };
 
     fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
-        agg_diff(&DxfMutation::RemoveStyle(self.clone()), base)
+        let Self { name } = self;
+        protocol::MutationOutcome::new(diff_remove_style(name))
     }
     fn inverse(&self, base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&DxfMutation::RemoveStyle(self.clone()), base)?
-    
-    })
-}
+        let Self { name } = self;
+        Ok({
+            match base.tables.styles.iter().find(|s| &s.name == name) {
+                Some(s) => vec![DxfMutation::InsertStyle(insert_style::InsertStyle { index: base.tables.styles.iter().position(|x| &x.name == name).unwrap_or(base.tables.styles.len()), style: s.clone() })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove style", "Textstil entfernen")
     }

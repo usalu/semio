@@ -645,7 +645,7 @@ pub fn print_content(ops: &[PdfOp], fonts: &dyn FontTable) -> PResult<Vec<u8>> {
                     out.extend_from_slice(image.bits_per_component.max(1).to_string().as_bytes());
                     if let Some(color_space) = &image.color_space {
                         out.extend_from_slice(b" /CS ");
-                        write_object(&mut out, &lower_colour_space_inline(color_space));
+                        write_object(&mut out, &lower_colour_space_inline(color_space)?);
                     }
                 }
                 if !image.decode.is_empty() {

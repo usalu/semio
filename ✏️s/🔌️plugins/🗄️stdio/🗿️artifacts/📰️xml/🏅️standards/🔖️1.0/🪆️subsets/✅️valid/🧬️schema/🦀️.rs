@@ -11,9 +11,8 @@ pub use crate::standards::v1_0::subsets::base::schema::*;
 /// 🧬️ THIS subset's own mutation vocabulary — `XmlValidMutation`, not the `✳️any` subset's
 /// `XmlMutation` the glob re-export above would otherwise supply. Declared here rather than in the
 /// crate's module glue so the vocabulary lives with the subset that owns it; the explicit item wins
-/// over the glob import, which is exactly the intent. Its own gate (a `SetSnapshot` that would land
-/// a hard §2.8 violation is refused outright) is tested inside that module;
-/// `derived_construction`'s tests below cover the SECOND, independent layer — `build()`, which
+/// over the glob import, which is exactly the intent. Its own gate (`blocked_snapshot_violation`) is tested inside that
+/// module; `derived_construction`'s tests below cover the SECOND, independent layer — `build()`, which
 /// catches a snapshot that arrived around the vocabulary entirely.
 #[path = "🧬️mutations/🦀️.rs"]
 pub mod valid_mutations;

@@ -8,24 +8,39 @@ fn one_col_row(name: &str, kind: SemioTableCellKind, value: SemioValue) -> Semio
     SemioTableSnapshot { schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(), columns: vec![SemioTableColumn { name: name.into(), kind }], rows: vec![SemioTableRow { cells: vec![value] }] }
 }
 
-#[semio_framework_async_macros::async_test]
-async fn apply_replaces_columns_and_rows_wholesale() {
-    let base = one_col_row("a", SemioTableCellKind::Str, SemioValue::Str { value: "x".into() });
-    let diff = SemioTableDiff {
-        columns: Some(SemioTableColumnList { values: vec![SemioTableColumn { name: "b".into(), kind: SemioTableCellKind::Int }] }),
-        rows: Some(SemioTableRowList { values: vec![SemioTableRow { cells: vec![SemioValue::Int { lexeme: "1".into() }] }] }),
-    };
-    let next = diff.apply(&base).expect("apply must succeed for a well-formed fixture");
-    assert_eq!(next.columns[0].name, "b");
-    assert_eq!(next.rows[0].cells[0], SemioValue::Int { lexeme: "1".into() });
+fn modify_cell(row: usize, cell: usize, value: SemioValue) -> SemioTableDiff {
+    use crate::standards::v1::subsets::base::schema::triples::IndexModified;
+    let cells = IndexedTripleDiff { modified: vec![IndexModified { index: cell, diff: Replace { value } }], ..Default::default() };
+    SemioTableDiff { columns: None, rows: Some(IndexedTripleDiff { modified: vec![IndexModified { index: row, diff: SemioTableRowDiff { cells: Some(cells) } }], ..Default::default() }) }
 }
 
 #[semio_framework_async_macros::async_test]
-async fn absorb_last_write_wins() {
-    let mut d1 = SemioTableDiff { columns: None, rows: Some(SemioTableRowList { values: vec![SemioTableRow { cells: vec![SemioValue::Str { value: "a".into() }] }] }) };
-    let d2 = SemioTableDiff { columns: None, rows: Some(SemioTableRowList { values: vec![SemioTableRow { cells: vec![SemioValue::Str { value: "b".into() }] }] }) };
-    d1.absorb(d2.clone());
-    assert_eq!(d1, d2);
+async fn apply_touches_only_named_cells() {
+    let base = one_col_row("a", SemioTableCellKind::Str, SemioValue::Str { value: "x".into() });
+    let diff = modify_cell(0, 0, SemioValue::Str { value: "y".into() });
+    let next = protocol::apply_diff(&diff, &base).expect("apply must succeed for a well-formed fixture");
+    assert_eq!(next.rows[0].cells[0], SemioValue::Str { value: "y".into() });
+    assert_eq!(next.columns, base.columns, "untouched columns must be preserved");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn absorb_equals_sequential_apply() {
+    let base = one_col_row("a", SemioTableCellKind::Str, SemioValue::Str { value: "x".into() });
+    let first = modify_cell(0, 0, SemioValue::Str { value: "y".into() });
+    let second = modify_cell(0, 0, SemioValue::Str { value: "z".into() });
+    let mut absorbed = first.clone();
+    absorbed.absorb(second.clone());
+    let sequential = protocol::apply_diff(&second, &protocol::apply_diff(&first, &base).unwrap()).unwrap();
+    assert_eq!(protocol::apply_diff(&absorbed, &base).unwrap(), sequential);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_restores_base() {
+    let base = one_col_row("a", SemioTableCellKind::Str, SemioValue::Str { value: "x".into() });
+    let diff = modify_cell(0, 0, SemioValue::Str { value: "y".into() });
+    let next = protocol::apply_diff(&diff, &base).unwrap();
+    let inverse = protocol::command::DiffAlgebra::inverse(&diff, &base);
+    assert_eq!(protocol::apply_diff(&inverse, &next).unwrap(), base);
 }
 
 #[semio_framework_async_macros::async_test]

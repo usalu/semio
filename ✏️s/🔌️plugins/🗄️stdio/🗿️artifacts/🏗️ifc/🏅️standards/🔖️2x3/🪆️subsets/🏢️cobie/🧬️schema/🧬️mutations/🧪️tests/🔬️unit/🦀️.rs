@@ -31,7 +31,7 @@ fn base() -> Ifc2x3Snapshot {
     Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: Part21Document { header, instances: vec![placement, building, storey, wall, wall_type, assignment] }, edm_preamble: None }
 }
 
-fn round_trip(mutation: Ifc2x3CobieMutation) {
+async fn round_trip(mutation: Ifc2x3CobieMutation) {
     let start = base();
     let mut mutated = start.clone();
     let outcome = apply_ifc2x3_cobie_mutation(&mut mutated, &mutation);
@@ -40,15 +40,16 @@ fn round_trip(mutation: Ifc2x3CobieMutation) {
     let inverse = Mutation::inverse(&mutation, &start).expect("valid retained mutation inverse fixture").into_iter().next().expect("one inverse");
     apply_ifc2x3_cobie_mutation(&mut mutated, &inverse);
     assert_eq!(mvd::canonical(&mutated), mvd::canonical(&start), "{mutation:?} then its inverse must restore the base exchange structure");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &start).await;
 }
 
-#[test]
-fn every_sheet_kind_round_trips_through_its_own_inverse() {
-    round_trip(Ifc2x3CobieMutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: "FMHandOverView".into() }));
-    round_trip(Ifc2x3CobieMutation::SetFacilityName(set_facility_name::SetFacilityName { building: 1, name: Some("Wellness Center Sama".into()) }));
-    round_trip(Ifc2x3CobieMutation::SetFloorElevation(set_floor_elevation::SetFloorElevation { storey: 2, elevation: Some(150.0) }));
-    round_trip(Ifc2x3CobieMutation::SetSpace(set_space::SetSpace { id: 99, space: Some(CobieSpaceRow { global_id: "space".into(), name: "Lobby".into(), placement: 10 }) }));
-    round_trip(Ifc2x3CobieMutation::SetTypeAssignment(set_type_assignment::SetTypeAssignment { id: 5, assignment: None }));
+#[semio_framework_async_macros::async_test]
+async fn every_sheet_kind_round_trips_through_its_own_inverse() {
+    round_trip(Ifc2x3CobieMutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: "FMHandOverView".into() })).await;
+    round_trip(Ifc2x3CobieMutation::SetFacilityName(set_facility_name::SetFacilityName { building: 1, name: Some("Wellness Center Sama".into()) })).await;
+    round_trip(Ifc2x3CobieMutation::SetFloorElevation(set_floor_elevation::SetFloorElevation { storey: 2, elevation: Some(150.0) })).await;
+    round_trip(Ifc2x3CobieMutation::SetSpace(set_space::SetSpace { id: 99, space: Some(CobieSpaceRow { global_id: "space".into(), name: "Lobby".into(), placement: 10 }), index: None })).await;
+    round_trip(Ifc2x3CobieMutation::SetTypeAssignment(set_type_assignment::SetTypeAssignment { id: 5, assignment: None, index: None })).await;
 }
 
 #[test]
@@ -57,14 +58,14 @@ fn the_cobie_guards_reject_rather_than_silently_edit() {
     assert!(!apply_ifc2x3_cobie_mutation(&mut snapshot, &Ifc2x3CobieMutation::SetFacilityName(set_facility_name::SetFacilityName { building: 2, name: Some("x".into()) })).messages().is_empty(), "a storey is not a facility");
     assert!(!apply_ifc2x3_cobie_mutation(&mut snapshot, &Ifc2x3CobieMutation::SetFloorElevation(set_floor_elevation::SetFloorElevation { storey: 1, elevation: Some(1.0) })).messages().is_empty(), "a building is not a floor");
     assert!(
-        !apply_ifc2x3_cobie_mutation(&mut snapshot, &Ifc2x3CobieMutation::SetSpace(set_space::SetSpace { id: 99, space: Some(CobieSpaceRow { global_id: "x".into(), name: "  ".into(), placement: 10 }) })).messages().is_empty(),
+        !apply_ifc2x3_cobie_mutation(&mut snapshot, &Ifc2x3CobieMutation::SetSpace(set_space::SetSpace { id: 99, space: Some(CobieSpaceRow { global_id: "x".into(), name: "  ".into(), placement: 10 }), index: None })).messages().is_empty(),
         "COBie's Space sheet is keyed by name"
     );
-    assert!(!apply_ifc2x3_cobie_mutation(&mut snapshot, &Ifc2x3CobieMutation::SetSpace(set_space::SetSpace { id: 3, space: None })).messages().is_empty(), "clearing a space must not delete a real wall");
+    assert!(!apply_ifc2x3_cobie_mutation(&mut snapshot, &Ifc2x3CobieMutation::SetSpace(set_space::SetSpace { id: 3, space: None, index: None })).messages().is_empty(), "clearing a space must not delete a real wall");
     assert!(
         !apply_ifc2x3_cobie_mutation(
             &mut snapshot,
-            &Ifc2x3CobieMutation::SetTypeAssignment(set_type_assignment::SetTypeAssignment { id: 98, assignment: Some(CobieTypeAssignment { global_id: "x".into(), owner_history: None, related_objects: vec![3], relating_type: 3 }) })
+            &Ifc2x3CobieMutation::SetTypeAssignment(set_type_assignment::SetTypeAssignment { id: 98, assignment: Some(CobieTypeAssignment { global_id: "x".into(), owner_history: None, related_objects: vec![3], relating_type: 3 }), index: None })
         )
         .messages()
         .is_empty(),
@@ -73,16 +74,28 @@ fn the_cobie_guards_reject_rather_than_silently_edit() {
     assert_eq!(snapshot, base(), "a rejected mutation leaves the snapshot untouched");
 }
 
+#[semio_framework_async_macros::async_test]
+async fn removing_a_middle_row_is_restored_at_its_original_index() {
+    let mut start = base();
+    let created = Ifc2x3CobieMutation::SetSpace(set_space::SetSpace { id: 99, space: Some(CobieSpaceRow { global_id: "space".into(), name: "Lobby".into(), placement: 10 }), index: Some(1) });
+    let outcome = apply_ifc2x3_cobie_mutation(&mut start, &created);
+    assert!(outcome.messages().is_empty(), "{created:?} was rejected: {:?}", outcome.messages());
+    assert_eq!(mvd::position(&start, 99), Some(1), "the creation honours its index");
+    let removal = Ifc2x3CobieMutation::SetSpace(set_space::SetSpace { id: 99, space: None, index: None });
+    let inverse = Mutation::inverse(&removal, &start).expect("valid retained mutation inverse fixture");
+    assert_eq!(inverse, vec![Ifc2x3CobieMutation::SetSpace(set_space::SetSpace { id: 99, space: Some(CobieSpaceRow { global_id: "space".into(), name: "Lobby".into(), placement: 10 }), index: Some(1) })], "the removal's inverse restores the row at its original index");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&removal, &start).await;
+}
+
 /// 🧪️ The declaration gate: `KINDS` must match the enum's own variants, in declaration order.
 #[test]
 fn kinds_const_matches_enum_variants_in_declaration_order() {
     let one_per_variant = vec![
-        Ifc2x3CobieMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Ifc2x3Snapshot::default() }),
         Ifc2x3CobieMutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: String::new() }),
         Ifc2x3CobieMutation::SetFacilityName(set_facility_name::SetFacilityName { building: 0, name: None }),
         Ifc2x3CobieMutation::SetFloorElevation(set_floor_elevation::SetFloorElevation { storey: 0, elevation: None }),
-        Ifc2x3CobieMutation::SetSpace(set_space::SetSpace { id: 0, space: None }),
-        Ifc2x3CobieMutation::SetTypeAssignment(set_type_assignment::SetTypeAssignment { id: 0, assignment: None }),
+        Ifc2x3CobieMutation::SetSpace(set_space::SetSpace { id: 0, space: None, index: None }),
+        Ifc2x3CobieMutation::SetTypeAssignment(set_type_assignment::SetTypeAssignment { id: 0, assignment: None, index: None }),
     ];
     assert_eq!(one_per_variant.len(), KINDS.len(), "one_per_variant must cover every KINDS entry exactly once");
     for (mutation, kind) in one_per_variant.iter().zip(KINDS.iter()) {

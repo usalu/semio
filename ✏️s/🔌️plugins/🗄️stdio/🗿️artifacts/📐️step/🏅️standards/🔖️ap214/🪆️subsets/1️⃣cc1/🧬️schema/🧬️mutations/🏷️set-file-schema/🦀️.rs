@@ -1,9 +1,8 @@
-//! 🏷️ `set-file-schema` — one rule of CC1's conformance filter, authored as its own mutation leaf.
-//! The class-neutral edit is performed by the shared ladder module; this file only names the axis and
-//! routes to it, so each rule has ONE implementation and six class callers.
+//! 🏷️ `set-file-schema` -- declares exactly the given schema names in `FILE_SCHEMA`; the prior declaration is restored verbatim.
 
-use crate::standards::v_ap214::engine::ladder::ClassEdit;
-use crate::standards::v_ap214::subsets::cc1::schema::mutations::{class_diff, class_inverse, StepCc1Mutation};
+use crate::schema::diff::StepDiff;
+use crate::standards::v_ap214::engine::ladder;
+use crate::standards::v_ap214::subsets::cc1::schema::mutations::{rejected, restored, StepCc1Mutation, CLASS};
 use crate::StepSnapshot;
 
 //#region 🔖️Payload
@@ -16,18 +15,21 @@ pub struct SetFileSchema {
 impl protocol::MutationKind<StepSnapshot, StepCc1Mutation> for SetFileSchema {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "file-schema", kind: "set-file-schema", record: "SetFileSchema" };
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepCc1Mutation as protocol::Mutation<StepSnapshot>>::Diff> {
-        class_diff(base, &ClassEdit::FileSchema { schemas: self.schemas.clone() })
+    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
+        match ladder::file_schema_diff(base, CLASS, &self.schemas) {
+            Ok(diff) => protocol::MutationOutcome::new(diff),
+            Err(message) => rejected(message),
+        }
     }
+
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepCc1Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        class_inverse(base, &ClassEdit::FileSchema { schemas: self.schemas.clone() })?
-    
-    })
-}
+        Ok(vec![StepCc1Mutation::SetFileSchema(SetFileSchema { schemas: base.header.file_schema.schemas.clone() })])
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set FILE_SCHEMA to [{}]", self.schemas.join(", ")), &format!("FILE_SCHEMA auf [{}] setzen", self.schemas.join(",")))
     }
+
     fn target(&self) -> Vec<String> {
         self.schemas.clone()
     }

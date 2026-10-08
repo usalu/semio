@@ -1,4 +1,4 @@
-/** 💡️ Generation3d inference schema — topology (DAG shape of `fixture`'s widget/synapse graph). */
+/** 💡️ Generation3d inference schema — topology (DAG shape of `fixture`'s widget/synapse graph) and geometry (the evaluation of every widget, summarised). */
 
 export interface Generation3dTopology {
   nodeCount: number;
@@ -8,9 +8,37 @@ export interface Generation3dTopology {
   cycleFree: boolean;
 }
 
+export type Generation3dGeometryQuality = "exact-analytic" | "exact-numerical" | "approximate" | "mesh-derived-brep" | "polygon-mesh" | "tessellated-mesh";
+
+export interface Generation3dFaultRecord {
+  code: string;
+  en: string;
+  de: string;
+  port: string | null;
+}
+
+export interface Generation3dOutputRecord {
+  port: string;
+  kind: string;
+  detail: string;
+}
+
+export interface Generation3dWidgetRecord {
+  quality: Generation3dGeometryQuality;
+  fault: Generation3dFaultRecord | null;
+  outputs: Generation3dOutputRecord[];
+}
+
+export interface Generation3dGeometryRecord {
+  widgets: Record<string, Generation3dWidgetRecord>;
+  faulted: number;
+}
+
 export interface Generation3dInference {
   /** @derived */
   topology: Generation3dTopology;
+  /** @derived */
+  geometry: Generation3dGeometryRecord;
 }
 
 //#region 🚪️Parsers
@@ -64,6 +92,46 @@ export function parseGeneration3dInference(value: unknown, at = "$"): Generation
   const row = proceduralGeneration3dInferenceGuardObject(value, at);
   return {
     topology: parseGeneration3dTopology(row["topology"], `${at}.topology`),
+    geometry: parseGeneration3dGeometryRecord(row["geometry"], `${at}.geometry`),
+  };
+}
+
+const geometryQualities: readonly Generation3dGeometryQuality[] = ["exact-analytic", "exact-numerical", "approximate", "mesh-derived-brep", "polygon-mesh", "tessellated-mesh"];
+
+export function parseGeneration3dGeometryRecord(value: unknown, at = "$"): Generation3dGeometryRecord {
+  const row = proceduralGeneration3dInferenceGuardObject(value, at);
+  const widgets = proceduralGeneration3dInferenceGuardObject(row["widgets"], `${at}.widgets`);
+  return {
+    widgets: Object.fromEntries(Object.entries(widgets).map(([id, widget]) => [id, parseGeneration3dWidgetRecord(widget, `${at}.widgets.${id}`)])),
+    faulted: proceduralGeneration3dInferenceGuardInteger(row["faulted"], `${at}.faulted`, {"minimum": 0}),
+  };
+}
+
+export function parseGeneration3dWidgetRecord(value: unknown, at = "$"): Generation3dWidgetRecord {
+  const row = proceduralGeneration3dInferenceGuardObject(value, at);
+  return {
+    quality: proceduralGeneration3dInferenceGuardMember(row["quality"], `${at}.quality`, geometryQualities),
+    fault: row["fault"] === null ? null : parseGeneration3dFaultRecord(row["fault"], `${at}.fault`),
+    outputs: proceduralGeneration3dInferenceGuardArray(row["outputs"], `${at}.outputs`).map((item, index) => parseGeneration3dOutputRecord(item, `${at}.outputs[${index}]`)),
+  };
+}
+
+export function parseGeneration3dFaultRecord(value: unknown, at = "$"): Generation3dFaultRecord {
+  const row = proceduralGeneration3dInferenceGuardObject(value, at);
+  return {
+    code: proceduralGeneration3dInferenceGuardString(row["code"], `${at}.code`),
+    en: proceduralGeneration3dInferenceGuardString(row["en"], `${at}.en`),
+    de: proceduralGeneration3dInferenceGuardString(row["de"], `${at}.de`),
+    port: row["port"] === null ? null : proceduralGeneration3dInferenceGuardString(row["port"], `${at}.port`),
+  };
+}
+
+export function parseGeneration3dOutputRecord(value: unknown, at = "$"): Generation3dOutputRecord {
+  const row = proceduralGeneration3dInferenceGuardObject(value, at);
+  return {
+    port: proceduralGeneration3dInferenceGuardString(row["port"], `${at}.port`),
+    kind: proceduralGeneration3dInferenceGuardString(row["kind"], `${at}.kind`),
+    detail: proceduralGeneration3dInferenceGuardString(row["detail"], `${at}.detail`),
   };
 }
 

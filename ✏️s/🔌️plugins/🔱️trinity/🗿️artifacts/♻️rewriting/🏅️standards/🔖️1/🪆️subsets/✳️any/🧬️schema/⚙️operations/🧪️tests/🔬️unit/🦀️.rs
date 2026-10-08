@@ -89,7 +89,7 @@ async fn rule_layout_point_mutations_inverse_law() {
 async fn edit_lhs_diff_absorb_law() {
     let base = sample_rule_state();
     let d1 = protocol::Mutation::diff(&edit_lhs({ let mut lhs = base.lhs.clone(); lhs.where_clause = Some("a.name = 'one'".into()); lhs }), &base).diff().clone();
-    let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
+    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
     let d2 = protocol::Mutation::diff(&edit_lhs({ let mut lhs = mid.lhs.clone(); lhs.where_clause = Some("a.name = 'two'".into()); lhs }), &mid).diff().clone();
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }

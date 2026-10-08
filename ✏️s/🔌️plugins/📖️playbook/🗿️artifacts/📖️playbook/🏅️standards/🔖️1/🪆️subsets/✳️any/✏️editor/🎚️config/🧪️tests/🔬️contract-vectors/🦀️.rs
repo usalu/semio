@@ -1,6 +1,6 @@
 use super::*;
 use dsl::os_pack as pack;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{Mutation, OpBinary, OpText};
 
 #[test]
 fn configuration_and_presence_contract_vectors_match_the_json_oracle() {
@@ -11,11 +11,11 @@ fn configuration_and_presence_contract_vectors_match_the_json_oracle() {
         let mutation: PlaybookConfigMutation = semio_framework_pack_json::from_json_str(&vector["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&mutation)).unwrap(), vector["mutation"]);
         assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().unwrap());
-        let next = mutation.diff(&base).diff().apply(&base).unwrap();
+        let next = protocol::apply_diff(mutation.diff(&base).diff(), &base).unwrap();
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&next)).unwrap(), vector["expected"]);
         assert_eq!(PlaybookConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         assert_eq!(PlaybookConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
-        let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+        let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().fold(next, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, base);
     }
 }

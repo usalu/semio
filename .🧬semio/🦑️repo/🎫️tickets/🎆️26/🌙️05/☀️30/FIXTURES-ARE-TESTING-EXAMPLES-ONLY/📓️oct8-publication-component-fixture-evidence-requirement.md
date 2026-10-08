@@ -1,0 +1,5 @@
+# Actual Publication Component Evidence Requirement
+
+The final registry describe/materialize-dev/generate/check and session/Dev distribution pipeline must retain actual Cargo observations for every staged component invocation, not merely the four framework --lib checks. The collector already preserves untouched unit features, profile, target, source/dep-info, artifact/staged bytes and build-resource records on actual component builds. The producer owner confirms the publication roster will use those real receipts.
+
+A shipped session component with artifact-app-testing or mutation-testing activation is refused; an explicit test component has its separate testing owner and cannot silently become session runtime. Current evidence must bind the actual staged compiler unit and current resource/input bytes. No hypothetical flags were rewritten, no .rmeta result was treated as a mounted component, no ticket observation was promoted and no publication pass is claimed yet. The root/runtime acquisition route must remain registered and zero-touch after temporary ticket output cleanup.

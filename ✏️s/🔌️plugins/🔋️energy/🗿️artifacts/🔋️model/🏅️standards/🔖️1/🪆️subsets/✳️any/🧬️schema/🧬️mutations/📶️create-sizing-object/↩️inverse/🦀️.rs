@@ -11,6 +11,9 @@ pub fn inverse(payload: &super::CreateSizingObject, base: &EnergyModelSnapshot) 
     if (base.model.sizing_objects.iter().any(|item| item.id == payload.id)) || (!base.model.zones.iter().any(|zone| zone.id == payload.zone_id)) {
         return Vec::new();
     }
+    if payload.index.is_some_and(|index| index as usize > base.model.sizing_objects.len()) {
+        return Vec::new();
+    }
     vec![vocabulary::delete_sizing_object(payload.id)]
 
     })())

@@ -1,6 +1,4 @@
-//! 🔖️ `remove-conformance-attribute` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🔖️ `remove-conformance-attribute` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -12,15 +10,14 @@ pub struct RemoveConformanceAttribute {}
 impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for RemoveConformanceAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "conformance-attribute", kind: "remove-conformance-attribute", record: "RemoveConformanceAttribute" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxStrictMutation as Mutation<DocxSnapshot>>::Diff> {
-        agg_diff(&DocxStrictMutation::RemoveConformanceAttribute(self.clone()), base)
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
+        protocol::MutationOutcome::new(diff_conformance_attribute(base, None))
     }
+
     fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxStrictMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&DocxStrictMutation::RemoveConformanceAttribute(self.clone()), base)?
-    
-    })
-}
+        Ok(conformance_attribute_inverse(base, false))
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove conformance attribute", "Konformitätsattribut entfernen")
     }

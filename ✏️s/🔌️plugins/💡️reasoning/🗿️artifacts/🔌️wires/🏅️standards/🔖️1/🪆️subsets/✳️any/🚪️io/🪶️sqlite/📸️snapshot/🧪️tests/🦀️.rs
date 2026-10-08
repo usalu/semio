@@ -31,8 +31,8 @@ fn assert_intrinsic(expected:&semio_framework_value::DslValue,actual:&semio_fram
 #[test]
 fn sqlite_snapshot_wires_exact_native_records_preserve_complete_intrinsic_and_handle(){
  let expected=native_fixture();
- for payload in[store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(&expected)),store::os_io::IoPayload::Text(store::ArtifactDsl::print_dsl(&expected))]{
-  let restored=match payload{store::os_io::IoPayload::Binary(bytes)=><WiresSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(),store::os_io::IoPayload::Text(text)=><WiresSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap(),_=>panic!("owned native encoding")};
+ for payload in[store::io::IoPayload::Binary(store::ArtifactPack::encode_pack(&expected)),store::io::IoPayload::Text(store::ArtifactDsl::print_dsl(&expected))]{
+  let restored=match payload{store::io::IoPayload::Binary(bytes)=><WiresSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(),store::io::IoPayload::Text(text)=><WiresSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap(),_=>panic!("owned native encoding")};
   assert_eq!(restored.content.child_id,expected.content.child_id);assert_eq!(restored.content.target,expected.content.target);
   assert_intrinsic(&expected.wires_snapshot,&restored.wires_snapshot);assert_intrinsic(&expected.meta,&restored.meta);
  }
@@ -43,8 +43,8 @@ fn sqlite_snapshot_wires_deep_complete_native_records_preserve_allowed_intrinsic
  let mut snapshot=native_fixture();snapshot.wires_snapshot=semio_framework_value::DslValue::Null;snapshot.meta=semio_framework_value::DslValue::Null;
  let mut expected=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(snapshot,<WiresSnapshot as semio_framework_value::FromValue>::retire_decoded);
  for _ in 0..fixture["deepLevels"].as_u64().unwrap(){let old=std::mem::replace(&mut expected.as_mut().meta,semio_framework_value::DslValue::Null);expected.as_mut().meta=semio_framework_value::DslValue::Array(vec![old]);}
- for payload in[store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(expected.as_mut())),store::os_io::IoPayload::Text(store::ArtifactDsl::print_dsl(expected.as_mut()))]{
-  let restored=match payload{store::os_io::IoPayload::Binary(bytes)=><WiresSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(),store::os_io::IoPayload::Text(text)=><WiresSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap(),_=>panic!("owned native encoding")};
+ for payload in[store::io::IoPayload::Binary(store::ArtifactPack::encode_pack(expected.as_mut())),store::io::IoPayload::Text(store::ArtifactDsl::print_dsl(expected.as_mut()))]{
+  let restored=match payload{store::io::IoPayload::Binary(bytes)=><WiresSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(),store::io::IoPayload::Text(text)=><WiresSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap(),_=>panic!("owned native encoding")};
   let mut restored=semio_framework_dsl_record::__rt::DecodedFieldOwner::new(restored,<WiresSnapshot as semio_framework_value::FromValue>::retire_decoded);
   assert_intrinsic(&expected.as_mut().meta,&restored.as_mut().meta);
   assert_eq!(expected.as_mut().content,restored.as_mut().content);
@@ -59,7 +59,7 @@ fn sqlite_snapshot_wires_deep_actual_erased_native_records_have_no_syntax_depth_
  for _ in 0..f["deepLevels"].as_u64().unwrap(){let old=std::mem::replace(&mut expected.as_mut().meta,semio_framework_value::DslValue::Null);expected.as_mut().meta=semio_framework_value::DslValue::Array(vec![old]);}
  let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.reasoning.wires".into(),standard:"1".into(),subset:"*".into()};let limits=SqliteDatabaseLimits::default();let mut reference=None;
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
-  let payload=match encoding{SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(expected.as_mut())),SnapshotEncoding::Text=>store::os_io::IoPayload::Text(store::ArtifactDsl::print_dsl(expected.as_mut()))};
+  let payload=match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(store::ArtifactPack::encode_pack(expected.as_mut())),SnapshotEncoding::Text=>store::io::IoPayload::Text(store::ArtifactDsl::print_dsl(expected.as_mut()))};
   let database=(codec.export)("s.reasoning.wires",&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap().value;
   if let Some(reference)=&reference{assert_eq!(&database,reference);}else{reference=Some(database.clone());}
   let encoded=(codec.import)("s.reasoning.wires",&dialect,database.clone(),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap().value;

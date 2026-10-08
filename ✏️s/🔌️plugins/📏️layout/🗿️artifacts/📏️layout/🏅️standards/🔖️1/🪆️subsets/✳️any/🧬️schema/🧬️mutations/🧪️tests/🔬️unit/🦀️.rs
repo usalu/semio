@@ -33,7 +33,7 @@ fn round_trip(doc: &LayoutSnapshot, operation: &LayoutMutation) -> LayoutSnapsho
     let backs = operation.inverse(doc).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in &backs {
-        restored = back.diff(&restored).diff().apply(&restored).expect("valid mutation diff");
+        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("valid mutation diff");
     }
     assert_eq!(&restored, doc, "inverse must restore the pre-operation document");
     forward
@@ -189,7 +189,7 @@ async fn frame_create_move_resize_style_delete_round_trip() {
 async fn text_frame_wrap_mode_and_columns_round_trip_and_ignore_rect_fields() {
     let doc = sample_doc();
     let add = LayoutMutation::CreateFrame(create_frame::CreateFrame { page_id: "page-1".into(), frame: new_text("frame-text"), index: Some(0), layer_id: None });
-    let with_text = add.diff(&doc).diff().apply(&doc).expect("valid mutation diff");
+    let with_text = protocol::apply_diff(add.diff(&doc).diff(), &doc).expect("valid mutation diff");
 
     let wrap = LayoutMutation::ChangeFrameWrapMode(change_frame_wrap_mode::ChangeFrameWrapMode { page_id: "page-1".into(), frame_id: "frame-text".into(), new_wrap_mode: "column".into() });
     let wrapped = round_trip(&with_text, &wrap);
@@ -204,7 +204,7 @@ async fn text_frame_wrap_mode_and_columns_round_trip_and_ignore_rect_fields() {
     // 🖼️ Fill/stroke are Rect-only fields — a change against a text frame is a no-op, and its
     // inverse (nothing captured) is therefore empty.
     let fill_on_text = LayoutMutation::ChangeFrameFill(change_frame_fill::ChangeFrameFill { page_id: "page-1".into(), frame_id: "frame-text".into(), new_fill: Some([1.0, 0.0, 0.0, 1.0]) });
-    let unchanged = fill_on_text.diff(&columned).diff().apply(&columned).expect("valid mutation diff");
+    let unchanged = protocol::apply_diff(fill_on_text.diff(&columned).diff(), &columned).expect("valid mutation diff");
     assert_eq!(unchanged, columned, "fill patch on a text frame must be a no-op");
     assert!(fill_on_text.inverse(&columned).expect("valid retained mutation inverse fixture").is_empty());
 }
@@ -212,7 +212,7 @@ async fn text_frame_wrap_mode_and_columns_round_trip_and_ignore_rect_fields() {
 #[semio_framework_async_macros::async_test]
 async fn frame_mutations_are_no_ops_when_target_missing() {
     let doc = sample_doc();
-    let apply = |operation: &LayoutMutation| operation.diff(&doc).diff().apply(&doc).expect("valid mutation diff");
+    let apply = |operation: &LayoutMutation| protocol::apply_diff(operation.diff(&doc).diff(), &doc).expect("valid mutation diff");
 
     let missing_page_create = LayoutMutation::CreateFrame(create_frame::CreateFrame { page_id: "no-page".into(), frame: new_rect("frame-x"), index: Some(0), layer_id: None });
     assert_eq!(apply(&missing_page_create), doc, "creating on a missing page must be a no-op");
@@ -254,7 +254,7 @@ async fn create_page_obeys_the_inverse_and_absorb_laws() {
     let create = LayoutMutation::CreatePage(create_page::CreatePage { page: page_2, index: None });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &create).await;
     let d1 = create.diff(&base).diff().clone();
-    let after = d1.apply(&base).expect("valid mutation diff");
+    let after = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
     let d2 = LayoutMutation::RenamePage(rename_page::RenamePage { id: "page-9".into(), new_name: "Renamed".into() }).diff(&after).diff().clone();
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }

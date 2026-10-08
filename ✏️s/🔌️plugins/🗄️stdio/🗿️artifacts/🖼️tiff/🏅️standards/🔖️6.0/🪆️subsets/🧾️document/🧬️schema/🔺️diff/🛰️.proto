@@ -5,7 +5,8 @@ message TiffTagModified { uint32 tag = 1; semio.s_stdio_tiff.snapshot.TiffValues
 message TiffTagAdded { uint32 tag = 1; semio.s_stdio_tiff.snapshot.TiffValues values = 2; }
 message TiffTagsDiff { repeated uint32 removed = 1; repeated TiffTagModified modified = 2; repeated TiffTagAdded added = 3; }
 message TiffSampleBlocks { repeated semio.s_stdio_tiff.snapshot.TiffSampleBlock values = 1; }
-message TiffIfdDiff { optional TiffTagsDiff entries = 1; optional TiffSampleBlocks blocks = 2; }
+message TiffSampleRun { uint64 block = 1; uint64 offset = 2; repeated semio.s_stdio_tiff.snapshot.TiffWord64 samples = 3; }
+message TiffIfdDiff { optional TiffTagsDiff entries = 1; optional TiffSampleBlocks blocks = 2; repeated TiffSampleRun runs = 3; }
 message TiffIfdModified { uint64 index = 1; TiffIfdDiff diff = 2; }
 message TiffIfdAdded { uint64 index = 1; semio.s_stdio_tiff.snapshot.TiffIfd ifd = 2; }
 message TiffIfdsDiff { repeated uint64 removed = 1; repeated TiffIfdModified modified = 2; repeated TiffIfdAdded added = 3; }

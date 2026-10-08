@@ -1,4 +1,0 @@
-> bun ./📜️script.ts schema generate
-
-[DEBUG] isolated Nx verification schema
-Warning: command "bun ./📜️script.ts schema generate" exited with non-zero status code

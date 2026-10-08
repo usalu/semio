@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/surface/node-graph/scene/schema.json",
+  "title": "Node Graph Scene Ingress",
+  "$ref": "#/$defs/Scene",
+  "$defs": {
+    "Port": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {"type": "string"},
+        "label": {"type": ["string", "null"]},
+        "code": {"type": ["string", "null"]},
+        "abbreviation": {"type": ["string", "null"]},
+        "fullName": {"type": ["string", "null"]},
+        "resourceKind": {"type": ["string", "null"]},
+        "valueType": {"type": ["string", "null"]}
+      }
+    },
+    "Node": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {"type": "string"},
+        "label": {"type": ["string", "null"]},
+        "instanceId": {"type": ["string", "null"]},
+        "pluginId": {"type": ["string", "null"]},
+        "appId": {"type": ["string", "null"]},
+        "icon": {"type": ["string", "null"]},
+        "x": {"type": ["number", "null"]},
+        "y": {"type": ["number", "null"]},
+        "width": {"type": ["number", "null"]},
+        "height": {"type": ["number", "null"]},
+        "inputs": {"anyOf": [{"type": "null"}, {"type": "array", "items": {"$ref": "#/$defs/Port"}}]},
+        "outputs": {"anyOf": [{"type": "null"}, {"type": "array", "items": {"$ref": "#/$defs/Port"}}]}
+      }
+    },
+    "Edge": {
+      "type": "object",
+      "required": ["id", "sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId"],
+      "properties": {
+        "id": {"type": "string"},
+        "sourceNodeId": {"type": "string"},
+        "sourcePortId": {"type": "string"},
+        "targetNodeId": {"type": "string"},
+        "targetPortId": {"type": "string"}
+      }
+    },
+    "EmbeddedText": {
+      "type": "string",
+      "description": "Plain JSON text passes through. A pk: prefix declares canonical Base64 of exactly one intrinsic Pack Body; Document framing is never inferred."
+    },
+    "Scene": {
+      "type": "object",
+      "description": "Valid typed scene structure. Ingress separately defaults an absent or semantically malformed nodes/edges vector to empty. A present malformed viewport refuses. Resource or cancellation refusals never default content.",
+      "properties": {
+        "nodes": {"type": "array", "items": {"$ref": "#/$defs/Node"}},
+        "edges": {"type": "array", "items": {"$ref": "#/$defs/Edge"}},
+        "viewport": {"$ref": "https://json.schemas.assets.semio-tech.com/framework/ui/viewport/2d"},
+        "previewOffJson": {"$ref": "#/$defs/EmbeddedText"},
+        "lodJson": {"$ref": "#/$defs/EmbeddedText"},
+        "controlsJson": {"$ref": "#/$defs/EmbeddedText"},
+        "clustersJson": {"$ref": "#/$defs/EmbeddedText"},
+        "computingJson": {"$ref": "#/$defs/EmbeddedText"},
+        "statusJson": {"$ref": "#/$defs/EmbeddedText"},
+        "capabilitiesJson": {"$ref": "#/$defs/EmbeddedText"},
+        "hostSnapshotJson": {"$ref": "#/$defs/EmbeddedText"}
+      }
+    },
+    "DecodeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "inputBytes", "maximumOwnedBytes", "maximumDepth", "maximumItems"],
+      "properties": {
+        "format": {"enum": ["Body", "Document"]},
+        "inputBytes": {"type": "integer", "minimum": 0},
+        "maximumOwnedBytes": {"type": "integer", "minimum": 0},
+        "maximumDepth": {"type": "integer", "minimum": 1},
+        "maximumItems": {"type": "integer", "minimum": 1}
+      }
+    },
+    "StepGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumUnits", "cancelled"],
+      "properties": {"maximumUnits": {"type": "integer", "minimum": 0}, "cancelled": {"type": "boolean"}}
+    },
+    "DecodeProgress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "units", "admittedBytes", "complete"],
+      "properties": {
+        "phase": {"enum": ["input", "projection", "base64", "pack", "json-measure", "json-write", "retirement", "complete"]},
+        "units": {"type": "integer", "minimum": 0},
+        "admittedBytes": {"type": "integer", "minimum": 0},
+        "complete": {"type": "boolean"}
+      }
+    }
+  }
+}

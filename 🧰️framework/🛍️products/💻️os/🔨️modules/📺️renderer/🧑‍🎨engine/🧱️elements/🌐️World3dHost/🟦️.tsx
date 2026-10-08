@@ -105,6 +105,8 @@ import {
   world3dModellingDataAttributes,
   world3dModellingStrings,
   resolveWorld3dToneHex,
+  world3dGlbHitFaceId,
+  world3dGlbSubElementMeshData,
   world3dSelectionWithPickFilter,
   world3dSubElementPaint,
   type World3dSubElementPaint,
@@ -2645,6 +2647,7 @@ function GlbInstanceMesh({
   shadowEnabled,
   revision,
   pickEnabled,
+  subElements,
 }: {
   readonly url: string;
   readonly color: string;
@@ -2656,8 +2659,15 @@ function GlbInstanceMesh({
   readonly shadowEnabled?: boolean;
   readonly revision: MeshStyleKind;
   readonly pickEnabled: boolean;
+  /** 🪪️ Receives the merged picking mesh with the GLB's own `_FACE_ID`/`_VERTEX_ID` tables (`null` without triangles) and renders sub-element overlays in the GLB frame. */
+  readonly subElements?: (mesh: WorldMeshData | null) => React.ReactNode;
 }) {
   const gltf = useLoader(GLTFLoader, publishedPageUrl(meshAssetTransportUrl(url, MESH_DELIVERY_CATALOG)));
+  const subMesh = useMemo(() => {
+    if (!subElements) return null;
+    const data = world3dGlbSubElementMeshData(gltf.scene);
+    return data ? ({ normals: [], ...data } as WorldMeshData) : null;
+  }, [gltf.scene, subElements !== undefined]);
   const invalidate = useThree((state) => state.invalidate);
   if (!GLB_MESH_LOCAL_BOUNDS.has(url)) {
     const corners = glbMeshFrameCorners(gltf.scene);
@@ -2695,7 +2705,102 @@ function GlbInstanceMesh({
   return (
     <group rotation={[GLB_MESH_FRAME_ROTATION_X, 0, 0]}>
       <primitive object={scene} />
+      {subElements?.(subMesh)}
     </group>
+  );
+}
+
+/** 🪪️ Hover, selection and vertex picking of the topology ids a GLB carries (`_FACE_ID`, `_VERTEX_ID`), drawn in the GLB frame with the same paint table as inline meshes. */
+function GlbSubElementLayer({
+  mesh,
+  instanceId,
+  targets,
+  pickEnabled,
+  meshReachable,
+  hoveredFaceId,
+  hoveredVertexId,
+  selectedFaceIds,
+  selectedVertexIds,
+  subElementPaint,
+  mergeMode,
+  onWorldPick,
+  onComponentHover,
+  onInstancePointerMove,
+}: {
+  readonly mesh: WorldMeshData | null;
+  readonly instanceId: string;
+  readonly targets: WorldSelectionTargets;
+  readonly pickEnabled: boolean;
+  readonly meshReachable: boolean;
+  readonly hoveredFaceId?: number;
+  readonly hoveredVertexId?: number;
+  readonly selectedFaceIds: ReadonlySet<number>;
+  readonly selectedVertexIds: ReadonlySet<number>;
+  readonly subElementPaint: World3dSubElementPaint;
+  readonly mergeMode: (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => string;
+  readonly onWorldPick: (args: { granularity: string; id: number; merge: string; objectId?: string }) => void;
+  readonly onComponentHover: (args: { objectId: string; mode: string; id: number } | null) => void;
+  readonly onInstancePointerMove: (id: string | null) => void;
+}) {
+  const vertexPick = useMemo(() => (mesh?.vertexIds ? buildVertexPickData(mesh) : null), [mesh]);
+  useEffect(() => () => vertexPick?.geometry.dispose(), [vertexPick]);
+  const hoveredFaces = useMemo(() => (hoveredFaceId === undefined ? null : new Set([hoveredFaceId])), [hoveredFaceId]);
+  const hoveredVertices = useMemo(() => (hoveredVertexId === undefined ? null : new Set([hoveredVertexId])), [hoveredVertexId]);
+  const faceSelected = useMemo(() => (mesh ? buildFaceOverlayGeometry(mesh, selectedFaceIds) : null), [mesh, selectedFaceIds]);
+  const faceHovered = useMemo(() => (mesh && hoveredFaces ? buildFaceOverlayGeometry(mesh, hoveredFaces) : null), [mesh, hoveredFaces]);
+  const vertexSelected = useMemo(() => (mesh ? buildVertexOverlayGeometry(mesh, selectedVertexIds) : null), [mesh, selectedVertexIds]);
+  const vertexHovered = useMemo(() => (mesh && hoveredVertices ? buildVertexOverlayGeometry(mesh, hoveredVertices) : null), [mesh, hoveredVertices]);
+  useEffect(() => () => faceSelected?.dispose(), [faceSelected]);
+  useEffect(() => () => faceHovered?.dispose(), [faceHovered]);
+  useEffect(() => () => vertexSelected?.dispose(), [vertexSelected]);
+  useEffect(() => () => vertexHovered?.dispose(), [vertexHovered]);
+  return (
+    <>
+      {targets.vertex && vertexPick ? (
+        <points
+          geometry={vertexPick.geometry}
+          onClick={(event) => {
+            if (!pickEnabled) return;
+            event.stopPropagation();
+            const vertexId = vertexPick.vertexIds[event.index ?? 0];
+            if (vertexId != null) onWorldPick({ granularity: "vertex", id: vertexId, merge: mergeMode(event), objectId: instanceId });
+          }}
+          onPointerMove={(event) => {
+            if (!pickEnabled) return;
+            event.stopPropagation();
+            const vertexId = vertexPick.vertexIds[event.index ?? 0];
+            if (vertexId != null) onComponentHover({ objectId: instanceId, mode: "vertex", id: vertexId });
+            else if (meshReachable) onInstancePointerMove(instanceId);
+          }}
+          onPointerOut={() => {
+            onInstancePointerMove(null);
+            onComponentHover(null);
+          }}
+        >
+          <pointsMaterial color={subElementPaint.vertexHover} size={WORLD_VERTEX_DOT_PX} sizeAttenuation={false} />
+        </points>
+      ) : null}
+      {faceSelected ? (
+        <mesh geometry={faceSelected} raycast={() => null}>
+          <meshBasicMaterial color={subElementPaint.faceSelect} transparent opacity={0.62} side={DoubleSide} depthWrite={false} polygonOffset polygonOffsetFactor={-2} />
+        </mesh>
+      ) : null}
+      {faceHovered ? (
+        <mesh geometry={faceHovered} raycast={() => null}>
+          <meshBasicMaterial color={subElementPaint.faceHover} transparent opacity={0.48} side={DoubleSide} depthWrite={false} polygonOffset polygonOffsetFactor={-3} />
+        </mesh>
+      ) : null}
+      {vertexSelected ? (
+        <points geometry={vertexSelected} raycast={() => null}>
+          <pointsMaterial color={subElementPaint.vertexSelect} size={subElementPaint.vertexMarkPx} sizeAttenuation={false} depthTest={false} />
+        </points>
+      ) : null}
+      {vertexHovered ? (
+        <points geometry={vertexHovered} raycast={() => null}>
+          <pointsMaterial color={subElementPaint.vertexHover} size={subElementPaint.vertexMarkPx} sizeAttenuation={false} depthTest={false} />
+        </points>
+      ) : null}
+    </>
   );
 }
 
@@ -3618,16 +3723,35 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
       ) : meshRecord?.url ? (
         <group
           onPointerDown={(event) => {
+            if (instancePickEnabled && targets.face && world3dGlbHitFaceId(event.object, event.faceIndex) !== undefined) return;
             if (!wholePickEnabled && !(lockedClickClears && meshReachable)) return;
             event.stopPropagation();
             onInstancePointerDown(instance.id, index, event);
           }}
+          onClick={(event) => {
+            if (!instancePickEnabled || !targets.face) return;
+            const faceId = world3dGlbHitFaceId(event.object, event.faceIndex);
+            if (faceId === undefined) return;
+            event.stopPropagation();
+            onWorldPick({ granularity: "face", id: faceId, merge: mergeMode(event), objectId: instance.id });
+          }}
           onPointerMove={(event) => {
+            if (instancePickEnabled && targets.face) {
+              const faceId = world3dGlbHitFaceId(event.object, event.faceIndex);
+              if (faceId !== undefined) {
+                event.stopPropagation();
+                onComponentHover({ objectId: instance.id, mode: "face", id: faceId });
+                return;
+              }
+            }
             if (!wholePickEnabled) return;
             event.stopPropagation();
             onInstancePointerMove(instance.id);
           }}
-          onPointerOut={() => onInstancePointerMove(null)}
+          onPointerOut={() => {
+            onInstancePointerMove(null);
+            onComponentHover(null);
+          }}
         >
           <Suspense fallback={null}>
             <GlbInstanceMesh
@@ -3641,7 +3765,29 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
               material={environmentMaterial}
               shadowEnabled={environmentShadowEnabled}
               revision={styleKind}
-              pickEnabled={wholePickEnabled}
+              pickEnabled={instancePickEnabled && (meshReachable || targets.face === true)}
+              subElements={
+                targets.face || targets.vertex || selectedFaceIds.size > 0 || selectedVertexIds.size > 0 || hoveredFaceId !== undefined || hoveredVertexId !== undefined
+                  ? (mesh) => (
+                      <GlbSubElementLayer
+                        mesh={mesh}
+                        instanceId={instance.id}
+                        targets={targets}
+                        pickEnabled={instancePickEnabled}
+                        meshReachable={meshReachable}
+                        hoveredFaceId={hoveredFaceId}
+                        hoveredVertexId={hoveredVertexId}
+                        selectedFaceIds={selectedFaceIds}
+                        selectedVertexIds={selectedVertexIds}
+                        subElementPaint={subElementPaint}
+                        mergeMode={mergeMode}
+                        onWorldPick={onWorldPick}
+                        onComponentHover={onComponentHover}
+                        onInstancePointerMove={onInstancePointerMove}
+                      />
+                    )
+                  : undefined
+              }
             />
           </Suspense>
         </group>

@@ -3,4 +3,5 @@ import type { ObjRef, PdfCcittParameters, PdfColorSpace, PdfDecimal, PdfDictEntr
 export interface SetColorSpaceMutation {
   mutation: 'setColorSpace';
   colorSpace: PdfNamedColorSpace;
+  index?: number | null;
 }

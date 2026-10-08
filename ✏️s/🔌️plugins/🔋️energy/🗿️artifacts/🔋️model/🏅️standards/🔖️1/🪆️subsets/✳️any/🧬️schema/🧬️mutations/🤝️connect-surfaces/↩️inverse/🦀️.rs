@@ -15,6 +15,9 @@ pub fn inverse(payload: &super::ConnectSurfaces, base: &EnergyModelSnapshot) -> 
     {
         return Vec::new();
     }
+    if payload.index.is_some_and(|index| index as usize > base.model.adjacency_pairs.len()) {
+        return Vec::new();
+    }
     vec![vocabulary::disconnect_surfaces(payload.surface_a_id, payload.surface_b_id)]
 
     })())

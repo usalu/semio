@@ -1,7 +1,5 @@
-//! ➕️ `insert-tiny-element` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! ➕️ `insert-tiny-element` — authored as its own mutation leaf. It builds its own sparse diff and concrete
+//! inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -17,15 +15,20 @@ pub struct InsertTinyElement {
 impl protocol::MutationKind<SvgSnapshot, SvgTinyMutation> for InsertTinyElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "tiny-element", kind: "insert-tiny-element", record: "InsertTinyElement" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgTinyMutation as Mutation<SvgSnapshot>>::Diff> {
-        agg_diff(&SvgTinyMutation::InsertTinyElement(self.clone()), base)
+    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
+        let Self { parent, index, node } = self;
+        match subtree_profile_violation(node) {
+            Some(message) => protocol::MutationOutcome::error(CODE_REJECTED, message, Vec::<String>::new()),
+            None => protocol::MutationOutcome::new(diff_at_path(
+                parent,
+                SvgNodeDiff::Element(SvgElementDiff { name: None, attributes: None, children: Some(SvgChildrenDiff { removed: Vec::new(), modified: Vec::new(), added: vec![SvgChildAdded { index: *index, item: node.clone() }] }) }),
+            )),
+        }
     }
     fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgTinyMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&SvgTinyMutation::InsertTinyElement(self.clone()), base)?
-    
-    })
-}
+        let Self { parent, index, .. } = self;
+        Ok(vec![SvgTinyMutation::RemoveElement(remove_element::RemoveElement { parent: parent.clone(), index: *index })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert tiny element", "Tiny-Element einfügen")
     }

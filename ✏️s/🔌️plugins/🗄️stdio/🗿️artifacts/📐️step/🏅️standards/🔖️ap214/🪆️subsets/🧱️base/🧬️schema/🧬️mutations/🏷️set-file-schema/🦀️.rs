@@ -1,7 +1,5 @@
-//! 🏷️ `set-file-schema` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 🏷️ `set-file-schema` — authored as its own mutation leaf. It builds its own sparse diff and concrete
+//! inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,15 +14,13 @@ pub struct SetFileSchema {
 impl protocol::MutationKind<StepSnapshot, StepMutation> for SetFileSchema {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "file-schema", kind: "set-file-schema", record: "SetFileSchema" };
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepMutation as Mutation<StepSnapshot>>::Diff> {
-        agg_diff(&StepMutation::SetFileSchema(self.clone()), base)
+    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
+        let Self { file_schema } = self;
+        protocol::MutationOutcome::new(StepDiff { file_schema: (base.header.file_schema != *file_schema).then(|| file_schema.clone()), ..Default::default() })
     }
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&StepMutation::SetFileSchema(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![StepMutation::SetFileSchema(set_file_schema::SetFileSchema { file_schema: base.header.file_schema.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set file schema", "Dateischema setzen")
     }

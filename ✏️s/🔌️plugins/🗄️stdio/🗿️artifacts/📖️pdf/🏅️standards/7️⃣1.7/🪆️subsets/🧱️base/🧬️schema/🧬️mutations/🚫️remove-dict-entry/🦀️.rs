@@ -27,7 +27,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveDictEntry {
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-        original_dict_value(base, self.id, &self.path, &self.key).map(|value| PdfMutation::SetDictEntry(SetDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone(), value })).into_iter().collect()
+        original_dict_value(base, self.id, &self.path, &self.key).map(|(position, value)| PdfMutation::SetDictEntry(SetDictEntry { id: self.id, path: self.path.clone(), key: self.key.clone(), value, index: Some(position) })).into_iter().collect()
     
     })())
 }
@@ -41,7 +41,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveDictEntry {
     }
 }
 
-fn original_dict_value(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], key: &str) -> Option<PdfObject> {
+fn original_dict_value(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], key: &str) -> Option<(usize, PdfObject)> {
     let object = base.objects.iter().find(|object| object.id == id)?;
     let mut current = &object.value;
     for segment in path {
@@ -57,7 +57,7 @@ fn original_dict_value(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], 
         PdfObject::Stream { dict, .. } => dict,
         _ => return None,
     };
-    entries.iter().find(|entry| entry.key == key).map(|entry| entry.value.clone())
+    entries.iter().position(|entry| entry.key == key).map(|position| (position, entries[position].value.clone()))
 }
 
 //#endregion 🔖️Mutation

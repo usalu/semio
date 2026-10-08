@@ -1,6 +1,4 @@
-//! 🔖️ `set-space` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🚪️ `set-space` -- sets or clears one COBie Space row; a cleared row is restored at the position it stood.
 
 use super::*;
 
@@ -10,23 +8,50 @@ use super::*;
 pub struct SetSpace {
     pub id: u64,
     pub space: Option<CobieSpaceRow>,
+    pub index: Option<usize>,
 }
 
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetSpace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "space", kind: "set-space", record: "SetSpace" };
 
-    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<<Ifc2x3CobieMutation as Mutation<Ifc2x3Snapshot>>::Diff> {
-        agg_diff(&Ifc2x3CobieMutation::SetSpace(self.clone()), base)
+    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
+        let Self { id, space, index } = self;
+        let instance = match space {
+            None => None,
+            Some(row) => {
+                if row.name.trim().is_empty() {
+                    return rejected("COBie's Space sheet is keyed by name -- an IFCSPACE with a blank Name is not a handover row".into());
+                }
+                let placement = mvd::instance_type(base, row.placement).unwrap_or("");
+                if !placement.eq_ignore_ascii_case("IFCLOCALPLACEMENT") {
+                    return rejected(format!("#{} is {placement:?}, not an IFCLOCALPLACEMENT -- a handover space is placed in the real spatial structure", row.placement));
+                }
+                Some(mvd::simple_instance(*id, SPACE, space_args(row)))
+            }
+        };
+        match mvd::entity_diff(base, *id, &[SPACE], instance, *index) {
+            Ok(diff) => protocol::MutationOutcome::new(diff),
+            Err(message) => rejected(message),
+        }
     }
+
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Result<Vec<Ifc2x3CobieMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&Ifc2x3CobieMutation::SetSpace(self.clone()), base)?
-    
-    })
-}
+        let Self { id, space, .. } = self;
+        Ok(match mvd::standing(base, *id, &[SPACE]) {
+            mvd::Standing::Foreign => Vec::new(),
+            mvd::Standing::Absent if space.is_some() => vec![Ifc2x3CobieMutation::SetSpace(SetSpace { id: *id, space: None, index: None })],
+            mvd::Standing::Absent => Vec::new(),
+            mvd::Standing::Present { index } => match space_row(base, *id) {
+                Some(row) => vec![Ifc2x3CobieMutation::SetSpace(SetSpace { id: *id, space: Some(row), index: Some(index) })],
+                None => Vec::new(),
+            },
+        })
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set space", "Raum setzen")
     }
+
     fn target(&self) -> Vec<String> {
         Vec::new()
     }

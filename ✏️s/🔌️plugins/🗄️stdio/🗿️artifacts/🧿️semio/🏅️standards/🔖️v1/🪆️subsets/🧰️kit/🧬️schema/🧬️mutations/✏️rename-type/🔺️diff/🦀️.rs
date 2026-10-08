@@ -1,7 +1,8 @@
 //! 🔺️ Diff for `RenameType`.
 
-use crate::standards::v1::subsets::kit::schema::diff::{SemioKitDiff, SemioKitTypeList};
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use crate::standards::v1::subsets::base::schema::triples::{IndexModified, IndexedTripleDiff};
+use crate::standards::v1::subsets::kit::schema::diff::{SemioKitDiff, SemioKitTypeDiff};
+use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot};
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -12,10 +13,7 @@ pub fn diff(payload: &super::RenameType, base: &SemioKitSnapshot) -> protocol::M
     if existing.name == payload.new_name {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Type \"{}\" is already named \"{}\".", payload.id, payload.new_name));
     }
-    let mut types = base.types.clone();
-    if let Some(t) = types.iter_mut().find(|t| t.id == payload.id) {
-        t.name = payload.new_name.clone();
-    }
-    protocol::MutationOutcome::new(SemioKitDiff { types: Some(SemioKitTypeList { values: types }), ..Default::default() })
+    let at = base.types.iter().position(|t| t.id == payload.id).expect("checked above");
+    protocol::MutationOutcome::new(SemioKitDiff { types: Some(IndexedTripleDiff { modified: vec![IndexModified { index: at, diff: SemioKitTypeDiff { name: Some(payload.new_name.clone()), category: None } }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

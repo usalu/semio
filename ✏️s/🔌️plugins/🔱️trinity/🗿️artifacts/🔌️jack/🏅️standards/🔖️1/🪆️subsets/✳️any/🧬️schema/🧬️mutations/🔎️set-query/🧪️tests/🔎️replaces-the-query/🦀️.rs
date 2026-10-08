@@ -67,7 +67,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: JackDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <JackDiff as protocol::MutationDiff<JackSnapshot>>::apply(&decoded, &before()).expect("committed diff applies");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies");
     assert_eq!(produced, after(), "set-query/🔎️replaces-the-query: committed diff did not carry before to after");
 }
 
@@ -96,4 +96,11 @@ async fn committed_json_is_canonical() {
     let decoded: JackDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff encodes");
     assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(DIFF).expect("diff reparses"), "set-query: committed diff JSON is not canonical");
+}
+
+/// ➕️ The concrete inverse rows' diffs sum to exactly the negative of the forward diff (law L3): replaying them restores `before`,
+/// the absorbed sum carries the applied state back, and it equals `diff.inverse(before)`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

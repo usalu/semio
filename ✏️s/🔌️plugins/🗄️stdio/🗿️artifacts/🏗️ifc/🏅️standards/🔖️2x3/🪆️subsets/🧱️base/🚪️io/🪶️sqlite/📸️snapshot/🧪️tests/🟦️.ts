@@ -86,12 +86,9 @@ test("IFC2x3 native backing and semantic cell limits have closed independent rol
 
 test("IFC2x3 subset history snapshots have independent complete relational witnesses",async()=>{
  for(const[folder,id]of[["🤝️cv20","cv20"],["🧮️sav","sav"],["🏢️cobie","cobie"]]){
-  const root=new URL("../../../../../"+folder+"/🧫️fixtures/🧬️mutations/📸️set-snapshot/📋️rename-file/",import.meta.url);
+  const root=new URL("../../../../../"+folder+"/🧫️fixtures/🧬️history-snapshots/📋️rename-file/",import.meta.url);
   const before=await Bun.file(new URL("📸️snapshot/⬅️before/🔣️.json",root)).json()as Ifc2x3Snapshot;
   const after=await Bun.file(new URL("📸️snapshot/➡️after/🔣️.json",root)).json()as Ifc2x3Snapshot;
-  const mutation=await Bun.file(new URL("🦠️mutation/🔣️.json",root)).json();
-  expect(mutation).toEqual({SetSnapshot:{snapshot:after}});
-  expect(await Bun.file(new URL("🎯️outcome/🔣️.json",root)).json()).toEqual({status:"applied"});
   for(const[side,input]of[["⬅️before",before],["➡️after",after]]as const){
    const text=await Bun.file(new URL("📸️snapshot/"+side+"/🗣️.dsl.semio",root)).text();
    expect(text.startsWith("semio stdio.ifc.2x3.dsl v1\n")).toBe(true);

@@ -40,8 +40,8 @@ fn explicit_null_removes_declaration_and_doctype_without_erasing_unchanged_field
             after.doc.doctype = None;
         }
         for replay in [diff.clone(), XmlDiff::parse_diff(&diff.print_diff()).unwrap(), XmlDiff::decode_diff(&diff.encode_diff().unwrap()).unwrap()] {
-            assert_eq!(replay.apply(&before).unwrap(), after, "case={}", case["name"]);
-            assert_eq!(replay.inverse(&before).apply(&after).unwrap(), before);
+            assert_eq!(protocol::apply_diff(&replay, &before).unwrap(), after, "case={}", case["name"]);
+            assert_eq!(protocol::apply_diff(&replay.inverse(&before), &after).unwrap(), before);
         }
     }
 }
@@ -67,9 +67,9 @@ fn attribute_reordering_and_composed_structural_edits_preserve_exact_identity_or
             assert!(!next.is_empty());
             combined.absorb(next);
             for replay in [combined.clone(), XmlDiff::parse_diff(&combined.print_diff()).unwrap(), XmlDiff::decode_diff(&combined.encode_diff().unwrap()).unwrap()] {
-                assert_eq!(replay.apply(&states[start]).unwrap(), states[end], "range={start}..{end}");
-                assert_eq!(replay.inverse(&states[start]).apply(&states[end]).unwrap(), states[start]);
-                let XmlNode::Element { attrs, .. } = replay.apply(&states[start]).unwrap().doc.root.unwrap() else { unreachable!() };
+                assert_eq!(protocol::apply_diff(&replay, &states[start]).unwrap(), states[end], "range={start}..{end}");
+                assert_eq!(protocol::apply_diff(&replay.inverse(&states[start]), &states[end]).unwrap(), states[start]);
+                let XmlNode::Element { attrs, .. } = protocol::apply_diff(&replay, &states[start]).unwrap().doc.root.unwrap() else { unreachable!() };
                 let oracle: Vec<Vec<String>> = serde_json::from_value(fixture["states"][end].clone()).unwrap();
                 assert_eq!(attrs.into_iter().map(|attr| vec![attr.name, attr.value]).collect::<Vec<_>>(), oracle);
             }
@@ -78,7 +78,7 @@ fn attribute_reordering_and_composed_structural_edits_preserve_exact_identity_or
     for order in fixture["invalidOrders"].as_array().unwrap() {
         let wire = serde_json::json!({ "root": { "kind": "element", "attributes": { "order": order } } });
         let diff: XmlDiff = semio_framework_pack_json::from_json_str(&wire.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        assert!(diff.apply(&states[0]).is_err(), "invalid order={order}");
+        assert!(protocol::apply_diff(&diff, &states[0]).is_err(), "invalid order={order}");
     }
     for case in fixture["invalidChildDiffs"].as_array().unwrap() {
         let diff: XmlChildrenDiff = semio_framework_pack_json::from_json_str(&case["diff"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();

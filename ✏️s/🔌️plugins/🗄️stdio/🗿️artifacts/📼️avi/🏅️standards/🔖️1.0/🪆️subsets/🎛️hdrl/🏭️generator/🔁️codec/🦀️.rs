@@ -531,18 +531,6 @@ fn recipe(id: &str) -> Option<(AviDoc, Option<AviDoc>)> {
     match id {
         "no-mutation-applied" => Some((base.clone(), Some(base))),
 
-        // 🧬 SetSnapshot replaces the WHOLE document — a materially different doc throughout.
-        "set-snapshot-applied" => {
-            let mut after = base.clone();
-            after.main_header.width = 128;
-            after.main_header.height = 96;
-            after.main_header.total_frames = 4;
-            after.streams[0].strh.rate = 30;
-            after.streams[0].strh.length = 4;
-            after.streams[0].chunks.push(AviChunk { fourcc: "00dc".into(), data: vec![0xAA, 0x00, 0x04, 0x04, 0x04, 0x04], keyframe: false });
-            Some((base, Some(after)))
-        }
-
         "set-main-header-applied" => {
             let mut after = base.clone();
             after.main_header.total_frames = 5;
@@ -647,7 +635,6 @@ fn recipe(id: &str) -> Option<(AviDoc, Option<AviDoc>)> {
 
 const RECIPE_IDS: &[&str] = &[
     "no-mutation-applied",
-    "set-snapshot-applied",
     "set-main-header-applied",
     "set-idx1-present-applied",
     "insert-stream-applied",

@@ -1,9 +1,8 @@
 //! 🧬️ Direct set-transform mutation owner.
 use crate::schema::diff::SvgDiff;
-use crate::schema::mutation_support::attribute_diff_at_path;
-use crate::schema::snapshot::{NodePath, TransformOp};
+use crate::schema::mutation_support::{attribute_diff_at_path, prior_attribute};
+use crate::schema::snapshot::{NodePath, SvgAttributeValue, TransformOp};
 use crate::SvgSnapshot;
-
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
@@ -11,37 +10,23 @@ use crate::SvgSnapshot;
 pub struct SetTransformPayload {
     pub path: NodePath,
     pub transform: Option<Vec<TransformOp>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol, payload = Apply)]
-#[value(tag = "phase", content = "value", rename_all = "camelCase")]
-pub enum SetTransformMutation {
-    Apply(SetTransformPayload),
-    Restore(SvgDiff),
-}
-
-impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetTransformMutation {
+impl protocol::MutationKind<SvgSnapshot, super::SvgMutation> for SetTransformPayload {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "transform", kind: "set-transform", record: "SetTransform" };
 
     fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
-        match self {
-            Self::Apply(payload) => protocol::MutationOutcome::new(attribute_diff_at_path(base, &payload.path, "transform", payload.transform.clone().map(crate::schema::snapshot::SvgAttributeValue::Transform))),
-            Self::Restore(diff) => protocol::MutationOutcome::new(diff.clone()),
-        }
+        let Self { path, transform, index } = self;
+        protocol::MutationOutcome::new(attribute_diff_at_path(base, path, "transform", transform.clone().map(SvgAttributeValue::Transform), *index))
     }
 
     fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<super::SvgMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<SvgSnapshot, super::SvgMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || <SvgDiff as protocol::DiffAlgebra<SvgSnapshot>>::is_empty(outcome.diff()) {
-            return Vec::new();
-        }
-        let inverse = <SvgDiff as protocol::DiffAlgebra<SvgSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::SvgMutation::SetTransform(Self::Restore(inverse))]
-    
-    })())
-}
+        let Self { path, .. } = self;
+        let (value, index) = prior_attribute(base, path, "transform");
+        Ok(vec![super::SvgMutation::SetTransform(Self { path: path.clone(), transform: value.and_then(|value| if let SvgAttributeValue::Transform(transform) = value { Some(transform) } else { None }), index })])
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Transform", "Transformation setzen")

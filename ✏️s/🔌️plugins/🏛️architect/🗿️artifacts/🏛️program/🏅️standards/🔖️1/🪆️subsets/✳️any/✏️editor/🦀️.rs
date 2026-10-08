@@ -185,7 +185,8 @@ pub mod behavior {
         Activity, Adjacency, AdjacencyKind, AnalysisKind, AnalysisRecord, ConnectionKind, Equipment, Function, FunctionKind, Process, ProgramElement, ProgramElementKind, Relationship, RelationshipKind, ReportKind, ReportRecord, Requirement,
         RequirementKind, Risk, RiskLevel, Stakeholder, TemplateRecord, UserCategory, UserProfile, ValidationStatus,
     };
-    use crate::standards::v1::subsets::any::schema::inferences::{build_report, run_analysis, RegisterCsvRow};
+    use crate::standards::v1::subsets::any::schema::inferences::{build_report, run_analysis};
+    use crate::standards::v1::subsets::any::io::tables::RegisterCsvRow;
     use crate::standards::v1::subsets::any::schema::normalize_pair;
     use crate::ProgramSnapshot;
     use semio_s_artifact_stdio_csv as stdio_csv;
@@ -247,7 +248,7 @@ pub mod behavior {
                         communication_channels: Vec::new(),
                         success_metrics: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateStakeholder(leaves::create_stakeholder::CreateStakeholder { stakeholder: item }));
+                    operations.push(ProgramMutation::CreateStakeholder(leaves::create_stakeholder::CreateStakeholder { stakeholder: item, index: None }));
                 }
                 "user" => {
                     let item = UserProfile {
@@ -277,7 +278,7 @@ pub mod behavior {
                         validated: false,
                         stakeholder_ids: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateUserProfile(leaves::create_user_profile::CreateUserProfile { user_profile: item }));
+                    operations.push(ProgramMutation::CreateUserProfile(leaves::create_user_profile::CreateUserProfile { user_profile: item, index: None }));
                 }
                 "activity" => {
                     let item = Activity {
@@ -307,7 +308,7 @@ pub mod behavior {
                         temporal_pattern: None,
                         supervision_level: None,
                     };
-                    operations.push(ProgramMutation::CreateActivity(leaves::create_activity::CreateActivity { activity: item }));
+                    operations.push(ProgramMutation::CreateActivity(leaves::create_activity::CreateActivity { activity: item, index: None }));
                 }
                 "function" => {
                     let item = Function {
@@ -335,7 +336,7 @@ pub mod behavior {
                         hierarchy_parent_id: None,
                         conflict_ids: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateFunction(leaves::create_function::CreateFunction { function: item }));
+                    operations.push(ProgramMutation::CreateFunction(leaves::create_function::CreateFunction { function: item, index: None }));
                 }
                 "element" | "room" => {
                     let item = ProgramElement {
@@ -366,7 +367,7 @@ pub mod behavior {
                         adjacency_preferences: Vec::new(),
                         environmental_zone: None,
                     };
-                    operations.push(ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element: item }));
+                    operations.push(ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element: item, index: None }));
                     element_ids.push(id.clone());
                 }
                 "requirement" => {
@@ -393,7 +394,7 @@ pub mod behavior {
                         trace_links: Vec::new(),
                         superseded_by: None,
                     };
-                    operations.push(ProgramMutation::CreateRequirement(leaves::create_requirement::CreateRequirement { requirement: item }));
+                    operations.push(ProgramMutation::CreateRequirement(leaves::create_requirement::CreateRequirement { requirement: item, index: None }));
                 }
                 "risk" => {
                     let item = Risk {
@@ -418,7 +419,7 @@ pub mod behavior {
                         escalation_path: Vec::new(),
                         monitoring_plan: None,
                     };
-                    operations.push(ProgramMutation::CreateRisk(leaves::create_risk::CreateRisk { risk: item }));
+                    operations.push(ProgramMutation::CreateRisk(leaves::create_risk::CreateRisk { risk: item, index: None }));
                 }
                 "process" => {
                     let item = Process {
@@ -447,7 +448,7 @@ pub mod behavior {
                         handoff_points: Vec::new(),
                         quality_gates: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateProcess(leaves::create_process::CreateProcess { process: item }));
+                    operations.push(ProgramMutation::CreateProcess(leaves::create_process::CreateProcess { process: item, index: None }));
                 }
                 "equipment" => {
                     let item = Equipment {
@@ -477,7 +478,7 @@ pub mod behavior {
                         commissioning_notes: Vec::new(),
                         spare_parts: Vec::new(),
                     };
-                    operations.push(ProgramMutation::CreateEquipment(leaves::create_equipment::CreateEquipment { equipment: item }));
+                    operations.push(ProgramMutation::CreateEquipment(leaves::create_equipment::CreateEquipment { equipment: item, index: None }));
                 }
                 "adjacency" | "adjacency_bundle" if element_ids.len() >= 2 => {
                     let (a, b) = normalize_pair(&element_ids[0], &element_ids[1]);
@@ -504,7 +505,7 @@ pub mod behavior {
                         source_relationship_id: None,
                         internal_external_access: None,
                     };
-                    operations.push(ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency }));
+                    operations.push(ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency, index: None }));
                 }
                 _ => {}
             }
@@ -538,7 +539,7 @@ pub mod behavior {
             expiry_date: None,
             related_decision_ids: Vec::new(),
         };
-        (report, ProgramMutation::CreateReportRecord(leaves::create_report_record::CreateReportRecord { report_record }))
+        (report, ProgramMutation::CreateReportRecord(leaves::create_report_record::CreateReportRecord { report_record, index: None }))
     }
     //#endregion 📄️ReportRecord
 
@@ -567,7 +568,7 @@ pub mod behavior {
             recommendations: result.findings.clone(),
             raw_result_ref: None,
         };
-        (result, ProgramMutation::CreateAnalysisRecord(leaves::create_analysis_record::CreateAnalysisRecord { analysis_record }))
+        (result, ProgramMutation::CreateAnalysisRecord(leaves::create_analysis_record::CreateAnalysisRecord { analysis_record, index: None }))
     }
     //#endregion 🔬️AnalysisRecord
 
@@ -758,7 +759,7 @@ pub mod behavior {
             adjacency_preferences: Vec::new(),
             environmental_zone: None,
         };
-        run.emit(ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element }));
+        run.emit(ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element, index: None }));
     }
 
     fn upsert_stakeholder(run: &mut ImportRun, row: RegisterCsvRow) {
@@ -795,7 +796,7 @@ pub mod behavior {
             communication_channels: Vec::new(),
             success_metrics: Vec::new(),
         };
-        run.emit(ProgramMutation::CreateStakeholder(leaves::create_stakeholder::CreateStakeholder { stakeholder }));
+        run.emit(ProgramMutation::CreateStakeholder(leaves::create_stakeholder::CreateStakeholder { stakeholder, index: None }));
     }
 
     fn upsert_requirement(run: &mut ImportRun, row: RegisterCsvRow) {
@@ -834,7 +835,7 @@ pub mod behavior {
             trace_links: Vec::new(),
             superseded_by: None,
         };
-        run.emit(ProgramMutation::CreateRequirement(leaves::create_requirement::CreateRequirement { requirement }));
+        run.emit(ProgramMutation::CreateRequirement(leaves::create_requirement::CreateRequirement { requirement, index: None }));
     }
 
     /// 🔗 Parses `source_id>target_id` from the CSV `source` column (export fidelity encoding).
@@ -885,7 +886,7 @@ pub mod behavior {
             incompatibility_requirement: None,
             separation_requirements: Vec::new(),
         };
-        run.emit(ProgramMutation::CreateRelationship(leaves::create_relationship::CreateRelationship { relationship }));
+        run.emit(ProgramMutation::CreateRelationship(leaves::create_relationship::CreateRelationship { relationship, index: None }));
     }
 
     fn upsert_adjacency(run: &mut ImportRun, row: RegisterCsvRow) {
@@ -893,7 +894,7 @@ pub mod behavior {
             if existing.header.name != row.name {
                 let mut adjacency = existing.clone();
                 adjacency.header.name = row.name;
-                run.emit(ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency }));
+                run.emit(ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency, index: None }));
             }
             return;
         }
@@ -922,7 +923,7 @@ pub mod behavior {
             source_relationship_id: None,
             internal_external_access: None,
         };
-        run.emit(ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency }));
+        run.emit(ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency, index: None }));
     }
 
     /// 📚️ Upserts a COMPOSED `knowledge` register row through create/rename mutations.
@@ -954,7 +955,7 @@ pub mod behavior {
             citations: Vec::new(),
             usage_count: 0,
         };
-        run.emit(ProgramMutation::CreateKnowledgeRecord(leaves::create_knowledge_record::CreateKnowledgeRecord { knowledge_record }));
+        run.emit(ProgramMutation::CreateKnowledgeRecord(leaves::create_knowledge_record::CreateKnowledgeRecord { knowledge_record, index: None }));
     }
 
     /// 🏁️ Upserts a COMPOSED `benchmarks` register row through create/rename mutations.
@@ -987,7 +988,7 @@ pub mod behavior {
             knowledge_id: None,
             last_verified: None,
         };
-        run.emit(ProgramMutation::CreateBenchmarkRecord(leaves::create_benchmark_record::CreateBenchmarkRecord { benchmark_record }));
+        run.emit(ProgramMutation::CreateBenchmarkRecord(leaves::create_benchmark_record::CreateBenchmarkRecord { benchmark_record, index: None }));
     }
     //#endregion 📤️ExchangeImport
 
@@ -1068,7 +1069,7 @@ pub mod behavior {
 
     /// ➕️ The mutation that appends a trace link to the plugin trace register.
     pub fn add_trace_link(from_id: EntityId, to_id: EntityId, kind: TraceKind) -> ProgramMutation {
-        ProgramMutation::ConnectTrace(leaves::connect_trace::ConnectTrace { trace: TraceLink::new(from_id, to_id, kind) })
+        ProgramMutation::ConnectTrace(leaves::connect_trace::ConnectTrace { trace: TraceLink::new(from_id, to_id, kind), index: None })
     }
 
     /// 🧷️ The plugin trace register plus the requirement-embedded trace links it does not hold yet.

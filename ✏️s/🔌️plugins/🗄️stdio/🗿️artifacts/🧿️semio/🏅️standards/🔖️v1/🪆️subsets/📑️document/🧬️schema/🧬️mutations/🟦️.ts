@@ -18,10 +18,10 @@ export type SemioDocumentMutation =
   | { mutation: "setRunText"; path: DocBlockPath; runIndex: number; text: string }
   | { mutation: "setRunStyle"; path: DocBlockPath; runIndex: number; style: RunStyle }
   | { mutation: "setImageBlock"; path: DocBlockPath; imageId: string; alt: string; width?: Extract<DocBlock,{kind:"image"}>["width"]; height?: Extract<DocBlock,{kind:"image"}>["height"] }
-  | { mutation: "insertStyle"; style: DocStyle }
+  | { mutation: "insertStyle"; style: DocStyle; at?: number }
   | { mutation: "removeStyle"; id: string }
   | { mutation: "setStyleName"; id: string; name: string }
   | { mutation: "setStyleBasedOn"; id: string; basedOn?: string }
-  | { mutation: "insertImage"; image: DocImage }
+  | { mutation: "insertImage"; image: DocImage; at?: number }
   | { mutation: "removeImage"; id: string }
   | { mutation: "setImageBytes"; id: string; mime: string; bytes: number[] };

@@ -137,9 +137,9 @@ mod subject {
         let mut observations = Vec::new();
         for row in owned_vectors()?.array("cases") {
             let original = row.get("snapshot").ok_or("neutral PNG snapshot missing")?;
-            let payload = Json::Object(vec![("snapshot".into(), original.clone())]);
-            let PngMutation::SetSnapshot(set) = wire_operation("set-snapshot", &payload, mutation_from_payload_json, mutation_payload_json)? else { return Err("neutral PNG snapshot admission changed mutation kind".into()) };
-            let base = set.snapshot;
+            let payload = Json::Object(vec![("image".into(),original.get("image").ok_or("native image missing")?.clone())]);
+            let PngMutation::ReplaceImage(set) = wire_operation("replace-image", &payload, mutation_from_payload_json, mutation_payload_json)? else { return Err("neutral PNG snapshot admission changed mutation kind".into()) };
+            let base = PngSnapshot{schema:semio_s_artifact_stdio_png::STDIO_PNG_DOCUMENT_SCHEMA.into(),image:set.image};
             let revision = semio_s_artifact_stdio_png::schema::operations::png_revision(&base);
             if revision != owned_png_revision(original)? { return Err("native sample structural revision differs from independent oracle".into()) }
             let text = <PngSnapshot as ArtifactDsl>::print_dsl(&base);

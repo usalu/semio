@@ -9,7 +9,7 @@
 
 use crate::mutations::CadMutation;
 use crate::CadSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚡create-energy-model/⚡️rehandles/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⚡create-energy-model/⚡️rehandles/📸️snapshot/➡️after/🔣️.json");
@@ -28,7 +28,7 @@ fn mutation() -> CadMutation {
 }
 fn applied() -> CadSnapshot {
     let base = before();
-    mutation().diff(&base).diff().apply(&base).expect("create-energy-model applies to its committed before-snapshot")
+    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("create-energy-model applies to its committed before-snapshot")
 }
 
 /// ▶️ `create-energy-model` writes the fixed `energy_model` slot even when it is already occupied; the other three slots never move.
@@ -65,7 +65,7 @@ async fn inverse_reinstalls_the_displaced_energy_handle() {
     }
     let mut snapshot = applied();
     for step in &inverse {
-        snapshot = step.diff(&snapshot).diff().apply(&snapshot).expect("create-energy-model/rehandles-the-occupied-energy-slot: inverse step applies");
+        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("create-energy-model/rehandles-the-occupied-energy-slot: inverse step applies");
     }
     assert_eq!(snapshot, base, "create-energy-model/rehandles-the-occupied-energy-slot: inverse did not restore the before-snapshot");
 }
@@ -126,6 +126,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::diff::CadDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-energy-model/rehandles-the-occupied-energy-slot: committed diff did not carry before to after");
+}
+
+/// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

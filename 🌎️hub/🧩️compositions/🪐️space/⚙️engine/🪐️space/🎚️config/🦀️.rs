@@ -139,7 +139,24 @@ impl Default for SpaceConfig {
     }
 }
 
-store::impl_whole_record_config!(SpaceConfig);
+store::config_diff! {
+    record: SpaceConfig,
+    diff: SpaceConfigDiff,
+    fields: {
+        camera: BTreeMap<String, SpaceWindowCamera>,
+        collapsed_node_ids: Vec<String>,
+        preview_off_node_ids: Vec<String>,
+        active_node_id: Option<String>,
+        focused_node_id: Option<String>,
+        clipboard_node_ids: Vec<String>,
+        workflow_engagement_input: String,
+        compiled_dag_engagement_input: String,
+        pending_import_node_id: Option<String>,
+        pending_import_format: Option<String>,
+        active_panel_tab: String,
+        space_id: Option<String>,
+    },
+}
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
@@ -461,34 +478,47 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
         }
     }
 
-    type Diff = SpaceConfig;
+    type Diff = SpaceConfigDiff;
 
-    fn diff(&self, base: &SpaceConfig) -> protocol::MutationOutcome<SpaceConfig> {
-        let mut next = base.clone();
-        match self {
-            SpaceConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
-            SpaceConfigMutation::SetActiveNode { node_id } => next.active_node_id = node_id.clone(),
-            SpaceConfigMutation::SetFocusedNode { node_id } => next.focused_node_id = node_id.clone(),
-            SpaceConfigMutation::SetClipboard { node_ids } => next.clipboard_node_ids = node_ids.clone(),
-            SpaceConfigMutation::SetCollapsed { node_ids } => next.collapsed_node_ids = node_ids.clone(),
-            SpaceConfigMutation::SetPreviewOff { node_ids } => next.preview_off_node_ids = node_ids.clone(),
+    fn diff(&self, base: &SpaceConfig) -> protocol::MutationOutcome<SpaceConfigDiff> {
+        protocol::MutationOutcome::new(match self {
+            SpaceConfigMutation::Snapshot { config } => SpaceConfigDiff::changing(base, config),
+            SpaceConfigMutation::SetActiveNode { node_id } => SpaceConfigDiff { active_node_id: Some(node_id.clone()), ..Default::default() },
+            SpaceConfigMutation::SetFocusedNode { node_id } => SpaceConfigDiff { focused_node_id: Some(node_id.clone()), ..Default::default() },
+            SpaceConfigMutation::SetClipboard { node_ids } => SpaceConfigDiff { clipboard_node_ids: Some(node_ids.clone()), ..Default::default() },
+            SpaceConfigMutation::SetCollapsed { node_ids } => SpaceConfigDiff { collapsed_node_ids: Some(node_ids.clone()), ..Default::default() },
+            SpaceConfigMutation::SetPreviewOff { node_ids } => SpaceConfigDiff { preview_off_node_ids: Some(node_ids.clone()), ..Default::default() },
             SpaceConfigMutation::SetCamera { window_id, camera } => {
-                next.camera.insert(window_id.clone(), *camera);
+                let mut cameras = base.camera.clone();
+                cameras.insert(window_id.clone(), *camera);
+                SpaceConfigDiff { camera: Some(cameras), ..Default::default() }
             }
-            SpaceConfigMutation::SetWorkflowEngagementInput { value } => next.workflow_engagement_input = value.clone(),
-            SpaceConfigMutation::SetCompiledDagEngagementInput { value } => next.compiled_dag_engagement_input = value.clone(),
-            SpaceConfigMutation::SetPendingImport { node_id, format } => {
-                next.pending_import_node_id = node_id.clone();
-                next.pending_import_format = format.clone();
-            }
-            SpaceConfigMutation::SetSpaceId { space_id } => next.space_id = space_id.clone(),
-            SpaceConfigMutation::SetActivePanelTab { tab_id } => next.active_panel_tab = tab_id.clone(),
-        }
-        protocol::MutationOutcome::new(next)
+            SpaceConfigMutation::SetWorkflowEngagementInput { value } => SpaceConfigDiff { workflow_engagement_input: Some(value.clone()), ..Default::default() },
+            SpaceConfigMutation::SetCompiledDagEngagementInput { value } => SpaceConfigDiff { compiled_dag_engagement_input: Some(value.clone()), ..Default::default() },
+            SpaceConfigMutation::SetPendingImport { node_id, format } => SpaceConfigDiff { pending_import_node_id: Some(node_id.clone()), pending_import_format: Some(format.clone()), ..Default::default() },
+            SpaceConfigMutation::SetSpaceId { space_id } => SpaceConfigDiff { space_id: Some(space_id.clone()), ..Default::default() },
+            SpaceConfigMutation::SetActivePanelTab { tab_id } => SpaceConfigDiff { active_panel_tab: Some(tab_id.clone()), ..Default::default() },
+        })
     }
 
     fn inverse(&self, base: &SpaceConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-        Ok(vec![SpaceConfigMutation::Snapshot { config: base.clone() }])
+        Ok(vec![match self {
+            SpaceConfigMutation::Snapshot { .. } => SpaceConfigMutation::Snapshot { config: base.clone() },
+            SpaceConfigMutation::SetActiveNode { .. } => SpaceConfigMutation::SetActiveNode { node_id: base.active_node_id.clone() },
+            SpaceConfigMutation::SetFocusedNode { .. } => SpaceConfigMutation::SetFocusedNode { node_id: base.focused_node_id.clone() },
+            SpaceConfigMutation::SetClipboard { .. } => SpaceConfigMutation::SetClipboard { node_ids: base.clipboard_node_ids.clone() },
+            SpaceConfigMutation::SetCollapsed { .. } => SpaceConfigMutation::SetCollapsed { node_ids: base.collapsed_node_ids.clone() },
+            SpaceConfigMutation::SetPreviewOff { .. } => SpaceConfigMutation::SetPreviewOff { node_ids: base.preview_off_node_ids.clone() },
+            SpaceConfigMutation::SetCamera { window_id, .. } => match base.camera.get(window_id) {
+                Some(camera) => SpaceConfigMutation::SetCamera { window_id: window_id.clone(), camera: *camera },
+                None => SpaceConfigMutation::Snapshot { config: base.clone() },
+            },
+            SpaceConfigMutation::SetWorkflowEngagementInput { .. } => SpaceConfigMutation::SetWorkflowEngagementInput { value: base.workflow_engagement_input.clone() },
+            SpaceConfigMutation::SetCompiledDagEngagementInput { .. } => SpaceConfigMutation::SetCompiledDagEngagementInput { value: base.compiled_dag_engagement_input.clone() },
+            SpaceConfigMutation::SetPendingImport { .. } => SpaceConfigMutation::SetPendingImport { node_id: base.pending_import_node_id.clone(), format: base.pending_import_format.clone() },
+            SpaceConfigMutation::SetSpaceId { .. } => SpaceConfigMutation::SetSpaceId { space_id: base.space_id.clone() },
+            SpaceConfigMutation::SetActivePanelTab { .. } => SpaceConfigMutation::SetActivePanelTab { tab_id: base.active_panel_tab.clone() },
+        }])
     }
 }
 //#endregion 🔖️ConfigOperations

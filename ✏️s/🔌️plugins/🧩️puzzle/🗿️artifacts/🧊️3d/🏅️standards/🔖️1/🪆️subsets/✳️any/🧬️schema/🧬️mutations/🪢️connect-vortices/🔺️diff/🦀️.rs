@@ -21,6 +21,11 @@ pub fn diff(payload: &super::mutation::ConnectVortices, base: &Puzzle3dSnapshot)
         x: payload.x,
         y: payload.y,
     };
-    protocol::MutationOutcome::new(Puzzle3dDiff { attractions: Some(Puzzle3dAttractionsDelta { added: vec![attraction], ..Default::default() }), ..Default::default() })
+    let reordered = payload.index.filter(|index| *index < base.attractions.len()).map(|index| {
+        let mut order: Vec<String> = base.attractions.iter().map(|entry| entry.id.clone()).collect();
+        order.insert(index, payload.id.clone());
+        order
+    });
+    protocol::MutationOutcome::new(Puzzle3dDiff { attractions: Some(Puzzle3dAttractionsDelta::adding(attraction, reordered)), ..Default::default() })
 }
 //#endregion 🔖️Diff

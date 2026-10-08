@@ -1,5 +1,18 @@
-; Direct binary frame: version, descriptor tag, leaf-owned payload.
-; change-jfif-header=2, replace-quant-table=3, remove-quant-table=4, replace-huffman-table=5, remove-huffman-table=6, change-restart-interval=7, insert-other-segment=8, remove-other-segment=9, replace-pixels=10
-mutation = %x01 tag *OCTET
-tag = %x02 / %x03 / %x04 / %x05 / %x06 / %x07 / %x08 / %x09 / %x0A / %x0B
+; Native declaration tags and structurally typed semantic image fields.
+mutation = %x01 (change-jfif / insert-segment / remove-segment / replace-pixels / replace-image)
+change-jfif = %x01 version density-units varint varint optional-thumbnail
+insert-segment = %x02 varint segment
+remove-segment = %x03 varint
+replace-pixels = %x04 bytes
+replace-image = %x05 image
+image = varint varint bytes version density-units varint varint optional-thumbnail segments
+version = OCTET OCTET
+density-units = %x00 / %x01 / %x02
+optional-thumbnail = %x00 / (%x01 thumbnail)
+thumbnail = OCTET OCTET bytes
+segment = OCTET bytes
+segments = varint *segment
+bytes = varint *OCTET
+varint = *9(%x80-FF) %x00-7F
 OCTET = %x00-FF
+; Counts declare the exact repetition extent; varints are minimal unsigned64 values.

@@ -11,7 +11,7 @@ use crate::standards::v1::subsets::cad::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_triple, enc_named_triple};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_added, dec_named_triple, enc_named_added, enc_named_triple};
 use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
 use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
@@ -21,13 +21,13 @@ use protocol::MutationDiff;
 pub(crate) fn print_cad_diff(d: &SemioCadDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(l) = &d.layers {
-        tokens.push(format!("layers={}", enc_named_triple(l, |k: &String| enc_str(k), enc_layer_diff, enc_layer)));
+        tokens.push(format!("layers={}", enc_named_triple(l, |k: &String| enc_str(k), enc_layer_diff, |a| enc_named_added(a, enc_layer))));
     }
     if let Some(b) = &d.blocks {
-        tokens.push(format!("blocks={}", enc_named_triple(b, |k: &String| enc_str(k), enc_block_diff, enc_block)));
+        tokens.push(format!("blocks={}", enc_named_triple(b, |k: &String| enc_str(k), enc_block_diff, |a| enc_named_added(a, enc_block))));
     }
     if let Some(e) = &d.entities {
-        tokens.push(format!("entities={}", enc_named_triple(e, |k: &String| enc_str(k), enc_entity_record_diff, enc_entity_record)));
+        tokens.push(format!("entities={}", enc_named_triple(e, |k: &String| enc_str(k), enc_entity_record_diff, |a| enc_named_added(a, enc_entity_record))));
     }
     tokens.join(" ")
 }
@@ -40,11 +40,11 @@ pub(crate) fn parse_cad_diff(line: &str) -> Result<SemioCadDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("layers=") {
-            d.layers = Some(dec_named_triple(rest, dec_str, dec_layer_diff, dec_layer)?);
+            d.layers = Some(dec_named_triple(rest, dec_str, dec_layer_diff, |t| dec_named_added(t, dec_layer))?);
         } else if let Some(rest) = token.strip_prefix("blocks=") {
-            d.blocks = Some(dec_named_triple(rest, dec_str, dec_block_diff, dec_block)?);
+            d.blocks = Some(dec_named_triple(rest, dec_str, dec_block_diff, |t| dec_named_added(t, dec_block))?);
         } else if let Some(rest) = token.strip_prefix("entities=") {
-            d.entities = Some(dec_named_triple(rest, dec_str, dec_entity_record_diff, dec_entity_record)?);
+            d.entities = Some(dec_named_triple(rest, dec_str, dec_entity_record_diff, |t| dec_named_added(t, dec_entity_record))?);
         } else {
             return Err(format!("cad diff: unknown token {token:?}"));
         }
@@ -243,14 +243,14 @@ pub(crate) fn dec_entity_record_diff(s: &str) -> Result<CadEntityRecordDiff, Str
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_block_diff(d: &CadBlockDiff) -> String {
-    format!("[{},{}]", encode_option(&d.base_point, |p: &SemioPoint2| enc_point2(p)), encode_option(&d.entities, |v: &CadEntitiesDiff| enc_named_triple(v, |k: &String| enc_str(k), enc_entity_record_diff, enc_entity_record)),)
+    format!("[{},{}]", encode_option(&d.base_point, |p: &SemioPoint2| enc_point2(p)), encode_option(&d.entities, |v: &CadEntitiesDiff| enc_named_triple(v, |k: &String| enc_str(k), enc_entity_record_diff, |a| enc_named_added(a, enc_entity_record))),)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_block_diff(s: &str) -> Result<CadBlockDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [base_point, entities] = parts.as_slice() else { return Err(format!("block diff: expected 2 fields, got {}", parts.len())) };
-    Ok(CadBlockDiff { base_point: decode_option(base_point, dec_point2)?, entities: decode_option(entities, |v| dec_named_triple(v, dec_str, dec_entity_record_diff, dec_entity_record))? })
+    Ok(CadBlockDiff { base_point: decode_option(base_point, dec_point2)?, entities: decode_option(entities, |v| dec_named_triple(v, dec_str, dec_entity_record_diff, |t| dec_named_added(t, dec_entity_record)))? })
 }
 }
 pub use diff_codec::*;

@@ -1,57 +1,39 @@
 {
   "artifact": null,
-  "schema": null,
+  "attractions": null,
   "domain": null,
   "meta": null,
   "objects": {
     "added": [],
-    "removed": [],
     "patched": [
       {
         "id": "object-b",
         "patch": {
-          "replacement": {
-            "id": "object-b",
-            "objectKind": "object-kind-b",
-            "anchor": "fixed",
-            "origin": [
-              4.0,
-              0.0,
-              0.0
-            ],
-            "vortices": [
+          "vortices": {
+            "added": [
               {
-                "id": "vortex-2",
-                "vortexKind": "vortex-kind-b",
-                "position": [
-                  -1.0,
-                  0.0,
-                  0.0
-                ],
                 "hidden": false,
-                "locked": false
-              },
-              {
                 "id": "vortex-3",
-                "vortexKind": "vortex-kind-b",
+                "locked": false,
                 "position": [
                   0.0,
                   0.0,
                   1.0
                 ],
-                "hidden": false,
-                "locked": false
+                "vortexKind": "vortex-kind-b"
               }
             ],
-            "hidden": false,
-            "locked": false
+            "patched": [],
+            "removed": [],
+            "reordered": null
           }
         }
       }
     ],
+    "removed": [],
     "reordered": null
   },
-  "attractions": null,
-  "targetVolumes": null,
-  "references": null
+  "references": null,
+  "schema": null,
+  "targetVolumes": null
 }

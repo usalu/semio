@@ -1,6 +1,45 @@
 /** 🧹️ Strict cross-language nested-value retirement laws; source oracle only. */
 import { strict as assert } from "node:assert";
 import stableStringify from "fast-json-stable-stringify";
+import { semioSchemaAjvV1 } from "../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+
+const ownerSchema=await Bun.file(new URL("../../🧬️schema/🔣️.json",import.meta.url)).json();
+const grantSchema=await Bun.file(new URL("../../../../../../../../🔨️modules/🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json",import.meta.url)).json();
+const ajv=semioSchemaAjvV1({allErrors:true}).addSchema(grantSchema).addSchema(ownerSchema);
+const validateGrant=ajv.compile({$ref:ownerSchema.$id+"#/$defs/Grant"});
+const validateDemand=ajv.compile({$ref:ownerSchema.$id+"#/$defs/Demand"});
+const typed=await Bun.file(new URL("../../🧫️fixtures/🎮️typed-owners/🔣️.json",import.meta.url)).json();
+for(const row of typed.cases) {
+  const value={nested:{value:row.text}};
+  assert.deepEqual(JSON.parse(stableStringify(value)),value);
+  assert.equal(bytesOf(value),Buffer.byteLength("nestedvalue")+new TextEncoder().encode(row.text).length);
+  assert(row.reservedCapacity>Buffer.byteLength(row.text));
+  for(const copy of typed.grants) {
+    assert(validateGrant({maximumItems:1,maximumCopyBytes:copy,maximumCapacityBytes:0,maximumReleaseBytes:row.reservedCapacity,maximumDepth:1}));
+    assert(validateDemand({copyBytes:1,capacityBytes:0,releaseBytes:row.reservedCapacity,depth:1}));
+  }
+}
+assert(!validateGrant({maximumItems:1,maximumBytes:4096}));
+function bytesOf(value:unknown):number {return typeof value==="string"?Buffer.byteLength(value):value!==null&&typeof value==="object"?Object.entries(value).reduce((sum,[key,child])=>sum+Buffer.byteLength(key)+bytesOf(child),0):0;}
+
+const finite=await Bun.file(new URL("../../🧫️fixtures/🧬️finite-fields/🔣️.json",import.meta.url)).json();
+const finiteSchema=await Bun.file(new URL("../../../🧬️schema/🔣️.json",import.meta.url)).json();
+const typeSchema=await Bun.file(new URL("../../../../../../../../🔨️modules/🌱️value/🏷️type/🧬️schema/🔣️.json",import.meta.url)).json();
+ajv.addSchema(typeSchema).addSchema(finiteSchema);
+const validateSchema=ajv.compile({$ref:finiteSchema.$id+"#/$defs/Schema"});const validateOperator=ajv.compile({$ref:finiteSchema.$id+"#/$defs/OperatorInfo"});
+assert(validateSchema(finite.schema),JSON.stringify(validateSchema.errors));assert(validateOperator(finite.operator),JSON.stringify(validateOperator.errors));
+assert.deepEqual(JSON.parse(stableStringify(finite.schema)),finite.schema);assert.deepEqual(JSON.parse(stableStringify(finite.operator)),finite.operator);
+const texts=(values:string[])=>values.reduce((sum,value)=>sum+new TextEncoder().encode(value).length,0);
+type TypeWire={kind:"schema",of:string}|{kind:"list",of:TypeWire}|{kind:"boolean"|"integer"|"decimal"|"text"|"any"};
+function typeText(value:TypeWire):number {return value.kind==="schema"?Buffer.byteLength(value.of):value.kind==="list"?typeText(value.of):0;}
+assert.equal(texts([finite.schema.id,finite.schema.module,finite.schema.name,finite.schema.icon,finite.schema.summary])+finite.schema.fields.reduce((sum:number,field:any)=>sum+texts([field.key,field.label??""])+typeText(field.value)+bytesOf(field.default),0),finite.expected.schemaStringBytes);
+assert.equal(texts([finite.operator.id,finite.operator.extension,finite.operator.name,finite.operator.abbreviation,finite.operator.icon,finite.operator.summary,...finite.operator.group,finite.operator.variadicInput.slotKey])+finite.operator.inputs.reduce((sum:number,channel:any)=>sum+texts([channel.code,channel.abbreviation,channel.name,channel.fullName,channel.label??"",...channel.operators,...channel.valueTypes,...channel.itemTypes])+bytesOf(channel.default),0),finite.expected.operatorStringBytes);
+
+const ownedDemand = await Bun.file(new URL("../../🧫️fixtures/📏️owned-demand/🔣️.json", import.meta.url)).json();
+assert.equal(JSON.parse(stableStringify({ text: ownedDemand.text })).text, ownedDemand.text);
+assert.ok(ownedDemand.reservedCapacity > Buffer.byteLength(ownedDemand.text));
+assert.ok(ownedDemand.reservedCapacity > ownedDemand.logicalPage);
+assert.equal(ownedDemand.unsupportedFullGrantKind, "unsupportedOwner");
 
 
 
@@ -55,3 +94,5 @@ assert.equal(Buffer.byteLength(node) + 2 * Buffer.byteLength(payload) + Buffer.b
 assert.equal(stableStringify({ node: { label: payload } }), JSON.stringify({ node: { label: payload } }));
 
 //#endregion 📸️EvaluationOwnership
+
+console.log("[DEBUG] actual Neural retirement independent UTF8/stable JSON, grant accounting, cache ownership and evaluation oracle assertions passed");

@@ -88,7 +88,7 @@ fn computers_manifest() -> JsonValue {
 // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` (out of this packet's
 // path_scope; `.contributes` is genuinely stateful registry work per that file's own doc comment,
 // but is dressed as `async` with zero real suspension — same shape `.depends_on` already bridges in
-// that same file); bridged here via `semio_framework::io::resolve_ready`, matching that established
+// that same file); bridged here via `semio_framework_os_kernel::io::resolve_ready`, matching that established
 // idiom. See this packet's lease-request asking the SDK owner to revert these to sync directly.
 fn bundle() -> ExtensionBundle {
     let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building", env!("CARGO_PKG_VERSION")).extends("cad").depends_on("cad", semio_framework::tree_pin!());

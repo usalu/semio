@@ -630,6 +630,33 @@ def patched_ids(before, after, member):
     return reached
 
 
+def apply_record_patch(record, patch):
+    """🩹 Applies one sparse typed patch to a copy of `record`: an absent key is untouched, `null` clears the member, any other value
+    sets it, and `handles` carries its own id-keyed delta."""
+    result = json.loads(json.dumps(record))
+    for key, value in patch.items():
+        if key == "handles":
+            result["handles"] = apply_keyed_delta(result.get("handles", []), value)
+        elif value is None:
+            result.pop(key, None)
+        else:
+            result[key] = json.loads(json.dumps(value))
+    return result
+
+
+def apply_keyed_delta(items, delta):
+    """🧩 Applies one id-keyed collection delta in the order the typed diff declares: removals, additions, patches, then the explicit order."""
+    items = [item for item in items if item["id"] not in set(delta.get("removed", []))]
+    items = items + json.loads(json.dumps(delta.get("added", [])))
+    patches = {entry["id"]: entry["patch"] for entry in delta.get("patched", [])}
+    items = [apply_record_patch(item, patches[item["id"]]) if item["id"] in patches else item for item in items]
+    order = delta.get("reordered")
+    if order is not None:
+        by_id = {item["id"]: item for item in items}
+        items = [by_id[identity] for identity in order]
+    return items
+
+
 def diff_reproduction(ctx):
     """🔺 jsonpatch reproduces every committed after-snapshot and holds the typed diff to its ops."""
     rows = []
@@ -675,12 +702,11 @@ def diff_reproduction(ctx):
             if declared_patched != reached:
                 failures.append("%s: the typed diff patches %r in %s, jsonpatch needs operations for %r" % (vector["id"], sorted(declared_patched), member, sorted(reached)))
             for entry in delta.get("patched", []):
-                replacement = entry.get("patch", {}).get("replacement")
-                if replacement is None:
-                    continue
+                before_record = next((record for record in vector["before"].get(member, []) if record["id"] == entry["id"]), None)
+                after_record = next((record for record in vector["after"].get(member, []) if record["id"] == entry["id"]), None)
                 checks += 1
-                if replacement != next((record for record in vector["after"].get(member, []) if record["id"] == entry["id"]), None):
-                    failures.append("%s: the typed diff's replacement for %s %r does not equal the committed after-snapshot's record" % (vector["id"], member, entry["id"]))
+                if before_record is None or apply_record_patch(before_record, entry.get("patch", {})) != after_record:
+                    failures.append("%s: the typed diff's sparse patch for %s %r does not carry the committed before-snapshot's record to the after-snapshot's record" % (vector["id"], member, entry["id"]))
         rows.append({"id": vector["id"], "kind": vector["kind"], "checks": checks, "ops": len(operations), "members": sorted(declared)})
     return report("diff-reproduction", rows, failures)
 # endregion 🔖️Diff

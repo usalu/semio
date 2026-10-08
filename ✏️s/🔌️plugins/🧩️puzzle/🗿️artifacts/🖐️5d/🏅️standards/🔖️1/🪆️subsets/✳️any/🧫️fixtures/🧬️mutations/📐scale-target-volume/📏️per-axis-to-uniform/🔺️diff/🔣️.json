@@ -1,41 +1,22 @@
 {
   "artifact": null,
-  "schema": null,
   "domain": null,
-  "label": null,
-  "meta": null,
-  "kindCatalogs": null,
-  "kindCatalogsExtra": null,
-  "kindCompatibility": null,
-  "parts": null,
   "fasteners": null,
+  "kindCompatibility": null,
+  "meta": null,
+  "parts": null,
+  "schema": null,
   "targetVolumes": {
     "added": [],
-    "removed": [],
     "patched": [
       {
         "id": "volume-1",
         "patch": {
-          "replacement": {
-            "id": "volume-1",
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "orientation": [
-              0.0,
-              0.0,
-              0.0,
-              1.0
-            ],
-            "scale": 2.0,
-            "hidden": false,
-            "locked": false
-          }
+          "scale": 2.0
         }
       }
     ],
+    "removed": [],
     "reordered": null
   }
 }

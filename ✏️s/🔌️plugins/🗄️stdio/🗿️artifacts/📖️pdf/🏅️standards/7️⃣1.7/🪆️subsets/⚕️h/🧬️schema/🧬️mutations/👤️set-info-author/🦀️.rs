@@ -1,7 +1,7 @@
 //! 👤️ Authoritative PDF/H mutation for setting the document author conformance axis.
 
 use super::PdfHMutation;
-use crate::standards::v1_7::subsets::base::schema::{diff::{PdfDiff, PdfInfoDiff, PdfSet}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{diff::{PdfDiff, PdfInfoDiff, PdfSet}, snapshot::PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -16,7 +16,8 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for SetInfoAuthor {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "info-author", kind: "set-info-author", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let change = (base.info.author.as_deref() != Some(self.author.as_str())).then(|| PdfInfoDiff { author: Some(PdfSet::Set { value: self.author.clone() }), ..Default::default() });
+        let wanted = (!self.author.is_empty()).then(|| self.author.clone());
+        let change = (base.info.author != wanted).then(|| PdfInfoDiff { author: Some(PdfSet::from_option(&wanted)), ..Default::default() });
         MutationOutcome::new(PdfDiff { info: change, ..Default::default() })
     }
 

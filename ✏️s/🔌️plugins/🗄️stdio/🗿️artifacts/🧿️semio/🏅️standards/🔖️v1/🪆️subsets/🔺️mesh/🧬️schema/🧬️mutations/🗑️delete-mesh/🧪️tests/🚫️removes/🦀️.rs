@@ -1,11 +1,8 @@
 //! 🧪️ `delete-mesh` fixture — `🚫️removes`.
 //!
 //! Transcribed from `../../🔺️diff/🦀️.rs`: an unknown mesh id is Error
-//! `mutation.target-missing`; otherwise the diff is a bare `meshes.removed[id]` that carries no
-//! content. `↩️inverse/🦀️.rs` is the interesting half: because the id-keyed add can only
-//! re-insert at a recorded index, the inverse first DELETES every mesh after the removed one, then
-//! re-creates the removed mesh, then re-creates that tail — so order is restored exactly. Removing
-//! the LEADING mesh of two is what makes that dance observable.
+//! `mutation.target-missing`; otherwise the diff is a bare `meshes.removed[id]` that carries no content.
+//! The inverse is one create carrying the removed index (`at`), so order is restored exactly.
 
 use crate::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
 use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
@@ -32,26 +29,25 @@ fn mutation() -> SemioMeshMutation {
 #[semio_framework_async_macros::async_test]
 async fn removes_the_leading_mesh() {
     let base = before();
-    assert_eq!(base.meshes.len(), 2, "the fixture needs a trailing mesh for the order-restoring inverse to matter");
-    let produced = mutation().diff(&base).diff().apply(&base).expect("delete-mesh applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-mesh applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-mesh/removes-the-leading-mesh-and-keeps-the-trailing-one: applied state differs from the committed after-snapshot");
     assert!(!produced.meshes.iter().any(|mesh| mesh.id == "mesh-a"), "the named mesh must be gone");
     assert_eq!(produced.meshes, vec![base.meshes[1].clone()], "the trailing mesh slides down into index 0");
     assert_eq!(produced.materials, base.materials, "deleting a mesh must not cascade into the materials its primitives referenced");
 }
 
-/// ↩️ The undo is a THREE-step dance: strip the tail, re-create the removed mesh, rebuild the tail.
+/// ↩️ The undo is ONE create carrying the removed index, so the original position is restored exactly.
 #[semio_framework_async_macros::async_test]
-async fn the_undo_strips_the_tail_recreates_the_mesh_then_rebuilds_the_tail() {
+async fn the_undo_recreates_the_mesh_at_its_original_index() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
-    assert_eq!(undo.len(), 3, "one delete per trailing mesh, then the re-create, then one create per trailing mesh");
-    assert!(matches!(undo[0], SemioMeshMutation::DeleteMesh(_)), "the tail is stripped first so the removed mesh can be re-inserted ahead of it");
-    assert!(matches!(undo[1], SemioMeshMutation::CreateMesh(_)) && matches!(undo[2], SemioMeshMutation::CreateMesh(_)), "then the removed mesh and the tail are re-created in order");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-mesh applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("each undo step applies to the running state");
+    assert_eq!(undo.len(), 1, "the removed mesh is restored by exactly one create");
+    assert!(matches!(&undo[0], SemioMeshMutation::CreateMesh(create) if create.at == Some(0)), "the create must name the removed index");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-mesh applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
     }
     assert_eq!(current, base, "delete-mesh/removes-the-leading-mesh-and-keeps-the-trailing-one: the undo did not restore the before-snapshot, order included");
 }
@@ -107,6 +103,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-mesh diff decodes");
-    let produced = decoded.apply(&before()).expect("committed delete-mesh diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-mesh diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-mesh/removes-the-leading-mesh-and-keeps-the-trailing-one: committed diff did not carry before to after");
 }

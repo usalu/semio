@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::generation3d::config::SetSnapshot;
+use crate::editor::generation3d::config::SetSun;
 use crate::standards::v1::subsets::any::schema::mutations::generation3d_document_replacement;
 use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
 use crate::standards::v1::subsets::any::schema::{PROCEDURAL_EXAMPLE_BOX_FILLET, PROCEDURAL_EXAMPLE_BOX_SHELL, PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, PROCEDURAL_EXAMPLE_HEX_COLUMN, PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, PROCEDURAL_EXAMPLE_RECT_EXTRUDE, PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, PROCEDURAL_EXAMPLE_SPHERE_TORUS};
@@ -67,10 +67,10 @@ fn set_active_example_artifact_gesture_fits_its_declared_fold_envelope_for_every
 #[test]
 fn set_active_example_config_gesture_fits_its_declared_fold_envelope() {
     let base = Generation3dConfig::default();
-    let mutation = Generation3dConfigMutation::SetSnapshot(SetSnapshot { config: Generation3dConfig { sun_json: "{\"azimuth\":1.0}".into(), ..base.clone() } });
-    let footprint = admit_generation3d_config_mutation(&mutation).expect("the config snapshot mutation is admissible");
+    let mutation = Generation3dConfigMutation::SetSun(SetSun { json: "{\"azimuth\":1.0}".into() });
+    let footprint = admit_generation3d_config_mutation(&mutation).expect("the config sun mutation is admissible");
     let inverse_rows = ::protocol::Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").len();
-    assert_eq!(inverse_rows, 1, "a config snapshot swap is point-invertible");
+    assert_eq!(inverse_rows, 1, "a config sun change is point-invertible");
     assert!(inverse_rows + 1 <= footprint.work_items, "one config item folds {} rows against a declared envelope of {}", inverse_rows + 1, footprint.work_items);
 }
 

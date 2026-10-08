@@ -8,7 +8,7 @@ async fn object_patch_apply_mutates_and_inverse_restores_all_fields() {
     let original = object.clone();
     let new_mesh_workspace = "{\"changed\":true}".to_string();
     let new_mesh = mesh_child_handle("obj-1", &new_mesh_workspace);
-    let patch = LowpolyObjectPatch { name: Some("Renamed".into()), smooth_shading: Some(true), transform: Some(LowpolyTransform { position: [1.0, 2.0, 3.0], ..LowpolyTransform::default() }), mesh: Some(Some(new_mesh.clone())), mesh_content: None, mesh_state:None };
+    let patch = LowpolyObjectPatch { name: Some("Renamed".into()), smooth_shading: Some(true), position: Some([1.0, 2.0, 3.0]), rotation: None, scale: None, mesh: Some(Some(new_mesh.clone())), mesh_content: None, mesh_state:None };
     object.apply_patch(&patch);
     assert_eq!(object.name, "Renamed");
     assert!(object.smooth_shading);

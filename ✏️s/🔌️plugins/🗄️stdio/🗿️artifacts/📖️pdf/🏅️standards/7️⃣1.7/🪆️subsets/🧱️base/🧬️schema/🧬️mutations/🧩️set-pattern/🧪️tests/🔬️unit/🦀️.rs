@@ -1,5 +1,8 @@
 use super::super::apply_pdf_mutation;
 use super::*;
+use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
+use crate::standards::v1_7::subsets::base::schema::snapshot::*;
+use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
 use semio_framework_diagnostic::Severity;
 
 #[test]
@@ -12,7 +15,7 @@ fn shading(id: &str) -> PdfShading {
 }
 
 fn shading_pattern(shading: &str, ext_g_state: Option<&str>) -> PdfMutation {
-    PdfMutation::SetPattern(SetPattern { pattern: PdfPattern { id: "P1".into(), matrix: PDF_IDENTITY_MATRIX, kind: PdfPatternKind::Shading { shading: shading.into(), ext_g_state: ext_g_state.map(Into::into) }, extra: Vec::new() } })
+    PdfMutation::SetPattern(SetPattern { pattern: PdfPattern { id: "P1".into(), matrix: PDF_IDENTITY_MATRIX, kind: PdfPatternKind::Shading { shading: shading.into(), ext_g_state: ext_g_state.map(Into::into) }, extra: Vec::new() }, index: None })
 }
 
 fn assert_refused(snapshot: &mut PdfSnapshot, mutation: &PdfMutation) {
@@ -53,4 +56,11 @@ fn an_empty_shading_id_names_nothing_and_applies() {
     let outcome = apply_pdf_mutation(&mut snapshot, &shading_pattern("", None));
     assert!(outcome.messages().is_empty(), "an absent shading is not a dangling reference, raised {:?}", outcome.messages());
     assert_eq!(snapshot.patterns.len(), 1);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    let (before, after) = support::snapshots(include_bytes!("../../../../../🧫️fixtures/🧩️set-pattern/⬅️before.pdf"), include_bytes!("../../../../../🧫️fixtures/🧩️set-pattern/➡️after.pdf"));
+    let before = support::applied(&before, &PdfMutation::SetShading(crate::standards::v1_7::subsets::base::schema::mutations::SetShading { shading: support::added(&before.shadings, &after.shadings), index: None }));
+    assert_mutation_inverse_sum_law(&PdfMutation::SetPattern(SetPattern { pattern: support::added(&before.patterns, &after.patterns), index: None }), &before).await;
 }

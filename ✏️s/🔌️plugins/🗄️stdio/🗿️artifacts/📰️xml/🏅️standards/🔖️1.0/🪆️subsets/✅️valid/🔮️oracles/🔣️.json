@@ -62,8 +62,6 @@
       "subsetDirectoryName": "✅️valid",
       "vectors": [],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "declare-doctype",
         "rename-document-element",
         "set-external-subset",
@@ -187,48 +185,6 @@
             "operation": "set-internal-subset",
             "bridgeVersion": 1,
             "variant": "SetInternalSubset"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "xml-1-0-valid-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "lxml-xml-1-0-valid-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "xml-1-0-valid-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "xml-1-0-valid-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "lxml-xml-1-0-valid-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "xml-1-0-valid-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {
@@ -524,56 +480,6 @@
       "reproducible": true,
       "family": "structural",
       "notes": "Character content of /root/item replaced, Hello -> World.",
-      "generator": {
-        "oracle": "lxml-xml-1-0-valid-mutate-reader",
-        "packageVersion": "6.1.3",
-        "engineFamily": "lxml",
-        "engineVersion": "6.1.3",
-        "command": "uv run python3 🔨️f2-gen-xml-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
-        "platform": "darwin-arm64"
-      }
-    },
-    {
-      "id": "set-snapshot-applied",
-      "class": "third-party-generated",
-      "target": {
-        "artifact": "s.stdio.xml",
-        "standard": "1.0",
-        "subset": "valid"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before-xml",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.xml",
-          "mediaType": "application/xml",
-          "sha256": "sha256:61f6795d0f2fe9e13e14af1da74af73d21952c94639f13fc1c43ee805f0b3411",
-          "bytes": 86
-        },
-        {
-          "role": "expected-after-xml",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.xml",
-          "mediaType": "application/xml",
-          "sha256": "sha256:93bb2fd714b6a3dc3693b7c04cda2208c8ca6c12ea9170b1e5f7e57f59dcdff8",
-          "bytes": 149
-        }
-      ],
-      "provenance": {
-        "source": "generated",
-        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
-        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "utf8-text-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": "Whole-document snapshot replace: an unrelated valid document substituted wholesale.",
       "generator": {
         "oracle": "lxml-xml-1-0-valid-mutate-reader",
         "packageVersion": "6.1.3",

@@ -85,33 +85,38 @@ pub struct GenerationRootRetirement {
 }
 
 impl GenerationRetirementState {
-    fn close_step(&mut self, items: usize, bytes: usize) -> store::SnapshotRetirementStep {
+    fn close_step(&mut self, items: usize, bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
         use store::SnapshotRetirementStep as Step;
         if items == 0 || bytes == 0 {
-            return Step::Blocked;
+            return Ok(Step::Blocked);
         }
         if let Some(value) = self.bytes.as_mut() {
-            let released_bytes = bytes.min(value.len());
-            value.truncate(value.len() - released_bytes);
-            if value.is_empty() {
-                self.bytes = None;
+            if !value.is_empty() {
+                let processed = bytes.min(value.len());
+                value.truncate(value.len() - processed);
+                return Ok(Step::Pending { released_items: 0, released_bytes: 0 });
             }
-            return Step::Pending { released_items: 0, released_bytes };
+            let released_bytes = value.capacity();
+            if released_bytes > bytes { return Ok(Step::Blocked); }
+            drop(self.bytes.take());
+            return Ok(Step::Pending { released_items: 1, released_bytes });
         }
         if let Some(value) = self.value.as_mut() {
-            let step = value.close_step(1, bytes).expect("generation value retirement");
-            if matches!(step, Step::Complete) { self.value = None; return Step::Pending { released_items: 1, released_bytes: 0 }; }
-            return step;
+            let step = value.close_step(1, bytes)?;
+            if matches!(step, Step::Complete) { self.value = None; return Ok(Step::Pending { released_items: 1, released_bytes: 0 }); }
+            return Ok(step);
         }
         if let Some(values) = self.values.as_mut() {
-            use semio_framework_value::ordered::{Grant, RetirementStep};
-            match values.advance(Grant { maximum_items: 1, maximum_bytes: bytes }) {
-                RetirementStep::Blocked => return Step::Blocked,
-                RetirementStep::Progress { released_items, released_bytes } => return Step::Pending { released_items, released_bytes },
+            use semio_framework_value::{ordered::RetirementStep, retained_clone::RetainedCloneGrant};
+            match values.advance(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: 0, maximum_release_bytes: bytes, maximum_depth: values.next_depth_demand() }) {
+                RetirementStep::Blocked => return Ok(Step::Blocked),
+                RetirementStep::Progress { released_items, released_bytes } => return Ok(Step::Pending { released_items, released_bytes }),
                 RetirementStep::OwnedValue(value) => self.value = Some(semio_framework_value::retirement::owned_retirement(value)),
                 RetirementStep::Complete => self.values = None,
+                RetirementStep::ProcessedBytes(_) => return Ok(Step::Pending { released_items: 0, released_bytes: 0 }),
+                RetirementStep::Failure(error) => return Err(error),
             }
-            return Step::Pending { released_items: 1, released_bytes: 0 };
+            return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(state) = self.state.as_mut() {
             if let Some(generation) = state.generations.pop() {
@@ -123,13 +128,13 @@ impl GenerationRetirementState {
             } else {
                 self.state = None;
             }
-            return Step::Pending { released_items: 1, released_bytes: 0 };
+            return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(root) = self.root.take() {
             self.state = Arc::into_inner(root);
-            return Step::Pending { released_items: 1, released_bytes: 0 };
+            return Ok(Step::Pending { released_items: 1, released_bytes: 0 });
         }
-        Step::Complete
+        Ok(Step::Complete)
     }
     fn terminal_is_empty(&self) -> bool {
         self.root.is_none() && self.state.is_none() && self.values.is_none() && self.value.is_none() && self.bytes.is_none()
@@ -138,7 +143,7 @@ impl GenerationRetirementState {
 
 impl store::ErasedSnapshotRetirement for GenerationRootRetirement {
     fn close_step(&mut self, items: usize, bytes: usize) -> Result<store::SnapshotRetirementStep, semio_framework_value::ValueError> {
-        Ok(self.owned.close_step(items, bytes))
+        self.owned.close_step(items, bytes)
     }
     fn terminal_is_empty(&self) -> bool {
         self.owned.terminal_is_empty()

@@ -12,8 +12,8 @@ pub struct ReplaceConfig {
 
 impl protocol::MutationKind<FormsConfig, FormsConfigMutation> for ReplaceConfig {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "config", kind: "replace-config", record: "ReplaceConfig" };
-    fn diff(&self, _base: &FormsConfig) -> protocol::MutationOutcome<FormsConfig> {
-        protocol::MutationOutcome::new(self.config.clone())
+    fn diff(&self, base: &FormsConfig) -> protocol::MutationOutcome<FormsConfigDiff> {
+        protocol::MutationOutcome::new(FormsConfigDiff::changing(base, &self.config))
     }
     fn inverse(&self, base: &FormsConfig) -> Result<Vec<FormsConfigMutation>, semio_framework_value::ValueError> {
     Ok((|| {

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import {completeCargoPreparationObservationV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts";
 /** 📦️ semio Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import { retainedExtrusionOracle } from "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/📦️extrude-orientation/🟦️.ts";
@@ -16,6 +17,7 @@ class CompositionScript extends BundleScript {
     if (segments.length === 1 && segments[0] === "check") { console.log(`semio conversion definition: checks=${runSemioConversionDefinitionChecks()}`); return; }
     if (segments.length !== 1 || segments[0] !== "prepare") throw new Error("Unknown Semio conversion composition command");
     console.log(`semio conversion composition: targets=${prepareSemioConversionDefinitionV1(this.repoRoot, resolve(this.root, "../.."))}`);
+    completeCargoPreparationObservationV1();
   }
 }
 

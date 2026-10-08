@@ -456,7 +456,9 @@
         "responses": []
       },
       "diff": {
-        "title": "Revised Survey"
+        "title": {
+          "value": "Revised Survey"
+        }
       },
       "after": {
         "schema": "forms.form",
@@ -526,7 +528,9 @@
         "responses": []
       },
       "diff": {
-        "title": null
+        "title": {
+          "value": null
+        }
       },
       "after": {
         "schema": "forms.form",

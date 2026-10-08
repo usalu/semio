@@ -470,7 +470,7 @@ fn sqlite_snapshot_gltf_native_owned_decode_controls_physical_and_typed_material
     value.document.extras = Some(GltfJson::Array((0..600).map(|index| GltfJson::String(if index == 0 { "long semantic literal 世界".repeat(4096) } else { "child".into() })).collect()));
     let limits = SqliteDatabaseLimits { max_value_bytes: 128 * 1024 * 1024, ..SqliteDatabaseLimits::default() };
     let expected = value.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
-    for payload in [store::os_io::IoPayload::Text(store::ArtifactDsl::print_dsl(&value)), store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(&value))] {
+    for payload in [store::io::IoPayload::Text(store::ArtifactDsl::print_dsl(&value)), store::io::IoPayload::Binary(store::ArtifactPack::encode_pack(&value))] {
         let restored = GltfSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
         assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap(), expected);
         GltfSnapshot::retire_sqlite_snapshot(restored);
@@ -523,8 +523,8 @@ fn sqlite_snapshot_gltf_genuine_native_output_rejects_limits_and_cancels_during_
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let payload = snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
         assert!(match payload {
-            store::os_io::IoPayload::Binary(v) => !v.is_empty(),
-            store::os_io::IoPayload::Text(v) => !v.is_empty(),
+            store::io::IoPayload::Binary(v) => !v.is_empty(),
+            store::io::IoPayload::Text(v) => !v.is_empty(),
         });
         for limits in [SqliteDatabaseLimits { max_value_bytes: work["refusedBytes"].as_u64().unwrap() as usize, ..limits }, SqliteDatabaseLimits { max_file_bytes: 1, ..limits }] {
             assert!(snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).is_err());

@@ -1,6 +1,6 @@
 //! 🧬️ IfcMutation — document mutation dispatch. Ticket
 //! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: real vocabulary beyond
-//! the universal `{NoMutation, SetSnapshot}` stub — HEADER scalar setters plus
+//! the universal stub — HEADER scalar setters plus
 //! `InsertEntity`/`RemoveEntity`/`SetEntityName`/`SetEntityArg`/`InsertEntityArg`/`RemoveEntityArg`
 //! for the id-keyed `entities` collection and its per-entity positional `args`. Every variant's
 //! `diff()` is handcrafted (constructs `IfcDiff` directly via the `schema::diff` builders) —
@@ -56,23 +56,17 @@ pub mod set_file_schema;
 /// ```text
 /// error[E0277]: the trait bound `v4::subsets::any::schema::snapshot::component::IfcValue: DslField` is not satisfied
 ///   --> …/🧬️mutations/🦀️.rs:27:21   (SetFileDescription { values: Vec<IfcValue> })
-/// error[E0277]: the trait bound `v4::subsets::any::schema::snapshot::component::IfcSnapshot: DslField` is not satisfied
-///   --> …/🧬️mutations/🦀️.rs:23:19   (SetSnapshot { snapshot: IfcSnapshot })
 /// error[E0277]: the trait bound `v4::subsets::any::schema::snapshot::component::IfcEntity: DslField` is not satisfied
 ///   --> …/🧬️mutations/🦀️.rs:40:17   (InsertEntity { entity: IfcEntity })
 /// ```
 /// Same root cause as `IfcDiff` (§3a): `IfcValue` carries fields on 7 of its 9 variants, has no
 /// `DslField` impl, and every variant here either carries it directly (`values`/`value`) or
-/// transitively via `IfcSnapshot`/`IfcEntity` (`SetSnapshot`/`InsertEntity`). `OpText`/`OpBinary`
+/// transitively via `IfcEntity` (`InsertEntity`). `OpText`/`OpBinary`
 /// stay hand-rolled below for the same reason, reusing `IfcDiff`'s `pub(crate)` grammar primitives
 /// (`enc_str`/`enc_ifc_value`/`enc_entity`/`split_top_level`/...); `DESCRIPTORS`/`descriptor()` are
 /// no longer hand-written, though — `#[derive(dsl::Mutations)]` synthesizes both from the per-leaf
 /// `🔣️.json` descriptors beside this file, which does not need `DslField`.
 //#region 🔖️Leaves
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
@@ -81,8 +75,6 @@ pub mod set_snapshot;
 #[mutations(snapshot = IfcSnapshot, diff = IfcDiff, schema = "IfcMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum IfcMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// 📇️ Sets the `FILE_DESCRIPTION` header record's raw value tuple.
     SetFileDescription(set_file_description::SetFileDescription),
     /// 📇️ Sets the `FILE_NAME` header record's raw value tuple.
@@ -107,15 +99,36 @@ pub enum IfcMutation {
 /// mutation catalog `../../🔣️oracle.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself).
-pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-file-description", "set-file-name", "set-file-schema", "insert-entity", "remove-entity", "set-entity-name", "set-entity-arg", "insert-entity-arg", "remove-entity-arg"];
+pub const KINDS: &[&str] = &["set-file-description", "set-file-name", "set-file-schema", "insert-entity", "remove-entity", "set-entity-name", "set-entity-arg", "insert-entity-arg", "remove-entity-arg"];
 //#endregion 🔖️Mutations
+
+//#region 🔖️Net
+/// 🧮️ The leaves that carry `base` to exactly `next`: the header fields that differ are set, then the entities past the longest
+/// equal prefix are removed and the next ones inserted at their positions. The snapshot `schema` is a constant of the artifact.
+pub fn net_mutations(base: &IfcSnapshot, next: &IfcSnapshot) -> Vec<IfcMutation> {
+    let mut leaves = Vec::new();
+    if base.header.file_description != next.header.file_description {
+        leaves.push(IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: next.header.file_description.clone() }));
+    }
+    if base.header.file_name != next.header.file_name {
+        leaves.push(IfcMutation::SetFileName(set_file_name::SetFileName { values: next.header.file_name.clone() }));
+    }
+    if base.header.file_schema != next.header.file_schema {
+        leaves.push(IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values: next.header.file_schema.clone() }));
+    }
+    let common = base.entities.iter().zip(&next.entities).take_while(|(left, right)| left == right).count();
+    leaves.extend(base.entities[common..].iter().rev().map(|entity| IfcMutation::RemoveEntity(remove_entity::RemoveEntity { id: entity.id })));
+    leaves.extend(next.entities.iter().enumerate().skip(common).map(|(index, entity)| IfcMutation::InsertEntity(insert_entity::InsertEntity { index, entity: entity.clone() })));
+    leaves
+}
+//#endregion 🔖️Net
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`, returning a typed error outcome without changing the
 /// snapshot when an entity or argument target is missing or out of range.
 pub fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutation) -> protocol::MutationOutcome<IfcDiff> {
     let outcome = <IfcMutation as Mutation<IfcSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -157,8 +170,6 @@ pub fn apply_ifc_mutation(snapshot: &mut IfcSnapshot, mutation: &IfcMutation) ->
 pub(crate) fn demo_mutation_cases() -> Vec<IfcMutation> {
     let demo_entity = |id: u64, name: &str, args: Vec<IfcValue>| IfcEntity { id, name: name.into(), args, complex: Vec::new() };
     vec![
-        IfcMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
-        IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::engine::demo_ifc_snapshot() }),
         IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: vec![IfcValue::String("demo".into())] }),
         IfcMutation::SetFileName(set_file_name::SetFileName { values: vec![IfcValue::String("demo.ifc".into())] }),
         IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])] }),
@@ -189,62 +200,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<IfcMutation> {
 }
 //#endregion 🔖️DemoCases
 
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &IfcMutation, base: &IfcSnapshot) -> protocol::MutationOutcome<IfcDiff> {
-    protocol::MutationOutcome::new(match this {
-        IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff::diff_set_snapshot(base, snapshot),
-        IfcMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<IfcSnapshot, IfcMutation>>::diff(patch, base),
-        IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values }) => diff::diff_set_file_description(values.clone()),
-        IfcMutation::SetFileName(set_file_name::SetFileName { values }) => diff::diff_set_file_name(values.clone()),
-        IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values }) => diff::diff_set_file_schema(values.clone()),
-        IfcMutation::InsertEntity(insert_entity::InsertEntity { index, entity }) => diff::diff_insert_entity(*index, entity.clone()),
-        IfcMutation::RemoveEntity(remove_entity::RemoveEntity { id }) => diff::diff_remove_entity(*id),
-        IfcMutation::SetEntityName(set_entity_name::SetEntityName { id, name }) => diff::diff_set_entity_name(*id, name),
-        IfcMutation::SetEntityArg(set_entity_arg::SetEntityArg { id, index, value }) => diff::diff_set_entity_arg(*id, *index, value.clone()),
-        IfcMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id, index, value }) => diff::diff_insert_entity_arg(*id, *index, value.clone()),
-        IfcMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id, index }) => diff::diff_remove_entity_arg(*id, *index),
-    })
-}
-
-/// ↩️ Handcrafted, key-aware mutation-level inverses — lifted verbatim from the former
-/// `impl Mutation`. Entity/arg-targeted variants look the prior value up in `base`; a stale/absent
-/// id/index inverts to NO step at all (`return Vec::new()`) rather than a `NoMutation` sentinel,
-/// since that variant no longer exists — `apply_ifc_mutation`-ing zero steps and applying a former
-/// `NoMutation` step were always observationally identical.
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &IfcMutation, base: &IfcSnapshot) -> Result<Vec<IfcMutation>, semio_framework_value::ValueError> {
-    Ok({
-    let entity = |id: u64| base.entities.iter().find(|e| e.id == id);
-    vec![match this {
-        IfcMutation::SetSnapshot(_) => IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-        IfcMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<IfcSnapshot, IfcMutation>>::inverse(patch, base)?),
-        IfcMutation::SetFileDescription(_) => IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: base.header.file_description.clone() }),
-        IfcMutation::SetFileName(_) => IfcMutation::SetFileName(set_file_name::SetFileName { values: base.header.file_name.clone() }),
-        IfcMutation::SetFileSchema(_) => IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values: base.header.file_schema.clone() }),
-        IfcMutation::InsertEntity(insert_entity::InsertEntity { entity, .. }) => IfcMutation::RemoveEntity(remove_entity::RemoveEntity { id: entity.id }),
-        IfcMutation::RemoveEntity(remove_entity::RemoveEntity { id }) => match base.entities.iter().position(|e| e.id == *id) {
-            Some(index) => IfcMutation::InsertEntity(insert_entity::InsertEntity { index, entity: base.entities[index].clone() }),
-            None => return Ok(Vec::new()),
-        },
-        IfcMutation::SetEntityName(set_entity_name::SetEntityName { id, .. }) => match entity(*id) {
-            Some(e) => IfcMutation::SetEntityName(set_entity_name::SetEntityName { id: *id, name: e.name.clone() }),
-            None => return Ok(Vec::new()),
-        },
-        IfcMutation::SetEntityArg(set_entity_arg::SetEntityArg { id, index, .. }) => match entity(*id).and_then(|e| e.args.get(*index)) {
-            Some(v) => IfcMutation::SetEntityArg(set_entity_arg::SetEntityArg { id: *id, index: *index, value: v.clone() }),
-            None => return Ok(Vec::new()),
-        },
-        IfcMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id, index, .. }) => IfcMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id: *id, index: *index }),
-        IfcMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id, index }) => match entity(*id).and_then(|e| e.args.get(*index)) {
-            Some(v) => IfcMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id: *id, index: *index, value: v.clone() }),
-            None => return Ok(Vec::new()),
-        },
-    }]
-
-    })
-}
-//#endregion 🔖️MutationTrait
 
 //#region Tests
 #[cfg(test)]

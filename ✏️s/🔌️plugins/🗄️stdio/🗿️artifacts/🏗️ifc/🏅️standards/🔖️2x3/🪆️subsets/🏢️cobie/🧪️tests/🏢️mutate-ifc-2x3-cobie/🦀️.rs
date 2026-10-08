@@ -1,5 +1,5 @@
 //! 🦀️ IFC2X3 / 🏢️cobie mutation case — Rust adapter. Exhaustive: every declared
-//! `Ifc2x3CobieMutation` kind (`ifc-2x3-cobie`, 6 kinds) gets a `mutate-<kind>` and an
+//! `Ifc2x3CobieMutation` kind (`ifc-2x3-cobie`, 5 kinds) gets a `mutate-<kind>` and an
 //! `inverse-<kind>` scenario, plus one identity round trip. Every row's `params` IS the leaf wire payload,
 //! which the subject decodes through the derive-generated `from_payload_value`. `ruststep` 0.4 can only READ Part-21
 //! text, so the oracle dispatcher
@@ -11,7 +11,7 @@
 //! compares them — real third-party evidence about structure, never a byte-level differential claim.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_artifact_stdio_ifc_test_oracle::standards::v2x3::subsets::cobie::{oracle_apply_mutation, oracle_round_trip, oracle_snapshot_payload, project_ifc_2x3_cobie};
+use semio_s_artifact_stdio_ifc_test_oracle::standards::v2x3::subsets::cobie::{oracle_apply_mutation, oracle_round_trip, project_ifc_2x3_cobie};
 
 
 //#region 🔖️Input
@@ -61,7 +61,6 @@ fn real_type_assignment() -> Json {
 /// `#712708` the forward direction deletes.
 fn inverse_spec(kind: &str, input: &[u8]) -> Result<Json, String> {
     Ok(match kind {
-        "set-snapshot" => json_spec("set-snapshot", oracle_snapshot_payload(input)?),
         "set-view-definition" => json_spec("set-view-definition", json_obj(vec![("view", json_str("CoordinationView_V2.0"))])),
         "set-facility-name" => json_spec("set-facility-name", json_obj(vec![("building", json_num(130.0)), ("name", json_str(""))])),
         "set-floor-elevation" => json_spec("set-floor-elevation", json_obj(vec![("storey", json_num(139.0)), ("elevation", json_num(0.0))])),

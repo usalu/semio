@@ -1,0 +1,14 @@
+{
+  "units": [0, 1, 3, 256],
+  "document": {"codecs":[0,1],"frameBytes":[1,3,256],"chunkThreshold":2,"catalogTamper":["crc32","blake3"]},
+  "cases": [
+    {"id":"null","hex":"0001011112","expected":null},
+    {"id":"false","hex":"0001011101","expected":false},
+    {"id":"signed","hex":"00010111030d","expected":-7},
+    {"id":"inline-empty","hex":"000101110700","expected":""},
+    {"id":"inline-unicode","hex":"000101110707e99baaf09f9880","expected":"雪😀"},
+    {"id":"symbol-unicode","hex":"0107e99baaf09f98800101110600","expected":"雪😀"},
+    {"id":"nested","hex":"0001011110010701780c0204121000","expected":{"x":[18,{}]}}
+  ],
+  "malformed": ["0000011112", "0001021112", "00010112", "000101111200", "000101110703f09f", "000101111001070178"]
+}

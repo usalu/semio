@@ -69,8 +69,7 @@ pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
     ("SetEncryption", crate::standards::v1_7::subsets::base::io::text::mutations::set_encryption::TEXT_OPCODE),
     ("SetCatalogEntry", crate::standards::v1_7::subsets::base::io::text::mutations::set_catalog_entry::TEXT_OPCODE),
     ("RemoveCatalogEntry", crate::standards::v1_7::subsets::base::io::text::mutations::remove_catalog_entry::TEXT_OPCODE),
-    ("SetSnapshot", crate::standards::v1_7::subsets::base::io::text::mutations::set_snapshot::TEXT_OPCODE),
-    ("PatchSnapshot", crate::standards::v1_7::subsets::base::io::text::mutations::patch_snapshot::TEXT_OPCODE),
+    ("ReplacePage", crate::standards::v1_7::subsets::base::io::text::mutations::replace_page::TEXT_OPCODE),
 ];
 //#endregion 🧾️DerivedRegistry
 
@@ -183,14 +182,8 @@ pub mod set_form;
 #[path = "🗂️set-catalog-entry/🦀️.rs"]
 pub mod set_catalog_entry;
 
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-
 #[path = "🔏️set-mark-info/🦀️.rs"]
 pub mod set_mark_info;
-
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 
 #[path = "🎚️remove-ext-g-state/🦀️.rs"]
 pub mod remove_ext_g_state;
@@ -314,3 +307,6 @@ pub mod set_info;
 
 #[path = "🆔️set-document-id/🦀️.rs"]
 pub mod set_document_id;
+
+#[path = "🪄️replace-page/🦀️.rs"]
+pub mod replace_page;

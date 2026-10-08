@@ -1367,7 +1367,7 @@ fn screen_select_original_vertices_skips_surface_samples() {
 /// 🎯️ Original ray-to-segment distances retain finite endpoints and the forward ray domain.
 #[test]
 fn ray_segment_distance_matches_neutral_three_cases() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     for row in fixture["gumball"]["raySegmentCases"].as_array().unwrap() {
         let vector = |key: &str| vec3_new_m(row[key][0].as_f64().unwrap() as f32, row[key][1].as_f64().unwrap() as f32, row[key][2].as_f64().unwrap() as f32);
         let distance = ray_segment_distance(vector("origin"), vector("direction").normalize_m(), vector("a"), vector("b")).expect("nondegenerate original segment");

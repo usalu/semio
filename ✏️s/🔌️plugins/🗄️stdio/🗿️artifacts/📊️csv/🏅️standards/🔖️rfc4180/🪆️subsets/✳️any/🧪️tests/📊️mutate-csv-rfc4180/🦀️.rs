@@ -33,7 +33,6 @@ fn resulting_has_header(spec: &Json, baseline: bool) -> bool {
     let params = spec.get("params").cloned().unwrap_or(Json::Null);
     let carrier = match spec.str("kind").as_str() {
         "set-has-header" => params,
-        "set-snapshot" => params.get("snapshot").cloned().unwrap_or(Json::Null),
         _ => Json::Null,
     };
     match carrier.get("hasHeader") {
@@ -69,10 +68,6 @@ fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
     };
     match forward.str("kind").as_str() {
         "set-has-header" => Ok(kind_spec("set-has-header", json_object(vec![("hasHeader", Json::Bool(BASELINE_HAS_HEADER))]))),
-        "set-snapshot" | "patch-snapshot" => {
-            let records = Json::Array(read_grid(original)?.iter().map(|record| record_wire(record)).collect());
-            Ok(kind_spec("set-snapshot", json_object(vec![("snapshot", json_object(vec![("schema", Json::String("stdio.csv".to_string())), ("hasHeader", Json::Bool(BASELINE_HAS_HEADER)), ("records", records)]))])))
-        }
         "insert-record" => {
             let index = number("index").ok_or("insert-record inverse: missing `index`")?;
             Ok(kind_spec("remove-record", json_object(vec![("index", Json::Number(index))])))

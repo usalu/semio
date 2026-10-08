@@ -1,6 +1,4 @@
-//! 🧩️ `set-conformance-attribute` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🧩️ `set-conformance-attribute` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -14,15 +12,14 @@ pub struct SetConformanceAttribute {
 impl protocol::MutationKind<DocxSnapshot, DocxTransitionalMutation> for SetConformanceAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "conformance-attribute", kind: "set-conformance-attribute", record: "SetConformanceAttribute" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxTransitionalMutation as Mutation<DocxSnapshot>>::Diff> {
-        agg_diff(&DocxTransitionalMutation::SetConformanceAttribute(self.clone()), base)
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
+        protocol::MutationOutcome::new(diff_conformance_attribute(base, Some(&self.value)))
     }
+
     fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxTransitionalMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&DocxTransitionalMutation::SetConformanceAttribute(self.clone()), base)?
-    
-    })
-}
+        Ok(conformance_attribute_inverse(base, true))
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set conformance attribute", "Konformitätsattribut setzen")
     }

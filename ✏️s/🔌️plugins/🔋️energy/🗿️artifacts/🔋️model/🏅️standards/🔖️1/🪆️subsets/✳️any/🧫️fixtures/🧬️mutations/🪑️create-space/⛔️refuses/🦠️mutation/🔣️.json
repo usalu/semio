@@ -3,5 +3,6 @@
   "id": 2,
   "name": "SPACE ONE",
   "zoneId": 9,
-  "floorAreaM2": 48.0
+  "floorAreaM2": 48.0,
+  "index": null
 }

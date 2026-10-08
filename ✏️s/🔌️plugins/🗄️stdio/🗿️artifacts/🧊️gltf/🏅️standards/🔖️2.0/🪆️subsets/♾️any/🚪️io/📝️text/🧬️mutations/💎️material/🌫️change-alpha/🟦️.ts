@@ -4,7 +4,7 @@ export type * from "../../../../../🧬️schema/🧬️mutations/💎️materia
 /** 🌫️ `change-material-alpha-mode` wire twin: the flat `Apply` payload `GltfChangeMaterialAlphaModePayload` and the phase wire `ChangeMaterialAlphaModeMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { type GltfAlphaMode, gltfWireIndex, gltfWireObject, gltfWireRequired, parseGltfAlphaMode } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
 export const parseGltfChangeMaterialAlphaModePayload = gltfWireObject<GltfChangeMaterialAlphaModePayload>({ material: gltfWireRequired(gltfWireIndex), alphaMode: gltfWireRequired(parseGltfAlphaMode) });
-export const parseChangeMaterialAlphaModeMutation = gltfWirePhase(parseGltfChangeMaterialAlphaModePayload, parseGltfDiff);
+export const parseChangeMaterialAlphaModeMutation = gltfWireApplyPhase(parseGltfChangeMaterialAlphaModePayload);

@@ -10,7 +10,7 @@ fn preview_lifecycle_matches_language_neutral_third_party_oracle() {
     for step in fixture["steps"].as_array().expect("steps") {
         let preview_text = step["previewText"].as_str().map(str::to_string);
         let mutation = Generation3dTransientMutation::from(SetGenerationPreview { preview_text });
-        typed = mutation.diff(&typed).diff().apply(&typed).expect("typed mutation applies");
+        typed = protocol::apply_diff(mutation.diff(&typed).diff(), &typed).expect("typed mutation applies");
         oracle.insert("generationPreviewText".into(), step["previewText"].clone());
         store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
         assert_eq!(Generation3dTransientMutation::parse_op(&mutation.print_op()).expect("text round trip"), mutation);

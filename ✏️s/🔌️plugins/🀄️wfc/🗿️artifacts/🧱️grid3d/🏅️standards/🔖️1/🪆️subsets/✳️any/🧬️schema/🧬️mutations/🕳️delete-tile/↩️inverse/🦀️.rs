@@ -10,6 +10,7 @@ pub fn inverse(payload: &super::DeleteTile, base: &Grid3dSnapshot) -> Result<Vec
     let mut steps = vec![crate::mutations::create_tile(tile.clone())];
     steps.extend(base.rules.iter().filter(|rule| rule.tile_a_id == payload.id || rule.tile_b_id == payload.id).map(|rule| crate::mutations::create_rule(rule.clone())));
     steps.extend(base.pinned.iter().filter(|cell| cell.tile_id == payload.id).map(|cell| crate::mutations::pin_cell(cell.clone())));
+    steps.reverse();
     steps
 
     })())

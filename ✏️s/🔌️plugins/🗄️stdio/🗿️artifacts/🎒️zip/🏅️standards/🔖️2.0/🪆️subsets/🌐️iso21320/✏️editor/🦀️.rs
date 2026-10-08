@@ -2,8 +2,7 @@
 
 use crate::editor::zip::iso21320::modes::edit;
 use crate::editor::zip::iso21320::modes::edit::windows::main;
-use crate::schema::mutations::patch_snapshot;
-use crate::schema::mutations::set_snapshot;
+use crate::schema::mutations::net_mutations;
 use crate::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::ArtifactEditor;
@@ -223,7 +222,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for ZipIso2
     }
 
     fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| ZipMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| ZipMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, net_mutations)
     }
 }
 //#endregion 🔖️Editor

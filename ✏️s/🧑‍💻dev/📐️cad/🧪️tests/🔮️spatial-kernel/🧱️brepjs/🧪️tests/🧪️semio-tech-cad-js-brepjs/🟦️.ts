@@ -2,7 +2,7 @@ import { aabbVolume } from "../../../../../../../🔨️modules/🌐️spatial-k
 import type { BrepjsTestDependencies } from "../../🟦️.ts";
 import type { Model, ModelSpaceJson } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
 import type { EdgeRef, FaceRef, MutableSolidRecord, ShellRef, SolidRef, VertexRef, WireRef } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
-import type { Vec3 } from "@semio-tech/s-3d-js";
+import type { Vec3 } from "@semio-tech/framework-3d-js";
 
 type TestSource = { readonly url: string };
 

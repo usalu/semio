@@ -261,9 +261,9 @@ fn requirement_is_live(requirement: &ArtifactRuntimeCapabilityRequirement) -> bo
         },
         "inference" => semio_framework_schema_registry::artifact_inference_descriptor_registered(&value("schema")),
         "codec" => ::semio_framework_async::poll::resolve_ready(semio_framework_os_kernel::document_codec(&value("codec"))).expect("the document codec registry").is_some(),
-        "composer" => ::semio_framework_async::poll::resolve_ready(semio_framework::io::list_composer_entries()).expect("the composer registry").iter().any(|(writes, _)| writes.to_coordinate() == value("dialect")),
-        "subset-validator" => ::semio_framework_async::poll::resolve_ready(semio_framework::io::list_registered_subset_validator_dialects()).expect("the subset validator registry").into_iter().any(|dialect| semio_framework::ArtifactDialect::from(dialect).to_coordinate() == value("validated-dialect")),
-        "representation" => values("extension").iter().filter_map(|extension| semio_framework::io::format_descriptor(extension.trim_start_matches('.')).expect("the format catalog")).any(|format| format.mimes.iter().cloned().collect::<BTreeSet<_>>() == values("mime") && format.extensions.iter().cloned().collect::<BTreeSet<_>>() == values("extension")),
+        "composer" => ::semio_framework_async::poll::resolve_ready(directory::io::list_composer_entries()).expect("the composer registry").iter().any(|(writes, _)| writes.to_coordinate() == value("dialect")),
+        "subset-validator" => ::semio_framework_async::poll::resolve_ready(directory::io::list_registered_subset_validator_dialects()).expect("the subset validator registry").into_iter().any(|dialect| semio_framework::ArtifactDialect::from(dialect).to_coordinate() == value("validated-dialect")),
+        "representation" => values("extension").iter().filter_map(|extension| directory::io::format_descriptor(extension.trim_start_matches('.')).expect("the format catalog")).any(|format| format.mimes.iter().cloned().collect::<BTreeSet<_>>() == values("mime") && format.extensions.iter().cloned().collect::<BTreeSet<_>>() == values("extension")),
         "grammar" => true,
         other => panic!("unknown runtime capability category {other}"),
     }
@@ -391,7 +391,7 @@ async fn sqlite_snapshot_primary_declared_owner_census() {
 /// 🔗️ Every authored Runtime dialect retains its actual concrete owner in the installed codec and both SQLite routes.
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_primary_declared_binding_census() {
-    use semio_framework::io::io_mechanism::{io_route, native_snapshot_sqlite_schema, preflight_native_snapshots, NativeSnapshotRegistration};
+    use directory::io::io_mechanism::{io_route, native_snapshot_sqlite_schema, preflight_native_snapshots, NativeSnapshotRegistration};
     use semio_framework::io_schema::{ArtifactDialect, IoFidelity, SQLITE_SNAPSHOT};
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🔣️.json")).unwrap();
     let expected = law["dialectBindings"].as_array().unwrap().iter().map(|row| (row["kind"].as_str().unwrap().to_string(), row["standard"].as_str().unwrap().to_string(), row["subset"].as_str().unwrap().to_string(), row["schema"].as_str().unwrap().to_string())).collect::<BTreeSet<_>>();
@@ -444,7 +444,7 @@ fn primary_snapshot_physical_rows(bytes: &[u8]) -> serde_json::Value {
 /// 📸️ Runs ordinary public Binary/Text I/O and preserves the full concrete Snapshot owner.
 async fn assert_primary_snapshot_payload<S>(snapshot: S, row: &serde_json::Value)
 where S: semio_framework_os_kernel::ArtifactPack + semio_framework_os_kernel::ArtifactDsl + PartialEq + std::fmt::Debug {
-    use semio_framework::io::io_mechanism::{io_identify, io_route, io_run};
+    use directory::io::io_mechanism::{io_identify, io_route, io_run};
     use semio_framework::io_schema::{ArtifactDialect, Confidence, IoFidelity, IoPayload, SQLITE_SNAPSHOT};
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧠️owners/🔣️.json")).unwrap();
     packages();
@@ -478,7 +478,7 @@ where S: semio_framework_os_kernel::ArtifactPack + semio_framework_os_kernel::Ar
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_primary_new_declaration_trees() {
     async fn check<PA: PluginApp>(tree: semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>, expected: &serde_json::Value) {
-        use semio_framework::io::io_mechanism::native_snapshot_sqlite_schema;
+        use directory::io::io_mechanism::native_snapshot_sqlite_schema;
         assert_eq!(tree.kind.as_str(), expected["kind"].as_str().unwrap());
         assert_eq!(tree.standards.len(), 1, "complete authored public tree standard roster");
         for standard in tree.standards {
@@ -541,11 +541,11 @@ async fn sqlite_snapshot_primary_geojson_public_payload() {
     assert_primary_snapshot_payload(snapshot, row).await;
     use semio_framework_os_kernel::{ArtifactDsl, ArtifactPack};
     let native = semio_framework::io_schema::ArtifactDialect { artifact_kind: row["kind"].as_str().unwrap().into(), standard: row["standard"].as_str().unwrap().into(), subset: row["subset"].as_str().unwrap().into() };
-    let export = semio_framework::io::io_mechanism::io_route(&native, &semio_framework::io_schema::SQLITE_SNAPSHOT.into(), 1).await.unwrap().value;
+    let export = directory::io::io_mechanism::io_route(&native, &semio_framework::io_schema::SQLITE_SNAPSHOT.into(), 1).await.unwrap().value;
     for invalid in row["invalidNaturalTexts"].as_array().unwrap() {
         let invalid = JsonSnapshot::from_value(parse_json_text(invalid.as_str().unwrap()).unwrap());
         for payload in [semio_framework::io_schema::IoPayload::Binary(invalid.encode_pack()), semio_framework::io_schema::IoPayload::Text(invalid.print_dsl())] {
-            assert!(semio_framework::io::io_mechanism::io_run(&export, payload).await.is_err(), "valid JSON that violates GeoJSON must be refused by the actual public route");
+            assert!(directory::io::io_mechanism::io_run(&export, payload).await.is_err(), "valid JSON that violates GeoJSON must be refused by the actual public route");
         }
     }
     eprintln!("[DEBUG] primary-stdio-geojson invalid-native-forms=2 refused-by-public-route=true");

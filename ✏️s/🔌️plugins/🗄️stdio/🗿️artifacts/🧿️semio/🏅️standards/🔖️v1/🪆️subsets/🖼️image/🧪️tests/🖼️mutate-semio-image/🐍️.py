@@ -44,7 +44,7 @@ from __future__ import annotations
 # region 🔖️Imports
 import json
 
-from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
+from semio_repo_test import Adapter, Context, Outcome, digest
 
 # endregion 🔖️Imports
 
@@ -336,9 +336,6 @@ def pack_bytes(document: dict) -> bytes:
 #: NESTED snapshot or frame payload keeps its own camelCase (`bitDepth`, `delayMs`) — the committed
 #: vectors carry exactly that mixed shape.
 TAG_TO_KIND = {
-    "noMutation": "no-mutation",
-    "setSnapshot": "set-snapshot",
-    "patchSnapshot": "patch-snapshot",
     "setDimensions": "set-dimensions",
     "setColorspace": "set-colorspace",
     "setBitDepth": "set-bit-depth",
@@ -386,14 +383,6 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     """
     kind = kind_of(mutation)
     result = json.loads(json.dumps(document))
-    if kind == "patch-snapshot":
-        return patched_snapshot(document, mutation["patch"])
-    if kind == "no-mutation":
-        return result
-    if kind == "set-snapshot":
-        replacement = json.loads(json.dumps(mutation["snapshot"]))
-        replacement["schema"] = document["schema"]
-        return replacement
     if kind == "set-dimensions":
         result["width"] = int(mutation["width"])
         result["height"] = int(mutation["height"])
@@ -458,10 +447,6 @@ def inverse_mutation(document: dict, mutation: dict) -> dict:
     value or removes the key it introduced.
     """
     kind = kind_of(mutation)
-    if kind == "patch-snapshot":
-        return {"mutation": "setSnapshot", "snapshot": json.loads(json.dumps(document))}
-    if kind in ("no-mutation", "set-snapshot"):
-        return {"mutation": "noMutation"} if kind == "no-mutation" else {"mutation": "setSnapshot", "snapshot": json.loads(json.dumps(document))}
     if kind == "set-dimensions":
         return {"mutation": "setDimensions", "width": document["width"], "height": document["height"]}
     if kind == "set-colorspace":
@@ -661,7 +646,7 @@ def adapter() -> Adapter:
     """🧭️ Registration entry point the Python host calls. Handlers are registered under the Scenario
     Outline base ids, which the host resolves for every Examples row, and plain scenarios under their
     own ids."""
-    return Adapter("python").oracle("mutate", mutate).oracle("no-mutation-baseline-mutate", mutate).oracle("inverse", inverse).oracle("no-mutation-baseline-inverse", inverse).oracle("spec-vector", spec_vector).oracle("spec-vector-no-mutation", spec_vector).oracle("identity-round-trip", identity_round_trip)
+    return Adapter("python").oracle("mutate", mutate).oracle("inverse", inverse).oracle("spec-vector", spec_vector).oracle("spec-vector-no-mutation", spec_vector).oracle("identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

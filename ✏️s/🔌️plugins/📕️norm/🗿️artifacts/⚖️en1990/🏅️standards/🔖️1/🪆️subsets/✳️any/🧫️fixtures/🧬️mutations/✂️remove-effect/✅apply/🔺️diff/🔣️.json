@@ -12,37 +12,42 @@
   "inspectionLevel": null,
   "kFiDeclared": null,
   "betaComputed": null,
-  "permanents": null,
-  "variables": null,
-  "accidentals": null,
-  "seismics": null,
-  "members": null,
-  "bridgeSls": null,
+  "permanents": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "variables": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "accidentals": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "seismics": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "bridgeSls": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
   "effects": [
     {
-      "memberId": "beam-B1",
-      "actionId": "G-sup",
-      "influence": 1.0
-    },
-    {
-      "memberId": "beam-B1",
-      "actionId": "G-inf",
-      "influence": 1.0
-    },
-    {
-      "memberId": "beam-B1",
-      "actionId": "Q-office",
-      "influence": 1.0
-    },
-    {
-      "memberId": "beam-B1",
-      "actionId": "Q-wind",
-      "influence": 1.0
-    },
-    {
-      "memberId": "beam-B1",
-      "actionId": "A-impact",
-      "influence": 1.0
+      "op": "Remove",
+      "index": 5,
+      "id": "",
+      "value": null
     }
   ]
 }

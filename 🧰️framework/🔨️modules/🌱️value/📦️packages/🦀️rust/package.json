@@ -9,6 +9,7 @@
     "test-portable": "nx run @semio-tech/value-rs:test-portable",
     "test-type-ownership": "nx run @semio-tech/value-rs:test-type-ownership",
     "test-decode-ownership": "nx run @semio-tech/value-rs:test-decode-ownership",
-    "test-refusal-codec": "nx run @semio-tech/value-rs:test-refusal-codec"
+    "test-refusal-codec": "nx run @semio-tech/value-rs:test-refusal-codec",
+    "test-ordered-retirement-source": "nx run @semio-tech/value-rs:test-ordered-retirement-source"
   }
 }

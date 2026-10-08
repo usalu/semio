@@ -1,7 +1,4 @@
-//! 🔪️ `truncate-at` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 🔪️ `truncate-at` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 //! `#[derive(semio_framework_dsl_record_derive::DslRecord)]` gives this leaf its own `DslField` impl with the SAME field spec
 //! `record_codegen` built when this field lived inline in the enum variant — the aggregate's
 //! tuple variant is a single-field newtype, so `#[derive(semio_framework_dsl_record_derive::DslEnum)]`'s `DslVariants` derive
@@ -22,14 +19,32 @@ impl protocol::MutationKind<BinarySnapshot, BinaryMutation> for TruncateAt {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "trailing-bytes", kind: "truncate-at", record: "TruncateAt" };
 
     fn diff(&self, base: &BinarySnapshot) -> protocol::MutationOutcome<<BinaryMutation as Mutation<BinarySnapshot>>::Diff> {
-        agg_diff(&BinaryMutation::TruncateAt(self.clone()), base)
+        let Self { offset } = self;
+        protocol::MutationOutcome::new({
+            if *offset >= base.bytes.len() {
+                BinaryDiff::default()
+            } else {
+                BinaryDiff { splices: vec![ByteSplice { offset: *offset, remove_len: base.bytes.len() - offset, insert: vec![] }] }
+            }
+        })
     }
     fn inverse(&self, base: &BinarySnapshot) -> Result<Vec<BinaryMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&BinaryMutation::TruncateAt(self.clone()), base)?
-    
-    })
-}
+        let Self { offset } = self;
+        Ok({
+            {
+                if *offset >= base.bytes.len() {
+                    // 🧭️ Nothing was actually dropped (offset was already past the end), so there is
+                    // no real forward step to undo — the same empty-inverse idiom the migrated `tiff`
+                    // pilot uses for its own dropped-`NoMutation` fallback arms (`RemoveTileTags`'s
+                    // "was already absent" case, `../../🖼️tiff/…/🧱️baseline/🧬️schema/🧬️mutations/
+                    // 🦀️.rs`), rather than reinstating a unit `NoMutation` variant the derive forbids.
+                    Vec::new()
+                } else {
+                    vec![BinaryMutation::ReplaceByteRange(replace_byte_range::ReplaceByteRange { offset: *offset, remove_len: 0, insert: base.bytes[*offset..].to_vec() })]
+                }
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Truncate at position", "An Position kürzen")
     }

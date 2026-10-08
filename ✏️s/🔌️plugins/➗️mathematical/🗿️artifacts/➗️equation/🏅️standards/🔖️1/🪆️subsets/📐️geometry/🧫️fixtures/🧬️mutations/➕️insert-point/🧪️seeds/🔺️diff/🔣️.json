@@ -1,16 +1,13 @@
 {
-  "graph": {
-    "directed": true,
-    "nodes": [],
-    "edges": [],
-    "algorithm": "",
-    "algorithmSeed": null
-  },
-  "geometry": {
-    "points": [
+  "points": {
+    "edits": [
       {
-        "x": 5.0,
-        "y": 6.0
+        "op": "insert",
+        "at": 0,
+        "point": {
+          "x": 5.0,
+          "y": 6.0
+        }
       }
     ]
   },
@@ -46,6 +43,5 @@
         "subset": "value"
       }
     }
-  },
-  "equation": null
+  }
 }

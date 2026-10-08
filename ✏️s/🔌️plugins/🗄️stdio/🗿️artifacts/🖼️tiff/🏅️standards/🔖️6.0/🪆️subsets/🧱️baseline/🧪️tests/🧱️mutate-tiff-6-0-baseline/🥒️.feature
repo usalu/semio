@@ -42,11 +42,7 @@ Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseli
   Every `params` cell — and the `setup` column's own `params` — is exactly the leaf's wire payload:
   its `payload_value()`, camelCase, no aggregate tag, decoded by the subject through the
   derive-generated `from_payload_value` and read by the reference by the same field names.
-  `set-snapshot` therefore carries the whole replacement document rather than three stamps on the
-  scan: the committed 4x4 grayscale vector (`🧫️fixtures/📸️set-snapshot/⬅️before.json`) with its
-  canonical RGBA raster and the three value axes stamped out of the class (`Compression` 5,
-  `PhotometricInterpretation` 6, `BitsPerSample` 16). The reference reads that document's axes off
-  its IFD 0 exactly as it reads the scan's.
+  The reference reads the mutated document's axes off its IFD 0 exactly as it reads the scan's.
 
   @id-mutate
   @level-exhaustive
@@ -60,7 +56,6 @@ Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseli
     Then the conformance verdict gains exactly <code>, and the projection moves on this kind's own axis
     Examples:
       | id | code | setup | params |
-      | set-snapshot | stdio.tiff.baseline.unsupported-compression | {} | {"snapshot":{"schema":"stdio.tiff","byteOrder":"littleEndian","ifds":[{"entries":[{"tag":256,"kind":"long","values":{"kind":"long","value":[4]}},{"tag":257,"kind":"long","values":{"kind":"long","value":[4]}},{"tag":258,"kind":"short","values":{"kind":"short","value":[16]}},{"tag":259,"kind":"short","values":{"kind":"short","value":[5]}},{"tag":262,"kind":"short","values":{"kind":"short","value":[6]}},{"tag":273,"kind":"long","values":{"kind":"long","value":[8]}},{"tag":277,"kind":"short","values":{"kind":"short","value":[1]}},{"tag":278,"kind":"long","values":{"kind":"long","value":[4]}},{"tag":279,"kind":"long","values":{"kind":"long","value":[16]}}],"pixels":[]}],"pixels":[0,0,0,255,1,1,1,255,2,2,2,255,3,3,3,255,4,4,4,255,5,5,5,255,6,6,6,255,7,7,7,255,8,8,8,255,9,9,9,255,10,10,10,255,11,11,11,255,12,12,12,255,13,13,13,255,14,14,14,255,15,15,15,255]}} |
       | set-compression | stdio.tiff.baseline.unsupported-compression | {} | {"compression":5} |
       | set-photometric-interpretation | stdio.tiff.baseline.unsupported-photometric | {} | {"photometric":6} |
       | set-bits-per-sample | stdio.tiff.baseline.unsupported-bits-per-sample | {} | {"bits":[16,16,16]} |
@@ -68,7 +63,6 @@ Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseli
       | remove-tile-tags |  | {"kind": "insert-tile-tags", "params": {"tileWidth": 256, "tileLength": 256}} | {} |
       | set-strip-offsets |  | {} | {"offsets":[8,65536]} |
       | remove-strip-offsets | stdio.tiff.baseline.missing-strip-offsets | {} | {} |
-      | patch-snapshot | stdio.tiff.baseline.unsupported-compression | {} | {"patch": {"operation": "set", "path": "/ifds/0/entries/3/values/value", "value": [5]}} |
 
   @id-inverse
   @level-exhaustive
@@ -82,7 +76,6 @@ Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseli
     Then the conformance projection is the pre-mutation one again, tag for tag
     Examples:
       | id | code | setup | params |
-      | set-snapshot | stdio.tiff.baseline.unsupported-compression | {} | {"snapshot":{"schema":"stdio.tiff","byteOrder":"littleEndian","ifds":[{"entries":[{"tag":256,"kind":"long","values":{"kind":"long","value":[4]}},{"tag":257,"kind":"long","values":{"kind":"long","value":[4]}},{"tag":258,"kind":"short","values":{"kind":"short","value":[16]}},{"tag":259,"kind":"short","values":{"kind":"short","value":[5]}},{"tag":262,"kind":"short","values":{"kind":"short","value":[6]}},{"tag":273,"kind":"long","values":{"kind":"long","value":[8]}},{"tag":277,"kind":"short","values":{"kind":"short","value":[1]}},{"tag":278,"kind":"long","values":{"kind":"long","value":[4]}},{"tag":279,"kind":"long","values":{"kind":"long","value":[16]}}],"pixels":[]}],"pixels":[0,0,0,255,1,1,1,255,2,2,2,255,3,3,3,255,4,4,4,255,5,5,5,255,6,6,6,255,7,7,7,255,8,8,8,255,9,9,9,255,10,10,10,255,11,11,11,255,12,12,12,255,13,13,13,255,14,14,14,255,15,15,15,255]}} |
       | set-compression | stdio.tiff.baseline.unsupported-compression | {} | {"compression":5} |
       | set-photometric-interpretation | stdio.tiff.baseline.unsupported-photometric | {} | {"photometric":6} |
       | set-bits-per-sample | stdio.tiff.baseline.unsupported-bits-per-sample | {} | {"bits":[16,16,16]} |
@@ -90,5 +83,4 @@ Feature: Move a real scanned TIFF across every axis of the Adobe TIFF 6.0 Baseli
       | remove-tile-tags |  | {"kind": "insert-tile-tags", "params": {"tileWidth": 256, "tileLength": 256}} | {} |
       | set-strip-offsets |  | {} | {"offsets":[8,65536]} |
       | remove-strip-offsets | stdio.tiff.baseline.missing-strip-offsets | {} | {} |
-      | patch-snapshot | stdio.tiff.baseline.unsupported-compression | {} | {"patch": {"operation": "set", "path": "/ifds/0/entries/3/values/value", "value": [5]}} |
 

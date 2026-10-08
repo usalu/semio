@@ -1,10 +1,9 @@
 import {test,expect} from "bun:test";
 import {readFileSync,existsSync} from "node:fs";
 import {join} from "node:path";
-import Ajv from "ajv";
+import Ajv from "ajv/dist/2020";
 const base=join(import.meta.dir,"..");
 const fixture=JSON.parse(readFileSync(join(base,"🧫️fixtures/🔣️.json"),"utf8"));
-const schema=JSON.parse(readFileSync(join(base,"🧬️schema/🔣️.json"),"utf8"));
 const varint=(value:bigint)=>{const bytes=[];do{const byte=Number(value&127n);value>>=7n;bytes.push(byte|(value?128:0));}while(value);return Buffer.from(bytes);};
 const text=(node:any)=>node.value.repeat(node.repeat??1);
 const symbols=(node:any,counts:Map<string,number>,forced:Set<string>,force=false)=>{
@@ -34,7 +33,6 @@ const encode=(node:any,pool:string[]):Buffer=>{
   return Buffer.concat([Buffer.from([packed?21:node.kind==="tuple"?11:12]),varint(BigInt(node.items.length)),...node.items.map((item:any)=>packed?f64(item.bits):item.kind==="record"?Buffer.concat([Buffer.from([13]),encode(item,pool)]):encode(item,pool))]);
 };
 test("neutral canonical Pack symbol/field order and exact binary64 oracle",()=>{
-  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
   for(const [index,row] of fixture.cases.entries()){
     const counts=new Map<string,number>();const forced=new Set<string>();symbols(row,counts,forced);
     const pool=[...counts.keys()].filter(value=>forced.has(value)||Buffer.byteLength(value)<=128||counts.get(value)!>=2).sort((a,b)=>Buffer.compare(Buffer.from(a),Buffer.from(b)));
@@ -50,4 +48,38 @@ test("neutral canonical Pack symbol/field order and exact binary64 oracle",()=>{
 test("canonical borrowed Pack operation has a retained bounded cursor",()=>{
   expect(existsSync(join(base,"🦀️.rs"))).toBe(true);
   expect(readFileSync(join(base,"🦀️.rs"),"utf8")).toContain("BorrowedProjectedPackCursor");
+});
+
+type IntrinsicNode = {kind:"null"}|{kind:"bool",value:boolean}|{kind:"int"|"uint",value:string}|{kind:"float",bits:string}|{kind:"text",value:string}|{kind:"bytes",value:number[]}|{kind:"array",items:IntrinsicNode[]}|{kind:"object",members:{key:string,node:IntrinsicNode}[]};
+const intrinsicFixture:{outputGrants:number[],copyGrants:number[],cancelStops:number[],cases:{name:string,fieldId:number,node:IntrinsicNode,expectedHex:string}[]}=JSON.parse(readFileSync(join(base,"🧫️fixtures/🌱️intrinsic/🔣️.json"),"utf8"));
+const intrinsicSymbols=(node:IntrinsicNode,counts:Map<string,number>):void=>{
+  if(node.kind==="text")counts.set(node.value,(counts.get(node.value)??0)+1);
+  if(node.kind==="array")for(const child of node.items)intrinsicSymbols(child,counts);
+  if(node.kind==="object")for(const member of node.members)intrinsicSymbols(member.node,counts);
+};
+const intrinsicEncode=(node:IntrinsicNode,pool:string[]):Buffer=>{
+  if(node.kind==="null")return Buffer.from([18]);
+  if(node.kind==="bool")return Buffer.from([node.value?2:1]);
+  if(node.kind==="int")return Buffer.concat([Buffer.from([3]),varint((BigInt(node.value)<<1n)^(BigInt(node.value)>>63n))]);
+  if(node.kind==="uint")return Buffer.concat([Buffer.from([4]),varint(BigInt(node.value))]);
+  if(node.kind==="float")return Buffer.concat([Buffer.from([5]),f64(node.bits)]);
+  if(node.kind==="text"){const ordinal=pool.indexOf(node.value);return ordinal<0?Buffer.concat([Buffer.from([7]),varint(BigInt(Buffer.byteLength(node.value))),Buffer.from(node.value)]):Buffer.concat([Buffer.from([6]),varint(BigInt(ordinal))]);}
+  if(node.kind==="bytes")return Buffer.concat([Buffer.from([8]),varint(BigInt(node.value.length)),Buffer.from(node.value)]);
+  if(node.kind==="array")return Buffer.concat([Buffer.from([12]),varint(BigInt(node.items.length)),...node.items.map(child=>intrinsicEncode(child,pool))]);
+  if(node.kind==="object")return Buffer.concat([Buffer.from([16]),varint(BigInt(node.members.length)),...node.members.flatMap(member=>[Buffer.from([7]),varint(BigInt(Buffer.byteLength(member.key))),Buffer.from(member.key),intrinsicEncode(member.node,pool)])]);
+  throw new Error("intrinsic oracle node has no authored authority");
+};
+test("retained intrinsic Body preserves ordered duplicate members and exact scalar bytes",()=>{
+  const schema=JSON.parse(readFileSync(join(base,"🧬️schema/🔣️.json"),"utf8"));const ajv=new Ajv({strict:true});ajv.addSchema(schema);
+  const request=ajv.compile({$ref:schema.$id+"#/$defs/IntrinsicBodyRequest"});const grant=ajv.compile({$ref:schema.$id+"#/$defs/Grant"});
+  for(const row of intrinsicFixture.cases){
+    expect(request({fieldId:row.fieldId,maximumDepth:64})).toBe(true);
+    const counts=new Map<string,number>();intrinsicSymbols(row.node,counts);
+    const pool=[...counts.keys()].filter(value=>Buffer.byteLength(value)<=128||counts.get(value)!>=2).sort((a,b)=>Buffer.compare(Buffer.from(a),Buffer.from(b)));
+    const bytes=Buffer.concat([varint(BigInt(pool.length)),...pool.flatMap(value=>[varint(BigInt(Buffer.byteLength(value))),Buffer.from(value)]),varint(1n),varint(BigInt(row.fieldId)),Buffer.from([17]),intrinsicEncode(row.node,pool)]);
+    expect(bytes.toString("hex")).toBe(row.expectedHex);
+    for(const copy of intrinsicFixture.copyGrants){expect(grant({maximumItems:1,maximumCopyBytes:copy,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:64})).toBe(true);for(const width of intrinsicFixture.outputGrants){const chunks=[];for(let offset=0;offset<bytes.length;offset+=Math.min(width,copy,64))chunks.push(bytes.subarray(offset,offset+Math.min(width,copy,64)));expect(Buffer.concat(chunks)).toEqual(bytes);}}
+  }
+  expect(intrinsicFixture.cases[3].expectedHex).not.toBe(intrinsicFixture.cases[4].expectedHex);
+  expect(request({fieldId:65536,maximumDepth:64})).toBe(false);expect(grant({maximumItems:-1,maximumCopyBytes:2,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:64})).toBe(false);
 });

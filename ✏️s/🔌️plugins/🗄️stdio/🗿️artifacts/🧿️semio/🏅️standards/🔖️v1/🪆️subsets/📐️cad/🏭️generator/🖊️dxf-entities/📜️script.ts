@@ -28,8 +28,6 @@ const FAMILY = "dxf-entities";
 const ROUTER = join(import.meta.dir, "..", "📜️script.ts");
 
 const RECIPES = [
-  "no-mutation-identity",
-  "set-snapshot-replaces-drawing",
   "add-layer-hidden-services",
   "remove-layer-scratch",
   "set-layer-walls-color",

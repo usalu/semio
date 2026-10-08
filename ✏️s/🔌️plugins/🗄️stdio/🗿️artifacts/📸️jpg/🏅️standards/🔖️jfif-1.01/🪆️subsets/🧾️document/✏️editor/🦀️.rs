@@ -5,7 +5,7 @@
 
 use crate::editor::jpg_any::modes::edit;
 use crate::editor::jpg_any::modes::edit::windows::main;
-use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::{ChangeRestartIntervalMutation, JpgMutation, ReplaceHuffmanTableMutation, ReplacePixelsMutation, ReplaceQuantTableMutation};
+use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::{JpgMutation,ReplaceImage,ReplacePixelsMutation,ChangeJfifHeaderMutation};
 use crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::JpgSnapshot;
 use crate::{JPG_ANY_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA};
 use semio_framework_2d::compute::EngineHandles;
@@ -144,18 +144,12 @@ fn jpgAnyEditor_bounded_edit(event: &editing::SnapshotEditEvent, snapshot: &JpgS
 /// 🎯️ The domain leaf exactly as granular as a set of one whole field or table — restart interval, the pixel
 /// raster, one quantization or Huffman table — else `None`, and the edit publishes as a path-scoped patch (design §19.3: the JFIF
 /// header leaf carries every header field, so a set of one of them is a patch).
-fn jpgAnyEditor_compact_mutation(event: &editing::SnapshotEditEvent, next: &JpgSnapshot) -> Option<JpgMutation> {
-    let editing::SnapshotEditEvent::SetValue { path, .. } = event else { return None };
-    let table = |prefix: &str, len: usize| path.strip_prefix(prefix).filter(|rest| !rest.contains('/')).and_then(|_| jpgAnyEditor_index(path, prefix, len));
-    match path.as_str() {
-        "/restartInterval" => Some(JpgMutation::ChangeRestartInterval(ChangeRestartIntervalMutation { restart_interval: next.restart_interval })),
-        "/pixels" => Some(JpgMutation::ReplacePixels(ReplacePixelsMutation { pixels: next.pixels.clone() })),
-        _ => match (table("/quantTables/", next.quant_tables.len()), table("/huffmanTables/", next.huffman_tables.len())) {
-            (Some(index), _) => Some(JpgMutation::ReplaceQuantTable(ReplaceQuantTableMutation { table: next.quant_tables[index].clone() })),
-            (_, Some(index)) => Some(JpgMutation::ReplaceHuffmanTable(ReplaceHuffmanTableMutation { table: next.huffman_tables[index].clone() })),
-            _ => None,
-        },
-    }
+fn jpgAnyEditor_compact_mutation(event:&editing::SnapshotEditEvent,next:&JpgSnapshot)->Option<JpgMutation>{
+ match event{
+ editing::SnapshotEditEvent::SetValue{path,..} if path=="/image/pixels"=>Some(JpgMutation::ReplacePixels(ReplacePixelsMutation{pixels:next.image.pixels.clone()})),
+ editing::SnapshotEditEvent::SetValue{path,..} if path.starts_with("/image/jfif")=>Some(JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation{version:next.image.jfif_version,density_units:next.image.jfif_density_units,x_density:next.image.jfif_x_density,y_density:next.image.jfif_y_density,thumbnail:next.image.jfif_thumbnail.clone()})),
+ _=>None
+}
 }
 struct JpgAnyEditorExampleFactory {
     keys: Vec<ToolFactoryKey>,
@@ -232,7 +226,7 @@ impl ArtifactEditor for JpgAnyEditor {
     }
 
     fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(snapshot, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snapshot.frame.as_ref())).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))
+        crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(snapshot, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))
     }
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
@@ -243,7 +237,7 @@ impl ArtifactEditor for JpgAnyEditor {
     }
 
     fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(JpgMutation::SetSnapshot(crate::standards::v_jfif_1_01::subsets::document::schema::mutations::set_snapshot::SetSnapshot { snapshot }))
+        Some(JpgMutation::ReplaceImage(ReplaceImage { image:snapshot.image }))
     }
 
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
@@ -353,17 +347,10 @@ impl editing::SnapshotEditingEditor for JpgAnyEditor {
             _ => None,
         }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        let next = jpgAnyEditor_bounded_edit(event, snapshot)?;
-        if let Some(mutation) = jpgAnyEditor_compact_mutation(event, &next) {
-            return Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() });
-        }
-        editing::snapshot_edit_patch(
-            event,
-            snapshot,
-            |patch| JpgMutation::PatchSnapshot(crate::standards::v_jfif_1_01::subsets::document::schema::mutations::patch_snapshot::PatchSnapshot { patch }),
-            Some(|snapshot| JpgMutation::SetSnapshot(crate::standards::v_jfif_1_01::subsets::document::schema::mutations::set_snapshot::SetSnapshot { snapshot })),
-        )
+    fn snapshot_edit_mutations(event:&editing::SnapshotEditEvent,snapshot:&Self::Snapshot)->Result<Emit<Self::Mutation,Self::ConfigMutation,Self::DraftMutation>,Fault>{
+        let next=jpgAnyEditor_bounded_edit(event,snapshot)?;
+        if next.schema!=snapshot.schema{return Err(jpgAnyEditor_edit_fault("stdio.jpg.identity-edit","JPEG image edits cannot change schema identity"));}
+        Ok(Emit::mutations(vec![jpgAnyEditor_compact_mutation(event,&next).unwrap_or_else(||JpgMutation::ReplaceImage(ReplaceImage{image:next.image}))]))
     }
 }
 

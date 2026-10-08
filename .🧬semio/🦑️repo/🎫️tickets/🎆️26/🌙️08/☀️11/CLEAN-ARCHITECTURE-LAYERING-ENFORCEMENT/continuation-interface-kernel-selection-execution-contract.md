@@ -1,0 +1,5 @@
+# Kernel Selection Original Whole Owner Execution Contract
+
+The red/green pair runs the complete current General Cargo owning law file, with no test-name filter. It retains every original case, policy, assertion, native Nextest/Cargo oracle and timeout. The only behavior cut is the three original Kernel fixture expected argument lists and their neutral manifest feature declaration, matching the defining current TestScript mutation-testing argument. Both runs retain the same explicit Record annotation for the test environment; no production command feature is removed or source restored.
+
+The source closure captures all defining Generic Cargo fixture/schema data, full current Kernel script and exact Kernel fixture, actual imports and existing module declarations. The Kernel script is literal source input for the original TypeScript extraction/VM law; its complete bytes are guarded, and its imports are not pretended to execute as runtime dependencies of the extracted class. Actual native inputs remain owned by each original law fixture. Full before/after custody precedes proposal writes. No narrowed pass substitutes for the failed full whole13.

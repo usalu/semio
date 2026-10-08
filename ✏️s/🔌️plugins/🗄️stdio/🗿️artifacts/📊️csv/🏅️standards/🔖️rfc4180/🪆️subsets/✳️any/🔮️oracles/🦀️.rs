@@ -55,14 +55,6 @@ fn number(value: &Json, key: &str) -> Option<f64> {
 fn record_from_wire(record: &Json) -> Vec<String> {
     record.array("fields").iter().map(|field| field.str("value")).collect()
 }
-/// 🩹️ The reference's own `CsvSnapshot` reading of `input` — every record of [`read_grid`] as `CsvRecord` wire, `quoted`
-/// left to the writer — that a `patch-snapshot` row's pointer operation addresses.
-#[cfg(feature = "oracles")]
-fn snapshot_wire(input: &[u8]) -> Result<Json, String> {
-    let field = |value: &String| Json::Object(vec![("value".to_string(), Json::String(value.clone())), ("quoted".to_string(), Json::Bool(false))]);
-    let records = read_grid(input)?.iter().map(|record| Json::Object(vec![("fields".to_string(), Json::Array(record.iter().map(field).collect()))])).collect();
-    Ok(Json::Object(vec![("schema".to_string(), Json::String("stdio.csv".to_string())), ("hasHeader".to_string(), Json::Bool(true)), ("records".to_string(), Json::Array(records))]))
-}
 //#endregion 🔖️SpecReaders
 
 //#region 🔖️Dispatch
@@ -77,7 +69,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
         "set-has-header" => Ok(input.to_vec()),
-        "set-snapshot" => write_grid(&params.get("snapshot").map(|snapshot| snapshot.array("records").iter().map(record_from_wire).collect::<Vec<_>>()).unwrap_or_default()),
         "insert-record" => {
             let mut grid = read_grid(input)?;
             let index = number(&params, "index").ok_or("insert-record: missing `index`")? as usize;
@@ -107,7 +98,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             record[field_index] = value;
             write_grid(&grid)
         }
-        "patch-snapshot" => write_grid(&semio_repo_test_host::law::patched_snapshot(&snapshot_wire(input)?, params.get("patch").ok_or("patch-snapshot: missing `patch`")?)?.array("records").iter().map(record_from_wire).collect::<Vec<_>>()),
         kind => Err(format!("mutation kind {kind:?} has no oracle implementation ({} input byte(s))", input.len())),
     }
 }

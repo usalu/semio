@@ -37,62 +37,26 @@ impl store::ArtifactPack for Generation2dGeneratePreviewWindowConfig {
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Self::__dsl_spec()) }
 }
 
-store::impl_whole_record_config!(Generation2dGeneratePreviewWindowConfig);
-
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
-#[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
-pub enum Generation2dGeneratePreviewWindowConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot { #[dsl(block)] config: Box<Generation2dGeneratePreviewWindowConfig> },
+semio_framework_os_kernel::config_record! {
+    record: Generation2dGeneratePreviewWindowConfig,
+    diff: Generation2dGeneratePreviewWindowConfigDiff,
+    set: Generation2dGeneratePreviewWindowConfigMutation,
+    owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview",
+    payload_schema: "procedural.generation2d.generatepreviewwindowconfig",
+    emoji: "🎚️",
+    replace: Snapshot { config } wire "snapshot" kind "set-window-config" name "Set Generation2d Generate Preview Window Configuration",
+    fields: {
+        viewport: semio_framework_os_kernel::Viewport2d => SetViewport "set-viewport",
+    },
 }
 
-impl protocol::OpText for Generation2dGeneratePreviewWindowConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        for (keyword, spec_fn) in &<Self as semio_framework_dsl_record::DslVariants>::variants() {
-            if line == keyword || line.starts_with(&format!("{keyword} ")) {
-                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
-                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown Generation2d generate-preview mutation '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
-        let spec = <Self as semio_framework_dsl_record::DslVariants>::variants().iter().find(|(key, _)| key == &keyword).map(|(_, spec)| (spec.ordinary)()).expect("Generation2d generate-preview mutation variant");
-        semio_framework_dsl_record::print(&record, &spec, semio_framework_dsl_record::JoinMode::Inline)
-    }
-}
 
-impl protocol::OpBinary for Generation2dGeneratePreviewWindowConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { dsl::variants_binary::encode_op(self) }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { dsl::variants_binary::decode_op(bytes) }
-}
 
-impl protocol::Mutation<Generation2dGeneratePreviewWindowConfig> for Generation2dGeneratePreviewWindowConfigMutation {
-    type Diff = Generation2dGeneratePreviewWindowConfig;
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
-        schema_version: 1,
-        owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🪟️windows/👁️preview/🎚️config",
-        semantic_kind: "set-window-config",
-        display_name: "Set Generation2d Generate Preview Window Configuration",
-        emoji: "🎚️",
-        aggregate_variant: "Snapshot",
-        payload_schema: "procedural.generation2d.generatepreviewwindowconfig",
-        text_opcode: None,
-        binary_tag: None,
-        invertibility: protocol::MutationInvertibility::ExplicitMutation,
-        diff_participation: protocol::MutationDiffParticipation::Detect,
-        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-        composition: protocol::MutationComposition::Atomic,
-        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::Typescript, protocol::MutationLanguageSurface::JsonSchema, protocol::MutationLanguageSurface::Graphql, protocol::MutationLanguageSurface::Protobuf],
-    }];
-    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, _base: &Generation2dGeneratePreviewWindowConfig) -> protocol::MutationOutcome<Self::Diff> { match self { Self::Snapshot { config } => protocol::MutationOutcome::new(config.as_ref().clone()) } }
-    fn inverse(&self, base: &Generation2dGeneratePreviewWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| { vec![Self::Snapshot { config: Box::new(base.clone()) }] 
-    })())
-}
-}
+
+
+
+
+
 
 pub struct Generation2dGeneratePreviewWindowConfigOwner;
 

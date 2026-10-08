@@ -3,7 +3,8 @@ import { runExactCargoLaws } from "../../../🏃️process/🧪️testing/🦀�
 import { resolve } from "node:path";
 import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../🏃️process/🧪️testing/🎚️budget/🟦️.ts";
-import { runRepositoryTestCommand } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runBudgetedTestCommand } from "../../../🏃️process/🧪️testing/🎛️execution/🟦️.ts";
+import { startNativeProgress } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 /** 🦀️ `@semio-tech/framework-job` task router: `bun ./📜️script.ts <test>`. */
 
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
@@ -30,7 +31,13 @@ class CanonicalArchitectureScript extends BundleScript {
 class CloseDemandSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { level, rest } = resolveTestLevel(segments, "quick");
-    await runRepositoryTestCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/📏️close-demand/🟦️.ts"), ...rest], { cwd: this.repoRoot, budgetMs: TEST_LEVEL_BUDGET_MS[level] });
+    const controller = new AbortController(), cancel = (): void => controller.abort(), stopProgress = startNativeProgress("job-close-demand");
+    process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
+    try {
+      await runBudgetedTestCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/📏️close-demand/🟦️.ts"), ...rest], { cwd: this.repoRoot, env: process.env, budgetMs: TEST_LEVEL_BUDGET_MS[level], signal: controller.signal, throwOnFailure: true, captureStdout: { limitBytes: 16 * 1024 * 1024, onChunk: bytes => { process.stdout.write(bytes); } } });
+    } finally {
+      stopProgress(); process.off("SIGINT", cancel); process.off("SIGTERM", cancel);
+    }
   }
 }
 

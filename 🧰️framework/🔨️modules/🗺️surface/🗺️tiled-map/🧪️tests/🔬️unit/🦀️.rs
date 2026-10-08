@@ -1,4 +1,41 @@
 
+const VECTOR_TILE_FIXTURES: &[(&str, &[u8])] = &[
+    ("0-0-0", include_bytes!("../../🧫️fixtures/🗺️vector-tiles/0-0-0/🛰️.pbf")),
+    ("1-1-0", include_bytes!("../../🧫️fixtures/🗺️vector-tiles/1-1-0/🛰️.pbf")),
+    ("2-2-1", include_bytes!("../../🧫️fixtures/🗺️vector-tiles/2-2-1/🛰️.pbf")),
+    ("3-4-2", include_bytes!("../../🧫️fixtures/🗺️vector-tiles/3-4-2/🛰️.pbf")),
+    ("4-8-5", include_bytes!("../../🧫️fixtures/🗺️vector-tiles/4-8-5/🛰️.pbf")),
+    ("5-17-11", include_bytes!("../../🧫️fixtures/🗺️vector-tiles/5-17-11/🛰️.pbf")),
+];
+
+fn vector_tile_fixture(key: &str) -> &'static [u8] {
+    VECTOR_TILE_FIXTURES.iter().find(|(name, _)| *name == key).expect("owned vector tile fixture").1
+}
+
+#[test]
+fn owned_vector_tile_inventory_agrees_with_independent_protobuf_corpus() {
+    use super::vector_tiles::GeomType;
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🗺️vector-tiles/🔣️.json")).expect("vector tile corpus");
+    let rows = corpus["tiles"].as_array().expect("tile roster");
+    assert_eq!(rows.len(), VECTOR_TILE_FIXTURES.len());
+    for row in rows {
+        let key = row["key"].as_str().expect("tile key");
+        let bytes = vector_tile_fixture(key);
+        assert_eq!(bytes.len() as u64, row["bytes"].as_u64().expect("byte count"));
+        let tile = super::vector_tiles::decode_mvt(bytes).expect("owned vector tile");
+        let layers: Vec<_> = tile.layers.iter().map(|layer| {
+            let mut geometry_types = [0usize; 4];
+            for feature in &layer.features {
+                let kind = match feature.geom_type {GeomType::Unknown => 0, GeomType::Point => 1, GeomType::LineString => 2, GeomType::Polygon => 3};
+                geometry_types[kind] += 1;
+            }
+            serde_json::json!({"name": layer.name, "extent": layer.extent, "features": layer.features.len(), "geometryTypes": geometry_types})
+        }).collect();
+        assert_eq!(serde_json::Value::Array(layers), row["layers"], "tile {key}");
+    }
+    println!("[DEBUG] Owned vector tile layer/feature/geometry inventory matches the independent Protobuf.js corpus for all six original tiles");
+}
+
 use super::MAX_VISIBLE_TILE_REQUESTS;
 use super::canvas::camera::{Camera, Viewport};
 use super::projection::{WORLD_HALF, default_world_camera, lonlat_to_world, tile_world_rect, world_to_lonlat};
@@ -788,10 +825,8 @@ fn decode_mvt_empty_bytes_yields_empty_tile() {
 }
 
 #[test]
-#[ignore = "requires .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-2-2-1.pbf from demotiles"]
 fn decode_demotile_fixture_has_named_layers() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-2-2-1.pbf");
-    let bytes = std::fs::read(path).expect("fixture pbf");
+    let bytes = vector_tile_fixture("2-2-1");
     let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
     assert!(!tile.layers.is_empty());
     assert!(tile.layers.iter().any(|l| !l.features.is_empty()));
@@ -802,8 +837,7 @@ fn decode_demotile_fixture_has_named_layers() {
 
 #[test]
 fn demotile_fixture_countries_use_multi_ring_polygons() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-2-2-1.pbf");
-    let bytes = std::fs::read(path).expect("fixture pbf");
+    let bytes = vector_tile_fixture("2-2-1");
     let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
     let countries = tile.layers.iter().find(|l| l.name == "countries").expect("countries layer");
     let multi = countries.features.iter().filter(|f| f.rings.len() > 1).count();
@@ -812,14 +846,8 @@ fn demotile_fixture_countries_use_multi_ring_polygons() {
 
 #[test]
 fn fixture_linestrings_split_at_moveto() {
-    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES");
     let mut found = false;
-    for entry in std::fs::read_dir(&dir).expect("fixture dir") {
-        let path = entry.expect("entry").path();
-        if path.extension().and_then(|e| e.to_str()) != Some("pbf") {
-            continue;
-        }
-        let bytes = std::fs::read(&path).expect("read pbf");
+    for (_, bytes) in VECTOR_TILE_FIXTURES {
         let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
         for layer in &tile.layers {
             if layer.features.iter().any(|f| f.lines.len() > 1) {
@@ -836,8 +864,7 @@ fn fixture_linestrings_split_at_moveto() {
 
 #[test]
 fn demotile_z5_has_countries_and_centroids() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
-    let bytes = std::fs::read(path).expect("fixture pbf");
+    let bytes = vector_tile_fixture("5-17-11");
     let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
     let countries = tile.layers.iter().find(|l| l.name == "countries").expect("countries");
     let centroids = tile.layers.iter().find(|l| l.name == "centroids").expect("centroids");
@@ -848,8 +875,7 @@ fn demotile_z5_has_countries_and_centroids() {
 
 #[test]
 fn demotile_z0_has_many_country_features() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
-    let bytes = std::fs::read(path).expect("fixture pbf");
+    let bytes = vector_tile_fixture("0-0-0");
     let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
     let countries = tile.layers.iter().find(|l| l.name == "countries").expect("countries");
     assert!(countries.features.len() >= 50, "world tile should include many countries");
@@ -857,8 +883,7 @@ fn demotile_z0_has_many_country_features() {
 
 #[test]
 fn figure_world_tile_paints_many_countries() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
-    let bytes = std::fs::read(path).expect("fixture pbf");
+    let bytes = vector_tile_fixture("0-0-0");
     let mut host = super::MapHost::new();
     host.set_size(800, 600, 1.0);
     host.set_render_mode("vector");
@@ -872,8 +897,7 @@ fn figure_world_tile_paints_many_countries() {
 
 #[test]
 fn colored_world_tile_paints_land_over_water_backdrop() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
-    let bytes = std::fs::read(path).expect("fixture pbf");
+    let bytes = vector_tile_fixture("0-0-0");
     let mut host = super::MapHost::new();
     host.set_size(800, 600, 1.0);
     host.set_render_mode("vector");
@@ -886,8 +910,7 @@ fn colored_world_tile_paints_land_over_water_backdrop() {
 
 #[test]
 fn figure_country_lod_uses_land_mass_backdrop() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-3-4-2.pbf");
-    let bytes = std::fs::read(path).expect("fixture pbf");
+    let bytes = vector_tile_fixture("3-4-2");
     let mut host = super::MapHost::new();
     host.set_size(800, 600, 1.0);
     host.set_render_mode("vector");
@@ -992,8 +1015,7 @@ fn place_label_visible_covers_admin_document() {
 
 #[test]
 fn label_camera_setup_intersects_fixture_tile() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
-    let bytes = std::fs::read(path).expect("fixture pbf");
+    let bytes = vector_tile_fixture("5-17-11");
     let mut host = super::MapHost::new();
     host.set_size(800, 600, 1.0);
     host.set_lod_mode("country");
@@ -1008,8 +1030,7 @@ fn label_camera_setup_intersects_fixture_tile() {
 
 #[test]
 fn figure_ground_labels_increase_scene_when_enabled() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
-    let bytes = std::fs::read(path).expect("fixture pbf");
+    let bytes = vector_tile_fixture("5-17-11");
     let mut host = super::MapHost::new();
     host.set_size(800, 600, 1.0);
     host.set_render_mode("vector");
@@ -1026,8 +1047,7 @@ fn figure_ground_labels_increase_scene_when_enabled() {
 
 #[test]
 fn colored_vector_labels_increase_scene_when_enabled() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
-    let bytes = std::fs::read(path).expect("fixture pbf");
+    let bytes = vector_tile_fixture("5-17-11");
     let mut host = super::MapHost::new();
     host.set_size(800, 600, 1.0);
     host.set_render_mode("vector");

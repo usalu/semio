@@ -4,7 +4,7 @@ export type * from "../../../../../🧬️schema/🧬️mutations/🏠️default
 /** 🔗️ `bind-default-scene` wire twin: the flat `Apply` payload `GltfBindDefaultScenePayload` and the phase wire `BindDefaultSceneMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
 export const parseGltfBindDefaultScenePayload = gltfWireObject<GltfBindDefaultScenePayload>({ scene: gltfWireRequired(gltfWireIndex) });
-export const parseBindDefaultSceneMutation = gltfWirePhase(parseGltfBindDefaultScenePayload, parseGltfDiff);
+export const parseBindDefaultSceneMutation = gltfWireApplyPhase(parseGltfBindDefaultScenePayload);

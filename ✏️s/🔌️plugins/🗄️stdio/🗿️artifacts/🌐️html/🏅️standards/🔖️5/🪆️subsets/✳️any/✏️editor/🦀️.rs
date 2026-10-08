@@ -7,7 +7,7 @@
 
 use crate::editor::html::modes::edit;
 use crate::editor::html::modes::edit::windows::main;
-use crate::standards::v5::subsets::any::schema::mutations::{insert_node,remove_node,set_attribute,set_comment,set_doctype,set_element_name,set_raw_text,set_snapshot::SetSnapshot,set_text,HtmlMutation};
+use crate::standards::v5::subsets::any::schema::mutations::{insert_node,remove_node,set_attribute,set_comment,set_doctype,set_element_name,set_raw_text,set_text,HtmlMutation};
 
 use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot};
 use crate::{HTML_DIALECT, STDIO_HTML_DOCUMENT_SCHEMA};
@@ -166,7 +166,7 @@ fn html_retained_extent(_command: &HtmlEditCommand, _snapshot: &HtmlSnapshot, _i
 fn html_emit(command: &HtmlEditCommand, snapshot: &HtmlSnapshot) -> Result<Emit<HtmlMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
         HtmlEditCommand::ReplaceText { text } => match <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-            Ok(next) => Ok(Emit::mutations(html_net_mutations(snapshot, &next))),
+            Ok(next) => Ok(Emit::mutations(semio_s_artifact_stdio_contract::editing::net_leaves_exact(snapshot, &next, html_net_mutations)?)),
             Err(error) => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.html.invalid-text"), error.to_string())),
         },
         HtmlEditCommand::EditSnapshot { .. } => Err(Fault::from("stdio-html-snapshot-edit-routed-to-native-reducer")),
@@ -247,9 +247,9 @@ impl ArtifactOwnedToolJobFactory for HtmlRetainedCommandJobFactory {
 /// or removes the attributes that changed and walks its children; a text, comment or raw-text node re-sets its text. Children
 /// unchanged at either end of a list stay untouched, surplus children are removed (last first) or inserted, and a child that
 /// changed kind (or whose attribute order the attribute leaves cannot reproduce) is removed and inserted anew. History
-/// therefore edits the node an author changed. The genuine whole-document replacements are `set-snapshot`: another document
-/// schema, or a root the node leaves cannot reach (another node kind, or a root attribute order the attribute leaves cannot
-/// reproduce). The main window's Apply and the document-details editor both commit through here.
+/// therefore edits the node an author changed. Another document schema, or a root the node leaves cannot reach (another node
+/// kind, or a root attribute order the attribute leaves cannot reproduce), answers no leaves and is refused by the exact replay.
+/// The main window's Apply and the document-details editor both commit through here.
 fn html_net_mutations(base: &HtmlSnapshot, next: &HtmlSnapshot) -> Vec<HtmlMutation> {
     let mut leaves = Vec::new();
     if base.doctype != next.doctype {
@@ -257,7 +257,7 @@ fn html_net_mutations(base: &HtmlSnapshot, next: &HtmlSnapshot) -> Vec<HtmlMutat
     }
     match base.schema == next.schema && html_net_node(&[], &base.root, &next.root, &mut leaves) {
         true => leaves,
-        false => vec![HtmlMutation::SetSnapshot(SetSnapshot { snapshot: next.clone() })],
+        false => Vec::new(),
     }
 }
 
@@ -379,8 +379,8 @@ impl ArtifactEditor for HtmlEditor {
         crate::standards::v5::subsets::any::io::text::snapshot::parse_html_document(text).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(HtmlMutation::SetSnapshot(SetSnapshot { snapshot }))
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
@@ -553,7 +553,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for HtmlEdi
     }
 
     fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net(event, snapshot, html_net_mutations)
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, html_net_mutations)
     }
 }
 //#endregion 🔖️Editor

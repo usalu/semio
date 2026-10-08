@@ -109,7 +109,7 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{create_camera,delete_camera,move_camera,reorder_cameras};
+    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{apply_gltf_mutation,create_camera,delete_camera,move_camera,reorder_cameras};
 use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutations::{gltf_inverse_restored_document};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::{GltfCameraProjection, GltfOrthographic, GltfPerspective};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
@@ -176,17 +176,17 @@ use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutati
     //#endregion 🔖️Params
 
     //#region 🔖️Dispatch
-    /// 📐️ Full parse → typed leaf `apply()` → re-serialize from the model alone — the
+    /// 📐️ Full parse → typed leaf mutation through the central applier → re-serialize from the model alone — the
     /// no-byte-pass-through rule this wave exists to enforce. Dispatches through each of the 4
     /// leaves' own real `apply()` directly, the same simple typed-payload shape every camera leaf
     /// exposes (no descriptor-table indirection needed here, unlike the artifact-root case's
     /// 7 older-style kinds).
     fn apply_kind(before: &GltfSnapshot, kind: &str, params: &Json) -> Result<GltfSnapshot, String> {
         match kind {
-            "create-camera" => create_camera::apply(&create_camera::GltfCreateCameraPayload { position: num(params, "position")?, projection: projection(params, "projection")? }, before).map_err(|error| error.detail),
-            "delete-camera" => delete_camera::apply(&delete_camera::GltfDeleteCameraPayload { index: num(params, "index")? }, before).map_err(|error| error.detail),
-            "move-camera" => move_camera::apply(&move_camera::GltfMoveCameraPayload { index: num(params, "index")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "reorder-cameras" => reorder_cameras::apply(&reorder_cameras::GltfReorderCamerasPayload { order: order(params, "order")? }, before).map_err(|error| error.detail),
+            "create-camera" => apply_gltf_mutation(before, &create_camera::mutation(create_camera::GltfCreateCameraPayload { position: num(params, "position")?, projection: projection(params, "projection")?, camera: None })),
+            "delete-camera" => apply_gltf_mutation(before, &delete_camera::mutation(delete_camera::GltfDeleteCameraPayload { index: num(params, "index")? })),
+            "move-camera" => apply_gltf_mutation(before, &move_camera::mutation(move_camera::GltfMoveCameraPayload { index: num(params, "index")?, position: num(params, "position")? })),
+            "reorder-cameras" => apply_gltf_mutation(before, &reorder_cameras::mutation(reorder_cameras::GltfReorderCamerasPayload { order: order(params, "order")? })),
             other => Err(format!("unrecognised mutation kind {other:?}")),
         }
     }

@@ -8,12 +8,9 @@ use crate::GisMapSnapshot;
 /// ↩️ Undo re-creates the feature at its pre-deletion index, captured from `base` — missing target
 /// (already absent) returns `Vec::new()`, an empty inverse rather than a no-op sentinel mutation.
 pub fn inverse(payload: &DeleteRoute, base: &GisMapSnapshot) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
     let Some(index) = base.routes.iter().position(|feature| feature.id == payload.id) else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
-    vec![GisMapMutation::CreateRoute(CreateRoute { index, item: base.routes[index].clone() })]
-
-    })())
+    Ok(vec![GisMapMutation::CreateRoute(CreateRoute { index, item: base.routes[index].clone() })])
 }
 //#endregion 🔹Inverse

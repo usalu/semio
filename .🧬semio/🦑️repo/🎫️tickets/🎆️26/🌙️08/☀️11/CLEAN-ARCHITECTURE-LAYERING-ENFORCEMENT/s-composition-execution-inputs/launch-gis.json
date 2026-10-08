@@ -1,0 +1,290 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "⚖️gate🌉️os-mcp🤖️live-agent-loop🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:live-agent-loop-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.10758
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🤖️live-agent-loop🌐️de🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:live-agent-loop-check",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_MCP_LIVE_LOCALE": "de"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107582
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🤝️hub-edit-durability🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:hub-edit-durability-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107585
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🤝️hub-agent-participant🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:hub-agent-participant-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.10759
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp💬️agent-reply🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:agent-reply-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107595
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🧩️plugin-coverage🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:plugin-coverage-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.28
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🚶️user-path🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:user-path-check",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OS_MCP_HUB_ORIGIN": "${input:acceptanceHubUrl}",
+        "S_OS_MCP_LIVE_SHELL_URL": "${input:acceptanceServeUrl}",
+        "S_OS_MCP_LIVE_LOCALE": "en"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.29
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🚶️user-path🌐️de🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:user-path-check",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OS_MCP_HUB_ORIGIN": "${input:acceptanceHubUrl}",
+        "S_OS_MCP_LIVE_SHELL_URL": "${input:acceptanceServeUrl}",
+        "S_OS_MCP_LIVE_LOCALE": "de"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.3
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🛡️security🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:security-check",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OS_MCP_HUB_ORIGIN": "${input:acceptanceHubUrl}",
+        "OS_HUB_ADMIN_CAPABILITY_FILE": "${input:acceptanceHubAdminCapability}"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.301
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp💼️inference-quartet🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:inference-quartet-check",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OS_MCP_HUB_ORIGIN": "${input:acceptanceHubUrl}"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.302
+      }
+    },
+    {
+      "name": "⚖️source-check💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:source-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.33
+      }
+    },
+    {
+      "name": "⚖️native-check💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:native-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.33
+      }
+    },
+    {
+      "name": "⚖️check💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.33
+      }
+    },
+    {
+      "name": "⚖️native-build💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:native-build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.33
+      }
+    },
+    {
+      "name": "⚖️native-build-release💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:native-build-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.33
+      }
+    },
+    {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "⚖️services-mcp-composition-source🧩️s🟦️🌍️gis",
+      "command": "bun nx run @semio-tech/s-gis-services-native:mcp-composition-source-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.18
+      }
+    },
+    {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "⚖️services-mcp-untrusted-content🧩️s🟦️🌍️gis",
+      "command": "bun nx run @semio-tech/s-gis-services-native:untrusted-content-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.1801
+      }
+    },
+    {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "⚖️services-fixture-ownership🧩️s🦀️🌍️gis",
+      "command": "bun nx run @semio-tech/s-gis-services-native:fixture-ownership-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.1802
+      }
+    },
+    {
+      "name": "⚖️canonical-pair-composition-check💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:canonical-pair-composition-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0297
+      }
+    },
+    {
+      "name": "📦️mcp-build💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:mcp-build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.0032
+      }
+    },
+    {
+      "name": "📦️mcp-build-release💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:mcp-build-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.0033
+      }
+    },
+    {
+      "name": "⚖️mcp-check💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:mcp-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0298
+      }
+    }
+  ],
+  "retireNames": [
+    "⚖️gate🌉️os-mcp🤖️live-agent-loop",
+    "⚖️gate🌉️os-mcp🤖️live-agent-loop🌐️de",
+    "⚖️gate🌉️os-mcp🤝️hub-edit-durability",
+    "⚖️gate🌉️os-mcp🤝️hub-agent-participant",
+    "⚖️gate🌉️os-mcp💬️agent-reply",
+    "⚖️gate🌉️os-mcp🧩️plugin-coverage",
+    "⚖️gate🌉️os-mcp🚶️user-path",
+    "⚖️gate🌉️os-mcp🚶️user-path🌐️de",
+    "⚖️gate🌉️os-mcp🛡️security",
+    "⚖️gate🌉️os-mcp💼️inference-quartet",
+    "⚖️source-check💡️services🦀️",
+    "⚖️native-check💡️services🦀️",
+    "⚖️native-build💡️services🦀️",
+    "⚖️native-build-release💡️services🦀️",
+    "⚖️services-mcp-composition-source🧩️s🟦️",
+    "⚖️services-mcp-untrusted-content🧩️s🟦️",
+    "⚖️services-fixture-ownership🧩️s🦀️",
+    "⚖️canonical-pair-composition-check💡️services🦀️",
+    "📦️mcp-build💡️services🦀️",
+    "📦️mcp-build-release💡️services🦀️",
+    "⚖️mcp-check💡️services🦀️"
+  ]
+}

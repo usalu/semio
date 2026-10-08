@@ -1,0 +1,25 @@
+# Current Energy Native Compiler Frontier
+
+Actual fifth Energy build101 emitted20errors in current stdio dependencies. Current I-JSON owner already independently removed the reported retired SetSnapshot/Apply forms after that compile; preserved its fresh bytes. Corrected the Semio text import to actual schema.mutations public sibling modules confirmed in actual native owner mount3398. Retired2unreachable removed SetSnapshot codec stubs in mesh/brep (decoded unused snapshot with unconstrained type, no current matching mutation) and3references to removed CSV PatchSnapshot codec branch (no current enum/module exists). All current semantic variant codec handlers, exact byte parsing/errors and production diff dispatch remain. Full preimages of5currentfiles retained. Actual sixth build pending; no metadata/pass substitution.
+
+## Ninth actual build: current owned error carrier
+
+The ninth storage-isolated actual build reached one E0277 in the current stdio media export owner: Fault implements From<String> and From<&str>, while the retirement error now owns a Cow<str>. The caller now passes error.message.into_owned() to its existing Fault conversion. Owned strings move without copying; borrowed notices materialize only on this error path. Retirement grant, pending/blocked/terminal branches and all native test bodies remain unchanged. Complete preimage is `📥️oct8-energy-native-media-export-cow-error-before.json`; raw actual compiler message is `energy-ninth-errors.json`. Native assertion success still requires the next actual registered target.
+
+## Tenth actual build: seven XLSX capability callers
+
+The tenth exact Energy build terminated with seven missing ApplyCapability callers in current XLSX. The base nested XML document diff, all three subset mutation wrappers, and all three subset streaming IO applications now call the existing Kernel apply_diff owner. No capability is constructed outside its existing central owner. All diff algebra, mutation variants, IO admission/cancellation, outcomes and native test bodies remain unchanged. Complete current preimages and replacements are retained in `📥️oct8-energy-native-xlsx-central-apply-before.json`; exact actual diagnostics are in `energy-tenth-errors.json`. A successful native assertion is still pending the next actual target.
+
+## Eleventh actual build and fresh co-owner settlement
+
+The eleventh build failed with 19 Semio close-demand macro errors from the trait/accessor state compiled at that invocation. Fresh source inspection found a concurrent real owner settlement already present: Store and Semio both take the actual store reference, and Semio uses the real immutable maintenance retirement byte-demand accessor. No source bytes were edited by this owner, and no fallback demand or assertion was introduced. Complete current source observations are retained in `📥️oct8-energy-native-concurrent-close-demand-observation.json`. Root requested a fresh Pack5, World1, Energy3, Shared1 sequence after the Kernel capability changes; historical native passes are retained as historical receipts.
+
+## Twelfth Primary Crate Frontier
+
+Actual Energy compiler capture `exact-cargo-laws-ywsvYy/00/build.stdout` reached the primary lib-test and produced four errors: Surface/Thermostat missing explicit current imports and the removed editor model_edit cloning probe. Current preimage `📥️oct8-energy-native-editor-current-seam-before.json` preserves the full existing test owner. The test imports the genuine domain types, then verifies the same five exact semantic mutation kinds through actual current editor commands, additionally comparing each complete centrally applied model against the independent edited model. The removed clone-probe helper is not restored. Selected three native SQLite laws remain byte-for-byte unchanged. A separate exact editor native execution is required to prove the revised neighboring law.
+
+Thirteenth actual target31777 is GREEN Nx0/5m32s: the primary crate now compiles and the original exact three native SQLite laws pass. Receipt `🗑️generated/oct8-plugin-artifacts/exact-cargo-laws-HoFZ8n/00/receipt.json`. The separately registered editor law remains pending execution; successful compilation alone is not its behavior proof.
+
+The additive editor first target17473 compiled successfully but failed exact law listing (selected0) because the assumed module prefix was incomplete. No zero-mount pass was credited. Actual compiled list `exact-cargo-laws-yAb0lZ/00/list.stdout` uniquely supplies the complete identity; private owner selection is corrected from that real list, fullpreimage `📥️oct8-energy-editor-compiled-law-selection-before.json`. Behavior execution remains pending.
+
+Additive editor second actual target66282 now GREEN Nx0/16.8s:exactly1 mounted editor law passed with all five granular emission and complete centrally applied model equalities. Receipt `🗑️generated/oct8-plugin-artifacts/exact-cargo-laws-Fzu0zQ/00/receipt.json`. The earlier selected0 refusal remains historical and no assertion weakened.

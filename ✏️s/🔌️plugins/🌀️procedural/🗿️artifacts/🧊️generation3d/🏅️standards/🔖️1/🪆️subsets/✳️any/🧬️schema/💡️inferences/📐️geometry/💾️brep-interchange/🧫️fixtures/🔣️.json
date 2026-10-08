@@ -1,0 +1,301 @@
+{
+  "description": "Language-agnostic laws of the brep.interchange widgets. The imports read a binary STL and an OBJ cube built by hand from twelve triangles (the base64 text is the byte string of 80 header bytes, a count and twelve 50-byte records); STEP and STL exports state their structure (entity and triangle counts) and the DWG export its decodability. Round trips through every format are asserted in the unit tests. TypeScript recomputes the STL byte layout and the OBJ topology of the hand-built cube with three.",
+  "tolerance": 1e-06,
+  "meshTolerance": 1e-06,
+  "deflection": 0.1,
+  "cases": [
+    {
+      "name": "export a cube as STEP",
+      "kind": "brep.interchange.exportStep",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "outputs": {
+        "step": {
+          "prefix": "ISO-10303-21;",
+          "contains": [
+            "END-ISO-10303-21;",
+            "MANIFOLD_SOLID_BREP",
+            "CLOSED_SHELL"
+          ],
+          "occurrences": {
+            "ADVANCED_FACE": 6,
+            "MANIFOLD_SOLID_BREP": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "export a compound as STEP writes every solid",
+      "kind": "brep.interchange.exportStep",
+      "inputs": {
+        "shape": {
+          "recipe": "compound",
+          "of": [
+            {
+              "recipe": "box",
+              "size": [
+                1,
+                1,
+                1
+              ]
+            },
+            {
+              "recipe": "translate",
+              "of": {
+                "recipe": "box",
+                "size": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "by": [
+                3,
+                0,
+                0
+              ]
+            }
+          ]
+        }
+      },
+      "outputs": {
+        "step": {
+          "prefix": "ISO-10303-21;",
+          "occurrences": {
+            "MANIFOLD_SOLID_BREP": 2,
+            "ADVANCED_FACE": 12
+          }
+        }
+      }
+    },
+    {
+      "name": "export a cube as binary STL",
+      "kind": "brep.interchange.exportStl",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            1,
+            1,
+            1
+          ]
+        },
+        "deflection": 0.1
+      },
+      "outputs": {
+        "stl": {
+          "bytes": 684
+        }
+      }
+    },
+    {
+      "name": "export a cube as OBJ",
+      "kind": "brep.interchange.exportObj",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            1,
+            1,
+            1
+          ]
+        },
+        "deflection": 0.1
+      },
+      "outputs": {
+        "obj": {
+          "prefix": "o ",
+          "lines": {
+            "f ": 12
+          }
+        }
+      }
+    },
+    {
+      "name": "export a cube as DWG",
+      "kind": "brep.interchange.exportDwg",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            1,
+            1,
+            1
+          ]
+        },
+        "deflection": 0.1
+      },
+      "outputs": {
+        "dwg": {
+          "base64": true
+        }
+      }
+    },
+    {
+      "name": "import a hand-built binary STL cube",
+      "kind": "brep.interchange.importStl",
+      "inputs": {
+        "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAAAIC/AAAAAAAAAAAAAAAAAAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAAAAAAAAAgL8AAAAAAAAAAAAAAAAAAIA/AACAPwAAAAAAAIA/AAAAAAAAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAgD8AAAAAAACAPwAAgD8AAIA/AACAPwAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AACAPwAAgD8AAIA/AAAAAAAAgD8AAIA/AAAAAAAAAACAvwAAAAAAAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAgD8AAAAAAAAAAIC/AAAAAAAAAAAAAAAAAAAAAAAAgD8AAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAIA/AAAAAAAAAACAPwAAAAAAAIA/AACAPwAAAAAAAAAAAACAPwAAgD8AAIA/AACAPwAAgD8AAAAAgL8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAPwAAAAAAAIA/AACAPwAAAACAvwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgD8AAIA/AAAAAAAAgD8AAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AACAPwAAAAAAAIA/AACAPwAAgD8AAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAIA/AACAPwAAgD8AAAAAAACAPwAA",
+        "tolerance": 0.0001
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 1.0,
+          "area": 6.0,
+          "faces": 12,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              1
+            ]
+          ],
+          "pin": false
+        }
+      }
+    },
+    {
+      "name": "import a hand-written OBJ cube",
+      "kind": "brep.interchange.importObj",
+      "inputs": {
+        "data": "o cube\nv 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\nv 0 0 1\nv 1 0 1\nv 1 1 1\nv 0 1 1\nf 1 4 3\nf 1 3 2\nf 5 6 7\nf 5 7 8\nf 1 2 6\nf 1 6 5\nf 3 4 8\nf 3 8 7\nf 1 5 8\nf 1 8 4\nf 2 3 7\nf 2 7 6\n",
+        "tolerance": 0.0001
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 1.0,
+          "area": 6.0,
+          "faces": 12,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              1
+            ]
+          ],
+          "pin": false
+        }
+      }
+    },
+    {
+      "name": "import a STEP text without any solid is a kernel fault",
+      "kind": "brep.interchange.importStep",
+      "inputs": {
+        "data": "ISO-10303-21;\nHEADER;\nENDSEC;\nDATA;\nENDSEC;\nEND-ISO-10303-21;\n"
+      },
+      "fault": {
+        "code": "generation3d.geometry.kernel"
+      }
+    },
+    {
+      "name": "import empty STEP text is refused at the port",
+      "kind": "brep.interchange.importStep",
+      "inputs": {
+        "data": ""
+      },
+      "fault": {
+        "code": "generation3d.geometry.interchange-empty",
+        "port": "data"
+      }
+    },
+    {
+      "name": "import blank STL text is refused at the port",
+      "kind": "brep.interchange.importStl",
+      "inputs": {
+        "data": "   ",
+        "tolerance": 0.0001
+      },
+      "fault": {
+        "code": "generation3d.geometry.interchange-empty",
+        "port": "data"
+      }
+    },
+    {
+      "name": "import STL that is not base64 is refused at the port",
+      "kind": "brep.interchange.importStl",
+      "inputs": {
+        "data": "%%%",
+        "tolerance": 0.0001
+      },
+      "fault": {
+        "code": "generation3d.geometry.interchange-decode",
+        "port": "data"
+      }
+    },
+    {
+      "name": "import STL bytes that are no STL is refused at the port",
+      "kind": "brep.interchange.importStl",
+      "inputs": {
+        "data": "AAAA",
+        "tolerance": 0.0001
+      },
+      "fault": {
+        "code": "generation3d.geometry.interchange-parse",
+        "port": "data"
+      }
+    },
+    {
+      "name": "import an OBJ face that names a missing vertex is refused at the port",
+      "kind": "brep.interchange.importObj",
+      "inputs": {
+        "data": "v 0 0 0\nf 1 2 3\n",
+        "tolerance": 0.0001
+      },
+      "fault": {
+        "code": "generation3d.geometry.interchange-parse",
+        "port": "data"
+      }
+    },
+    {
+      "name": "import DWG bytes that are no DWG is refused at the port",
+      "kind": "brep.interchange.importDwg",
+      "inputs": {
+        "data": "AAAA",
+        "tolerance": 0.0001
+      },
+      "fault": {
+        "code": "generation3d.geometry.interchange-parse",
+        "port": "data"
+      }
+    },
+    {
+      "name": "export a vertex as OBJ has nothing to triangulate",
+      "kind": "brep.interchange.exportObj",
+      "inputs": {
+        "shape": {
+          "recipe": "vertex",
+          "point": [
+            0,
+            0,
+            0
+          ]
+        },
+        "deflection": 0.1
+      },
+      "fault": {
+        "code": "generation3d.geometry.interchange-empty",
+        "port": "shape"
+      }
+    }
+  ]
+}

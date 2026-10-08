@@ -5,7 +5,7 @@ use crate::standards::v1::subsets::any::io::text::mutations::*;
 fn demo_mutation_cases() -> Vec<En1995Mutation> {
     let base = crate::En1995Snapshot::compliant_building_beam();
     vec![
-        En1995Mutation::ChangeAnnex(crate::mutations::set_snapshot::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
+        En1995Mutation::ChangeAnnex(crate::mutations::change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
         En1995Mutation::InsertMember(crate::mutations::insert_member::InsertMember { index: 99, member: crate::TimberMember { id: "beam-B9".into(), ..base.members[0].clone() } }),
         En1995Mutation::RemoveMember(crate::mutations::remove_member::RemoveMember { index: 0 }),
         En1995Mutation::ChangeMemberRole(crate::mutations::change_member_role::ChangeMemberRole { member_id: base.members[0].id.clone(), new_value: crate::MemberRole::Column }),

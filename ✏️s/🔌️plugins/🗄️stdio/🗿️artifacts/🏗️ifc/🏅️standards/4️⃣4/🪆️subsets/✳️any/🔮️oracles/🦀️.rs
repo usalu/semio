@@ -241,26 +241,6 @@ mod oracles {
     /// 📇️ The three `HEADER;` records ISO 10303-21 §8.2 fixes, in its own order, keyed by their `IfcHeader` wire name.
     const HEADER_RECORDS: [(&str, &str); 3] = [("FILE_DESCRIPTION", "fileDescription"), ("FILE_NAME", "fileName"), ("FILE_SCHEMA", "fileSchema")];
 
-    /// 📸️ `set-snapshot`: the whole document becomes the `IfcSnapshot` wire record — its header and its entities, in the
-    /// record's own order.
-    fn replace_with_snapshot(exchange: &mut Exchange, snapshot: &Json) -> Result<(), String> {
-        let header = snapshot.get("header").ok_or("an IFC4 snapshot carries `header`")?;
-        exchange.header = HEADER_RECORDS.iter().map(|(record, member)| Ok(Record { name: record.to_string(), parameter: Parameter::List(values_from_wire(header, member)?) })).collect::<Result<Vec<_>, String>>()?;
-        exchange.data = vec![DataSection { meta: Vec::new(), entities: snapshot.array("entities").iter().map(entity_from_wire).collect::<Result<Vec<_>, String>>()? }];
-        Ok(())
-    }
-
-    /// 📸️ The document as a `set-snapshot` payload `{snapshot}` — what restores it through [`replace_with_snapshot`].
-    fn snapshot_payload_of(exchange: &Exchange) -> Result<Json, String> {
-        let header = HEADER_RECORDS
-            .iter()
-            .map(|(record, member)| Ok((member.to_string(), Json::Array(header_record(exchange, record).map(args).transpose()?.map(|items| items.iter().map(value_to_wire).collect()).unwrap_or_default()))))
-            .collect::<Result<Vec<_>, String>>()?;
-        let entities = exchange.data.iter().flat_map(|section| section.entities.iter()).map(entity_to_wire).collect::<Result<Vec<_>, String>>()?;
-        let snapshot = Json::Object(vec![("schema".to_string(), Json::String("stdio.ifc".to_string())), ("header".to_string(), Json::Object(header)), ("entities".to_string(), Json::Array(entities))]);
-        Ok(Json::Object(vec![("snapshot".to_string(), snapshot)]))
-    }
-
     /// 🔤️ An independently-parsed `Parameter` in this module's own canonical projection shape — the argument form
     /// `project_ifc_4_any` echoes back, recursively for aggregates.
     fn value_to_json(param: &Parameter) -> Json {
@@ -442,17 +422,9 @@ mod oracles {
     /// honest real behaviour of a positional entity-graph removal, not hidden by a cascading delete
     /// this subset's `IfcMutation::RemoveEntity` does not itself perform either (`schema::diff::
     /// diff_remove_entity` only removes the one keyed entity — confirmed by reading that file).
-    /// Every arm reads the leaf wire payload (`IfcValue`/`IfcEntity`/`IfcSnapshot` wire), and `set-snapshot` replaces
-    /// the whole document with the snapshot record.
+    /// Every arm reads the leaf wire payload (`IfcValue`/`IfcEntity` wire).
     fn apply(exchange: &mut Exchange, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "set-snapshot" => replace_with_snapshot(exchange, params.get("snapshot").ok_or("set-snapshot carries `snapshot`")?),
-            "patch-snapshot" => {
-                let payload = snapshot_payload_of(exchange)?;
-                let patched = semio_repo_test_host::law::patched_snapshot(payload.get("snapshot").ok_or("the reading carries no snapshot")?, params.get("patch").ok_or("patch-snapshot carries `patch`")?)?;
-                replace_with_snapshot(exchange, &patched)
-            }
-
             "set-file-description" => {
                 let values = values_from_wire(params, "values")?;
                 let record = header_record_mut(exchange, "FILE_DESCRIPTION").ok_or("input carries no FILE_DESCRIPTION header record")?;
@@ -565,10 +537,6 @@ mod oracles {
         Ok(write_exchange(&read(input)?).into_bytes())
     }
 
-    /// 📸️ The untouched document as the `set-snapshot` payload that restores it.
-    pub fn snapshot_payload(input: &[u8]) -> Result<Json, String> {
-        snapshot_payload_of(&read(input)?)
-    }
     //#endregion 🔖️Dispatch
 
     //#region 🔖️HeaderProjection
@@ -670,12 +638,6 @@ pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     oracles::round_trip(input)
 }
 
-/// 📸️ The untouched artifact as the `set-snapshot` wire payload that restores it — the inverse of `set-snapshot`.
-#[cfg(feature = "oracles")]
-pub fn oracle_snapshot_payload(input: &[u8]) -> Result<Json, String> {
-    oracles::snapshot_payload(input)
-}
-
 /// 👁️ This subset's own semantic projection, re-exported at the module's public surface so the
 /// case adapter can reach it as `oracle_apply_mutation`'s sibling.
 #[cfg(feature = "oracles")]
@@ -693,12 +655,6 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
-
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_snapshot_payload(_input: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
-
 #[cfg(not(feature = "oracles"))]
 pub fn project_ifc_4_any(_bytes: &[u8]) -> Result<Json, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())

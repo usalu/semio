@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use semio_framework_plugin::AnalyzeSource;
+    use semio_framework_plugin::io::AnalyzeSource;
     use semio_s_artifact_stdio_zip::opc::{self, OpcPackage, REL_TYPE_OFFICE_DOCUMENT, RELS_CONTENT_TYPE};
 
     const TRANSITIONAL_PRESENTATION_XML: &str = concat!(

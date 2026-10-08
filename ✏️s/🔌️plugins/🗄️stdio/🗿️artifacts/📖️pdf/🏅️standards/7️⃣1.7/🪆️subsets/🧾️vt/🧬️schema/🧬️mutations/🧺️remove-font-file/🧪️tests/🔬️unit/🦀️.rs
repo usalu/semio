@@ -18,3 +18,10 @@ async fn inverse_diffs_sum_to_the_negative_diff() {
     let base = support::document_of(vec![PdfObject::Stream { dict: Vec::new(), data: b"font".to_vec(), filters: Vec::new() }, support::dict(vec![("Type", PdfObject::Name("FontDescriptor".to_string())), ("FontFile2", PdfObject::Ref(ObjRef { num: 1, gen: 0 }))])]);
     assert_mutation_inverse_sum_law(&PdfVtMutation::RemoveFontFile(RemoveFontFile { descriptor_ordinal: 0 }), &base).await;
 }
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_restores_a_middle_row() {
+    let base = support::document_of(vec![PdfObject::Stream { dict: Vec::new(), data: b"font".to_vec(), filters: Vec::new() }, support::dict(vec![("Type", PdfObject::Name("FontDescriptor".to_string())), ("FontFile2", PdfObject::Ref(ObjRef { num: 1, gen: 0 }))])]);
+    let base = support::with_trailing_entry(&base, support::font_descriptors(&base)[0]);
+    assert_mutation_inverse_sum_law(&PdfVtMutation::RemoveFontFile(RemoveFontFile { descriptor_ordinal: 0 }), &base).await;
+}

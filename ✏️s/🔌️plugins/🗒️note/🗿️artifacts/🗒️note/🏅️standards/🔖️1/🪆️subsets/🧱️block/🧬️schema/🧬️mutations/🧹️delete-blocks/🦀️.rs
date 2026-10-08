@@ -42,3 +42,27 @@ impl MutationKind<NoteSnapshot, NoteMutation> for DeleteBlocks {
     }
 }
 //#endregion 🔖️Mutation
+
+/// 🧭️ The blocks a delete really removes, in descending `(parent, index)` order: listed ids that exist, each once, without the ids that vanish with a listed ancestor.
+fn removal_roots(payload: &DeleteBlocks, base: &NoteSnapshot) -> Vec<(Option<String>, usize, crate::NoteBlockNode)> {
+    let mut roots: Vec<(Option<String>, usize, crate::NoteBlockNode)> = Vec::new();
+    for (position, id) in payload.ids.iter().enumerate() {
+        let (Some(block), Some((parent_id, index))) = (crate::schema::find_block(&base.blocks, id), crate::schema::find_block_location(&base.blocks, id)) else {
+            continue;
+        };
+        let repeated = payload.ids[..position].contains(id);
+        let nested = payload.ids.iter().filter(|other| *other != id).filter_map(|other| crate::schema::find_block(&base.blocks, other)).any(|ancestor| crate::schema::find_block(&ancestor_children(ancestor), id).is_some());
+        if !repeated && !nested {
+            roots.push((parent_id, index, block.clone()));
+        }
+    }
+    roots.sort_by(|a, b| b.0.cmp(&a.0).then(b.1.cmp(&a.1)));
+    roots
+}
+
+fn ancestor_children(block: &crate::NoteBlockNode) -> Vec<crate::NoteBlockNode> {
+    match block {
+        crate::NoteBlockNode::Group { children, .. } => children.clone(),
+        _ => Vec::new(),
+    }
+}

@@ -1,4 +1,5 @@
 # 🎯️ Direct set-named-destination GraphQL payload.
 input SetNamedDestinationMutationInput {
   destination: PdfNamedDestinationInput
+  index: Int
 }

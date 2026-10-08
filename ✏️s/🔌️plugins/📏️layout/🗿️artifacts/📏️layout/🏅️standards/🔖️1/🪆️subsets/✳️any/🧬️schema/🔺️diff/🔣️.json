@@ -5,7 +5,6 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "artifact",
     "schema",
     "name",
     "grid",
@@ -19,20 +18,10 @@
     "printTarget",
     "dataFields",
     "backgroundDrawing",
+    "drawingTexts",
     "referencedModel"
   ],
   "properties": {
-    "artifact": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/artifact.json"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "schema": {
       "anyOf": [
         {
@@ -58,7 +47,7 @@
     "grid": {
       "anyOf": [
         {
-          "$ref": "#/$defs/GridSettings"
+          "$ref": "#/$defs/GridPatch"
         },
         {
           "type": "null"
@@ -146,14 +135,7 @@
     "printTarget": {
       "anyOf": [
         {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/PrintTargetChange"
         },
         {
           "type": "null"
@@ -164,23 +146,7 @@
     "dataFields": {
       "anyOf": [
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "dictionary"
-          ],
-          "properties": {
-            "dictionary": {
-              "anyOf": [
-                {
-                  "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/dictionary.json"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
-          }
+          "$ref": "#/$defs/LayoutDataFieldsDelta"
         },
         {
           "type": "null"
@@ -200,6 +166,13 @@
           "type": "null"
         }
       ],
+      "x-semio-state": "artifact"
+    },
+    "drawingTexts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/LayoutDrawingTextRow"
+      },
       "x-semio-state": "artifact"
     },
     "referencedModel": {
@@ -1287,10 +1260,7 @@
         "style_runs": {
           "anyOf": [
             {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/TextStyleRun"
-              }
+              "$ref": "#/$defs/TextStyleRunsDelta"
             },
             {
               "type": "null"
@@ -1767,10 +1737,7 @@
         "guides": {
           "anyOf": [
             {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/LayoutRect"
-              }
+              "$ref": "#/$defs/PageGuidesDelta"
             },
             {
               "type": "null"
@@ -1780,10 +1747,7 @@
         "overrides": {
           "anyOf": [
             {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/PageOverride"
-              }
+              "$ref": "#/$defs/PageOverridesDelta"
             },
             {
               "type": "null"
@@ -1793,7 +1757,7 @@
         "layer_added": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Layer"
+              "$ref": "#/$defs/PageLayerAdded"
             },
             {
               "type": "null"
@@ -2306,6 +2270,326 @@
         },
         "layer_id": {
           "type": "string"
+        }
+      }
+    },
+    "GridPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "baselineGrid": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "baselineOffset": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "snapToBaseline": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "PrintTargetChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target"
+      ],
+      "properties": {
+        "target": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "DataFieldsPresence": {
+      "type": "string",
+      "enum": [
+        "created",
+        "deleted",
+        "replaced"
+      ]
+    },
+    "LayoutDataFieldsDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "presence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DataFieldsPresence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entries": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LayoutDataEntriesDelta"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "LayoutDataEntriesDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/dictionary.json#/properties/entries/items"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LayoutDataEntryPatchEntry"
+          }
+        },
+        "reordered": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "added",
+        "removed",
+        "patched",
+        "reordered"
+      ]
+    },
+    "LayoutDrawingTextRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "text"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "TextStyleRunRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "run"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "run": {
+          "$ref": "#/$defs/TextStyleRun"
+        }
+      }
+    },
+    "TextStyleRunsDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "len": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TextStyleRunRow"
+          }
+        }
+      }
+    },
+    "PageGuideRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "guide"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "guide": {
+          "$ref": "#/$defs/LayoutRect"
+        }
+      }
+    },
+    "PageGuidesDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "len": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageGuideRow"
+          }
+        }
+      }
+    },
+    "PageOverridePatchEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "item"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "item": {
+          "$ref": "#/$defs/PageOverride"
+        }
+      }
+    },
+    "PageOverridesDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageOverride"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PageOverridePatchEntry"
+          }
+        },
+        "reordered": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "PageLayerAdded": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layer",
+        "index"
+      ],
+      "properties": {
+        "layer": {
+          "$ref": "#/$defs/Layer"
+        },
+        "index": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "LayoutDataEntryPatchEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "item"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "item": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/dictionary.json#/properties/entries/items"
         }
       }
     }

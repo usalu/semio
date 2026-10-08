@@ -62,7 +62,6 @@
       "subsetDirectoryName": "🧮️sav",
       "vectors": [],
       "kinds": [
-        "set-snapshot",
         "set-view-definition",
         "set-analysis-model",
         "set-load-group",
@@ -137,28 +136,6 @@
             "operation": "set-load-group",
             "bridgeVersion": 1,
             "variant": "SetLoadGroup"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "ifc-2x3-sav-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "ifcopenshell-ifc-2x3-sav-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "ifc-2x3-sav-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
           },
           "oracleRequirements": [
             {
@@ -393,56 +370,6 @@
       "reproducible": true,
       "family": "structural",
       "notes": "Replaced the header FILE_DESCRIPTION's view-definition text via ifcopenshell."
-    },
-    {
-      "id": "set-snapshot-applied",
-      "class": "third-party-generated",
-      "target": {
-        "artifact": "s.stdio.ifc",
-        "standard": "2x3",
-        "subset": "sav"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "millimetre",
-        "angle": "radian"
-      },
-      "files": [
-        {
-          "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.ifc",
-          "mediaType": "model/ifc",
-          "sha256": "sha256:b1efd56bbddb4dfc8356743c1f6c5e26b31a299755a323cd9b07df1a4c42d322",
-          "bytes": 188636
-        },
-        {
-          "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.ifc",
-          "mediaType": "model/ifc",
-          "sha256": "sha256:fdc3c539e4b69896171679173172c5b32999611cdeee1c2eeaee8f0f7bd0574c",
-          "bytes": 188651
-        }
-      ],
-      "generator": {
-        "oracle": "ifcopenshell-ifc-2x3-sav-mutate-reader",
-        "packageVersion": "0.8.4.post1",
-        "engineFamily": "ifcopenshell",
-        "engineVersion": "0.8.4.post1",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
-        "platform": "darwin-arm64"
-      },
-      "provenance": {
-        "source": "generated",
-        "license": "LGPL-3.0-or-later (ifcopenshell)",
-        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "semantic-ifc-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": "Replaced both an IfcStructuralAnalysisModel.Name and an IfcStructuralLoadGroup.Name together, standing in for a wholesale SAV snapshot replacement."
     }
   ],
   "oracleHostPackages": []

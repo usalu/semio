@@ -9,10 +9,10 @@
       }
     }
   },
-  "restore": {
+  "inverse": {
     "mutation": "bindDefaultScene",
     "payload": {
-      "phase": "restore",
+      "phase": "apply",
       "value": {
         "scene": 0
       }

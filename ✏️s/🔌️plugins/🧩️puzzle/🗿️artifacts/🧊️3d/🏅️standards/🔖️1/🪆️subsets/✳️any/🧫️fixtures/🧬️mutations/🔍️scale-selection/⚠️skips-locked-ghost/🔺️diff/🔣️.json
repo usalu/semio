@@ -12,27 +12,11 @@
       {
         "id": "volume-1",
         "patch": {
-          "replacement": {
-            "hidden": false,
-            "id": "volume-1",
-            "locked": false,
-            "orientation": [
-              0.0,
-              0.0,
-              0.0,
-              1.0
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "scale": [
-              1.0,
-              1.0,
-              1.0
-            ]
-          }
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
         }
       }
     ],

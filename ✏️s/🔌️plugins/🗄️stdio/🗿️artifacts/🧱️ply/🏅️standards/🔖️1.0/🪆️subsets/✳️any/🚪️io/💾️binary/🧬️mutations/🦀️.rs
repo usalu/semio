@@ -7,9 +7,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod mutations_codec {
 use super::*;
 use crate::standards::v1_0::subsets::any::schema::mutations::*;
-use crate::schema::diff::{diff_add_element, diff_insert_row, diff_remove_element, diff_remove_row, diff_set_comments, diff_set_format, diff_set_row_property, diff_set_snapshot, PlyDiff};
-use crate::standards::v1_0::subsets::any::io::binary::snapshot::{write_bin_snapshot};
-use crate::standards::v1_0::subsets::any::io::binary::snapshot::{read_bin_snapshot};
+
 use crate::standards::v1_0::subsets::any::io::text::diff::{dec_value};
 use crate::standards::v1_0::subsets::any::io::text::diff::{enc_value};
 use crate::standards::v1_0::subsets::any::io::binary::diff::{read_bin_value};
@@ -47,8 +45,6 @@ use protocol::OpText;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn op_tag(m: &PlyMutation) -> u8 {
     match m {
-        PlyMutation::SetSnapshot(..) => TAG_SET_SNAPSHOT,
-        PlyMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
         PlyMutation::SetFormat(..) => TAG_SET_FORMAT,
         PlyMutation::InsertComment(..) => TAG_INSERT_COMMENT,
         PlyMutation::RemoveComment(..) => TAG_REMOVE_COMMENT,
@@ -71,8 +67,6 @@ impl OpBinary for PlyMutation {
         w.write_u8(store::pack_rt::OP_BINARY_FORMAT);
         w.write_u8(op_tag(self));
         match self {
-            PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => write_bin_snapshot(&mut w, snapshot),
-            PlyMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => w.write_bytes(&protocol::OpBinary::encode_op(patch)?),
             PlyMutation::SetFormat(set_format::SetFormat { format }) => {
                 crate::standards::v1_0::subsets::any::io::binary::diff::write_bin_format(&mut w, *format);
             }
@@ -110,8 +104,6 @@ impl OpBinary for PlyMutation {
         let _format = r.read_u8().map_err(|error| op_pack_err(&error))?;
         let tag = r.read_u8().map_err(|error| op_pack_err(&error))?;
         match tag {
-            TAG_PATCH_SNAPSHOT => Ok(PlyMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(r.read_bytes(r.remaining()).map_err(|error| op_pack_err(&error))?)? })),
-            TAG_SET_SNAPSHOT => Ok(PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(|error| op_pack_err(&error))? })),
             TAG_SET_FORMAT => Ok(PlyMutation::SetFormat(set_format::SetFormat { format: crate::standards::v1_0::subsets::any::io::binary::diff::read_bin_format(&mut r).map_err(|error| op_pack_err(&error))? })),
             TAG_INSERT_COMMENT => {
                 let index = r.read_varint_u64().map_err(|error| op_pack_err(&error))? as usize;
@@ -153,8 +145,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `PlyMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_SET_FORMAT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-format");
 const TAG_INSERT_COMMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-comment");
 const TAG_REMOVE_COMMENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-comment");

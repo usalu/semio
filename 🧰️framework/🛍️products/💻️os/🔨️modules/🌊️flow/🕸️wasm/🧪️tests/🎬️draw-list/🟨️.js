@@ -1,6 +1,6 @@
 //! 🎬️ Conformance twin for `canvas::draw_list`: the JavaScript replayer, measured on the SAME
 //! fixture and the SAME encoded draw list the Rust law pins
-//! (`♾️infinite/🖼️canvas/🧪️tests/🎬️draw-list/{🔣️.json,📐️expected-draw-list.json}`).
+//! (`🖼️canvas/🧫️fixtures/🎬️draw-list/{🔣️.json,📐️expected-draw-list.json}`).
 //!
 //! Two implementations of one contract, so the fixture is read from where the encoder lives rather
 //! than copied here — a drift in either direction fails on one side or the other. The assertion is
@@ -15,8 +15,8 @@ const equal = (actual, expected, law) => {
   if (actual !== expected) throw new Error(`${law}: ${actual} !== ${expected}`);
 };
 
-const fixtureUrl = new URL("../../../../♾️infinite/🖼️canvas/🧫️fixtures/🎬️draw-list/🔣️.json", import.meta.url);
-const expectationUrl = new URL("../../../../♾️infinite/🖼️canvas/🧫️fixtures/🎬️draw-list/📐️expected-draw-list.json", import.meta.url);
+const fixtureUrl = new URL("../../../../../../../🔨️modules/🖼️canvas/🧫️fixtures/🎬️draw-list/🔣️.json", import.meta.url);
+const expectationUrl = new URL("../../../../../../../🔨️modules/🖼️canvas/🧫️fixtures/🎬️draw-list/📐️expected-draw-list.json", import.meta.url);
 const fixture = JSON.parse(await readFile(fixtureUrl, "utf8"));
 const drawList = JSON.parse(await readFile(expectationUrl, "utf8"));
 

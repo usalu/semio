@@ -71,7 +71,7 @@ impl TiffIfd {
     pub fn validate(&self) -> Result<(), String> {
         if self.entries.windows(2).any(|pair| pair[0].tag >= pair[1].tag) { return Err("tiff: tags must have unique ascending semantic identities".into()); }
         for entry in &self.entries {
-            if matches!(entry.tag, 259 | 266 | 273 | 278 | 279 | 284 | 317 | 322 | 323 | 324 | 325 | 292 | 293 | 347 | 513 | 514 | 515 | 517 | 518 | 519 | 520 | 521 | 530) { return Err("tiff: native storage policy cannot be a semantic tag".into()); }
+            if matches!(entry.tag, 259 | 266 | 273 | 278 | 279 | 284 | 317 | 322 | 323 | 324 | 325 | 292 | 293 | 347 | 512 | 513 | 514 | 515 | 517 | 518 | 519 | 520 | 521 | 530) { return Err("tiff: native storage policy cannot be a semantic tag".into()); }
             if let TiffValues::Ascii(texts) = &entry.values { if texts.iter().any(|text| !text.is_ascii() || text.contains('\0')) { return Err("tiff: ASCII metadata needs owned text without native terminators".into()); } }
         }
         if self.blocks.is_empty() { return Ok(()); }

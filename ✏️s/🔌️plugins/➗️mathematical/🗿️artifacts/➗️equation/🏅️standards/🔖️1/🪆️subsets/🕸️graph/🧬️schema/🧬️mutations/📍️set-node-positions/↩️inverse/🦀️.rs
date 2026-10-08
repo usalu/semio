@@ -10,7 +10,7 @@ pub fn inverse(payload: &SetNodePositions, base: &EquationSnapshot) -> Result<Ve
     if equation_targets_invariant(&payload.ids()).is_err() || payload.positions.iter().any(|position| !position.x.is_finite() || !position.y.is_finite()) {
         return Vec::new();
     }
-    let graph = base.graph.clone();
+    let graph = &base.graph;
     let placed: Vec<(EquationNodePosition, bool)> =
         payload.positions.iter().filter_map(|position| graph.nodes.iter().find(|node| node.id == position.id).map(|node| (EquationNodePosition { id: node.id.clone(), x: node.x, y: node.y }, (node.x, node.y) != (position.x, position.y)))).collect();
     if !placed.iter().any(|(_, moves)| *moves) {

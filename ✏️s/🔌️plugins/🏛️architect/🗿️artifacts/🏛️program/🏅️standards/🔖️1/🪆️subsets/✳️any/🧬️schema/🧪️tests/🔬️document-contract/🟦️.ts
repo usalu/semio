@@ -39,6 +39,8 @@ const expectedFields = [
   "schema", "meta", "project", "stakeholders", "users", "activities", "functions", "elements", "quantities", "relationships", "adjacencies", "processes", "flows", "accessRules", "operations", "equipment", "resources", "storage", "environmental", "humanFactors", "accessibility", "privacy", "safety", "security", "regulatory", "siteContext", "organizational", "services", "infrastructure", "information", "communication", "wayfinding", "schedules", "flexibility", "growth", "sustainability", "resilience", "costs", "delivery", "risks", "conflicts", "requirements", "priorities", "scenarios", "options", "decisions", "validations", "performance", "quality", "artifacts", "assumptions", "constraints", "complianceRecords", "approvals", "meetings", "changes", "collaboration", "analyses", "reports", "searchFilters", "statusRecords", "workshops", "surveys", "issues", "auditEvents", "templates", "knowledgePayload", "knowledge", "benchmarksPayload", "benchmarks", "traces", "governance",
 ] as const;
 
+const expectedDiffFields = expectedFields.filter(field => field !== "knowledgePayload" && field !== "benchmarksPayload");
+
 const assertChild = (child: JsonObject, label: string): void => {
   assert.equal(typeof child.childId, "string", `${label}.childId`);
   assert.equal(child.target.artifactId, child.childId, `${label} target identity`);
@@ -64,8 +66,8 @@ export function testProgramDocumentContract(): void {
   assert.deepEqual(artifactSchema.required, expectedFields);
   assert.deepEqual(Object.keys(snapshotSchema.properties), expectedFields);
   assert.deepEqual(snapshotSchema.required, expectedFields);
-  assert.deepEqual(Object.keys(diffSchema.properties), ["artifact", ...expectedFields]);
-  assert.deepEqual(diffSchema.required, ["artifact", ...expectedFields]);
+  assert.deepEqual(Object.keys(diffSchema.properties), expectedDiffFields);
+  assert.deepEqual(diffSchema.required, expectedDiffFields);
 
   for (const field of expectedFields.filter((name) => artifactSchema.properties[name]?.type === "array")) {
     const ref = artifactSchema.properties[field].items?.$ref;
@@ -77,8 +79,8 @@ export function testProgramDocumentContract(): void {
 
   const snapshotPaths = collect(snapshotRoot, "/📸️snapshot/⬅️before/🔣️.json").concat(collect(snapshotRoot, "/📸️snapshot/➡️after/🔣️.json")).sort();
   const diffPaths = collect(snapshotRoot, "/🔺️diff/🔣️.json").sort();
-  assert.equal(snapshotPaths.length, 532, "committed snapshot count");
-  assert.equal(diffPaths.length, 260, "committed diff count");
+  assert.equal(snapshotPaths.length, 676, "committed snapshot count");
+  assert.equal(diffPaths.length, 332, "committed diff count");
   const registerFields = expectedFields.filter((field) => artifactSchema.properties[field]?.type === "array");
   const covered = new Set<string>();
   for (const path of snapshotPaths) {
@@ -99,9 +101,12 @@ export function testProgramDocumentContract(): void {
     assert(validateDiff(value), `${path}: ${JSON.stringify(validateDiff.errors)}`);
     const canonicalDiff=(() => { try { return programDiffFromJson(value); } catch (error) { throw new Error(`${path}: ${error instanceof Error ? error.message : String(error)}`); } })();
     assert.deepEqual(parseProgramDiff(canonicalDiff), canonicalDiff, `${path}: diff parser`);
-    assert.deepEqual(Object.keys(value), ["artifact", ...expectedFields], `${path}: exact diff fields`);
-    if (value.knowledge !== null) assertChild(value.knowledge, `${path}.knowledge`);
-    if (value.benchmarks !== null) assertChild(value.benchmarks, `${path}.benchmarks`);
+    assert.deepEqual(Object.keys(value), expectedDiffFields, `${path}: exact diff fields`);
+    for (const field of ["knowledge", "benchmarks"]) if (value[field] !== null) {
+      assert.deepEqual(Object.keys(value[field]), ["added", "removed", "patched", "reordered"], `${path}.${field}: identified row delta`);
+      for (const added of value[field].added) assert.equal(typeof added.id, "string", `${path}.${field}: admitted row identity`);
+      for (const patched of value[field].patched) assert.equal(typeof patched.id, "string", `${path}.${field}: patched row identity`);
+    }
   }
 
   const neutral = readJson(neutralPath);

@@ -1,0 +1,339 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/hub/bootstrap/provenance.json",
+  "title": "Trusted Catalog Producer Provenance",
+  "$defs": {
+    "ByteClaimV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "relativePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "relativePath",
+        "sha256",
+        "byteLength"
+      ]
+    },
+    "PhysicalInputV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "logicalPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "logicalPath",
+        "path",
+        "sha256",
+        "byteLength"
+      ]
+    },
+    "ActorProducerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "semio.os.closed-browser-actor-producer/v1"
+        },
+        "actor": {
+          "$ref": "#/$defs/ByteClaimV1"
+        },
+        "component": {
+          "$ref": "#/$defs/ByteClaimV1"
+        },
+        "descriptor": {
+          "$ref": "#/$defs/ByteClaimV1"
+        },
+        "policyCanonical": {
+          "type": "string",
+          "minLength": 1
+        },
+        "policySha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "runtime": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "path",
+            "sha256",
+            "byteLength"
+          ]
+        },
+        "compiler": {
+          "$ref": "#/$defs/ObservationClaimV1"
+        },
+        "inputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/PhysicalInputV1"
+          }
+        }
+      },
+      "required": [
+        "schema",
+        "actor",
+        "component",
+        "descriptor",
+        "policyCanonical",
+        "policySha256",
+        "runtime",
+        "compiler",
+        "inputs"
+      ]
+    },
+    "PackageProducerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pluginId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packageId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "component": {
+          "$ref": "#/$defs/ByteClaimV1"
+        },
+        "descriptor": {
+          "$ref": "#/$defs/ByteClaimV1"
+        },
+        "cargoInvocations": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/$defs/ObservationClaimV1"
+          }
+        },
+        "browserActor": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ObservationClaimV1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cargoPackage": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        }
+      },
+      "required": [
+        "pluginId",
+        "packageId",
+        "component",
+        "descriptor",
+        "cargoInvocations",
+        "browserActor",
+        "cargoPackage"
+      ]
+    },
+    "GenerationProducerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "semio.hub.trusted-catalog-producer/v1"
+        },
+        "profileId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bundle": {
+          "$ref": "#/$defs/ByteClaimV1"
+        },
+        "packages": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/PackageProducerV1"
+          }
+        }
+      },
+      "required": [
+        "schema",
+        "profileId",
+        "generationId",
+        "bundle",
+        "packages"
+      ]
+    },
+    "PublicationProducerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "semio.hub.trusted-catalog-publication-producer/v1"
+        },
+        "dataRoot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "profileId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generationId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "publicationRevision": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "pointer": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "path",
+            "sha256",
+            "byteLength"
+          ]
+        },
+        "bundle": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "path",
+            "sha256",
+            "byteLength"
+          ]
+        },
+        "producer": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "path",
+            "sha256",
+            "byteLength"
+          ]
+        }
+      },
+      "required": [
+        "schema",
+        "dataRoot",
+        "profileId",
+        "generationId",
+        "publicationRevision",
+        "pointer",
+        "bundle",
+        "producer"
+      ]
+    },
+    "ObservationClaimV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "byteLength"
+      ]
+    }
+  }
+}

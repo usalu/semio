@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "streams": null,
@@ -8,54 +7,38 @@
   "calibration": null,
   "params": null,
   "gcps": {
-    "values": [
+    "rows": [
       {
-        "id": "gcp-corner",
-        "name": "Corner",
-        "worldPosition": [
-          1.0,
-          2.0,
-          3.0
-        ],
-        "observations": [
-          {
-            "streamId": "stream-b",
-            "frameIndex": 0,
-            "pixel": [
-              10.0,
-              20.0
-            ]
-          }
-        ]
-      },
-      {
-        "id": "gcp-ridge",
-        "name": "Ridge",
-        "worldPosition": [
-          4.0,
-          5.0,
-          6.0
-        ],
-        "observations": []
-      },
-      {
-        "id": "gcp-tower",
-        "name": "Tower",
-        "worldPosition": [
-          7.0,
-          8.0,
-          9.0
-        ],
-        "observations": [
-          {
-            "streamId": "stream-a",
-            "frameIndex": 0,
-            "pixel": [
-              5.0,
-              6.0
-            ]
-          }
-        ]
+        "row": "insert",
+        "entity": {
+          "id": "gcp-tower",
+          "name": "Tower",
+          "worldPosition": [
+            {
+              "bits": "401c000000000000"
+            },
+            {
+              "bits": "4020000000000000"
+            },
+            {
+              "bits": "4022000000000000"
+            }
+          ],
+          "observations": [
+            {
+              "streamId": "stream-a",
+              "frameIndex": 0,
+              "pixel": [
+                {
+                  "bits": "40a00000"
+                },
+                {
+                  "bits": "40c00000"
+                }
+              ]
+            }
+          ]
+        }
       }
     ]
   },

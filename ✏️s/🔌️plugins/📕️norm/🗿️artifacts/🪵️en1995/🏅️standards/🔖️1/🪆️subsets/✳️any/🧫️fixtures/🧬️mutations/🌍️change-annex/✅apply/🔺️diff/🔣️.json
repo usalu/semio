@@ -1,6 +1,13 @@
 {
-  "artifact": null,
   "annex": "En",
-  "members": null,
-  "connections": null
+  "members": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "connections": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

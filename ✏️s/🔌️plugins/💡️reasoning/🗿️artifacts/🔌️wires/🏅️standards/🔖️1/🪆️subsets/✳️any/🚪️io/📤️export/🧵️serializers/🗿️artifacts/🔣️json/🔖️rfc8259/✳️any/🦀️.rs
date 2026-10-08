@@ -3,7 +3,7 @@
 //! `Deserializer`: emits `WiresSnapshot`'s own canonical JSON shape verbatim, so `IoFidelity::Exact`.
 
 use crate::WiresSnapshot;
-use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 

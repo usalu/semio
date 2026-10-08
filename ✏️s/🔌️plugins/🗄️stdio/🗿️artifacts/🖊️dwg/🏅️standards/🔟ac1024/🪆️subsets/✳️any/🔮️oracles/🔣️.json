@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json manifest. ⚠️ The `dwg-ac1018-any` and `dwg-ac1024-any` catalogs declare the SAME three kinds, and that is correct rather than a copy-paste: `4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs` is a one-line `pub use` of `🔟ac1024`'s, as are its `🧬️schema` and `📸️snapshot` facets, so `DwgMutation` is ONE Rust enum shared by both standards. They are identical BY CONSTRUCTION, not by agreement, and the AC1024 oracle module's `every_ac1018_facet_is_a_re_export_of_this_one` test reads the committed sources and fails the moment that stops being true. Two catalogs and two capabilities exist anyway because the contract gate counts coverage per subset and a catalog claimed by no feature is itself a breach.",
+  "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🔣️oracle.json manifest. ⚠️ The `dwg-ac1018-any` and `dwg-ac1024-any` catalogs declare the SAME single kind, and that is correct rather than a copy-paste: `4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs` is a one-line `pub use` of `🔟ac1024`'s, as are its `🧬️schema` and `📸️snapshot` facets, so `DwgMutation` is ONE Rust enum shared by both standards. They are identical BY CONSTRUCTION, not by agreement, and the AC1024 oracle module's `every_ac1018_facet_is_a_re_export_of_this_one` test reads the committed sources and fails the moment that stops being true. Two catalogs and two capabilities exist anyway because the contract gate counts coverage per subset and a catalog claimed by no feature is itself a breach.",
   "oracles": [
     {
       "id": "libredwg-dwg-preamble-cli",
@@ -58,22 +58,8 @@
       "capability": "dwg-ac1024-mutate",
       "standardDirectoryName": "🔟ac1024",
       "subsetDirectoryName": "✳️any",
-      "vectors": [
-        {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
-          "scenarios": [
-            {
-              "id": "retitles-the-summary-and-records-the-last-editor",
-              "directoryName": "✏️retitles"
-            }
-          ]
-        }
-      ],
+      "vectors": [],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "set-version-info"
       ]
     }
@@ -87,49 +73,6 @@
       "standardDirectoryName": "🔟ac1024",
       "subsetDirectoryName": "✳️any",
       "mutations": [
-        {
-          "id": "set-snapshot",
-          "capability": "dwg-ac1024-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "dwg-ac1024-mutate",
-              "qualifyingKind": "third-party-cli",
-              "oracle": "libredwg-dwg-preamble-cli"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "dwg-ac1024-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "dwg-ac1024-mutate",
-              "qualifyingKind": "third-party-cli",
-              "oracle": "libredwg-dwg-preamble-cli"
-            }
-          ]
-        },
         {
           "id": "set-version-info",
           "capability": "dwg-ac1024-mutate",
@@ -195,7 +138,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "dwg-carrier",
-      "notes": "Handcrafted before/after pair reusing this exact subset's own committed set-snapshot DwgSnapshot fixture (LibreDWG-cross-checked against the real architectural.dwg header), stamped AC1024 as every decoded drawing with content is, as `before`; `after` overwrites SetVersionInfo{version:\"AC1024\",maintenanceVersion:1,codepage:1252} — the AC1018 tree's own mutation aggregate re-exports this exact leaf from AC1024 (`pub use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::mutations::*`), so one real implementation backs both subsets."
+      "notes": "Handcrafted before/after pair reusing this exact subset's own committed DwgSnapshot fixture (LibreDWG-cross-checked against the real architectural.dwg header), stamped AC1024 as every decoded drawing with content is, as `before`; `after` overwrites SetVersionInfo{version:\"AC1024\",maintenanceVersion:1,codepage:1252} — the AC1018 tree's own mutation aggregate re-exports this exact leaf from AC1024 (`pub use crate::artifacts::dwg::standards::v_ac1024::subsets::any::schema::mutations::*`), so one real implementation backs both subsets."
     }
   ],
   "oracleHostPackages": []

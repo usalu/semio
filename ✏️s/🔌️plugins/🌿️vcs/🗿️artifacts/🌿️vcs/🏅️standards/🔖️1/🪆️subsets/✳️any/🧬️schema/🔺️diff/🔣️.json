@@ -6,11 +6,6 @@
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "artifact": {
-      "title": "VcsArtifact",
-      "type": "object",
-      "x-semio-state": "artifact"
-    },
     "schema": {
       "type": "string",
       "x-semio-state": "artifact"
@@ -67,6 +62,12 @@
           }
         },
         "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reordered": {
           "type": "array",
           "items": {
             "type": "string"

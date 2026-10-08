@@ -1,8 +1,6 @@
 # 🪪️ PlaybookDiff imports the canonical OS Store child identity.
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
-# import PlaybookArtifact from "../🔗️.graphql"
 type PlaybookDiff {
-  artifact: PlaybookArtifact
   schema: String
   id: String
   version: String

@@ -232,12 +232,12 @@ pub fn lower_document_headless(snapshot: &PdfSnapshot, expected_pages: usize, op
     lowering.reserve_fields();
     lowering.lower_optional_content_groups();
     lowering.lower_fonts()?;
-    lowering.lower_images();
+    lowering.lower_images()?;
     lowering.lower_forms()?;
-    lowering.lower_ext_g_states();
-    lowering.lower_shadings();
+    lowering.lower_ext_g_states()?;
+    lowering.lower_shadings()?;
     lowering.lower_patterns()?;
-    lowering.lower_named_resources();
+    lowering.lower_named_resources()?;
     lowering.lower_embedded_files();
     let catalog = lowering.lower_catalog(pages_ref, false)?;
     lowering.set(catalog_ref, PdfObject::Dict(catalog));
@@ -344,12 +344,12 @@ pub fn lower_document(snapshot: &PdfSnapshot, first_number: u32, options: LowerO
     }
     lowering.lower_optional_content_groups();
     lowering.lower_fonts()?;
-    lowering.lower_images();
+    lowering.lower_images()?;
     lowering.lower_forms()?;
-    lowering.lower_ext_g_states();
-    lowering.lower_shadings();
+    lowering.lower_ext_g_states()?;
+    lowering.lower_shadings()?;
     lowering.lower_patterns()?;
-    lowering.lower_named_resources();
+    lowering.lower_named_resources()?;
     lowering.lower_embedded_files();
     for (index, page) in snapshot.pages.iter().enumerate() {
         lowering.lower_page(index, page, page_refs[index], pages_ref)?;
@@ -581,13 +581,13 @@ impl Lowering<'_> {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn lower_images(&mut self) {
+    fn lower_images(&mut self) -> PResult<()> {
         for image in &self.snapshot.images {
             let reference = self.refs[&(Category::XObject, image.id.clone())];
             let refs = self.refs.clone();
             let mut ref_of = |id: &str| refs.get(&(Category::XObject, id.to_string())).map(|r| PdfObject::Ref(*r));
             let mut oc_ref_of = |id: &str| refs.get(&(Category::OptionalContent, id.to_string())).map(|r| PdfObject::Ref(*r));
-            let mut object = lower_image(image, self, &mut ref_of, &mut oc_ref_of);
+            let mut object = lower_image(image, self, &mut ref_of, &mut oc_ref_of)?;
             if !self.options.compress {
                 if let PdfObject::Stream { filters, .. } = &mut object {
                     filters.retain(|filter| filter.is_image_codec());
@@ -595,6 +595,7 @@ impl Lowering<'_> {
             }
             self.set(reference, object);
         }
+        Ok(())
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -607,7 +608,7 @@ impl Lowering<'_> {
             }
             let resources = self.resources_for(&form.content);
             dict.push(entry("Resources", resources));
-            push_opt(&mut dict, "Group", form.group.as_ref().map(|group| self.lower_group(group)));
+            push_opt(&mut dict, "Group", form.group.as_ref().map(|group| self.lower_group(group)).transpose()?);
             push_opt(&mut dict, "OC", form.optional_content.as_deref().and_then(|id| self.reference(Category::OptionalContent, id)));
             push_opt(&mut dict, "StructParent", form.struct_parent.map(|v| PdfObject::Int(v as i64)));
             dict.extend(form.extra.iter().cloned());
@@ -621,40 +622,42 @@ impl Lowering<'_> {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn lower_group(&mut self, group: &PdfTransparencyGroup) -> PdfObject {
+    fn lower_group(&mut self, group: &PdfTransparencyGroup) -> PResult<PdfObject> {
         let mut dict = vec![entry("Type", PdfObject::name("Group")), entry("S", PdfObject::name("Transparency"))];
-        push_opt(&mut dict, "CS", group.color_space.as_ref().map(|cs| lower_colour_space(cs, self)));
+        push_opt(&mut dict, "CS", group.color_space.as_ref().map(|cs| lower_colour_space(cs, self)).transpose()?);
         if group.isolated {
             dict.push(entry("I", PdfObject::Bool(true)));
         }
         if group.knockout {
             dict.push(entry("K", PdfObject::Bool(true)));
         }
-        PdfObject::Dict(dict)
+        Ok(PdfObject::Dict(dict))
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn lower_ext_g_states(&mut self) {
+    fn lower_ext_g_states(&mut self) -> PResult<()> {
         for state in &self.snapshot.ext_g_states {
             let reference = self.refs[&(Category::ExtGState, state.id.clone())];
             let refs = self.refs.clone();
             let mut form_ref_of = |id: &str| refs.get(&(Category::XObject, id.to_string())).map(|r| PdfObject::Ref(*r));
             let mut font_ref_of = |id: &str| refs.get(&(Category::Font, id.to_string())).map(|r| PdfObject::Ref(*r));
-            let object = lower_ext_g_state(state, self, &mut form_ref_of, &mut font_ref_of);
+            let object = lower_ext_g_state(state, self, &mut form_ref_of, &mut font_ref_of)?;
             self.set(reference, object);
         }
+        Ok(())
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn lower_shadings(&mut self) {
+    fn lower_shadings(&mut self) -> PResult<()> {
         for shading in &self.snapshot.shadings {
             let reference = self.refs[&(Category::Shading, shading.id.clone())];
-            let lowered = lower_shading(shading, self);
+            let lowered = lower_shading(shading, self)?;
             if let PdfObject::Ref(temporary) = lowered {
                 let value = self.objects.iter().position(|object| object.id == temporary).map(|index| self.objects.remove(index).value).unwrap_or(PdfObject::Null);
                 self.set(reference, value);
             }
         }
+        Ok(())
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -693,10 +696,10 @@ impl Lowering<'_> {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn lower_named_resources(&mut self) {
+    fn lower_named_resources(&mut self) -> PResult<()> {
         for space in &self.snapshot.color_spaces {
             let reference = self.refs[&(Category::ColorSpace, space.name.clone())];
-            let value = lower_colour_space(&space.color_space, self);
+            let value = lower_colour_space(&space.color_space, self)?;
             self.set(reference, value);
         }
         for properties in &self.snapshot.properties {
@@ -707,6 +710,7 @@ impl Lowering<'_> {
             };
             self.set(reference, value);
         }
+        Ok(())
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -747,7 +751,7 @@ impl Lowering<'_> {
         let content = self.content_stream(&page.content)?;
         let content_ref = self.add(content);
         dict.push(entry("Contents", PdfObject::Ref(content_ref)));
-        push_opt(&mut dict, "Group", page.group.as_ref().map(|group| self.lower_group(group)));
+        push_opt(&mut dict, "Group", page.group.as_ref().map(|group| self.lower_group(group)).transpose()?);
         push_opt(&mut dict, "Thumb", page.thumbnail.as_deref().and_then(|id| self.reference(Category::XObject, id)));
         push_opt(&mut dict, "StructParents", page.struct_parents.map(|v| PdfObject::Int(v as i64)));
         push_opt(&mut dict, "Trans", page.transition.as_ref().map(|t| PdfObject::Dict(t.clone())));

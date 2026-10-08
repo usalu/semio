@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/mutation/replace-xml-node/schema.json",
+  "title": "ReplaceXmlNode",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "address",
+    "node"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "replaceXmlNode"
+    },
+    "address": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pptx/ecma-376/base/xml-address.json#/$defs/PptxXmlAddress",
+      "x-semio-ui": {
+        "label": {
+          "en": "Node",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Revision-bound XML node to replace.",
+          "de": "Revisionsgebundener XML-Knoten, der ersetzt wird."
+        }
+      }
+    },
+    "node": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlNode",
+      "x-semio-ui": {
+        "label": {
+          "en": "Replacement XML",
+          "de": "Ersatz-XML"
+        },
+        "description": {
+          "en": "Canonical XML that takes the node's place; it has to keep the node's expanded name.",
+          "de": "Kanonisches XML, das den Platz des Knotens einnimmt; es muss den erweiterten Namen des Knotens behalten."
+        }
+      }
+    }
+  }
+}

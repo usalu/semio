@@ -11,11 +11,11 @@ use protocol::{Mutation, MutationDiff, SemanticMutation};
 /// and asserted directly.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(base: &SemioMeshSnapshot, operation: &SemioMeshMutation) -> SemioMeshSnapshot {
-    let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
+    let forward = protocol::apply_diff(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
     let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
-    for back in &backwards {
-        restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
+    for back in backwards.iter().rev() {
+        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
     }
     assert_eq!(restored, base.clone(), "inverse must exactly restore the pre-operation fixture for {operation:?}");
     forward
@@ -33,7 +33,7 @@ async fn inverse_round_trip_law_covers_every_variant() {
 #[semio_framework_async_macros::async_test]
 async fn create_delete_mesh_round_trips_explicitly() {
     let base = fixture();
-    let create = SemioMeshMutation::CreateMesh(create_mesh::CreateMesh { mesh: SemioMesh { id: "mesh-c".into(), primitives: vec![] } });
+    let create = SemioMeshMutation::CreateMesh(create_mesh::CreateMesh { mesh: SemioMesh { id: "mesh-c".into(), primitives: vec![] }, at: None });
     let after_create = round_trip(&base, &create);
     assert!(after_create.meshes.iter().any(|m| m.id == "mesh-c"));
 
@@ -59,7 +59,7 @@ async fn set_change_replace_move_of_an_absent_target_have_empty_inverse_and_are_
 
     let topo = SemioMeshMutation::SetPrimitiveTopology(set_primitive_topology::SetPrimitiveTopology { mesh_id: "mesh-missing".into(), primitive_id: "prim-missing".into(), topology: SemioTopology::Lines });
     assert!(topo.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(topo.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "set-primitive-topology on an absent target is a no-op");
+    assert_eq!(protocol::apply_diff(topo.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "set-primitive-topology on an absent target is a no-op");
 
     let geom = SemioMeshMutation::ReplacePrimitiveGeometry(replace_primitive_geometry::ReplacePrimitiveGeometry {
         mesh_id: "mesh-missing".into(),
@@ -71,15 +71,15 @@ async fn set_change_replace_move_of_an_absent_target_have_empty_inverse_and_are_
         indices: vec![],
     });
     assert!(geom.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(geom.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "replace-primitive-geometry on an absent target is a no-op");
+    assert_eq!(protocol::apply_diff(geom.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "replace-primitive-geometry on an absent target is a no-op");
 
     let color = SemioMeshMutation::ChangeMaterialBaseColor(change_material_base_color::ChangeMaterialBaseColor { id: "mat-missing".into(), new_base_color: SemioRgba::default() });
     assert!(color.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(color.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "change-material-base-color on an absent target is a no-op");
+    assert_eq!(protocol::apply_diff(color.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "change-material-base-color on an absent target is a no-op");
 
     let mv = SemioMeshMutation::MoveVertex(move_vertex::MoveVertex { mesh_id: "mesh-a".into(), primitive_id: "prim-a".into(), vertex_index: 999, new_point: SemioPoint3::default() });
     assert!(mv.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(mv.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "move-vertex at an out-of-bounds index is a no-op");
+    assert_eq!(protocol::apply_diff(mv.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "move-vertex at an out-of-bounds index is a no-op");
 }
 //#endregion 🧪️InverseRoundTripLaw
 
@@ -94,11 +94,11 @@ async fn diff_consistency_law_matches_independent_between() {
     let base = fixture();
     for m in demo_mutation_cases() {
         let hand_diff = m.diff(&base);
-        let after = hand_diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
+        let after = protocol::apply_diff(hand_diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
         let independent_diff = SemioMeshDiff::between(&base, &after);
         assert_eq!(
-            hand_diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"),
-            independent_diff.apply(&base).expect("apply must succeed for a well-formed fixture"),
+            protocol::apply_diff(hand_diff.diff(), &base).expect("apply must succeed for a well-formed fixture"),
+            protocol::apply_diff(&independent_diff, &base).expect("apply must succeed for a well-formed fixture"),
             "diff({m:?}) must match an independent before/after comparison"
         );
     }

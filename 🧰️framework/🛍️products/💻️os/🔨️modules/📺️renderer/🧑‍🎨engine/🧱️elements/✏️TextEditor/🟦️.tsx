@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-canvas-react-renderer";
+import { WasmCanvas, type WasmCanvasSession } from "@semio-tech/canvas-react-renderer";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { cn, ContextMenuController, glassClass, Textarea, useCanvasAppearanceSync, useLabel, useShellScopeOptional, type ContextMenuItem, type UiTranslationKey } from "@semio-tech/ui-react";
 import { createTextEditorTypingRunV1, receiveTextEditorSceneV1, refuseTextEditorSpliceV1, scalarOfUtf8OffsetV1, sendTextEditorSpliceV1, settleTextEditorSpliceV1, TEXT_EDITOR_SCENE_LANES, TEXT_EDITOR_TYPING_BUFFER_ARG, TEXT_EDITOR_TYPING_COMMIT_ARG, TEXT_EDITOR_TYPING_HOST_SIGNALS, textEditorActions, textEditorAppliedSpliceV1, textEditorSpliceHostV1, textEditorTypingV1, utf8OffsetOfScalarV1, type ActionDescriptor, type ActionOperationControlV1, type ComponentSceneHostProps, type ContextMenuItemSpec, type PluginContextMenuRequest, type TextEditorScene, type TextEditorSpliceHostV1, type TextEditorSpliceViewV1, type TextEditorTypingRunV1 } from "@semio-tech/framework";
@@ -593,7 +593,7 @@ function showTextEditorSpliceViewV1(session: FrameworkEditorSession | null, view
 }
 
 //#region WasmEditorSurface
-/** 🖋️ The canvas text editor. It never paints on its own: the session {@link GraphWasmCanvas} hands it is the
+/** 🖋️ The canvas text editor. It never paints on its own: the session {@link WasmCanvas} hands it is the
  * frame-demanding handle, where every call invalidates and the canvas paints once at the next frame. Its handlers used to
  * call `renderFrame` (a synchronous paint) after every change on top of that, and every echo of its own edit was synced
  * again even when its pack was byte-identical to the one already applied (the selection round trip), so one keystroke
@@ -834,7 +834,7 @@ function WasmEditorSurface({
 
   useEffect(() => {
     syncSession();
-    // sessionEpoch: re-sync immediately after GraphWasmCanvas (re)attaches a session (e.g. the stub -> real wasm swap),
+    // sessionEpoch: re-sync immediately after WasmCanvas (re)attaches a session (e.g. the stub -> real wasm swap),
     // since the attach lifecycle is independent of scene changes and a ref update alone would not otherwise re-trigger this effect.
   }, [syncSession, sessionEpoch]);
 
@@ -1013,7 +1013,7 @@ function WasmEditorSurface({
       setExtraCaretsJson: () => {},
       setCaretVisible: () => {},
     } satisfies FrameworkEditorSession;
-    // Deliberately omits scene.buffer: GraphWasmCanvas re-attaches the GPU canvas whenever sessionFactory's
+    // Deliberately omits scene.buffer: WasmCanvas re-attaches the GPU canvas whenever sessionFactory's
     // identity changes, so this must stay stable across content edits — only the wasmSession load transition matters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wasmSession]);
@@ -1092,9 +1092,9 @@ function WasmEditorSurface({
 
   const dismissContextMenu = useCallback(() => setContextMenu(null), []);
 
-  // Stable identity: GraphWasmCanvas re-attaches the GPU canvas whenever this prop's identity changes,
+  // Stable identity: WasmCanvas re-attaches the GPU canvas whenever this prop's identity changes,
   // so it must not close over anything that changes per scene update (see sessionEpoch above for re-sync).
-  const onSessionReady = useCallback((session: GraphWasmSession) => {
+  const onSessionReady = useCallback((session: WasmCanvasSession) => {
     sessionRef.current = session as FrameworkEditorSession;
     sessionRef.current.setCaretVisible(caretCadenceRef.current?.visible() ?? false);
     syncSessionCanvasTheme(sessionRef.current);
@@ -1103,7 +1103,7 @@ function WasmEditorSurface({
 
   return (
     <div ref={surfaceRef} className="relative min-h-0 flex-1">
-      <GraphWasmCanvas className="absolute inset-0" sessionFactory={sessionFactory} onSessionReady={onSessionReady} enablePointer={false} />
+      <WasmCanvas className="absolute inset-0" sessionFactory={sessionFactory} onSessionReady={onSessionReady} enablePointer={false} />
       <TextPeerCaretsOverlayV1 windowId={presenceWindowId} project={projectPeerCaret} frame={presenceFrame + sessionEpoch} lineHeightPx={16} locale={typeof document !== "undefined" ? document.documentElement.lang : undefined} />
       <div
         className="absolute inset-0"

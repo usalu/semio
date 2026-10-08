@@ -1,34 +1,23 @@
 {
   "edges": {
-    "values": [
+    "modified": [
       {
-        "id": {
-          "value": "e1"
-        },
-        "source": {
-          "value": "a"
-        },
-        "target": {
-          "value": "b"
-        },
-        "kind": "data",
-        "label": "A to B",
-        "properties": [
-          {
-            "key": "weight",
-            "value": {
-              "kind": "int",
-              "lexeme": "7"
-            }
-          },
-          {
-            "key": "colour",
-            "value": {
-              "kind": "str",
-              "value": "blue"
-            }
+        "index": 0,
+        "diff": {
+          "properties": {
+            "modified": [
+              {
+                "index": 1,
+                "diff": {
+                  "value": {
+                    "kind": "str",
+                    "value": "blue"
+                  }
+                }
+              }
+            ]
           }
-        ]
+        }
       }
     ]
   }

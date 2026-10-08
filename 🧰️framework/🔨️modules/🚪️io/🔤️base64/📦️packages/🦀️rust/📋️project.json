@@ -1,0 +1,17 @@
+{
+  "name": "@semio-tech/framework-io-base64-rs",
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🔨️modules/🚪️io/🔤️base64",
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🔤️base64/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/⏱️trace/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/**/*"
+    ]
+  },
+  "targets": {
+    "test-native": { "executor": "nx:run-commands", "cache": false, "inputs": ["default"], "options": { "cwd": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-native" } },
+    "test-source": { "executor": "nx:run-commands", "cache": false, "inputs": ["default"], "options": { "cwd": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-source" } },
+    "test-strict": { "executor": "nx:run-commands", "cache": false, "inputs": ["default"], "options": { "cwd": "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-strict" } }
+  }
+}

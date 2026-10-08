@@ -109,6 +109,7 @@ wit-bindgen = { version = "0.57.1", default-features = false, features = ["macro
 semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 
 [dev-dependencies]
+semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🚪️ Test-only `entrypoint`: `one_framework_reserved_route_fits_a_bounded_thread_stack` drives one
 # `interactionSelect` on a deliberately small OS thread, and only `block_on` can pump a future from

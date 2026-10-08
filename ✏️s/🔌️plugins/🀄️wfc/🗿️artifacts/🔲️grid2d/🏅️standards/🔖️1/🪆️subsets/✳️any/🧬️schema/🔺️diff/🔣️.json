@@ -3,19 +3,410 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/grid2d/1/any/diff.json",
   "title": "Grid2dDiff",
   "type": "object",
-  "additionalProperties": true,
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "seed",
+    "width",
+    "height",
+    "cellWidth",
+    "cellHeight",
+    "periodicX",
+    "periodicY",
+    "tiles",
+    "rules",
+    "pinned",
+    "masked"
+  ],
   "properties": {
-    "schema": { "type": "string", "x-semio-state": "artifact" },
-    "seed": { "type": "integer", "x-semio-state": "artifact" },
-    "width": { "type": "integer", "x-semio-state": "artifact" },
-    "height": { "type": "integer", "x-semio-state": "artifact" },
-    "cellWidth": { "type": "number", "x-semio-state": "artifact" },
-    "cellHeight": { "type": "number", "x-semio-state": "artifact" },
-    "periodicX": { "type": "boolean", "x-semio-state": "artifact" },
-    "periodicY": { "type": "boolean", "x-semio-state": "artifact" },
-    "tilesRemoved": { "type": "array", "items": { "type": "string" }, "x-semio-state": "artifact" },
-    "rulesRemoved": { "type": "array", "items": { "type": "string" }, "x-semio-state": "artifact" },
-    "pinnedRemoved": { "type": "array", "items": { "type": "string" }, "x-semio-state": "artifact" },
-    "maskedRemoved": { "type": "array", "items": { "type": "string" }, "x-semio-state": "artifact" }
+    "schema": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "seed": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "width": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "height": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cellWidth": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cellHeight": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "periodicX": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "periodicY": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "tiles": {
+      "title": "TilesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "patched"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "title": "WfcTile2d",
+            "type": "object"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "patch": {
+                "title": "TilesPatch",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "weight",
+                  "media",
+                  "label"
+                ],
+                "properties": {
+                  "weight": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "media": {
+                    "anyOf": [
+                      {
+                        "title": "Media",
+                        "type": [
+                          "object",
+                          "string"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "label": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "value"
+                        ],
+                        "properties": {
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "rules": {
+      "title": "RulesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "patched"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "title": "WfcAdjacencyRule2d",
+            "type": "object"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "patch": {
+                "title": "RulesPatch",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "tileAId",
+                  "tileBId",
+                  "direction",
+                  "allowed"
+                ],
+                "properties": {
+                  "tileAId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "tileBId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "direction": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "allowed": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "pinned": {
+      "title": "PinnedDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "patched"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "title": "WfcPinnedCell2d",
+            "type": "object"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "patch": {
+                "title": "PinnedPatch",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "tileId"
+                ],
+                "properties": {
+                  "tileId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "masked": {
+      "title": "MaskedDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "patched"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "title": "WfcCell2d",
+            "type": "object"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "patch": {
+                "title": "MaskedPatch",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [],
+                "properties": {}
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }

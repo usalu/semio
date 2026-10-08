@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/xlsx/ecma-376/transitional/mutation/set-relationship-base/schema.json",
+  "title": "SetRelationshipBase",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "base"
+  ],
+  "properties": {
+    "base": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "label": {
+          "en": "Relationship base URI",
+          "de": "Basis-URI der Beziehungen"
+        },
+        "group": "value",
+        "order": 10
+      }
+    }
+  }
+}

@@ -108,8 +108,6 @@ fn sweep_b() -> SemioPresentationSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_mutations() -> Vec<SemioPresentationMutation> {
     vec![
-        SemioPresentationMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
-        SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
         SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: 1, slide: Slide { id: "new".into(), layout_id: None, shapes: Vec::new(), notes: Vec::new() } }),
         SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index: 0 }),
         SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index: 0, layout_id: Some("layout1".into()) }),
@@ -123,9 +121,9 @@ fn sample_mutations() -> Vec<SemioPresentationMutation> {
         SemioPresentationMutation::RemoveShape(remove_shape::RemoveShape { slide_index: 0, shape_index: 0 }),
         SemioPresentationMutation::SetShapeFrame(set_shape_frame::SetShapeFrame { slide_index: 0, shape_index: 0, frame: frame(9.0, 9.0, 9.0, 9.0) }),
         SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index: 0, shape_index: 0, blocks: vec![text_block("changed")] }),
-        SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: SlideMaster { id: "m2".into(), shapes: Vec::new() } }),
+        SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: SlideMaster { id: "m2".into(), shapes: Vec::new() }, at: None }),
         SemioPresentationMutation::RemoveMaster(remove_master::RemoveMaster { id: "master1".into() }),
-        SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout: SlideLayout { id: "l2".into(), master_id: "master1".into(), shapes: Vec::new() } }),
+        SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout: SlideLayout { id: "l2".into(), master_id: "master1".into(), shapes: Vec::new() }, at: None }),
         SemioPresentationMutation::RemoveLayout(remove_layout::RemoveLayout { id: "layout1".into() }),
         SemioPresentationMutation::SetLayoutMaster(set_layout_master::SetLayoutMaster { id: "layout1".into(), master_id: "master1".into() }),
     ]
@@ -133,7 +131,7 @@ fn sample_mutations() -> Vec<SemioPresentationMutation> {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn apply_valid(diff: &SemioPresentationDiff, base: &SemioPresentationSnapshot) -> SemioPresentationSnapshot {
-    MutationDiff::apply(diff, base).expect("valid Semio presentation diff fixture")
+    protocol::apply_diff(diff, base).expect("valid Semio presentation diff fixture")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -144,7 +142,8 @@ async fn mutation_diff_law() {
         let applied_via_diff = apply_valid(diff_direct.diff(), &base);
 
         let mut via_apply = base.clone();
-        let diff_from_apply = apply_semio_presentation_mutation(&mut via_apply, &mutation);
+        let (__next, diff_from_apply) = crate::applied(&via_apply, &mutation);
+        via_apply = __next;
 
         assert_eq!(applied_via_diff, via_apply, "mutation_diff_law: apply mismatch for {mutation:?}");
         assert_eq!(diff_direct, diff_from_apply, "mutation_diff_law: diff mismatch for {mutation:?}");
@@ -159,9 +158,9 @@ async fn inverse_law() {
         let base = fixture();
 
         let mut round_tripped = base.clone();
-        apply_semio_presentation_mutation(&mut round_tripped, &mutation);
-        for inverse_mutation in <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
-            apply_semio_presentation_mutation(&mut round_tripped, &inverse_mutation);
+        round_tripped = crate::applied(&round_tripped, &mutation).0;
+        for inverse_mutation in <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            round_tripped = crate::applied(&round_tripped, &inverse_mutation).0;
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
@@ -288,7 +287,7 @@ async fn between_roundtrip_law() {
     // "Real" fixture leg: a realistic small deck diffed against a mutated variant.
     let real = fixture();
     let mut mutated = real.clone();
-    apply_semio_presentation_mutation(&mut mutated, &SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index: 0, shape_index: 0, blocks: vec![text_block("Chapter Two")] }));
+    mutated = crate::applied(&mutated, &SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index: 0, shape_index: 0, blocks: vec![text_block("Chapter Two")] })).0;
     assert_ne!(real, mutated);
     assert_eq!(apply_valid(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&real, &mutated), &real), mutated);
     assert_eq!(apply_valid(&<SemioPresentationDiff as DiffAlgebra<SemioPresentationSnapshot>>::between(&mutated, &real), &mutated), real);
@@ -363,7 +362,6 @@ async fn field_sweep() {
 #[semio_framework_async_macros::async_test]
 async fn op_text_binary_roundtrip_law() {
     let mutations = vec![
-        SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
         SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide {
             index: 1,
             slide: Slide {
@@ -385,9 +383,9 @@ async fn op_text_binary_roundtrip_law() {
             shape_index: 0,
             blocks: vec![text_block("changed"), DocBlock::Heading { level: 1, style_id: Some("s".into()), runs: vec![DocRun { text: "h".into(), style: Default::default() }] }],
         }),
-        SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: SlideMaster { id: "m2".into(), shapes: Vec::new() } }),
+        SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: SlideMaster { id: "m2".into(), shapes: Vec::new() }, at: None }),
         SemioPresentationMutation::RemoveMaster(remove_master::RemoveMaster { id: "master1".into() }),
-        SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout: SlideLayout { id: "l2".into(), master_id: "master1".into(), shapes: Vec::new() } }),
+        SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout: SlideLayout { id: "l2".into(), master_id: "master1".into(), shapes: Vec::new() }, at: None }),
         SemioPresentationMutation::RemoveLayout(remove_layout::RemoveLayout { id: "layout1".into() }),
         SemioPresentationMutation::SetLayoutMaster(set_layout_master::SetLayoutMaster { id: "layout1".into(), master_id: "master1".into() }),
     ];
@@ -403,3 +401,13 @@ async fn op_text_binary_roundtrip_law() {
     }
 }
 //#endregion 🔖️OpTextBinaryRoundtripLaw
+
+/// 🎯️ Position law: removing ANY slide, master or layout (first, middle, last) is undone at its original index.
+#[semio_framework_async_macros::async_test]
+async fn removals_invert_at_every_position() {
+    let base = crate::standards::v1::subsets::presentation::schema::snapshot::demo_semio_presentation_snapshot();
+    for index in 0..base.slides.len() {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index }), &base).await;
+    }
+}
+

@@ -7,7 +7,7 @@ use crate::{EquationMutation, EquationSnapshot};
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::DisconnectNodes, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    let graph = base.graph.clone();
+    let graph = &base.graph;
     match graph.edges.iter().position(|edge| edge.id == payload.id) {
         Some(index) => {
             let edge = &graph.edges[index];

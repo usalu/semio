@@ -61,7 +61,6 @@
       "subsetDirectoryName": "🔄️transitional",
       "vectors": [],
       "kinds": [
-        "set-snapshot",
         "set-main-namespace",
         "set-relationship-base",
         "set-conformance-attribute",
@@ -167,81 +166,11 @@
               "oracle": "python-docx-docx-ecma-376-transitional-mutate-reader"
             }
           ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "docx-ecma-376-transitional-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "docx-ecma-376-transitional-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "python-docx-docx-ecma-376-transitional-mutate-reader"
-            }
-          ]
         }
       ]
     }
   ],
   "testEvidence": [
-    {
-      "id": "set-snapshot-applied",
-      "class": "third-party-generated",
-      "target": {
-        "artifact": "s.stdio.docx",
-        "standard": "ecma-376",
-        "subset": "transitional"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before-docx",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.docx",
-          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          "sha256": "sha256:b474c437e1a32791159ea86cdbab6eb49d07bb77d96e4acebcdec938e65ff1a1",
-          "bytes": 36581
-        },
-        {
-          "role": "expected-after-docx",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.docx",
-          "mediaType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-          "sha256": "sha256:a1ccdb3c31a2b14c95a79d483ce82e77520e52dc3dfdcf6e22d04bbb78d7ed50",
-          "bytes": 36589
-        }
-      ],
-      "provenance": {
-        "source": "generated",
-        "license": "MIT (python-docx)",
-        "attribution": "Written by python-docx 1.2.0's own Document.save()",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "exact-bytes-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": "Whole-document snapshot replace: an unrelated valid document (two paragraphs instead of one) substituted wholesale.",
-      "generator": {
-        "oracle": "python-docx-docx-ecma-376-transitional-mutate-reader",
-        "packageVersion": "1.2.0",
-        "engineFamily": "python-docx",
-        "engineVersion": "1.2.0",
-        "command": "uv run python3 🔨️f2-gen-docx-structural-fixtures.py (python-docx Document object model + .save())",
-        "platform": "darwin-arm64"
-      }
-    },
     {
       "id": "set-conformance-attribute-applied",
       "class": "handcrafted",

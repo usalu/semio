@@ -2,7 +2,7 @@
 //! (constructs the sparse `TsvDiff` directly — apply-and-capture is banned); `inverse()` is
 //! handcrafted per variant, index-aware, reading the pre-state it needs from `base`.
 
-use crate::standards::iana::subsets::any::schema::diff::{diff_set_snapshot, TsvDiff, TsvRowAdded, TsvRowDiff, TsvRowModified, TsvRowsDiff};
+use crate::standards::iana::subsets::any::schema::diff::{TsvDiff, TsvRowAdded, TsvRowDiff, TsvRowModified, TsvRowsDiff};
 
 
 
@@ -28,10 +28,6 @@ pub mod set_line_ending;
 /// csv's/gif89a's hand-rolled paths document; hand-rolling below reuses `TsvDiff`'s
 /// `pub(crate)` grammar primitives instead).
 //#region 🔖️Leaves
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "🔚set-trailing-newline/🦀️.rs"]
 pub mod set_trailing_newline;
 //#endregion 🔖️Leaves
@@ -42,8 +38,6 @@ pub mod set_trailing_newline;
 #[mutations(snapshot = TsvSnapshot, diff = TsvDiff, schema = "TsvMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum TsvMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// ↩️ Toggles whether the encoded text ends with a line terminator.
     SetTrailingNewline(set_trailing_newline::SetTrailingNewline),
     /// ↩️ Replaces the file's line-ending convention.
@@ -59,7 +53,7 @@ pub enum TsvMutation {
 /// 🧾️ Kebab-case spelling of every `TsvMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `tsv-iana-any` (`../../🔮️oracles/🔣️.json`) is measured against this
 /// exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
-pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-trailing-newline", "set-line-ending", "insert-row", "remove-row", "set-cell"];
+pub const KINDS: &[&str] = &["set-trailing-newline", "set-line-ending", "insert-row", "remove-row", "set-cell"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -68,7 +62,7 @@ pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-trailing-new
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_tsv_mutation(snapshot: &mut TsvSnapshot, mutation: &TsvMutation) -> protocol::MutationOutcome<TsvDiff> {
     let outcome = <TsvMutation as Mutation<TsvSnapshot>>::diff(mutation, snapshot);
-    match MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -79,45 +73,33 @@ pub fn apply_tsv_mutation(snapshot: &mut TsvSnapshot, mutation: &TsvMutation) ->
 
 //#endregion 🔖️Apply
 
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &TsvMutation, base: &TsvSnapshot) -> protocol::MutationOutcome<TsvDiff> {
-    protocol::MutationOutcome::new(match this {
-        TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
-        TsvMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<TsvSnapshot, TsvMutation>>::diff(patch, base),
-        TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline }) => TsvDiff { trailing_newline: Some(*trailing_newline), ..TsvDiff::default() },
-        TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending }) => TsvDiff { line_ending: Some(*line_ending), ..TsvDiff::default() },
-        TsvMutation::InsertRow(insert_row::InsertRow { index, row }) => TsvDiff { records: Some(TsvRowsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![TsvRowAdded { index: *index, row: row.clone() }] }), ..TsvDiff::default() },
-        TsvMutation::RemoveRow(remove_row::RemoveRow { index }) => TsvDiff { records: Some(TsvRowsDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }), ..TsvDiff::default() },
-        TsvMutation::SetCell(set_cell::SetCell { row_index, field_index, value }) => {
-            let mut fields = vec![None; field_index + 1];
-            fields[*field_index] = Some(value.clone());
-            TsvDiff { records: Some(TsvRowsDiff { removed: Vec::new(), modified: vec![TsvRowModified { index: *row_index, diff: TsvRowDiff { fields: Some(fields) } }], added: Vec::new() }), ..TsvDiff::default() }
-        }
-    })
-}
-
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &TsvMutation, base: &TsvSnapshot) -> Result<Vec<TsvMutation>, semio_framework_value::ValueError> {
-    Ok({
-    match this {
-        TsvMutation::SetSnapshot(_) => vec![TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        TsvMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<TsvSnapshot, TsvMutation>>::inverse(patch, base)?),
-        TsvMutation::SetTrailingNewline(_) => vec![TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: base.trailing_newline })],
-        TsvMutation::SetLineEnding(_) => vec![TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending: base.line_ending })],
-        TsvMutation::InsertRow(insert_row::InsertRow { index, .. }) => vec![TsvMutation::RemoveRow(remove_row::RemoveRow { index: *index })],
-        TsvMutation::RemoveRow(remove_row::RemoveRow { index }) => match base.records.get(*index) {
-            Some(row) => vec![TsvMutation::InsertRow(insert_row::InsertRow { index: *index, row: row.clone() })],
-            None => Vec::new(),
-        },
-        TsvMutation::SetCell(set_cell::SetCell { row_index, field_index, .. }) => match base.records.get(*row_index).and_then(|r| r.get(*field_index)) {
-            Some(cell) => vec![TsvMutation::SetCell(set_cell::SetCell { row_index: *row_index, field_index: *field_index, value: cell.clone() })],
-            None => Vec::new(),
-        },
+//#region 🔖️Net
+/// 🧮️ The leaves that carry `base` to exactly `next`: the trailing-newline flag and the line ending if they moved, then every row
+/// in place (one `set-cell` per differing cell; a row whose column count changed is removed and inserted anew) and the diverging
+/// tail (surplus rows removed last first, missing rows inserted).
+pub fn net_mutations(base: &TsvSnapshot, next: &TsvSnapshot) -> Vec<TsvMutation> {
+    let mut leaves = Vec::new();
+    if base.trailing_newline != next.trailing_newline {
+        leaves.push(TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: next.trailing_newline }));
     }
-
-    })
+    if base.line_ending != next.line_ending {
+        leaves.push(TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending: next.line_ending }));
+    }
+    let paired = base.records.len().min(next.records.len());
+    for (row_index, (before, after)) in base.records.iter().zip(&next.records).enumerate().filter(|(_, (before, after))| before != after) {
+        if before.len() == after.len() {
+            leaves.extend(before.iter().zip(after).enumerate().filter(|(_, (old, new))| old != new).map(|(field_index, (_, new))| TsvMutation::SetCell(set_cell::SetCell { row_index, field_index, value: new.clone() })));
+        } else {
+            leaves.push(TsvMutation::RemoveRow(remove_row::RemoveRow { index: row_index }));
+            leaves.push(TsvMutation::InsertRow(insert_row::InsertRow { index: row_index, row: after.clone() }));
+        }
+    }
+    leaves.extend((paired..base.records.len()).rev().map(|index| TsvMutation::RemoveRow(remove_row::RemoveRow { index })));
+    leaves.extend(next.records.iter().enumerate().skip(paired).map(|(index, row)| TsvMutation::InsertRow(insert_row::InsertRow { index, row: row.clone() })));
+    leaves
 }
+//#endregion 🔖️Net
+
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
@@ -140,16 +122,7 @@ pub(crate) fn agg_inverse(this: &TsvMutation, base: &TsvSnapshot) -> Result<Vec<
 mod tests;
 //#endregion 🧪️Tests
 
-//#region 🧪️FixtureTests
-// 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
-// agents migrating the other stdio artifacts, so the production mounts there stay untouched while
-// this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
-// directory, which is what makes the leaf-relative path below resolve.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-//#endregion 🧪️FixtureTests
+
 
 #[cfg(test)]
 use protocol::{OpBinary,OpText};

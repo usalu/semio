@@ -1,4 +1,6 @@
 //! 🧬️ Direct create-primitive mutation owner: payload, validation, typed diff, inverse, and outcomes.
+use crate::schema::diff::*;
+use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::modules::mutation_support::structure_geometry::{checked_index, checked_position};
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::GltfTopLevelMutationRejection;
@@ -10,19 +12,29 @@ pub const ID: &str = "s.stdio.gltf.mutation.create-primitive.v1";
 pub struct GltfCreatePrimitivePayload {
     pub mesh: usize,
     pub position: usize,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub primitive: Option<Box<GltfPrimitive>>,
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate(payload: &GltfCreatePrimitivePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
     checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
     checked_position(payload.position, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
+    if let Some(record) = &payload.primitive {
+        check_primitive(record, &GltfLengths::of(base))?;
+    }
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfCreatePrimitivePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
-    let mut next = base.clone();
-    next.document.meshes[payload.mesh].primitives.insert(payload.position, GltfPrimitive::default());
-    Ok(next)
+pub fn plan(p: &GltfCreatePrimitivePayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
+    validate(p, base)?;
+    Ok(GltfDiff { meshes: primitives_rows(p.mesh, GltfPrimitivesDiff { added: vec![GltfAdded { index: p.position, item: p.primitive.as_deref().cloned().unwrap_or_default() }], ..Default::default() }), ..Default::default() })
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(p: &GltfCreatePrimitivePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    if validate(p, base).is_err() {
+        return Vec::new();
+    }
+    vec![super::delete_primitive::mutation(super::delete_primitive::GltfDeletePrimitivePayload { mesh: p.mesh, primitive: p.position })]
 }
 
 //#region 🧬️DirectMutation
@@ -31,7 +43,11 @@ pub fn apply(payload: &GltfCreatePrimitivePayload, base: &GltfSnapshot) -> Resul
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum CreatePrimitiveMutation {
     Apply(GltfCreatePrimitivePayload),
-    Restore(Box<crate::schema::diff::GltfDiff>),
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutation(payload: GltfCreatePrimitivePayload) -> super::GltfMutation {
+    super::GltfMutation::CreatePrimitive(CreatePrimitiveMutation::Apply(payload))
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreatePrimitiveMutation {
@@ -39,28 +55,18 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreatePrimiti
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => match apply(payload, base) {
-                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Self::Apply(payload) => match plan(payload, base) {
+                Ok(diff) => protocol::MutationOutcome::new(diff),
                 Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
-            },
-            Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
-                Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-                Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
             },
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
-            return Vec::new();
+        match self {
+            Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::GltfMutation::CreatePrimitive(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Create Primitive", "Primitiv erstellen")

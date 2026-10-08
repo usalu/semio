@@ -1,7 +1,7 @@
 //! 🔺️ `change-annex` sparse diff construction — writes only `En1995Diff.annex` from the payload.
 
 use crate::diff::En1995Diff;
-use crate::mutations::set_snapshot::ChangeAnnex;
+use crate::mutations::change_annex::ChangeAnnex;
 use crate::En1995Snapshot;
 
 //#region 🔖️Diff

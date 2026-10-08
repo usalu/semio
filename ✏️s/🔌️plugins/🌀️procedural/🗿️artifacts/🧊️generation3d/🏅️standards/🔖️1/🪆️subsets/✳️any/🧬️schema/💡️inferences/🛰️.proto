@@ -1,11 +1,13 @@
 syntax = "proto3";
 package semio.s.procedural.generation3d.inference;
 
-// 💡️ Generation3d inference schema — topology (DAG shape of `fixture`'s widget/synapse graph).
+// 💡️ Generation3d inference schema — topology (DAG shape of `fixture`'s widget/synapse graph) and geometry (the evaluation of every widget, summarised).
 
 message Generation3dInference {
   // @derived
   Generation3dTopology topology = 1;
+  // @derived
+  Generation3dGeometryRecord geometry = 2;
 }
 
 message Generation3dTopology {
@@ -14,4 +16,37 @@ message Generation3dTopology {
   repeated string topo_order = 3;
   uint32 depth = 4;
   bool cycle_free = 5;
+}
+
+enum Generation3dGeometryQuality {
+  GENERATION3D_GEOMETRY_QUALITY_EXACT_ANALYTIC = 0;
+  GENERATION3D_GEOMETRY_QUALITY_EXACT_NUMERICAL = 1;
+  GENERATION3D_GEOMETRY_QUALITY_APPROXIMATE = 2;
+  GENERATION3D_GEOMETRY_QUALITY_MESH_DERIVED_BREP = 3;
+  GENERATION3D_GEOMETRY_QUALITY_POLYGON_MESH = 4;
+  GENERATION3D_GEOMETRY_QUALITY_TESSELLATED_MESH = 5;
+}
+
+message Generation3dGeometryRecord {
+  map<string, Generation3dWidgetRecord> widgets = 1;
+  uint32 faulted = 2;
+}
+
+message Generation3dWidgetRecord {
+  Generation3dGeometryQuality quality = 1;
+  optional Generation3dFaultRecord fault = 2;
+  repeated Generation3dOutputRecord outputs = 3;
+}
+
+message Generation3dFaultRecord {
+  string code = 1;
+  string en = 2;
+  string de = 3;
+  optional string port = 4;
+}
+
+message Generation3dOutputRecord {
+  string port = 1;
+  string kind = 2;
+  string detail = 3;
 }

@@ -1180,7 +1180,7 @@ fn world_gumball_update_validates_one_selected_aba_token_per_turn() {
     state.bounds = Rect { x: 0.0, y: 0.0, w: 100.0, h: 100.0 };
     let token = state.interaction_objects.admit(3, WorldInteractionObjectKind::Instance, "selected", None, Mat4::identity(), [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0], None).expect("selected token");
     let mut selected = Box::new([None; WORLD_GUMBALL_SELECTED_CAPACITY]);
-    selected[0] = Some(WorldGumballTarget { object: token, source_index: None });
+    selected[0] = Some(WorldGumballTarget::new(token, None, "selected").expect("original selected target"));
     let mut gesture = WorldGumballGesture {
         revision: 3,
         start_generation: 5,
@@ -1222,7 +1222,7 @@ fn world_gumball_commit_host_snapshot() -> (World3dState, WorldGumballGesture) {
     state.interaction_objects.revision = 3;
     let token = state.interaction_objects.admit(3, WorldInteractionObjectKind::Instance, "selected", None, Mat4::identity(), [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0], None).expect("selected token");
     let mut selected = Box::new([None; WORLD_GUMBALL_SELECTED_CAPACITY]);
-    selected[0] = Some(WorldGumballTarget { object: token, source_index: None });
+    selected[0] = Some(WorldGumballTarget::new(token, None, "selected").expect("original selected target"));
     let gesture = WorldGumballGesture {
         revision: 3,
         start_generation: 5,
@@ -2499,12 +2499,12 @@ fn vertex_markers_hold_their_pixel_size_at_every_camera_distance() {
         orbit.to_camera()
     };
     let centre = Vec3::new(0.0, 0.0, 0.0);
-    let near_half = vertex_marker_half_extent(&near, viewport, centre, VERTEX_BASE_SCALE);
-    let far_half = vertex_marker_half_extent(&far, viewport, centre, VERTEX_BASE_SCALE);
+    let near_half = vertex_marker_half_extent(&near, viewport, centre, VERTEX_BASE_SCALE, None);
+    let far_half = vertex_marker_half_extent(&far, viewport, centre, VERTEX_BASE_SCALE, None);
     assert!(far_half > near_half * 10.0, "a marker 100x further away spans ~100x more world units to keep its pixels ({near_half} → {far_half})");
     let near_pixels = near_half / world_units_per_pixel(&near, viewport, near.position.sub(centre).length());
     assert!((near_pixels - WORLD_VERTEX_DOT_PX * 0.5).abs() < 1e-3, "the plain dot is React's 6 px, got {}", near_pixels * 2.0);
-    let mark = vertex_marker_half_extent(&near, viewport, centre, VERTEX_HOVER_SCALE);
+    let mark = vertex_marker_half_extent(&near, viewport, centre, VERTEX_HOVER_SCALE, None);
     assert!(mark > near_half, "a hovered/selected marker is React's larger 11 px mark");
     assert!(far_half > 0.0075, "the old world-unit cross was sub-pixel at this distance");
 }
@@ -5009,6 +5009,7 @@ fn scene_bridge_binds_the_apps_interaction_domain_for_world_picking() {
 /// slots are heap-first rather than an inline `[T; N]` field — and then constructs them on a thread
 /// holding only the fixture's `boundedThreadStackBytes`. `Builder::stack_size` overrides
 /// `RUST_MIN_STACK`, so the repo runner's 128 MiB floor cannot hide a re-inflated frame here.
+#[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn world_interaction_object_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json")).expect("🧱️ the committed fixed-slot-table budget parses");
@@ -6115,7 +6116,7 @@ fn world_component_target_capacity_covers_exact_maximum_width() {
 /// 🤝️ Equal component groups retain their original object ownership through every shared merge mode.
 #[test]
 fn world_component_selection_merge_preserves_remaining_object_projection() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let mut mesh = fixture["mesh"].clone();mesh["componentReferences"] = serde_json::json!({"face":[fixture["source"]["label"]]});
     let mut scene = scene_with_selection_and_domain("{}",Some(("geometry","object")));
     let world = scene.world_3d.as_mut().unwrap();
@@ -6151,7 +6152,7 @@ fn world_native_analytic_wire_preserves_edge_only_scene() {
 }
 
 fn assert_native_original_wire(edge_only: bool) {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
     let mut scene = scene_with_selection_and_domain("{}",Some(("geometry","object")));
     let world = scene.world_3d.as_mut().unwrap();
     world.meshes_json = serde_json::json!([{"id":"wire","data":if edge_only {&fixture["edgeOnly"]["mesh"]}else{&fixture["mesh"]}}]).to_string();
@@ -6254,7 +6255,7 @@ fn world_native_analytic_point_paints_without_component_targeting() {
 /// 🪡️ A wire is primary geometry even when surface outlines and component targeting are disabled.
 #[test]
 fn world_native_analytic_wire_paints_without_surface_outlines() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
     for show_edges in [true,false] {
         let mut scene=scene_with_selection("{}");let world=scene.world_3d.as_mut().unwrap();
         world.meshes_json=serde_json::json!([{"id":"wire","data":fixture["mesh"]}]).to_string();world.instances_json=serde_json::json!([{"id":fixture["instance"],"meshId":"wire"}]).to_string();world.camera_json=fixture["camera"].to_string();
@@ -6270,7 +6271,7 @@ fn world_native_analytic_wire_paints_without_surface_outlines() {
 /// 🖌️ Equal local face groups retain their original object when the selected overlay is scanned.
 #[test]
 fn world_face_selection_overlay_is_scoped_to_original_object() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let mut mesh = fixture["mesh"].clone();mesh["componentReferences"] = serde_json::json!({"face":[fixture["source"]["label"]]});
     let mut scene = scene_with_selection_and_domain("{}",Some(("geometry","object")));
     let world = scene.world_3d.as_mut().unwrap();
@@ -6302,7 +6303,7 @@ fn world_face_selection_overlay_is_scoped_to_original_object() {
 /// 🔐️ The original analytic face scan consumes the fresh Guest source lane and refuses ambiguity.
 #[test]
 fn world_face_selection_overlay_validates_fresh_guest_source_targets() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let refusals: serde_json::Value = serde_json::from_str(include_str!("../../../../📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🧫️fixtures/🎯️analytic-component-target.json")).unwrap();
     let mut rows: Vec<serde_json::Value> = fixture["steps"].as_array().unwrap().iter().map(|step|serde_json::json!({"name":step["merge"],"targets":step["selected"].as_array().unwrap().iter().map(|index|fixture["targets"][index.as_u64().unwrap() as usize].clone()).collect::<Vec<_>>(),"labels":[fixture["source"]["label"]],"selected":step["selected"],"active":step["active"],"groups":step["groups"]})).collect();
     rows.extend(refusals["overlayRefusals"].as_array().unwrap().iter().map(|row|serde_json::json!({"name":row["name"],"targets":row["targets"],"labels":row["labels"],"selected":[],"active":0,"groups":["0"]})));
@@ -6332,7 +6333,7 @@ fn world_face_selection_overlay_validates_fresh_guest_source_targets() {
 /// 🔄️ Changing a nonactive exact face invalidates the original overlay without changing active projections.
 #[test]
 fn world_face_selection_overlay_invalidates_nonactive_source_changes() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let row=&fixture["overlayLifecycle"];
     let mut mesh=fixture["mesh"].clone();mesh["faceIds"]=serde_json::json!([0,1]);mesh["componentReferences"]=serde_json::json!({"face":row["labels"]});
     let mut scene=scene_with_selection_and_domain("{}",Some(("geometry","object")));let world=scene.world_3d.as_mut().unwrap();
@@ -6373,7 +6374,7 @@ fn world_face_selection_overlay_invalidates_nonactive_source_changes() {
 /// 🧽️ A fresh empty original selection snapshot clears each component and hover projection.
 #[test]
 fn world_scene_selection_snapshot_clears_empty_components_and_hover() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let mut state = World3dState::new("surface".into(),"controller".into());
     let original = serde_json::json!({"ids":[fixture["objects"][0]],"gumballSelectionIds":[fixture["targets"][0]],"granularity":"face","componentIds":[0],"activeObjectId":fixture["objects"][0],"hoveredComponent":{"id":0,"objectId":fixture["objects"][0],"mode":"face"}}).to_string();
     sync_world3d_scene_selection(&mut state,&original);
@@ -6394,7 +6395,7 @@ fn world_scene_selection_snapshot_clears_empty_components_and_hover() {
 /// 📍️ The published Scene pivot belongs to the existing gumball target owner and clears with it.
 #[test]
 fn world_native_component_gumball_retains_delivered_pivot() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let mut state=World3dState::new("surface".into(),"controller".into());
     for row in fixture["gumball"]["pivotCases"].as_array().unwrap() {
         sync_world3d_scene_selection(&mut state,&serde_json::json!({"ids":[fixture["objects"][0]],"gumballSelectionIds":[fixture["targets"][0]],"granularity":"face","gumballTarget":row["pivot"]}).to_string());
@@ -6408,7 +6409,7 @@ fn world_native_component_gumball_retains_delivered_pivot() {
 /// 🛠️ Original component gumball capture and publication retain the guest source target lane.
 #[test]
 fn world_native_component_gumball_retains_original_source_targets() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let row = &fixture["gumball"];let object = &fixture["objects"][row["object"].as_u64().unwrap() as usize];
     let expected = serde_json::Value::Array(row["ids"].as_array().unwrap().iter().map(|index|fixture["targets"][index.as_u64().unwrap() as usize].clone()).collect());
     for pivot_case in row["pivotCases"].as_array().unwrap() {
@@ -6466,7 +6467,7 @@ fn world_native_component_gumball_retains_original_source_targets() {
 /// 🕹️ Component gumballs use the original event authority through capture, motion, release and cancellation.
 #[test]
 fn world_native_component_gumball_uses_original_event_authority() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let row=&fixture["gumball"];let object=&fixture["objects"][row["object"].as_u64().unwrap() as usize];
     let targets:Vec<String>=row["ids"].as_array().unwrap().iter().map(|index|fixture["targets"][index.as_u64().unwrap() as usize].as_str().unwrap().to_string()).collect();
     for case in row["authorityCases"].as_array().unwrap() {
@@ -6510,7 +6511,7 @@ fn world_native_component_gumball_uses_original_event_authority() {
 /// 🧮️ One object's source components consume original action credits rather than an arbitrary sixty-four object limit.
 #[test]
 fn world_native_component_gumball_captures_wide_source_selection() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();let row=&fixture["gumball"];
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();let row=&fixture["gumball"];
     let count=row["wideSelection"]["count"].as_u64().unwrap() as usize;let first=row["wideSelection"]["labelStart"].as_str().unwrap().parse::<u64>().unwrap();let object=fixture["objects"][0].as_str().unwrap();
     let labels:Vec<String>=(0..count).map(|index|(first+index as u64).to_string()).collect();let targets:Vec<String>=labels.iter().enumerate().map(|(index,label)|format!("{object}.face.{index}~{}~{label}~{}",fixture["source"]["handle"].as_str().unwrap(),fixture["source"]["revision"].as_str().unwrap())).collect();
     let mut mesh=fixture["mesh"].clone();mesh["indices"]=serde_json::json!((0..count).flat_map(|_|[0,1,2]).collect::<Vec<_>>());mesh["faceIds"]=serde_json::json!((0..count as u32).collect::<Vec<_>>());mesh["componentReferences"]=serde_json::json!({"face":labels});
@@ -6527,7 +6528,7 @@ fn world_native_component_gumball_captures_wide_source_selection() {
 /// 🌊️ A live component gesture keeps its captured targets across a real guest mesh/source refresh.
 #[test]
 fn world_native_component_gumball_survives_live_guest_source_refresh() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️component-selection-merges/🔣️.json")).unwrap();
     let row = &fixture["gumball"];
     let refresh = &row["liveRefresh"];
     let object = &fixture["objects"][row["object"].as_u64().unwrap() as usize];
@@ -6577,6 +6578,10 @@ fn world_native_component_gumball_survives_live_guest_source_refresh() {
             assert!(state.scene_bridge_retired.is_none(), "the superseded snapshot lease finished bounded retirement");
             assert_eq!(state.gumball_selection_ids, targets, "the guest preserves the captured start selection");
             assert!(state.interaction_authority.as_ref().unwrap().gumball.is_some(), "guest source publication retains the live gesture");
+            let revision = state.interaction_revision;
+            sync_world3d_state(&mut state, &scene, bounds);
+            assert_eq!(with_world_step_context(64, |context| step_world3d_scene_bridge(&mut state, context)), World3dSceneBridgeStep::Idle, "an unchanged guest source stages no new bridge");
+            assert_eq!(state.interaction_revision, revision, "an unchanged guest source does not advance view authority");
         }
     }
     let expected = refresh["dispatches"].as_array().unwrap();
@@ -6584,6 +6589,7 @@ fn world_native_component_gumball_survives_live_guest_source_refresh() {
     let mut offset = [0.0; 3];
     for (action, expected) in actions.iter().zip(expected) {
         let args = action.args.as_ref().unwrap();
+        eprintln!("[DEBUG] original live refresh actual={args:?} expected={expected}");
         assert_eq!(args.get("mode").and_then(|value| value.as_str()), row["mode"].as_str());
         assert_eq!(args.get("phase").and_then(|value| value.as_str()), expected["phase"].as_str());
         assert_eq!(args.get("ids").unwrap().as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<Vec<_>>(), targets.iter().map(String::as_str).collect::<Vec<_>>());
@@ -6606,7 +6612,7 @@ fn world_native_component_gumball_survives_live_guest_source_refresh() {
 /// 🖱️ Primary points and wires remain selectable and hoverable in the original object domain.
 #[test]
 fn world_native_primary_geometry_object_pick_uses_original_domain() {
-    let wire: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
+    let wire: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
     let points: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️vertex-provenance/🔣️.json")).unwrap();
     let point = &points["cases"].as_array().unwrap().iter().find(|row|row["kind"] == "point").unwrap()["points"][0];
     let point_mesh = serde_json::json!({"positions":point,"indices":[],"vertexIds":[0],"edgePositions":[],"edgeIds":[]});
@@ -6704,7 +6710,7 @@ fn world_native_primary_geometry_gpu_upload_preserves_original_zero_indices() {
         Err(error) if error.starts_with("offscreen adapter:") => { println!("[DEBUG] originalPrimaryGpuAdapterUnavailable {error}"); return; }
         Err(error) => panic!("original primary GPU initialization {error}"),
     };
-    let wire: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
+    let wire: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🎯️analytic-wire-picking/🔣️.json")).unwrap();
     let points: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🧊️3d/📐️brep/⚙️engine/🧫️fixtures/🎯️vertex-provenance/🔣️.json")).unwrap();
     let point = &points["cases"].as_array().unwrap().iter().find(|row| row["kind"] == "point").unwrap()["points"][0];
     let point_mesh = serde_json::json!({"positions":point,"indices":[],"vertexIds":[0],"edgePositions":[],"edgeIds":[]});
@@ -6726,7 +6732,11 @@ fn world_native_primary_geometry_gpu_upload_preserves_original_zero_indices() {
                 Err(error) => { result = Err(error); break; }
             }
         }
-        if result.is_ok() { assert_eq!(gpu.mesh_store_mut().get_versioned(name, version).unwrap().index_count, 0); }
+        if result.is_ok() {
+            let resident = gpu.mesh_store_mut().get_versioned(name, version).unwrap();
+            assert_eq!(resident.index_count, 0);
+            assert_eq!(resident.index_buffer.size(), 0, "an original primitive owns no fabricated index bytes");
+        }
         for _ in 0..4096 { if gpu.close_mesh_upload_step() { break; } }
         assert!(gpu.mesh_upload_terminal_is_empty());
         for _ in 0..4096 { if gpu.retire_mesh_exact_step(name, version).unwrap() { break; } }
@@ -6830,3 +6840,481 @@ fn a_face_scalar_field_becomes_one_constant_colour_attribute_per_triangle_and_re
     assert_eq!(attribute.values.len(), 4);
 }
 //#endregion 🔖️Modelling
+
+//#region 🔖️ModellingWgpu
+const UNIT_CUBE_MESHES: &str = r#"[{"id":"cube","data":{"positions":[0,0,0,1,0,0,1,1,0,0,1,0,0,0,1,1,0,1,1,1,1,0,1,1],"indices":[0,2,1,0,3,2,4,5,6,4,6,7,0,1,5,0,5,4,3,7,6,3,6,2,0,4,7,0,7,3,1,2,6,1,6,5]}}]"#;
+
+fn modelling_cube_scene(options: Option<ui_wgpu::wgpu::World3dModellingOptions>) -> UiComponentSceneNode {
+    let mut scene = scene_with_selection("{}");
+    let world = scene.world_3d.as_mut().expect("world fixture");
+    world.meshes_json = UNIT_CUBE_MESHES.into();
+    world.instances_json = r#"[{"id":"obj-1","meshId":"cube","position":[0,0,0],"rotation":[0,0,0,1],"scale":[1,1,1]}]"#.into();
+    world.modelling_options = options;
+    scene
+}
+
+fn paint_world(scene: &UiComponentSceneNode, state: &mut World3dState, gpu: &mut World3dBuildContext, theme: &ui_wgpu::wgpu::Theme, bounds: Rect) -> (ui_wgpu::wgpu::DrawList, ui_wgpu::wgpu::FontAtlas) {
+    let mut draw = ui_wgpu::wgpu::DrawList::default();
+    draw.set_screen_height(bounds.h);
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
+    {
+        let mut ctx = ui_wgpu::wgpu::widgets::WidgetContext {
+            draw: &mut draw,
+            overlay: None,
+            atlas: &mut atlas,
+            icons: None,
+            input: &mut input,
+            theme,
+            scroll_offsets: &mut scroll,
+            collapsed_sections: &mut collapsed,
+            open_selects: &mut selects,
+            interaction_maps: None,
+            pick_clip: None,
+            viewport_height: bounds.h,
+        };
+        render_world_3d(scene, bounds, &mut ctx, state, gpu, World3dShadowProfile::World);
+    }
+    (draw, atlas)
+}
+
+fn painted_pass(scene: &UiComponentSceneNode, state: &mut World3dState, theme: &ui_wgpu::wgpu::Theme, bounds: Rect, ready: impl Fn(&ScenePass3d) -> bool) -> ui_wgpu::wgpu::DrawList {
+    let mut gpu = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    drive_scene_bridge(state, scene, bounds);
+    for turn in 0..4_096 {
+        let (draw, _) = paint_world(scene, state, &mut gpu, theme, bounds);
+        if draw.scene_passes.last().is_some_and(&ready) {
+            println!("[DEBUG] Original modelling pass ready on bounded turn={turn}");
+            return draw;
+        }
+    }
+    panic!("the world pass never satisfied its readiness predicate");
+}
+
+fn section_roles(draws: &[SceneDraw3d]) -> Vec<(String, ui_wgpu::wgpu::SceneSectionRole3d)> {
+    draws.iter().flat_map(|draw| draw.instances.iter().map(|instance| (draw.mesh_key.clone(), instance.material.section))).collect()
+}
+
+#[test]
+fn a_capped_section_clips_the_scene_and_brackets_the_cap_plane_between_two_stencil_toggles() {
+    use ui_wgpu::wgpu::SceneSectionRole3d as Role;
+    let fixture = modelling_fixture();
+    let row = &fixture["sectionPlanes"][1];
+    let section: ui_wgpu::wgpu::World3dSection = serde_json::from_value(row["section"].clone()).expect("fixture section");
+    let options = ui_wgpu::wgpu::World3dModellingOptions { section: Some(section), ..Default::default() };
+    let theme = ui_wgpu::wgpu::Theme::default();
+    let bounds = Rect::new(0.0, 0.0, 320.0, 240.0);
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    let draw = painted_pass(&modelling_cube_scene(Some(options)), &mut state, &theme, bounds, |pass| pass.translucent_draws.iter().any(|draw| draw.instances.iter().any(|instance| instance.material.section == Role::Cap)));
+    let pass = draw.scene_passes.last().unwrap();
+    let want: Vec<f32> = row["plane"].as_array().unwrap().iter().map(|value| value.as_f64().unwrap() as f32).collect();
+    assert_eq!(pass.section_clip.map(|plane| plane.to_vec()), Some(want), "the pass carries the fixture's three.js clip plane");
+    assert_eq!(section_roles(&pass.draws), vec![("cube".to_string(), Role::Clipped)], "every scene instance is tested against the plane");
+    let roles = section_roles(&pass.translucent_draws);
+    assert_eq!(roles, vec![("cube".to_string(), Role::StencilToggle), ("gumball-plane".to_string(), Role::Cap), ("cube".to_string(), Role::StencilToggle)], "toggle, cap, toggle restores the stencil bit");
+    let cap = pass.translucent_draws.iter().flat_map(|draw| &draw.instances).find(|instance| instance.material.section == Role::Cap).unwrap();
+    let expected = theme.celebrate[1];
+    assert_eq!(cap.color, [expected.r, expected.g, expected.b, 1.0], "the cap takes the secondary tone from the live theme");
+    let axis = cap.model.transform_point(Vec3::new(0.0, 1.0, 0.0)).sub(cap.model.transform_point(Vec3::ZERO));
+    let normal = [1.0, 1.0, 0.0].map(|component: f32| component / 2.0_f32.sqrt());
+    for (got, want) in [axis.x, axis.y, axis.z].into_iter().zip(normal) {
+        assert!((got / axis.length() - want).abs() < 1e-4, "the cap plane stands on the section normal");
+    }
+    let centre = cap.model.transform_point(Vec3::ZERO);
+    assert_eq!([centre.x, centre.y, centre.z], [1.0, 2.0, 3.0], "the cap is centred on the section origin");
+    retire_bridged_surface(&mut state);
+}
+
+#[test]
+fn an_open_section_clips_without_a_cap_and_no_section_changes_nothing() {
+    use ui_wgpu::wgpu::SceneSectionRole3d as Role;
+    let theme = ui_wgpu::wgpu::Theme::default();
+    let bounds = Rect::new(0.0, 0.0, 320.0, 240.0);
+    let open = ui_wgpu::wgpu::World3dModellingOptions { section: Some(ui_wgpu::wgpu::World3dSection::new([0.0, 0.0, 0.5], [0.0, 0.0, 1.0])), ..Default::default() };
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    let draw = painted_pass(&modelling_cube_scene(Some(open)), &mut state, &theme, bounds, |pass| !pass.draws.is_empty());
+    let pass = draw.scene_passes.last().unwrap();
+    assert_eq!(pass.section_clip, Some([-0.0, -0.0, -1.0, 0.5]));
+    assert_eq!(section_roles(&pass.draws), vec![("cube".to_string(), Role::Clipped)]);
+    assert!(section_roles(&pass.translucent_draws).iter().all(|(_, role)| *role == Role::None), "an open section draws no stencil or cap");
+    retire_bridged_surface(&mut state);
+    let mut plain = World3dState::new("surface-1".into(), "controller-1".into());
+    let draw = painted_pass(&modelling_cube_scene(None), &mut plain, &theme, bounds, |pass| !pass.draws.is_empty());
+    let pass = draw.scene_passes.last().unwrap();
+    assert_eq!(pass.section_clip, None);
+    assert!(section_roles(&pass.draws).into_iter().chain(section_roles(&pass.translucent_draws)).all(|(_, role)| role == Role::None));
+    retire_bridged_surface(&mut plain);
+}
+
+fn overlay_vertices(draw: &ui_wgpu::wgpu::DrawList) -> Vec<[f32; 2]> {
+    draw.layers.iter().flat_map(|layer| layer.overlay_vector_vertices.iter().map(|vertex| vertex.position)).collect()
+}
+
+fn overlay_glyphs(draw: &ui_wgpu::wgpu::DrawList) -> usize {
+    draw.layers.iter().flat_map(|layer| &layer.overlay_ui_instances).filter(|instance| instance.uv_rect != [0.0, 0.0, 1.0, 1.0]).count()
+}
+
+fn annotation_scene(layer: serde_json::Value) -> UiComponentSceneNode {
+    let mut scene = modelling_cube_scene(None);
+    scene.world_3d.as_mut().unwrap().annotations = Some(semio_framework_pack_json::from_json_str(&layer.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("annotation layer"));
+    scene
+}
+
+#[test]
+fn annotations_paint_the_shared_projection_as_screen_constant_overlay_geometry() {
+    let fixture = modelling_fixture();
+    let layer = fixture["annotationProjection"]["layer"].clone();
+    let scene = annotation_scene(layer.clone());
+    let theme = ui_wgpu::wgpu::Theme::default();
+    let bounds = Rect::new(40.0, 30.0, 640.0, 480.0);
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    let draw = painted_pass(&scene, &mut state, &theme, bounds, |pass| !pass.draws.is_empty());
+    let pass = draw.scene_passes.last().unwrap();
+    let typed: ui_wgpu::wgpu::World3dAnnotationLayer = semio_framework_pack_json::from_json_str(&layer.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let projected = ui_wgpu::wgpu::project_world3d_annotations(&typed, &pass.view_proj, bounds.w, bounds.h);
+    assert!(projected.iter().any(|entry| entry.visible) && projected.iter().any(|entry| !entry.visible));
+    let vertices = overlay_vertices(&draw);
+    let near = |x: f64, y: f64| vertices.iter().any(|vertex| (f64::from(vertex[0]) - (x + f64::from(bounds.x))).abs() < 1.0 && (f64::from(vertex[1]) - (y + f64::from(bounds.y))).abs() < 1.0);
+    for entry in projected.iter().filter(|entry| entry.visible) {
+        for line in &entry.lines {
+            assert!(near(line[0], line[1]) && near(line[2], line[3]), "{}: the projected line is painted at its screen position", entry.id);
+        }
+        for arrow in &entry.arrows {
+            assert!(near(arrow.x, arrow.y), "{}: the arrow tip is painted on its anchor", entry.id);
+        }
+    }
+    let hidden_only = projected.iter().filter(|entry| !entry.visible).count();
+    assert!(hidden_only >= 2);
+    let glyphs = overlay_glyphs(&draw);
+    let visible_text: usize = typed.items.iter().zip(&projected).filter(|(_, entry)| entry.visible && entry.label.is_some()).map(|(item, _)| item.text().resolve("en").chars().count()).sum();
+    assert_eq!(glyphs, visible_text, "exactly the visible labels are written, in English by default");
+    retire_bridged_surface(&mut state);
+}
+
+#[test]
+fn annotation_sizes_stay_in_screen_pixels_when_the_camera_moves_away() {
+    let layer = serde_json::json!({"items":[{"kind":"dimension","id":"d","from":[0,0,0],"to":[1,0,0],"offset":[0,-0.2,0],"text":{"en":"1","de":"1"}}]});
+    let theme = ui_wgpu::wgpu::Theme::default();
+    let bounds = Rect::new(0.0, 0.0, 640.0, 480.0);
+    let mut arrow_sizes = Vec::new();
+    for distance in [4.0, 40.0] {
+        let mut scene = annotation_scene(layer.clone());
+        scene.world_3d.as_mut().unwrap().camera_json = format!(r#"{{"position":[{distance},{distance},{distance}],"target":[0.0,0.0,0.0],"up":[0.0,0.0,1.0],"fov":45.0}}"#);
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        let draw = painted_pass(&scene, &mut state, &theme, bounds, |pass| !pass.draws.is_empty());
+        let typed: ui_wgpu::wgpu::World3dAnnotationLayer = semio_framework_pack_json::from_json_str(&layer.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let projected = ui_wgpu::wgpu::project_world3d_annotations(&typed, &draw.scene_passes.last().unwrap().view_proj, bounds.w, bounds.h);
+        let arrows = &projected[0].arrows;
+        assert_eq!(arrows.len(), 2, "the original dimension projects both arrowheads");
+        let triangles: Vec<_> = draw.layers.iter().flat_map(|layer| layer.overlay_vector_vertices.iter().map(|vertex| vertex.position)).collect();
+        for expected in arrows {
+            let arrow = triangles.chunks_exact(3).find(|triangle| (f64::from(triangle[0][0]) - expected.x).abs() < 0.01 && (f64::from(triangle[0][1]) - expected.y).abs() < 0.01).expect("the dimension arrowhead is painted at its projected anchor");
+            let tip_to_base = ((arrow[1][0] + arrow[2][0]) / 2.0 - arrow[0][0]).hypot((arrow[1][1] + arrow[2][1]) / 2.0 - arrow[0][1]);
+            arrow_sizes.push(tip_to_base);
+        }
+        retire_bridged_surface(&mut state);
+    }
+    assert_eq!(arrow_sizes.len(), 4);
+    assert!(arrow_sizes.iter().all(|size| (size - 9.0).abs() < 0.01), "both arrowheads are nine pixels at every distance: {arrow_sizes:?}");
+}
+
+#[test]
+fn annotation_text_follows_the_active_language() {
+    let layer = serde_json::json!({"items":[{"kind":"leader","id":"m","anchor":[0.5,0.5,0.5],"labelOffsetPx":[10,10],"text":{"en":"Centre point","de":"Mitte"}}]});
+    let theme = ui_wgpu::wgpu::Theme::default();
+    let bounds = Rect::new(0.0, 0.0, 640.0, 480.0);
+    let mut counts = Vec::new();
+    for german in [false, true] {
+        let mut scene = annotation_scene(layer.clone());
+        scene.world_3d.as_mut().unwrap().annotations = scene.world_3d.as_ref().unwrap().annotations.clone().map(|mut layer| {
+            if let ui_wgpu::wgpu::World3dAnnotation::Leader(leader) = &mut layer.items[0] {
+                leader.text = ui_wgpu::wgpu::World3dText::new("Centre point", "Mitte");
+            }
+            layer
+        });
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.set_modelling_locale(german);
+        let draw = painted_pass(&scene, &mut state, &theme, bounds, |pass| !pass.draws.is_empty());
+        counts.push(overlay_glyphs(&draw));
+        retire_bridged_surface(&mut state);
+    }
+    assert_eq!(counts, vec!["Centre point".chars().count(), "Mitte".chars().count()]);
+}
+
+fn legend_scene(values: serde_json::Value) -> UiComponentSceneNode {
+    let mut scene = modelling_cube_scene(None);
+    scene.world_3d.as_mut().unwrap().scalar_field = Some(field_named("scalar-vertex-inferno", values));
+    let world = scene.world_3d.as_mut().unwrap();
+    world.scalar_field.as_mut().unwrap().mesh_id = "cube".into();
+    scene
+}
+
+fn ramp_slices(draw: &ui_wgpu::wgpu::DrawList) -> Vec<[f32; 4]> {
+    draw.layers.iter().flat_map(|layer| &layer.overlay_ui_instances).filter(|instance| instance.uv_rect == [0.0, 0.0, 1.0, 1.0] && instance.rect[2] == 12.0).map(|instance| instance.color).collect()
+}
+
+#[test]
+fn an_applied_scalar_field_paints_its_legend_ramp_top_down_in_the_fixture_ramp_colours() {
+    let theme = ui_wgpu::wgpu::Theme::default();
+    let bounds = Rect::new(0.0, 0.0, 640.0, 480.0);
+    let scene = legend_scene(serde_json::json!([0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 1.0]));
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    let draw = painted_pass(&scene, &mut state, &theme, bounds, |pass| !pass.draws.is_empty());
+    assert_eq!(state.scalar_field_status(), World3dScalarFieldStatus::Applied);
+    let slices = ramp_slices(&draw);
+    assert_eq!(slices.len(), 32);
+    let ramp = ui_wgpu::wgpu::World3dColorRamp::Inferno;
+    let colour = |t: f64| {
+        let [r, g, b] = ramp.sample(t);
+        let linear = ui_wgpu::wgpu::Rgba::from_srgb8(r, g, b, 255);
+        [linear.r, linear.g, linear.b, 1.0]
+    };
+    assert_eq!(slices[0], colour(1.0 - 0.5 / 32.0), "the top of the bar is the range maximum");
+    assert_eq!(slices[31], colour(0.5 / 32.0), "the bottom of the bar is the range minimum");
+    let fixture = modelling_fixture();
+    for sample in fixture["ramps"]["inferno"]["samples"].as_array().unwrap() {
+        let hex = sample["hex"].as_str().unwrap();
+        let [r, g, b] = ramp.sample(sample["t"].as_f64().unwrap());
+        assert_eq!(format!("#{r:02x}{g:02x}{b:02x}"), hex, "the legend ramp is the fixture's three.js ramp");
+    }
+    let rects: Vec<[f32; 4]> = draw.layers.iter().flat_map(|layer| &layer.overlay_ui_instances).filter(|instance| instance.uv_rect == [0.0, 0.0, 1.0, 1.0] && instance.rect[2] == 12.0).map(|instance| instance.rect).collect();
+    assert!(rects.windows(2).all(|pair| pair[1][1] > pair[0][1]), "slices run from the top downwards");
+    assert!(rects[0][0] >= 8.0 && rects[31][1] + rects[31][3] <= bounds.h - 8.0, "the legend sits inside the viewport's lower-left margin");
+    retire_bridged_surface(&mut state);
+}
+
+#[test]
+fn a_scalar_field_that_does_not_fit_its_mesh_announces_the_mismatch_instead_of_a_legend() {
+    let theme = ui_wgpu::wgpu::Theme::default();
+    let bounds = Rect::new(0.0, 0.0, 640.0, 480.0);
+    let scene = legend_scene(serde_json::json!([0.0, 1.0]));
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    let draw = painted_pass(&scene, &mut state, &theme, bounds, |pass| !pass.draws.is_empty());
+    assert_eq!(state.scalar_field_status(), World3dScalarFieldStatus::Mismatch);
+    assert!(ramp_slices(&draw).is_empty());
+    assert_eq!(overlay_glyphs(&draw), ui_wgpu::wgpu::world3d_modelling_strings("en").mismatch.chars().count());
+    retire_bridged_surface(&mut state);
+    let mut german = World3dState::new("surface-1".into(), "controller-1".into());
+    german.set_modelling_locale(true);
+    let draw = painted_pass(&scene, &mut german, &theme, bounds, |pass| !pass.draws.is_empty());
+    assert_eq!(overlay_glyphs(&draw), ui_wgpu::wgpu::world3d_modelling_strings("de").mismatch.chars().count());
+    retire_bridged_surface(&mut german);
+}
+
+#[test]
+fn highlight_tokens_recolour_exactly_their_granularity_through_the_live_theme() {
+    let highlight: ui_wgpu::wgpu::World3dHighlight = serde_json::from_value(serde_json::json!({
+        "face": {"hover": "info", "selected": "secondary"},
+        "edge": {"hover": "danger"},
+        "vertex": {"selected": "success", "widthPx": 8}
+    }))
+    .unwrap();
+    let mut custom = ui_wgpu::wgpu::Theme::default();
+    custom.celebrate[1] = ui_wgpu::wgpu::Rgba::new(0.2, 0.4, 0.6, 1.0);
+    custom.error = ui_wgpu::wgpu::Rgba::new(0.9, 0.1, 0.1, 1.0);
+    custom.success = ui_wgpu::wgpu::Rgba::new(0.1, 0.9, 0.1, 1.0);
+    for theme in [ui_wgpu::wgpu::Theme::default(), custom] {
+        let paint = world3d_sub_element_paint_native(&theme, Some(&highlight));
+        assert_eq!(paint.face_select, Some([theme.celebrate[1].r, theme.celebrate[1].g, theme.celebrate[1].b, 1.0]));
+        assert_eq!(paint.edge_hover, Some([theme.error.r, theme.error.g, theme.error.b, 1.0]));
+        assert_eq!(paint.vertex_select, Some([theme.success.r, theme.success.g, theme.success.b, 1.0]));
+        assert_eq!((paint.edge_select, paint.vertex_hover, paint.vertex_mark_px), (None, None, Some(8.0)), "an absent token keeps the built-in palette; the vertex width becomes the mark size");
+        let selected: HashSet<String> = ["1".to_string()].into();
+        let none = HashSet::new();
+        assert_eq!(component_overlay_color("1", &selected, &none, &None, (paint.face_select, paint.face_hover)).map(|(color, _)| color), paint.face_select);
+        assert_eq!(component_overlay_color("1", &selected, &none, &None, (paint.edge_select, paint.edge_hover)).map(|(color, _)| color), Some([0.35, 0.75, 1.0, 1.0]), "the edge selection token is absent: the built-in palette stays");
+        let hovered = Some("2".to_string());
+        assert_eq!(component_overlay_color("2", &none, &none, &hovered, (paint.edge_select, paint.edge_hover)).map(|(color, _)| color), Some([theme.error.r, theme.error.g, theme.error.b, 0.9]));
+        assert_eq!(face_overlay_color(&paint, 2), [theme.celebrate[1].r, theme.celebrate[1].g, theme.celebrate[1].b, 0.62]);
+    }
+    assert_eq!(world3d_sub_element_paint_native(&ui_wgpu::wgpu::Theme::default(), None), WorldSubElementPaint::default(), "no highlight leaves every default alone");
+    assert_eq!(face_overlay_color(&WorldSubElementPaint::default(), 1), [0.35, 0.75, 1.0, 0.48]);
+}
+
+#[test]
+fn every_tone_resolves_to_an_opaque_theme_colour() {
+    let theme = ui_wgpu::wgpu::Theme::default();
+    for tone in ui_wgpu::wgpu::World3dTone::ALL {
+        let color = world3d_tone_rgba(&theme, *tone);
+        assert_eq!(color[3], 1.0, "{tone:?}");
+        assert!(color[..3].iter().all(|channel| (0.0..=1.0).contains(channel)));
+    }
+    assert_eq!(world3d_tone_rgba(&theme, ui_wgpu::wgpu::World3dTone::Neutral), [theme.text.r, theme.text.g, theme.text.b, 1.0]);
+}
+#[test]
+fn the_modelling_overlays_publish_a_text_alternative_in_the_active_language() {
+    let theme = ui_wgpu::wgpu::Theme::default();
+    let bounds = Rect::new(0.0, 0.0, 640.0, 480.0);
+    let mut scene = legend_scene(serde_json::json!([0.0, 0.1, 0.2, 0.3, null, 0.5, 0.6, 1.0]));
+    scene.world_3d.as_mut().unwrap().annotations = Some(semio_framework_pack_json::from_json_str(&modelling_fixture()["valid"][0]["value"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture layer"));
+    let mut labels = Vec::new();
+    for german in [false, true] {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.set_modelling_locale(german);
+        let _ = painted_pass(&scene, &mut state, &theme, bounds, |pass| !pass.draws.is_empty());
+        let entries = world3d_modelling_accessibility(&state, &scene);
+        assert_eq!(entries[0].role, "list");
+        assert!(entries.iter().filter(|entry| entry.role == "listitem" && entry.depth == 1).count() >= 4, "one list item per annotation");
+        assert!(entries.iter().all(|entry| !entry.polite), "an applied legend is not a live region");
+        labels.push(entries.iter().map(|entry| entry.label.clone()).collect::<Vec<_>>());
+        retire_bridged_surface(&mut state);
+    }
+    assert_eq!(labels[0][0], "Measurements");
+    assert_eq!(labels[1][0], "Messungen");
+    assert_eq!(labels[0][1], "Dimension: Width 40 mm");
+    assert_eq!(labels[1][1], "Bemaßung: Breite 40 mm");
+    assert!(labels[0].contains(&"Legend: Wall thickness".to_string()) && labels[0].contains(&"No data".to_string()) && labels[0].contains(&"0.25 mm".to_string()));
+    assert!(labels[1].contains(&"Legende: Wandstaerke".to_string()) && labels[1].contains(&"Keine Daten".to_string()) && labels[1].contains(&"0,25 mm".to_string()));
+    let mut mismatch_state = World3dState::new("surface-1".into(), "controller-1".into());
+    let mismatch = legend_scene(serde_json::json!([0.0, 1.0]));
+    let _ = painted_pass(&mismatch, &mut mismatch_state, &theme, bounds, |pass| !pass.draws.is_empty());
+    let entries = world3d_modelling_accessibility(&mismatch_state, &mismatch);
+    assert_eq!(entries.len(), 1);
+    assert_eq!((entries[0].role, entries[0].polite, entries[0].label.as_str()), ("status", true, "The scalar field does not match the mesh"));
+    retire_bridged_surface(&mut mismatch_state);
+}
+/// 🧊️ Renders one painted world draw list through the real prepared pipeline on a headless GPU and reads the pixels back, `None` when the machine has no adapter.
+#[cfg(not(target_arch = "wasm32"))]
+fn render_on_gpu(scene: &UiComponentSceneNode, state: &mut World3dState, theme: &ui_wgpu::wgpu::Theme, size: u32, ready: impl Fn(&ScenePass3d) -> bool) -> Option<Vec<u8>> {
+    use semio_framework_job::{InteractiveJob, StepOutcome};
+    use ui_wgpu::wgpu::draw::{RasterTextureCleanupStep, RasterTextureWitness};
+    use ui_wgpu::wgpu::{GpuContext, PreparedRasterKeepCursorV1, PreparedRasterKeepStepV1, PreparedRenderGate, PreparedRenderInput, PreparedRenderJob, UiPresentToken};
+    let source = match semio_framework_async::block_on(GpuContext::headless(1, 1)) {
+        Ok(source) => source,
+        Err(error) if error.starts_with("offscreen adapter:") => return None,
+        Err(error) => panic!("headless GPU {error}"),
+    };
+    let bounds = Rect::new(0.0, 0.0, size as f32, size as f32);
+    let mut resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
+    drive_scene_bridge(state, scene, bounds);
+    let mut draw = None;
+    let mut readied = false;
+    for _ in 0..512 {
+        let (painted, _) = paint_world(scene, state, &mut resources, theme, bounds);
+        let ready = painted.scene_passes.last().is_some_and(&ready);
+        draw = Some(painted);
+        if ready {
+            readied = true;
+            break;
+        }
+    }
+    assert!(readied, "the world pass never satisfied its readiness predicate");
+    let draw = draw.expect("a painted frame");
+    let mut input = PreparedRenderInput::try_new(7, 1, draw, None, 0.0).unwrap_or_else(|rejected| panic!("prepared input refused: {}", rejected.fault()));
+    while !resources.append_step(&mut input).unwrap_or_else(|_| panic!("world resources refused")) {}
+    let mut job = PreparedRenderJob::try_new(input).unwrap_or_else(|rejected| panic!("prepared job refused: {}", rejected.fault()));
+    let mut packet = None;
+    for _ in 0..8_192 {
+        match with_world_step_context(1_000, |context| job.step(context)) {
+            StepOutcome::Yield => {}
+            mut outcome @ StepOutcome::Complete(_) => {
+                packet = job.take_packet();
+                InteractiveJob::begin_close(&mut job);
+                while outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES) != semio_framework_job::JobPayloadCloseStep::Complete {}
+                break;
+            }
+            other => panic!("prepared job ended in {other:?}: {:?}", job.fault()),
+        }
+    }
+    while !PreparedRenderJob::close_step(&mut job) {}
+    let mut packet = packet.expect("a prepared packet");
+    let mut gpu = source.offscreen(size, size).expect("offscreen target");
+    gpu.begin_prepared(&UiPresentToken::mint_for_current_thread(), &PreparedRenderGate::default(), &packet, packet.scene_revision(), packet.preview_generation()).expect("packet admitted");
+    let witness = RasterTextureWitness { scene_revision: packet.scene_revision(), preview_generation: packet.preview_generation(), operation: 1 };
+    gpu.begin_raster_ownership(witness).expect("raster ownership");
+    let mut keep = PreparedRasterKeepCursorV1::default();
+    loop {
+        match packet.raster_keep_step(&mut keep) {
+            PreparedRasterKeepStepV1::Pending => {}
+            PreparedRasterKeepStepV1::Key(key) => gpu.publish_raster_ownership(witness, key).expect("raster key"),
+            PreparedRasterKeepStepV1::Complete => {
+                gpu.seal_raster_ownership(witness).expect("raster seal");
+                break;
+            }
+        }
+    }
+    for index in 0..packet.uploads().len() {
+        while !gpu.apply_prepared_upload_step(&packet, index, witness, witness).expect("upload step") {}
+    }
+    let mut cursor = gpu.begin_prepared_present(&packet, witness).expect("present cursor");
+    while !gpu.prepared_present_step(&packet, &mut cursor).expect("present step") {
+        assert!(gpu.take_missing_world_mesh().is_none(), "every drawn mesh is resident");
+    }
+    let mut readback = gpu.begin_prepared_readback(&cursor).expect("readback");
+    while !gpu.prepared_readback_step(&mut readback).expect("readback step") {}
+    let rgba = readback.take_rgba().expect("pixels");
+    cursor.begin_close();
+    while !cursor.close_step() {}
+    while !gpu.abort_presented_rasters_step(witness).expect("abort rasters") {}
+    while !matches!(gpu.close_raster_upload_step(), RasterTextureCleanupStep::Complete) {}
+    while !gpu.close_mesh_upload_step() {}
+    while !gpu.close_raster_table_step().expect("raster table") {}
+    while !gpu.close_mesh_table_step() {}
+    while !packet.retire_step() {}
+    Some(rgba)
+}
+
+fn top_camera(scene: &mut UiComponentSceneNode) {
+    scene.world_3d.as_mut().unwrap().camera_json = r#"{"position":[0.5,0.5,6.0],"target":[0.5,0.5,0.5],"up":[0.0,1.0,0.0],"fov":30.0}"#.into();
+}
+
+fn side_camera(scene: &mut UiComponentSceneNode) {
+    scene.world_3d.as_mut().unwrap().camera_json = r#"{"position":[6.0,0.5,0.5],"target":[0.5,0.5,0.5],"up":[0.0,0.0,1.0],"fov":30.0}"#.into();
+}
+
+fn pixel(rgba: &[u8], size: u32, x: u32, y: u32) -> [u8; 4] {
+    let at = ((y * size + x) * 4) as usize;
+    [rgba[at], rgba[at + 1], rgba[at + 2], rgba[at + 3]]
+}
+
+fn distance(left: [u8; 4], right: [u8; 4]) -> i32 {
+    (0..3).map(|channel| (i32::from(left[channel]) - i32::from(right[channel])).abs()).sum()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn on_a_real_gpu_a_section_removes_the_far_half_and_the_cap_closes_the_cut_without_leaking_stencil() {
+    use ui_wgpu::wgpu::SceneSectionRole3d as Role;
+    const SIZE: u32 = 128;
+    let theme = ui_wgpu::wgpu::Theme::default();
+    let section = |cap: bool| {
+        let section = ui_wgpu::wgpu::World3dSection::new([0.5, 0.5, 0.5], [0.0, 0.0, 1.0]);
+        Some(ui_wgpu::wgpu::World3dModellingOptions { section: Some(if cap { section.capped(ui_wgpu::wgpu::World3dTone::Danger) } else { section }), ..Default::default() })
+    };
+    let render = |options: Option<ui_wgpu::wgpu::World3dModellingOptions>, camera: fn(&mut UiComponentSceneNode)| -> Option<Vec<u8>> {
+        let mut scene = modelling_cube_scene(options.clone());
+        camera(&mut scene);
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        let capped = options.as_ref().and_then(|options| options.section).is_some_and(|section| section.cap.is_some());
+        let pixels = render_on_gpu(&scene, &mut state, &theme, SIZE, |pass| !pass.draws.is_empty() && (!capped || pass.translucent_draws.iter().any(|draw| draw.instances.iter().any(|instance| instance.material.section == Role::Cap))));
+        retire_bridged_surface(&mut state);
+        pixels
+    };
+    let Some(whole) = render(None, top_camera) else {
+        println!("[DEBUG] sectionGpuAdapterUnavailable");
+        return;
+    };
+    let open = render(section(false), top_camera).expect("same adapter");
+    let capped = render(section(true), top_camera).expect("same adapter");
+    let background = pixel(&whole, SIZE, 3, 3);
+    let centre = (SIZE / 2, SIZE / 2);
+    assert_ne!(pixel(&whole, SIZE, centre.0, centre.1), background, "the whole cube covers the image centre");
+    let tone = theme.error;
+    let cap_pixel = pixel(&capped, SIZE, centre.0, centre.1);
+    assert!(distance(cap_pixel, pixel(&open, SIZE, centre.0, centre.1)) > 60, "the cap changes the cut: {cap_pixel:?} against {:?}", pixel(&open, SIZE, centre.0, centre.1));
+    let dominant = |channels: [f32; 3]| (0..3).max_by(|a, b| channels[*a].total_cmp(&channels[*b])).unwrap();
+    assert_eq!(dominant([f32::from(cap_pixel[0]), f32::from(cap_pixel[1]), f32::from(cap_pixel[2])]), dominant([tone.r, tone.g, tone.b]), "the cap is painted in the danger tone");
+    for (x, y) in [(3, 3), (SIZE - 4, 3), (3, SIZE - 4), (SIZE - 4, SIZE - 4), (SIZE / 2, 6)] {
+        assert_eq!(pixel(&capped, SIZE, x, y), pixel(&open, SIZE, x, y), "outside the cube the capped render equals the open render at ({x}, {y}): the stencil bit never leaks");
+    }
+    let side_whole = render(None, side_camera).expect("same adapter");
+    let side_cut = render(section(false), side_camera).expect("same adapter");
+    let side_background = pixel(&side_whole, SIZE, 3, 3);
+    let (x, upper, lower) = (SIZE / 2, SIZE / 2 - 12, SIZE / 2 + 12);
+    assert_ne!(pixel(&side_whole, SIZE, x, upper), side_background, "the upper half of the cube is drawn without the section");
+    assert_eq!(pixel(&side_cut, SIZE, x, upper), side_background, "the section removes the side its normal points to");
+    assert_eq!(pixel(&side_cut, SIZE, x, lower), pixel(&side_whole, SIZE, x, lower), "the kept half is untouched");
+    println!("[DEBUG] sectionGpu adapter=true clipped=true capped=true stencilRestored=true");
+}
+//#endregion 🔖️ModellingWgpu

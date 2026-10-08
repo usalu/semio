@@ -19,7 +19,7 @@ pub const STYLES_REL_TARGET: &str = "styles.xml";
 pub const REL_TYPE_STYLES: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles";
 /// 🏅️ ISO/IEC 29500-1 Strict's styles relationship type — the exact counterpart of
 /// [`STRICT_REL_TYPE_OFFICE_DOCUMENT`], and needed for the same reason. A package that has been
-/// stamped Strict (`📏️strict`'s `set-relationship-base`/`set-snapshot`) carries THIS type on its
+/// stamped Strict (`📏️strict`'s `set-relationship-base`/`set-main-namespace`) carries THIS type on its
 /// styles relationship and never the transitional one, so a writer that recognizes only
 /// [`REL_TYPE_STYLES`] concludes the package has no styles relationship and appends a second,
 /// transitional-typed one beside the strict one it just failed to see — real package corruption,

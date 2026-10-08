@@ -110,9 +110,9 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// doc for why this exists as one owned slice instead of six separate `register_subset_validator`
 /// calls.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn step_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
-    use semio_framework_plugin::subset_validator_entry_of;
-    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
+fn step_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
+    use semio_framework_plugin::io::subset_validator_entry_of;
+    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
     ENTRIES
         .get_or_init(|| {
             vec![
@@ -216,7 +216,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v_ap214::engine::io_registry as v_ap214;
-    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
+    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();

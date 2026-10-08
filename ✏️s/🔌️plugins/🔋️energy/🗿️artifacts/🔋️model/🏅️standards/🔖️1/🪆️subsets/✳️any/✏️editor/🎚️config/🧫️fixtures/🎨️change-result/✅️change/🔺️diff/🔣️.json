@@ -1,6 +1,3 @@
 {
-  "zoneTimestepMinutes": 15,
-  "systemTimestepMinutes": 5,
-  "warmupDays": 1,
   "resultField": "solarTransmitted"
 }

@@ -1203,7 +1203,7 @@ async fn set_step_enabled_is_idempotent_by_value_and_refuses_a_missing_value() {
 //#region 🔖️MediaTests
 #[semio_framework_async_macros::async_test]
 async fn export_brep_out_returns_step_text_structured_payload() {
-    semio_framework::register_format_descriptors(semio_s_artifact_stdio_step::formats().expect("STEP format descriptors")).await.expect("register stdio format descriptors");
+    semio_framework_os_kernel::io::register_format_descriptors(semio_s_artifact_stdio_step::formats().expect("STEP format descriptors")).await.expect("register stdio format descriptors");
     let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&document, &history);

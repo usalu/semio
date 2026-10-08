@@ -146,8 +146,6 @@
         }
       ],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "create-column",
         "delete-column",
         "rename-column",
@@ -324,47 +322,6 @@
             "operation": "reorder-rows",
             "bridgeVersion": 1,
             "variant": "ReorderRows"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-table-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "semio-v1-table-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-table-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "semio-v1-table-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

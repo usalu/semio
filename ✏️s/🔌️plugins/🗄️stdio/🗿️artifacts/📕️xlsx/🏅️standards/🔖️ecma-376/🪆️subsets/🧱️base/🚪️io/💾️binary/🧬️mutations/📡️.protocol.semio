@@ -11,8 +11,6 @@ framing record
 header fixed 2
 field format u8
 field tag u8
-record set-snapshot tag=1
-field payload bytes
 record insert-sheet tag=2
 field payload bytes
 record remove-sheet tag=3
@@ -28,8 +26,6 @@ field payload bytes
 record remove-shared-string tag=8
 field payload bytes
 record set-shared-string tag=9
-field payload bytes
-record patch-snapshot tag=10
 field payload bytes
 record insert-cell tag=11
 field payload bytes

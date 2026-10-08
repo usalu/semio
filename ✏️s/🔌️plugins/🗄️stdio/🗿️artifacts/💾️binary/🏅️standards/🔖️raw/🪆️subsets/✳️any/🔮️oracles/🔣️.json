@@ -45,21 +45,8 @@
       "capability": "binary-raw-mutate",
       "standardDirectoryName": "🔖️raw",
       "subsetDirectoryName": "✳️any",
-      "vectors": [
-        {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
-          "scenarios": [
-            {
-              "id": "rewrites-the-two-middle-bytes",
-              "directoryName": "🪡️rewrites"
-            }
-          ]
-        }
-      ],
+      "vectors": [],
       "kinds": [
-        "set-snapshot",
         "replace-byte-range",
         "append-bytes",
         "truncate-at"
@@ -106,26 +93,6 @@
             "operation": "replace-byte-range",
             "bridgeVersion": 1,
             "variant": "ReplaceByteRange"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "binary-raw-mutate",
-              "qualifyingKind": "third-party-library"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "binary-raw-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
           },
           "oracleRequirements": [
             {

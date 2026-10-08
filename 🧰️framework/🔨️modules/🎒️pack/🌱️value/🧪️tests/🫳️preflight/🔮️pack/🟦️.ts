@@ -15,7 +15,7 @@ function record(reader:Reader,symbols:string[]):{[id:number]:ClosedValue}{const 
 function value(reader:Reader,symbols:string[]):ClosedValue{
  const symbol=()=>{const index=reader.varint();if(index>=symbols.length)throw Error("Unknown independent symbol");return symbols[index]!;};
  const tag=reader.byte();switch(tag){
-  case 0:return null;case 1:return false;case 2:return true;
+  case 0:case 18:return null;case 1:return false;case 2:return true;
   case 3:{const word=reader.unsigned();return String((word>>1n)^-(word&1n));}
   case 4:return String(reader.unsigned());
   case 5:{const raw=reader.span(8);return {bits:new DataView(raw.buffer,raw.byteOffset,8).getBigUint64(0,true).toString(16).padStart(16,"0")};}
@@ -24,6 +24,8 @@ function value(reader:Reader,symbols:string[]):ClosedValue{
   case 21:{const count=reader.varint(),values:ClosedValue[]=[];for(let index=0;index<count;index++){const raw=reader.span(8);values.push({bits:new DataView(raw.buffer,raw.byteOffset,8).getBigUint64(0,true).toString(16).padStart(16,"0")});}return values;}
   case 22:{const count=reader.varint(),values:ClosedValue[]=[];for(let index=0;index<count;index++){const word=reader.unsigned();values.push(String((word>>1n)^-(word&1n)));}return values;}
   case 13:return record(reader,symbols);
+  case 16:{const count=reader.varint(),result:{[key:string]:ClosedValue}={};for(let index=0;index<count;index++){const key=value(reader,symbols);if(typeof key!=="string")throw Error("Independent map key is not text");Object.defineProperty(result,key,{value:value(reader,symbols),enumerable:true,configurable:true,writable:true});}return result;}
+  case 17:return value(reader,symbols);
   case 15:{const count=reader.varint(),statements:ClosedValue[]=[];for(let index=0;index<count;index++)statements.push({keyword:symbol(),record:record(reader,symbols)});return {statements};}
   case 20:{
    const count=reader.varint(),width=reader.varint(),rows:Record<string,ClosedValue>[] = Array.from({length:count},()=>({}));let previous=-1;
@@ -43,6 +45,11 @@ function value(reader:Reader,symbols:string[]):ClosedValue{
   }
   default:throw Error("Unauthored independent closed tag "+tag);
  }
+}
+
+/** 🧺️ Reads explicit intrinsic Body framing without importing any Product or domain extension. */
+export function readIntrinsicBody(bytes:Uint8Array):ClosedValue{
+ const reader=new Reader(bytes),symbols:string[]=[];const count=reader.varint();for(let index=0;index<count;index++)symbols.push(reader.text(reader.varint()));if(reader.varint()!==1||reader.varint()!==1||reader.byte()!==17)throw Error("Independent intrinsic field identity");const result=value(reader,symbols);if(reader.position!==bytes.length)throw Error("Independent intrinsic Body tail");return result;
 }
 export function readClosedRecordPack(bytes:Uint8Array,token:string):{[id:number]:ClosedValue}{
  const outer=new Reader(bytes);if(Buffer.compare(Buffer.from(outer.span(8)),Buffer.from([137,83,69,77,13,10,26,10])))throw Error("Independent envelope magic");const lengthBytes=outer.span(4),length=new DataView(lengthBytes.buffer,lengthBytes.byteOffset,4).getUint32(0,true);if(outer.text(length)!==token+".pack v1")throw Error("Independent envelope identity");return readBareClosedRecordPack(outer.span(bytes.length-outer.position));

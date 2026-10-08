@@ -1,6 +1,22 @@
 {
   "width": 0,
   "height": 4294967295,
-  "pixels": [1, 2, 3, 4, 5],
-  "jfifThumbnail": { "width": 0, "height": 255, "rgbData": [10, 11, 12, 13, 14] }
+  "pixels": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "jfifThumbnail": {
+    "width": 0,
+    "height": 255,
+    "rgbData": [
+      10,
+      11,
+      12,
+      13,
+      14
+    ]
+  }
 }

@@ -44,8 +44,6 @@ impl store::ArtifactPack for EquationGraphWindowConfig {
     }
 }
 
-store::impl_whole_record_config!(EquationGraphWindowConfig);
-
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::*;

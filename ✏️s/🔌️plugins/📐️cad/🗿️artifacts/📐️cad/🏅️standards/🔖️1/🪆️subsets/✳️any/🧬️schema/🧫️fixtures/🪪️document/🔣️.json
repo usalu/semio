@@ -56,17 +56,18 @@
     "breps": []
   },
   "diff": {
-    "artifact": null,
     "schema": null,
     "id": null,
     "shapeModel": {
-      "childId": "cad-shape-model-2",
-      "target": {
-        "artifactId": "cad-shape-model-2",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "model"
+      "child": {
+        "childId": "cad-shape-model-2",
+        "target": {
+          "artifactId": "cad-shape-model-2",
+          "dialect": {
+            "artifactKind": "s.stdio.semio",
+            "standard": "v1",
+            "subset": "model"
+          }
         }
       }
     },
@@ -74,7 +75,7 @@
     "energyModel": null,
     "structureClassicModel": null,
     "drawings": {
-      "values": [
+      "added": [
         {
           "childId": "cad-drawing-2",
           "target": {
@@ -86,7 +87,9 @@
             }
           }
         }
-      ]
+      ],
+      "removed": [],
+      "reordered": null
     },
     "referencesByModelDefinitionId": null,
     "nodes": {
@@ -102,7 +105,7 @@
       "reordered": null
     },
     "breps": {
-      "values": [
+      "added": [
         {
           "childId": "brep-middle",
           "target": {
@@ -114,7 +117,9 @@
             }
           }
         }
-      ]
+      ],
+      "removed": [],
+      "reordered": null
     }
   },
   "invalidDocuments": [
@@ -155,6 +160,9 @@
     },
     {
       "drawings": []
+    },
+    {
+      "artifact": {}
     }
   ]
 }

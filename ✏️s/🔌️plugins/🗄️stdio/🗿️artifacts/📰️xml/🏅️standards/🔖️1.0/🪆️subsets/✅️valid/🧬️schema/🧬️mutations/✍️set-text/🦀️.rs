@@ -1,6 +1,4 @@
-//! ✍️ `set-text` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! ✍️ `set-text` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,14 +14,24 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetText {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "text", kind: "set-text", record: "SetText" };
 
     fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as Mutation<XmlSnapshot>>::Diff> {
-        agg_diff(&XmlValidMutation::SetText(self.clone()), base)
+        let Self { path, text } = self;
+        protocol::MutationOutcome::new(diff_at_path(&path.0, XmlNodeDiff::Text { text: Some(text.clone()) }))
     }
     fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<XmlValidMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&XmlValidMutation::SetText(self.clone()), base)?
-    
-    })
-}
+        let Self { path, .. } = self;
+        Ok({
+            {
+                let prior = path
+                    .resolve(base.doc.root.as_ref())
+                    .and_then(|node| match node {
+                        XmlNode::Text { text } => Some(text.clone()),
+                        _ => None,
+                    })
+                    .unwrap_or_default();
+                vec![XmlValidMutation::SetText(set_text::SetText { path: path.clone(), text: prior })]
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set text", "Text setzen")
     }

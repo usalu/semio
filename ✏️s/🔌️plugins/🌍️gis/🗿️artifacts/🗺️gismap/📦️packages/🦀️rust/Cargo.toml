@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../.."
 name = "semio-s-artifact-gis-gismap"
 version.workspace = true
 edition.workspace = true
@@ -61,7 +61,7 @@ tokio = { workspace = true }
 # 🔮 Test-only GeoJSON ORACLE: the third-party `geojson` crate reads what the rfc8259/geojson writer emits and writes what its reader must accept.
 geojson = { version = "1.0.0", default-features = false }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 geo = { version = "0.31.0", default-features = false }
 semio-framework-async-macros = { workspace = true }
 serde = { workspace = true }

@@ -1,9 +1,9 @@
 //! 🧱️ The energy model's entity patches — one sparse patch per row type of [`crate::model::Model`], one per record, and the
 //! whole-model patch that names them all. A row patch addresses its row by id and carries only the fields that change:
-//! `set` assigns a scalar, `opt` sets or clears an optional field, `list` edits an ordered id list, `slots` assigns
-//! entries of a fixed array, `rows`/`with` nest a collection or a record.
+//! `Set` assigns a scalar, `Opt` sets or clears an optional field, `List` edits an ordered id list, `Arr` assigns
+//! entries of a fixed array, `Coll`/`Rec` nest a collection or a record.
 
-use super::patch::{patch, patch_field_ty, record_patch, row_patch, ArrayShape, FieldPatch, ListEdit, OptionChange, Row, RowPatch, Rows, Slots, Unchanged};
+use super::patch::{patch, record_patch, row_patch, Arr, Coll, Field, FieldPatch, List, Opt, Rec, Row, RowPatch, Set, Unchanged};
 use protocol::MutationApplyError;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
@@ -112,11 +112,11 @@ row_patch! {
     /// 🩹 Sparse patch over one [`Zone`] row.
     ZonePatch for crate::model::Zone {
         key id: crate::model::EntityId;
-        set name: String,
-        set volume_m3: f64,
-        set multiplier: u32,
-        set conditioned: bool,
-        set part_of_total_floor_area: bool,
+        Set name: String,
+        Set volume_m3: f64,
+        Set multiplier: u32,
+        Set conditioned: bool,
+        Set part_of_total_floor_area: bool,
     }
 }
 
@@ -124,9 +124,9 @@ row_patch! {
     /// 🩹 Sparse patch over one [`Space`] row.
     SpacePatch for crate::model::Space {
         key id: crate::model::EntityId;
-        set name: String,
-        set zone_id: crate::model::EntityId,
-        set floor_area_m2: f64,
+        Set name: String,
+        Set zone_id: crate::model::EntityId,
+        Set floor_area_m2: f64,
     }
 }
 
@@ -134,15 +134,15 @@ row_patch! {
     /// 🩹 Sparse patch over one [`Surface`] row.
     SurfacePatch for crate::model::Surface {
         key id: crate::model::EntityId;
-        set name: String,
-        set zone_id: crate::model::EntityId,
-        set class: crate::model::SurfaceClass,
-        set vertices_m: Vec<[f64; 3]>,
-        set construction_id: crate::model::EntityId,
-        set outside_boundary_condition: crate::model::OutsideBoundary,
-        set sun_exposed: bool,
-        set wind_exposed: bool,
-        set multiplier: u32,
+        Set name: String,
+        Set zone_id: crate::model::EntityId,
+        Set class: crate::model::SurfaceClass,
+        Set vertices_m: Vec<[f64; 3]>,
+        Set construction_id: crate::model::EntityId,
+        Set outside_boundary_condition: crate::model::OutsideBoundary,
+        Set sun_exposed: bool,
+        Set wind_exposed: bool,
+        Set multiplier: u32,
     }
 }
 
@@ -150,22 +150,22 @@ row_patch! {
     /// 🩹 Sparse patch over one [`Fenestration`] row.
     FenestrationPatch for crate::model::Fenestration {
         key id: crate::model::EntityId;
-        set name: String,
-        set surface_id: crate::model::EntityId,
-        set u_value_w_m2k: f64,
-        set shgc: f64,
-        set vlt: f64,
-        set area_m2: f64,
-        set height_m: f64,
-        set sill_height_m: f64,
-        set frame_conductance_w_k: f64,
-        set divider_conductance_w_k: f64,
-        set overhang_depth_m: f64,
-        set overhang_offset_m: f64,
-        set fin_depth_m: f64,
-        set fin_offset_m: f64,
-        opt glazing_construction_id: crate::model::EntityId,
-        set vertices_m: Vec<[f64; 3]>,
+        Set name: String,
+        Set surface_id: crate::model::EntityId,
+        Set u_value_w_m2k: f64,
+        Set shgc: f64,
+        Set vlt: f64,
+        Set area_m2: f64,
+        Set height_m: f64,
+        Set sill_height_m: f64,
+        Set frame_conductance_w_k: f64,
+        Set divider_conductance_w_k: f64,
+        Set overhang_depth_m: f64,
+        Set overhang_offset_m: f64,
+        Set fin_depth_m: f64,
+        Set fin_offset_m: f64,
+        Opt glazing_construction_id: crate::model::EntityId,
+        Set vertices_m: Vec<[f64; 3]>,
     }
 }
 
@@ -173,15 +173,15 @@ row_patch! {
     /// 🩹 Sparse patch over one [`Material`] row.
     MaterialPatch for crate::model::Material {
         key id: crate::model::EntityId;
-        set name: String,
-        set roughness: crate::model::SurfaceRoughness,
-        set thickness_m: f64,
-        set conductivity_w_m_k: f64,
-        set density_kg_m3: f64,
-        set specific_heat_j_kg_k: f64,
-        set thermal_absorptance: f64,
-        set solar_absorptance: f64,
-        set visible_absorptance: f64,
+        Set name: String,
+        Set roughness: crate::model::SurfaceRoughness,
+        Set thickness_m: f64,
+        Set conductivity_w_m_k: f64,
+        Set density_kg_m3: f64,
+        Set specific_heat_j_kg_k: f64,
+        Set thermal_absorptance: f64,
+        Set solar_absorptance: f64,
+        Set visible_absorptance: f64,
     }
 }
 
@@ -189,18 +189,18 @@ row_patch! {
     /// 🩹 Sparse patch over one [`GlazingMaterial`] row.
     GlazingMaterialPatch for crate::model::GlazingMaterial {
         key id: crate::model::EntityId;
-        set name: String,
-        set thickness_m: f64,
-        set conductivity_w_m_k: f64,
-        set solar_transmittance: f64,
-        set solar_reflectance_front: f64,
-        set solar_reflectance_back: f64,
-        set visible_transmittance: f64,
-        set visible_reflectance_front: f64,
-        set visible_reflectance_back: f64,
-        set infrared_transmittance: f64,
-        set infrared_emissivity_front: f64,
-        set infrared_emissivity_back: f64,
+        Set name: String,
+        Set thickness_m: f64,
+        Set conductivity_w_m_k: f64,
+        Set solar_transmittance: f64,
+        Set solar_reflectance_front: f64,
+        Set solar_reflectance_back: f64,
+        Set visible_transmittance: f64,
+        Set visible_reflectance_front: f64,
+        Set visible_reflectance_back: f64,
+        Set infrared_transmittance: f64,
+        Set infrared_emissivity_front: f64,
+        Set infrared_emissivity_back: f64,
     }
 }
 
@@ -208,9 +208,9 @@ row_patch! {
     /// 🩹 Sparse patch over one [`GasMaterial`] row.
     GasMaterialPatch for crate::model::GasMaterial {
         key id: crate::model::EntityId;
-        set name: String,
-        set thickness_m: f64,
-        set gas: crate::model::GasKind,
+        Set name: String,
+        Set thickness_m: f64,
+        Set gas: crate::model::GasKind,
     }
 }
 
@@ -218,8 +218,8 @@ row_patch! {
     /// 🩹 Sparse patch over one [`Construction`] row.
     ConstructionPatch for crate::model::Construction {
         key id: crate::model::EntityId;
-        set name: String,
-        list layer_material_ids: crate::model::EntityId,
+        Set name: String,
+        List layer_material_ids: crate::model::EntityId,
     }
 }
 
@@ -227,13 +227,13 @@ row_patch! {
     /// 🩹 Sparse patch over one [`PeopleGain`] row.
     PeopleGainPatch for crate::model::PeopleGain {
         key id: crate::model::EntityId;
-        set zone_id: crate::model::EntityId,
-        set schedule_id: crate::model::ScheduleId,
-        set activity_schedule_id: crate::model::ScheduleId,
-        set people_per_area: f64,
-        set sensible_fraction: f64,
-        set latent_fraction: f64,
-        set radiant_fraction: f64,
+        Set zone_id: crate::model::EntityId,
+        Set schedule_id: crate::model::ScheduleId,
+        Set activity_schedule_id: crate::model::ScheduleId,
+        Set people_per_area: f64,
+        Set sensible_fraction: f64,
+        Set latent_fraction: f64,
+        Set radiant_fraction: f64,
     }
 }
 
@@ -241,12 +241,12 @@ row_patch! {
     /// 🩹 Sparse patch over one [`LightingGain`] row.
     LightingGainPatch for crate::model::LightingGain {
         key id: crate::model::EntityId;
-        set zone_id: crate::model::EntityId,
-        set schedule_id: crate::model::ScheduleId,
-        set watts_per_area: f64,
-        set radiant_fraction: f64,
-        set visible_fraction: f64,
-        set return_air_fraction: f64,
+        Set zone_id: crate::model::EntityId,
+        Set schedule_id: crate::model::ScheduleId,
+        Set watts_per_area: f64,
+        Set radiant_fraction: f64,
+        Set visible_fraction: f64,
+        Set return_air_fraction: f64,
     }
 }
 
@@ -254,11 +254,11 @@ row_patch! {
     /// 🩹 Sparse patch over one [`EquipmentGain`] row.
     EquipmentGainPatch for crate::model::EquipmentGain {
         key id: crate::model::EntityId;
-        set zone_id: crate::model::EntityId,
-        set schedule_id: crate::model::ScheduleId,
-        set watts_per_area: f64,
-        set radiant_fraction: f64,
-        set latent_fraction: f64,
+        Set zone_id: crate::model::EntityId,
+        Set schedule_id: crate::model::ScheduleId,
+        Set watts_per_area: f64,
+        Set radiant_fraction: f64,
+        Set latent_fraction: f64,
     }
 }
 
@@ -266,11 +266,11 @@ row_patch! {
     /// 🩹 Sparse patch over one [`Thermostat`] row.
     ThermostatPatch for crate::model::Thermostat {
         key id: crate::model::EntityId;
-        set zone_id: crate::model::EntityId,
-        set heating_setpoint_schedule_id: crate::model::ScheduleId,
-        set cooling_setpoint_schedule_id: crate::model::ScheduleId,
-        set heating_throttle_range_k: f64,
-        set cooling_throttle_range_k: f64,
+        Set zone_id: crate::model::EntityId,
+        Set heating_setpoint_schedule_id: crate::model::ScheduleId,
+        Set cooling_setpoint_schedule_id: crate::model::ScheduleId,
+        Set heating_throttle_range_k: f64,
+        Set cooling_throttle_range_k: f64,
     }
 }
 
@@ -278,11 +278,11 @@ row_patch! {
     /// 🩹 Sparse patch over one [`Humidistat`] row.
     HumidistatPatch for crate::model::Humidistat {
         key id: crate::model::EntityId;
-        set zone_id: crate::model::EntityId,
-        set humidifying_setpoint_schedule_id: crate::model::ScheduleId,
-        set dehumidifying_setpoint_schedule_id: crate::model::ScheduleId,
-        set humidifying_throttle_range: f64,
-        set dehumidifying_throttle_range: f64,
+        Set zone_id: crate::model::EntityId,
+        Set humidifying_setpoint_schedule_id: crate::model::ScheduleId,
+        Set dehumidifying_setpoint_schedule_id: crate::model::ScheduleId,
+        Set humidifying_throttle_range: f64,
+        Set dehumidifying_throttle_range: f64,
     }
 }
 
@@ -290,9 +290,9 @@ row_patch! {
     /// 🩹 Sparse patch over one [`SetpointManager`] row.
     SetpointManagerPatch for crate::model::SetpointManager {
         key id: crate::model::EntityId;
-        set name: String,
-        set kind: crate::model::SetpointManagerKind,
-        opt schedule_id: crate::model::ScheduleId,
+        Set name: String,
+        Set kind: crate::model::SetpointManagerKind,
+        Opt schedule_id: crate::model::ScheduleId,
     }
 }
 
@@ -300,13 +300,13 @@ row_patch! {
     /// 🩹 Sparse patch over one [`IdealLoadsSystem`] row.
     IdealLoadsSystemPatch for crate::model::IdealLoadsSystem {
         key id: crate::model::EntityId;
-        set zone_id: crate::model::EntityId,
-        set max_heating_supply_air_temp_c: f64,
-        set min_cooling_supply_air_temp_c: f64,
-        opt max_heating_capacity_w: f64,
-        opt max_cooling_capacity_w: f64,
-        set outdoor_air_per_person_m3_s: f64,
-        set outdoor_air_per_area_m3_s_m2: f64,
+        Set zone_id: crate::model::EntityId,
+        Set max_heating_supply_air_temp_c: f64,
+        Set min_cooling_supply_air_temp_c: f64,
+        Opt max_heating_capacity_w: f64,
+        Opt max_cooling_capacity_w: f64,
+        Set outdoor_air_per_person_m3_s: f64,
+        Set outdoor_air_per_area_m3_s_m2: f64,
     }
 }
 
@@ -314,11 +314,11 @@ row_patch! {
     /// 🩹 Sparse patch over one [`ZoneEquipmentAssignment`] row.
     ZoneEquipmentAssignmentPatch for crate::model::ZoneEquipmentAssignment {
         key id: crate::model::EntityId;
-        set zone_id: crate::model::EntityId,
-        set equipment_type: crate::model::ZoneEquipmentType,
-        set priority: u8,
-        set heating_capacity_w: f64,
-        set cooling_capacity_w: f64,
+        Set zone_id: crate::model::EntityId,
+        Set equipment_type: crate::model::ZoneEquipmentType,
+        Set priority: u8,
+        Set heating_capacity_w: f64,
+        Set cooling_capacity_w: f64,
     }
 }
 
@@ -326,11 +326,11 @@ row_patch! {
     /// 🩹 Sparse patch over one [`ModelAirLoop`] row.
     ModelAirLoopPatch for crate::model::ModelAirLoop {
         key id: crate::model::EntityId;
-        set name: String,
-        set supply_node_id: u32,
-        set return_node_id: u32,
-        set design_supply_air_flow_m3_s: f64,
-        list terminal_zone_ids: crate::model::EntityId,
+        Set name: String,
+        Set supply_node_id: u32,
+        Set return_node_id: u32,
+        Set design_supply_air_flow_m3_s: f64,
+        List terminal_zone_ids: crate::model::EntityId,
     }
 }
 
@@ -338,12 +338,12 @@ row_patch! {
     /// 🩹 Sparse patch over one [`PlantLoopConfig`] row.
     PlantLoopConfigPatch for crate::model::PlantLoopConfig {
         key id: crate::model::EntityId;
-        set name: String,
-        set loop_type: crate::model::PlantLoopType,
-        set supply_temperature_c: f64,
-        set return_temperature_c: f64,
-        set design_flow_kg_s: f64,
-        list equipment_ids: crate::model::EntityId,
+        Set name: String,
+        Set loop_type: crate::model::PlantLoopType,
+        Set supply_temperature_c: f64,
+        Set return_temperature_c: f64,
+        Set design_flow_kg_s: f64,
+        List equipment_ids: crate::model::EntityId,
     }
 }
 
@@ -351,9 +351,9 @@ row_patch! {
     /// 🩹 Sparse patch over one [`OutdoorAirSystem`] row.
     OutdoorAirSystemPatch for crate::model::OutdoorAirSystem {
         key id: crate::model::EntityId;
-        set air_loop_id: crate::model::EntityId,
-        set min_oa_flow_m3_s: f64,
-        set economizer_enabled: bool,
+        Set air_loop_id: crate::model::EntityId,
+        Set min_oa_flow_m3_s: f64,
+        Set economizer_enabled: bool,
     }
 }
 
@@ -361,18 +361,18 @@ row_patch! {
     /// 🩹 Sparse patch over one [`Infiltration`] row.
     InfiltrationPatch for crate::model::Infiltration {
         key id: crate::model::EntityId;
-        set zone_id: crate::model::EntityId,
-        set schedule_id: crate::model::ScheduleId,
-        set method: crate::air_exchange::InfiltrationMethod,
-        set design_flow_ach: f64,
-        set flow_per_exterior_area_m3_s_m2: f64,
-        set effective_leakage_area_m2: f64,
-        set discharge_coefficient: f64,
-        set stack_height_m: f64,
-        set constant_term_coefficient: f64,
-        set temperature_term_coefficient: f64,
-        set velocity_term_coefficient: f64,
-        set velocity_squared_term_coefficient: f64,
+        Set zone_id: crate::model::EntityId,
+        Set schedule_id: crate::model::ScheduleId,
+        Set method: crate::air_exchange::InfiltrationMethod,
+        Set design_flow_ach: f64,
+        Set flow_per_exterior_area_m3_s_m2: f64,
+        Set effective_leakage_area_m2: f64,
+        Set discharge_coefficient: f64,
+        Set stack_height_m: f64,
+        Set constant_term_coefficient: f64,
+        Set temperature_term_coefficient: f64,
+        Set velocity_term_coefficient: f64,
+        Set velocity_squared_term_coefficient: f64,
     }
 }
 
@@ -380,11 +380,11 @@ row_patch! {
     /// 🩹 Sparse patch over one [`MechanicalVentilation`] row.
     MechanicalVentilationPatch for crate::model::MechanicalVentilation {
         key id: crate::model::EntityId;
-        set zone_id: crate::model::EntityId,
-        set schedule_id: crate::model::ScheduleId,
-        set design_flow_m3_s: f64,
-        set fan_total_efficiency: f64,
-        set fan_delta_pressure_pa: f64,
+        Set zone_id: crate::model::EntityId,
+        Set schedule_id: crate::model::ScheduleId,
+        Set design_flow_m3_s: f64,
+        Set fan_total_efficiency: f64,
+        Set fan_delta_pressure_pa: f64,
     }
 }
 
@@ -392,9 +392,9 @@ row_patch! {
     /// 🩹 Sparse patch over one [`ShadingSurface`] row.
     ShadingSurfacePatch for crate::model::ShadingSurface {
         key id: crate::model::EntityId;
-        set name: String,
-        set vertices_m: Vec<[f64; 3]>,
-        opt transmittance_schedule_id: crate::model::ScheduleId,
+        Set name: String,
+        Set vertices_m: Vec<[f64; 3]>,
+        Opt transmittance_schedule_id: crate::model::ScheduleId,
     }
 }
 
@@ -402,8 +402,8 @@ row_patch! {
     /// 🩹 Sparse patch over one [`SpaceList`] row.
     SpaceListPatch for crate::model::SpaceList {
         key id: crate::model::EntityId;
-        set name: String,
-        list space_ids: crate::model::EntityId,
+        Set name: String,
+        List space_ids: crate::model::EntityId,
     }
 }
 
@@ -411,8 +411,8 @@ row_patch! {
     /// 🩹 Sparse patch over one [`ThermalEnclosure`] row.
     ThermalEnclosurePatch for crate::model::ThermalEnclosure {
         key id: crate::model::EntityId;
-        set name: String,
-        list zone_ids: crate::model::EntityId,
+        Set name: String,
+        List zone_ids: crate::model::EntityId,
     }
 }
 
@@ -420,10 +420,10 @@ row_patch! {
     /// 🩹 Sparse patch over one [`ElectricalLoadCenter`] row.
     ElectricalLoadCenterPatch for crate::model::ElectricalLoadCenter {
         key id: crate::model::EntityId;
-        set name: String,
-        list generator_ids: crate::model::EntityId,
-        list pv_ids: crate::model::EntityId,
-        list battery_ids: crate::model::EntityId,
+        Set name: String,
+        List generator_ids: crate::model::EntityId,
+        List pv_ids: crate::model::EntityId,
+        List battery_ids: crate::model::EntityId,
     }
 }
 
@@ -431,12 +431,12 @@ row_patch! {
     /// 🩹 Sparse patch over one [`PvSystemAssignment`] row.
     PvSystemAssignmentPatch for crate::model::PvSystemAssignment {
         key id: crate::model::EntityId;
-        set dc_capacity_w: f64,
-        set area_m2: f64,
-        set tilt_deg: f64,
-        set azimuth_deg: f64,
-        set module_efficiency: f64,
-        set inverter_efficiency: f64,
+        Set dc_capacity_w: f64,
+        Set area_m2: f64,
+        Set tilt_deg: f64,
+        Set azimuth_deg: f64,
+        Set module_efficiency: f64,
+        Set inverter_efficiency: f64,
     }
 }
 
@@ -444,10 +444,10 @@ row_patch! {
     /// 🩹 Sparse patch over one [`BatteryAssignment`] row.
     BatteryAssignmentPatch for crate::model::BatteryAssignment {
         key id: crate::model::EntityId;
-        set capacity_kwh: f64,
-        set max_charge_w: f64,
-        set max_discharge_w: f64,
-        set round_trip_efficiency: f64,
+        Set capacity_kwh: f64,
+        Set max_charge_w: f64,
+        Set max_discharge_w: f64,
+        Set round_trip_efficiency: f64,
     }
 }
 
@@ -455,10 +455,10 @@ row_patch! {
     /// 🩹 Sparse patch over one [`ShwSystemConfig`] row.
     ShwSystemConfigPatch for crate::model::ShwSystemConfig {
         key id: crate::model::EntityId;
-        set heater_capacity_w: f64,
-        set storage_volume_m3: f64,
-        set setpoint_c: f64,
-        set schedule_id: crate::model::ScheduleId,
+        Set heater_capacity_w: f64,
+        Set storage_volume_m3: f64,
+        Set setpoint_c: f64,
+        Set schedule_id: crate::model::ScheduleId,
     }
 }
 
@@ -466,11 +466,11 @@ row_patch! {
     /// 🩹 Sparse patch over one [`SolarThermalConfig`] row.
     SolarThermalConfigPatch for crate::model::SolarThermalConfig {
         key id: crate::model::EntityId;
-        set collector_area_m2: f64,
-        set efficiency: f64,
-        set storage_volume_m3: f64,
-        set tilt_deg: f64,
-        set azimuth_deg: f64,
+        Set collector_area_m2: f64,
+        Set efficiency: f64,
+        Set storage_volume_m3: f64,
+        Set tilt_deg: f64,
+        Set azimuth_deg: f64,
     }
 }
 
@@ -478,9 +478,9 @@ row_patch! {
     /// 🩹 Sparse patch over one [`RefrigerationConfig`] row.
     RefrigerationConfigPatch for crate::model::RefrigerationConfig {
         key id: crate::model::EntityId;
-        set case_count: u32,
-        set design_load_w: f64,
-        set defrost_schedule_id: crate::model::ScheduleId,
+        Set case_count: u32,
+        Set design_load_w: f64,
+        Set defrost_schedule_id: crate::model::ScheduleId,
     }
 }
 
@@ -488,9 +488,9 @@ row_patch! {
     /// 🩹 Sparse patch over one [`WaterSystemConfig`] row.
     WaterSystemConfigPatch for crate::model::WaterSystemConfig {
         key id: crate::model::EntityId;
-        set fixture_count: u32,
-        set peak_flow_l_s: f64,
-        set schedule_id: crate::model::ScheduleId,
+        Set fixture_count: u32,
+        Set peak_flow_l_s: f64,
+        Set schedule_id: crate::model::ScheduleId,
     }
 }
 
@@ -498,10 +498,10 @@ row_patch! {
     /// 🩹 Sparse patch over one [`FaultDefinition`] row.
     FaultDefinitionPatch for crate::model::FaultDefinition {
         key id: crate::model::EntityId;
-        set target_equipment_id: crate::model::EntityId,
-        set fault_type: crate::model::FaultType,
-        set severity: f64,
-        set start_schedule_id: crate::model::ScheduleId,
+        Set target_equipment_id: crate::model::EntityId,
+        Set fault_type: crate::model::FaultType,
+        Set severity: f64,
+        Set start_schedule_id: crate::model::ScheduleId,
     }
 }
 
@@ -509,9 +509,9 @@ row_patch! {
     /// 🩹 Sparse patch over one [`SizingObject`] row.
     SizingObjectPatch for crate::model::SizingObject {
         key id: crate::model::EntityId;
-        set zone_id: crate::model::EntityId,
-        set sizing_type: crate::model::SizingType,
-        set design_day_type: crate::model::DesignDayType,
+        Set zone_id: crate::model::EntityId,
+        Set sizing_type: crate::model::SizingType,
+        Set design_day_type: crate::model::DesignDayType,
     }
 }
 
@@ -519,10 +519,10 @@ row_patch! {
     /// 🩹 Sparse patch over one [`DaylightZoneConfig`] row.
     DaylightZoneConfigPatch for crate::model::DaylightZoneConfig {
         key id: crate::model::EntityId;
-        set zone_id: crate::model::EntityId,
-        set illuminance_target_lux: f64,
-        set glare_limit: f64,
-        set window_transmittance: f64,
+        Set zone_id: crate::model::EntityId,
+        Set illuminance_target_lux: f64,
+        Set glare_limit: f64,
+        Set window_transmittance: f64,
     }
 }
 
@@ -530,7 +530,7 @@ row_patch! {
     /// 🩹 Sparse patch over one [`RoomAirModelAssignment`] row.
     RoomAirModelAssignmentPatch for crate::model::RoomAirModelAssignment {
         key zone_id: crate::model::EntityId;
-        set model: crate::model::RoomAirModelType,
+        Set model: crate::model::RoomAirModelType,
     }
 }
 
@@ -538,7 +538,7 @@ row_patch! {
     /// 🩹 Sparse patch over one [`ConstantSchedule`] row.
     ConstantSchedulePatch for crate::schedule::ConstantSchedule {
         key id: crate::model::ScheduleId;
-        set value: f64,
+        Set value: f64,
     }
 }
 
@@ -546,9 +546,9 @@ row_patch! {
     /// 🩹 Sparse patch over one [`DailySchedule`] row.
     DailySchedulePatch for crate::schedule::DailySchedule {
         key id: crate::model::ScheduleId;
-        slots hourly_values: [f64; 24],
-        set interpolation: crate::schedule::ScheduleInterpolation,
-        opt limits: crate::schedule::ScheduleLimits,
+        Arr hourly_values: [f64; 24],
+        Set interpolation: crate::schedule::ScheduleInterpolation,
+        Opt limits: crate::schedule::ScheduleLimits,
     }
 }
 
@@ -556,7 +556,7 @@ row_patch! {
     /// 🩹 Sparse patch over one [`WeeklySchedule`] row.
     WeeklySchedulePatch for crate::schedule::WeeklySchedule {
         key id: crate::model::ScheduleId;
-        slots daily_schedule_ids: [crate::model::ScheduleId; 7],
+        Arr daily_schedule_ids: [crate::model::ScheduleId; 7],
     }
 }
 
@@ -564,10 +564,10 @@ row_patch! {
     /// 🩹 Sparse patch over one [`AnnualSchedule`] row.
     AnnualSchedulePatch for crate::schedule::AnnualSchedule {
         key id: crate::model::ScheduleId;
-        list rules: crate::schedule::CompactScheduleRule,
-        set default_daily_schedule_id: crate::model::ScheduleId,
-        opt holiday_daily_schedule_id: crate::model::ScheduleId,
-        list holiday_dates: (u16, u8, u8),
+        List rules: crate::schedule::CompactScheduleRule,
+        Set default_daily_schedule_id: crate::model::ScheduleId,
+        Opt holiday_daily_schedule_id: crate::model::ScheduleId,
+        List holiday_dates: (u16, u8, u8),
     }
 }
 
@@ -575,100 +575,100 @@ row_patch! {
     /// 🩹 Sparse patch over one [`TimeSeriesSchedule`] row.
     TimeSeriesSchedulePatch for crate::schedule::TimeSeriesSchedule {
         key id: crate::model::ScheduleId;
-        set values: Vec<f64>,
-        set timestep_seconds: u32,
+        Set values: Vec<f64>,
+        Set timestep_seconds: u32,
     }
 }
 
 record_patch! {
     /// 🩹 Sparse patch over the [`Site`] record.
     SitePatch for crate::model::Site {
-        set latitude_deg: f64,
-        set longitude_deg: f64,
-        set elevation_m: f64,
-        set time_zone_hours: f64,
-        set north_axis_deg: f64,
+        Set latitude_deg: f64,
+        Set longitude_deg: f64,
+        Set elevation_m: f64,
+        Set time_zone_hours: f64,
+        Set north_axis_deg: f64,
     }
 }
 
 record_patch! {
     /// 🩹 Sparse patch over the [`GroundTemperatureConfig`] record.
     GroundTemperatureConfigPatch for crate::model::GroundTemperatureConfig {
-        slots building_surface_c: [f64; 12],
-        slots shallow_c: [f64; 12],
-        set deep_c: f64,
+        Arr building_surface_c: [f64; 12],
+        Arr shallow_c: [f64; 12],
+        Set deep_c: f64,
     }
 }
 
 record_patch! {
     /// 🩹 Sparse patch over the [`RunPeriod`] record.
     RunPeriodPatch for crate::calendar::RunPeriod {
-        set start_month: u8,
-        set start_day: u8,
-        set end_month: u8,
-        set end_day: u8,
-        set year: u16,
+        Set start_month: u8,
+        Set start_day: u8,
+        Set end_month: u8,
+        Set end_day: u8,
+        Set year: u16,
     }
 }
 
 record_patch! {
     /// 🩹 Sparse patch over the [`ScheduleSet`](crate::schedule::ScheduleSet) record.
     ScheduleSetPatch for crate::schedule::ScheduleSet {
-        rows constants: ConstantSchedulePatch,
-        rows daily: DailySchedulePatch,
-        rows weekly: WeeklySchedulePatch,
-        rows annual: AnnualSchedulePatch,
-        rows time_series: TimeSeriesSchedulePatch,
+        Coll constants: ConstantSchedulePatch,
+        Coll daily: DailySchedulePatch,
+        Coll weekly: WeeklySchedulePatch,
+        Coll annual: AnnualSchedulePatch,
+        Coll time_series: TimeSeriesSchedulePatch,
     }
 }
 
 record_patch! {
     /// 🩹 Sparse patch over the whole [`Model`](crate::model::Model).
     ModelPatch for crate::model::Model {
-        set name: String,
-        set version: String,
-        with site: SitePatch,
-        rows zones: ZonePatch,
-        rows spaces: SpacePatch,
-        rows surfaces: SurfacePatch,
-        rows fenestrations: FenestrationPatch,
-        rows materials: MaterialPatch,
-        rows glazing_materials: GlazingMaterialPatch,
-        rows gas_materials: GasMaterialPatch,
-        rows constructions: ConstructionPatch,
-        rows people: PeopleGainPatch,
-        rows lighting: LightingGainPatch,
-        rows equipment: EquipmentGainPatch,
-        rows thermostats: ThermostatPatch,
-        rows humidistats: HumidistatPatch,
-        rows setpoint_managers: SetpointManagerPatch,
-        rows ideal_loads: IdealLoadsSystemPatch,
-        rows zone_equipment: ZoneEquipmentAssignmentPatch,
-        rows air_loops: ModelAirLoopPatch,
-        rows plant_loops: PlantLoopConfigPatch,
-        rows outdoor_air_systems: OutdoorAirSystemPatch,
-        rows infiltrations: InfiltrationPatch,
-        rows mechanical_ventilations: MechanicalVentilationPatch,
-        rows shading_surfaces: ShadingSurfacePatch,
-        rows space_lists: SpaceListPatch,
-        rows thermal_enclosures: ThermalEnclosurePatch,
-        rows adjacency_pairs: AdjacencyPairPatch,
-        opt airflow_network: crate::model::AirflowNetworkDefinition,
-        rows electrical_load_centers: ElectricalLoadCenterPatch,
-        rows pv_systems: PvSystemAssignmentPatch,
-        rows battery_storage: BatteryAssignmentPatch,
-        rows shw_systems: ShwSystemConfigPatch,
-        rows solar_thermal_systems: SolarThermalConfigPatch,
-        rows refrigeration_systems: RefrigerationConfigPatch,
-        rows water_systems: WaterSystemConfigPatch,
-        rows faults: FaultDefinitionPatch,
-        rows output_variables: OutputVariableSpecPatch,
-        rows sizing_objects: SizingObjectPatch,
-        rows daylight_zones: DaylightZoneConfigPatch,
-        rows room_air_models: RoomAirModelAssignmentPatch,
-        with ground_temperature: GroundTemperatureConfigPatch,
-        with run_period: RunPeriodPatch,
-        with schedules: ScheduleSetPatch,
+        Set name: String,
+        Set version: String,
+        Rec site: SitePatch,
+        Coll zones: ZonePatch,
+        Coll spaces: SpacePatch,
+        Coll surfaces: SurfacePatch,
+        Coll fenestrations: FenestrationPatch,
+        Coll materials: MaterialPatch,
+        Coll glazing_materials: GlazingMaterialPatch,
+        Coll gas_materials: GasMaterialPatch,
+        Coll constructions: ConstructionPatch,
+        Coll people: PeopleGainPatch,
+        Coll lighting: LightingGainPatch,
+        Coll equipment: EquipmentGainPatch,
+        Coll thermostats: ThermostatPatch,
+        Coll humidistats: HumidistatPatch,
+        Coll setpoint_managers: SetpointManagerPatch,
+        Coll ideal_loads: IdealLoadsSystemPatch,
+        Coll zone_equipment: ZoneEquipmentAssignmentPatch,
+        Coll air_loops: ModelAirLoopPatch,
+        Coll plant_loops: PlantLoopConfigPatch,
+        Coll outdoor_air_systems: OutdoorAirSystemPatch,
+        Coll infiltrations: InfiltrationPatch,
+        Coll mechanical_ventilations: MechanicalVentilationPatch,
+        Coll shading_surfaces: ShadingSurfacePatch,
+        Coll space_lists: SpaceListPatch,
+        Coll thermal_enclosures: ThermalEnclosurePatch,
+        Coll adjacency_pairs: AdjacencyPairPatch,
+        Opt airflow_network: crate::model::AirflowNetworkDefinition,
+        Coll electrical_load_centers: ElectricalLoadCenterPatch,
+        Coll pv_systems: PvSystemAssignmentPatch,
+        Coll battery_storage: BatteryAssignmentPatch,
+        Coll shw_systems: ShwSystemConfigPatch,
+        Coll solar_thermal_systems: SolarThermalConfigPatch,
+        Coll refrigeration_systems: RefrigerationConfigPatch,
+        Coll water_systems: WaterSystemConfigPatch,
+        Coll faults: FaultDefinitionPatch,
+        Coll output_variables: OutputVariableSpecPatch,
+        Coll sizing_objects: SizingObjectPatch,
+        Coll daylight_zones: DaylightZoneConfigPatch,
+        Coll room_air_models: RoomAirModelAssignmentPatch,
+        Rec ground_temperature: GroundTemperatureConfigPatch,
+        Rec run_period: RunPeriodPatch,
+        Rec schedules: ScheduleSetPatch,
     }
 }
 //#endregion 🔖️Patches

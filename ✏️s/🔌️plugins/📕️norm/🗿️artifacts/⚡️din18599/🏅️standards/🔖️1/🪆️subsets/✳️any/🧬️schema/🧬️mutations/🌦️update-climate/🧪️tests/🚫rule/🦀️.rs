@@ -14,7 +14,7 @@ fn mutation() -> Din18599Mutation { serde_json::from_str(MUTATION).unwrap() }
 #[semio_framework_async_macros::async_test]
 async fn applies_to_committed_after() {
     let raised = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::diff(&mutation(), &before());
-    let after = <Din18599Diff as protocol::MutationDiff<Din18599Snapshot>>::apply(raised.diff(), &before()).unwrap();
+    let after = protocol::apply_diff(raised.diff(), &before()).unwrap();
     assert_eq!(after, expected_after());
     assert_eq!(expected_after(), before());
 }

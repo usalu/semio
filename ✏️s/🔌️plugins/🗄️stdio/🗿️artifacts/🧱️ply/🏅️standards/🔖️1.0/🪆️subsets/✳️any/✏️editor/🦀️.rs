@@ -4,7 +4,7 @@
 
 use crate::editor::ply::modes::edit;
 use crate::editor::ply::modes::edit::windows::main;
-use crate::standards::v1_0::subsets::any::schema::mutations::{patch_snapshot,set_snapshot as snapshot_edit_set_snapshot,PlyMutation};
+use crate::standards::v1_0::subsets::any::schema::mutations::{PlyMutation};
 
 use crate::standards::v1_0::subsets::any::schema::snapshot::PlySnapshot;
 use semio_framework_plugin::app::InteractionView;
@@ -289,7 +289,7 @@ impl editing::SnapshotEditingEditor for PlyAnyEditor {
         match command { PlyAnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_patch(event, snapshot, |patch| PlyMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| PlyMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot })))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::v1_0::subsets::any::schema::mutations::net_mutations)
     }
 }
 

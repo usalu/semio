@@ -61,7 +61,7 @@ pub fn emit(payload: &SetActiveExample, doc: &ArtifactView<'_, Generation3dSnaps
     // 🧹️ The loaded example projection is dead once its operations and camera are read — close it
     // through its explicit ladder, never leave the fixture's ordered layout root to drop glue.
     target.retire_cold();
-    Ok(Emit { artifact_mutations: operations, config_mutations: vec![Generation3dConfigMutation::SetSnapshot(crate::editor::generation3d::config::SetSnapshot { config })], ..Default::default() })
+    Ok(Emit { artifact_mutations: operations, config_mutations: crate::editor::generation3d::config::config_replacement(cfg.snapshot, &config), ..Default::default() })
 }
 
 pub fn handle(payload: &SetActiveExample, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation>, Fault> {

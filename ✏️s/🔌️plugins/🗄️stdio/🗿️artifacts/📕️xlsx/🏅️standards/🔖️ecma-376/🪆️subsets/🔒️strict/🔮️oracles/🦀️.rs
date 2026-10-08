@@ -23,7 +23,7 @@ use semio_repo_test_host::Json;
 /// 🧾️ Kebab-case spelling of every variant this subset's `XlsxStrictMutation` declares, in
 /// declaration order. The catalog `xlsx-ecma-376-strict` is measured against this exact list, and the
 /// subject-side `KINDS` carries the test that proves enum, constant and manifest never drift apart.
-pub const KINDS: &[&str] = &["set-main-namespace", "set-relationships-namespace", "set-conformance-attribute", "remove-conformance-attribute", "insert-vml-part", "remove-vml-part", "set-worksheet-content-type"];
+pub const KINDS: &[&str] = &["set-main-namespace", "set-relationships-namespace", "set-relationship-base", "set-conformance-attribute", "remove-conformance-attribute", "insert-vml-part", "remove-vml-part", "set-worksheet-content-type"];
 //#endregion 🔖️Vocabulary
 
 //#region 🔖️Profile
@@ -85,7 +85,7 @@ pub fn project_package(_input: &[u8]) -> Result<Json, String> {
 
 //#region 🔖️Stamp
 /// 🏅️ Stamps the whole package into (`strict`) or out of the strict conformance class — the reference half of the
-/// `mutate-set-snapshot`/`inverse-set-snapshot` scenarios, whose subject replaces its whole snapshot with its own stamp.
+/// `mutate-stamp-strict-class`/`inverse-stamp-strict-class` scenarios, whose subject applies the namespace, relationship-base and conformance-attribute stamp mutations.
 #[cfg(feature = "oracles")]
 pub fn oracle_stamp(input: &[u8], strict: bool) -> Result<Vec<u8>, String> {
     let mut parts = semio_s_plugin_stdio_document_test_oracle::ooxml::read_parts(input)?;

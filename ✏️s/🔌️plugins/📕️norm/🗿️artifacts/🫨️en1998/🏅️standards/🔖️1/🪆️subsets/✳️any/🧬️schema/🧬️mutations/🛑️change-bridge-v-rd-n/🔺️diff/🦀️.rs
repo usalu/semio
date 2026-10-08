@@ -1,8 +1,7 @@
 //! 🛑️ `change-bridge-v-rd-n` diff — patches the one field of the row at the index; a missing row is a `mutation.target-missing`.
 
 use super::ChangeBridgeVRdN;
-use crate::diff::En1998RowEdit as _;
-use crate::diff::{En1998Diff, En1998BridgeEdit, En1998BridgePatch};
+use crate::diff::{En1998Diff, En1998BridgeDelta, En1998BridgePatch};
 use crate::En1998Snapshot;
 
 pub fn diff(payload: &ChangeBridgeVRdN, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
@@ -10,5 +9,5 @@ pub fn diff(payload: &ChangeBridgeVRdN, base: &En1998Snapshot) -> protocol::Muta
         return protocol::MutationOutcome::error("mutation.target-missing", "bridge", Vec::<String>::new());
     };
     let patch = En1998BridgePatch { v_rd_n: Some(payload.new_v_rd_n), ..Default::default() };
-    protocol::MutationOutcome::new(En1998Diff { bridges: vec![En1998BridgeEdit::patch(payload.index, row.id.clone(), patch)], ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { bridges: En1998BridgeDelta::modification(&row.id, patch), ..Default::default() })
 }

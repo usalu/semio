@@ -396,7 +396,7 @@ pub fn puzzle3d_selection_yields(base: &Puzzle3dSnapshot, records: &[Puzzle3dSel
             }
             let (gap, shift, rise, rotation, turn, tilt) = derive_attraction_params(parent.origin, parent.orientation, parent.position, parent.direction, child.position, child.direction, child.origin, child.orientation);
             let id = puzzle3d_minted_attraction_id(state, attracting, attracted);
-            let connect = connect_vortices(id.clone(), attracting.clone(), attracted.clone(), gap, shift, rise, rotation, turn, tilt, 0.0, 0.0);
+            let connect = connect_vortices(id.clone(), attracting.clone(), attracted.clone(), gap, shift, rise, rotation, turn, tilt, 0.0, 0.0, None);
             if apply_puzzle3d_mutation(state, &connect).is_ok() {
                 yields.push((format!("attraction:{id}"), connect));
             }

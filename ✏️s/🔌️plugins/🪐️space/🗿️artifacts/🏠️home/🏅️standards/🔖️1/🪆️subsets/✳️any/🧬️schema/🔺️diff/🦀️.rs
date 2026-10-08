@@ -15,38 +15,19 @@ pub struct SHomeDiff {
 }
 //#endregion 🔖️Diff
 
-use crate::standards::v1::subsets::any::schema::SHomeArtifact;
 use crate::SHomeSnapshot;
 use protocol::MutationDiff;
 
-impl SHomeDiff {
-    /// 🧬️ Applies sparse document changes to the artifact.
-    pub fn apply_to_artifact(&self, artifact: &SHomeArtifact) -> protocol::MutationApplyResult<SHomeArtifact> {
-        Ok({
-            let mut next = artifact.clone();
-            if let Some(schema) = &self.schema {
-                next.schema = schema.clone();
-            }
-            if let Some(value) = self.catalog_generation {
-                next.catalog_generation = value;
-            }
-            next
-        })
-    }
-}
-
 impl MutationDiff<SHomeSnapshot> for SHomeDiff {
-    fn apply(&self, snapshot: &SHomeSnapshot) -> protocol::MutationApplyResult<SHomeSnapshot> {
-        Ok({
-            let mut next = snapshot.clone();
-            if let Some(schema) = &self.schema {
-                next.schema = schema.clone();
-            }
-            if let Some(value) = self.catalog_generation {
-                next.catalog_generation = value;
-            }
-            next
-        })
+    fn apply(&self, snapshot: &SHomeSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SHomeSnapshot> {
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(value) = self.catalog_generation {
+            next.catalog_generation = value;
+        }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
         macro_rules! take {
@@ -58,5 +39,17 @@ impl MutationDiff<SHomeSnapshot> for SHomeDiff {
         }
         take!(schema);
         take!(catalog_generation);
+    }
+}
+
+impl protocol::DiffAlgebra<SHomeSnapshot> for SHomeDiff {
+    fn inverse(&self, base: &SHomeSnapshot) -> Self {
+        Self { schema: self.schema.as_ref().map(|_| base.schema.clone()), catalog_generation: self.catalog_generation.map(|_| base.catalog_generation) }
+    }
+    fn between(base: &SHomeSnapshot, other: &SHomeSnapshot) -> Self {
+        Self { schema: (base.schema != other.schema).then(|| other.schema.clone()), catalog_generation: (base.catalog_generation != other.catalog_generation).then_some(other.catalog_generation) }
+    }
+    fn is_empty(&self) -> bool {
+        self.schema.is_none() && self.catalog_generation.is_none()
     }
 }

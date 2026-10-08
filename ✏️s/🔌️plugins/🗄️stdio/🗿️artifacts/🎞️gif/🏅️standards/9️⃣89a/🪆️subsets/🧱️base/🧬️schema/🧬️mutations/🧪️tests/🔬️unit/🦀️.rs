@@ -45,7 +45,7 @@ async fn round_trips(base: &GifSnapshot, mutation: GifMutation) {
         restored = protocol::apply_diff(inv_diff.diff(), &restored).expect("inverse diff must apply to restored");
     }
     assert_eq!(&restored, base, "apply(inverse(m), apply(m, base)) must recover base for {mutation:?}");
-    protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, base).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, base).await;
 }
 
 /// 🧪️ `mutation_diff_law`: every variant's `diff()` matches what `apply_gif_mutation` returns.

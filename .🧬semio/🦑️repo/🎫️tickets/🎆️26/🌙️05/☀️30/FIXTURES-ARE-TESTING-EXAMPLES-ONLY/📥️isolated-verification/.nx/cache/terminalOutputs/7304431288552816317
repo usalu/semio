@@ -1,5 +1,0 @@
-> bun ./📜️script.ts test-owner-command "🧰️framework/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts" prepare
-
-[DEBUG] isolated Nx verification test-owner-command
-[0m[31merror[0m[2m:[0m [1mModule not found "[1m/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts[0m"
-Warning: command "bun ./📜️script.ts test-owner-command "🧰️framework/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts" prepare" exited with non-zero status code

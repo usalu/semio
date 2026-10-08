@@ -960,7 +960,7 @@ where
         let base = self.base.as_ref().ok_or_else(|| "Equation preparation lost its exact base root".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "Equation preparation lost its mutation owner".to_string())?;
         let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "Equation preparation lost its Store authority".to_string())?;
         let prepared = authority.prepare_one_item(authority.next_edit(mutation, inverse), Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };

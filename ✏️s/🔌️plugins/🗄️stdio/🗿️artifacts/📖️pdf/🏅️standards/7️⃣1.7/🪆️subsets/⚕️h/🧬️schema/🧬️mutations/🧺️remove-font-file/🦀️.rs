@@ -2,7 +2,7 @@
 
 use super::embed_font_file::EmbedFontFile;
 use super::PdfHMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -22,17 +22,14 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for RemoveFontFile {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfHMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        support::font_descriptors(base)
-            .get(self.descriptor_ordinal)
-            .copied()
-            .and_then(|id| support::font_program(base, id))
-            .map(|(key, program)| PdfHMutation::EmbedFontFile(EmbedFontFile { descriptor_ordinal: self.descriptor_ordinal, key, program }))
-            .into_iter()
-            .collect()
-    
-    })())
-}
+        Ok({
+            let Some(id) = support::font_descriptors(base).get(self.descriptor_ordinal).copied() else { return Ok(Vec::new()) };
+            support::font_program(base, id).map(|(key, program)| {
+                let entry_index = support::entry_position(base, id, &key);
+                PdfHMutation::EmbedFontFile(EmbedFontFile { descriptor_ordinal: self.descriptor_ordinal, key, program, entry_index })
+            }).into_iter().collect()
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove font program from descriptor {}", self.descriptor_ordinal), &format!("Schriftprogramm aus Deskriptor {} entfernen", self.descriptor_ordinal))

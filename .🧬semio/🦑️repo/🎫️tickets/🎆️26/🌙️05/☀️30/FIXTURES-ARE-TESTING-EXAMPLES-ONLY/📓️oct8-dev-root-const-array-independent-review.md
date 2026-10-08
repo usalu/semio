@@ -1,0 +1,5 @@
+# Dev Root Const Array Review
+
+The current Dev local-Hub contract test retains genuine provider schema Ajv and owned parser validation for every input row, actual process launch/arguments/refusal/cancellation, and compares observed outcomes to plain expectedOutcomes using assert.deepEqual at53. A generated Ajv const schema over the complete process-case outcome roster would create a second independent whole-corpus authority; ordinary expected equality is the correct existing test relation.
+
+The live detector's new rule applies only when node.const is an array containing an object with an expect/expected/expectedCamelCase key. Variable production result arrays do not match; fixed literal protocol strings do not match. Independently read110 positive input: CanonicalPolicy is a variable array of name/outcome/alive payloads, CanonicalLimits is const [spawned,refused]. Both avoid the rootconst-object expectation rule. Genuine measured variable reports remain unaffected by this representation check. No label-based controller/result waiver was introduced. This is bounded current source/input review; actual tests are parent receipts and were not rerun here.

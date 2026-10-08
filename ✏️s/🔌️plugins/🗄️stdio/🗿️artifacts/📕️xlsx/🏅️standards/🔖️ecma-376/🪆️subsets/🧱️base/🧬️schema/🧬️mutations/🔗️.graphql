@@ -1,6 +1,4 @@
 enum XlsxMutationTag {
-  SET_SNAPSHOT
-  PATCH_SNAPSHOT
   INSERT_SHEET
   REMOVE_SHEET
   RENAME_SHEET
@@ -38,13 +36,9 @@ input XlsxWorksheetAddressInput {
   revision: String!
 }
 input XlsxCellVacancyAddressInput { worksheet: XlsxWorksheetAddressInput!, row: Int!, column: Int! }
-scalar SnapshotPatch
-scalar XlsxSnapshotInput
 scalar XlsxMutationValue
 input XlsxMutationInput {
   mutation: XlsxMutationTag!
-  snapshot: XlsxSnapshotInput
-  patch: SnapshotPatch
   sheet: XlsxSheetInput
   name: String
   newName: String

@@ -115,7 +115,7 @@ fn committed_diff_applies_to_after() {
 }
 
 /// ⚖️ The inverse diffs sum to the negative of the forward diff (`Σ = d₁ ⊕ … ⊕ dₙ`, `Σ.apply(after) == before`).
-#[test]
-fn inverse_diffs_sum_to_the_negative_diff() {
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before());
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

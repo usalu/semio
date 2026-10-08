@@ -1,4 +1,5 @@
 //! 🧬️ Direct delete-buffer-view mutation owner: payload, validation, typed diff, inverse, and outcomes.
+use crate::schema::diff::*;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::GltfSnapshot;
@@ -14,14 +15,26 @@ pub fn validate(payload: &GltfDeleteBufferViewPayload, base: &GltfSnapshot) -> R
     if payload.index >= base.document.buffer_views.len() {
         return Err(reject("gltf.mutation.index-out-of-range", "document/bufferViews", "index must address an item"));
     }
+    require_unreferenced(base, GltfTopLevelFamily::BufferViews, payload.index)?;
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfDeleteBufferViewPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
-    let mut next = base.clone();
-    buffer_views_op(&mut next, GltfTopLevelFamily::BufferViews, payload.index, None, None)?;
-    Ok(next)
+pub fn plan(p: &GltfDeleteBufferViewPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
+    validate(p, base)?;
+    let mut diff = rewire(base, GltfTopLevelFamily::BufferViews, &mut after_delete(p.index));
+    let slot = diff.buffer_views.get_or_insert_with(Default::default);
+    slot.removed.push(p.index);
+    Ok(diff)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(p: &GltfDeleteBufferViewPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    if validate(p, base).is_err() {
+        return Vec::new();
+    }
+    let mut rows = vec![super::create_buffer_view::mutation(super::create_buffer_view::GltfCreateBufferViewPayload { position: p.index, buffer: base.document.buffer_views[p.index].buffer, byte_offset: base.document.buffer_views[p.index].byte_offset, byte_length: base.document.buffer_views[p.index].byte_length, buffer_view: Some(Box::new(base.document.buffer_views[p.index].clone())) })];
+
+    rows.reverse();
+    rows
 }
 
 //#region 🧬️DirectMutation
@@ -30,7 +43,11 @@ pub fn apply(payload: &GltfDeleteBufferViewPayload, base: &GltfSnapshot) -> Resu
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum DeleteBufferViewMutation {
     Apply(GltfDeleteBufferViewPayload),
-    Restore(Box<crate::schema::diff::GltfDiff>),
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutation(payload: GltfDeleteBufferViewPayload) -> super::GltfMutation {
+    super::GltfMutation::DeleteBufferView(DeleteBufferViewMutation::Apply(payload))
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteBufferViewMutation {
@@ -38,28 +55,18 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteBufferV
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => match apply(payload, base) {
-                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Self::Apply(payload) => match plan(payload, base) {
+                Ok(diff) => protocol::MutationOutcome::new(diff),
                 Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
-            },
-            Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
-                Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-                Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
             },
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
-            return Vec::new();
+        match self {
+            Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::GltfMutation::DeleteBufferView(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Delete Buffer View", "Pufferansicht löschen")
@@ -75,4 +82,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteBufferV
 #[cfg(test)]
 #[path = "🧪️tests/🔬️t067/🦀️.rs"]
 mod case_t067;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
+mod case_middle_row;
 //#endregion 🧪️Tests

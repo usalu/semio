@@ -1,17 +1,110 @@
-# 🪪️ Din18599Diff uses the canonical Store child identity.
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# 🧬️ Din18599 diff schema — keyed sparse diff: scalar setters, id/index/key keyed row diffs and per-field section patches.
+
+type Din18599ZonesPatch {
+  id: String!
+  labelEn: String
+  labelDe: String
+  usageProfile: UsageProfile
+  areaM2: Float
+  volumeM3: Float
+  thetaIHeatC: Float
+  thetaICoolC: Float
+  occupants: Int
+  internalGainsWM2: Float
+  lightingPowerWM2: Float
+}
+
+type Din18599ZonesRows {
+  added: [ThermalZone!]!
+  removed: [String!]!
+  modified: [Din18599ZonesPatch!]!
+  order: [String!]
+}
+
+type Din18599ElementsPatch {
+  id: String!
+  labelEn: String
+  labelDe: String
+  kind: ElementKind
+  zoneId: String
+  areaM2: Float
+  uValueWM2k: Float
+  orientationDeg: Float
+  tiltDeg: Float
+  gValue: Float
+  fc: Float
+  adjacency: Adjacency
+}
+
+type Din18599ElementsRows {
+  added: [EnvelopeElement!]!
+  removed: [String!]!
+  modified: [Din18599ElementsPatch!]!
+  order: [String!]
+}
+
+type Din18599HeatingPatch {
+  generationEfficiency: Float
+  distributionEfficiency: Float
+  storageEfficiency: Float
+  transferEfficiency: Float
+  energyCarrier: String
+}
+
+type Din18599DhwPatch {
+  specificDemandKwhPersonA: Float
+  storageLossKwhA: Float
+  distributionLossKwhA: Float
+  energyCarrier: String
+}
+
+type Din18599VentilationPatch {
+  airflowM3H: Float
+  heatRecoveryEta: Float
+  fanPowerW: Float
+}
+
+type Din18599CoolingPatchPlantValue {
+  value: CoolingPlant
+}
+
+type Din18599CoolingPatch {
+  plant: Din18599CoolingPatchPlantValue
+}
+
+type Din18599LightingPatch {
+  controlFactor: Float
+}
+
+type Din18599RenewablesPatch {
+  pvAreaM2: Float
+  pvEfficiency: Float
+  solarThermalKwhA: Float
+}
+
+type Din18599ClimatePatch {
+  thetaEC: [Float!]
+  gHWM2: [Float!]
+}
+
 type Din18599Diff {
-  useClass: String @state(class: ARTIFACT)
-  heatedAreaM2: Float @state(class: ARTIFACT)
-  occupants: Int @state(class: ARTIFACT)
-  hT: Float @state(class: ARTIFACT)
-  hV: Float @state(class: ARTIFACT)
-  climate: ArtifactChild @state(class: ARTIFACT)
-  internalGainsWM2: Float @state(class: ARTIFACT)
-  solarGainsKwh: Float @state(class: ARTIFACT)
-  systemLossesKwh: Float @state(class: ARTIFACT)
-  renewableKwh: Float @state(class: ARTIFACT)
-  annualLimitKwh: Float @state(class: ARTIFACT)
-  energyCarrier: String @state(class: ARTIFACT)
-  referenceQPKwh: Float @state(class: ARTIFACT)
+  buildingCategory: BuildingCategory @state(class: ARTIFACT)
+  attachment: Attachment @state(class: ARTIFACT)
+  useClass: UseClass @state(class: ARTIFACT)
+  method: CalculationMethod @state(class: ARTIFACT)
+  netFloorAreaM2: Float @state(class: ARTIFACT)
+  heatedVolumeM3: Float @state(class: ARTIFACT)
+  gegQpFactor: Float @state(class: ARTIFACT)
+  deltaUWbWM2k: Float @state(class: ARTIFACT)
+  automationClass: AutomationClass @state(class: ARTIFACT)
+  zones: Din18599ZonesRows @state(class: ARTIFACT)
+  elements: Din18599ElementsRows @state(class: ARTIFACT)
+  heating: Din18599HeatingPatch @state(class: ARTIFACT)
+  dhw: Din18599DhwPatch @state(class: ARTIFACT)
+  ventilation: Din18599VentilationPatch @state(class: ARTIFACT)
+  cooling: Din18599CoolingPatch @state(class: ARTIFACT)
+  lighting: Din18599LightingPatch @state(class: ARTIFACT)
+  renewables: Din18599RenewablesPatch @state(class: ARTIFACT)
+  climate: Din18599ClimatePatch @state(class: ARTIFACT)
+  climateTable: Din18599ClimateChild @state(class: ARTIFACT)
 }

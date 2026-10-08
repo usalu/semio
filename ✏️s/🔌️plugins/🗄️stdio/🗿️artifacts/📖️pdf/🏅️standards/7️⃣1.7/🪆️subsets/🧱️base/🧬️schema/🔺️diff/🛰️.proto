@@ -30,10 +30,29 @@ message PdfDiff {
   PdfSetString metadata = 24;
   PdfSetArrVec_u8x2 document_id = 25;
   PdfSetPdfEncryption encryption = 26;
-  PdfInfo info = 27;
+  PdfInfoDiff info = 27;
   PdfDictDiff catalog_extra = 28;
   PdfObjectsDiff objects = 29;
   PdfDictDiff trailer = 30;
+  bool graph_edit = 31;
+}
+
+message PdfInfoDiff {
+  PdfSetString title = 1;
+  PdfSetString author = 2;
+  PdfSetString subject = 3;
+  PdfSetString keywords = 4;
+  PdfSetString creator = 5;
+  PdfSetString producer = 6;
+  PdfSetPdfDate creation_date = 7;
+  PdfSetPdfDate modification_date = 8;
+  PdfSetString trapped = 9;
+  repeated PdfDictEntry extra = 10;
+}
+
+message PdfSetPdfDate {
+  string kind = 1;
+  PdfDate value = 2;
 }
 
 message PdfDictDiff {

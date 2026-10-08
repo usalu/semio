@@ -1,7 +1,4 @@
-//! 🗃️ `set-vlr-data` — its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 🗃️ `set-vlr-data` — its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 //!
 //! 📦️ Replaces a VLR's payload bytes.
 use super::*;
@@ -19,14 +16,18 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetVlrData {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "vlr-data", kind: "set-vlr-data", record: "SetVlrData" };
 
     fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
-        agg_diff(&LasMutation::SetVlrData(self.clone()), base)
+        let Self { index, data } = self;
+        protocol::MutationOutcome::new(diff::diff_set_vlr_data(*index, data.clone()))
     }
     fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&LasMutation::SetVlrData(self.clone()), base)?
-    
-    })
-}
+        let Self { index, .. } = self;
+        Ok({
+            match base.vlrs.get(*index) {
+                Some(v) => vec![LasMutation::SetVlrData(set_vlr_data::SetVlrData { index: *index, data: v.data.clone() })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set VLR data", "VLR-Daten setzen")
     }

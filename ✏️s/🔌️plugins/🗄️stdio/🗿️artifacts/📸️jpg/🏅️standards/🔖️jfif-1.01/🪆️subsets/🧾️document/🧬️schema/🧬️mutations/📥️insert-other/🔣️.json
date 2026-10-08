@@ -7,7 +7,7 @@
   "aggregateVariant": "InsertOtherSegment",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "insert-other-segment",
-  "binaryTag": 8,
+  "binaryTag": 2,
   "invertibility": "explicit-mutation",
   "diffParticipation": "apply-only",
   "outcomeClasses": [

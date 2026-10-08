@@ -1,53 +1,35 @@
 //! 🧬️ Direct remove-element mutation owner.
 use crate::schema::diff::{diff_at_path, XmlChildrenDiff, XmlDiff, XmlElementDiff, XmlNodeDiff};
 use crate::schema::mutation_support::XmlNodePath;
+use crate::schema::snapshot::XmlNode;
 use crate::XmlSnapshot;
-
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-pub struct RemoveElementPayload {
+pub struct RemoveElementMutation {
     pub path: XmlNodePath,
     pub index: usize,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol, payload = Apply)]
-#[value(tag = "phase", content = "value", rename_all = "camelCase")]
-pub enum RemoveElementMutation {
-    Apply(RemoveElementPayload),
-    /// 📦️ Boxed on purpose: `XmlDiff` is the largest thing this leaf can hold, and an inline
-    /// variant of that size pushes the whole leaf past the neutral inline-ownership budget
-    /// (`🧫️fixtures/📦️inline-layout/🔣️.json`, 128 B) every ephemeral transfer of it is measured
-    /// against — same boxing the sibling `🧊️gltf` leaves use for their own `Restore` arm.
-    Restore(Box<XmlDiff>),
-}
+pub type RemoveElementPayload = RemoveElementMutation;
 
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for RemoveElementMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "element", kind: "remove-element", record: "RemovedElement" };
 
-    fn diff(&self, _base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
-        match self {
-            Self::Apply(payload) => protocol::MutationOutcome::new(diff_at_path(
-                &payload.path.0,
-                XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: vec![payload.index], modified: Vec::new(), added: Vec::new() }) }),
-            )),
-            Self::Restore(diff) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-        }
+    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
+        protocol::MutationOutcome::new(diff_at_path(
+            &self.path.0,
+            XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: vec![self.index], modified: Vec::new(), added: Vec::new() }) }),
+        ))
     }
 
     fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<super::XmlMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<XmlSnapshot, super::XmlMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::is_empty(outcome.diff()) {
-            return Vec::new();
-        }
-        let inverse = <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::XmlMutation::RemoveElement(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+        Ok(match self.path.resolve(base.doc.root.as_ref()) {
+            Some(XmlNode::Element { children, .. }) => children.get(self.index).map(|node| vec![super::XmlMutation::InsertElement(super::InsertElementMutation { path: self.path.clone(), index: self.index, node: node.clone() })]).unwrap_or_default(),
+            _ => Vec::new(),
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove Element", "Element entfernen")

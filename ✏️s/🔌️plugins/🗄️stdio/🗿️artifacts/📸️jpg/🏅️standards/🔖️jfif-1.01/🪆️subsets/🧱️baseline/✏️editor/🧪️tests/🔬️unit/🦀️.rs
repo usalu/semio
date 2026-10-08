@@ -23,22 +23,22 @@ fn payload_detail_edits_publish_the_exact_requested_value() {
     register_document_schema();
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json"))).unwrap();
     let mut snapshot = JpgSnapshot::default();
-    snapshot.pixels = vec![7, 9];
+    snapshot.image.pixels = vec![7, 9];
     let base: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();
     for row in fixture["payload"]["cases"].as_array().unwrap() {
         let mut event = row["event"].clone();
-        event["path"] = format!("/pixels{}", event["path"].as_str().unwrap()).into();
+        event["path"] = format!("/image/pixels{}", event["path"].as_str().unwrap()).into();
         if let Some(from) = event.get_mut("from") {
-            *from = format!("/pixels{}", from.as_str().unwrap()).into();
+            *from = format!("/image/pixels{}", from.as_str().unwrap()).into();
         }
         let event: editing::SnapshotEditEvent = semio_framework_pack_json::from_json_str(&event.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let emitted = <JpgBaselineEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).unwrap_or_else(|error| panic!("{}: {error:?}", row["id"]));
         let mut next = snapshot.clone();
         for mutation in emitted.artifact_mutations {
-            next = protocol::MutationDiff::apply(<JpgBaselineMutation as protocol::Mutation<JpgSnapshot>>::diff(&mutation, &next).diff(), &next).unwrap();
+            next = protocol::apply_diff(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&mutation, &next).diff(), &next).unwrap();
         }
         let mut expected = base.clone();
-        *expected.pointer_mut("/pixels").unwrap() = row["expected"].clone();
+        *expected.pointer_mut("/image/pixels").unwrap() = row["expected"].clone();
         let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&next))).unwrap();
         assert_eq!(actual, expected, "{}", row["id"]);
     }

@@ -18,95 +18,6 @@ use crate::standards::v1_0::subsets::any::schema::mutations::{point};
 #[cfg(test)]
 use crate::standards::v1_0::subsets::any::schema::mutations::{vlr};
 
-/// 📋 Whole-`LasHeader` positional codec — only needed by `SetSnapshot`'s `snapshot` argument (no
-/// other variant carries a full header).
-pub(crate) fn enc_header(h: &LasHeader) -> String {
-    let fields: Vec<String> = vec![
-        h.version_major.to_string(),
-        h.version_minor.to_string(),
-        crate::standards::v1_0::subsets::any::io::text::diff::hex_encode(h.system_identifier.as_bytes()),
-        crate::standards::v1_0::subsets::any::io::text::diff::hex_encode(h.generating_software.as_bytes()),
-        h.creation_day_of_year.to_string(),
-        h.creation_year.to_string(),
-        h.header_size.to_string(),
-        h.offset_to_point_data.to_string(),
-        h.number_of_vlrs.to_string(),
-        h.point_data_format_id.to_string(),
-        h.point_data_record_length.to_string(),
-        h.number_of_point_records.to_string(),
-        crate::standards::v1_0::subsets::any::io::text::diff::enc_u32x5(&h.points_by_return),
-        h.x_scale.to_string(),
-        h.y_scale.to_string(),
-        h.z_scale.to_string(),
-        h.x_offset.to_string(),
-        h.y_offset.to_string(),
-        h.z_offset.to_string(),
-        h.max_x.to_string(),
-        h.min_x.to_string(),
-        h.max_y.to_string(),
-        h.min_y.to_string(),
-        h.max_z.to_string(),
-        h.min_z.to_string(),
-    ];
-    let las_field_separator = ",";
-    format!("[{}]", fields.join(las_field_separator))
-}
-
-pub(crate) fn dec_header(s: &str) -> Result<LasHeader, String> {
-    let parts = crate::standards::v1_0::subsets::any::io::text::diff::split_top_level(crate::standards::v1_0::subsets::any::io::text::diff::strip_brackets(s)?, ',');
-    let [version_major, version_minor, system_identifier, generating_software, creation_day_of_year, creation_year, header_size, offset_to_point_data, number_of_vlrs, point_data_format_id, point_data_record_length, number_of_point_records, points_by_return, x_scale, y_scale, z_scale, x_offset, y_offset, z_offset, max_x, min_x, max_y, min_y, max_z, min_z] =
-        parts.as_slice()
-    else {
-        return Err(format!("header: expected 25 fields, got {}", parts.len()));
-    };
-    Ok(LasHeader {
-        version_major: crate::standards::v1_0::subsets::any::io::text::diff::parse_u8(version_major)?,
-        version_minor: crate::standards::v1_0::subsets::any::io::text::diff::parse_u8(version_minor)?,
-        system_identifier: String::from_utf8(crate::standards::v1_0::subsets::any::io::text::diff::hex_decode(system_identifier)?).map_err(|e| e.to_string())?,
-        generating_software: String::from_utf8(crate::standards::v1_0::subsets::any::io::text::diff::hex_decode(generating_software)?).map_err(|e| e.to_string())?,
-        creation_day_of_year: crate::standards::v1_0::subsets::any::io::text::diff::parse_u16(creation_day_of_year)?,
-        creation_year: crate::standards::v1_0::subsets::any::io::text::diff::parse_u16(creation_year)?,
-        header_size: crate::standards::v1_0::subsets::any::io::text::diff::parse_u16(header_size)?,
-        offset_to_point_data: crate::standards::v1_0::subsets::any::io::text::diff::parse_u32(offset_to_point_data)?,
-        number_of_vlrs: crate::standards::v1_0::subsets::any::io::text::diff::parse_u32(number_of_vlrs)?,
-        point_data_format_id: crate::standards::v1_0::subsets::any::io::text::diff::parse_u8(point_data_format_id)?,
-        point_data_record_length: crate::standards::v1_0::subsets::any::io::text::diff::parse_u16(point_data_record_length)?,
-        number_of_point_records: crate::standards::v1_0::subsets::any::io::text::diff::parse_u32(number_of_point_records)?,
-        points_by_return: crate::standards::v1_0::subsets::any::io::text::diff::dec_u32x5(points_by_return)?,
-        x_scale: crate::standards::v1_0::subsets::any::io::text::diff::parse_f64(x_scale)?,
-        y_scale: crate::standards::v1_0::subsets::any::io::text::diff::parse_f64(y_scale)?,
-        z_scale: crate::standards::v1_0::subsets::any::io::text::diff::parse_f64(z_scale)?,
-        x_offset: crate::standards::v1_0::subsets::any::io::text::diff::parse_f64(x_offset)?,
-        y_offset: crate::standards::v1_0::subsets::any::io::text::diff::parse_f64(y_offset)?,
-        z_offset: crate::standards::v1_0::subsets::any::io::text::diff::parse_f64(z_offset)?,
-        max_x: crate::standards::v1_0::subsets::any::io::text::diff::parse_f64(max_x)?,
-        min_x: crate::standards::v1_0::subsets::any::io::text::diff::parse_f64(min_x)?,
-        max_y: crate::standards::v1_0::subsets::any::io::text::diff::parse_f64(max_y)?,
-        min_y: crate::standards::v1_0::subsets::any::io::text::diff::parse_f64(min_y)?,
-        max_z: crate::standards::v1_0::subsets::any::io::text::diff::parse_f64(max_z)?,
-        min_z: crate::standards::v1_0::subsets::any::io::text::diff::parse_f64(min_z)?,
-    })
-}
-
-pub(crate) fn enc_snapshot(s: &LasSnapshot) -> String {
-    let las_list_separator = ",";
-    let vlrs = s.vlrs.iter().map(crate::standards::v1_0::subsets::any::io::text::diff::enc_vlr).collect::<Vec<_>>().join(las_list_separator);
-    let points = s.points.iter().map(crate::standards::v1_0::subsets::any::io::text::diff::enc_point).collect::<Vec<_>>().join(las_list_separator);
-    format!("[{},[{}],[{}]]", enc_header(&s.header), vlrs, points)
-}
-
-pub(crate) fn dec_snapshot(s: &str) -> Result<LasSnapshot, String> {
-    let inner = crate::standards::v1_0::subsets::any::io::text::diff::strip_brackets(s)?;
-    let parts = crate::standards::v1_0::subsets::any::io::text::diff::split_top_level(inner, ',');
-    let [header_s, vlrs_s, points_s] = parts.as_slice() else {
-        return Err(format!("snapshot: expected 3 top-level fields, got {}", parts.len()));
-    };
-    let header = dec_header(header_s)?;
-    let vlrs = crate::standards::v1_0::subsets::any::io::text::diff::split_top_level(crate::standards::v1_0::subsets::any::io::text::diff::strip_brackets(vlrs_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(crate::standards::v1_0::subsets::any::io::text::diff::dec_vlr).collect::<Result<Vec<_>, String>>()?;
-    let points = crate::standards::v1_0::subsets::any::io::text::diff::split_top_level(crate::standards::v1_0::subsets::any::io::text::diff::strip_brackets(points_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(crate::standards::v1_0::subsets::any::io::text::diff::dec_point).collect::<Result<Vec<_>, String>>()?;
-    Ok(LasSnapshot { schema: crate::STDIO_LAS_DOCUMENT_SCHEMA.into(), header, vlrs, points })
-}
-
 pub(crate) fn enc_f64x3(t: &(f64, f64, f64)) -> String {
     format!("[{},{},{}]", t.0, t.1, t.2)
 }
@@ -119,8 +30,6 @@ pub(crate) fn dec_f64x3(s: &str) -> Result<(f64, f64, f64), String> {
 
 pub(crate) fn print_las_mutation(m: &LasMutation) -> String {
     match m {
-        LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
-        LasMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         LasMutation::SetVersion(set_version::SetVersion { major, minor }) => format!("set-version major={major} minor={minor}"),
         LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier }) => format!("set-system-identifier system-identifier={}", crate::standards::v1_0::subsets::any::io::text::diff::hex_encode(system_identifier.as_bytes())),
         LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software }) => format!("set-software-info generating-software={}", crate::standards::v1_0::subsets::any::io::text::diff::hex_encode(generating_software.as_bytes())),
@@ -143,8 +52,6 @@ pub(crate) fn parse_las_mutation(line: &str) -> Result<LasMutation, String> {
     let rest: Vec<&str> = tokens.collect();
     let arg = |key: &str| -> Result<&str, String> { rest.iter().find_map(|t| t.strip_prefix(key)).ok_or_else(|| format!("{keyword}: missing arg {key:?}")) };
     match keyword {
-        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| LasMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
-        "set-snapshot" => Ok(LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_snapshot(arg("snapshot=")?)? })),
         "set-version" => Ok(LasMutation::SetVersion(set_version::SetVersion { major: crate::standards::v1_0::subsets::any::io::text::diff::parse_u8(arg("major=")?)?, minor: crate::standards::v1_0::subsets::any::io::text::diff::parse_u8(arg("minor=")?)? })),
         "set-system-identifier" => Ok(LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: String::from_utf8(crate::standards::v1_0::subsets::any::io::text::diff::hex_decode(arg("system-identifier=")?)?).map_err(|e| e.to_string())? })),
         "set-software-info" => Ok(LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software: String::from_utf8(crate::standards::v1_0::subsets::any::io::text::diff::hex_decode(arg("generating-software=")?)?).map_err(|e| e.to_string())? })),

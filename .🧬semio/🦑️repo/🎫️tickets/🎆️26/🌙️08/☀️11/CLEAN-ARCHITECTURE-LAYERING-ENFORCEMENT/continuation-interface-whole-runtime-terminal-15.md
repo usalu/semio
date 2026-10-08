@@ -1,0 +1,9 @@
+# Whole Runtime 15 Terminal
+
+The exact registered whole15 route ended with observed Nx1 after admitted cancellation of the stalled owned Bun child. Runtime child code is 137, cancelled=true. All 55 modules, including all original 41, remained in the actual argv; their long controls and 60,000 ms/default budgets were unchanged. No passing substitute or physical source publication occurred.
+
+Capture retained 147,444 exact frames. Post-custody completed all 147444 frames, with every sealed full body exact. It recorded 12382 current physical advances and 2 snapshot writes. Controlled-source physical advances: 7. Physical S manifest/lock normalization and concurrent General command work are explicitly independent intervals; the snapshot retains its seed-lock authority. Full before/after snapshot-write journals remain in generated capture evidence.
+
+The original workspace-contract finite stdin Git oracle at line269 still used Bun.spawnSync. It blocked beyond the test deadline; saved bounded sample showed kevent64 wait and an unreaped zombie. Admitted driver SIGTERM caused its exact child closure; observed ps confirmed both child43639 and zombie47541 absent, and terminal/post-custody publication completed. The outer actual process closed Nx1; the runner's final assertion of expected success also failed as intended.
+
+There are 55 observed failing assertions before cancellation, including required General workspace receiving composition, six-case Kernel feature-prefix mismatch, original bounded Root preparation deadlines, and original fixture/taxonomy/transaction caller contracts. The full original corpus remains retained. Successor work must repair actual contracts and blocking owners, preserving deadlines, cases, markers, and independent oracles. Frozen producer15, stage15, inspection15 and complete failed runtime receipts remain immutable.

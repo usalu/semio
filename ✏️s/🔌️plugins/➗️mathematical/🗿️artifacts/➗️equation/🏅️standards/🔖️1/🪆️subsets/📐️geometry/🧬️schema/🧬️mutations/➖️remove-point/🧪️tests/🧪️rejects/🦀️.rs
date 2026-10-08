@@ -35,7 +35,7 @@ fn produced() -> protocol::MutationOutcome<EquationDiff> {
 async fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     assert!(base.geometry.points.is_empty(), "rejects-removing-a-point-from-an-empty-cloud's before-snapshot must hold a point-less cloud");
-    let applied = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(produced().diff(), &base).expect("an empty diff still applies cleanly");
+    let applied = protocol::apply_diff(produced().diff(), &base).expect("an empty diff still applies cleanly");
     assert_eq!(applied, expected_after(), "remove-point/rejects-removing-a-point-from-an-empty-cloud: applied state differs from committed after-snapshot");
     assert_eq!((applied.notation, applied.results, applied.computed), (base.notation, base.results, base.computed), "a rejected remove must not mint a fresh notation/results/computed triple");
 }
@@ -96,4 +96,10 @@ async fn declared_outcome_holds() {
     assert_eq!(outcome.get("code").and_then(semio_framework_pack_json::Value::as_str), Some(message.code.0.as_str()), "the declared code must match the emitted one");
     let declared_path: Vec<String> = outcome.get("path").and_then(semio_framework_pack_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared_path, message.target, "the declared path must match the emitted target");
+}
+
+/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

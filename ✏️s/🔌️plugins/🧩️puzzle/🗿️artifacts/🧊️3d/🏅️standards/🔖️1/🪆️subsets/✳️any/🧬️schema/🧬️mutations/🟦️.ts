@@ -152,6 +152,7 @@ export interface ConnectVortices {
   tilt: Binary64;
   x: Binary64;
   y: Binary64;
+  index?: number | null;
 }
 
 /** ✂️ `disconnect-vortices` payload — removes an attraction between two vortices. */
@@ -266,6 +267,7 @@ export interface ConnectKindCompatibility {
   bidirectional: boolean;
   important: boolean;
   specificity: Puzzle3dCompatSpecificity;
+  index?: number | null;
 }
 
 /** 💔 `disconnect-kind-compatibility` payload — revokes one vortex-kind-id pair's attraction allowance. */

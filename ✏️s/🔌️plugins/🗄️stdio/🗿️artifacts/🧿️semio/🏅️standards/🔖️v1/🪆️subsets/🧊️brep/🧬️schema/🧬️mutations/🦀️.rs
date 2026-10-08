@@ -170,7 +170,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioBrepMutation> {
     use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
     use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepShellFace, BrepSolidShell, BrepSurface};
     vec![
-        SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v-new".into(), point: SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 }, tol: 2e-7 }),
+        SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v-new".into(), point: SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 }, tol: 2e-7, at: None }),
         SemioBrepMutation::DeleteVertex(delete_vertex::DeleteVertex { id: "v1".into() }),
         SemioBrepMutation::CreateEdge(create_edge::CreateEdge {
             id: "e-new".into(),
@@ -178,13 +178,14 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioBrepMutation> {
             end_vertex: "v2".into(),
             curve: BrepCurve::Circle { center: SemioPoint3::default(), axis: SemioPoint3 { x: 0.0, y: 0.0, z: 1.0 }, radius: 1.0 },
             tol: 3e-7,
+            at: Some(0),
         }),
         SemioBrepMutation::DeleteEdge(delete_edge::DeleteEdge { id: "e1".into() }),
-        SemioBrepMutation::CreateFace(create_face::CreateFace { id: "f-new".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Sphere { center: SemioPoint3::default(), radius: 2.0 }, orientation: true, tol: 4e-7 }),
+        SemioBrepMutation::CreateFace(create_face::CreateFace { id: "f-new".into(), outer_loop: "l1".into(), inner_loops: vec![], surface: BrepSurface::Sphere { center: SemioPoint3::default(), radius: 2.0 }, orientation: true, tol: 4e-7, at: None }),
         SemioBrepMutation::DeleteFace(delete_face::DeleteFace { id: "f1".into() }),
-        SemioBrepMutation::CreateShell(create_shell::CreateShell { id: "s-new".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: true }] }),
+        SemioBrepMutation::CreateShell(create_shell::CreateShell { id: "s-new".into(), faces: vec![BrepShellFace { face: "f1".into(), orientation: true }], at: None }),
         SemioBrepMutation::DeleteShell(delete_shell::DeleteShell { id: "s1".into() }),
-        SemioBrepMutation::CreateSolid(create_solid::CreateSolid { id: "so-new".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: true }] }),
+        SemioBrepMutation::CreateSolid(create_solid::CreateSolid { id: "so-new".into(), shells: vec![BrepSolidShell { shell: "s1".into(), is_void: true }], at: None }),
         SemioBrepMutation::DeleteSolid(delete_solid::DeleteSolid { id: "so1".into() }),
         SemioBrepMutation::ReplaceCurve(replace_curve::ReplaceCurve {
             edge_id: "e1".into(),

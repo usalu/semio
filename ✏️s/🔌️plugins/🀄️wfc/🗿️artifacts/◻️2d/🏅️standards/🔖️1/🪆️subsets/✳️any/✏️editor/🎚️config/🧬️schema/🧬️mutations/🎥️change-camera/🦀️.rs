@@ -1,6 +1,6 @@
 //! 🎥️ Change Camera in the WFC 2D config facet — one mutation per settled pan/zoom gesture.
 
-use super::{Wfc2dConfig, Wfc2dConfigMutation};
+use super::{Wfc2dConfig, Wfc2dConfigDiff, Wfc2dConfigMutation};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -16,8 +16,12 @@ pub struct ChangeCamera {
 
 impl protocol::MutationKind<Wfc2dConfig, Wfc2dConfigMutation> for ChangeCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "camera", kind: "change-camera", record: "ChangeCamera" };
-    fn diff(&self, base: &Wfc2dConfig) -> protocol::MutationOutcome<Wfc2dConfig> {
-        protocol::MutationOutcome::new(Wfc2dConfig { camera_x: self.x, camera_y: self.y, camera_zoom: self.zoom, ..base.clone() })
+    fn diff(&self, base: &Wfc2dConfig) -> protocol::MutationOutcome<Wfc2dConfigDiff> {
+        let diff = Wfc2dConfigDiff { camera_x: (base.camera_x != self.x).then_some(self.x), camera_y: (base.camera_y != self.y).then_some(self.y), camera_zoom: (base.camera_zoom != self.zoom).then_some(self.zoom), ..Default::default() };
+        if protocol::DiffAlgebra::<Wfc2dConfig>::is_empty(&diff) {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The camera already holds that pose.");
+        }
+        protocol::MutationOutcome::new(diff)
     }
     fn inverse(&self, base: &Wfc2dConfig) -> Result<Vec<Wfc2dConfigMutation>, semio_framework_value::ValueError> {
     Ok((|| {

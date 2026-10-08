@@ -1,0 +1,9 @@
+{
+  "mutation": "deleteScene",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "index": 1
+    }
+  }
+}

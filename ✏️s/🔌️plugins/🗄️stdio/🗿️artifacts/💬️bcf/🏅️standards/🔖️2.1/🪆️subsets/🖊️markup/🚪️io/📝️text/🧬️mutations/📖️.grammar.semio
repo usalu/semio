@@ -15,18 +15,16 @@ comment none
 # `enc_str`/`enc_bytes` (hex-encoded UTF-8 string / raw byte) field. `[0]`/`[1,x]` is
 # `encode_option`'s uniform tri-state shape (`📖️grammar-recipe.md` §1.4); `viewpoint-ref`'s
 # `Option<Option<String>>` nests it twice (`opt-opt-hex`).
-document = set-snapshot | patch-snapshot | set-version | insert-topic | remove-topic | set-topic-markup | insert-comment | remove-comment | set-comment | insert-viewpoint | remove-viewpoint | set-viewpoint-camera | set-viewpoint-components | set-viewpoint-snapshot
+document = set-version | insert-topic | remove-topic | set-topic-markup | insert-comment | remove-comment | set-comment | insert-viewpoint | remove-viewpoint | set-viewpoint-camera | set-viewpoint-components | set-viewpoint-snapshot
 
-patch-snapshot = "patch-snapshot" "patch" "=" hex
-set-snapshot = "set-snapshot" "snapshot" "=" bcf-snapshot
 set-version = "set-version" "version" "=" hex
-insert-topic = "insert-topic" "topic" "=" topic
+insert-topic = "insert-topic" "topic" "=" topic "index" "=" opt-int
 remove-topic = "remove-topic" "guid" "=" hex
 set-topic-markup = "set-topic-markup" "guid" "=" hex "title" "=" opt-hex "description" "=" opt-hex "status" "=" opt-hex "priority" "=" opt-hex "labels" "=" opt-label-list "creation-date" "=" opt-hex "creation-author" "=" opt-hex
-insert-comment = "insert-comment" "topic-guid" "=" hex "comment" "=" bcf-comment
+insert-comment = "insert-comment" "topic-guid" "=" hex "comment" "=" bcf-comment "index" "=" opt-int
 remove-comment = "remove-comment" "topic-guid" "=" hex "guid" "=" hex
 set-comment = "set-comment" "topic-guid" "=" hex "guid" "=" hex "date" "=" opt-hex "author" "=" opt-hex "text" "=" opt-hex "viewpoint-ref" "=" opt-opt-hex
-insert-viewpoint = "insert-viewpoint" "topic-guid" "=" hex "viewpoint" "=" viewpoint
+insert-viewpoint = "insert-viewpoint" "topic-guid" "=" hex "viewpoint" "=" viewpoint "index" "=" opt-int
 remove-viewpoint = "remove-viewpoint" "topic-guid" "=" hex "guid" "=" hex
 set-viewpoint-camera = "set-viewpoint-camera" "topic-guid" "=" hex "guid" "=" hex "camera" "=" opt-camera
 set-viewpoint-components = "set-viewpoint-components" "topic-guid" "=" hex "guid" "=" hex "components" "=" opt-components
@@ -47,19 +45,11 @@ bool-lit = "0" | "1"
 bcf-float = INT | FLOAT
 
 # ── Restated whole-item value shapes -- verbatim from this artifact's own `../../../🧬️schema/🧬️mutations/🔺️diff/🦀️.rs`
-# `enc_bcf_snapshot`/`enc_topic`/`enc_comment`/`enc_viewpoint`/`enc_camera`/`enc_point3`/
+# `enc_topic`/`enc_comment`/`enc_viewpoint`/`enc_camera`/`enc_point3`/
 # `enc_components`/`enc_visibility`/`enc_coloring`/`enc_part` (reused, per that file's own
 # `pub(crate)` primitives-reuse note, by THIS file's `OpText`/`OpBinary` impl too) ───────────────
 label-list = "[" label-item* "]"
 label-item = hex ","?
-
-# `BcfSnapshot` -- `[schema,version,topics,parts]` (`enc_bcf_snapshot`, `SetSnapshot`'s whole-payload
-# encoding only).
-bcf-snapshot = "[" hex "," hex "," topics-list "," parts-list "]"
-topics-list = "[" topic-item* "]"
-topic-item = topic ","?
-parts-list = "[" part-item* "]"
-part-item = part ","?
 
 # `BcfTopic` -- `[guid,title,description,status,priority,labels,creation-date,creation-author,comments,viewpoints]`.
 topic = "[" hex "," hex "," hex "," hex "," hex "," label-list "," hex "," hex "," comments-list "," viewpoints-list "]"
@@ -95,3 +85,5 @@ coloring = "[" hex "," label-list "]"
 
 # `BcfRawPart` -- `[name,data]`.
 part = "[" hex "," hex "]"
+
+opt-int = "[" "0" "]" | "[" "1" "," INT "]"

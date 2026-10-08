@@ -120,7 +120,7 @@ async fn a_semio_member_mints_and_reopens_a_real_child_envelope() {
 /// witness.
 #[semio_framework_async_macros::async_test]
 async fn returned_read_leases_retire_before_the_displaced_owners_that_alias_them() {
-    use crate::standards::v1::subsets::value::schema::mutations::{set_snapshot::SetSnapshot, SemioValueMutation};
+    use crate::standards::v1::subsets::value::schema::mutations::{set_value::SetValue, SemioValueMutation};
     use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 
     let seed = SemioValueSnapshot::default();
@@ -139,8 +139,7 @@ async fn returned_read_leases_retire_before_the_displaced_owners_that_alias_them
     // The first commit parks the aliased snapshot in the tail-undo cache; the SECOND one evicts it
     // into the displaced-owner queue, which is where the close cursor meets it.
     for step in ["first", "second"] {
-        let next = SemioValueSnapshot { root: SemioValue::Str { value: step.into() }, ..SemioValueSnapshot::default() };
-        store.apply_one(store.generation(), SemioValueMutation::SetSnapshot(SetSnapshot { snapshot: next }), dsl::HistoryLane::Document).await.expect("one-item commit");
+        store.apply_one(store.generation(), SemioValueMutation::SetValue(SetValue { path: Vec::new(), value: SemioValue::Str { value: step.into() } }), dsl::HistoryLane::Document).await.expect("one-item commit");
     }
 
     // The laws this pins reach their close through a SECOND decision — an undo of the commit they
@@ -193,7 +192,7 @@ fn close_member(member: &mut SemioMembers) {
 /// 🧭️ Genuine superseded history and retained replay prefixes reach the same bounded Semio close cursor.
 #[semio_framework_async_macros::async_test]
 async fn supersession_and_prefix_owners_follow_the_exact_semio_close_cursor() {
-    use crate::standards::v1::subsets::value::schema::mutations::{set_snapshot::SetSnapshot, SemioValueMutation};
+    use crate::standards::v1::subsets::value::schema::mutations::{set_value::SetValue, SemioValueMutation};
     use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
     let case: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/close-frontiers/🔣️.json")).expect("independent JSON close corpus");
     let document = case["document"].as_str().unwrap();
@@ -203,8 +202,7 @@ async fn supersession_and_prefix_owners_follow_the_exact_semio_close_cursor() {
     let runtime = dsl::ArtifactStoreInitializationRuntime::new(document, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA, envelope.vcs.genesis.share_snapshot(), envelope.vcs.genesis.digest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     let mut store = dsl::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, <SemioValueSnapshot as dsl::MemberStoreOwner<SemioValueMutation>>::member_store_owners());
     for value in case["values"].as_array().unwrap() {
-        let snapshot = SemioValueSnapshot { root: SemioValue::Str { value: value.as_str().unwrap().into() }, ..SemioValueSnapshot::default() };
-        store.apply_one(store.generation(), SemioValueMutation::SetSnapshot(SetSnapshot { snapshot }), dsl::HistoryLane::Document).await.expect("real registered value operation");
+        store.apply_one(store.generation(), SemioValueMutation::SetValue(SetValue { path: Vec::new(), value: SemioValue::Str { value: value.as_str().unwrap().into() } }), dsl::HistoryLane::Document).await.expect("real registered value operation");
     }
     let ids: Vec<_> = store.mutation_ops().expect("authored operation identities").into_iter().map(|operation| operation.mutation_id).collect();
     store.dispatch(dsl::ArtifactCommand::Supersede { scope: None, inputs: vec![dsl::SupersedeInput { target: ids[case["withdraw_index"].as_u64().unwrap() as usize].clone(), replacement: None }] }).await.expect("real authored withdrawal");

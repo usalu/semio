@@ -1,0 +1,7 @@
+# Specific Caller Command Handoff
+
+The newly defining General command owner requires an explicit absolute SEMIO_COMMAND_WORKSPACE. Its defining schemas and configuration reader remain in General Process; Specific Root must author that capability only when selecting the General aggregate. Root may compose its own taxonomy path to the actual Framework workspace. Generic discovery must not infer Root or Specific manifests, and no obsolete forwarding API is restored.
+
+The receiving Root dispatch, BuildScript and TestScript are the stable integration points. Their current concrete Canvas native/font/React branches and all route arguments remain conserved. Native Cargo requests retain explicit selected owning manifests and caller-owned preparation, operation, cancellation, progress, process context and release custody. Required preparation without its port remains a refusal. Policies continue to be validated by their actual defining General Cargo, Vitest, process-context and artifact contracts.
+
+This additional caller cut is outside frozen successor15. It requires a fresh current-source preimage and a genuine missing-capability red followed by the exact successor, preserving original cases and complete runtime scope. The whole15 source/runtime interval and its logs must be retained before this integration advances any controlled source. No physical Specific handoff or overall acceptance is claimed here.

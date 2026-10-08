@@ -1,22 +1,31 @@
 {
   "schema": null,
   "seed": null,
-  "slotsRemoved": [],
-  "slotsUpserted": [],
-  "edgesRemoved": [],
-  "edgesUpserted": [],
-  "tilesRemoved": [],
-  "tilesUpserted": [],
-  "rulesRemoved": [],
-  "rulesUpserted": [
-    [
-      0,
+  "slots": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "edges": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "tiles": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "rules": {
+    "removed": [],
+    "added": [
       {
         "id": "rule-roof-roof",
         "tileAId": "tile-roof",
         "tileBId": "tile-roof",
         "allowed": false
       }
-    ]
-  ]
+    ],
+    "patched": []
+  }
 }

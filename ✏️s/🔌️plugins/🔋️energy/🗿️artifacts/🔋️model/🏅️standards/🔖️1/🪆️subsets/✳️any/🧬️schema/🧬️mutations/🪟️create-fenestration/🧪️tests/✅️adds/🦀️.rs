@@ -20,7 +20,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     let mut model = crate::model::Model { name: "BESTEST 600".into(), ..crate::model::Model::default() };
     model.zones.push(zone(1, "ZONE ONE"));
     model.surfaces.push(fixtures::surface(3, "WALL SOUTH", 1, 2));
-    (snapshot(model), super::create_fenestration(crate::model::EntityId(5), "WINDOW SOUTH".into(), crate::model::EntityId(3), 3.0, 0.787, 0.86, 6.0, 2.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None))
+    (snapshot(model), super::create_fenestration(crate::model::EntityId(5), "WINDOW SOUTH".into(), crate::model::EntityId(3), 3.0, 0.787, 0.86, 6.0, 2.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None, None))
 }
 
 fn case() -> Case {

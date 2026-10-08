@@ -1,6 +1,5 @@
 //! 🧪️ Forms neutral document and sparse-edit laws against independent JSON values.
 use crate::{FormsSnapshot, FormsDiff};
-use protocol::MutationDiff;
 use store::{ArtifactDsl, ArtifactPack};
 
 fn vectors() -> serde_json::Value {
@@ -31,7 +30,7 @@ fn forms_document_contract_exact_json_and_sparse_edits() {
         let before: FormsSnapshot = semio_framework_pack_json::from_json_str(&case["before"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let diff: FormsDiff = semio_framework_pack_json::from_json_str(&case["diff"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&diff)).unwrap(), case["diff"]);
-        let after = diff.apply(&before).expect("valid sparse change");
+        let after = protocol::apply_diff(&diff, &before).expect("valid sparse change");
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&after)).unwrap(), case["after"], "{}", case["name"]);
     }
 }
@@ -54,7 +53,7 @@ fn forms_document_contract_distinct_child_owners_and_typed_refusal() {
     let mut child = before.structure.clone();
     child.child_id = "foreign-child".into();
     let diff = FormsDiff { structure: Some(child), ..Default::default() };
-    assert_eq!(diff.apply(&before).unwrap().structure.child_id, "foreign-child");
+    assert_eq!(protocol::apply_diff(&diff, &before).unwrap().structure.child_id, "foreign-child");
     assert_eq!(before, FormsSnapshot::default());
 }
 

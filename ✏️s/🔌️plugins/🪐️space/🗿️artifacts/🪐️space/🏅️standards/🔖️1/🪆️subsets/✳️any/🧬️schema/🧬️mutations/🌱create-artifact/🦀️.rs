@@ -13,11 +13,18 @@ use crate::standards::v1::subsets::any::schema::snapshot::{SSpaceSnapshot, Space
 pub struct CreateArtifact {
     #[dsl(block)]
     pub artifact: SpaceArtifactRow,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub index: Option<u32>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
+/// 🏗️ Builder — appends the row after the existing ones.
 pub fn create_artifact(artifact: SpaceArtifactRow) -> SSpaceMutation {
-    SSpaceMutation::CreateArtifact(CreateArtifact { artifact })
+    SSpaceMutation::CreateArtifact(CreateArtifact { artifact, index: None })
+}
+
+/// 📍️ Builder — inserts the row at `index` (an index past the end appends).
+pub fn create_artifact_at(artifact: SpaceArtifactRow, index: u32) -> SSpaceMutation {
+    SSpaceMutation::CreateArtifact(CreateArtifact { artifact, index: Some(index) })
 }
 
 impl protocol::MutationKind<SSpaceSnapshot, SSpaceMutation> for CreateArtifact {

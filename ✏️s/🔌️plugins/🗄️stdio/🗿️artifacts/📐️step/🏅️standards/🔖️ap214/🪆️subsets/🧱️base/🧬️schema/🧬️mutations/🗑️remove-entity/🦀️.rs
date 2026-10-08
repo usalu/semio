@@ -1,7 +1,5 @@
-//! 🗑️ `remove-entity` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 🗑️ `remove-entity` — authored as its own mutation leaf. It builds its own sparse diff and concrete
+//! inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,15 +13,17 @@ pub struct RemoveEntity {
 impl protocol::MutationKind<StepSnapshot, StepMutation> for RemoveEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "entity", kind: "remove-entity", record: "RemoveEntity" };
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepMutation as Mutation<StepSnapshot>>::Diff> {
-        agg_diff(&StepMutation::RemoveEntity(self.clone()), base)
+    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
+        let Self { id } = self;
+        protocol::MutationOutcome::new(StepDiff { entities: Some(StepEntitiesDiff { removed: vec![*id], ..Default::default() }), ..Default::default() })
     }
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&StepMutation::RemoveEntity(self.clone()), base)?
-    
-    })
-}
+        let Self { id } = self;
+        Ok(match base.entities.iter().position(|e| e.id == *id) {
+            Some(idx) => vec![StepMutation::InsertEntity(insert_entity::InsertEntity { index: idx, entity: base.entities[idx].clone() })],
+            None => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove entity", "Entität entfernen")
     }

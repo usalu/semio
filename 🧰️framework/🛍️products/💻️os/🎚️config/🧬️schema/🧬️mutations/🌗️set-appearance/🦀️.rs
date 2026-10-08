@@ -22,7 +22,7 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetA
     }
 
     fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
-        Ok(vec![UiPreferencesConfigMutation::Appearance(Self { appearance: base.appearance.clone() })])
+        Ok(vec![UiPreferencesConfigMutation::SetAppearance(Self { appearance: base.appearance.clone() })])
     }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

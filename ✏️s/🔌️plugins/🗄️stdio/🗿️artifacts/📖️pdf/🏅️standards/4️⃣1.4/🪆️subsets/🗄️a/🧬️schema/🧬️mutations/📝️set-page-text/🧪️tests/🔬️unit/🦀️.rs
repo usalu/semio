@@ -1,4 +1,6 @@
 use super::*;
+use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
+use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
 use protocol::Mutation;
 
 #[test]
@@ -53,4 +55,10 @@ fn missing_page_refuses_without_inverse_or_state_change() {
     assert!(crate::standards::v1_4::subsets::base::schema::mutations::apply_outcome(!mutation.diff(&state), &mut state).messages().is_empty());
     assert_eq!(state, base);
     assert!(mutation.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    let base = PdfSnapshot { pages: vec![PageDoc { width: 612.0, height: 792.0, text: "first".to_string() }, PageDoc { width: 100.0, height: 200.0, text: "second".to_string() }], ..Default::default() };
+    assert_mutation_inverse_sum_law(&PdfA1Mutation::SetPageText(SetPageText { text: "replaced".to_string() }), &base).await;
 }

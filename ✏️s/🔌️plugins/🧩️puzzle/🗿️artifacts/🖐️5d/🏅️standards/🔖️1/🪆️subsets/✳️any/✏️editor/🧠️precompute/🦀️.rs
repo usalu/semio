@@ -370,7 +370,7 @@ impl Puzzle5dPlannerBoard {
             hidden: false,
             locked: false,
         };
-        let connect = ConnectVortices { id: fastener_id, attracting: preview.target_vortex_full_id.clone(), attracted: puzzle5d_grip_full_id(&part_id, &source.id), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 };
+        let connect = ConnectVortices { id: fastener_id, attracting: preview.target_vortex_full_id.clone(), attracted: puzzle5d_grip_full_id(&part_id, &source.id), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0, index: None };
         self.adopt(&object, &connect)
     }
 
@@ -395,7 +395,7 @@ impl Puzzle5dPlannerBoard {
             placed.push((create.object.origin.map(|axis| axis as f32), [part.part_2d.x, part.part_2d.y]));
             let encode = |mutation: Puzzle5dMutation| <Puzzle5dMutation as protocol::OpBinary>::encode_op(&mutation).map_err(|error| Fault::from(format!("puzzle5d-planner-tick-op: {error}")));
             append_ops.push(encode(create_part(schema_part(&part)?, None))?);
-            append_ops.push(encode(connect_grips(fastener.id, fastener.source, fastener.target, fastener.fastener_kind, fastener.gap, fastener.shift, fastener.rise, fastener.rotation, fastener.turn, fastener.tilt, fastener.x, fastener.y))?);
+            append_ops.push(encode(connect_grips(fastener.id, fastener.source, fastener.target, fastener.fastener_kind, fastener.gap, fastener.shift, fastener.rise, fastener.rotation, fastener.turn, fastener.tilt, fastener.x, fastener.y, None))?);
         }
         let mut trace = Vec::with_capacity(tick.trace.len());
         for page in tick.trace {

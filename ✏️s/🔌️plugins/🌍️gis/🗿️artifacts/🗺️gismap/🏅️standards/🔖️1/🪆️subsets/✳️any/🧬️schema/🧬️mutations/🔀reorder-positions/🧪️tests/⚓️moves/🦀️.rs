@@ -114,7 +114,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: GisMapDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <GisMapDiff as protocol::MutationDiff<GisMapSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-positions/moves-harbor-position-to-end: committed diff did not carry before to after");
 }
 
@@ -143,4 +143,10 @@ async fn permutes_the_whole_position_order_without_touching_any_payload() {
         ("reorder", "positions", "reorder-positions", "ReorderedPositions"),
         "reorder-positions/moves-harbor-position-to-end: the fixture must be bound to reorder-positions' own descriptor"
     );
+}
+
+/// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

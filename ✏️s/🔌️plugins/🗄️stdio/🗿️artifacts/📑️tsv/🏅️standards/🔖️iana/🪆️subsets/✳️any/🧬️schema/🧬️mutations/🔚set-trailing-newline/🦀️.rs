@@ -1,6 +1,4 @@
-//! 🔚 `set-trailing-newline` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🔚 `set-trailing-newline` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,14 +14,12 @@ impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetTrailingNewline {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "trailing-newline", kind: "set-trailing-newline", record: "SetTrailingNewline" };
 
     fn diff(&self, base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as Mutation<TsvSnapshot>>::Diff> {
-        agg_diff(&TsvMutation::SetTrailingNewline(self.clone()), base)
+        let Self { trailing_newline } = self;
+        protocol::MutationOutcome::new(TsvDiff { trailing_newline: Some(*trailing_newline), ..TsvDiff::default() })
     }
     fn inverse(&self, base: &TsvSnapshot) -> Result<Vec<TsvMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&TsvMutation::SetTrailingNewline(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: base.trailing_newline })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set trailing newline", "Abschließenden Zeilenumbruch setzen")
     }

@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../.."
 name = "semio-s-artifact-animate-presentation"
 version.workspace = true
 edition.workspace = true
@@ -72,7 +72,7 @@ optional = true
 
 [dev-dependencies]
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest", "artifact-app-testing"], package = "semio-framework-plugin" }
-semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws"] }
+semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws", "mutation-testing"] }
 roxmltree = "0.20.0"
 serde.workspace = true
 serde_json.workspace = true

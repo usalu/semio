@@ -1,7 +1,7 @@
 //! 🔺️ Diff fragment yielded by `ReplaceAssetPayload`. Error `target-missing` when the key is
 //! absent, Warning `no-op` when the payload is unchanged.
 use super::ReplaceAssetPayload;
-use crate::schema::diff::note_asset_upsert_diff;
+use crate::schema::diff::NoteAssetRow;
 use crate::NoteDiff;
 use crate::NoteSnapshot;
 
@@ -13,6 +13,6 @@ pub fn diff(payload: &ReplaceAssetPayload, base: &NoteSnapshot) -> protocol::Mut
     if existing == &payload.new_asset {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Asset \"{}\" payload is unchanged.", payload.key));
     }
-    protocol::MutationOutcome::new(note_asset_upsert_diff(&payload.key, &payload.new_asset))
+    protocol::MutationOutcome::new(NoteDiff::asset_rows(vec![NoteAssetRow::Replace { key: payload.key.clone(), asset: payload.new_asset.clone() }]))
 }
 //#endregion 🔖️Diff

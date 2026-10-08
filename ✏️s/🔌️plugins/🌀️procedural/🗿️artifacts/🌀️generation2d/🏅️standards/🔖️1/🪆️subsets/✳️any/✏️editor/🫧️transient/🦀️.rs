@@ -48,14 +48,6 @@ impl store::ArtifactPack for Generation2dTransient {
     }
 }
 
-impl protocol::MutationDiff<Generation2dTransient> for Generation2dTransient {
-    fn apply(&self, _base: &Generation2dTransient) -> protocol::MutationApplyResult<Generation2dTransient> {
-        Ok(self.clone())
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
@@ -67,3 +59,45 @@ mod tests;
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
+
+/// 🩹 Owned-field diff of [`Generation2dTransient`]: exactly the fields a leaf sets.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Generation2dTransientPatch {
+    pub generation_preview_text: Option<Generation2dPreviewTextChange>,
+}
+
+/// 🔺️ One change of the nullable `generation_preview_text`: the inner `None` clears it.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Generation2dPreviewTextChange {
+    pub text: Option<String>,
+}
+
+impl protocol::MutationDiff<Generation2dTransient> for Generation2dTransientPatch {
+    fn apply(&self, base: &Generation2dTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Generation2dTransient> {
+        Ok(Generation2dTransient {
+            generation_preview_text: self.generation_preview_text.clone().map_or_else(|| base.generation_preview_text.clone(), |change| change.text),
+            ..base.clone()
+        })
+    }
+    fn absorb(&mut self, other: Self) {
+        self.generation_preview_text = other.generation_preview_text.or_else(|| self.generation_preview_text.take());
+    }
+}
+
+impl protocol::DiffAlgebra<Generation2dTransient> for Generation2dTransientPatch {
+    fn inverse(&self, base: &Generation2dTransient) -> Self {
+        Self {
+            generation_preview_text: self.generation_preview_text.as_ref().map(|_| Generation2dPreviewTextChange { text: base.generation_preview_text.clone() }),
+        }
+    }
+    fn between(base: &Generation2dTransient, other: &Generation2dTransient) -> Self {
+        Self {
+            generation_preview_text: (base.generation_preview_text != other.generation_preview_text).then(|| Generation2dPreviewTextChange { text: other.generation_preview_text.clone() }),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.generation_preview_text.is_none()
+    }
+}

@@ -59,9 +59,9 @@ fn sweep_b() -> SemioBrepSnapshot {
 async fn between_roundtrip_law_and_field_sweep_both_directions() {
     let (a, b) = (sweep_a(), sweep_b());
     let d_ab = SemioBrepDiff::between(&a, &b);
-    assert_eq!(d_ab.apply(&a).expect("apply must succeed for a well-formed fixture"), b);
+    assert_eq!(protocol::apply_diff(&d_ab, &a).expect("apply must succeed for a well-formed fixture"), b);
     let d_ba = SemioBrepDiff::between(&b, &a);
-    assert_eq!(d_ba.apply(&b).expect("apply must succeed for a well-formed fixture"), a);
+    assert_eq!(protocol::apply_diff(&d_ba, &b).expect("apply must succeed for a well-formed fixture"), a);
     assert!(SemioBrepDiff::between(&a, &a).is_empty());
 }
 //#endregion 🔖️between_roundtrip_law
@@ -74,34 +74,34 @@ async fn field_sweep_every_field_present_in_diff() {
 
     let vertices = d.vertices.as_ref().expect("vertices diff present");
     assert_eq!(vertices.removed, vec!["v-removed".to_string()]);
-    assert_eq!(vertices.added.iter().map(|v| v.id.clone()).collect::<Vec<_>>(), vec!["v-added".to_string()]);
+    assert_eq!(vertices.added.iter().map(|v| v.item.id.clone()).collect::<Vec<_>>(), vec!["v-added".to_string()]);
     assert!(vertices.modified.iter().any(|m| m.key == "v1" && m.diff.point.is_some() && m.diff.tol == Some(2e-7)));
 
     let edges = d.edges.as_ref().expect("edges diff present");
     assert_eq!(edges.removed, vec!["e-removed".to_string()]);
-    assert_eq!(edges.added.iter().map(|e| e.id.clone()).collect::<Vec<_>>(), vec!["e-added".to_string()]);
+    assert_eq!(edges.added.iter().map(|e| e.item.id.clone()).collect::<Vec<_>>(), vec!["e-added".to_string()]);
     let e1 = edges.modified.iter().find(|m| m.key == "e1").expect("e1 modified");
     assert!(e1.diff.start_vertex.is_some() && e1.diff.end_vertex.is_some() && e1.diff.curve.is_some() && e1.diff.tol == Some(3e-7));
 
     let loops = d.loops.as_ref().expect("loops diff present");
     assert_eq!(loops.removed, vec!["l-removed".to_string()]);
-    assert_eq!(loops.added.iter().map(|l| l.id.clone()).collect::<Vec<_>>(), vec!["l-added".to_string()]);
+    assert_eq!(loops.added.iter().map(|l| l.item.id.clone()).collect::<Vec<_>>(), vec!["l-added".to_string()]);
     assert!(loops.modified.iter().any(|m| m.key == "l1" && m.diff.edges.is_some()));
 
     let faces = d.faces.as_ref().expect("faces diff present");
     assert_eq!(faces.removed, vec!["f-removed".to_string()]);
-    assert_eq!(faces.added.iter().map(|f| f.id.clone()).collect::<Vec<_>>(), vec!["f-added".to_string()]);
+    assert_eq!(faces.added.iter().map(|f| f.item.id.clone()).collect::<Vec<_>>(), vec!["f-added".to_string()]);
     let f1 = faces.modified.iter().find(|m| m.key == "f1").expect("f1 modified");
     assert!(f1.diff.outer_loop.is_some() && f1.diff.inner_loops.is_some() && f1.diff.surface.is_some() && f1.diff.orientation.is_some() && f1.diff.tol == Some(4e-7));
 
     let shells = d.shells.as_ref().expect("shells diff present");
     assert_eq!(shells.removed, vec!["s-removed".to_string()]);
-    assert_eq!(shells.added.iter().map(|s| s.id.clone()).collect::<Vec<_>>(), vec!["s-added".to_string()]);
+    assert_eq!(shells.added.iter().map(|s| s.item.id.clone()).collect::<Vec<_>>(), vec!["s-added".to_string()]);
     assert!(shells.modified.iter().any(|m| m.key == "s1" && m.diff.faces.is_some()));
 
     let solids = d.solids.as_ref().expect("solids diff present");
     assert_eq!(solids.removed, vec!["so-removed".to_string()]);
-    assert_eq!(solids.added.iter().map(|s| s.id.clone()).collect::<Vec<_>>(), vec!["so-added".to_string()]);
+    assert_eq!(solids.added.iter().map(|s| s.item.id.clone()).collect::<Vec<_>>(), vec!["so-added".to_string()]);
     assert!(solids.modified.iter().any(|m| m.key == "so1" && m.diff.shells.is_some()));
 }
 //#endregion 🔖️field_sweep
@@ -112,7 +112,7 @@ async fn inverse_law_diff_level_round_trips() {
     let (a, b) = (sweep_a(), sweep_b());
     let d = SemioBrepDiff::between(&a, &b);
     let inv = d.inverse(&a);
-    assert_eq!(inv.apply(&d.apply(&a).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture"), a);
+    assert_eq!(protocol::apply_diff(&inv, &protocol::apply_diff(&d, &a).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture"), a);
 }
 //#endregion 🔖️inverse_law
 
@@ -121,25 +121,25 @@ async fn inverse_law_diff_level_round_trips() {
 async fn absorb_law_add_then_remove_of_same_added_key_cancels() {
     let base = SemioBrepSnapshot::default();
     let mut d1 = SemioBrepDiff::default();
-    d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![], added: vec![BrepVertex { tol: 1e-7, id: "v-new".into(), point: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } }] });
+    d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![], added: vec![NamedAdded { index: 0, item: BrepVertex { tol: 1e-7, id: "v-new".into(), point: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 } } }] });
     let mut d2 = SemioBrepDiff::default();
     d2.vertices = Some(BrepVerticesDiff { removed: vec!["v-new".into()], modified: vec![], added: vec![] });
-    let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
     d1.absorb(d2);
-    assert_eq!(d1.apply(&base).expect("apply must succeed for a well-formed fixture"), sequential);
-    assert_eq!(d1.apply(&base).expect("apply must succeed for a well-formed fixture"), base, "add-then-remove-of-same-key must net to a no-op");
+    assert_eq!(protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture"), sequential);
+    assert_eq!(protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture"), base, "add-then-remove-of-same-key must net to a no-op");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn absorb_law_add_then_setfield_patches_added_payload() {
     let base = SemioBrepSnapshot::default();
     let mut d1 = SemioBrepDiff::default();
-    d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![], added: vec![BrepVertex { tol: 1e-7, id: "v-new".into(), point: SemioPoint3::default() }] });
+    d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![], added: vec![NamedAdded { index: 0, item: BrepVertex { tol: 1e-7, id: "v-new".into(), point: SemioPoint3::default() } }] });
     let mut d2 = SemioBrepDiff::default();
     d2.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![NamedModified { key: "v-new".into(), diff: BrepVertexDiff { point: Some(SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 }), tol: Some(2e-7) } }], added: vec![] });
-    let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
     d1.absorb(d2);
-    let result = d1.apply(&base).expect("apply must succeed for a well-formed fixture");
+    let result = protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture");
     assert_eq!(result, sequential);
     assert_eq!(result.vertices[0].point, SemioPoint3 { x: 5.0, y: 5.0, z: 5.0 });
     assert_eq!(result.vertices[0].tol, 2e-7);
@@ -153,9 +153,9 @@ async fn absorb_law_modify_then_remove_drops_pending_patch() {
     d1.vertices = Some(BrepVerticesDiff { removed: vec![], modified: vec![NamedModified { key: "v1".into(), diff: BrepVertexDiff { point: Some(SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 }), tol: None } }], added: vec![] });
     let mut d2 = SemioBrepDiff::default();
     d2.vertices = Some(BrepVerticesDiff { removed: vec!["v1".into()], modified: vec![], added: vec![] });
-    let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
     d1.absorb(d2);
-    let result = d1.apply(&base).expect("apply must succeed for a well-formed fixture");
+    let result = protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture");
     assert_eq!(result, sequential);
     assert!(result.vertices.is_empty());
 }
@@ -170,8 +170,8 @@ async fn absorb_law_associativity() {
     let d2 = SemioBrepDiff::between(&mid, &after);
     let mut absorbed = d1.clone();
     absorbed.absorb(d2.clone());
-    assert_eq!(absorbed.apply(&base).expect("apply must succeed for a well-formed fixture"), after);
-    assert_eq!(absorbed.apply(&base).expect("apply must succeed for a well-formed fixture"), d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture"));
+    assert_eq!(protocol::apply_diff(&absorbed, &base).expect("apply must succeed for a well-formed fixture"), after);
+    assert_eq!(protocol::apply_diff(&absorbed, &base).expect("apply must succeed for a well-formed fixture"), protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture"));
 }
 //#endregion 🔖️absorb_law
 

@@ -8,16 +8,13 @@ fn text_edit_requires_an_explicit_text_value_and_allows_empty_documents() {
 }
 
 #[test]
-fn natural_file_route_exports_commonmark_and_reopens_through_one_mutation() {
+fn natural_file_route_exports_commonmark_and_reopens_the_same_document() {
     let edited = MdSnapshot::from_text("# Natural Open Save\n\nEdited body.\n");
     let bytes = <MdEditor as ArtifactEditor>::encode_natural_file(&edited).expect("Markdown natural bytes");
     let oracle = semio_s_artifact_stdio_md_test_oracle::standards::v_commonmark::subsets::any::project_md;
     assert_eq!(oracle(&bytes).expect("Comrak reads exported Markdown"), oracle(b"# Natural Open Save\n\nEdited body.\n").expect("Comrak reads expected Markdown"));
     let reopened = <MdEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("Markdown natural bytes reopen");
-    let Some(MdMutation::SetSnapshot(SetSnapshot { snapshot: opened })) = <MdEditor as ArtifactEditor>::whole_document_operation(reopened) else {
-        panic!("natural Markdown opens through one event-sourced snapshot mutation")
-    };
-    assert_eq!(opened, edited);
+    assert_eq!(reopened, edited);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -135,7 +132,6 @@ fn net_leaf_summary(leaf: &MdMutation) -> serde_json::Value {
         MdMutation::RemoveBlock(leaf) => (leaf.path.iter().map(step).collect(), leaf.index),
         MdMutation::ReplaceBlock(leaf) => (leaf.path.iter().map(step).collect(), leaf.index),
         MdMutation::SetInlines(leaf) => (leaf.path.iter().map(step).collect(), leaf.index),
-        MdMutation::SetSnapshot(_) => (Vec::new(), 0),
     };
     serde_json::json!({ "kind": protocol::SemanticMutation::<MdSnapshot>::semantics(leaf).kind, "path": path, "index": index })
 }
@@ -167,18 +163,18 @@ fn an_applied_text_is_its_net_block_leaves_and_they_reach_exactly_that_text() {
     }
 }
 
-/// ⚖️ LAW (audit T4): the ONLY whole-document `set-snapshot` the net leaves emit is the named replace intent — an applied envelope
-/// naming another document schema — and no net-leaves corpus change (every one keeps its schema) emits one.
+/// ⚖️ LAW: an applied envelope naming another document schema is refused by the exact replay instead of being published as a
+/// whole-document replacement, and no net-leaves corpus change (every one keeps its schema) is refused.
 #[test]
-fn only_another_document_schema_is_a_whole_document_set_snapshot() {
+fn another_document_schema_is_refused_and_no_corpus_change_is() {
     let corpus: serde_json::Value = serde_json::from_str(NET_LEAVES).expect("net-leaves corpus");
     for case in corpus["cases"].as_array().expect("cases") {
         let (base, next) = (MdSnapshot::from_text(case["before"].as_str().expect("before")), MdSnapshot::from_text(case["after"].as_str().expect("after")));
-        assert!(md_net_mutations(&base, &next).iter().all(|leaf| !matches!(leaf, MdMutation::SetSnapshot(_))), "{}: a block edit is never a whole-document set-snapshot", case["id"]);
+        assert!(semio_s_artifact_stdio_contract::editing::net_leaves_exact(&base, &next, md_net_mutations).is_ok(), "{}: a block edit is addressed by its leaves", case["id"]);
     }
     let base = MdSnapshot::from_text("# Title\n\nBody.\n");
     let other = MdSnapshot { schema: "stdio.md.other-schema".into(), ..base.clone() };
-    assert_eq!(md_net_mutations(&base, &other), vec![MdMutation::SetSnapshot(SetSnapshot { snapshot: other.clone() })], "another document schema replaces the document");
+    assert!(semio_s_artifact_stdio_contract::editing::net_leaves_exact(&base, &other, md_net_mutations).is_err(), "another document schema is unaddressed");
 }
 
 /// ⚖️ LAW (design §20.3): a document-details edit publishes the artifact's own net block leaves — exactly the corpus leaves of
@@ -200,7 +196,6 @@ fn a_document_details_edit_is_its_net_block_leaves() {
                 MdMutation::RemoveBlock(_) => ("Remove block", "Block entfernen"),
                 MdMutation::ReplaceBlock(_) => ("Replace block", "Block ersetzen"),
                 MdMutation::SetInlines(_) => ("Set inlines", "Inline-Elemente setzen"),
-                MdMutation::SetSnapshot(_) => ("Set snapshot", "Momentaufnahme setzen"),
             };
             assert_eq!(protocol::SemanticMutation::<MdSnapshot>::label(leaf), semio_framework_ui_locale::LocalizedLabel::native(en, de), "{id}: the row is labelled from its leaf in every supported locale");
         }

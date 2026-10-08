@@ -46,7 +46,7 @@ impl Default for FormsConfig {
     fn default() -> Self { Self { contributions_json: "[]".into() } }
 }
 
-store::impl_whole_record_config!(FormsConfig);
+store::config_diff! { record: FormsConfig, diff: FormsConfigDiff, fields: { contributions_json: String } }
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;

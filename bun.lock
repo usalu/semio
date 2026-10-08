@@ -80,7 +80,7 @@
       "version": "0.1.0",
     },
     "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/s-2d-js",
+      "name": "@semio-tech/framework-2d-js",
       "version": "0.1.0",
     },
     "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust": {
@@ -259,6 +259,25 @@
         "jsdom": "^24.1.3",
       },
     },
+    "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/canvas-react-renderer",
+      "version": "0.1.0",
+      "dependencies": {
+        "@semio-tech/framework": "workspace:*",
+        "@semio-tech/ui-react": "workspace:*",
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3",
+      },
+      "devDependencies": {
+        "@types/react": "^19.2.8",
+        "@types/react-dom": "^19.2.3",
+        "typescript": "^5.9.3",
+        "vite": "^7.3.1",
+      },
+    },
+    "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust": {
+      "name": "semio-framework-canvas",
+    },
     "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-deflate-rs",
       "version": "0.1.0",
@@ -282,6 +301,10 @@
       "name": "@semio-tech/framework-artifact-reference-rs",
       "version": "0.1.0",
     },
+    "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust": {
+      "name": "@semio-tech/framework-io-base64-rs",
+      "version": "0.1.0",
+    },
     "🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-io-schema-rs",
       "version": "0.1.0",
@@ -295,7 +318,7 @@
       "version": "0.1.0",
     },
     "🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/s-3d-js",
+      "name": "@semio-tech/framework-3d-js",
       "version": "0.1.0",
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -484,22 +507,6 @@
         "vitest": "^4.0.17",
       },
     },
-    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/infinite-canvas-react-renderer",
-      "version": "0.1.0",
-      "dependencies": {
-        "@semio-tech/framework": "workspace:*",
-        "@semio-tech/ui-react": "workspace:*",
-        "react": "^19.2.3",
-        "react-dom": "^19.2.3",
-      },
-      "devDependencies": {
-        "@types/react": "^19.2.8",
-        "@types/react-dom": "^19.2.3",
-        "typescript": "^5.9.3",
-        "vite": "^7.3.1",
-      },
-    },
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript": {
       "name": "@semio-tech/framework-os-mcp",
       "version": "0.1.0",
@@ -526,11 +533,12 @@
       "dependencies": {
         "@react-three/fiber": "^9.5.0",
         "@semio-tech/assets": "workspace:*",
+        "@semio-tech/canvas-react-renderer": "workspace:*",
         "@semio-tech/framework": "workspace:*",
         "@semio-tech/framework-editor-rs": "workspace:*",
         "@semio-tech/framework-os": "workspace:*",
+        "@semio-tech/framework-os-node-graph-rs": "workspace:*",
         "@semio-tech/framework-surface-rs": "workspace:*",
-        "@semio-tech/infinite-canvas-react-renderer": "workspace:*",
         "@semio-tech/infinite-world-r3f": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
         "@semio-tech/ui-styling": "workspace:*",
@@ -562,6 +570,9 @@
         "typescript": "^5.9.3",
         "vitest": "^4.0.17",
       },
+    },
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust": {
+      "name": "@semio-tech/framework-os-node-graph-rs",
     },
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧮️compute": {
       "name": "@semio-tech/framework-plugin-compute-ownership",
@@ -1676,6 +1687,8 @@
 
     "@semio-tech/assets": ["@semio-tech/assets@workspace:🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript"],
 
+    "@semio-tech/canvas-react-renderer": ["@semio-tech/canvas-react-renderer@workspace:🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript"],
+
     "@semio-tech/compiler-syntax-rust-ts": ["@semio-tech/compiler-syntax-rust-ts@workspace:🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript"],
 
     "@semio-tech/compute-ownership-runner": ["@semio-tech/compute-ownership-runner@workspace:🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution"],
@@ -1685,6 +1698,10 @@
     "@semio-tech/flow-core-build": ["@semio-tech/flow-core-build@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust"],
 
     "@semio-tech/framework": ["@semio-tech/framework@workspace:🧰️framework/📦️packages/🟦️typescript"],
+
+    "@semio-tech/framework-2d-js": ["@semio-tech/framework-2d-js@workspace:🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript"],
+
+    "@semio-tech/framework-3d-js": ["@semio-tech/framework-3d-js@workspace:🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript"],
 
     "@semio-tech/framework-actor": ["@semio-tech/framework-actor@workspace:🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript"],
 
@@ -1710,6 +1727,8 @@
 
     "@semio-tech/framework-graph-layout-run-rs": ["@semio-tech/framework-graph-layout-run-rs@workspace:🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust"],
 
+    "@semio-tech/framework-io-base64-rs": ["@semio-tech/framework-io-base64-rs@workspace:🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust"],
+
     "@semio-tech/framework-io-schema-rs": ["@semio-tech/framework-io-schema-rs@workspace:🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust"],
 
     "@semio-tech/framework-kernel": ["@semio-tech/framework-kernel@workspace:🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript"],
@@ -1727,6 +1746,8 @@
     "@semio-tech/framework-os-kernel": ["@semio-tech/framework-os-kernel@workspace:🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"],
 
     "@semio-tech/framework-os-mcp": ["@semio-tech/framework-os-mcp@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript"],
+
+    "@semio-tech/framework-os-node-graph-rs": ["@semio-tech/framework-os-node-graph-rs@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust"],
 
     "@semio-tech/framework-os-rs": ["@semio-tech/framework-os-rs@workspace:🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/pkg"],
 
@@ -1774,8 +1795,6 @@
 
     "@semio-tech/framework-ui-viewport-rs": ["@semio-tech/framework-ui-viewport-rs@workspace:🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust"],
 
-    "@semio-tech/infinite-canvas-react-renderer": ["@semio-tech/infinite-canvas-react-renderer@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript"],
-
     "@semio-tech/infinite-world-r3f": ["@semio-tech/infinite-world-r3f@workspace:🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript"],
 
     "@semio-tech/machine": ["@semio-tech/machine@workspace:🧰️framework/🔨️modules/🔄️machine/📦️packages/🟦️typescript"],
@@ -1817,10 +1836,6 @@
     "@semio-tech/repo-sqlite": ["@semio-tech/repo-sqlite@workspace:🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🪶️sqlite/📦️packages/🟦️typescript"],
 
     "@semio-tech/repo-test": ["@semio-tech/repo-test@workspace:🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript"],
-
-    "@semio-tech/s-2d-js": ["@semio-tech/s-2d-js@workspace:🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript"],
-
-    "@semio-tech/s-3d-js": ["@semio-tech/s-3d-js@workspace:🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript"],
 
     "@semio-tech/schema-composition-rs": ["@semio-tech/schema-composition-rs@workspace:🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust"],
 
@@ -3559,6 +3574,8 @@
     "seek-bzip": ["seek-bzip@1.0.6", "", { "dependencies": { "commander": "^2.8.1" }, "bin": { "seek-bunzip": "bin/seek-bunzip", "seek-table": "bin/seek-bzip-table" } }, "sha512-e1QtP3YL5tWww8uKaOCQ18UxIT2laNBXHjV/S2WYCiK4udiv8lkG89KRIoCjUagnAmCBurjF4zEVX2ByBbnCjQ=="],
 
     "semio-framework-2d": ["semio-framework-2d@workspace:🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust"],
+
+    "semio-framework-canvas": ["semio-framework-canvas@workspace:🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust"],
 
     "semio-framework-pixels": ["semio-framework-pixels@workspace:🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust"],
 

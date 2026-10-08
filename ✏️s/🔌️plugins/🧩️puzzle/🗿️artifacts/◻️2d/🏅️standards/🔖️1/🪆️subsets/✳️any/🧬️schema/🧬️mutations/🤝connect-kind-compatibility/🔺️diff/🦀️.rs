@@ -1,5 +1,5 @@
 //! 🔺️ Sparse diff builder for `ConnectKindCompatibility` — appends one row to `meta.kindCompatibility`.
-use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dKindCompatibilityDelta, Puzzle2dMetaPatch};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle2dDiff, Puzzle2dKindCompatibilityDelta, Puzzle2dKindCompatibilityKey, Puzzle2dMetaPatch};
 use crate::{Puzzle2dKindCompatibility, Puzzle2dSnapshot};
 
 //#region 🔖️Diff
@@ -8,6 +8,11 @@ pub fn diff(payload: &super::ConnectKindCompatibility, base: &Puzzle2dSnapshot) 
         return protocol::MutationOutcome::new(Puzzle2dDiff::default()).absorb_messages([protocol::MutationMessage::warning("mutation.no-op", "already connected").at(vec![payload.source.to_string_owner(), payload.target.to_string_owner()])]);
     }
     let row = Puzzle2dKindCompatibility { source: payload.source.clone(), target: payload.target.clone(), bidirectional: payload.bidirectional, important: payload.important, specificity: payload.specificity };
-    protocol::MutationOutcome::new(Puzzle2dDiff { meta: Some(Puzzle2dMetaPatch { kind_compatibility: Some(Puzzle2dKindCompatibilityDelta::adding(row, None)), ..Default::default() }), ..Default::default() })
+    let reordered = payload.index.filter(|index| *index < base.meta.kind_compatibility.len()).map(|index| {
+        let mut order: Vec<Puzzle2dKindCompatibilityKey> = base.meta.kind_compatibility.iter().map(|row| Puzzle2dKindCompatibilityKey { source: row.source.clone(), target: row.target.clone() }).collect();
+        order.insert(index, Puzzle2dKindCompatibilityKey { source: row.source.clone(), target: row.target.clone() });
+        order
+    });
+    protocol::MutationOutcome::new(Puzzle2dDiff { meta: Some(Puzzle2dMetaPatch { kind_compatibility: Some(Puzzle2dKindCompatibilityDelta::adding(row, reordered)), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

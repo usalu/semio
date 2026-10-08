@@ -1,16 +1,18 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "title": null,
   "blocks": {
-    "added": [],
-    "removed": [
-      "blk-ink",
-      "blk-image"
-    ],
-    "patched": [],
-    "reordered": null
+    "rows": [
+      {
+        "row": "remove",
+        "id": "blk-image"
+      },
+      {
+        "row": "remove",
+        "id": "blk-ink"
+      }
+    ]
   },
   "gridVisible": null,
   "gridSpacing": null,

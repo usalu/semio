@@ -18,6 +18,8 @@ pub fn inverse(payload: &super::DeleteNode, base: &SemioGraphSnapshot) -> Result
     let edges = base.edges.iter().enumerate().filter(|(_, edge)| edge.source == payload.id || edge.target == payload.id).map(|(at, edge)| {
         SemioGraphMutation::CreateEdge(CreateEdge { id: edge.id.clone(), source: edge.source.clone(), target: edge.target.clone(), kind: edge.kind.clone(), label: edge.label.clone(), source_port: edge.source_port.clone(), target_port: edge.target_port.clone(), properties: edge.properties.clone(), at: Some(at) })
     });
-    Ok(std::iter::once(restore).chain(edges).collect())
+    let mut rows: Vec<SemioGraphMutation> = std::iter::once(restore).chain(edges).collect();
+    rows.reverse();
+    Ok(rows)
 }
 //#endregion 🔖️Inverse

@@ -1,6 +1,6 @@
 //! 🌞️ Sets the JSON-encoded `WorldSunConfig` driving the preview sun rig.
 
-use super::{Generation3dConfig, Generation3dConfigMutation};
+use super::{Generation3dConfigPatch, Generation3dConfig, Generation3dConfigMutation};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "sun")]
@@ -13,10 +13,8 @@ pub struct SetSun {
 impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for SetSun {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "sun", kind: "set-sun", record: "SetSun" };
 
-    fn diff(&self, base: &Generation3dConfig) -> protocol::MutationOutcome<Generation3dConfig> {
-        let mut next = base.clone();
-        next.sun_json.clone_from(&self.json);
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, base: &Generation3dConfig) -> protocol::MutationOutcome<Generation3dConfigPatch> {
+        protocol::MutationOutcome::new(Generation3dConfigPatch { sun_json: Some(self.json.clone()), ..Default::default() })
     }
 
     fn inverse(&self, base: &Generation3dConfig) -> Result<Vec<Generation3dConfigMutation>, semio_framework_value::ValueError> {

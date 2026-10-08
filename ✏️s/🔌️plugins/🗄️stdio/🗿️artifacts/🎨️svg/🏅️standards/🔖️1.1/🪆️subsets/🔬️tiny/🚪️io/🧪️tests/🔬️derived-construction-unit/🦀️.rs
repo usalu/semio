@@ -16,13 +16,9 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
-        let mut snapshot = SvgTinyBuilderConstruction::empty().build().unwrap();
-        if let Some(SvgNode::Element { children, .. }) = snapshot.doc.root.as_mut() {
-            children.push(SvgNode::Element { name: "script".into(), attrs: vec![], children: vec![SvgNode::Text { text: "alert(1)".into() }] });
-        }
-        let (mutated, _diff) = SvgTinyBuilderConstruction::from_snapshot(SvgSnapshot::default()).mutate(SvgTinyMutation::SetSnapshot(crate::standards::v1_1::subsets::tiny::schema::mutations::set_snapshot::SetSnapshot { snapshot }));
-        let err = mutated.build().expect_err("a <script> element must fail build()");
+    async fn hard_violation_read_from_text_still_fails_build() {
+        let text = r#"<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>"#;
+        let err = SvgTinyBuilderConstruction::from_text(text).expect("parses").build().expect_err("a <script> element must fail build()");
         assert!(err.iter().any(|d| d.code.0 == CODE_ELEMENT));
     }
 

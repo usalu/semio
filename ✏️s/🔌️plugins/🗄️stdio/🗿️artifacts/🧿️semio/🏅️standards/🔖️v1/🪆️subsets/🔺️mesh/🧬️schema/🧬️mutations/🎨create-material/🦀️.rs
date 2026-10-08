@@ -8,6 +8,8 @@ use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, Semio
 #[mutation_leaf(contract = ::protocol)]
 pub struct CreateMaterial {
     pub material: SemioMaterial,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for CreateMaterial {

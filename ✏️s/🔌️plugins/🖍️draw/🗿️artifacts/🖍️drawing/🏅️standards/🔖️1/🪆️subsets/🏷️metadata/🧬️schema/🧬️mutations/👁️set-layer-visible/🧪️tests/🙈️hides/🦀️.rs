@@ -126,7 +126,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::DrawingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::DrawingDiff as protocol::MutationDiff<DrawingSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-layer-visible/hides-shape-a: committed diff did not carry before to after");
 }
 

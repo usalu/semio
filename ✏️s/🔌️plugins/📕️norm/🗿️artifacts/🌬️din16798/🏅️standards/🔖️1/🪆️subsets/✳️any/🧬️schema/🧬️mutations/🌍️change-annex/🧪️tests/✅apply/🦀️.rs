@@ -23,3 +23,9 @@ async fn applies_change_annex() {
 fn sample_mutation(base: &Din16798Snapshot) -> Din16798Mutation {
     Din16798Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: if base.annex == crate::document::AnnexChoice::De { crate::document::AnnexChoice::En } else { crate::document::AnnexChoice::De } })
 }
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    let base = Din16798Snapshot::default();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&sample_mutation(&base), &base).await;
+}

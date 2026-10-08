@@ -16,6 +16,9 @@ use protocol::{MutationKind, SemanticDescriptor};
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ConnectAdjacency {
     pub adjacency: Adjacency,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    pub index: Option<usize>,
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ConnectAdjacency {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "adjacency", kind: "connect-adjacency", record: "ConnectedAdjacency" };

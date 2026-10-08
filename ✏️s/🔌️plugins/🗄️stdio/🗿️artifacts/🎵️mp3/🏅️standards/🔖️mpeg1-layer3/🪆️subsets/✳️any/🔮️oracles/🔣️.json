@@ -49,22 +49,8 @@
       "capability": "mp3-mpeg1-layer3-mutate",
       "standardDirectoryName": "🔖️mpeg1-layer3",
       "subsetDirectoryName": "✳️any",
-      "vectors": [
-        {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
-          "scenarios": [
-            {
-              "id": "retitles-the-id3v2-tit2-frame",
-              "directoryName": "🏷️retitles"
-            }
-          ]
-        }
-      ],
+      "vectors": [],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "set-id3v2",
         "set-frames",
         "set-id3v1"
@@ -129,45 +115,6 @@
             "operation": "set-id3v2",
             "bridgeVersion": 1,
             "variant": "SetId3v2"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "mp3-mpeg1-layer3-mutate",
-              "qualifyingKind": "third-party-library"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "mp3-mpeg1-layer3-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "mp3-mpeg1-layer3-mutate",
-              "qualifyingKind": "third-party-library"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "mp3-mpeg1-layer3-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

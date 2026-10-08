@@ -59,21 +59,35 @@ fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
     (0..value.len()).step_by(2).map(|index| u8::from_str_radix(&value[index..index + 2], 16).map_err(|error| error.to_string())).collect()
 }
 
+fn enc_at(at: Option<usize>) -> String {
+    at.map(|at| format!(",{at}")).unwrap_or_default()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_at(parts: &[&str], required: usize, tag: &str) -> Result<Option<usize>, String> {
+    match parts.len() {
+        n if n == required => Ok(None),
+        n if n == required + 1 => parse_usize(parts[required]).map(Some),
+        n => Err(format!("{tag}: expected {required} or {} fields, got {n}", required + 1)),
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn print_kit_mutation(m: &SemioKitMutation) -> String {
     match m {
-        SemioKitMutation::CreateObject(p) => format!("createObject:{},{}", enc_str(&p.child_id), enc_ref(&p.target)),
+        SemioKitMutation::CreateObject(p) => format!("createObject:{},{}{}", enc_str(&p.child_id), enc_ref(&p.target), enc_at(p.at)),
         SemioKitMutation::DeleteObject(p) => format!("deleteObject:{}", enc_str(&p.child_id)),
-        SemioKitMutation::CreateModel(p) => format!("createModel:{},{}", enc_str(&p.child_id), enc_ref(&p.target)),
+        SemioKitMutation::CreateModel(p) => format!("createModel:{},{}{}", enc_str(&p.child_id), enc_ref(&p.target), enc_at(p.at)),
         SemioKitMutation::DeleteModel(p) => format!("deleteModel:{}", enc_str(&p.child_id)),
         SemioKitMutation::CreateProperties(p) => format!("createProperties:{},{}", enc_str(&p.child_id), enc_ref(&p.target)),
         SemioKitMutation::DeleteProperties(_) => "deleteProperties".to_string(),
-        SemioKitMutation::BindRepresentation(p) => format!("bindRepresentation:{},{},{}", enc_ref(&p.target), enc_pin(&p.pin), enc_str(&p.role)),
+        SemioKitMutation::BindRepresentation(p) => format!("bindRepresentation:{},{},{}{}", enc_ref(&p.target), enc_pin(&p.pin), enc_str(&p.role), enc_at(p.at)),
         SemioKitMutation::UnbindRepresentation(p) => format!("unbindRepresentation:{}", p.index),
         SemioKitMutation::ChangeRepresentationPin(p) => format!("changeRepresentationPin:{},{}", p.index, enc_pin(&p.pin)),
-        SemioKitMutation::AddType(p) => format!("addType:{},{},{}", enc_str(&p.id), enc_str(&p.name), enc_str(&p.category)),
+        SemioKitMutation::AddType(p) => format!("addType:{},{},{}{}", enc_str(&p.id), enc_str(&p.name), enc_str(&p.category), enc_at(p.at)),
         SemioKitMutation::RemoveType(p) => format!("removeType:{}", enc_str(&p.id)),
         SemioKitMutation::RenameType(p) => format!("renameType:{},{}", enc_str(&p.id), enc_str(&p.new_name)),
-        SemioKitMutation::AddDesign(p) => format!("addDesign:{},{}", enc_str(&p.id), enc_str(&p.name)),
+        SemioKitMutation::AddDesign(p) => format!("addDesign:{},{}{}", enc_str(&p.id), enc_str(&p.name), enc_at(p.at)),
         SemioKitMutation::RemoveDesign(p) => format!("removeDesign:{}", enc_str(&p.id)),
         SemioKitMutation::EditDesign(p) => format!("editDesign:{},{},{}", enc_str(&p.id), enc_pieces(&p.pieces), enc_connections(&p.connections)),
     }
@@ -81,25 +95,21 @@ fn print_kit_mutation(m: &SemioKitMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
-    if let Some(payload) = line.strip_prefix("setSnapshot:") {
-        let bytes = hex_decode(payload)?;
-        let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
-        let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-        let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
-    }
     if line == "deleteProperties" {
         return Ok(SemioKitMutation::DeleteProperties(DeleteProperties {}));
     }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("kit mutation: missing ':' in {line:?}"))?;
     match tag {
         "createObject" => {
-            let (child_id, target) = rest.split_once(',').ok_or_else(|| "createObject: missing comma".to_string())?;
-            Ok(SemioKitMutation::CreateObject(CreateObject { child_id: dec_str(child_id)?, target: dec_ref(target)? }))
+            let parts = split_top_level(rest, ',');
+            let at = dec_at(&parts, 2, "createObject")?;
+            Ok(SemioKitMutation::CreateObject(CreateObject { child_id: dec_str(parts[0])?, target: dec_ref(parts[1])?, at }))
         }
         "deleteObject" => Ok(SemioKitMutation::DeleteObject(DeleteObject { child_id: dec_str(rest)? })),
         "createModel" => {
-            let (child_id, target) = rest.split_once(',').ok_or_else(|| "createModel: missing comma".to_string())?;
-            Ok(SemioKitMutation::CreateModel(CreateModel { child_id: dec_str(child_id)?, target: dec_ref(target)? }))
+            let parts = split_top_level(rest, ',');
+            let at = dec_at(&parts, 2, "createModel")?;
+            Ok(SemioKitMutation::CreateModel(CreateModel { child_id: dec_str(parts[0])?, target: dec_ref(parts[1])?, at }))
         }
         "deleteModel" => Ok(SemioKitMutation::DeleteModel(DeleteModel { child_id: dec_str(rest)? })),
         "createProperties" => {
@@ -108,8 +118,8 @@ fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
         }
         "bindRepresentation" => {
             let parts = split_top_level(rest, ',');
-            let [target, pin, role] = parts.as_slice() else { return Err(format!("bindRepresentation: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioKitMutation::BindRepresentation(BindRepresentation { target: dec_ref(target)?, pin: dec_pin(pin)?, role: dec_str(role)? }))
+            let at = dec_at(&parts, 3, "bindRepresentation")?;
+            Ok(SemioKitMutation::BindRepresentation(BindRepresentation { target: dec_ref(parts[0])?, pin: dec_pin(parts[1])?, role: dec_str(parts[2])?, at }))
         }
         "unbindRepresentation" => Ok(SemioKitMutation::UnbindRepresentation(UnbindRepresentation { index: parse_usize(rest)? })),
         "changeRepresentationPin" => {
@@ -118,8 +128,8 @@ fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
         }
         "addType" => {
             let parts = split_top_level(rest, ',');
-            let [id, name, category] = parts.as_slice() else { return Err(format!("addType: expected 3 fields, got {}", parts.len())) };
-            Ok(SemioKitMutation::AddType(AddType { id: dec_str(id)?, name: dec_str(name)?, category: dec_str(category)? }))
+            let at = dec_at(&parts, 3, "addType")?;
+            Ok(SemioKitMutation::AddType(AddType { id: dec_str(parts[0])?, name: dec_str(parts[1])?, category: dec_str(parts[2])?, at }))
         }
         "removeType" => Ok(SemioKitMutation::RemoveType(RemoveType { id: dec_str(rest)? })),
         "renameType" => {
@@ -127,8 +137,9 @@ fn parse_kit_mutation(line: &str) -> Result<SemioKitMutation, String> {
             Ok(SemioKitMutation::RenameType(RenameType { id: dec_str(id)?, new_name: dec_str(new_name)? }))
         }
         "addDesign" => {
-            let (id, name) = rest.split_once(',').ok_or_else(|| "addDesign: missing comma".to_string())?;
-            Ok(SemioKitMutation::AddDesign(AddDesign { id: dec_str(id)?, name: dec_str(name)? }))
+            let parts = split_top_level(rest, ',');
+            let at = dec_at(&parts, 2, "addDesign")?;
+            Ok(SemioKitMutation::AddDesign(AddDesign { id: dec_str(parts[0])?, name: dec_str(parts[1])?, at }))
         }
         "removeDesign" => Ok(SemioKitMutation::RemoveDesign(RemoveDesign { id: dec_str(rest)? })),
         "editDesign" => {
@@ -158,19 +169,20 @@ impl protocol::OpText for SemioKitMutation {
 pub(crate) fn demo_mutation_cases() -> Vec<SemioKitMutation> {
     let ref_of = |subset: &str, id: &str| semio_framework_artifact_reference::ArtifactRef { artifact_id: id.into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } };
     vec![
-        SemioKitMutation::CreateObject(CreateObject { child_id: "o1".into(), target: ref_of("object", "t1") }),
+        SemioKitMutation::CreateObject(CreateObject { child_id: "o1".into(), target: ref_of("object", "t1"), at: None }),
         SemioKitMutation::DeleteObject(DeleteObject { child_id: "o1".into() }),
-        SemioKitMutation::CreateModel(CreateModel { child_id: "m1".into(), target: ref_of("model", "t2") }),
+        SemioKitMutation::CreateModel(CreateModel { child_id: "m1".into(), target: ref_of("model", "t2"), at: None }),
         SemioKitMutation::DeleteModel(DeleteModel { child_id: "m1".into() }),
         SemioKitMutation::CreateProperties(CreateProperties { child_id: "p1".into(), target: ref_of("value", "t3") }),
         SemioKitMutation::DeleteProperties(DeleteProperties {}),
-        SemioKitMutation::BindRepresentation(BindRepresentation { target: ref_of("mesh", "t4"), pin: store::LinkPin::Head, role: "chair".into() }),
+        SemioKitMutation::BindRepresentation(BindRepresentation { target: ref_of("mesh", "t4"), pin: store::LinkPin::Head, role: "chair".into(), at: None }),
         SemioKitMutation::UnbindRepresentation(UnbindRepresentation { index: 0 }),
         SemioKitMutation::ChangeRepresentationPin(ChangeRepresentationPin { index: 0, pin: store::LinkPin::Checkpoint { id: "cp1".into() } }),
-        SemioKitMutation::AddType(AddType { id: "chair".into(), name: "Chair".into(), category: "furniture".into() }),
+        SemioKitMutation::AddType(AddType { id: "chair".into(), name: "Chair".into(), category: "furniture".into(), at: None }),
+        SemioKitMutation::AddType(AddType { id: "stool".into(), name: "Stool".into(), category: "furniture".into(), at: Some(1) }),
         SemioKitMutation::RemoveType(RemoveType { id: "chair".into() }),
         SemioKitMutation::RenameType(RenameType { id: "chair".into(), new_name: "Armchair".into() }),
-        SemioKitMutation::AddDesign(AddDesign { id: "d1".into(), name: "Design One".into() }),
+        SemioKitMutation::AddDesign(AddDesign { id: "d1".into(), name: "Design One".into(), at: None }),
         SemioKitMutation::RemoveDesign(RemoveDesign { id: "d1".into() }),
         SemioKitMutation::EditDesign(EditDesign { id: "d1".into(), pieces: vec![], connections: vec![] }),
     ]

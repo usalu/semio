@@ -11,8 +11,6 @@ framing record
 header fixed 2
 field format u8
 field tag varint
-record set-snapshot tag=0
-field payload bytes
 record insert-slide tag=1
 field payload bytes
 record remove-slide tag=2
@@ -27,5 +25,5 @@ record set-shape-text tag=6
 field payload bytes
 record set-shape-position tag=7
 field payload bytes
-record patch-snapshot tag=8
+record replace-xml-node tag=8
 field payload bytes

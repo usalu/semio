@@ -22,8 +22,8 @@
         "de": "Kantenzug extrudieren"
       },
       "description": {
-        "en": "Extrudes a closed wire in a plane parallel to the XY plane into a solid along a vector.",
-        "de": "Extrudiert einen geschlossenen Kantenzug in einer zur XY-Ebene parallelen Ebene entlang eines Vektors zu einem Körper."
+        "en": "Extrudes a closed planar wire into a solid along a vector that leaves the wire's plane.",
+        "de": "Extrudiert einen geschlossenen ebenen Kantenzug entlang eines Vektors, der die Ebene des Kantenzugs verlässt, zu einem Körper."
       },
       "inputs": [
         {

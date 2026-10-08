@@ -40,7 +40,7 @@ from __future__ import annotations
 # region 🔖️Imports
 import json
 
-from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
+from semio_repo_test import Adapter, Context, Outcome, digest
 
 # endregion 🔖️Imports
 
@@ -49,9 +49,6 @@ from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
 #: 🏷️ Every variant of this subset's mutation vocabulary, in the order the mutations grammar's `op`
 #: production lists them, kebab-cased as the catalog spells them.
 KINDS = (
-    "no-mutation",
-    "set-snapshot",
-    "patch-snapshot",
     "insert-timeline",
     "remove-timeline",
     "set-timeline-name",
@@ -339,12 +336,6 @@ def apply_mutation(snapshot: dict, mutation: dict) -> dict:
     """🧬️ Applies one verb, returning a NEW snapshot."""
     result = clone(snapshot)
     kind, args = parts(mutation)
-    if kind == "no-mutation":
-        return result
-    if kind == "patch-snapshot":
-        return patched_snapshot(snapshot, args["patch"])
-    if kind == "set-snapshot":
-        return clone(args["snapshot"])
     if kind == "insert-timeline":
         result["timelines"].insert(index_at(len(result["timelines"]), args["index"], kind, True), clone(args["timeline"]))
         return result
@@ -390,12 +381,6 @@ def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
     meanings — an insertion is undone by a removal at the position it took, and an overwrite by an
     overwrite with the value it displaced."""
     kind, args = parts(mutation)
-    if kind == "no-mutation":
-        return wire("no-mutation", {})
-    if kind == "patch-snapshot":
-        return wire("set-snapshot", {"snapshot": clone(snapshot)})
-    if kind == "set-snapshot":
-        return wire("set-snapshot", {"snapshot": clone(snapshot)})
     if kind == "insert-timeline":
         return wire("remove-timeline", {"index": args["index"]})
     if kind == "remove-timeline":
@@ -504,7 +489,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
         raise AssertionError("re-parsing the printed walk cycle lost content")
     if snapshot["schema"] != DOCUMENT_SCHEMA:
         raise AssertionError("the committed walk cycle declares schema %r, expected %r" % (snapshot["schema"], DOCUMENT_SCHEMA))
-    declared = vector(ctx, "no-mutation")["before"]
+    declared = vector(ctx, "insert-timeline")["before"]
     if snapshot != declared:
         raise AssertionError("the real committed walk cycle does not decode to the before-snapshot every specification vector starts from\n     got: %s\nexpected: %s" % (json.dumps(snapshot), json.dumps(declared)))
     return Outcome({"document": snapshot, "dslDigest": digest(printed), "dslLength": len(printed)})
@@ -517,7 +502,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
 def adapter() -> Adapter:
     """🧭️ Registration entry point the host calls. Handlers are registered under the Scenario Outline base
     ids, which the host resolves for every Examples row, and plain scenarios under their own ids."""
-    return Adapter("python").oracle("mutate", mutate).oracle("no-mutation-baseline-mutate", mutate).oracle("inverse", inverse).oracle("no-mutation-baseline-inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
+    return Adapter("python").oracle("mutate", mutate).oracle("inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

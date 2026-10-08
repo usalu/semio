@@ -27,7 +27,7 @@ pub const LAYOUT_DOCUMENT_SCHEMA: &str = "layout.layout";
 /// "s.layout.layout")]`; `standard`/`subset` match this file's own
 /// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — the canonical surface id is `s.layout.layout@1/*#editor`
 /// / `s.layout.layout@1/*#viewer`, exactly the contract §1 grammar. NOT the same type as
-/// `store::os_io::ArtifactDialect` used a few lines below by `background_drawing_child_handle` (a
+/// `semio_framework_artifact_reference::ArtifactDialect` used a few lines below by `background_drawing_child_handle` (a
 /// wire `ArtifactDialect` describing STDIO's drawing subset for composition purposes, unrelated to
 /// this artifact's own surface identity) — this is the SDK's compile-time `Dialect`.
 pub const LAYOUT_DIALECT: Dialect = Dialect { artifact_kind: "s.layout.layout", standard: StandardId("1"), subset: SubsetId::ANY };
@@ -120,6 +120,27 @@ pub fn background_drawing_child_handle(_source_tag: &str, content: &SemioDrawing
 /// document has no snapshot-owned `background_drawing` record.
 pub fn background_drawing_content(snapshot: &LayoutSnapshot) -> Option<SemioDrawingSnapshot> {
     snapshot.background_drawing.as_ref().map(|child| child.content.clone())
+}
+
+/// ✏️ The central apply of one plan-text edit: the text node at `index` (depth-first over the layers) now reads `text`; `false` when the plan has no such node.
+pub fn set_drawing_text(content: &mut SemioDrawingSnapshot, index: u32, text: &str) -> bool {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::DrawNode;
+    fn replace(node: &mut DrawNode, index: &mut u32, text: &str) -> bool {
+        match node {
+            DrawNode::Text { value, .. } => {
+                if *index == 0 {
+                    *value = text.to_string();
+                    return true;
+                }
+                *index -= 1;
+                false
+            }
+            DrawNode::Group { children, .. } => children.iter_mut().any(|child| replace(child, index, text)),
+            DrawNode::Path { .. } | DrawNode::Image { .. } => false,
+        }
+    }
+    let mut cursor = index;
+    content.layers.iter_mut().any(|layer| replace(&mut layer.root, &mut cursor, text))
 }
 
 //#region 🔖️DropPreview
@@ -915,6 +936,16 @@ pub struct PageLayerPatched {
     pub locked: Option<bool>,
 }
 
+/// 🌱️ Sparse "one layer was inserted into this page" fragment of a {@link PagePatch}: the layer plus its FINAL-state stacking index (`None` appends).
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(deny_unknown_fields)]
+pub struct PageLayerAdded {
+    #[dsl(statements)]
+    pub layer: Layer,
+    pub index: Option<usize>,
+}
+
 /// 📄️ Sparse page patch with borrowed nested roles and unchanged, cleared or replaced optional fields.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -937,11 +968,11 @@ pub struct PagePatch {
     #[value(default)]
     pub parent_page_id: Option<Option<String>>,
     #[value(default)]
-    pub guides: Option<Vec<LayoutRect>>,
+    pub guides: Option<crate::standards::v1::subsets::any::schema::diff::PageGuidesDelta>,
     #[value(default)]
-    pub overrides: Option<Vec<PageOverride>>,
+    pub overrides: Option<crate::standards::v1::subsets::any::schema::diff::PageOverridesDelta>,
     #[value(default)]
-    pub layer_added: Option<Layer>,
+    pub layer_added: Option<PageLayerAdded>,
     #[value(default)]
     pub layer_removed: Option<String>,
     #[value(default)]
@@ -1089,16 +1120,17 @@ impl Patchable<PagePatch> for Page {
         if let Some(parent) = &patch.parent_page_id {
             self.parent_page_id = parent.clone();
         }
-        if let Some(guides) = &patch.guides {
-            self.guides = guides.clone();
+        if let Some(guides) = patch.guides.as_ref().and_then(|delta| crate::standards::v1::subsets::any::schema::diff::apply_page_guides(&self.guides, delta).ok()) {
+            self.guides = guides;
         }
-        if let Some(overrides) = &patch.overrides {
-            self.overrides = overrides.clone();
+        if let Some(overrides) = patch.overrides.as_ref().and_then(|delta| crate::standards::v1::subsets::any::schema::diff::apply_page_overrides(&self.overrides, delta).ok()) {
+            self.overrides = overrides;
         }
-        if let Some(layer) = &patch.layer_added {
-            if self.layers.iter().all(|item| item.id != layer.id) {
-                self.layer_ids.push(layer.id.clone());
-                self.layers.push(layer.clone());
+        if let Some(added) = &patch.layer_added {
+            if self.layers.iter().all(|item| item.id != added.layer.id) {
+                let at = added.index.unwrap_or(self.layers.len()).min(self.layers.len());
+                self.layer_ids.insert(at.min(self.layer_ids.len()), added.layer.id.clone());
+                self.layers.insert(at, added.layer.clone());
             }
         }
         if let Some(layer_id) = &patch.layer_removed {
@@ -1184,8 +1216,8 @@ impl Patchable<PagePatch> for Page {
             patch.columns_gutter = Some(other.columns.gutter);
             changed = true;
         }
-        if self.overrides != other.overrides {
-            patch.overrides = Some(other.overrides.clone());
+        if let Some(delta) = crate::standards::v1::subsets::any::schema::diff::between_delta::<crate::standards::v1::subsets::any::schema::diff::PageOverridesDelta>(&self.overrides, &other.overrides) {
+            patch.overrides = Some(delta);
             changed = true;
         }
         let self_ids: Vec<String> = self.frames.iter().map(|frame| frame.id().to_string()).collect();
@@ -1205,7 +1237,7 @@ impl Patchable<PagePatch> for Page {
 pub struct TextStoryPatch {
     pub content: Option<String>,
     #[value(default)]
-    pub style_runs: Option<Vec<TextStyleRun>>,
+    pub style_runs: Option<crate::standards::v1::subsets::any::schema::diff::TextStyleRunsDelta>,
 }
 
 impl Patchable<TextStoryPatch> for TextStory {
@@ -1213,14 +1245,14 @@ impl Patchable<TextStoryPatch> for TextStory {
         if let Some(content) = &patch.content {
             self.content = content.clone();
         }
-        if let Some(style_runs) = &patch.style_runs {
-            self.style_runs = style_runs.clone();
+        if let Some(style_runs) = patch.style_runs.as_ref().and_then(|delta| crate::standards::v1::subsets::any::schema::diff::apply_story_runs(&self.style_runs, delta).ok()) {
+            self.style_runs = style_runs;
         }
     }
 
     fn diff_patch(&self, other: &Self) -> Option<TextStoryPatch> {
         let content = (self.content != other.content).then(|| other.content.clone());
-        let style_runs = (self.style_runs != other.style_runs).then(|| other.style_runs.clone());
+        let style_runs = crate::standards::v1::subsets::any::schema::diff::between_positional::<crate::standards::v1::subsets::any::schema::diff::TextStyleRunsDelta>(&self.style_runs, &other.style_runs);
         (content.is_some() || style_runs.is_some()).then(|| TextStoryPatch { content, style_runs })
     }
 }
@@ -1431,6 +1463,9 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-character-style/🦀️.rs"]
                             mod component;
                             pub use component::*;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-character-style/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+                            mod tests_removes_a_middle_row;
                         }
                         #[path = "."]
                         pub mod update_character_style {
@@ -1590,6 +1625,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-page/🧪️tests/🚫️removes-page-2/🦀️.rs"]
                             mod tests_removes_page_2;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-page/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+                            mod tests_removes_a_middle_row;
                         }
                         #[path = "."]
                         pub mod rename_page {
@@ -1644,6 +1682,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-pages/🧪️tests/🔀️moves/🦀️.rs"]
                             mod tests_moves_page_1_behind_page_2;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-pages/🧪️tests/📍️moves-a-middle-row/🦀️.rs"]
+                            mod tests_moves_a_middle_row;
                         }
                         #[path = "."]
                         pub mod create_story {
@@ -1662,6 +1703,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕delete-story/🧪️tests/🚫️removes-story-2/🦀️.rs"]
                             mod tests_removes_story_2;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📕delete-story/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+                            mod tests_removes_a_middle_row;
                         }
                         #[path = "."]
                         pub mod edit_story {
@@ -1689,6 +1733,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-link/🧪️tests/🔗️removes-link-2/🦀️.rs"]
                             mod tests_removes_link_2;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️delete-link/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+                            mod tests_removes_a_middle_row;
                         }
                         #[path = "."]
                         pub mod change_link_path {
@@ -1716,6 +1763,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-frame/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_the_text_frame_and_its_layer_membership;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-frame/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+                            mod tests_removes_a_middle_row;
                         }
                         #[path = "."]
                         pub mod move_frame {

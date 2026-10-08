@@ -30,7 +30,10 @@ pub fn diff(payload: &super::CreateSurface, base: &EnergyModelSnapshot) -> proto
     let Some(boundary) = crate::model::OutsideBoundary::from_parts(payload.boundary, payload.interzone_surface_id) else {
         return protocol::MutationOutcome::fatal("mutation.invariant", "An interzone boundary names exactly one partner surface, and every other boundary names none.", [payload.id.0.to_string()]);
     };
-    let position = base.model.surfaces.iter().position(|item| item.id > payload.id).unwrap_or(base.model.surfaces.len());
+    let position = payload.index.map_or_else(|| base.model.surfaces.iter().position(|item| item.id > payload.id).unwrap_or(base.model.surfaces.len()), |index| index as usize);
+    if position > base.model.surfaces.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} surfaces.", position, base.model.surfaces.len()), [payload.id.0.to_string()]);
+    }
     protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { surfaces: Rows::inserting(position, crate::model::Surface {
             id: payload.id,
             name: payload.name.clone(),

@@ -7,7 +7,7 @@ use super::super::*;
 pub fn inverse(payload: &super::SetMetadataEntry, base: &SemioImageSnapshot) -> Result<Vec<SemioImageMutation>, semio_framework_value::ValueError> {
     let super::SetMetadataEntry { key, .. } = payload;
     Ok(vec![match base.metadata.iter().find(|e| &e.key == key) {
-        Some(entry) => SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: key.clone(), value: entry.value.clone() }),
+        Some(entry) => SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: key.clone(), value: entry.value.clone(), at: None }),
         None => SemioImageMutation::RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry { key: key.clone() }),
     }])
 }

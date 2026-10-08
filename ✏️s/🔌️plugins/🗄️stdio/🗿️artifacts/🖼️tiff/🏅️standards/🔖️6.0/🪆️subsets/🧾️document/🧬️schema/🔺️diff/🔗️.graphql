@@ -5,8 +5,10 @@ type TiffTagAdded { tag: UInt16! values: TiffValues! }
 input TiffTagAddedInput { tag: UInt16! values: TiffValuesInput! }
 type TiffTagsDiff { removed: [UInt16!] modified: [TiffTagModified!] added: [TiffTagAdded!] }
 input TiffTagsDiffInput { removed: [UInt16!] modified: [TiffTagModifiedInput!] added: [TiffTagAddedInput!] }
-type TiffIfdDiff { entries: TiffTagsDiff blocks: [TiffSampleBlock!] }
-input TiffIfdDiffInput { entries: TiffTagsDiffInput blocks: [TiffSampleBlockInput!] }
+type TiffSampleRun { block: Int! offset: Int! samples: [TiffWord64!]! }
+input TiffSampleRunInput { block: Int! offset: Int! samples: [TiffWord64Input!]! }
+type TiffIfdDiff { entries: TiffTagsDiff blocks: [TiffSampleBlock!] runs: [TiffSampleRun!] }
+input TiffIfdDiffInput { entries: TiffTagsDiffInput blocks: [TiffSampleBlockInput!] runs: [TiffSampleRunInput!] }
 type TiffIfdModified { index: Int64! diff: TiffIfdDiff! }
 input TiffIfdModifiedInput { index: Int64! diff: TiffIfdDiffInput! }
 type TiffIfdAdded { index: Int64! ifd: TiffIfd! }

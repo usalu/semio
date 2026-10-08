@@ -8,4 +8,5 @@ export interface FormGeneration {
 
 export interface CreateGeneration {
   generation: FormGeneration;
+  index?: number | null;
 }

@@ -76,7 +76,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::{Block2dMutation, Block2dSnapshot, BLOCK2D_DIALECT, BLOCK_2D_SCHEMA};
-    use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+    use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
@@ -158,14 +158,14 @@ pub mod derived_construction {
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match <Self::Diff as protocol::MutationDiff<Self::Snapshot>>::apply(outcome.diff(), &self.snapshot) {
+            match protocol::apply_diff(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
                 Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = <Block2dDiff as protocol::MutationDiff<Block2dSnapshot>>::apply(&diff, &self.snapshot)?;
+            let snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             self.snapshot = snapshot;
             Ok(self)
         }
@@ -182,7 +182,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::Block2dSnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Block2dParts {
@@ -195,27 +195,27 @@ pub mod derived_analysis {
         type Parts = Block2dParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.block.block2d", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
+        fn sniff(_source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+            semio_framework_plugin::io::Confidence::Medium
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Block2dParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
+            let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <Block2dSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <Block2dSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },

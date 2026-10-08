@@ -10,11 +10,17 @@ fn changes_the_owned_catalog_axis_and_plans_its_inverse() {
     let next = applied(&base, &PdfUaMutation::RemoveStructTreeRoot(mutation.clone()));
     assert!(support::catalog_entry(&next, "StructTreeRoot").is_none());
     assert_eq!(next.objects.len(), 1, "the root leaves with its catalog entry");
-    assert_eq!(<RemoveStructTreeRoot as MutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfUaMutation::SetStructTreeRoot(SetStructTreeRoot {})]);
+    assert_eq!(<RemoveStructTreeRoot as MutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfUaMutation::SetStructTreeRoot(SetStructTreeRoot { placements: Vec::new(), entry_index: None })]);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    let base = applied(&support::document(), &PdfUaMutation::SetStructTreeRoot(SetStructTreeRoot {}));
+    let base = applied(&support::document(), &PdfUaMutation::SetStructTreeRoot(SetStructTreeRoot { placements: Vec::new(), entry_index: None }));
+    assert_mutation_inverse_sum_law(&PdfUaMutation::RemoveStructTreeRoot(RemoveStructTreeRoot {}), &base).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_restores_a_middle_row() {
+    let base = support::with_tail(&applied(&support::document(), &PdfUaMutation::SetStructTreeRoot(SetStructTreeRoot { placements: Vec::new(), entry_index: None })));
     assert_mutation_inverse_sum_law(&PdfUaMutation::RemoveStructTreeRoot(RemoveStructTreeRoot {}), &base).await;
 }

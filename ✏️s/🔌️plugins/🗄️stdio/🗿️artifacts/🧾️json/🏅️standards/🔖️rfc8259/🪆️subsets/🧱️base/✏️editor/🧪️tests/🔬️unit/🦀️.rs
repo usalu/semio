@@ -35,18 +35,14 @@ async fn editor_declares_the_tree_window() {
 }
 
 #[test]
-fn natural_file_route_exports_json_and_reopens_through_one_mutation() {
+fn natural_file_route_exports_json_and_reopens_the_same_document() {
     let source = r#"{"title":"Natural Open Save","edited":true,"count":3}"#;
     let edited = JsonSnapshot::from_value(crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(source).expect("JSON fixture"));
     let bytes = <JsonAnyEditor as ArtifactEditor>::encode_natural_file(&edited).expect("JSON natural bytes");
     let independent: serde_json::Value = serde_json::from_slice(&bytes).expect("serde_json reads exported JSON");
     assert_eq!(independent["title"], "Natural Open Save");
     let reopened = <JsonAnyEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("JSON natural bytes reopen");
-    let Some(JsonMutation::SetScalar(crate::schema::mutations::SetScalarMutation::Apply(payload))) = <JsonAnyEditor as ArtifactEditor>::whole_document_operation(reopened) else {
-        panic!("natural JSON opens through one event-sourced root mutation")
-    };
-    assert!(payload.path.is_empty());
-    assert_eq!(payload.value, edited.value);
+    assert_eq!(reopened, edited);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -100,7 +96,7 @@ async fn set_node_preserves_every_json_value_kind_and_rejects_invalid_source() {
         let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
         let command = JsonAnyEditorCommand::SetNode { node_id: main::JSON_ROOT_NODE_ID.into(), revision, value: source.into() };
         let emit = json_any_emit(&command, &snapshot, None).expect("valid JSON value");
-        let next = protocol::MutationDiff::apply(<JsonMutation as protocol::Mutation<JsonSnapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("compact node patch applies");
+        let next = protocol::apply_diff(<JsonMutation as protocol::Mutation<JsonSnapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("compact node patch applies");
         let native = crate::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text(source).expect("JSON file parser");
         let expected = serde_json::from_str::<serde_json::Value>(source).expect("serde_json oracle");
         assert_eq!(next.value, native);

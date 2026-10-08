@@ -1,43 +1,23 @@
 {
-  "artifact": null,
   "annex": null,
   "structureKind": null,
   "steelFYPa": null,
   "beams": null,
   "columns": {
-    "values": [
+    "removed": [],
+    "inserted": [],
+    "modified": [
       {
-        "id": "col-C1",
-        "kind": "concrete_filled",
-        "lengthM": 3.5,
-        "outerSizeM": 0.3,
-        "wallThicknessM": 0.01,
-        "steelAM2": 0.0084,
-        "steelFYPa": 355000000.0,
-        "concreteAM2": 0.072,
-        "concreteFCkPa": 30000000.0,
-        "reinforcementAsM2": 0.0012,
-        "reinforcementFYkPa": 500000000.0,
-        "iM4": 0.00021,
-        "bucklingCurve": "a",
-        "actions": [
-          {
-            "id": "G-col",
-            "kind": "permanent",
-            "category": "self",
-            "stage": "composite",
-            "nKN": 2500000.0,
-            "mKNm": 20000.0
-          },
-          {
-            "id": "Q-col",
-            "kind": "imposed",
-            "category": "B",
-            "stage": "composite",
-            "nKN": 400000.0,
-            "mKNm": 15000.0
-          }
-        ]
+        "index": 0,
+        "kind": null,
+        "actions": {
+          "modified": [
+            {
+              "index": 0,
+              "nKN": 2500000.0
+            }
+          ]
+        }
       }
     ]
   },

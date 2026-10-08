@@ -8,7 +8,6 @@
 //!
 //! | kind | COBie sheet | production rule it addresses |
 //! |---|---|---|
-//! | `set-snapshot` | — | `CODE_FILE_SCHEMA` — the document must declare `IFC2X3` |
 //! | `set-view-definition` | — | `CODE_VIEW_DEFINITION` — `FILE_DESCRIPTION` must name `FMHandOverView` |
 //! | `set-facility-name` | Facility | `CODE_BUILDING_STOREY` — the handover needs a named `IfcBuilding` |
 //! | `set-floor-elevation` | Floor | `CODE_BUILDING_STOREY` — the Floor sheet is an `IfcBuildingStorey` with an elevation |
@@ -98,7 +97,7 @@ mod oracles {
                     Parameter::Enumeration("INTERNAL".to_string()),
                     Parameter::NotProvided,
                 ];
-                part21::upsert_simple(exchange, id, "IFCSPACE", args)
+                part21::upsert_simple_at(exchange, id, "IFCSPACE", args, part21::opt_usize_field(params, "index")?)
             }
         }
     }
@@ -125,7 +124,7 @@ mod oracles {
                 let mut args = vec![Parameter::String(part21::str_field(assignment, "globalId")?), owner, Parameter::NotProvided, Parameter::NotProvided];
                 args.push(Parameter::List(related.into_iter().map(|object| Parameter::Ref(Name::Entity(object))).collect()));
                 args.push(Parameter::Ref(Name::Entity(relating_type)));
-                part21::upsert_simple(exchange, id, "IFCRELDEFINESBYTYPE", args)
+                part21::upsert_simple_at(exchange, id, "IFCRELDEFINESBYTYPE", args, part21::opt_usize_field(params, "index")?)
             }
         }
     }
@@ -134,7 +133,6 @@ mod oracles {
     /// error, never a silent no-op.
     fn apply(exchange: &mut Exchange, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "set-snapshot" => part21::replace_with_snapshot(exchange, params.get("snapshot").ok_or("set-snapshot carries `snapshot`")?),
             "set-view-definition" => part21::set_view_definition(exchange, &part21::str_field(params, "view")?),
             "set-facility-name" => set_facility_name(exchange, params),
             "set-floor-elevation" => set_floor_elevation(exchange, params),
@@ -155,10 +153,6 @@ mod oracles {
         Ok(part21::write(&part21::read(input)?))
     }
 
-    /// 📸️ The untouched document as the `set-snapshot` payload that restores it.
-    pub fn snapshot_payload(input: &[u8]) -> Result<Json, String> {
-        Ok(part21::snapshot_payload(&part21::read(input)?))
-    }
     //#endregion 🔖️Apply
 
     //#region 🔖️Projection
@@ -218,12 +212,6 @@ pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     oracles::round_trip(input)
 }
 
-/// 📸️ The untouched artifact as the `set-snapshot` wire payload that restores it — the inverse of `set-snapshot`.
-#[cfg(feature = "oracles")]
-pub fn oracle_snapshot_payload(input: &[u8]) -> Result<Json, String> {
-    oracles::snapshot_payload(input)
-}
-
 /// 👁️ This subset's own semantic projection, read back through the independent `ruststep` parser.
 #[cfg(feature = "oracles")]
 pub fn project_ifc_2x3_cobie(bytes: &[u8]) -> Result<Json, String> {
@@ -238,11 +226,6 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
-
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_snapshot_payload(_input: &[u8]) -> Result<Json, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

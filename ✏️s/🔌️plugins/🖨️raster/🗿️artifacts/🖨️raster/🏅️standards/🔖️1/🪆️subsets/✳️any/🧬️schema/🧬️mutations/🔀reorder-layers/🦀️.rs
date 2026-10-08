@@ -24,10 +24,7 @@ pub mod mutation {
         }
 
         fn inverse(&self, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
-    Ok({
-            super::super::inverse::inverse(self, base)?
-        
-    })
+    super::super::inverse::inverse(self, base)
 }
 
         fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

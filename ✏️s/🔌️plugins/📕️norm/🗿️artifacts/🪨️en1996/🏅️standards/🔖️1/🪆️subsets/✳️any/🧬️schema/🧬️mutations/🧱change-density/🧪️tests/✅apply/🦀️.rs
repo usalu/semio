@@ -1,8 +1,7 @@
-#[test]
-fn applies_change_density() {
-    use crate::mutations::change_density::ChangeDensity;
-    use crate::En1996Snapshot;
-    use protocol::MutationKind;
-    let _ = En1996Snapshot::compliant_clay_wall();
-    assert_eq!(<ChangeDensity as MutationKind<En1996Snapshot, crate::En1996Mutation>>::SEMANTICS.kind, "change-density");
+//! 🧪️ `change-density` — the committed applied vector's inverse diffs sum to the negative of its forward diff.
+
+#[semio_framework_async_macros::async_test]
+async fn change_density_inverse_diffs_sum_to_the_negative_diff() {
+    let (mutation, before) = crate::mutations::fixture_tests::applied_vector("change-density");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
 }

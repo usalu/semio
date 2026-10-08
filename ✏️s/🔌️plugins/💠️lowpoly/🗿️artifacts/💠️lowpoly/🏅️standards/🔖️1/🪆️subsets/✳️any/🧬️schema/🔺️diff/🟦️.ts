@@ -3,20 +3,9 @@ import{parseLowpolyMeshState,type LowpolyMeshState}from"../🕸️mesh/🟦️.t
 import { parseArtifactChild, type ArtifactChild } from "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts";
 import { type Binary32 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 import { parseBinary32 } from "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
-import {
-  parseLowpolyArtifact,
-  parseLowpolyObject,
-  parseLowpolyPaintLayer,
-  parseLowpolyTransform,
-  type LowpolyArtifact,
-  type LowpolyObject,
-  type LowpolyPaintLayer,
-  type LowpolyTransform,
-} from "../🟦️.ts";
+import { parseLowpolyObject, parseLowpolyPaintLayer, type LowpolyObject, type LowpolyPaintLayer } from "../🟦️.ts";
 
 export interface LowpolyDiff {
-  /** @state artifact */
-  artifact?: LowpolyArtifact | null;
   /** @state artifact */
   schema?: string | null;
   /** @state artifact */
@@ -34,44 +23,41 @@ export interface LowpolyObjectPatchEntry {
   id: string;
   patch: LowpolyObjectPatch;
   paintLayers: LowpolyPaintLayersDelta | null;
+  meshMotions: LowpolyMeshMotion[];
 }
 
 export interface LowpolyObjectPatch {
   name: string | null;
   smoothShading: boolean | null;
-  transform: LowpolyTransform | null;
+  position: [number, number, number] | null;
+  rotation: [number, number, number] | null;
+  scale: [number, number, number] | null;
   mesh: ArtifactChild | null;
   meshContent?: string | null;
   meshState?: {state:LowpolyMeshState|null}|null;
 }
 
 export interface LowpolyPaintLayersDelta {
-  added: LowpolyIndexedPaintLayer[];
-  removed: number[];
-  patched: LowpolyIndexedPaintLayerPatch[];
-  strokes: LowpolyPaintStrokeAt[];
+  edits: LowpolyPaintEdit[];
 }
 
-export interface LowpolyIndexedPaintLayer {
-  index: number;
-  layer: LowpolyPaintLayer;
-}
+export type LowpolyPaintEdit =
+  | { op: "insert"; index: number; layer: LowpolyPaintLayer }
+  | { op: "remove"; index: number }
+  | { op: "replace"; index: number; layer: LowpolyPaintLayer }
+  | { op: "patch"; index: number; patch: LowpolyPaintLayerPatch }
+  | { op: "stroke"; index: number; runs: PixelRun[] };
 
-export interface LowpolyIndexedPaintLayerPatch {
-  index: number;
-  patch: LowpolyPaintLayerPatch;
-}
+export type LowpolyMeshMotion =
+  | { motion: "offset"; vertexIds: number[]; offset: [number, number, number] }
+  | { motion: "turn"; vertexIds: number[]; pivot: [number, number, number]; axis: [number, number, number]; angle: number }
+  | { motion: "stretch"; vertexIds: number[]; pivot: [number, number, number]; factor: [number, number, number] };
 
 export interface LowpolyPaintLayerPatch {
   name: string | null;
   visible: boolean | null;
   opacity: Binary32 | null;
   blendMode: string | null;
-}
-
-export interface LowpolyPaintStrokeAt {
-  layerIndex: number;
-  runs: PixelRun[];
 }
 
 export interface PixelRun {
@@ -129,7 +115,6 @@ export const lowpolyLowpolyDiffGuardConstant = <T extends string | number | bool
 export function parseLowpolyDiff(value: unknown, at = "$"): LowpolyDiff {
   const row = lowpolyLowpolyDiffGuardObject(value, at);
   return {
-    artifact: row["artifact"] === null ? null : parseLowpolyArtifact(row["artifact"], `${at}.artifact`),
     schema: row["schema"] === null ? null : lowpolyLowpolyDiffGuardString(row["schema"], `${at}.schema`),
     objects: row["objects"] === null ? null : parseLowpolyObjectsDelta(row["objects"], `${at}.objects`),
   };
@@ -150,7 +135,8 @@ export function parseLowpolyObjectPatchEntry(value: unknown, at = "$"): LowpolyO
   return {
     id: lowpolyLowpolyDiffGuardString(row["id"], `${at}.id`),
     patch: parseLowpolyObjectPatch(row["patch"], `${at}.patch`),
-    paintLayers: row["paintLayers"] === null ? null : parseLowpolyPaintLayersDelta(row["paintLayers"], `${at}.paintLayers`),
+    paintLayers: row["paintLayers"] == null ? null : parseLowpolyPaintLayersDelta(row["paintLayers"], `${at}.paintLayers`),
+    meshMotions: lowpolyLowpolyDiffGuardArray(row["meshMotions"], `${at}.meshMotions`).map((item, index) => parseLowpolyMeshMotion(item, `${at}.meshMotions[${index}]`)),
   };
 }
 
@@ -159,37 +145,57 @@ export function parseLowpolyObjectPatch(value: unknown, at = "$"): LowpolyObject
   return {
     name: row["name"] === null ? null : lowpolyLowpolyDiffGuardString(row["name"], `${at}.name`),
     smoothShading: row["smoothShading"] === null ? null : lowpolyLowpolyDiffGuardBoolean(row["smoothShading"], `${at}.smoothShading`),
-    transform: row["transform"] === null ? null : parseLowpolyTransform(row["transform"], `${at}.transform`),
+    position: row["position"] == null ? null : parseLowpolyVector3(row["position"], `${at}.position`),
+    rotation: row["rotation"] == null ? null : parseLowpolyVector3(row["rotation"], `${at}.rotation`),
+    scale: row["scale"] == null ? null : parseLowpolyVector3(row["scale"], `${at}.scale`),
     mesh: row["mesh"] === null ? null : parseArtifactChild(row["mesh"]),
     meshContent:row["meshContent"]==null?null:lowpolyLowpolyDiffGuardString(row["meshContent"],`${at}.meshContent`),
     meshState:row["meshState"]==null?null:parseLowpolyMeshStateSlot(row["meshState"],`${at}.meshState`),
   };
 }
 
+function parseLowpolyVector3(value: unknown, at: string): [number, number, number] {
+  const items = lowpolyLowpolyDiffGuardArray(value, at, { minItems: 3, maxItems: 3 });
+  return [lowpolyLowpolyDiffGuardNumber(items[0], `${at}[0]`), lowpolyLowpolyDiffGuardNumber(items[1], `${at}[1]`), lowpolyLowpolyDiffGuardNumber(items[2], `${at}[2]`)];
+}
+
 export function parseLowpolyPaintLayersDelta(value: unknown, at = "$"): LowpolyPaintLayersDelta {
   const row = lowpolyLowpolyDiffGuardObject(value, at);
-  return {
-    added: lowpolyLowpolyDiffGuardArray(row["added"], `${at}.added`).map((item, index) => parseLowpolyIndexedPaintLayer(item, `${at}.added[${index}]`)),
-    removed: lowpolyLowpolyDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => lowpolyLowpolyDiffGuardInteger(item, `${at}.removed[${index}]`, {"minimum": 0})),
-    patched: lowpolyLowpolyDiffGuardArray(row["patched"], `${at}.patched`).map((item, index) => parseLowpolyIndexedPaintLayerPatch(item, `${at}.patched[${index}]`)),
-    strokes: lowpolyLowpolyDiffGuardArray(row["strokes"], `${at}.strokes`).map((item, index) => parseLowpolyPaintStrokeAt(item, `${at}.strokes[${index}]`)),
-  };
+  return { edits: lowpolyLowpolyDiffGuardArray(row["edits"], `${at}.edits`).map((item, index) => parseLowpolyPaintEdit(item, `${at}.edits[${index}]`)) };
 }
 
-export function parseLowpolyIndexedPaintLayer(value: unknown, at = "$"): LowpolyIndexedPaintLayer {
+export function parseLowpolyPaintEdit(value: unknown, at = "$"): LowpolyPaintEdit {
   const row = lowpolyLowpolyDiffGuardObject(value, at);
-  return {
-    index: lowpolyLowpolyDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 }),
-    layer: parseLowpolyPaintLayer(row["layer"], `${at}.layer`),
-  };
+  const index = lowpolyLowpolyDiffGuardInteger(row["index"], `${at}.index`, { minimum: 0 });
+  switch (row["op"]) {
+    case "insert":
+      return { op: "insert", index, layer: parseLowpolyPaintLayer(row["layer"], `${at}.layer`) };
+    case "remove":
+      return { op: "remove", index };
+    case "replace":
+      return { op: "replace", index, layer: parseLowpolyPaintLayer(row["layer"], `${at}.layer`) };
+    case "patch":
+      return { op: "patch", index, patch: parseLowpolyPaintLayerPatch(row["patch"], `${at}.patch`) };
+    case "stroke":
+      return { op: "stroke", index, runs: lowpolyLowpolyDiffGuardArray(row["runs"], `${at}.runs`).map((item, position) => parsePixelRun(item, `${at}.runs[${position}]`)) };
+    default:
+      return lowpolyLowpolyDiffGuardReject(`${at}.op`, "value is not a paint edit");
+  }
 }
 
-export function parseLowpolyIndexedPaintLayerPatch(value: unknown, at = "$"): LowpolyIndexedPaintLayerPatch {
+export function parseLowpolyMeshMotion(value: unknown, at = "$"): LowpolyMeshMotion {
   const row = lowpolyLowpolyDiffGuardObject(value, at);
-  return {
-    index: lowpolyLowpolyDiffGuardInteger(row["index"], `${at}.index`, {"minimum": 0}),
-    patch: parseLowpolyPaintLayerPatch(row["patch"], `${at}.patch`),
-  };
+  const vertexIds = lowpolyLowpolyDiffGuardArray(row["vertexIds"], `${at}.vertexIds`).map((item, index) => lowpolyLowpolyDiffGuardInteger(item, `${at}.vertexIds[${index}]`, { minimum: 0 }));
+  switch (row["motion"]) {
+    case "offset":
+      return { motion: "offset", vertexIds, offset: parseLowpolyVector3(row["offset"], `${at}.offset`) };
+    case "turn":
+      return { motion: "turn", vertexIds, pivot: parseLowpolyVector3(row["pivot"], `${at}.pivot`), axis: parseLowpolyVector3(row["axis"], `${at}.axis`), angle: lowpolyLowpolyDiffGuardNumber(row["angle"], `${at}.angle`) };
+    case "stretch":
+      return { motion: "stretch", vertexIds, pivot: parseLowpolyVector3(row["pivot"], `${at}.pivot`), factor: parseLowpolyVector3(row["factor"], `${at}.factor`) };
+    default:
+      return lowpolyLowpolyDiffGuardReject(`${at}.motion`, "value is not a mesh motion");
+  }
 }
 
 export function parseLowpolyPaintLayerPatch(value: unknown, at = "$"): LowpolyPaintLayerPatch {
@@ -199,14 +205,6 @@ export function parseLowpolyPaintLayerPatch(value: unknown, at = "$"): LowpolyPa
     visible: row["visible"] === null ? null : lowpolyLowpolyDiffGuardBoolean(row["visible"], `${at}.visible`),
     opacity: row["opacity"] === null ? null : parseBinary32(row["opacity"]),
     blendMode: row["blendMode"] === null ? null : lowpolyLowpolyDiffGuardString(row["blendMode"], `${at}.blendMode`),
-  };
-}
-
-export function parseLowpolyPaintStrokeAt(value: unknown, at = "$"): LowpolyPaintStrokeAt {
-  const row = lowpolyLowpolyDiffGuardObject(value, at);
-  return {
-    layerIndex: lowpolyLowpolyDiffGuardInteger(row["layerIndex"], `${at}.layerIndex`, {"minimum": 0}),
-    runs: lowpolyLowpolyDiffGuardArray(row["runs"], `${at}.runs`).map((item, index) => parsePixelRun(item, `${at}.runs[${index}]`)),
   };
 }
 

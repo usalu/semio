@@ -1,6 +1,4 @@
-//! 🔖️ `set-attribute` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🔖️ `set-attribute` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -18,14 +16,13 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetAttribute {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "attribute", kind: "set-attribute", record: "SetAttribute" };
 
     fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as Mutation<HtmlSnapshot>>::Diff> {
-        agg_diff(&HtmlMutation::SetAttribute(self.clone()), base)
+        let Self { path, name, value } = self;
+        protocol::MutationOutcome::new(attribute_diff_at_path(base, path, name, value.clone()))
     }
     fn inverse(&self, base: &HtmlSnapshot) -> Result<Vec<HtmlMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&HtmlMutation::SetAttribute(self.clone()), base)?
-    
-    })
-}
+        let Self { path, name, .. } = self;
+        Ok(vec![HtmlMutation::SetAttribute(set_attribute::SetAttribute { path: path.clone(), name: name.clone(), value: prior_attribute(base, path, name) })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set attribute", "Attribut setzen")
     }

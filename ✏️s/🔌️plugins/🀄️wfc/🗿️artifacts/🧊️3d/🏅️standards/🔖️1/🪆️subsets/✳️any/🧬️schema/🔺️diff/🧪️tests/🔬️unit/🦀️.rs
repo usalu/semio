@@ -102,6 +102,19 @@ fn inverse_restores_the_base() {
     assert_eq!(protocol::apply_diff(&inverse, &after).expect("inverse applies"), base);
 }
 
+/// 🎯️ Removing or creating a middle row is undone by the inverse diff at the row's original position.
+#[test]
+fn inverse_restores_middle_rows() {
+    let mut base = base();
+    base.tiles.insert(1, tile("c", 1.5));
+    base.tiles.push(tile("f", 3.0));
+    for diff in [rows(Wfc3dRows { removed: vec!["c".into()], ..Default::default() }), rows(Wfc3dRows { added: vec![tile("e", 4.0)], ..Default::default() })] {
+        let after = protocol::apply_diff(&diff, &base).expect("diff applies");
+        let inverse = DiffAlgebra::<Wfc3dSnapshot>::inverse(&diff, &base);
+        assert_eq!(protocol::apply_diff(&inverse, &after).expect("inverse applies"), base);
+    }
+}
+
 /// 🧭️ `between` reaches the other document, and is empty between equal documents.
 #[test]
 fn between_reaches_the_other_document() {

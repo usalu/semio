@@ -1,7 +1,7 @@
 //! 📡️ Native mutation binary and text codecs have identical semantic output.
 
-use crate::standards::v1::subsets::any::io::binary::mutations::*;
-use crate::{schema, PresentationSnapshot};
+use crate::standards::v1::subsets::any::io::binary::mutations::{encode_op, decode_op};
+use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 #[semio_framework_async_macros::async_test]
 async fn op_binary_round_trips_and_agrees_with_text() {
     let operation = PresentationMutation::ReplaceTiles(crate::mutations::replace_tiles::ReplaceTiles { new_tiles: Vec::new() });

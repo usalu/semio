@@ -299,7 +299,7 @@ fn wheel_zoom_emits_the_node_graph_viewport_action_with_the_moved_camera() {
 /// `node_graph_fit_camera` answers through `nodeGraphViewport`, so answering the pre-fit camera
 /// re-publishes it forever — which is exactly what a Flow surface did while the fit landed on the
 /// dag's derived paint copy. The shared rows live in
-/// `♾️infinite/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json` (`surfaceRows`); the host half of the law is
+/// `🧰️framework/🔨️modules/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json` (`surfaceRows`); the host half of the law is
 /// `🌊️flow/🖥️host/🧪️tests/🔬️unit/🦀️.rs`, `a_fitted_flow_surface_publishes_the_camera_it_computed`.
 /// Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
 #[test]

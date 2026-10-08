@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState, type DragEvent, type KeyboardEvent, type MouseEvent } from "react";
-import { type GraphWasmSession, EASED_SURFACE_TRAILING_WINDOW_MS, GraphWasmCanvas, createDemandFrameScheduler } from "@semio-tech/infinite-canvas-react-renderer";
+import { type WasmCanvasSession, EASED_SURFACE_TRAILING_WINDOW_MS, WasmCanvas, createDemandFrameScheduler } from "@semio-tech/canvas-react-renderer";
 import { STYLING_METRICS, currentStylingAppearanceName, resolveColorHex, serializeCanvasThemeJson, syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import {
   borderNormalBottomClass,
@@ -95,7 +95,7 @@ type WorkflowNodeData = {
 
 type GraphContextMenuItem = ContextMenuItemSpec;
 
-type FrameworkGraphSession = GraphWasmSession & {
+type FrameworkGraphSession = WasmCanvasSession & {
   syncFromSceneJson?(json: string): void;
   syncFromScenePack?(bytes: Uint8Array): void;
   pointerDownScreen(sx: number, sy: number, button: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
@@ -877,7 +877,7 @@ function WasmGraphSurface({
   }, [scenePack, paintOverlays]);
 
   const onSessionReady = useCallback(
-    (session: GraphWasmSession) => {
+    (session: WasmCanvasSession) => {
       sessionRef.current = session as FrameworkGraphSession;
       syncOptionalGraphCanvasTheme(sessionRef.current);
       try {
@@ -1093,7 +1093,7 @@ function WasmGraphSurface({
       }}
       onPointerUp={emitInteractionState}
     >
-      <GraphWasmCanvas className="absolute inset-0" sessionFactory={sessionFactory} onSessionReady={onSessionReady} enablePointer={false} />
+      <WasmCanvas className="absolute inset-0" sessionFactory={sessionFactory} onSessionReady={onSessionReady} enablePointer={false} />
       <canvas ref={labelCanvasRef} className="pointer-events-none absolute inset-0 z-40" />
       {selectionBounds ? <div className="pointer-events-none absolute z-20 border-2 border-accent" style={{ left: selectionBounds.x, top: selectionBounds.y, width: selectionBounds.width, height: selectionBounds.height }} /> : null}
       {marquee ? (
@@ -1851,7 +1851,7 @@ const DAG_LABEL_LEGIBLE_MIN_PX = 8;
 /** ✂️ Longest prefix of `text` that still fits `maxWidth` once {@link DAG_LABEL_ELLIPSIS} is
  * appended, measured by the CALLER's own measure. The JavaScript twin of
  * `canvas::text::ellipsize_by_measure`; both are pinned to the rows of
- * `♾️infinite/🖼️canvas/🧫️fixtures/🏷️label-fit/🔣️.json`.
+ * `🧰️framework/🔨️modules/🖼️canvas/🧫️fixtures/🏷️label-fit/🔣️.json`.
  *
  * Empty text and a non-positive budget draw nothing; a budget too narrow for even one glyph plus
  * the ellipsis draws the bare ellipsis, so a clipped caption is always visibly clipped. */
@@ -2737,7 +2737,7 @@ function syncFlowSessionStructureFromScene(session: FlowWasmSession, scene: Node
  * persists a fit exactly the way it persists a pan or a zoom gesture, so the next open honours it.
  *
  * Twin of `DagHost::adopt_camera_or_fit`; the law itself is {@link dagStartupCamera}, pinned by
- * `♾️infinite/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json`. */
+ * `🧰️framework/🔨️modules/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json`. */
 function applyFlowStartupCamera(session: FlowWasmSession, scene: NodeGraphScene, width: number, height: number): { readonly camera: DagCameraState; readonly fitted: boolean } {
   const stored = scene.viewport ?? DEFAULT_NODE_GRAPH_VIEWPORT;
   const decision = dagStartupCamera(stored, dagContentBounds(scene.nodes), width, height);
@@ -3267,7 +3267,7 @@ export function FlowGraphCanvasHost({
    * device-pixel store synchronously, then forwards the logical size to the wasm surface when one is
    * already attached. Session-independent on purpose — before this, the GPU canvas was only ever sized
    * from inside `attachCanvas().then(...)` and the label canvas only from `paintOverlays`, so a boot
-   * where the surface attach is slow (or a hidden tab, where the shared `GraphWasmCanvas` layout wait
+   * where the surface attach is slow (or a hidden tab, where the shared `WasmCanvas` layout wait
    * never ticks) left both at the HTML default 300×150 in a 966×836 window. */
   const syncSurfaceSize = useCallback(() => {
     const container = containerRef.current;

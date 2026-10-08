@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../.."
 name = "semio-s-artifact-stdio-binary"
 version.workspace = true
 edition.workspace = true
@@ -43,6 +43,7 @@ semio-s-artifact-stdio-contract = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

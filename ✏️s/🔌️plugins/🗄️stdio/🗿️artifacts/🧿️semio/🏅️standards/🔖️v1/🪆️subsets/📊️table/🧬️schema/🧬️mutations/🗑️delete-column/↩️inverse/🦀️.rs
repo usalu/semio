@@ -18,6 +18,7 @@ pub fn inverse(payload: &super::DeleteColumn, base: &SemioTableSnapshot) -> Resu
             mutations.push(SemioTableMutation::EditCell(edit_cell::EditCell { row_index, column_name: payload.name.clone(), new_value: cell.clone() }));
         }
     }
+    mutations.reverse();
     mutations
 
     })())

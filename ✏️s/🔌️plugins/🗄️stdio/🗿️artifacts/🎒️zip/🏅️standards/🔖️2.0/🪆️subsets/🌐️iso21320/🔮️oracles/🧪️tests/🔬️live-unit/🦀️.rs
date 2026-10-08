@@ -44,7 +44,6 @@ mod tests {
     #[test]
     fn every_declared_kind_round_trips_through_its_own_inverse() {
         let specs = vec![
-            spec("set-snapshot", vec![("snapshot", Json::Object(vec![("schema".into(), Json::String("stdio.zip".into())), ("entries".into(), Json::Array(vec![entry("x", "y", 0.0)])), ("comment".into(), Json::String("neu".into())), ("commentUtf8".into(), Json::Bool(true))]))]),
             spec("set-archive-comment", vec![("comment", Json::String("geaendert".into())), ("commentUtf8", Json::Bool(true))]),
             spec("add-stored-entry", vec![("entry", entry("a.png", "p", 0.0))]),
             spec("add-deflated-entry", vec![("entry", entry("a.txt", "p", 8.0))]),

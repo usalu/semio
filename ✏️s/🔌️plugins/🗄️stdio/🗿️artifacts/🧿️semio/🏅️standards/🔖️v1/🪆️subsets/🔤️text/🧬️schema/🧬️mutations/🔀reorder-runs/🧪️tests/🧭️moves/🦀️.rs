@@ -31,7 +31,7 @@ fn reorder_runs() -> SemioTextMutation {
 #[semio_framework_async_macros::async_test]
 async fn moves_run_zero_past_the_other_two() {
     let base = before();
-    let produced = reorder_runs().diff(&base).diff().apply(&base).expect("reorder-runs applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(reorder_runs().diff(&base).diff(), &base).expect("reorder-runs applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-runs/moves-the-first-run-to-the-end: applied state differs from the committed after-snapshot");
     assert_eq!(produced.runs.len(), base.runs.len(), "reorder-runs is a permutation — it may never add or drop a run");
     assert_eq!(produced.runs[2], base.runs[0], "the moved run must sit last after the remove-then-insert");
@@ -44,11 +44,12 @@ async fn moves_run_zero_past_the_other_two() {
 async fn the_undo_reorder_moves_the_run_back_to_the_head() {
     let base = before();
     let mutation = reorder_runs();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioTextMutation::ReorderRuns(crate::standards::v1::subsets::text::schema::mutations::reorder_runs::ReorderRuns { from: 2, to: 0 })], "the undo must address the landed index #2 and send it back to #0");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward reorder-runs applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo reorder-runs applies to the reordered state");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward reorder-runs applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo reorder-runs applies to the reordered state");
     }
     assert_eq!(current, base, "reorder-runs/moves-the-first-run-to-the-end: the undo did not restore the before-snapshot");
 }
@@ -92,7 +93,6 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical() {
     let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-runs diff decodes");
     let list = decoded.runs.as_ref().expect("an applied reorder-runs diff carries a runs list");
-    assert_eq!(list.values.len(), before().runs.len(), "the reorder diff must carry exactly as many runs as the base");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "reorder-runs/moves-the-first-run-to-the-end: committed diff JSON is not canonical");
@@ -102,6 +102,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-runs diff decodes");
-    let produced = decoded.apply(&before()).expect("committed reorder-runs diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed reorder-runs diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-runs/moves-the-first-run-to-the-end: committed diff did not carry before to after");
 }

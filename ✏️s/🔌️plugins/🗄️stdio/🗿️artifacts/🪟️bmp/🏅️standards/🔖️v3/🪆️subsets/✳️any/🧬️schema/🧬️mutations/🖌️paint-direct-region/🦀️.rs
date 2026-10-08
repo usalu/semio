@@ -1,7 +1,7 @@
 //! 🖌️ Revision-guarded direct-color BMP region paint.
 
 use crate::schema::diff::BmpDiff;
-use crate::schema::mutations::{BmpMutation, SetSnapshot};
+use crate::schema::mutations::{BmpMutation, ReplaceImage};
 use crate::BmpSnapshot;
 use protocol::DiffAlgebra;
 
@@ -34,10 +34,10 @@ impl protocol::MutationKind<BmpSnapshot, BmpMutation> for PaintDirectRegion {
     }
 
     fn inverse(&self, base: &BmpSnapshot) -> Result<Vec<BmpMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![BmpMutation::SetSnapshot(SetSnapshot { snapshot: base.clone() })]
+    Ok({
+        vec![BmpMutation::ReplaceImage(ReplaceImage { image: base.image.clone() })]
     
-    })())
+    })
 }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

@@ -1,18 +1,20 @@
 use super::*;
 use semio_framework_plugin::WindowTransientOwner;
 
-/// ♻️ Walks a `RetirementCursor` tree under the smallest positive grant there is (one byte per
-/// turn), pushing each `Child` cursor the owner hands back — the exact shape
-/// `semio_framework_value::retirement::RetirementStep` declares, so a nested owner is retired explicitly instead of
-/// being dropped recursively.
+/// ♻️ Retires one payload byte per turn with separately admitted constructor and whole release grants.
 fn retire(cursor: Box<dyn semio_framework_value::retirement::RetirementCursor>, maximum_turns: usize) {
     let mut stack = vec![cursor];
     for _ in 0..maximum_turns {
         let Some(top) = stack.last_mut() else { return };
-        match top.close_step(1) {
+        let release=if top.next_work_byte_demand()==0{top.next_close_byte_demand().unwrap_or(0)}else{0};
+        let capacity=top.next_birth_bytes(if top.next_work_byte_demand()==0{release}else{1}).expect("preview controlled constructor authority");
+        let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1,maximum_capacity_bytes:capacity,maximum_release_bytes:release,maximum_depth:64};
+        match top.close_step(grant) {
             semio_framework_value::retirement::RetirementStep::Child(child) => stack.push(child),
+            semio_framework_value::retirement::RetirementStep::Advanced => {},
+            semio_framework_value::retirement::RetirementStep::Failure(error) => panic!("preview retirement refused: {error}"),
             semio_framework_value::retirement::RetirementStep::ProcessedBytes(processed_bytes) => assert!(processed_bytes <= 1),
-            semio_framework_value::retirement::RetirementStep::Bytes(released_bytes) => assert!(released_bytes <= 1),
+            semio_framework_value::retirement::RetirementStep::Bytes(released_bytes) => assert!(released_bytes <= release),
             semio_framework_value::retirement::RetirementStep::Complete => {
                 assert!(top.terminal_is_empty());
                 stack.pop();

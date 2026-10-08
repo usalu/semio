@@ -92,30 +92,7 @@ fn remove_triangle_inverse_reinserts_the_original_triangle() {
 }
 
 #[test]
-fn set_snapshot_replaces_the_whole_triangle_list() {
-    let one_triangle = Json::Array(vec![Json::Object(vec![
-        ("normal".to_string(), Json::Array(vec![Json::Number(0.0), Json::Number(0.0), Json::Number(1.0)])),
-        (
-            "vertices".to_string(),
-            Json::Array(vec![
-                Json::Array(vec![Json::Number(0.0), Json::Number(0.0), Json::Number(0.0)]),
-                Json::Array(vec![Json::Number(1.0), Json::Number(0.0), Json::Number(0.0)]),
-                Json::Array(vec![Json::Number(0.0), Json::Number(1.0), Json::Number(0.0)]),
-            ]),
-        ),
-    ])]);
-    let snapshot = Json::Object(vec![("schema".to_string(), Json::String("stdio.stl".to_string())), ("solidName".to_string(), Json::String("replaced".to_string())), ("triangles".to_string(), one_triangle)]);
-    let output = oracle_apply_mutation(FIXTURE.as_bytes(), &spec("set-snapshot", Json::Object(vec![("snapshot".to_string(), snapshot)]))).unwrap();
-    assert_eq!(triangle_soup::read(&output).unwrap().len(), 1);
-    assert_eq!(ascii::read_name(&output).unwrap(), "replaced");
-}
-
-#[test]
-fn set_snapshot_inverse_restores_name_and_triangles_and_out_of_range_edits_leave_nothing_to_undo() {
-    let snapshot = Json::Object(vec![("schema".to_string(), Json::String("stdio.stl".to_string())), ("solidName".to_string(), Json::String("replaced".to_string())), ("triangles".to_string(), Json::Array(vec![]))]);
-    let forward = spec("set-snapshot", Json::Object(vec![("snapshot".to_string(), snapshot)]));
-    let restored = oracle_apply_mutation(&oracle_apply_mutation(FIXTURE.as_bytes(), &forward).unwrap(), &oracle_inverse_spec(FIXTURE.as_bytes(), &forward).unwrap().unwrap()).unwrap();
-    assert_eq!(oracle_document_projection(&restored).unwrap(), oracle_document_projection(FIXTURE.as_bytes()).unwrap());
+fn out_of_range_edits_leave_nothing_to_undo() {
     assert!(oracle_inverse_spec(FIXTURE.as_bytes(), &spec("remove-triangle", Json::Object(vec![("index".to_string(), Json::Number(9.0))]))).unwrap().is_none());
 }
 

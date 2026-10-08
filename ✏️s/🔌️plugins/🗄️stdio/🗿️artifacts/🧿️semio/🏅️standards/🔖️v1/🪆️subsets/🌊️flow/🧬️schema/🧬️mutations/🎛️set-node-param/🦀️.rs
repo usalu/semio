@@ -9,6 +9,8 @@ pub struct SetNodeParam {
     pub id: String,
     pub key: String,
     pub value: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl protocol::MutationKind<SemioFlowSnapshot, SemioFlowMutation> for SetNodeParam {

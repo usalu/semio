@@ -7,7 +7,7 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/validated/mutation/set-n/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/validated/mutation/assign-n/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/validated/mutation/restore-n/schema.json"
     }
   ]
 }

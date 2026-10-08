@@ -13,10 +13,8 @@ pub struct SetEngagementInput {
 
 impl protocol::MutationKind<PresentationConfig, PresentationConfigMutation> for SetEngagementInput {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "engagement-input", kind: "set-engagement-input", record: "SetEngagementInput" };
-    fn diff(&self, base: &PresentationConfig) -> protocol::MutationOutcome<PresentationConfig> {
-        let mut next = base.clone();
-        next.engagement_input = self.value.clone();
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, base: &PresentationConfig) -> protocol::MutationOutcome<PresentationConfigDiff> {
+        protocol::MutationOutcome::new(PresentationConfigDiff { engagement_input: (base.engagement_input != self.value).then(|| self.value.clone()) })
     }
     fn inverse(&self, base: &PresentationConfig) -> Result<Vec<PresentationConfigMutation>, semio_framework_value::ValueError> {
     Ok((|| {
@@ -29,5 +27,17 @@ impl protocol::MutationKind<PresentationConfig, PresentationConfigMutation> for 
     }
     fn target(&self) -> Vec<String> {
         vec!["engagementInput".into()]
+    }
+}
+
+#[cfg(test)]
+mod law_tests {
+    use super::*;
+
+    /// ⚖️ The inverse diffs sum to the negative of the forward diff (L3).
+    #[semio_framework_async_macros::async_test]
+    async fn inverse_diffs_sum_to_the_negative_diff() {
+        let base = PresentationConfig::default();
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&PresentationConfigMutation::SetEngagementInput(SetEngagementInput { value: "draft".into() }), &base).await;
     }
 }

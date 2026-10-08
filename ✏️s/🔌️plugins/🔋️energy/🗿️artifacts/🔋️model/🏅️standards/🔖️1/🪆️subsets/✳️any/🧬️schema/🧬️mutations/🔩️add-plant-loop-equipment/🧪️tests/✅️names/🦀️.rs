@@ -31,7 +31,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
         design_flow_kg_s: 2.0,
         equipment_ids: Vec::new(),
     });
-    (snapshot(model), super::add_plant_loop_equipment(crate::model::EntityId(18), crate::model::EntityId(50)))
+    (snapshot(model), super::add_plant_loop_equipment(crate::model::EntityId(18), crate::model::EntityId(50), None))
 }
 
 fn case() -> Case {

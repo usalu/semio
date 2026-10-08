@@ -16,11 +16,12 @@ pub struct CreateOutdoorAirSystem {
     pub air_loop_id: crate::model::EntityId,
     pub min_oa_flow_m3_s: f64,
     pub economizer_enabled: bool,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_outdoor_air_system(id: crate::model::EntityId, air_loop_id: crate::model::EntityId, min_oa_flow_m3_s: f64, economizer_enabled: bool) -> EnergyModelMutation {
-    EnergyModelMutation::CreateOutdoorAirSystem(CreateOutdoorAirSystem { id, air_loop_id, min_oa_flow_m3_s, economizer_enabled })
+pub fn create_outdoor_air_system(id: crate::model::EntityId, air_loop_id: crate::model::EntityId, min_oa_flow_m3_s: f64, economizer_enabled: bool, index: Option<u32>) -> EnergyModelMutation {
+    EnergyModelMutation::CreateOutdoorAirSystem(CreateOutdoorAirSystem { id, air_loop_id, min_oa_flow_m3_s, economizer_enabled, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateOutdoorAirSystem {

@@ -25,3 +25,7 @@ pub const DAG_DEMO_TEXT: &str = include_str!("🖼️assets/🎬️demo/🗣️.
 #[cfg(test)]
 #[path = "./🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
 mod sqlite_snapshot_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🏷️label-tiers/🦀️.rs"]
+mod label_tier_laws;

@@ -182,12 +182,6 @@ mod live {
             Ok(())
         };
         match spec.str("kind").as_str() {
-            "set-snapshot" => {
-                let snapshot = params.get("snapshot").ok_or("set-snapshot requires a `snapshot` field")?;
-                archive.entries = snapshot.array("entries").iter().map(|entry| entry_of(entry, None)).collect::<Result<_, _>>()?;
-                archive.comment = snapshot.str("comment");
-                Ok(archive)
-            }
             "set-archive-comment" => {
                 archive.comment = params.str("comment");
                 Ok(archive)
@@ -246,7 +240,6 @@ mod live {
     pub fn invert(original: &IsoArchive, mutated: IsoArchive, spec: &Json) -> Result<IsoArchive, String> {
         let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
         match spec.str("kind").as_str() {
-            "set-snapshot" => Ok(original.clone()),
             "set-archive-comment" => Ok(IsoArchive { comment: original.comment.clone(), ..mutated }),
             "add-stored-entry" | "add-deflated-entry" => {
                 let name = params.get("entry").map(|entry| entry.str("name")).unwrap_or_default();

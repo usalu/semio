@@ -10,7 +10,7 @@ const HOST_APP_ID: &str = "sourcing-curation";
 // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires a
 // plain sync fn). `.mode`/`.contributes_topic` are still `async fn` in
 // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` (out of this packet's path_scope);
-// bridged via `semio_framework::io::resolve_ready` — see this packet's lease-request. See R9.
+// bridged via `semio_framework_os_kernel::io::resolve_ready` — see this packet's lease-request. See R9.
 fn bundle() -> ExtensionBundle {
     let module = BeamsModule;
     let bundle = ExtensionBundle::new(EXTENSION_ID, "Sourcing Module Beams", env!("CARGO_PKG_VERSION")).extends("sourcing").depends_on("sourcing", semio_framework::tree_pin!());

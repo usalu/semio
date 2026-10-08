@@ -2,7 +2,7 @@
 
 use super::set_struct_tree_root::SetStructTreeRoot;
 use super::PdfUaMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -19,9 +19,9 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for RemoveStructTreeRoot {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        support::catalog_entry(base, "StructTreeRoot").map(|_| PdfUaMutation::SetStructTreeRoot(SetStructTreeRoot {})).into_iter().collect()
-    })())
+        Ok({
+            support::catalog_entry(base, "StructTreeRoot").map(|entry| PdfUaMutation::SetStructTreeRoot(SetStructTreeRoot { placements: entry.as_ref().map(|root| support::placements_of(base, &[root])).unwrap_or_default(), entry_index: support::catalog_entry_position(base, "StructTreeRoot") })).into_iter().collect()
+        })
     }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

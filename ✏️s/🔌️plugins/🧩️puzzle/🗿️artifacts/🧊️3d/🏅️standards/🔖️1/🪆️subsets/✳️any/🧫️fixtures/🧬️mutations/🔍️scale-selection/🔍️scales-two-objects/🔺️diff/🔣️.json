@@ -9,79 +9,21 @@
       {
         "id": "object-a",
         "patch": {
-          "replacement": {
-            "anchor": "fixed",
-            "hidden": false,
-            "id": "object-a",
-            "label": "Alpha",
-            "locked": false,
-            "meshUrl": "mesh://alpha",
-            "objectKind": "object-kind-a",
-            "orientation": [
-              0.0,
-              0.0,
-              0.0,
-              1.0
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "scale": [
-              2.0,
-              1.0,
-              0.5
-            ],
-            "vortices": [
-              {
-                "hidden": false,
-                "id": "vortex-1",
-                "locked": false,
-                "position": [
-                  1.0,
-                  0.0,
-                  0.0
-                ],
-                "vortexKind": "vortex-kind-a"
-              }
-            ]
-          }
+          "scale": [
+            2.0,
+            1.0,
+            0.5
+          ]
         }
       },
       {
         "id": "object-b",
         "patch": {
-          "replacement": {
-            "anchor": "fixed",
-            "hidden": false,
-            "id": "object-b",
-            "locked": false,
-            "objectKind": "object-kind-b",
-            "origin": [
-              4.0,
-              0.0,
-              0.0
-            ],
-            "scale": [
-              2.0,
-              1.0,
-              0.5
-            ],
-            "vortices": [
-              {
-                "hidden": false,
-                "id": "vortex-2",
-                "locked": false,
-                "position": [
-                  -1.0,
-                  0.0,
-                  0.0
-                ],
-                "vortexKind": "vortex-kind-b"
-              }
-            ]
-          }
+          "scale": [
+            2.0,
+            1.0,
+            0.5
+          ]
         }
       }
     ],

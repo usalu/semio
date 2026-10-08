@@ -1,13 +1,13 @@
 use crate::standards::v1_0::subsets::any::io::sqlite::snapshot::*;
 
 #[test]
-fn sqlite_snapshot_ply_declaration_count_patch_and_set_snapshot_retain_unsigned_metadata(){
+fn sqlite_snapshot_ply_declaration_count_patch_retains_unsigned_metadata(){
     use store::{MutationDiff,DiffBinary,DiffCodec,DiffText};
     use dsl::DiffAlgebra;
     let base=fixture();let mut target=base.clone();target.elements[0].count=u64::MAX;
     let delta=crate::schema::diff::PlyDiff::between(&base,&target);
-    assert_eq!(delta.apply(&base).unwrap(),target);
-    for roundtrip in [crate::schema::diff::PlyDiff::parse_diff(&delta.print_diff()).unwrap(),crate::schema::diff::PlyDiff::decode_diff(&delta.encode_diff().unwrap()).unwrap()]{assert_eq!(roundtrip.apply(&base).unwrap(),target);}
+    assert_eq!(protocol::apply_diff(&delta, &base).unwrap(),target);
+    for roundtrip in [crate::schema::diff::PlyDiff::parse_diff(&delta.print_diff()).unwrap(),crate::schema::diff::PlyDiff::decode_diff(&delta.encode_diff().unwrap()).unwrap()]{assert_eq!(protocol::apply_diff(&roundtrip, &base).unwrap(),target);}
 }
 
 

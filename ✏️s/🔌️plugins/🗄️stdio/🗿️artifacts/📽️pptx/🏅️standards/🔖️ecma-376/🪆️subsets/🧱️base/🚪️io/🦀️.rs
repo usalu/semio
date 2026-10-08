@@ -66,7 +66,7 @@ pub const MINIMAL_THEME_XML: &str = concat!(
 pub mod derived_composition {
     use crate::standards::v_ecma_376::subsets::base::io::PptxAnalyzer;
     use crate::PptxSnapshot;
-    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
     const DEP_ZIP: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
@@ -111,7 +111,7 @@ pub mod io_registry {
     use crate::standards::v_ecma_376::subsets::base::io::PptxComposer as PptxRawAnyComposer;
     use crate::standards::v_ecma_376::subsets::strict::io::PptxStrictComposer;
     use crate::standards::v_ecma_376::subsets::transitional::io::PptxTransitionalComposer;
-    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -165,11 +165,12 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<PptxSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::schema::mutations::apply_pptx_mutation(&mut self.snapshot, &mutation);
+            let (next, diff) = store::apply_outcome(&self.snapshot, protocol::Mutation::diff(&mutation, &self.snapshot));
+            self.snapshot = next;
             (Self::from_snapshot(self.snapshot), diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <PptxDiff as protocol::MutationDiff<PptxSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             Ok(Self::from_snapshot(self.snapshot))
         }
         fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
@@ -224,7 +225,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::PptxSnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.pptx` parts.
@@ -242,25 +243,25 @@ pub mod derived_analysis {
         type Parts = PptxParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             // 🕵️ Real sniff: OPC-shaped bytes whose root officeDocument relationship resolves under
             // `ppt/` — disambiguates from docx/xlsx, which share the same zip magic and OPC shape.
             match source {
-                AnalyzeSource::Binary(bytes) if crate::standards::v_ecma_376::subsets::base::io::import::deserializers::sniff_pptx_bytes(bytes) => IoConfidence::High,
-                AnalyzeSource::Binary(_) | AnalyzeSource::Text(_) => IoConfidence::Low,
+                AnalyzeSource::Binary(bytes) if crate::standards::v_ecma_376::subsets::base::io::import::deserializers::sniff_pptx_bytes(bytes) => semio_framework_plugin::io::Confidence::High,
+                AnalyzeSource::Binary(_) | AnalyzeSource::Text(_) => semio_framework_plugin::io::Confidence::Low,
             }
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = PptxParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
+            let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <PptxSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -273,7 +274,7 @@ pub mod derived_analysis {
                         match result {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),
                             Err(err) => {
-                                confidence = IoConfidence::Low;
+                                confidence = semio_framework_plugin::io::Confidence::Low;
                                 diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err));
                             }
                         }

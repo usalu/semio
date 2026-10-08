@@ -4,7 +4,7 @@
 pub mod derived_composition {
     use crate::standards::v1_1::subsets::base::io::SvgAnalyzer;
     use crate::SvgSnapshot;
-    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
     const DEP_XML: Dialect = Dialect { artifact_kind: "s.stdio.xml", standard: StandardId("1.0"), subset: SubsetId("*") };
@@ -55,7 +55,7 @@ pub mod io_registry {
     use crate::standards::v1_1::subsets::base::io::SvgComposer as SvgRawAnyComposer;
     use crate::standards::v1_1::subsets::basic::io::SvgBasicComposer;
     use crate::standards::v1_1::subsets::tiny::io::SvgTinyComposer;
-    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -478,11 +478,12 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::schema::mutations::apply_svg_mutation(&mut self.snapshot, &mutation);
+            let (next, diff) = store::apply_outcome(&self.snapshot, protocol::Mutation::diff(&mutation, &self.snapshot));
+            self.snapshot = next;
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <SvgDiff as protocol::MutationDiff<SvgSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             Ok(self)
         }
         /// 🏗️ Lowers any pending typed constructor calls into `snapshot.doc`'s root `<svg>` children
@@ -532,7 +533,7 @@ pub mod derived_analysis {
     use crate::schema::snapshot::SvgElement;
     use crate::standards::v1_1::subsets::base::io::text::snapshot::{svg_document_to_typed,native_svg_document};
     use crate::SvgSnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use crate::schema::snapshot::{SvgNode};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::{xml_document_from_text};
 
@@ -559,26 +560,26 @@ use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapsh
         /// 🕵️ Real sniff: parses the (possibly DOCTYPE/prolog-prefixed) XML and checks the root
         /// element's LOCAL name is `svg` (namespace-prefixed roots like `ns:svg` count too) -- not a
         /// constant. Binary sources aren't XML text, so they're never claimed here.
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             match source {
                 AnalyzeSource::Text(text) => match xml_document_from_text(text) {
                     Ok(doc) => match &doc.root {
-                        Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name, .. }) if name == "svg" || name.ends_with(":svg") => IoConfidence::High,
-                        Some(_) => IoConfidence::Low,
-                        None => IoConfidence::Low,
+                        Some(semio_s_artifact_stdio_xml::schema::snapshot::XmlNode::Element { name, .. }) if name == "svg" || name.ends_with(":svg") => semio_framework_plugin::io::Confidence::High,
+                        Some(_) => semio_framework_plugin::io::Confidence::Low,
+                        None => semio_framework_plugin::io::Confidence::Low,
                     },
                     // 🚧️ Malformed XML: still `Low` rather than a hard rejection, since a truncated
                     // real `.svg` file is a plausible source this artifact still owns.
-                    Err(_) => IoConfidence::Low,
+                    Err(_) => semio_framework_plugin::io::Confidence::Low,
                 },
-                AnalyzeSource::Binary(_) => IoConfidence::Low,
+                AnalyzeSource::Binary(_) => semio_framework_plugin::io::Confidence::Low,
             }
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SvgParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
+            let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => {
@@ -587,14 +588,14 @@ use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapsh
                                 match svg_document_to_typed(&native_svg_document(&snapshot.doc)) {
                                     Ok(typed) => parts.typed = Some(typed),
                                     Err(err) => {
-                                        confidence = IoConfidence::Low;
+                                        confidence = semio_framework_plugin::io::Confidence::Low;
                                         diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.typed", semio_framework_diagnostic::TextSpan::at(1, 1), err));
                                     }
                                 }
                                 parts.snapshot = Some(snapshot);
                             }
                             Err(err) => {
-                                confidence = IoConfidence::Low;
+                                confidence = semio_framework_plugin::io::Confidence::Low;
                                 diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                             }
                         }
@@ -607,7 +608,7 @@ use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapsh
                             parts.snapshot = Some(snapshot);
                         }
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },

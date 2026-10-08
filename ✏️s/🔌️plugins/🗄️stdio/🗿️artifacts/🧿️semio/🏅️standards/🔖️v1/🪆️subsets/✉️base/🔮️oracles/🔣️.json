@@ -37,36 +37,6 @@
       "subsetDirectoryName": "✉️base",
       "vectors": [
         {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
-          "scenarios": [
-            {
-              "id": "replaces-the-envelope-wrapping-a-value-subset",
-              "directoryName": "✉️replaces"
-            },
-            {
-              "id": "reasserts-the-value-envelope-unchanged",
-              "directoryName": "🪞️reasserts"
-            },
-            {
-              "id": "retypes-a-value-envelope-to-an-empty-image",
-              "directoryName": "🔁️retypes"
-            }
-          ]
-        },
-        {
-          "mutationId": "patch-snapshot",
-          "sourceMutationDirectoryName": "🩹️patch-snapshot",
-          "mutationDirectoryName": "🩹️patch-snapshot",
-          "scenarios": [
-            {
-              "id": "edits-the-value-arm-of-the-envelope",
-              "directoryName": "✏️edits"
-            }
-          ]
-        },
-        {
           "mutationId": "apply-image",
           "sourceMutationDirectoryName": "🖼️apply-image",
           "mutationDirectoryName": "🖼️apply-image",
@@ -79,8 +49,6 @@
         }
       ],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "apply-brep",
         "apply-mesh",
         "apply-model",
@@ -111,49 +79,6 @@
       "standardDirectoryName": "🔖️v1",
       "subsetDirectoryName": "✉️base",
       "mutations": [
-        {
-          "id": "set-snapshot",
-          "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-base-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "json-rust-semio-envelope-carrier-reader"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "semio-v1-base-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-base-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "json-rust-semio-envelope-carrier-reader"
-            }
-          ]
-        },
         {
           "id": "apply-brep",
           "capability": "semio-v1-base-mutate",
@@ -1455,198 +1380,6 @@
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     },
     {
-      "id": "set-snapshot-replaces-the-envelope-wrapping-a-value-subset",
-      "class": "handcrafted",
-      "target": {
-        "artifact": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "base"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "radian"
-      },
-      "files": [
-        {
-          "role": "expected-before-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/✉️replaces/📸️snapshot/⬅️before/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:1138e8bc0ddffdccf2b46322a0ee12b49d7ed4ed9c87a2aae4a210481a8c03af",
-          "bytes": 624
-        },
-        {
-          "role": "mutation-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/✉️replaces/🦠️mutation/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:a63825249342e4c9b305e62e552ef3f98137dbcc0f71a20597ec99560776e971",
-          "bytes": 836
-        },
-        {
-          "role": "expected-after-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/✉️replaces/📸️snapshot/➡️after/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:8a9a996da0a49f00ef78032dd5cba969c38045febc4fc7647e2faac0bf7970ee",
-          "bytes": 624
-        },
-        {
-          "role": "expected-diff-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/✉️replaces/🔺️diff/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:4c33649059530497fa997d63a5667db89fc4db5aff94162a6be47e01db7e4b82",
-          "bytes": 645
-        },
-        {
-          "role": "outcome-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/✉️replaces/🎯️outcome/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a",
-          "bytes": 26
-        }
-      ],
-      "provenance": {
-        "source": "authored",
-        "license": "AGPL-3.0-only",
-        "attribution": "Handcrafted envelope-level specification vector of this subset; no third-party content embedded.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "ordered-json-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": "Replaces a value-subset envelope with one whose count moved from 41 to 42. The diff is a whole `replace`: set-snapshot is the only verb that may change the subset kind, so it never narrows to a per-arm delta.",
-      "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
-    },
-    {
-      "id": "set-snapshot-reasserts-the-value-envelope-unchanged",
-      "class": "handcrafted",
-      "target": {
-        "artifact": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "base"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "radian"
-      },
-      "files": [
-        {
-          "role": "expected-before-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🪞️reasserts/📸️snapshot/⬅️before/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:1138e8bc0ddffdccf2b46322a0ee12b49d7ed4ed9c87a2aae4a210481a8c03af",
-          "bytes": 624
-        },
-        {
-          "role": "mutation-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🪞️reasserts/🦠️mutation/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:f5ce469c29f2ad485595bfb929cbcfd47d13847c2c185cc868b1a5409d57f2fd",
-          "bytes": 836
-        },
-        {
-          "role": "expected-after-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🪞️reasserts/📸️snapshot/➡️after/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:1138e8bc0ddffdccf2b46322a0ee12b49d7ed4ed9c87a2aae4a210481a8c03af",
-          "bytes": 624
-        },
-        {
-          "role": "expected-diff-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🪞️reasserts/🔺️diff/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:b3318f86a7be5426bc966a5c4485851c87e805f826c21388cb23d187aa0117a4",
-          "bytes": 645
-        },
-        {
-          "role": "outcome-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🪞️reasserts/🎯️outcome/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a",
-          "bytes": 26
-        }
-      ],
-      "provenance": {
-        "source": "authored",
-        "license": "AGPL-3.0-only",
-        "attribution": "Handcrafted envelope-level specification vector of this subset; no third-party content embedded.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "ordered-json-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": "Reasserts the committed value envelope through set-snapshot: the identity of the envelope vocabulary, which has no separate no-mutation verb. The routed envelope equals the one it started from.",
-      "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
-    },
-    {
-      "id": "set-snapshot-retypes-a-value-envelope-to-an-empty-image",
-      "class": "handcrafted",
-      "target": {
-        "artifact": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "base"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "radian"
-      },
-      "files": [
-        {
-          "role": "expected-before-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes/📸️snapshot/⬅️before/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:1138e8bc0ddffdccf2b46322a0ee12b49d7ed4ed9c87a2aae4a210481a8c03af",
-          "bytes": 624
-        },
-        {
-          "role": "mutation-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes/🦠️mutation/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:4058a2df6025695f0e3177f2c3bbfa096a4266e4b9cee493ee2ef62dd7cc1501",
-          "bytes": 360
-        },
-        {
-          "role": "expected-after-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes/📸️snapshot/➡️after/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:6b1a3bcbd1394468f77a33d28cc168432161afd867f34ef3c94e007b7e40b180",
-          "bytes": 240
-        },
-        {
-          "role": "expected-diff-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes/🔺️diff/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:b3c0e3d6e836745b24ac4f77937cb2b93353310ca5a724f53cad417945806596",
-          "bytes": 261
-        },
-        {
-          "role": "outcome-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes/🎯️outcome/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a",
-          "bytes": 26
-        }
-      ],
-      "provenance": {
-        "source": "authored",
-        "license": "AGPL-3.0-only",
-        "attribution": "Handcrafted envelope-level specification vector of this subset; no third-party content embedded.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "ordered-json-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": "Retypes a value envelope into an empty image envelope — the one change of subset kind the envelope permits, and only through set-snapshot.",
-      "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
-    },
-    {
       "id": "apply-image-refuses-a-value-envelope",
       "class": "handcrafted",
       "target": {
@@ -1702,63 +1435,6 @@
       "family": "structural",
       "notes": "A wrapped image set-dimensions mutation against a value envelope: the arms do not match, so the envelope refuses it with `mutation.target-missing` and stays exactly as it stood. No diff exists.",
       "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
-    },
-    {
-      "id": "patch-snapshot-edits-the-value-arm-of-the-envelope",
-      "class": "handcrafted",
-      "target": {
-        "artifact": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "base"
-      },
-      "mutation": "patch-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "radian"
-      },
-      "files": [
-        {
-          "role": "expected-before-json",
-          "path": "../🧫️fixtures/🧬️mutations/🩹️patch-snapshot/✏️edits/📸️snapshot/⬅️before/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:1138e8bc0ddffdccf2b46322a0ee12b49d7ed4ed9c87a2aae4a210481a8c03af",
-          "bytes": 624
-        },
-        {
-          "role": "mutation-json",
-          "path": "../🧫️fixtures/🧬️mutations/🩹️patch-snapshot/✏️edits/🦠️mutation/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:fbd9fb1c06efad5cf1d8877e70bb82f05668e6ffb9ef3ffa597868fa0dd92b95",
-          "bytes": 196
-        },
-        {
-          "role": "expected-after-json",
-          "path": "../🧫️fixtures/🧬️mutations/🩹️patch-snapshot/✏️edits/📸️snapshot/➡️after/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:a41bb08dfa50c85dfea3d0f344f811433c7a59d42ae4f4816fe8922f0c1ca0f0",
-          "bytes": 633
-        },
-        {
-          "role": "outcome-json",
-          "path": "../🧫️fixtures/🧬️mutations/🩹️patch-snapshot/✏️edits/🎯️outcome/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a",
-          "bytes": 26
-        }
-      ],
-      "provenance": {
-        "source": "authored",
-        "license": "AGPL-3.0-only",
-        "attribution": "Handcrafted envelope-level specification vector of this subset; no third-party content embedded.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "ordered-json-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": "One RFC 6901 set into the value arm: the title entry's string moves from `Envelope Fixture` to `Envelope Fixture, patched`. The after-envelope is the host's independent `patched_snapshot` of the before-envelope; the committed carrier records no diff, because the patch's diff is the subject's own derivation.",
-      "comparisonPipeline": "semio-v1-base-carrier-reproduce-v1"
     }
   ],
   "probes": [
@@ -1798,13 +1474,13 @@
       "rationale": "🔬️ The SECOND, independent implementation of the envelope and of every arm verb its vectors exercise, in another language and on another engine family than the json-rust oracle the parity case runs: the platform `JSON.parse` reads every vector this subset registers, Ajv 8 holds each document to the carrier the subset publishes (`../🧬️schema/📸️snapshot/🔣️.json`, `../🧬️schema/🧬️mutations/🔣️.json` and every schema they reference), and the envelope law plus each arm verb are applied in TypeScript written from the arms' published leaf schemas, sharing no code with the Rust subject or the oracle. Every vector is REPRODUCED from before + mutation and compared with the committed after.",
       "qualification": {
         "status": "qualified",
-        "evidence": "Run over all 22 registered vectors: 22/22 conform to the published carrier schemas (after the six arm-schema drifts were fixed at their schemas), 22/22 are reproduced exactly from before + mutation — three set-snapshot, one refusal and the eighteen delegated arm verbs — and a one-character tamper of a committed after-envelope fails exactly that vector.",
+        "evidence": "Run over all 18 registered vectors: 18/18 conform to the published carrier schemas (after the six arm-schema drifts were fixed at their schemas), 22/22 are reproduced exactly from before + mutation — three set-snapshot, one refusal and the eighteen delegated arm verbs — and a one-character tamper of a committed after-envelope fails exactly that vector.",
         "checkedAt": "2026-09-24",
         "criteria": [
           {
             "id": "reproduces-the-expressible-vectors",
             "met": true,
-            "detail": "22/22 vectors reproduced from before + mutation: the envelope law for set-snapshot and refusal, the arm's own verb for the eighteen delegated vectors."
+            "detail": "18/18 vectors reproduced from before + mutation: the envelope law for refusal, the arm's own verb for the eighteen delegated vectors."
           },
           {
             "id": "rejects-a-known-bad-pair",

@@ -15,19 +15,21 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 pub struct SetTrailerEntry {
     pub key: String,
     pub value: PdfObject,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfMutation> for SetTrailerEntry {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "trailer-entry", kind: "set-trailer-entry", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::graph_edit(diff::diff_set_trailer_entry(base, &self.key, self.value.clone())))
+        MutationOutcome::new(diff::graph_edit(diff::diff_set_trailer_entry(base, &self.key, self.value.clone(), self.index)))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         match base.trailer.iter().find(|entry| entry.key == self.key) {
-            Some(entry) => vec![PdfMutation::SetTrailerEntry(SetTrailerEntry { key: self.key.clone(), value: entry.value.clone() })],
+            Some(entry) => vec![PdfMutation::SetTrailerEntry(SetTrailerEntry { key: self.key.clone(), value: entry.value.clone(), index: None })],
             None => vec![PdfMutation::RemoveTrailerEntry(RemoveTrailerEntry { key: self.key.clone() })],
         }
     

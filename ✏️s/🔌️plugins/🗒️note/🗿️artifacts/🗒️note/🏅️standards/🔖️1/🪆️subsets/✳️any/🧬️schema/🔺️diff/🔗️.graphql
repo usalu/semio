@@ -1,26 +1,52 @@
-# import NoteArtifact, NoteBlockNode, NoteImageAsset from "../🔗️.graphql"
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
+# import NoteBlockNode, NoteImageAsset, NoteTextChild, NoteTableCell from "../🔗️.graphql"
 # import ArtifactLink from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔗️.graphql"
 type NoteDiff {
-  artifact: NoteArtifact
   schema: String
   id: String
-  title: String
+  title: NoteAssignedString
   blocks: NoteBlocksDelta
-  gridVisible: Boolean
-  gridSpacing: Float
-  gridSubdivisions: Float
-  gridOpacity: Float
-  snapEnabled: Boolean
-  snapGridSpacing: Float
-  pencilWidth: Float
-  eraserRadius: Float
+  gridVisible: NoteAssignedBoolean
+  gridSpacing: NoteAssignedFloat
+  gridSubdivisions: NoteAssignedFloat
+  gridOpacity: NoteAssignedFloat
+  snapEnabled: NoteAssignedBoolean
+  snapGridSpacing: NoteAssignedFloat
+  pencilWidth: NoteAssignedFloat
+  eraserRadius: NoteAssignedFloat
   assets: NoteAssetsDelta
-  linkedArtifact: ArtifactLink
+  linkedArtifact: NoteAssignedLink
 }
-type NoteAddedBlockEntry { parentId: String index: Int block: NoteBlockNode! }
-type NoteBlockPatch { blockJson: String }
-type NoteBlockPatchEntry { id: String! patch: NoteBlockPatch! }
-type NoteBlocksDelta { added: [NoteAddedBlockEntry!]! removed: [String!]! patched: [NoteBlockPatchEntry!]! reordered: [String!] }
-type NoteAssetDeltaEntry { key: String! value: NoteImageAsset }
-type NoteAssetsDelta { entries: [NoteAssetDeltaEntry!]! }
+type NoteAssignedString { value: String }
+type NoteAssignedBoolean { value: Boolean }
+type NoteAssignedFloat { value: Float }
+type NoteAssignedLink { value: ArtifactLink }
+enum NoteBlockRowKind { ADD REMOVE MOVE PATCH }
+type NoteBlockRow { row: NoteBlockRowKind! id: String parentId: String index: Int block: NoteBlockNode patch: NoteBlockPatch }
+type NoteBlocksDelta { rows: [NoteBlockRow!]! }
+enum NoteTableEditKind { INSERT_ROW REMOVE_ROW INSERT_COLUMN REMOVE_COLUMN }
+type NoteTableEdit { edit: NoteTableEditKind! index: Int! name: String cells: [NoteTableCell!] }
+type NotePoint { x: Float! y: Float! }
+type NoteBlockPatch {
+  name: String
+  x: Float
+  y: Float
+  width: Float
+  height: Float
+  rotation: Float
+  visible: Boolean
+  locked: Boolean
+  content: NoteTextChild
+  fontSize: Float
+  fontWeight: String
+  align: String
+  imageKey: String
+  table: [NoteTableEdit!]
+  tex: String
+  displayMode: Boolean
+  points: [NotePoint!]
+  strokeWidth: Float
+  color: [Float!]
+}
+enum NoteAssetRowKind { INSERT REPLACE REMOVE }
+type NoteAssetRow { row: NoteAssetRowKind! key: String! asset: NoteImageAsset }
+type NoteAssetsDelta { rows: [NoteAssetRow!]! }

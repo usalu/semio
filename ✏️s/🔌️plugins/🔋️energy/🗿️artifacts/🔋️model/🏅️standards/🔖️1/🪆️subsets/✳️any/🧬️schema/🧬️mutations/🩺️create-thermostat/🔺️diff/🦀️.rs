@@ -34,7 +34,11 @@ pub fn diff(payload: &super::CreateThermostat, base: &EnergyModelSnapshot) -> pr
     if !payload.cooling_throttle_range_k.is_finite() || payload.cooling_throttle_range_k <= 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A cooling throttle range must be a positive finite number, got {}.", payload.cooling_throttle_range_k), [payload.id.0.to_string()]);
     }
-    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { thermostats: Rows::inserting(base.model.thermostats.len(), crate::model::Thermostat {
+    let position = payload.index.map_or(base.model.thermostats.len(), |index| index as usize);
+    if position > base.model.thermostats.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} thermostats.", position, base.model.thermostats.len()), [payload.id.0.to_string()]);
+    }
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { thermostats: Rows::inserting(position, crate::model::Thermostat {
         id: payload.id,
         zone_id: payload.zone_id,
         heating_setpoint_schedule_id: payload.heating_setpoint_schedule_id,

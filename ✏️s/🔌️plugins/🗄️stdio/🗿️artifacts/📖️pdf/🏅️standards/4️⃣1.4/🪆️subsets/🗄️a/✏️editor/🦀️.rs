@@ -2,8 +2,6 @@
 
 use crate::editor::pdf14a::modes::edit;
 use crate::editor::pdf14a::modes::edit::windows::main;
-use crate::standards::v1_4::subsets::base::schema::mutations::set_snapshot;
-use crate::standards::v1_4::subsets::base::schema::mutations::patch_snapshot;
 use crate::standards::v1_4::subsets::base::schema::{mutations::PdfMutation, snapshot::PdfSnapshot};
 use crate::{PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF_DOCUMENT_SCHEMA};
 use crate::editor::pdf14::page;
@@ -196,7 +194,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for Pdf14AE
     }
 
     fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| PdfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| PdfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::v1_4::subsets::base::schema::mutations::net_mutations)
     }
 }
 

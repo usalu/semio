@@ -1,0 +1,15 @@
+# Full Grant Controlled Cursor Source Audit 6
+
+Read-only physically current source audit during law6 execution. No reruns, edits or global compilation claims.
+
+Literal scan across framework and S found no old byte-only typed RetirementCursor.close_step definition. Canonical trait now takes RetainedCloneGrant and enum includes Advanced and Failure(ValueError). Current ControlledRetirement parent handles Child, Advanced, Failure, Bytes, ProcessedBytes, Complete and BudgetExhausted; failure propagates exactly. It passes one item, exact previously published birth capacity, caller copy/release credits and remaining depth equal caller maximum_depth minus parent frontier len.
+
+ControlledRetirement now directly implements RetireOwned with Box Self birth and T capability gate. Its cursor implementation forwards same full grant to inner step, maps copied bytes to ProcessedBytes, physical releases to Bytes, capacity-only progress to Advanced, no progress to BudgetExhausted, and error to Failure. Thus no copied work is converted to physical release and parent records admitted birth once. Terminal frame release requires inner terminal-empty.
+
+Actionable admission gap: parent step checks depth only after frontier reserve and root construction branches. maximum_depth0 or a limit smaller than root membership can therefore allocate/move ownership before eventual DepthLimit. If depth is an admission dimension, validate required frontier/root membership before those transitions; add zero/one-below depth nonmovement vectors. The existing check also uses len>=depth before every cursor action, so define whether an at-limit non-child action should be allowed or refused; preserve fixture limits and exact constructor semantics.
+
+Demand ports still erase errors through .ok in ControlledRetirement cursor next_birth/next_release forwarding. This preserves explicit refusal at parent missing-authority check but loses original allocation/invariant error identity. The mandatory canonical demand API ultimately needs Result rather than treating an actual failed demand query as absent authority. Do not claim complete typed error preservation for these queries yet.
+
+Unsupported cold erased path remains separate: CursorStack synthesizes a full grant from its old aggregate maximum_bytes with copy/capacity/release each equal remaining and depth usizeMAX. Its typed call signature is migrated, but this is not caller-specific independent grant admission. OwnedRetirement/ErasedCursor and OS/S cursor families are not certified by finite Value tests; do not infer those semantics from type-signature migration. Global compile remains unproved by this read-only scan.
+
+The partial-prefix neutral law retains copy3, exact allocation observers, demand rechecks, original turn limits and recursive fixture values. Prefix cloning currently loses reserved-empty capacities as Root already identified; constructor-preserving fixture rebuilding is required before claiming original reserved ownership conserved. No runtime success is claimed while law6 is live.

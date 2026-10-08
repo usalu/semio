@@ -1,3 +1,0 @@
-# 🧬️ remove-quant-table/RemoveQuantTable
-scalar RemoveQuantTableMutationValue
-input RemoveQuantTableMutation { id: Int! }

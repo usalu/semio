@@ -295,4 +295,4 @@ pub(super) fn json(value:&GltfJson,control:&mut NativeEncodeControl<'_>)->Result
 pub(super) fn snapshot(value:&GltfSnapshot,control:&mut NativeEncodeControl<'_>)->Result<RecordValue,ValueError>{snapshot_value(value,control)}
 
 /// 🛫️ Uses the declared output terminal with the owner’s controlled borrowed field producer.
-pub(super) fn encode_native(value:&GltfSnapshot,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{store::encode_sqlite_snapshot_record_native(encoding,"stdio.gltf",spec_producer(),|native|snapshot_value(value,native),control)}
+pub(super) fn encode_native(value:&GltfSnapshot,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>)->Result<store::io::IoPayload,ValueError>{store::encode_sqlite_snapshot_record_native(encoding,"stdio.gltf",spec_producer(),|native|snapshot_value(value,native),control)}

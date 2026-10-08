@@ -4,7 +4,7 @@
 
 use crate::editor::stl::modes::edit;
 use crate::editor::stl::modes::edit::windows::main;
-use crate::standards::v_ascii::subsets::any::schema::mutations::{patch_snapshot,set_snapshot,StlMutation};
+use crate::standards::v_ascii::subsets::any::schema::mutations::{StlMutation};
 
 use crate::standards::v_ascii::subsets::any::schema::snapshot::StlSnapshot;
 use semio_framework_plugin::app::InteractionView;
@@ -289,7 +289,7 @@ impl editing::SnapshotEditingEditor for StlAnyEditor {
         match command { StlAnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_patch(event, snapshot, |patch| StlMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::v_ascii::subsets::any::schema::mutations::net_mutations)
     }
 }
 

@@ -31,12 +31,14 @@ semio_framework_value::artifact_retire_struct!(LayoutWindowTransient { drop_prev
 semio_framework_plugin::transient_root! {
     state: LayoutWindowTransient,
     mutation: LayoutWindowTransientMutation,
+    diff: LayoutWindowTransientDiff,
     owner: "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️blueprint/🫧️transient",
     kind: "set-window-transient",
     display_name: "Set Layout Window Transient",
     payload_schema: "layout.windowtransient",
     envelope: "s.layout.layout.windowtransient",
     extension: "layoutwindowtransient",
+    fields: { drop_preview: LayoutDropPreviewState, engagement_input: String, transform_tool: Option<Box<LayoutTransformToolState>> },
 }
 
 semio_framework_plugin::window_transient_owners! {

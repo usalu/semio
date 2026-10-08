@@ -3,7 +3,7 @@
   "standard": "2.1",
   "subsets": {
     "markup": {
-      "name": "buildingSMART BCF-XML 2.1 Markup (`markup.bcf` per topic, plus the container-level `bcf.version`) -- topic and comment text, version, plus the whole-document set-snapshot/no-mutation surface. The shared reader/writer for the whole BCF-ZIP container lives here; the other two subsets reuse it (family-module pattern) rather than duplicating it."
+      "name": "buildingSMART BCF-XML 2.1 Markup (`markup.bcf` per topic, plus the container-level `bcf.version`) -- topic and comment text, version, plus the no-mutation surface. The shared reader/writer for the whole BCF-ZIP container lives here; the other two subsets reuse it (family-module pattern) rather than duplicating it."
     },
     "viewpoint": {
       "name": "buildingSMART BCF-XML 2.1 Viewpoint (`viewpoint.bcfv` per topic) -- camera and visibility/coloring component state, a file distinct from that topic's markup."

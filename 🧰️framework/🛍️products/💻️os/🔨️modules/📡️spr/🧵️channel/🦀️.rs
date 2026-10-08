@@ -3296,3 +3296,7 @@ pub fn encode_local_interaction_query_frame_into(reply: &protocol::LocalInteract
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path = "🧪️tests/📤️return-content/🦀️.rs"]
+mod return_content_tests;

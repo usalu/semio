@@ -976,11 +976,15 @@ mod bridge {
         let op = Add { amount: 5 };
         let envelope = envelope_from_operation(document_id().await, "counter", &op, &base, protocol::ActorId("alice".to_string()), protocol::MutationId("op-add-1".to_string()), protocol::HybridLogicalTimestamp::new(1, 0)).await.unwrap();
         let entries = diff_entries(&envelope.diff).await.unwrap();
-        assert_eq!(entries.len(), 1);
+        assert_eq!(entries.len(), 1, "only the changed field is persisted");
         let (path, value) = &entries[0];
-        assert_eq!(path, "counter");
-        let new_value: Counter = semio_framework_value::FromValue::from_value(value.clone().unwrap()).unwrap();
-        assert_eq!(new_value.value, 15);
+        assert_eq!(path, "counter/value");
+        let new_value: i64 = semio_framework_value::FromValue::from_value(value.clone().unwrap()).unwrap();
+        assert_eq!(new_value, 15);
+        let inverse = inverse_entries(&envelope.inverse).await.unwrap();
+        assert_eq!(inverse.len(), 1, "the inverse carries the base value of the changed field only");
+        assert_eq!(inverse[0].0, "counter/value");
+        assert_eq!(inverse[0].1.clone().map(|value| <i64 as semio_framework_value::FromValue>::from_value(value).unwrap()), Some(10));
     }
 }
 //#endregion 🔖️Bridge

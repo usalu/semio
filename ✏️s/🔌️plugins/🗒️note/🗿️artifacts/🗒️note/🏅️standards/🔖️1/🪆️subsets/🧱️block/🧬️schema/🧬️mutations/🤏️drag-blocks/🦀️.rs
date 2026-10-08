@@ -49,3 +49,21 @@ impl MutationKind<NoteSnapshot, NoteMutation> for DragBlocks {
     }
 }
 //#endregion 🔖️Mutation
+
+/// 🧭️ The current `(x, y)` of every block a drag moves — each addressed block and its whole subtree, each once — and the addressed ids that do not exist.
+fn dragged_positions(payload: &DragBlocks, base: &NoteSnapshot) -> (std::collections::BTreeMap<String, (f64, f64)>, Vec<String>) {
+    let mut moved = std::collections::BTreeMap::new();
+    let mut missing = Vec::new();
+    for id in &payload.ids {
+        match crate::schema::find_block(&base.blocks, id) {
+            Some(block) => {
+                for member in crate::schema::flatten_blocks(std::slice::from_ref(block)) {
+                    let (x, y, ..) = crate::schema::block_bounds(member);
+                    moved.insert(crate::schema::block_id(member).to_string(), (x, y));
+                }
+            }
+            None => missing.push(id.clone()),
+        }
+    }
+    (moved, missing)
+}

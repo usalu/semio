@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ResizeGrid` — an id-keyed delta over `Grid3dSnapshot`, never a
 //! whole-snapshot capture.
 
-use crate::diff::Grid3dDiff;
+use crate::diff::{Grid3dAxisPatch, Grid3dDiff};
 use crate::schema::snapshot::*;
 
 pub fn diff(payload: &super::ResizeGrid, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
@@ -21,9 +21,9 @@ pub fn diff(payload: &super::ResizeGrid, base: &Grid3dSnapshot) -> protocol::Mut
         width: Some(payload.width),
         height: Some(payload.height),
         depth: Some(payload.depth),
-        cell_sizes_x: Some(resized_axis(&base.cell_sizes_x, payload.width)),
-        cell_sizes_y: Some(resized_axis(&base.cell_sizes_y, payload.height)),
-        cell_sizes_z: Some(resized_axis(&base.cell_sizes_z, payload.depth)),
+        cell_sizes_x: Some(Grid3dAxisPatch::between(&base.cell_sizes_x, &resized_axis(&base.cell_sizes_x, payload.width))).filter(|patch| !patch.is_empty()),
+        cell_sizes_y: Some(Grid3dAxisPatch::between(&base.cell_sizes_y, &resized_axis(&base.cell_sizes_y, payload.height))).filter(|patch| !patch.is_empty()),
+        cell_sizes_z: Some(Grid3dAxisPatch::between(&base.cell_sizes_z, &resized_axis(&base.cell_sizes_z, payload.depth))).filter(|patch| !patch.is_empty()),
         ..Default::default()
     })
 }

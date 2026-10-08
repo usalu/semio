@@ -1,0 +1,9 @@
+# SPR Fixture Capability Closure
+
+The SPR mutation fixture reader and inverse-case reader and their facade reexports now require cfg(test) or the explicit mutation-testing feature. The default kernel deflate feature is unchanged. The kernel test script requests mutation-testing only for actual Cargo test commands. Actual downstream consumer manifests request the capability exclusively through dev-dependencies; normal and build dependencies and default feature declarations do not request it. Pure mutation behavior helpers remain available to production.
+
+Actual Bun.TOML source checks counted 129 dev-only requests, zero normal/build requests; actual owned Rust parser excludes filesystem reader edges without the capability and retains them when requested. Semio CLI is additionally scoped to native-bin and non-wasm, matching its existing required-feature binary declarations; payload verification and native CLI body remain intact.
+
+Actual focused source execution passed3tests/0fail/3473expectations, Nx0/227ms. Source receipt is 🗑️generated/oct8-spr-mutation-testing-source.log. No fresh native test or four-guest success is inferred. Plugin resumed fresh ordered Energy native target after settlement. Independent reviewer parsed the same129requests and confirmed helper/facade/default boundaries in 📓️oct8-spr-test-feature-and-collector-review.md.
+
+Exact authored path roster is 📥️oct8-spr-mutation-testing-manifest-paths.json. Exact preimages were captured for117manifests in 📥️oct8-spr-mutation-testing-manifest-preimages.json; twelve initial edits preceded that capture and are not claimed as byte-level preimages. Their original dependency features remain recorded in pre-edit actual Cargo metadata. The parser-only renamed dsl_lsp dependency was excluded because it has no helper consumer. Its roster is 📥️oct8-spr-mutation-testing-renamed-consumers.json. Native Semio preimage is 📥️oct8-semio-native-cli-preimage.rs.

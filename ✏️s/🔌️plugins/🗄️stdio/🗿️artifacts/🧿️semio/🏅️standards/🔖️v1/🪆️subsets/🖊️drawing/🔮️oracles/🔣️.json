@@ -371,8 +371,6 @@
         }
       ],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "create-layer",
         "delete-layer",
         "create-node",
@@ -1521,49 +1519,6 @@
           },
           "carriers": [
             "svg"
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-drawing-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "quick-xml-drawing-svg-reader"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "semio-v1-drawing-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-drawing-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "quick-xml-drawing-svg-reader"
-            }
           ]
         },
         {

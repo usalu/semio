@@ -14,11 +14,12 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 pub struct CreateRoomAirModelAssignment {
     pub zone_id: crate::model::EntityId,
     pub model: crate::model::RoomAirModelType,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_room_air_model_assignment(zone_id: crate::model::EntityId, model: crate::model::RoomAirModelType) -> EnergyModelMutation {
-    EnergyModelMutation::CreateRoomAirModelAssignment(CreateRoomAirModelAssignment { zone_id, model })
+pub fn create_room_air_model_assignment(zone_id: crate::model::EntityId, model: crate::model::RoomAirModelType, index: Option<u32>) -> EnergyModelMutation {
+    EnergyModelMutation::CreateRoomAirModelAssignment(CreateRoomAirModelAssignment { zone_id, model, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateRoomAirModelAssignment {

@@ -4,7 +4,7 @@
 pub mod export_registers_csv {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
-    use crate::standards::v1::subsets::any::schema::inferences::export_registers_csv;
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::export_registers_csv;
     use crate::ProgramSnapshot;
     use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;

@@ -1,20 +1,17 @@
 {
   "artifact": null,
-  "schema": null,
   "domain": null,
-  "label": null,
-  "meta": null,
-  "kindCatalogs": null,
-  "kindCatalogsExtra": null,
-  "kindCompatibility": null,
-  "parts": null,
   "fasteners": {
     "added": [],
+    "patched": [],
     "removed": [
       "fast-1"
     ],
-    "patched": [],
     "reordered": null
   },
+  "kindCompatibility": null,
+  "meta": null,
+  "parts": null,
+  "schema": null,
   "targetVolumes": null
 }

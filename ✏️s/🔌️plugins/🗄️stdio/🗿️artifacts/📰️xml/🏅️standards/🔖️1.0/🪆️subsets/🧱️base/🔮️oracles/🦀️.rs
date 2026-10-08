@@ -544,15 +544,6 @@ mod oracles {
         match kind {
             "set-declaration" => doc.declaration = declaration_from_wire(&member(params, "declaration")),
             "set-doctype" => doc.doctype = doctype_from_wire(&member(params, "doctype"))?,
-            "patch-snapshot" => {
-                let root = doc.root.as_ref().map(xnode_to_wire).unwrap_or(Json::Null);
-                let reading = Json::Object(vec![("schema".to_string(), Json::String("stdio.xml".to_string())), ("doc".to_string(), Json::Object(vec![("root".to_string(), root)]))]);
-                let patched = semio_repo_test_host::law::patched_snapshot(&reading, &member(params, "patch"))?;
-                doc.root = match member(&member(&patched, "doc"), "root") {
-                    Json::Null => None,
-                    root => Some(xnode_from_wire(&root)?),
-                };
-            }
             "insert-element" => {
                 let path = usize_path(params.array("path"));
                 let index = usize_field(params, "index");
@@ -619,7 +610,6 @@ mod oracles {
         match kind {
             "set-declaration" => doc.declaration = base.declaration.clone(),
             "set-doctype" => doc.doctype = base.doctype.clone(),
-            "patch-snapshot" => doc.root = base.root.clone(),
             "insert-element" => {
                 let XNode::Element { children, .. } = resolve_mut(doc.root.as_mut(), &path).ok_or("inverse insert-element: path does not resolve to an element")? else {
                     return Err("inverse insert-element: path does not address an element".to_string());

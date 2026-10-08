@@ -1,7 +1,7 @@
 //! 🔺️ Diff fragment yielded by `EditBlockMath`. Error `target-missing` when the block is absent
 //! or not a math block, Warning `no-op` when the TeX source is unchanged.
 use super::EditBlockMath;
-use crate::schema::diff::note_block_patch_diff;
+use crate::schema::diff::NoteBlockPatch;
 use crate::NoteDiff;
 use crate::NoteSnapshot;
 
@@ -16,10 +16,6 @@ pub fn diff(payload: &EditBlockMath, base: &NoteSnapshot) -> protocol::MutationO
     if tex == &payload.new_tex {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Block \"{}\" math is unchanged.", payload.id));
     }
-    let mut updated = block.clone();
-    if let crate::NoteBlockNode::Math { tex, .. } = &mut updated {
-        *tex = payload.new_tex.clone();
-    }
-    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, &updated))
+    protocol::MutationOutcome::new(NoteDiff::block_patches([(payload.id.clone(), NoteBlockPatch { tex: Some(payload.new_tex.clone()), ..Default::default() })]))
 }
 //#endregion 🔖️Diff

@@ -1,11 +1,12 @@
 {
-  "artifact": null,
   "workshop": {
-    "machines": [
+    "added": [],
+    "removed": [],
+    "patched": [
       {
         "id": "saw",
-        "label": "Bench Saw",
-        "iconId": "scissors",
+        "label": null,
+        "iconId": null,
         "capabilities": [
           {
             "id": "pocket",
@@ -39,7 +40,8 @@
           }
         ]
       }
-    ]
+    ],
+    "reordered": null
   },
   "stockId": null,
   "stockLabel": null,

@@ -6,6 +6,7 @@ export type {FemNode,FemDof,FemAxis,FemElement,FemMaterial,FemSection,FemSupport
 /** 🌱️ Mirrors Rust `CreateNode` (`⚪️create-node/🦀️.rs`). */
 export interface CreateNode {
   node: FemNode;
+  index?: number | null;
 }
 
 /** 🗑️ Mirrors Rust `DeleteNode` (`🗑️⚪️delete-node/🦀️.rs`). */
@@ -16,6 +17,7 @@ export interface DeleteNode {
 /** 🌱️ Mirrors Rust `CreateElement` (`🧩️create-element/🦀️.rs`). */
 export interface CreateElement {
   element: FemElement;
+  index?: number | null;
 }
 
 /** 🗑️ Mirrors Rust `DeleteElement` (`🗑️🧩️delete-element/🦀️.rs`). */
@@ -32,6 +34,7 @@ export interface ReplaceElement {
 /** 🌱️ Mirrors Rust `CreateMaterial` (`🌱️create-material/🦀️.rs`). */
 export interface CreateMaterial {
   material: FemMaterial;
+  index?: number | null;
 }
 
 /** 🗑️ Mirrors Rust `DeleteMaterial` (`🗑️🧱️delete-material/🦀️.rs`). */
@@ -48,6 +51,7 @@ export interface ReplaceMaterial {
 /** 🌱️ Mirrors Rust `CreateSection` (`📐️create-section/🦀️.rs`). */
 export interface CreateSection {
   section: FemSection;
+  index?: number | null;
 }
 
 /** 🗑️ Mirrors Rust `DeleteSection` (`🗑️📐️delete-section/🦀️.rs`). */
@@ -64,6 +68,7 @@ export interface ReplaceSection {
 /** 🌱️ Mirrors Rust `CreateSupport` (`🛡️create-support/🦀️.rs`). */
 export interface CreateSupport {
   support: FemSupport;
+  index?: number | null;
 }
 
 /** 🗑️ Mirrors Rust `DeleteSupport` (`🗑️delete-support/🦀️.rs`). */
@@ -80,6 +85,7 @@ export interface ReplaceSupport {
 /** 🌱️ Mirrors Rust `CreateSolid` (`🧊️create-solid/🦀️.rs`). */
 export interface CreateSolid {
   solid: FemSolid;
+  index?: number | null;
 }
 
 /** 🗑️ Mirrors Rust `DeleteSolid` (`🗑️🧊️delete-solid/🦀️.rs`). */
@@ -96,6 +102,7 @@ export interface ReplaceSolid {
 /** 🌱️ Mirrors Rust `CreateLoadCase` (`📋️create-load-case/🦀️.rs`). */
 export interface CreateLoadCase {
   loadCase: FemLoadCase;
+  index?: number | null;
 }
 
 /** 🗑️ Mirrors Rust `DeleteLoadCase` (`🗑️📋️delete-load-case/🦀️.rs`). */
@@ -107,6 +114,7 @@ export interface DeleteLoadCase {
 export interface AddLoad {
   caseId: string;
   load: FemLoad;
+  index?: number | null;
 }
 
 /** ➖️ Mirrors Rust `RemoveLoad` (`➖️remove-load/🦀️.rs`). */
@@ -124,6 +132,7 @@ export interface ChangeLoadCaseSelfWeight {
 /** 🌱️ Mirrors Rust `CreateCombination` (`🔗️create-combination/🦀️.rs`). */
 export interface CreateCombination {
   combination: FemCombination;
+  index?: number | null;
 }
 
 /** 🗑️ Mirrors Rust `DeleteCombination` (`🗑️🔗️delete-combination/🦀️.rs`). */

@@ -1132,7 +1132,7 @@ fn prepare_process3d_document(base: &Process3dSnapshot, mutation: Process3dMutat
         return Err(format!("Process3d document mutation was refused by its own vocabulary: {}", message.message));
     }
     let inverse = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
-    let post = protocol::MutationDiff::apply(outcome.diff(), base).map_err(|error| format!("Process3d document mutation could not apply onto its exact base: {}", error.message))?;
+    let post = protocol::apply_diff(outcome.diff(), base).map_err(|error| format!("Process3d document mutation could not apply onto its exact base: {}", error.message))?;
     process3d_document_bytes(&post).map_err(semio_framework_value::ValueError::into_message)?;
     Ok((post, inverse, mutation))
 }
@@ -2144,7 +2144,7 @@ fn process_json_envelope_is_bounded(input: &str) -> bool {
 // 🚫️async: E1 pure — bounded JSON decode into operation-owned values, zero suspension points.
 // `TopicContribution::decode` itself is still `fn` in
 // `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs` (out of this packet's path_scope); bridged via
-// `semio_framework::io::resolve_ready` (see `imperative_extension_sdk`'s identical bridge and this
+// `semio_framework_os_kernel::io::resolve_ready` (see `imperative_extension_sdk`'s identical bridge and this
 // packet's lease-request for the SDK owner to revert `decode` to sync directly).
 /// 🧩️ Distils a host pack down to what THIS app can install: the `process.machines` entries
 /// addressed to it, in host order, while the re-encoded roster still fits `maximum_bytes`.

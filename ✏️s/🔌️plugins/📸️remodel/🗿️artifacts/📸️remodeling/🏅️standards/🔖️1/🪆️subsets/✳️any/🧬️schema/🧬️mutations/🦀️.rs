@@ -65,7 +65,7 @@ pub use super::append_content::{append_content, AppendContent};
 pub use super::add_gcp_observation::{add_gcp_observation, AddGcpObservation};
 pub use super::add_stream_frame::{add_stream_frame, AddStreamFrame};
 pub use super::change_stream_sync::{change_stream_sync, ChangeStreamSync};
-pub use super::commit_reconstruction::{commit_reconstruction, CommitReconstruction, ReconstructionAssetCommit};
+pub use super::commit_reconstruction::{commit_reconstruction, rebind_asset, CommitReconstruction, ReconstructionAssetCommit};
 pub use super::create_asset::{create_asset, CreateAsset};
 pub use super::create_camera_calibration::{create_camera_calibration, CreateCameraCalibration};
 pub use super::create_gcp::{create_gcp, CreateGcp};
@@ -116,7 +116,7 @@ pub fn ordered_index<T, K: Ord>(items: &[T], key: &K, key_of: impl Fn(&T) -> K) 
 /// `🎬️sequence`'s `apply_sequence_mutation`) since external callers (the editor surface) still call it
 /// by this name.
 pub fn apply_remodeling_mutation(snapshot: &RemodelingSnapshot, mutation: &RemodelingMutation) -> protocol::MutationApplyResult<RemodelingSnapshot> {
-    protocol::MutationDiff::apply(&mutation.diff(snapshot).into_parts().0, snapshot)
+    protocol::apply_diff(&mutation.diff(snapshot).into_parts().0, snapshot)
 }
 
 /// ↩️ Computes the inverse mutations from pre-state — kept as a free-function wrapper (matching
@@ -145,7 +145,7 @@ pub(crate) fn bridge_step(snapshot: &RemodelingSnapshot, mutation: &RemodelingMu
     use protocol::{Mutation, MutationDiff};
     let outcome = <RemodelingMutation as Mutation<RemodelingSnapshot>>::diff(mutation, snapshot);
     let messages: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
-    match MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => Ok((next, messages)),
         Err(error) => Err(format!("{error:?}")),
     }

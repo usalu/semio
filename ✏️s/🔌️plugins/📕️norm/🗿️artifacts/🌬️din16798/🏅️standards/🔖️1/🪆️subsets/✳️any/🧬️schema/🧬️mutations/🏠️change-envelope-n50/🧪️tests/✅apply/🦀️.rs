@@ -23,3 +23,9 @@ async fn applies_change_envelope_n50() {
 fn sample_mutation(base: &Din16798Snapshot) -> Din16798Mutation {
     Din16798Mutation::ChangeEnvelopeN50(change_envelope_n50::ChangeEnvelopeN50 { new_envelope_n50_h_inv: base.envelope_n50_h_inv + 0.1 })
 }
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    let base = Din16798Snapshot::default();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&sample_mutation(&base), &base).await;
+}

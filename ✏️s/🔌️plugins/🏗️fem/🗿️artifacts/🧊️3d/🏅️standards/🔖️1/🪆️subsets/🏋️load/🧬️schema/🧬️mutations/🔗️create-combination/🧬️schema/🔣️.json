@@ -81,6 +81,27 @@
         "group": "record",
         "order": 10
       }
+    },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint64",
+      "minimum": 0,
+      "description": "Zero-based insertion position among the siblings; absent or past the end appends.",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "placement",
+        "order": 900
+      }
     }
   }
 }

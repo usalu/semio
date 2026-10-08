@@ -2,7 +2,7 @@
 //! (constructs the sparse `EpwDiff` directly — apply-and-capture is banned); `inverse()` is
 //! handcrafted per variant, index/field-aware, reading the pre-state it needs from `base`.
 
-use crate::standards::energyplus::subsets::any::schema::diff::{diff_set_snapshot, EpwDiff, EpwRecordAdded, EpwRecordDiff, EpwRecordModified, EpwRecordsDiff};
+use crate::standards::energyplus::subsets::any::schema::diff::{EpwDiff, EpwRecordAdded, EpwRecordDiff, EpwRecordModified, EpwRecordsDiff};
 
 
 
@@ -43,10 +43,6 @@ pub mod set_record_field;
 /// `EpwSnapshot`/`EpwLocation`/`EpwDataPeriods`, none of which implement `dsl::DslField`; wiring
 /// that up is out of this ticket's scope, matching csv's/gif's own documented hand-roll rationale).
 //#region 🔖️Leaves
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "📆set-typical-extreme-periods/🦀️.rs"]
 pub mod set_typical_extreme_periods;
 //#endregion 🔖️Leaves
@@ -58,8 +54,6 @@ pub mod set_typical_extreme_periods;
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = EpwSnapshot, diff = EpwDiff, schema = "EpwMutation")]
 pub enum EpwMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// 📍️ Replaces the LOCATION header line.
     SetLocation(set_location::SetLocation),
     /// 🌡️ Replaces the DESIGN CONDITIONS header line (retained verbatim).
@@ -89,7 +83,6 @@ pub enum EpwMutation {
 /// mutation catalog `epw-energyplus-any` (`../../🔣️oracle.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
 pub const KINDS: &[&str] = &[
-    "set-snapshot", "patch-snapshot",
     "set-location",
     "set-design-conditions",
     "set-typical-extreme-periods",
@@ -110,7 +103,7 @@ pub const KINDS: &[&str] = &[
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_epw_mutation(snapshot: &mut EpwSnapshot, mutation: &EpwMutation) -> protocol::MutationOutcome<EpwDiff> {
     let outcome = <EpwMutation as Mutation<EpwSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -121,60 +114,53 @@ pub fn apply_epw_mutation(snapshot: &mut EpwSnapshot, mutation: &EpwMutation) ->
 //#endregion 🔖️Apply
 
 
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &EpwMutation, base: &EpwSnapshot) -> protocol::MutationOutcome<EpwDiff> {
-    protocol::MutationOutcome::new(match this {
-        EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
-        EpwMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<EpwSnapshot, EpwMutation>>::diff(patch, base),
-        EpwMutation::SetLocation(set_location::SetLocation { location }) => EpwDiff { location: Some(location.clone()), ..EpwDiff::default() },
-        EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value }) => EpwDiff { design_conditions: Some(value.clone()), ..EpwDiff::default() },
-        EpwMutation::SetTypicalExtremePeriods(set_typical_extreme_periods::SetTypicalExtremePeriods { value }) => EpwDiff { typical_extreme_periods: Some(value.clone()), ..EpwDiff::default() },
-        EpwMutation::SetGroundTemperatures(set_ground_temperatures::SetGroundTemperatures { value }) => EpwDiff { ground_temperatures: Some(value.clone()), ..EpwDiff::default() },
-        EpwMutation::SetHolidaysDst(set_holidays_dst::SetHolidaysDst { value }) => EpwDiff { holidays_dst: Some(value.clone()), ..EpwDiff::default() },
-        EpwMutation::SetComments1(set_comments1::SetComments1 { value }) => EpwDiff { comments_1: Some(value.clone()), ..EpwDiff::default() },
-        EpwMutation::SetComments2(set_comments2::SetComments2 { value }) => EpwDiff { comments_2: Some(value.clone()), ..EpwDiff::default() },
-        EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods }) => EpwDiff { data_periods: Some(data_periods.clone()), ..EpwDiff::default() },
-        EpwMutation::InsertRecord(insert_record::InsertRecord { index, record }) => {
-            EpwDiff { records: Some(EpwRecordsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![EpwRecordAdded { index: *index, record: record.as_ref().clone() }] }), ..EpwDiff::default() }
-        }
-        EpwMutation::RemoveRecord(remove_record::RemoveRecord { index }) => EpwDiff { records: Some(EpwRecordsDiff { removed: vec![*index], modified: Vec::new(), added: Vec::new() }), ..EpwDiff::default() },
-        EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index, field_index, value }) => {
-            let mut fdiff = EpwRecordDiff::default();
-            fdiff.set_at(*field_index, Some(value.clone()));
-            EpwDiff { records: Some(EpwRecordsDiff { removed: Vec::new(), modified: vec![EpwRecordModified { index: *record_index, diff: fdiff }], added: Vec::new() }), ..EpwDiff::default() }
-        }
-    })
-}
-
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &EpwMutation, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
-    Ok({
-    match this {
-        EpwMutation::SetSnapshot(_) => vec![EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        EpwMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<EpwSnapshot, EpwMutation>>::inverse(patch, base)?),
-        EpwMutation::SetLocation(_) => vec![EpwMutation::SetLocation(set_location::SetLocation { location: base.location.clone() })],
-        EpwMutation::SetDesignConditions(_) => vec![EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: base.design_conditions.clone() })],
-        EpwMutation::SetTypicalExtremePeriods(_) => vec![EpwMutation::SetTypicalExtremePeriods(set_typical_extreme_periods::SetTypicalExtremePeriods { value: base.typical_extreme_periods.clone() })],
-        EpwMutation::SetGroundTemperatures(_) => vec![EpwMutation::SetGroundTemperatures(set_ground_temperatures::SetGroundTemperatures { value: base.ground_temperatures.clone() })],
-        EpwMutation::SetHolidaysDst(_) => vec![EpwMutation::SetHolidaysDst(set_holidays_dst::SetHolidaysDst { value: base.holidays_dst.clone() })],
-        EpwMutation::SetComments1(_) => vec![EpwMutation::SetComments1(set_comments1::SetComments1 { value: base.comments_1.clone() })],
-        EpwMutation::SetComments2(_) => vec![EpwMutation::SetComments2(set_comments2::SetComments2 { value: base.comments_2.clone() })],
-        EpwMutation::SetDataPeriods(_) => vec![EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods: base.data_periods.clone() })],
-        EpwMutation::InsertRecord(insert_record::InsertRecord { index, .. }) => vec![EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: *index })],
-        EpwMutation::RemoveRecord(remove_record::RemoveRecord { index }) => match base.records.get(*index) {
-            Some(record) => vec![EpwMutation::InsertRecord(insert_record::InsertRecord { index: *index, record: Box::new(record.clone()) })],
-            None => Vec::new(),
-        },
-        EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index, field_index, .. }) => match base.records.get(*record_index).and_then(|r| r.field_at(*field_index)) {
-            Some(prior) => vec![EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: *record_index, field_index: *field_index, value: prior.to_string() })],
-            None => Vec::new(),
-        },
-    }
-
-    })
-}
 //#endregion 🔖️MutationTrait
+
+//#region 🔖️Net
+/// 🧮️ The leaves that carry `base` to exactly `next`: each header line that moved, then every record row in place (one
+/// `set-record-field` per differing column) and the diverging tail (surplus rows removed last first, missing rows inserted). The
+/// snapshot `schema` is a constant of the artifact and never a leaf.
+pub fn net_mutations(base: &EpwSnapshot, next: &EpwSnapshot) -> Vec<EpwMutation> {
+    let mut leaves = Vec::new();
+    if base.location != next.location {
+        leaves.push(EpwMutation::SetLocation(set_location::SetLocation { location: next.location.clone() }));
+    }
+    if base.design_conditions != next.design_conditions {
+        leaves.push(EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: next.design_conditions.clone() }));
+    }
+    if base.typical_extreme_periods != next.typical_extreme_periods {
+        leaves.push(EpwMutation::SetTypicalExtremePeriods(set_typical_extreme_periods::SetTypicalExtremePeriods { value: next.typical_extreme_periods.clone() }));
+    }
+    if base.ground_temperatures != next.ground_temperatures {
+        leaves.push(EpwMutation::SetGroundTemperatures(set_ground_temperatures::SetGroundTemperatures { value: next.ground_temperatures.clone() }));
+    }
+    if base.holidays_dst != next.holidays_dst {
+        leaves.push(EpwMutation::SetHolidaysDst(set_holidays_dst::SetHolidaysDst { value: next.holidays_dst.clone() }));
+    }
+    if base.comments_1 != next.comments_1 {
+        leaves.push(EpwMutation::SetComments1(set_comments1::SetComments1 { value: next.comments_1.clone() }));
+    }
+    if base.comments_2 != next.comments_2 {
+        leaves.push(EpwMutation::SetComments2(set_comments2::SetComments2 { value: next.comments_2.clone() }));
+    }
+    if base.data_periods != next.data_periods {
+        leaves.push(EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods: next.data_periods.clone() }));
+    }
+    let paired = base.records.len().min(next.records.len());
+    for (record_index, (before, after)) in base.records.iter().zip(&next.records).enumerate().filter(|(_, (before, after))| before != after) {
+        for field_index in 0..crate::standards::energyplus::subsets::any::schema::snapshot::EPW_RECORD_FIELD_COUNT {
+            if let (Some(old), Some(new)) = (before.field_at(field_index), after.field_at(field_index)) {
+                if old != new {
+                    leaves.push(EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index, field_index, value: new.to_string() }));
+                }
+            }
+        }
+    }
+    leaves.extend((paired..base.records.len()).rev().map(|index| EpwMutation::RemoveRecord(remove_record::RemoveRecord { index })));
+    leaves.extend(next.records.iter().enumerate().skip(paired).map(|(index, record)| EpwMutation::InsertRecord(insert_record::InsertRecord { index, record: Box::new(record.clone()) })));
+    leaves
+}
+//#endregion 🔖️Net
 
 //#region OpCodecs
 
@@ -196,16 +182,7 @@ pub(crate) fn agg_inverse(this: &EpwMutation, base: &EpwSnapshot) -> Result<Vec<
 mod tests;
 //#endregion 🧪️Tests
 
-//#region 🧪️FixtureTests
-// 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
-// agents migrating the other stdio artifacts, so the production mounts there stay untouched while
-// this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
-// directory, which is what makes the leaf-relative path below resolve.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-//#endregion 🧪️FixtureTests
+
 
 #[cfg(test)]
 use protocol::{OpBinary,OpText};

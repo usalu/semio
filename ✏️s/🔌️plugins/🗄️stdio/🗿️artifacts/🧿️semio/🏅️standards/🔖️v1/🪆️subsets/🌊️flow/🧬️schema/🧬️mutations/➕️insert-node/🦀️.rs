@@ -7,12 +7,14 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertNode {
     pub node: FlowNode,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl InsertNode {
     /// 🟢️ Transfers one typed node into its insertion command without a wire round trip.
     pub fn new(node: FlowNode) -> Self {
-        Self { node }
+        Self { node, at: None }
     }
 }
 

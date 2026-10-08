@@ -15,11 +15,19 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "insert-table-column")]
 pub struct InsertTableColumn {
     pub id: String,
+    /// 🏷️ The header of the appended column; absent derives the next letter.
+    #[value(default)]
+    #[serde(default)]
+    pub name: Option<String>,
+    /// 🧱️ One cell per row for the appended column; absent appends blank cells.
+    #[value(default)]
+    #[serde(default)]
+    pub cells: Option<Vec<crate::NoteTableCell>>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 pub fn insert_table_column(id: String) -> NoteMutation {
-    NoteMutation::InsertTableColumn(InsertTableColumn { id })
+    NoteMutation::InsertTableColumn(InsertTableColumn { id, name: None, cells: None })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for InsertTableColumn {

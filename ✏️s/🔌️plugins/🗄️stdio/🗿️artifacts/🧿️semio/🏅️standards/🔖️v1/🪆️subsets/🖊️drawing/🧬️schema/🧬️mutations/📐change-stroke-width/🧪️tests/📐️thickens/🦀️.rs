@@ -31,7 +31,7 @@ fn mutation() -> SemioDrawingMutation {
 #[semio_framework_async_macros::async_test]
 async fn thickens_the_stroke_without_recolouring_it() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("change-stroke-width applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("change-stroke-width applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "change-stroke-width/thickens-the-primary-styles-stroke: applied state differs from the committed after-snapshot");
     assert_eq!(produced.styles[0].stroke_width, Some(2.5), "the width takes the payload's own value");
     assert_eq!(produced.styles[0].stroke, base.styles[0].stroke, "thickening must NOT recolour the stroke — that is a separate triad");
@@ -44,13 +44,14 @@ async fn thickens_the_stroke_without_recolouring_it() {
 async fn the_undo_change_stroke_width_restores_the_original_width() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "change-stroke-width of an existing style undoes as exactly one change-stroke-width");
     let SemioDrawingMutation::ChangeStrokeWidth(restore) = &undo[0] else { panic!("change-stroke-width must undo as change-stroke-width") };
     assert_eq!(restore.new_width, base.styles[0].stroke_width, "the undo must recapture BASE's own width, Option and all");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward change-stroke-width applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo change-stroke-width applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward change-stroke-width applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo change-stroke-width applies");
     }
     assert_eq!(current, base, "change-stroke-width/thickens-the-primary-styles-stroke: the undo did not restore the before-snapshot");
 }
@@ -111,6 +112,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-stroke-width diff decodes");
-    let produced = decoded.apply(&before()).expect("committed change-stroke-width diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed change-stroke-width diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-stroke-width/thickens-the-primary-styles-stroke: committed diff did not carry before to after");
 }

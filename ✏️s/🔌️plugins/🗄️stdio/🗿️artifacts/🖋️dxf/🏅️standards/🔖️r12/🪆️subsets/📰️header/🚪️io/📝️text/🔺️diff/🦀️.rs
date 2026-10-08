@@ -300,7 +300,7 @@ pub(crate) fn dec_dxf_entities(s: &str) -> Result<Vec<DxfEntity>, String> {
 }
 
 /// 🏷️ Full (non-diff) item encoders — self-bracketing positional tuples, used by `added` entries
-/// in every collection triple AND by `🧬️mutations`'s `SetSnapshot`/`Insert*`/`Set*` argument
+/// in every collection triple AND by `🧬️mutations`'s `Insert*`/`Set*` argument
 /// payloads (hence `pub(crate)`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_header_var(hv: &DxfHeaderVar) -> String {

@@ -5,7 +5,7 @@ pub use binary::snapshot::encode_options::{JpgEncodeOptions,JpgEncodeComponent};
 pub mod derived_composition {
     use crate::standards::v_jfif_1_01::subsets::document::io::JpgAnalyzer;
     use crate::JpgSnapshot;
-    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
@@ -596,7 +596,7 @@ fn box_downsample(src: &[f64], sw: usize, sh: usize, fx: usize, fy: usize) -> (V
 /// embedded thumbnail when present.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn encode_jfif_app0(snap: &JpgSnapshot) -> Vec<u8> {
-    let thumb = snap.jfif_thumbnail.as_ref();
+    let thumb = snap.image.jfif_thumbnail.as_ref();
     let (tw, th, tdata): (u8, u8, &[u8]) = match thumb {
         Some(t) => (t.width, t.height, &t.rgb_data),
         None => (0, 0, &[]),
@@ -604,13 +604,13 @@ fn encode_jfif_app0(snap: &JpgSnapshot) -> Vec<u8> {
     let len = 2 + 5 + 2 + 1 + 2 + 2 + 1 + 1 + tdata.len();
     let mut out = vec![0xFFu8, 0xE0, (len >> 8) as u8, (len & 0xFF) as u8];
     out.extend_from_slice(b"JFIF\0");
-    out.push(snap.jfif_version.0);
-    out.push(snap.jfif_version.1);
-    out.push(snap.jfif_density_units.to_u8());
-    out.push((snap.jfif_x_density >> 8) as u8);
-    out.push((snap.jfif_x_density & 0xFF) as u8);
-    out.push((snap.jfif_y_density >> 8) as u8);
-    out.push((snap.jfif_y_density & 0xFF) as u8);
+    out.push(snap.image.jfif_version.0);
+    out.push(snap.image.jfif_version.1);
+    out.push(snap.image.jfif_density_units.to_u8());
+    out.push((snap.image.jfif_x_density >> 8) as u8);
+    out.push((snap.image.jfif_x_density & 0xFF) as u8);
+    out.push((snap.image.jfif_y_density >> 8) as u8);
+    out.push((snap.image.jfif_y_density & 0xFF) as u8);
     out.push(tw);
     out.push(th);
     out.extend_from_slice(tdata);
@@ -660,7 +660,7 @@ fn frame_components_of(options: &JpgEncodeOptions) -> Result<Vec<JpgFrameCompone
 /// (IJG convention, default 90) — chosen so the round trip through our own decoder stays well
 /// under a visually-lossless error budget. Edges are replicated (not zero-padded) up to the next
 /// MCU boundary to avoid ringing. Writes a real JFIF APP0 from `snap.jfif_*` and re-emits
-/// `snap.other_segments` verbatim right after it — always canonicalizes to fresh Annex K DQT/DHT
+/// `snap.image.other_segments` verbatim right after it — always canonicalizes to fresh Annex K DQT/DHT
 /// tables at the chosen quality (documented normal form, matches png's pixel-canonicalization
 /// precedent: `quant_tables`/`huffman_tables` are typed RETENTION of a decoded file's actual
 /// tables, not necessarily what a subsequent re-encode emits) — `restart_interval` is retained but
@@ -677,16 +677,21 @@ fn frame_components_of(options: &JpgEncodeOptions) -> Result<Vec<JpgFrameCompone
 /// since there is nothing to honour.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_jpg(snap: &JpgSnapshot, options:&JpgEncodeOptions) -> Result<Vec<u8>, JpgError> {
-    if snap.width == 0 || snap.height == 0 {
+    if snap.image.width == 0 || snap.image.height == 0 {
         return Err(JpgError::Malformed("empty image".into()));
     }
-    if snap.pixels.len() != (snap.width as usize) * (snap.height as usize) * 4 {
+    if snap.image.pixels.len() != (snap.image.width as usize) * (snap.image.height as usize) * 4 {
         return Err(JpgError::Malformed("pixels length mismatch".into()));
     }
-    if snap.width > u16::MAX as u32 || snap.height > u16::MAX as u32 {
+    if snap.image.pixels.chunks_exact(4).any(|pixel|pixel[3]!=255){return Err(JpgError::Unsupported("JPEG raster output cannot represent transparent alpha samples".into()));}
+    if let Some(thumbnail)=&snap.image.jfif_thumbnail{
+        if thumbnail.rgb_data.len()!=usize::from(thumbnail.width)*usize::from(thumbnail.height)*3||thumbnail.rgb_data.len()>u16::MAX as usize-16{return Err(JpgError::Malformed("JFIF thumbnail exceeds its exact RGB extent or APP0 segment width".into()));}
+    }
+    if snap.image.other_segments.iter().any(|segment|!matches!(segment.marker,0xe0..=0xef|0xfe)||segment.data.len()>u16::MAX as usize-2||segment.marker==0xe0&&segment.data.starts_with(b"JFIF\0")){return Err(JpgError::Malformed("opaque metadata requires bounded APP/COM content outside the owned JFIF header".into()));}
+    if snap.image.width > u16::MAX as u32 || snap.image.height > u16::MAX as u32 {
         return Err(JpgError::Unsupported("image dimensions exceed JPEG's 16-bit SOF0 width/height field".into()));
     }
-    let (width, height): (u16, u16) = (snap.width as u16, snap.height as u16);
+    let (width, height): (u16, u16) = (snap.image.width as u16, snap.image.height as u16);
     if !(1..=100).contains(&options.quality) {return Err(JpgError::Malformed("JPEG export quality must be 1..=100".into()));}
     let quality = options.quality as i32;
     let comps = frame_components_of(options)?;
@@ -705,7 +710,7 @@ pub fn encode_jpg(snap: &JpgSnapshot, options:&JpgEncodeOptions) -> Result<Vec<u
         for x in 0..pw {
             let sx = x.min(width as usize - 1);
             let idx = (sy * width as usize + sx) * 4;
-            let (yy, cb, cr) = rgb_to_ycbcr(snap.pixels[idx], snap.pixels[idx + 1], snap.pixels[idx + 2]);
+            let (yy, cb, cr) = rgb_to_ycbcr(snap.image.pixels[idx], snap.image.pixels[idx + 1], snap.image.pixels[idx + 2]);
             let channels = [yy, cb, cr];
             for (plane, value) in full.iter_mut().zip(channels) {
                 plane[y * pw + x] = value;
@@ -741,7 +746,7 @@ pub fn encode_jpg(snap: &JpgSnapshot, options:&JpgEncodeOptions) -> Result<Vec<u
     let mut out = Vec::new();
     out.extend_from_slice(&[0xFF, 0xD8]); // SOI
     out.extend_from_slice(&encode_jfif_app0(snap));
-    for seg in &snap.other_segments {
+    for seg in &snap.image.other_segments {
         out.push(0xFF);
         out.push(seg.marker);
         let len = seg.data.len() + 2;
@@ -941,6 +946,10 @@ struct JpgHeader {
     other_segments: Vec<JpgSegment>,
     frame: JpgFrameHeader,
     sof_marker: u8,
+    arithmetic_conditioning:Vec<binary::snapshot::observations::JpgArithmeticConditioning>,
+    arithmetic:bool,
+    scan_components:Vec<JpgScanComponent>,
+    scan_parameters:[u8;3],
     restart_interval_raw: u16,
     restart_interval: Option<u16>,
     jfif_version: JfifVersion,
@@ -953,7 +962,7 @@ struct JpgHeader {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn parse_jpg_header(data: &dyn JpgByteSource) -> Result<JpgHeader, JpgError> {
+fn parse_jpg_header(data: &dyn JpgByteSource, inspect:bool) -> Result<JpgHeader, JpgError> {
     if data.len() < 4 || data.byte(0) != Some(0xFF) || data.byte(1) != Some(0xD8) {
         return Err(JpgError::Malformed("missing SOI".into()));
     }
@@ -966,6 +975,8 @@ fn parse_jpg_header(data: &dyn JpgByteSource) -> Result<JpgHeader, JpgError> {
     let mut other_segments: Vec<JpgSegment> = Vec::new();
     let mut frame: Option<JpgFrameHeader> = None;
     let mut sof_marker: u8 = 0;
+    let mut arithmetic_conditioning=Vec::new();
+    let mut arithmetic=false;
     let mut restart_interval_raw = 0u16;
     let mut restart_interval: Option<u16> = None;
     let mut jfif_version: JfifVersion = (1, 1);
@@ -987,7 +998,8 @@ fn parse_jpg_header(data: &dyn JpgByteSource) -> Result<JpgHeader, JpgError> {
         match marker {
             0xD8 => continue, // stray SOI, tolerate
             0xD9 => return Err(JpgError::Malformed("EOI before SOS".into())),
-            0xC0 => {
+            0xC0 | 0xC1 | 0xC2 | 0xC3 | 0xC5 | 0xC6 | 0xC7 | 0xC9 | 0xCA | 0xCB | 0xCD | 0xCE | 0xCF => {
+                if !inspect && marker!=0xc0 {return Err(JpgError::Unsupported(format!("non-baseline frame process 0x{marker:02x}")));}
                 let len = read_u16(data, i)?;
                 let seg = source_range(data, i + 2, len.saturating_sub(2))?;
                 if seg.len() < 6 {
@@ -1008,23 +1020,6 @@ fn parse_jpg_header(data: &dyn JpgByteSource) -> Result<JpgHeader, JpgError> {
                 sof_marker = marker;
                 i += len;
             }
-            0xC1 | 0xC2 | 0xC3 | 0xC5 | 0xC6 | 0xC7 | 0xC9 | 0xCA | 0xCB | 0xCD | 0xCE | 0xCF => {
-                let name = match marker {
-                    0xC1 => "extended sequential (SOF1)",
-                    0xC2 => "progressive (SOF2)",
-                    0xC3 => "lossless (SOF3)",
-                    0xC5 => "differential sequential (SOF5)",
-                    0xC6 => "differential progressive (SOF6)",
-                    0xC7 => "differential lossless (SOF7)",
-                    0xC9 => "arithmetic extended sequential (SOF9)",
-                    0xCA => "arithmetic progressive (SOF10)",
-                    0xCB => "arithmetic lossless (SOF11)",
-                    0xCD => "arithmetic differential sequential (SOF13)",
-                    0xCE => "arithmetic differential progressive (SOF14)",
-                    _ => "arithmetic differential lossless (SOF15)",
-                };
-                return Err(JpgError::Unsupported(name.into()));
-            }
             0xDB => {
                 let len = read_u16(data, i)?;
                 let mut p = i + 2;
@@ -1036,6 +1031,7 @@ fn parse_jpg_header(data: &dyn JpgByteSource) -> Result<JpgHeader, JpgError> {
                     let table_info = data.byte(p).ok_or_else(|| JpgError::Malformed("DQT truncated".into()))?;
                     let pq = table_info >> 4;
                     let tq = table_info & 0x0F;
+                    if pq>1||tq>3||p+1+64*(pq as usize+1)>end{return Err(JpgError::Malformed("DQT selector, precision or declared body is invalid".into()));}
                     p += 1;
                     let mut tbl = [0i32; 64];
                     let mut tbl_u16 = [0u16; 64];
@@ -1055,7 +1051,6 @@ fn parse_jpg_header(data: &dyn JpgByteSource) -> Result<JpgHeader, JpgError> {
                         }
                     }
                     quant.insert(tq, tbl);
-                    quant_tables.retain(|t| t.id != tq);
                     quant_tables.push(JpgQuantTable { id: tq, precision: pq, values: tbl_u16 });
                 }
                 i += len;
@@ -1065,17 +1060,19 @@ fn parse_jpg_header(data: &dyn JpgByteSource) -> Result<JpgHeader, JpgError> {
                 let mut p = i + 2;
                 let end = i + len;
                 while p < end {
-                    if p + 16 >= data.len() {
+                    if p + 17 > end || end>data.len() {
                         return Err(JpgError::Malformed("DHT truncated".into()));
                     }
                     let table_info = data.byte(p).ok_or_else(|| JpgError::Malformed("DHT truncated".into()))?;
                     let class = table_info >> 4;
                     let id = table_info & 0x0F;
+                    if class>1||id>3{return Err(JpgError::Malformed("DHT selector exceeds its native domain".into()));}
                     p += 1;
                     let mut bits = [0u8; 16];
                     bits.copy_from_slice(&source_range(data, p, 16)?);
                     p += 16;
                     let count: usize = bits.iter().map(|&b| b as usize).sum();
+                    if p+count>end{return Err(JpgError::Malformed("DHT symbols exceed the declared table segment".into()));}
                     let values = source_range(data, p, count)?;
                     p += count;
                     let table = build_huffman(&bits, &values)?;
@@ -1085,21 +1082,16 @@ fn parse_jpg_header(data: &dyn JpgByteSource) -> Result<JpgHeader, JpgError> {
                     } else {
                         ac_tables.insert(id, table);
                     }
-                    huffman_tables.retain(|t| !(t.class == huffman_class && t.id == id));
                     huffman_tables.push(JpgHuffmanTable { id, class: huffman_class, bits, values });
                 }
                 i += len;
             }
             0xCC => {
-                // 🚫 DAC (Define Arithmetic Coding conditioning) — its presence means the
-                // entropy-coded scan needs arithmetic decoding, which this Huffman-only decoder
-                // never implements (T.81 baseline sequential DCT is Huffman-only, Annex F). An
-                // explicit `Unsupported` here (rather than falling through to the generic
-                // "unhandled marker" `Malformed` case below) preserves the module's "never decode
-                // arithmetic-coded data as Huffman garbage" invariant with a precise error, and
-                // means `JpgSnapshot.arithmetic` is genuinely `false` for every snapshot this
-                // engine ever returns `Ok` for (ticket 26/08/11/ARTIFACT-STANDARD-SUBSETS-REAL-VOCABULARIES).
-                return Err(JpgError::Unsupported("arithmetic coding conditioning (DAC present)".into()));
+                arithmetic=true;
+                if !inspect {return Err(JpgError::Unsupported("arithmetic coding conditioning (DAC present)".into()));}
+                let len=read_u16(data,i)?;let body=source_range(data,i+2,len.checked_sub(2).ok_or_else(||JpgError::Malformed("DAC length is invalid".into()))?)?;
+                if body.len()%2!=0 {return Err(JpgError::Malformed("DAC requires selector/value pairs".into()));}
+                for pair in body.chunks_exact(2){if pair[0]>>4>1||pair[0]&15>3{return Err(JpgError::Malformed("DAC selector exceeds its native domain".into()));}arithmetic_conditioning.push(binary::snapshot::observations::JpgArithmeticConditioning{selector:pair[0],value:pair[1]});}i+=len;
             }
             0xDD => {
                 let len = read_u16(data, i)?;
@@ -1114,7 +1106,7 @@ fn parse_jpg_header(data: &dyn JpgByteSource) -> Result<JpgHeader, JpgError> {
                 let seg = source_range(data, i + 2, len.saturating_sub(2))?;
                 let ns = *seg.first().ok_or_else(|| JpgError::Malformed("SOS truncated".into()))? as usize;
                 if !(1..=4).contains(&ns) || seg.len()!=1+2*ns+3 {return Err(JpgError::Malformed("SOS component shape is invalid".into()));}
-                if seg[1+2*ns..]!=[0,63,0] {return Err(JpgError::Unsupported("non-baseline sequential scan parameters".into()));}
+                if !inspect && seg[1+2*ns..]!=[0,63,0] {return Err(JpgError::Unsupported("non-baseline sequential scan parameters".into()));}
                 let mut scan_tabs: Vec<(usize,u8,u8)> = Vec::with_capacity(ns);
                 for k in 0..ns {
                     let base = 1 + k * 2;
@@ -1124,7 +1116,7 @@ fn parse_jpg_header(data: &dyn JpgByteSource) -> Result<JpgHeader, JpgError> {
                     if scan_tabs.iter().any(|(index,_,_)|*index==ci) {return Err(JpgError::Malformed("SOS component selectors must be unique".into()));}
                     scan_tabs.push((ci,dcac >> 4,dcac & 0x0F));
                 }
-                if ns != frame.components.len() {
+                if !inspect && ns != frame.components.len() {
                     return Err(JpgError::Unsupported("multi-scan (non-interleaved) baseline JPEG".into()));
                 }
                 i += len;
@@ -1137,6 +1129,10 @@ fn parse_jpg_header(data: &dyn JpgByteSource) -> Result<JpgHeader, JpgError> {
                     other_segments,
                     frame,
                     sof_marker,
+                    arithmetic_conditioning,
+                    arithmetic,
+                    scan_components:(0..ns).map(|index|JpgScanComponent{id:seg[1+2*index],dc_table_id:seg[2+2*index]>>4,ac_table_id:seg[2+2*index]&15}).collect(),
+                    scan_parameters:seg[1+2*ns..].try_into().expect("admitted SOS arity"),
                     restart_interval_raw,
                     restart_interval,
                     jfif_version,
@@ -1213,11 +1209,16 @@ impl JpgStepDecoder {
     pub fn take_observations(&mut self)->Option<JpgNativeObservations>{self.observations.take()}
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn new(data: &dyn JpgByteSource) -> Result<Self, JpgError> {
-        Self::from_header(parse_jpg_header(data)?, true)
+        Self::from_header(parse_jpg_header(data,false)?, true)
     }
 
     fn from_header(header: JpgHeader, initialize: bool) -> Result<Self, JpgError> {
         let frame = &header.frame;
+        if frame.precision!=8||frame.width==0||frame.height==0||!(1..=4).contains(&frame.components.len()){return Err(JpgError::Unsupported("component decoding requires a nonempty 8-bit baseline frame".into()));}
+        if frame.components.iter().any(|component|!(1..=4).contains(&component.h_sampling)||!(1..=4).contains(&component.v_sampling)){return Err(JpgError::Malformed("component sampling exceeds the native 1..=4 domain".into()));}
+        let mut ids=std::collections::HashSet::new();
+        if frame.components.iter().any(|component|!ids.insert(component.id)){return Err(JpgError::Malformed("duplicate frame component identifier".into()));}
+        if initialize&&!matches!(frame.components.len(),1|3){return Err(JpgError::Unsupported("RGBA admission supports grayscale and JFIF YCbCr images".into()));}
         let hmax = frame.components.iter().map(|c| c.h_sampling).max().unwrap_or(1).max(1) as usize;
         let vmax = frame.components.iter().map(|c| c.v_sampling).max().unwrap_or(1).max(1) as usize;
         let (width, height) = (frame.width as usize, frame.height as usize);
@@ -1352,19 +1353,8 @@ impl JpgStepDecoder {
         }
         let header = *self.header.take().ok_or_else(|| JpgError::Malformed("JPEG decoder stepped after completion".into()))?;
         self.planes = Vec::new();
-        self.observations=Some(JpgNativeObservations{frame:header.frame,sof_marker:header.sof_marker,arithmetic:false,quant_tables:header.quant_tables,huffman_tables:header.huffman_tables,restart_interval:header.restart_interval});
-        Ok(Some(JpgSnapshot {
-            schema: STDIO_JPG_DOCUMENT_SCHEMA.into(),
-            width: width as u32,
-            height: height as u32,
-            pixels: std::mem::take(&mut self.rgba),
-            jfif_version: header.jfif_version,
-            jfif_density_units: header.jfif_density_units,
-            jfif_x_density: header.jfif_x_density,
-            jfif_y_density: header.jfif_y_density,
-            jfif_thumbnail: header.jfif_thumbnail,
-            other_segments: header.other_segments,
-        }))
+        self.observations=Some(JpgNativeObservations{frame:header.frame,sof_marker:header.sof_marker,arithmetic:header.arithmetic,arithmetic_conditioning:header.arithmetic_conditioning,scan_components:header.scan_components,scan_parameters:header.scan_parameters,quant_tables:header.quant_tables,huffman_tables:header.huffman_tables,restart_interval:header.restart_interval});
+        Ok(Some(JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), image: crate::schema::snapshot::JpgImage { width: width as u32,height: height as u32,pixels: std::mem::take(&mut self.rgba),jfif_version: header.jfif_version,jfif_density_units: header.jfif_density_units,jfif_x_density: header.jfif_x_density,jfif_y_density: header.jfif_y_density,jfif_thumbnail: header.jfif_thumbnail,other_segments: header.other_segments } }))
     }
 }
 //#endregion Decode
@@ -1379,7 +1369,7 @@ mod tests;
 pub mod io_registry {
     use crate::standards::v_jfif_1_01::subsets::baseline::io::JpgBaselineComposer;
     use crate::standards::v_jfif_1_01::subsets::document::io::JpgComposer as JpgRawAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -1433,7 +1423,7 @@ pub mod derived_construction {
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <JpgDiff as protocol::MutationDiff<JpgSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
@@ -1450,13 +1440,14 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::JpgSnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.jpg` parts.
     #[derive(Clone, Debug, Default)]
     pub struct JpgParts {
         pub snapshot: Option<JpgSnapshot>,
+        pub observations: Option<super::JpgNativeObservations>,
     }
     //#endregion 🔖️Parts
 
@@ -1468,14 +1459,14 @@ pub mod derived_analysis {
         type Parts = JpgParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             const SIG: [u8; 2] = [0xFF, 0xD8]; // SOI
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if bytes.len() >= 2 && bytes[0..2] == SIG {
-                        IoConfidence::High
+                        semio_framework_plugin::io::Confidence::High
                     } else {
-                        IoConfidence::Low
+                        semio_framework_plugin::io::Confidence::Low
                     }
                 }
                 AnalyzeSource::Text(text) => {
@@ -1487,19 +1478,19 @@ pub mod derived_analysis {
                     };
                     let hex: String = body.chars().filter(|c| !c.is_whitespace()).take(4).collect();
                     if hex.len() < 4 {
-                        return IoConfidence::Low;
+                        return semio_framework_plugin::io::Confidence::Low;
                     }
                     let mut decoded = [0u8; 2];
                     for (i, byte) in decoded.iter_mut().enumerate() {
                         match u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16) {
                             Ok(b) => *byte = b,
-                            Err(_) => return IoConfidence::Low,
+                            Err(_) => return semio_framework_plugin::io::Confidence::Low,
                         }
                     }
                     if decoded == SIG {
-                        IoConfidence::High
+                        semio_framework_plugin::io::Confidence::High
                     } else {
-                        IoConfidence::Low
+                        semio_framework_plugin::io::Confidence::Low
                     }
                 }
             }
@@ -1508,21 +1499,29 @@ pub mod derived_analysis {
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = JpgParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
+            let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <JpgSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <JpgSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => {
+                        if bytes.starts_with(&[0xff,0xd8]) {
+                            match super::inspect_jpg_native_header(&bytes.as_ref()) {
+                                Ok(observations)=>parts.observations=Some(observations),
+                                Err(error)=>diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.native-header",semio_framework_diagnostic::TextSpan::at(1,1),error.to_string())),
+                            }
+                        }
+                        match <JpgSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
+                        }
                         }
                     },
                 }
@@ -1548,6 +1547,33 @@ semio_framework_plugin::derive_artifact_facets!(
 /// 🆕️ Constructs the canonical decoded white image at native admission.
 pub fn blank_jpg_snapshot() -> JpgSnapshot {
     use crate::standards::v_jfif_1_01::subsets::document::io::{decode_jpg, encode_jpg};
-    let seed = JpgSnapshot { width: 1, height: 1, pixels: vec![255, 255, 255, 255], ..JpgSnapshot::default() };
-    encode_jpg(&seed, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(seed.frame.as_ref())).and_then(|bytes| decode_jpg(&bytes)).expect("blank_jpg_snapshot: the 1×1 seed round-trips through the real codec")
+    let seed = JpgSnapshot { schema: crate::STDIO_JPG_DOCUMENT_SCHEMA.into(), image: crate::schema::snapshot::JpgImage { width: 1,height: 1,pixels: vec![255, 255, 255, 255],..crate::schema::snapshot::JpgImage::default() } };
+    encode_jpg(&seed, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).and_then(|bytes| decode_jpg(&bytes)).expect("blank_jpg_snapshot: the 1×1 seed round-trips through the real codec")
+}
+
+/// 🧾️ Inspects exact native header observations even when raster decoding refuses that profile.
+pub fn inspect_jpg_native_header(data:&dyn JpgByteSource)->Result<JpgNativeObservations,JpgError>{
+ let header=parse_jpg_header(data,true)?;
+ Ok(JpgNativeObservations{frame:header.frame,sof_marker:header.sof_marker,arithmetic:header.arithmetic,arithmetic_conditioning:header.arithmetic_conditioning,scan_components:header.scan_components,scan_parameters:header.scan_parameters,quant_tables:header.quant_tables,huffman_tables:header.huffman_tables,restart_interval:header.restart_interval})
+}
+
+/// 🚦️ Inspects native facts within an input budget and checkpoints every 256 byte visits.
+pub fn inspect_jpg_native_header_controlled(data:&dyn JpgByteSource,maximum_input_bytes:usize,on_progress:&mut dyn FnMut(usize)->bool)->Result<JpgNativeObservations,semio_framework_value::ValueError>{
+ use std::cell::{Cell,RefCell};
+ use semio_framework_value::{ValueError,ValueRefusalKind};
+ if data.len()>maximum_input_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"JPEG native input exceeds its admission budget"));}
+ struct Source<'a>{data:&'a dyn JpgByteSource,on_progress:RefCell<&'a mut dyn FnMut(usize)->bool>,visited:Cell<usize>,stopped:Cell<bool>}
+ impl JpgByteSource for Source<'_>{
+  fn len(&self)->usize{self.data.len()}
+  fn byte(&self,index:usize)->Option<u8>{
+   let visited=self.visited.get();
+   if self.stopped.get()||(visited%256==0&&!(self.on_progress.borrow_mut())(visited)){self.stopped.set(true);return None;}
+   self.visited.set(visited.saturating_add(1));self.data.byte(index)
+  }
+ }
+ let source=Source{data,on_progress:RefCell::new(on_progress),visited:Cell::new(0),stopped:Cell::new(false)};
+ let result=inspect_jpg_native_header(&source);
+ if source.stopped.get(){return Err(ValueError::new(ValueRefusalKind::Canceled,"JPEG native header inspection canceled"));}
+ if !(source.on_progress.borrow_mut())(source.visited.get()){return Err(ValueError::new(ValueRefusalKind::Canceled,"JPEG native header inspection canceled"));}
+ result.map_err(Into::into)
 }

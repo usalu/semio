@@ -15,11 +15,17 @@ use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
 pub struct CreateHandle {
     #[dsl(block)]
     pub handle: Block2dHandleTemplate,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 pub fn create_handle(handle: Block2dHandleTemplate) -> Block2dMutation {
-    Block2dMutation::CreateHandle(CreateHandle { handle })
+    Block2dMutation::CreateHandle(CreateHandle { handle, index: None })
+}
+
+/// 📍️ Builder — like [`create_handle`] but inserts the row at `index`.
+pub fn create_handle_at(handle: Block2dHandleTemplate, index: u32) -> Block2dMutation {
+    Block2dMutation::CreateHandle(CreateHandle { handle, index: Some(index) })
 }
 
 impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for CreateHandle {

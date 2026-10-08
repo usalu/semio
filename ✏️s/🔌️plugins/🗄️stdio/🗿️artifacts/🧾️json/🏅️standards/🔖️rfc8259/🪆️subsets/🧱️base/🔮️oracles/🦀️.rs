@@ -166,8 +166,8 @@ fn library_to_wire(value: &json::JsonValue) -> Json {
     }
 }
 
-/// 🩹️ The reference's own `JsonSnapshot` reading of `input` (`{schema, value}`) that a `patch-snapshot` row's pointer
-/// operation addresses, and that the case adapter restores the original through (`restore-snapshot`).
+/// 🩹️ The reference's own `JsonSnapshot` reading of `input` (`{schema, value}`) that the case adapter restores the original
+/// through (`restore-snapshot`, the reference's undo, never a subject mutation).
 #[cfg(feature = "oracles")]
 pub fn snapshot_wire(input: &[u8]) -> Result<Json, String> {
     Ok(Json::Object(vec![("schema".to_string(), Json::String("stdio.json".to_string())), ("value".to_string(), library_to_wire(&read_json(input)?))]))
@@ -253,10 +253,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
                 None => return Err("set-scalar: target path does not resolve".to_string()),
             }
             write_json(&root)
-        }
-        "patch-snapshot" => {
-            let patched = semio_repo_test_host::law::patched_snapshot(&snapshot_wire(input)?, params.get("patch").ok_or("patch-snapshot: missing `patch`")?)?;
-            write_json(&library_from_wire(patched.get("value").unwrap_or(&Json::Null))?)
         }
         "restore-snapshot" => write_json(&library_from_wire(params.get("snapshot").and_then(|snapshot| snapshot.get("value")).unwrap_or(&Json::Null))?),
         kind => Err(format!("mutation kind {kind:?} has no oracle implementation ({} input byte(s))", input.len())),

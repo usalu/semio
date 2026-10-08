@@ -122,7 +122,6 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
       | replace-fill | 🪣️replace-fill |
       | change-stroke-color | 🖌️change-stroke |
       | change-stroke-width | 📐️change-stroke-width |
-      | patch-snapshot | 🩹️patch-snapshot |
 
   @id-inverse
   @level-exhaustive
@@ -151,7 +150,6 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
       | replace-fill | 🪣️replace-fill |
       | change-stroke-color | 🖌️change-stroke |
       | change-stroke-width | 📐️change-stroke-width |
-      | patch-snapshot | 🩹️patch-snapshot |
 
   @id-spec-vector
   @level-exhaustive

@@ -29,7 +29,7 @@ async fn between_roundtrip_law_same_kind_real_field_change() {
     let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
     assert!(matches!(d, SemioDiff::Audio(_)), "same-kind change must nest, not Replace: {d:?}");
     assert!(!d.is_empty());
-    assert_eq!(d.apply(&a).expect("valid nested diff"), b);
+    assert_eq!(protocol::apply_diff(&d, &a).expect("valid nested diff"), b);
     assert!(<SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &a).is_empty());
 }
 
@@ -42,9 +42,9 @@ async fn between_roundtrip_law_flow_node_insert() {
     let b = flow_snapshot(&["n1", "n2"]);
     let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
     assert!(matches!(d, SemioDiff::Flow(_)));
-    assert_eq!(d.apply(&a).expect("valid nested diff"), b);
+    assert_eq!(protocol::apply_diff(&d, &a).expect("valid nested diff"), b);
     let inv = d.inverse(&a);
-    assert_eq!(inv.apply(&d.apply(&a).expect("valid nested diff")).expect("valid inverse"), a);
+    assert_eq!(protocol::apply_diff(&inv, &protocol::apply_diff(&d, &a).expect("valid nested diff")).expect("valid inverse"), a);
 }
 
 /// 🧪️ between_roundtrip_law, cross-kind change: no sparse representation exists, must fall
@@ -55,7 +55,7 @@ async fn between_roundtrip_law_cross_kind_replaces() {
     let b = flow_snapshot(&["n1"]);
     let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
     assert!(matches!(d, SemioDiff::Replace(_)), "cross-kind change must Replace: {d:?}");
-    assert_eq!(d.apply(&a).expect("valid replacement"), b);
+    assert_eq!(protocol::apply_diff(&d, &a).expect("valid replacement"), b);
 }
 
 /// 🧪️ inverse_law across all 3 shapes: same-kind nested, cross-kind Replace, and NoChange.
@@ -63,9 +63,9 @@ async fn between_roundtrip_law_cross_kind_replaces() {
 async fn inverse_law_covers_nested_replace_and_no_change() {
     for (a, b) in [(audio_snapshot(44_100), audio_snapshot(96_000)), (audio_snapshot(44_100), flow_snapshot(&["n1", "n2"])), (audio_snapshot(44_100), audio_snapshot(44_100))] {
         let d = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &b);
-        let applied = d.apply(&a).expect("valid diff");
+        let applied = protocol::apply_diff(&d, &a).expect("valid diff");
         let inv = d.inverse(&a);
-        assert_eq!(inv.apply(&applied).expect("valid inverse"), a, "inverse must restore base for {d:?}");
+        assert_eq!(protocol::apply_diff(&inv, &applied).expect("valid inverse"), a, "inverse must restore base for {d:?}");
     }
 }
 
@@ -78,10 +78,10 @@ async fn absorb_law_same_kind_delegates_to_nested() {
     let after = audio_snapshot(96_000);
     let mut d1 = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&a, &mid);
     let d2 = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&mid, &after);
-    let applied_before_absorb = d1.apply(&a).expect("valid first diff");
+    let applied_before_absorb = protocol::apply_diff(&d1, &a).expect("valid first diff");
     d1.absorb(d2.clone());
-    assert_eq!(d1.apply(&a).expect("valid absorbed diff"), d2.apply(&applied_before_absorb).expect("valid second diff"));
-    assert_eq!(d1.apply(&a).expect("valid absorbed diff"), after);
+    assert_eq!(protocol::apply_diff(&d1, &a).expect("valid absorbed diff"), protocol::apply_diff(&d2, &applied_before_absorb).expect("valid second diff"));
+    assert_eq!(protocol::apply_diff(&d1, &a).expect("valid absorbed diff"), after);
 }
 
 /// 🧪️ absorb_law: a later `Replace` always wins outright, whatever preceded it.
@@ -94,7 +94,7 @@ async fn absorb_law_later_replace_wins() {
     let d2 = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&mid, &after);
     d1.absorb(d2);
     assert!(matches!(d1, SemioDiff::Replace(_)));
-    assert_eq!(d1.apply(&a).expect("valid replacement"), after);
+    assert_eq!(protocol::apply_diff(&d1, &a).expect("valid replacement"), after);
 }
 
 /// 🧪️ absorb_law: an earlier `Replace` absorbing a later same-kind diff folds it into the
@@ -107,7 +107,7 @@ async fn absorb_law_replace_then_nested_folds_in() {
     let mut d1 = SemioDiff::Replace(Box::new(replaced.clone()));
     let d2 = <SemioDiff as DiffAlgebra<SemioSnapshot>>::between(&replaced, &after);
     d1.absorb(d2);
-    assert_eq!(d1.apply(&a).expect("valid absorbed diff"), after);
+    assert_eq!(protocol::apply_diff(&d1, &a).expect("valid absorbed diff"), after);
 }
 
 /// 🧪️ diff_codec_text_binary_roundtrip_law across `NoChange`, a same-kind nested diff (one
@@ -169,7 +169,7 @@ async fn all_eighteen_subset_tags_round_trip_empty_nested_diff() {
 #[semio_framework_async_macros::async_test]
 async fn malformed_cross_kind_diff_is_rejected_and_absorb_preserves_rejection() {
     let base = audio_snapshot(44_100);
-    let error = SemioDiff::Flow(Default::default()).apply(&base).unwrap_err();
+    let error = protocol::apply_diff(&SemioDiff::Flow(Default::default()), &base).unwrap_err();
     assert_eq!(error.code, "mutation.apply.kind-mismatch");
     assert_eq!(error.target, vec!["subset"]);
 
@@ -179,7 +179,7 @@ async fn malformed_cross_kind_diff_is_rejected_and_absorb_preserves_rejection() 
         panic!("cross-kind absorb must preserve a typed rejection");
     };
     assert_eq!(error.code, "mutation.apply.kind-mismatch");
-    assert!(diff.apply(&base).is_err());
+    assert!(protocol::apply_diff(&diff, &base).is_err());
 
     let text = diff.print_diff();
     assert_eq!(SemioDiff::parse_diff(&text).expect("rejection text round-trip"), diff);

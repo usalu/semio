@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "maximumItems": 1,
+  "maximumCopyBytes": 3,
+  "maximumDepth": 64,
+  "maximumTurns": 100000,
+  "cases": [
+    {"kind": "null", "value": null, "payloadBytes": 0},
+    {"kind": "bool", "value": true, "payloadBytes": 1},
+    {"kind": "uint", "value": 42, "payloadBytes": 8},
+    {"kind": "int", "value": -42, "payloadBytes": 8},
+    {"kind": "float", "value": 1.25, "payloadBytes": 8},
+    {"kind": "text", "value": "groß🧬", "payloadBytes": 9},
+    {"kind": "bytes", "value": [0, 127, 255], "payloadBytes": 3},
+    {"kind": "array", "value": [true, "ö", [42, null]], "payloadBytes": 11},
+    {"kind": "object", "value": {"a": [false, "🧬"], "ö": -7}, "payloadBytes": 16},
+    {"kind": "reserved-text", "value": "", "capacity": 128, "payloadBytes": 0},
+    {"kind": "reserved-bytes", "value": [], "capacity": 17, "payloadBytes": 0},
+    {"kind": "reserved-array", "value": [], "capacity": 5, "payloadBytes": 0},
+    {"kind": "reserved-object", "value": {}, "capacity": 5, "payloadBytes": 0}
+  ]
+}

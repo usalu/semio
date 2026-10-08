@@ -1,0 +1,9 @@
+{
+  "text": "typed original owner 雪",
+  "reservedCapacity": 8193,
+  "maximumCopyBytes": 3,
+  "maximumItems": 1,
+  "maximumDepth": 4096,
+  "maximumTurns": 65536,
+  "unsupportedKind": "unsupportedOwner"
+}

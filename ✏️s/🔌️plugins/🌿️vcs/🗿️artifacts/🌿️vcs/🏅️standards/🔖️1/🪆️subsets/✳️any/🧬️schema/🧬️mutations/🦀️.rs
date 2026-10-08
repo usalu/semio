@@ -2,7 +2,7 @@
 
 use crate::VcsSnapshot;
 
-pub use super::add_tag::{add_tag, AddTag};
+pub use super::add_tag::{add_tag, add_tag_at, AddTag};
 pub use super::change_counter::{change_counter, ChangeCounter};
 pub use super::change_notes::{change_notes, ChangeNotes};
 pub use super::change_status::{change_status, ChangeStatus};

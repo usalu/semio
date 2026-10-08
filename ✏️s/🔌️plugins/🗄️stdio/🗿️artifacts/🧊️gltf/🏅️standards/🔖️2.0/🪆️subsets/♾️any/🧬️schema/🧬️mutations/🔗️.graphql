@@ -1,4 +1,3 @@
-# set-snapshot/SetSnapshot: 📸️snapshot/📸️set/🔗️.graphql
 # 🧬 Complete glTF direct mutation discriminator roster.
 +# add-required-extension
 # add-used-extension
@@ -241,7 +240,6 @@ enum GltfMutationKind {
   UNBIND_SCENE_ROOT_NODE
   REMOVE_REQUIRED_EXTENSION
   REMOVE_USED_EXTENSION
-  SET_SNAPSHOT
 }
 scalar GltfMutationPayload
 input GltfMutationInput { kind: GltfMutationKind!, payload: GltfMutationPayload! }

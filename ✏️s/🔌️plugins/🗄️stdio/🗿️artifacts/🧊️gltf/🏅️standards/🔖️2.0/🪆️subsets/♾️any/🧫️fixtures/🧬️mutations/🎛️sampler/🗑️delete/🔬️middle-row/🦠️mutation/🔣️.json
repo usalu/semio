@@ -1,0 +1,9 @@
+{
+  "mutation": "deleteSampler",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "index": 1
+    }
+  }
+}

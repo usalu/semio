@@ -16,6 +16,6 @@ pub struct RemoveItem {
 
 //#region 🔖️Handler
 pub fn handle(payload: &RemoveItem, doc: &ArtifactView<'_, Din18599Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Din18599Mutation, NoConfigMutation>, Fault> {
-    crate::app_surface::dispatch_remove_item(doc.snapshot, &payload.path, payload.index as usize, |base, target| Din18599Mutation::from_snapshot(base, target))
+    crate::app_surface::dispatch_remove_item(doc.snapshot, &payload.path, payload.index as usize, |document, edit| crate::mutations::resolve_edit(document, edit))
 }
 //#endregion 🔖️Handler

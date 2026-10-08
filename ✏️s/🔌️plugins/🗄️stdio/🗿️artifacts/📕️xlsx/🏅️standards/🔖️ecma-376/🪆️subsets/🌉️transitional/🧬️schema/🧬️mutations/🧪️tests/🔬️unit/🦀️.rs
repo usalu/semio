@@ -10,18 +10,18 @@ use super::*;
 fn kinds_match_enum_and_catalog() {
     fn kind_of(mutation: &XlsxTransitionalMutation) -> &'static str {
         match mutation {
-            XlsxTransitionalMutation::SetSnapshot(_) => "set-snapshot",
             XlsxTransitionalMutation::SetMainNamespace(_) => "set-main-namespace",
             XlsxTransitionalMutation::SetRelationshipsNamespace(_) => "set-relationships-namespace",
+            XlsxTransitionalMutation::SetRelationshipBase(_) => "set-relationship-base",
             XlsxTransitionalMutation::SetConformanceAttribute(_) => "set-conformance-attribute",
             XlsxTransitionalMutation::RemoveConformanceAttribute(_) => "remove-conformance-attribute",
             XlsxTransitionalMutation::SetWorksheetContentType(_) => "set-worksheet-content-type",
         }
     }
     let samples = [
-        XlsxTransitionalMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: XlsxSnapshot::default() }),
         XlsxTransitionalMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace: String::new() }),
         XlsxTransitionalMutation::SetRelationshipsNamespace(set_relationships_namespace::SetRelationshipsNamespace { namespace: String::new() }),
+        XlsxTransitionalMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: String::new() }),
         XlsxTransitionalMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value: String::new() }),
         XlsxTransitionalMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
         XlsxTransitionalMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path: String::new(), content_type: String::new() }),
@@ -39,13 +39,30 @@ fn kinds_match_enum_and_catalog() {
 //#endregion 🔖️KindsConformanceLaw
 
 //#region 🔖️StampLaw
-/// 🏅️ The class stamp is bijective: stamping into one class and back out of it lands on the
-/// snapshot it started from. This is what makes `SetSnapshot` exactly invertible on this axis,
-/// and it is proven on a snapshot built by this repository's own code, not asserted.
-#[test]
-fn stamping_into_a_class_and_back_is_the_identity() {
-    let base = XlsxSnapshot::default();
-    assert_eq!(stamp_conformance_class(stamp_conformance_class(base.clone(), true), false), stamp_conformance_class(base, false));
+/// 🏗️ A three-sheet workbook declaring the strict families, so every stamp kind has something to retarget.
+fn stampable() -> XlsxSnapshot {
+    use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
+    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSheet, XlsxWorkbook};
+    let workbook = XlsxWorkbook { sheets: ["One", "Two", "Three"].into_iter().map(|name| XlsxSheet { name: name.into(), cells: vec![] }).collect(), shared_strings: vec![] };
+    crate::standards::v_ecma_376::subsets::strict::schema::stamp_strict_namespace(build_minimal_xlsx(workbook))
+}
+
+/// 🏅️ Every stamp kind satisfies the inverse sum law on a workbook declaring the opposite class, and stamping into the class and back out restores the workbook.
+#[semio_framework_async_macros::async_test]
+async fn every_stamp_kind_satisfies_the_inverse_sum_law_and_stamping_round_trips() {
+    let base = stampable();
+    for mutation in stamp_conformance_class_mutations(false) {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+    let mut stamped = base.clone();
+    for mutation in stamp_conformance_class_mutations(false) {
+        apply_xlsx_transitional_mutation(&mut stamped, &mutation);
+    }
+    assert_ne!(stamped, base);
+    for mutation in stamp_conformance_class_mutations(true) {
+        apply_xlsx_transitional_mutation(&mut stamped, &mutation);
+    }
+    assert_eq!(stamped, base);
 }
 //#endregion 🔖️StampLaw
 

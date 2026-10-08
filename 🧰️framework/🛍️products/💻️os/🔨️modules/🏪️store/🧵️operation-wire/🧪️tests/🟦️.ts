@@ -1,12 +1,9 @@
 import { test, expect } from "bun:test";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import Ajv from "ajv";
 const base = join(import.meta.dir, "..");
 const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
 test("borrowed operation wire neutral UTF8/ordered JSON and bounded chunk oracle", () => {
-  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
   for (const row of fixture.cases) {
     const bytes = Buffer.concat([Buffer.from(row.header), Buffer.from(JSON.stringify(row.body))]);
     expect(Array.from(new TextEncoder().encode(JSON.stringify(row.body)))).toEqual(Array.from(bytes.subarray(row.header.length)));

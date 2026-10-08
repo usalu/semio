@@ -9,7 +9,7 @@
 
 use crate::mutations::CadMutation;
 use crate::CadSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/💣delete-structure-classic-model/🏚️vacates/📸️snapshot/➡️after/🔣️.json");
@@ -28,7 +28,7 @@ fn mutation() -> CadMutation {
 }
 fn applied() -> CadSnapshot {
     let base = before();
-    mutation().diff(&base).diff().apply(&base).expect("delete-structure-classic-model applies to its committed before-snapshot")
+    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-structure-classic-model applies to its committed before-snapshot")
 }
 
 /// ▶️ `delete-structure-classic-model` empties the fixed `structure_classic_model` slot; the composed child document itself is not this parent's business.
@@ -62,7 +62,7 @@ async fn inverse_reinstalls_the_escrowed_structure_classic_handle() {
     }
     let mut snapshot = applied();
     for step in &inverse {
-        snapshot = step.diff(&snapshot).diff().apply(&snapshot).expect("delete-structure-classic-model/vacates-the-structure-classic-slot: inverse step applies");
+        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("delete-structure-classic-model/vacates-the-structure-classic-slot: inverse step applies");
     }
     assert_eq!(snapshot, base, "delete-structure-classic-model/vacates-the-structure-classic-slot: inverse did not restore the before-snapshot");
 }
@@ -132,9 +132,15 @@ async fn committed_diff_is_canonical() {
 async fn committed_diff_applies_to_after() {
     let base = before();
     let in_memory = mutation().diff(&base).diff().clone();
-    assert_eq!(in_memory.apply(&base).expect("the in-memory diff applies"), expected_after(), "delete-structure-classic-model/vacates-the-structure-classic-slot: the in-memory diff must carry before to after");
+    assert_eq!(protocol::apply_diff(&in_memory, &base).expect("the in-memory diff applies"), expected_after(), "delete-structure-classic-model/vacates-the-structure-classic-slot: the in-memory diff must carry before to after");
 
     let decoded: crate::diff::CadDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
     assert_eq!(decoded, crate::diff::CadDiff::default(), "delete-structure-classic-model/vacates-the-structure-classic-slot: a `null` structureClassicModel is indistinguishable from an untouched one, so the decoded diff is empty");
-    assert_eq!(decoded.apply(&base).expect("the decoded diff applies"), base, "delete-structure-classic-model/vacates-the-structure-classic-slot: the JSON-decoded diff is inert — the vacate intent is lost on the wire");
+    assert_eq!(protocol::apply_diff(&decoded, &base).expect("the decoded diff applies"), base, "delete-structure-classic-model/vacates-the-structure-classic-slot: the JSON-decoded diff is inert — the vacate intent is lost on the wire");
+}
+
+/// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

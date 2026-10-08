@@ -154,15 +154,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     let params = spec.get("params").cloned().unwrap_or(Json::Null);
     match spec.str("kind").as_str() {
         "" => return Err("mutation spec carries no `kind`".to_string()),
-        "set-snapshot" => {
-            let snapshot = params.get("snapshot").ok_or("set-snapshot is missing `snapshot`")?;
-            lines = snapshot.array("lines").iter().map(|line| match line {
-                Json::String(value) => Ok(value.clone()),
-                _ => Err("set-snapshot lines must be strings".to_string()),
-            }).collect::<Result<Vec<_>, _>>()?;
-            trailing_newline = matches!(snapshot.get("trailingNewline"), Some(Json::Bool(true)));
-            is_crlf = snapshot.str("lineEnding") == "crLf";
-        }
         "set-trailing-newline" => trailing_newline = json_bool(&params, "value"),
         "set-line-ending" => is_crlf = params.str("value") == "crLf",
         "insert-line" => {
@@ -212,18 +203,6 @@ pub fn oracle_inverse_spec(original: &[u8], forward: &Json) -> Result<Json, Stri
     let spec = |kind: &str, params: Json| Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params)]);
     let ending = if is_crlf { "crLf" } else { "lf" };
     match forward.str("kind").as_str() {
-        "set-snapshot" => Ok(spec(
-            "set-snapshot",
-            object(vec![(
-                "snapshot",
-                object(vec![
-                    ("schema", Json::String("stdio.txt".to_string())),
-                    ("lines", Json::Array(lines.into_iter().map(Json::String).collect())),
-                    ("trailingNewline", Json::Bool(trailing_newline)),
-                    ("lineEnding", Json::String(ending.to_string())),
-                ]),
-            )]),
-        )),
         "set-trailing-newline" => Ok(spec("set-trailing-newline", object(vec![("value", Json::Bool(trailing_newline))]))),
         "set-line-ending" => Ok(spec("set-line-ending", object(vec![("value", Json::String(ending.to_string()))]))),
         "insert-line" => {

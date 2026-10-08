@@ -6,16 +6,6 @@
   "conversionThresholdBytes": 65536,
   "tables": [
     {
-      "guard": "infinite::canvas",
-      "crate": "semio-framework-os-infinite",
-      "owner": "canvas::renderer::OpaqueSceneRetirementRegistry",
-      "capacityConstant": "OPAQUE_SCENE_RETIREMENT_CAPACITY",
-      "capacity": 1024,
-      "elementType": "OpaqueSceneRetirementSlot",
-      "elementSizeBytes": 312,
-      "ownerSizeBytes": 16
-    },
-    {
       "guard": "infinite::world",
       "crate": "semio-framework-os-infinite",
       "owner": "world::WorldInteractionObjectRegistry",

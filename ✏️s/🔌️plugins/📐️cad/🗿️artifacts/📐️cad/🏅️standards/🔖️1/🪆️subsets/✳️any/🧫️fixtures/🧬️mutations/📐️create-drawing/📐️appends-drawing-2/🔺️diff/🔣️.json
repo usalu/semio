@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "shapeModel": null,
@@ -7,18 +6,7 @@
   "energyModel": null,
   "structureClassicModel": null,
   "drawings": {
-    "values": [
-      {
-        "childId": "cad-drawing-1",
-        "target": {
-          "artifactId": "cad-drawing-1",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "drawing"
-          }
-        }
-      },
+    "added": [
       {
         "childId": "cad-drawing-2",
         "target": {
@@ -30,7 +18,9 @@
           }
         }
       }
-    ]
+    ],
+    "removed": [],
+    "reordered": null
   },
   "breps": null,
   "referencesByModelDefinitionId": null,

@@ -12,13 +12,13 @@ fn canonical_vectors_execute_direct_mutation_and_codec_laws() {
         let base = scene_snapshot(&vector["base"]);
         let expected = scene_snapshot(&vector["after"]);
         assert_eq!(scene_snapshot(&vector["undo"]), base);
-        assert_eq!(mutation::apply(&payload, &base).unwrap(), expected);
+        assert_eq!(protocol::apply_diff(&mutation::plan(&payload, &base).unwrap(), &base).unwrap(), expected);
         assert_laws(&mutation::DeleteSceneMutation::Apply(payload.clone()), &base, &expected);
         for rejection in vector["rejections"].as_array().unwrap() {
             if let Some(payload) = rejection.get("payload") {
                 let rejected = decode(payload);
                 let rejected_base = rejection.get("base").map(scene_snapshot).unwrap_or_else(|| base.clone());
-                assert_eq!(mutation::apply(&rejected, &rejected_base).unwrap_err().code, rejection["code"].as_str().unwrap());
+                assert_eq!(mutation::plan(&rejected, &rejected_base).unwrap_err().code, rejection["code"].as_str().unwrap());
             }
         }
     }

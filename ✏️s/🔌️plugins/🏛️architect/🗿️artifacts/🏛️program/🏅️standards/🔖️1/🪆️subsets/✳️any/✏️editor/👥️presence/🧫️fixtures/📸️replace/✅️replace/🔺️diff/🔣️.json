@@ -1,6 +1,8 @@
 {
   "activeRegister": "risks",
-  "adjacencyKindFilter": "prohibited",
+  "adjacencyKindFilter": {
+    "value": "prohibited"
+  },
   "graphCameraX": 10.0,
   "graphCameraY": -5.0,
   "graphCameraZoom": 3.0

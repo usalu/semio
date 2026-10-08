@@ -342,6 +342,17 @@ pub struct IfcEntitiesDiff {
 }
 
 impl IfcEntitiesDiff {
+    /// 🔁️ The rows that undo this diff against `base`: added entities are removed, removed entities return at their base position, and modified
+    /// entities invert field by field.
+    pub fn inverse(&self, base: &[IfcEntity]) -> Self {
+        let mut removed: Vec<(usize, u64)> = self.added.iter().map(|entry| (entry.index, entry.entity.id)).collect();
+        removed.sort_unstable();
+        let modified = self.modified.iter().filter_map(|entry| base.iter().find(|entity| entity.id == entry.id).map(|entity| IfcEntityModified { id: entry.id, diff: entry.diff.inverse(entity) })).collect();
+        let mut added: Vec<IfcEntityAdded> = self.removed.iter().filter_map(|id| base.iter().position(|entity| entity.id == *id).map(|index| IfcEntityAdded { index, entity: base[index].clone() })).collect();
+        added.sort_by_key(|entry| entry.index);
+        Self { removed: removed.into_iter().map(|(_, id)| id).collect(), modified, added }
+    }
+
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
@@ -489,8 +500,8 @@ fn absorb_entities(d1: Option<IfcEntitiesDiff>, d2: Option<IfcEntitiesDiff>) -> 
 //#endregion 🔖️EntitiesDiff
 
 //#region 🔖️Diff
-/// 🔺️ Diff for `stdio.ifc`. No `snapshot: Option<IfcSnapshot>` full-replace slot anywhere — even
-/// `SetSnapshot`'s diff is the sparse field-by-field [`IfcDiff::between`].
+/// 🔺️ Diff for `stdio.ifc`. No `snapshot: Option<IfcSnapshot>` full-replace slot anywhere — the diff is sparse
+/// field by field.
 /// 🧪️ F6 CONFIRMED: `#[derive(dsl::)]` on this struct fails to compile (ticket
 /// 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION, real `cargo check -p
 /// semio-s-plugin-stdio --lib` output, verbatim):
@@ -645,11 +656,14 @@ impl MutationDiff<IfcSnapshot> for IfcDiff {
 }
 
 impl DiffAlgebra<IfcSnapshot> for IfcDiff {
-    /// 🔁️ Diff-level undo, derived generically (correct by construction, per zip's precedent):
-    /// the state delta from `self.apply(base)` back to `base`.
+    /// 🔁️ Diff-level undo: every header field the diff sets returns to its base value, and the entity rows invert key by key.
     fn inverse(&self, base: &IfcSnapshot) -> Self {
-        let mutated = apply_ifc_diff_unchecked(self, base);
-        Self::between(&mutated, base)
+        Self {
+            file_description: self.file_description.as_ref().map(|_| base.header.file_description.clone()),
+            file_name: self.file_name.as_ref().map(|_| base.header.file_name.clone()),
+            file_schema: self.file_schema.as_ref().map(|_| base.header.file_schema.clone()),
+            entities: self.entities.as_ref().map(|diff| diff.inverse(&base.entities)),
+        }
     }
 
     /// 🧭️ State delta (compose `GetXDiff`).
@@ -668,12 +682,6 @@ impl DiffAlgebra<IfcSnapshot> for IfcDiff {
 }
 
 //#region 🔖️MutationDiffBuilders
-/// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
-/// slot exists on `IfcDiff` to short-circuit into.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &IfcSnapshot, next: &IfcSnapshot) -> IfcDiff {
-    IfcDiff::between(base, next)
-}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_file_description(values: Vec<IfcValue>) -> IfcDiff {
     IfcDiff { file_description: Some(values), ..Default::default() }

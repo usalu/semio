@@ -1,3 +1,0 @@
-# 🧬️ replace-huffman-table/ReplaceHuffmanTable
-scalar ReplaceHuffmanTableMutationValue
-input ReplaceHuffmanTableMutation { table: ReplaceHuffmanTableMutationValue! }

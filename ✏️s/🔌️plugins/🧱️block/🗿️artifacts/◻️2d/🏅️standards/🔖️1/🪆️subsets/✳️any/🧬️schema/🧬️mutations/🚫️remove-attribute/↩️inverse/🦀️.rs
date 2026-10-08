@@ -6,8 +6,8 @@ use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::RemoveAttribute, base: &Block2dSnapshot) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    match base.attributes.iter().find(|item| item.key == payload.key) {
-        Some(existing) => vec![super::super::add_attribute::add_attribute(existing.clone())],
+    match base.attributes.iter().enumerate().find(|(_, item)| item.key == payload.key) {
+        Some((position, existing)) => vec![super::super::add_attribute::add_attribute_at(existing.clone(), position as u32)],
         None => Vec::new(),
     }
 

@@ -15,7 +15,10 @@ pub fn diff(payload: &super::AddAirLoopTerminalZone, base: &EnergyModelSnapshot)
     if existing.terminal_zone_ids.contains(&payload.zone_id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Air loop {} already lists terminal zone {}.", payload.id.0, payload.zone_id.0), [payload.zone_id.0.to_string()]);
     }
-    let position = existing.terminal_zone_ids.iter().position(|entry| entry.0 > payload.zone_id.0).unwrap_or(existing.terminal_zone_ids.len());
+    let position = payload.index.map_or_else(|| existing.terminal_zone_ids.iter().position(|entry| entry.0 > payload.zone_id.0).unwrap_or(existing.terminal_zone_ids.len()), |index| index as usize);
+    if position > existing.terminal_zone_ids.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the list of {} terminal_zone_ids.", position, existing.terminal_zone_ids.len()), [payload.id.0.to_string()]);
+    }
     protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { air_loops: Rows::modifying(ModelAirLoopPatch { terminal_zone_ids: ListEdit::inserting(position, payload.zone_id), ..ModelAirLoopPatch::of(payload.id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

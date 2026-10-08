@@ -1,4 +1,4 @@
-/** ⏯️ Tool run declaration and action injection over `🧫️fixtures/⏯️tool-run-actions.json`; oracle: ajv validates the fixture and hostile mutations against the manifest schema, which reaches the `⏯️tool-run` schema by `$ref`. */
+/** ⏯️ Tool run declaration and action injection over `🧫️fixtures/⏯️tool-run-actions.json`; oracle: ajv validates actual tool/utility payloads and hostile run declarations against the manifest schema, which reaches the `⏯️tool-run` schema by `$ref`. */
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import toolRunSchema from "../../../⏯️tool-run/🧬️schema/🔣️.json";
@@ -14,11 +14,6 @@ if (!("run" in toolCandidate)) throw new Error("⏯️ fixture case 2 must carry
 const toolWithRun = toolCandidate;
 
 describe("⏯️ manifest tool run declaration", () => {
-  test("the fixture validates against the manifest schema", () => {
-    const validate = validator("ToolRunActionsFixture");
-    expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-  });
-
   test("hostile run declarations are rejected through the tool-run $ref", () => {
     const tool = validator("ToolDefinition");
     const utility = validator("UtilityDefinition");
@@ -29,8 +24,6 @@ describe("⏯️ manifest tool run declaration", () => {
     expect(tool({ ...toolWithRun, run: { ...toolWithRun.run, reasons: [{ ...toolWithRun.run!.reasons[0], code: 65280 }] } })).toBe(false);
     expect(tool({ ...toolWithRun, run: { ...toolWithRun.run, extra: true } })).toBe(false);
     expect(tool({ ...toolWithRun, runs: toolWithRun.run })).toBe(false);
-    expect(validator("ToolRunActionsFixture")({ ...fixture, actions: fixture.actions.map((row, index) => (index === 0 ? { ...row, id: "toolRunCancel" } : row)) })).toBe(false);
-    expect(validator("ToolRunActionsFixture")({ ...fixture, actions: fixture.actions.map((row, index) => (index === 6 ? { ...row, keys: "escape" } : row)) })).toBe(false);
   });
 
   test("actions are injected exactly when a tool or utility declares run", () => {

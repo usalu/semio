@@ -45,7 +45,7 @@ impl JpgComponentDecoder {
         if should_cancel() {return Err(refusal(ValueRefusalKind::Canceled,"JPEG component admission cancelled"));}
         if data.len()>maximum_working_bytes/8 {return Err(refusal(ValueRefusalKind::OwnershipLimit,"JPEG input exceeds component working budget"));}
         let source=CheckedSource{source:data,cancel:RefCell::new(should_cancel),stopped:Cell::new(false)};
-        let parsed=parse_jpg_header(&source);
+        let parsed=parse_jpg_header(&source,false);
         if source.stopped.get() {return Err(refusal(ValueRefusalKind::Canceled,"JPEG header admission cancelled"));}
         let header=parsed.map_err(ValueError::from)?;
         let frame=&header.frame;

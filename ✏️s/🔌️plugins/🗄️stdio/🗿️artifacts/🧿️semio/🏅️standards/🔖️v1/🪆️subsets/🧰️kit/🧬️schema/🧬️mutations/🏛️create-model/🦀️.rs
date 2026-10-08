@@ -9,6 +9,8 @@ use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
 pub struct CreateModel {
     pub child_id: String,
     pub target: semio_framework_artifact_reference::ArtifactRef,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for CreateModel {

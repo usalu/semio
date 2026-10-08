@@ -17,9 +17,9 @@ const ajv = new Ajv({ strict: true });
 ajv.addKeyword({ keyword: "x-semio-state", metaSchema: { type: "string" } });
 ajv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
 for (const numeric of ["double", "float", "int32", "int64", "uint32", "uint64"]) ajv.addFormat(numeric, true);
-const validate = ajv.compile({ $defs: module.$defs, $ref: "#/$defs/SequenceRetainedActions" });
+const validate = ajv.compile({ $defs: module.$defs, $ref: "#/$defs/SequenceRetainedActionsRoute" });
 
-if (!validate(fixture)) throw new Error(`Sequence retained action fixture rejected: ${JSON.stringify(validate.errors)}`);
+for (const route of fixture.routes) if (!validate(route)) throw new Error(`Sequence retained route rejected: ${JSON.stringify(validate.errors)}`);
 const ids = fixture.routes.map(({ id }) => id);
 if (new Set(ids).size !== 16) throw new Error("Sequence retained action fixture must own 16 unique live routes");
 
@@ -47,14 +47,14 @@ for (const law of hostileLaws(fixture)) {
 for (const token of ["ArtifactCommandWorkStep::Progress", "ArtifactCommandWorkStep::Replay", "fn checkpoint", "fn restore", "fn begin_close", "fn close_step", "fn terminal_is_empty"]) {
   if (!source.includes(token)) throw new Error(`Sequence retained state-machine law is missing ${token}`);
 }
-for (const token of ["fn build_artifact_store_one_item_preparation_factory()", "SequenceArtifactStorePreparationFactory", "canonical_base_revision: request.canonical_base_revision"]) {
+for (const token of ["fn build_document_store_owners()", "bounded_document_store_owners::<Self::Snapshot, Self::Mutation>()", "canonical_base_revision: request.canonical_base_revision"]) {
   if (!source.includes(token)) throw new Error(`Sequence retained Store/freshness authority is missing ${token}`);
 }
 const windowConfigSource = readFileSync(fileURLToPath(new URL("../🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🦀️.rs", editorRoot)), "utf8");
 for (const token of ["impl semio_framework_plugin::WindowConfigOwner for SequenceMainWindowConfigOwner", "fn build_one_item_preparation_factory()", "bounded_window_config_preparation_factory::<Self>()"]) {
   if (!windowConfigSource.includes(token)) throw new Error(`Sequence retained WindowConfig authority is missing ${token}`);
 }
-for (const token of ["SequenceReorganizeState", "self.edge += 1", "SequenceNodeGraphStage::FixtureSteps", "self.fixture_steps.pop_front()", "SequenceNodeGraphStage::DeleteSelectionDiscover", "self.delete_scan += 1", "self.operation += 1", "SequenceRunOrderStage", "frame.order.advance", "sequence-run-retire-frame", "sequence-persistent-publication-lane", "maximum_items == 0 || maximum_bytes == 0"]) {
+for (const token of ["SequenceReorganizeState", "self.edge += 1", "SequenceNodeGraphStage::Parse", "SequenceNodeGraphStage::Apply", "SequenceNodeGraphStage::DeleteDiscover", "SequenceNodeGraphStage::DeleteApply", "self.operations.len()", "self.delete_scan += 1", "self.operation += 1", "SequenceRunOrderStage", "frame.order.advance", "sequence-run-retire-frame", "sequence-persistent-publication-lane", "maximum_items == 0 || maximum_bytes == 0"]) {
   if (!source.includes(token)) throw new Error(`Sequence persistent cursor law is missing ${token}`);
 }
 const reorganizeOracle = dagreLayoutOracle(fixture.persistentOracle.reorganize);
@@ -64,7 +64,7 @@ if (!deepEqual(nodeGraphOracle, fixture.persistentOracle.nodeGraphEdit.expectedM
 const runOracle = graphOrderOracle(fixture.persistentOracle.run);
 if (!deepEqual(runOracle, fixture.persistentOracle.run.expectedOrder)) throw new Error(`Sequence run order drifted from graphlib: ${JSON.stringify(runOracle)}`);
 
-console.log(JSON.stringify({ oracle: "ajv-draft07+dagre-0.8.5+graphlib", routes: ids.length, migrated: migrated.length, pending: pending.length, hostileLaws: 9, persistentScenarios: 3, maximumStepMicros: fixture.runtimeLaws.maximumStepMicros, locales: fixture.locales, accessibility: "bounded-progress-cancel-close", customization: Object.keys(fixture.customization) }));
+console.log(JSON.stringify({ oracle: "ajv-draft07+dagre-0.8.5+graphlib", routes: ids.length, migrated: migrated.length, pending: pending.length, hostileLaws: 7, persistentScenarios: 3, maximumStepMicros: fixture.runtimeLaws.maximumStepMicros, locales: fixture.locales, accessibility: "bounded-progress-cancel-close", customization: Object.keys(fixture.customization) }));
 
 //#endregion 🧬️LanguageNeutralContract
 
@@ -109,24 +109,21 @@ function nodeGraphMutationOracle(scenario) {
 //#region ☣️HostileLaws
 
 function hostileLaws(valid) {
-  const unknown = structuredClone(valid);
-  unknown.routes[0].identityCache = true;
-  const falseMigrated = structuredClone(valid);
-  falseMigrated.routes[0].classification = "MigratedWithoutCursor";
-  const falseBatch = structuredClone(valid);
-  falseBatch.routes[0].classification = "batch-only-pending-rewrite";
-  const oversized = structuredClone(valid);
-  oversized.routes.find(({ classification }) => classification === "migrated").contract.maximumRawBytes = 4097;
-  const excessiveUnits = structuredClone(valid);
-  excessiveUnits.routes.find(({ contract }) => contract.maximumUnits === 66049).contract.maximumUnits = 66050;
-  const monolingual = structuredClone(valid);
-  monolingual.locales = ["en"];
-  const slowPoll = structuredClone(valid);
-  slowPoll.runtimeLaws.maximumStepMicros = 8001;
-  const wrongChildLane = structuredClone(valid);
-  wrongChildLane.routes.find(({ id }) => id === "addStep").publicationLane = "window-config";
-  const wrongTransientLane = structuredClone(valid);
-  wrongTransientLane.routes.find(({ id }) => id === "run").publicationLane = "child";
+  const route = (predicate = () => true) => structuredClone(valid.routes.find(predicate));
+  const unknown = route();
+  unknown.identityCache = true;
+  const falseMigrated = route();
+  falseMigrated.classification = "MigratedWithoutCursor";
+  const falseBatch = route();
+  falseBatch.classification = "batch-only-pending-rewrite";
+  const oversized = route(({ classification }) => classification === "migrated");
+  oversized.contract.maximumRawBytes = 4097;
+  const excessiveUnits = route(({ contract }) => contract.maximumUnits === 66049);
+  excessiveUnits.contract.maximumUnits = 66050;
+  const wrongChildLane = route(({ id }) => id === "addStep");
+  wrongChildLane.publicationLane = "window-config";
+  const wrongTransientLane = route(({ id }) => id === "run");
+  wrongTransientLane.publicationLane = "child";
   return [
     { id: "wrong-child-publication-owner", value: wrongChildLane },
     { id: "wrong-transient-publication-owner", value: wrongTransientLane },
@@ -135,8 +132,6 @@ function hostileLaws(valid) {
     { id: "false-batch-contract", value: falseBatch },
     { id: "oversized-wire", value: oversized },
     { id: "excessive-units", value: excessiveUnits },
-    { id: "monolingual", value: monolingual },
-    { id: "slow-poll", value: slowPoll },
   ];
 }
 

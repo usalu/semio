@@ -13,6 +13,6 @@ pub fn diff(payload: &ChangePencilWidth, base: &NoteSnapshot) -> protocol::Mutat
     if payload.new_width == base.pencil_width {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Pencil width already has this value.");
     }
-    protocol::MutationOutcome::new(NoteDiff { pencil_width: Some(payload.new_width), ..Default::default() })
+    protocol::MutationOutcome::new(NoteDiff { pencil_width: Some(crate::schema::diff::NoteAssigned::new(payload.new_width)), ..Default::default() })
 }
 //#endregion 🔖️Diff

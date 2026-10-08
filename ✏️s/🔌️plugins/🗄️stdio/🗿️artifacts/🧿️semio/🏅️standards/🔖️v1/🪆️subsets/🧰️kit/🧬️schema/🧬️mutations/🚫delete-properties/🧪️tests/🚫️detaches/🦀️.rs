@@ -39,7 +39,7 @@ fn mutation() -> SemioKitMutation {
 async fn clears_the_properties_slot_and_leaves_every_other_slot_alone() {
     let base = before();
     assert!(base.properties.is_some(), "the fixture needs a populated properties slot");
-    let produced = mutation().diff(&base).diff().apply(&base).expect("delete-properties applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-properties applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-properties/detaches-the-properties-child-and-leaves-every-other-collection-alone: applied state differs from the committed after-snapshot");
     assert!(produced.properties.is_none(), "the properties slot must be empty afterwards");
     assert_eq!((produced.types, produced.designs), (base.types, base.designs), "types and designs must survive untouched");
@@ -51,13 +51,14 @@ async fn clears_the_properties_slot_and_leaves_every_other_slot_alone() {
 async fn the_undo_create_properties_reattaches_the_captured_handle() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "deleting an existing properties child undoes as exactly one create-properties");
     let SemioKitMutation::CreateProperties(recreate) = &undo[0] else { panic!("delete-properties must undo as create-properties") };
     assert_eq!(recreate.child_id, "props-1", "the undo must recapture the ORIGINAL child id from base");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-properties applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo create-properties applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-properties applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo create-properties applies");
     }
     assert_eq!(current, base, "delete-properties/detaches-the-properties-child-and-leaves-every-other-collection-alone: the undo did not restore the before-snapshot");
 }
@@ -129,9 +130,9 @@ async fn committed_diff_json_pins_the_option_option_collapse() {
 #[semio_framework_async_macros::async_test]
 async fn authored_diff_applies_to_after_while_the_decoded_one_is_inert() {
     let authored = SemioKitDiff { properties: Some(None), ..Default::default() };
-    let produced = authored.apply(&before()).expect("the Some(None) diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&authored, &before()).expect("the Some(None) diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-properties/detaches-the-properties-child-and-leaves-every-other-collection-alone: the Some(None) diff did not carry before to after");
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-properties diff decodes");
-    let inert = decoded.apply(&before()).expect("the collapsed diff still applies, it just does nothing");
+    let inert = protocol::apply_diff(&decoded, &before()).expect("the collapsed diff still applies, it just does nothing");
     assert_eq!(inert, before(), "the JSON-decoded diff is inert — that is exactly the limitation being pinned");
 }

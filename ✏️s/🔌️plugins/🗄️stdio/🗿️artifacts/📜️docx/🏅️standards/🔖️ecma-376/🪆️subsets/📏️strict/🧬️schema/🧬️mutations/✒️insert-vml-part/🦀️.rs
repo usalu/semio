@@ -1,6 +1,4 @@
-//! 🏷️ `insert-vml-part` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🏷️ `insert-vml-part` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,15 +13,18 @@ pub struct InsertVmlPart {
 impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for InsertVmlPart {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "vml-part", kind: "insert-vml-part", record: "InsertVmlPart" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxStrictMutation as Mutation<DocxSnapshot>>::Diff> {
-        agg_diff(&DocxStrictMutation::InsertVmlPart(self.clone()), base)
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
+        protocol::MutationOutcome::new(diff_insert_vml_part(base, &self.path, &self.document))
     }
+
     fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxStrictMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&DocxStrictMutation::InsertVmlPart(self.clone()), base)?
-    
-    })
-}
+        let path = self.path.trim_start_matches('/');
+        if base.xml_part(path).is_some() || base.opc.part(path).is_some() {
+            return Ok(Vec::new());
+        }
+        Ok(vec![DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: self.path.clone() })])
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert VML part", "VML-Paketteil einfügen")
     }

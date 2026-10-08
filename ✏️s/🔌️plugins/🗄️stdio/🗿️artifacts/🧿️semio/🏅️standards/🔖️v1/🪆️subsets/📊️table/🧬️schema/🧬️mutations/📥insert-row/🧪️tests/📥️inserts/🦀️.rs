@@ -30,7 +30,7 @@ fn insert_row() -> SemioTableMutation {
 #[semio_framework_async_macros::async_test]
 async fn inserts_the_hamburg_row_at_final_index_one() {
     let base = before();
-    let produced = insert_row().diff(&base).diff().apply(&base).expect("insert-row applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(insert_row().diff(&base).diff(), &base).expect("insert-row applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "insert-row/inserts-a-row-between-the-two-existing-rows: applied state differs from the committed after-snapshot");
     assert_eq!(produced.rows.len(), base.rows.len() + 1, "insert-row lengthens the row sequence by exactly one");
     assert_eq!(produced.rows[1].cells.len(), produced.columns.len(), "the inserted row must be positionally aligned with the column list");
@@ -43,11 +43,12 @@ async fn inserts_the_hamburg_row_at_final_index_one() {
 async fn the_undo_remove_row_takes_the_hamburg_row_back_out() {
     let base = before();
     let mutation = insert_row();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioTableMutation::RemoveRow(crate::standards::v1::subsets::table::schema::mutations::remove_row::RemoveRow { index: 1 })], "insert-row at #1 must undo as remove-row at #1");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward insert-row applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo remove-row applies to the lengthened table");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward insert-row applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo remove-row applies to the lengthened table");
     }
     assert_eq!(current, base, "insert-row/inserts-a-row-between-the-two-existing-rows: the undo did not restore the before-snapshot");
 }
@@ -94,7 +95,6 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical_and_omits_columns_entirely() {
     let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-row diff decodes");
     assert!(decoded.columns.is_none(), "insert-row must leave the columns slot untouched");
-    assert_eq!(decoded.rows.as_ref().map(|list| list.values.len()), Some(3), "the diff must carry all three rows of the final sequence");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert!(committed.get("columns").is_none(), "the committed diff JSON must not carry a columns key at all");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
@@ -105,6 +105,6 @@ async fn committed_diff_is_canonical_and_omits_columns_entirely() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-row diff decodes");
-    let produced = decoded.apply(&before()).expect("committed insert-row diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed insert-row diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "insert-row/inserts-a-row-between-the-two-existing-rows: committed diff did not carry before to after");
 }

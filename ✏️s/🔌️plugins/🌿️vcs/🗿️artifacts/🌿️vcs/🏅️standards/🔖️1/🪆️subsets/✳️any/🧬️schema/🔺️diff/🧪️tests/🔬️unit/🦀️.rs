@@ -4,5 +4,5 @@ use super::*;
 async fn empty_diff_is_a_no_operation() {
     let base = crate::standards::v1::subsets::any::schema::empty_vcs_snapshot();
     let diff = VcsDiff::default();
-    assert_eq!(diff.apply(&base).expect("valid mutation diff"), base);
+    assert_eq!(protocol::apply_diff(&diff, &base).expect("valid mutation diff"), base);
 }

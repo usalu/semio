@@ -3,12 +3,8 @@ use crate::standards::v1::subsets::brep::io::text::mutations::decode_semio_brep_
 use super::*;
 use protocol::{DiffBinary,DiffCodec,DiffText, Mutation, MutationDiff, OpText, SemanticMutation};
 
-/// 🔧️ All 6 collections are id-keyed SETS with no user-meaningful display order (this facet's
-/// own `🔺️diff` module doc comment; same shape `🕸️graph`'s `nodes`/`edges` already establish and
-/// test the same way): `create-*`'s diff always APPENDS to `added`, so an inverse that
-/// re-creates an entity deleted from the middle of a collection legitimately lands it at the
-/// end. Round-trip fidelity is therefore SET equality, not vector equality — sort by id before
-/// comparing, never compare the raw `Vec` order.
+/// 🔧️ Sorts every collection by id, for comparisons that must not depend on display order. Position-exact restoration is
+/// asserted separately by `deletions_invert_at_every_position`.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sorted_by_id(mut s: SemioBrepSnapshot) -> SemioBrepSnapshot {
     s.vertices.sort_by(|a, b| a.id.cmp(&b.id));
@@ -29,13 +25,13 @@ fn sorted_by_id(mut s: SemioBrepSnapshot) -> SemioBrepSnapshot {
 /// convention.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(base: &SemioBrepSnapshot, operation: &SemioBrepMutation) -> SemioBrepSnapshot {
-    let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
+    let forward = protocol::apply_diff(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
     let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
-    for back in &backwards {
-        restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
+    for back in backwards.iter().rev() {
+        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
     }
-    assert_eq!(sorted_by_id(restored), sorted_by_id(base.clone()), "inverse must exactly restore the pre-operation fixture (as a SET) for {operation:?}");
+    assert_eq!(restored, base.clone(), "inverse must exactly restore the pre-operation fixture, order included, for {operation:?}");
     forward
 }
 
@@ -51,7 +47,7 @@ async fn inverse_round_trip_law_covers_every_variant() {
 #[semio_framework_async_macros::async_test]
 async fn create_delete_vertex_round_trips_explicitly() {
     let base = fixture();
-    let create = SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v3".into(), point: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 }, tol: 2e-7 });
+    let create = SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v3".into(), point: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 }, tol: 2e-7, at: None });
     let after_create = round_trip(&base, &create);
     assert!(after_create.vertices.iter().any(|v| v.id == "v3"));
 
@@ -68,7 +64,7 @@ async fn delete_vertex_cascades_to_dependent_edges_and_inverse_restores_both() {
     let base = fixture();
     let delete = SemioBrepMutation::DeleteVertex(delete_vertex::DeleteVertex { id: "v1".into() });
     let diff = delete.diff(&base);
-    let after = diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
+    let after = protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
     assert!(!after.vertices.iter().any(|v| v.id == "v1"), "v1 must be gone");
     assert!(!after.edges.iter().any(|e| e.id == "e1"), "e1 (dependent on v1) must be cascade-deleted");
 
@@ -76,8 +72,8 @@ async fn delete_vertex_cascades_to_dependent_edges_and_inverse_restores_both() {
     assert!(undo.iter().any(|m| matches!(m, SemioBrepMutation::CreateVertex(v) if v.id == "v1")), "inverse must reconstruct the deleted vertex");
     assert!(undo.iter().any(|m| matches!(m, SemioBrepMutation::CreateEdge(e) if e.id == "e1")), "inverse must reconstruct the one cascade-deleted edge");
     let mut restored = after;
-    for back in &undo {
-        restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
+    for back in undo.iter().rev() {
+        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
     }
     // `delete-vertex`'s inverse lifts the vertex and edge tails off and re-declares them in base order
     // (`🗑️delete-vertex/↩️inverse`), so the undo restores the document exactly, order included.
@@ -102,11 +98,11 @@ async fn replace_and_move_of_an_absent_target_have_empty_inverse_and_are_no_ops(
         },
     });
     assert!(replace.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(replace.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "replace-curve on an absent edge is a no-op");
+    assert_eq!(protocol::apply_diff(replace.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "replace-curve on an absent edge is a no-op");
 
     let mv = SemioBrepMutation::MoveVertex(move_vertex::MoveVertex { vertex_id: "v-missing".into(), new_point: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3::default() });
     assert!(mv.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(mv.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "move-vertex on an absent vertex is a no-op");
+    assert_eq!(protocol::apply_diff(mv.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "move-vertex on an absent vertex is a no-op");
 }
 //#endregion 🧪️InverseRoundTripLaw
 
@@ -123,11 +119,11 @@ async fn diff_consistency_law_matches_independent_between() {
     let base = fixture();
     for m in demo_mutation_cases() {
         let hand_diff = m.diff(&base);
-        let after = hand_diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
+        let after = protocol::apply_diff(hand_diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
         let independent_diff = SemioBrepDiff::between(&base, &after);
         assert_eq!(
-            hand_diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture"),
-            independent_diff.apply(&base).expect("apply must succeed for a well-formed fixture"),
+            protocol::apply_diff(hand_diff.diff(), &base).expect("apply must succeed for a well-formed fixture"),
+            protocol::apply_diff(&independent_diff, &base).expect("apply must succeed for a well-formed fixture"),
             "diff({m:?}) must match an independent before/after comparison"
         );
     }
@@ -182,9 +178,9 @@ async fn language_neutral_delete_inverses_preserve_distinct_tolerances() {
         let expected = test_case["expectedInverse"].as_array().expect("expected inverse is an array").iter().map(|operation| decode_semio_brep_mutation_json(&operation.to_string()).expect("expected inverse operation decodes")).collect::<Vec<_>>();
         let actual = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
         assert_eq!(actual, expected, "{}", test_case["id"].as_str().expect("inverse case id is a string"));
-        let mut restored = mutation.diff(&base).diff().apply(&base).expect("delete diff applies");
-        for operation in actual {
-            restored = operation.diff(&restored).diff().apply(&restored).expect("inverse diff applies");
+        let mut restored = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("delete diff applies");
+        for operation in actual.into_iter().rev() {
+            restored = protocol::apply_diff(operation.diff(&restored).diff(), &restored).expect("inverse diff applies");
         }
         assert_eq!(sorted_by_id(restored), sorted_by_id(base), "{}", test_case["id"].as_str().expect("inverse case id is a string"));
     }
@@ -259,3 +255,26 @@ async fn kinds_match_the_enum_and_the_catalog() {
     }
 }
 //#endregion 🧪️KindsCatalog
+
+/// 🎯️ Position law: deleting ANY vertex (with its incident edges), edge, face, shell or solid (first, middle, last) is undone at its original index.
+#[semio_framework_async_macros::async_test]
+async fn deletions_invert_at_every_position() {
+    let base = crate::standards::v1::subsets::brep::schema::snapshot::demo_brep_snapshot();
+    for item in &base.vertices {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioBrepMutation::DeleteVertex(delete_vertex::DeleteVertex { id: item.id.clone() }), &base).await;
+    }
+    for item in &base.edges {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioBrepMutation::DeleteEdge(delete_edge::DeleteEdge { id: item.id.clone() }), &base).await;
+    }
+    for item in &base.faces {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioBrepMutation::DeleteFace(delete_face::DeleteFace { id: item.id.clone() }), &base).await;
+    }
+    for item in &base.shells {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioBrepMutation::DeleteShell(delete_shell::DeleteShell { id: item.id.clone() }), &base).await;
+    }
+    for item in &base.solids {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioBrepMutation::DeleteSolid(delete_solid::DeleteSolid { id: item.id.clone() }), &base).await;
+    }
+    assert!(base.vertices.len() >= 3, "the law needs a middle vertex");
+}
+

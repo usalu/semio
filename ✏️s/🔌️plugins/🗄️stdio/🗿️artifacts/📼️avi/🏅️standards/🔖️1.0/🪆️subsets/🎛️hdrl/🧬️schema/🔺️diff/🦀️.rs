@@ -211,6 +211,26 @@ pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: Indexe
     d1.modified = modified_map.into_iter().map(|(index, diff)| IndexedModified { index, diff }).collect();
     d1.added = merged_added_final;
 }
+
+/// ↩️ Negative rows for an indexed collection triple against its BASE items: added rows become removals at their final index,
+/// removed rows return at their base index, and each modified row restores its base value at the index the row has after the
+/// diff. Every list comes back ascending, the normal form [`absorb_indexed`] emits.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_indexed<T: Clone, D>(diff: &IndexedDiff<T, D>, base: &[T], inverse_item: impl Fn(&D, &T) -> D) -> IndexedDiff<T, D> {
+    let mut removed_sorted = diff.removed.clone();
+    removed_sorted.sort_unstable();
+    removed_sorted.dedup();
+    let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
+    added_final.sort_unstable();
+    let after_index = |index: usize| {
+        let survivor = index - removed_sorted.iter().filter(|dropped| **dropped < index).count();
+        added_final.iter().fold(survivor, |position, inserted| if *inserted <= position { position + 1 } else { position })
+    };
+    let mut modified: Vec<IndexedModified<D>> = diff.modified.iter().filter_map(|row| base.get(row.index).map(|item| IndexedModified { index: after_index(row.index), diff: inverse_item(&row.diff, item) })).collect();
+    modified.sort_by_key(|row| row.index);
+    let added = removed_sorted.iter().filter_map(|index| base.get(*index).map(|item| IndexedAdded { index: *index, item: item.clone() })).collect();
+    IndexedDiff { removed: added_final, modified, added }
+}
 //#endregion 🔖️IndexedTriple
 
 //#region 🔖️Chunk
@@ -234,6 +254,10 @@ fn apply_chunk_diff_mut(item: &mut AviChunk, d: &AviChunkDiff) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn between_chunk(a: &AviChunk, b: &AviChunk) -> AviChunkDiff {
     AviChunkDiff { data: (a.data != b.data).then(|| b.data.clone()), keyframe: (a.keyframe != b.keyframe).then_some(b.keyframe) }
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_chunk_diff(d: &AviChunkDiff, base: &AviChunk) -> AviChunkDiff {
+    AviChunkDiff { data: d.data.as_ref().map(|_| base.data.clone()), keyframe: d.keyframe.map(|_| base.keyframe) }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn chunk_diff_is_empty(d: &AviChunkDiff) -> bool {
@@ -291,6 +315,15 @@ fn between_stream(a: &AviStream, b: &AviStream) -> AviStreamDiff {
         strf: (a.strf != b.strf).then(|| b.strf.clone()),
         chunks: (!chunks_diff.is_empty()).then_some(chunks_diff),
         strl_extra: (a.strl_extra != b.strl_extra).then(|| b.strl_extra.clone()),
+    }
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_stream_diff(d: &AviStreamDiff, base: &AviStream) -> AviStreamDiff {
+    AviStreamDiff {
+        strh: d.strh.as_ref().map(|_| base.strh.clone()),
+        strf: d.strf.as_ref().map(|_| base.strf.clone()),
+        chunks: d.chunks.as_ref().map(|chunks| inverse_indexed(chunks, &base.chunks, inverse_chunk_diff)).filter(|chunks| !chunks.is_empty()),
+        strl_extra: d.strl_extra.as_ref().map(|_| base.strl_extra.clone()),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -419,35 +452,19 @@ impl DiffAlgebra<AviSnapshot> for AviDiff {
         }
     }
     fn inverse(&self, base: &AviSnapshot) -> Self {
-        // 🔁️ Correct-by-construction (identical reasoning to mp4's `Mp4Diff::inverse`).
-        let mut after = base.clone();
-        if let Some(v) = &self.main_header {
-            after.main_header = v.clone();
+        Self {
+            main_header: self.main_header.as_ref().map(|_| base.main_header.clone()),
+            streams: self.streams.as_ref().map(|streams| inverse_indexed(streams, &base.streams, inverse_stream_diff)).filter(|streams| !streams.is_empty()),
+            idx1_present: self.idx1_present.map(|_| base.idx1_present),
+            unknown_chunks: self.unknown_chunks.as_ref().map(|chunks| inverse_indexed(chunks, &base.unknown_chunks, |_, chunk: &RiffChunk| chunk.clone())).filter(|chunks| !chunks.is_empty()),
+            hdrl_extra: self.hdrl_extra.as_ref().map(|_| base.hdrl_extra.clone()),
         }
-        if let Some(v) = &self.streams {
-            after.streams = apply_indexed(&base.streams, v, apply_stream_diff);
-        }
-        if let Some(v) = self.idx1_present {
-            after.idx1_present = v;
-        }
-        if let Some(v) = &self.unknown_chunks {
-            after.unknown_chunks = apply_indexed(&base.unknown_chunks, v, apply_riff_diff);
-        }
-        if let Some(v) = &self.hdrl_extra {
-            after.hdrl_extra = v.clone();
-        }
-        Self::between(&after, base)
     }
     fn is_empty(&self) -> bool {
         self.main_header.is_none() && self.streams.is_none() && self.idx1_present.is_none() && self.unknown_chunks.is_none() && self.hdrl_extra.is_none()
     }
 }
 
-/// 🧩 Set-snapshot diff helper — used by the `📸️set-snapshot/🔺️diff` leaf.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &AviSnapshot, snapshot: &AviSnapshot) -> AviDiff {
-    <AviDiff as DiffAlgebra<AviSnapshot>>::between(base, snapshot)
-}
 //#endregion 🔖️Diff
 
 //#region 🔖️Tests

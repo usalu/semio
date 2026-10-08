@@ -409,7 +409,7 @@ where
                 let mutation = self.mutation.take().ok_or_else(|| "Playbook retained preparation lost its mutation owner".to_string())?;
                 let retained_bytes = playbook_bounded_serialized_bytes(base.get())?;
                 let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-                let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+                let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
                 self.candidate = Some((post, inverse, mutation, retained_bytes));
                 self.phase = 1;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: retained_bytes as u64, digest: [0; 32] };

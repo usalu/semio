@@ -6,23 +6,20 @@ op: ( insertNode | removeNode | setNodeKind | setNodeLabel
     | setNodePosition | setNodeParam | removeNodeParam | insertEdge | removeEdge
     | setEdgeEndpoints | setEdgeKind | dragNodes) EOF;
 
-insertNode: 'insert-node' 'node' '=' node;
+insertNode: 'insert-node' 'node' '=' node ('at' '=' INT)?;
 removeNode: 'remove-node' 'id' '=' HEX;
 setNodeKind: 'set-node-kind' 'id' '=' HEX 'kind' '=' HEX;
 setNodeLabel: 'set-node-label' 'id' '=' HEX 'label' '=' HEX;
 setNodePosition: 'set-node-position' 'id' '=' HEX 'position' '=' point2;
-setNodeParam: 'set-node-param' 'id' '=' HEX 'key' '=' HEX 'value' '=' HEX;
+setNodeParam: 'set-node-param' 'id' '=' HEX 'key' '=' HEX 'value' '=' HEX ('at' '=' INT)?;
 removeNodeParam: 'remove-node-param' 'id' '=' HEX 'key' '=' HEX;
-insertEdge: 'insert-edge' 'edge' '=' edge;
+insertEdge: 'insert-edge' 'edge' '=' edge ('at' '=' INT)?;
 removeEdge: 'remove-edge' 'id' '=' HEX;
 setEdgeEndpoints: 'set-edge-endpoints' 'id' '=' HEX 'from' '=' port 'to' '=' port;
 setEdgeKind: 'set-edge-kind' 'id' '=' HEX 'kind' '=' HEX;
 dragNodes: 'drag-nodes' 'targets' '=' '[' hexList? ']' 'dx' '=' number 'dy' '=' number;
 hexList: HEX (',' HEX)*;
 
-snapshotLit: '[' HEX ',' '[' nodeList? ']' ',' '[' edgeList? ']' ']';
-nodeList: node (',' node)*;
-edgeList: edge (',' edge)*;
 
 node: '[' HEX ',' HEX ',' HEX ',' '[' paramList? ']' ',' point2 ']';
 paramList: param (',' param)*;

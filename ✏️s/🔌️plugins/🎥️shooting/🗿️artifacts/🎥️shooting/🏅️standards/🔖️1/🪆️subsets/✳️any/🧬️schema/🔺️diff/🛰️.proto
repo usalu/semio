@@ -6,48 +6,81 @@ import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/�
 
 message ShootingDiff {
   // @state artifact
-  optional ShootingArtifact artifact = 1;
+  optional string schema = 1;
   // @state artifact
-  optional string schema = 2;
+  optional ShootingAssetsDelta assets = 2;
   // @state artifact
-  optional ShootingAssetsDelta assets = 3;
+  optional ShootingSavedCamerasDelta saved_cameras = 3;
   // @state artifact
-  optional ShootingSavedCamerasDelta saved_cameras = 4;
+  optional ShootingScenePatch scene = 4;
   // @state artifact
-  optional ShootingSceneLighting scene = 5;
+  optional ShootingShotsDelta shots = 5;
   // @state artifact
-  optional ShootingShotsDelta shots = 6;
+  optional string active_shot_id = 6;
   // @state artifact
-  optional string active_shot_id = 7;
+  optional string active_asset_id = 7;
   // @state artifact
-  optional string active_asset_id = 8;
-  // @state artifact
-  optional semio.os.store.ArtifactChild emblem = 9;
+  optional ShootingAssignedEmblem emblem = 8;
 }
 
-message ShootingStringList {
-  repeated string values = 1;
+message ShootingAssignedEmblem {
+  optional semio.os.store.ArtifactChild value = 1;
+}
+
+message ShootingAssignedQuaternion {
+  repeated double value = 1;
+  bool present = 2;
+}
+
+message ShootingAssignedVector {
+  repeated double value = 1;
+  bool present = 2;
+}
+
+message ShootingAssignedString {
+  optional string value = 1;
+}
+
+enum ShootingEditKind {
+  SHOOTING_EDIT_KIND_ADD = 0;
+  SHOOTING_EDIT_KIND_REMOVE = 1;
+  SHOOTING_EDIT_KIND_MOVE = 2;
+}
+
+message ShootingAssetEdit {
+  ShootingEditKind edit = 1;
+  optional uint32 index = 2;
+  optional string id = 3;
+  optional ShootingAsset item = 4;
+}
+
+message ShootingShotEdit {
+  ShootingEditKind edit = 1;
+  optional uint32 index = 2;
+  optional string id = 3;
+  optional ShootingShot item = 4;
+}
+
+message ShootingSavedCameraEdit {
+  ShootingEditKind edit = 1;
+  optional uint32 index = 2;
+  optional string id = 3;
+  optional ShootingSavedCamera item = 4;
 }
 
 message ShootingAssetsDelta {
-  repeated ShootingAsset added = 1;
-  repeated string removed = 2;
-  repeated ShootingAssetPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ShootingAssetEdit edits = 1;
+  repeated ShootingAssetPatchEntry patched = 2;
 }
 
 message ShootingShotsDelta {
-  repeated ShootingShot added = 1;
-  repeated string removed = 2;
-  repeated ShootingShotPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ShootingShotEdit edits = 1;
+  repeated ShootingShotPatchEntry patched = 2;
 }
 
 message ShootingSavedCamerasDelta {
-  repeated ShootingSavedCamera added = 1;
-  repeated string removed = 2;
-  repeated ShootingSavedCameraPatchEntry patched = 3;
-  repeated string reordered = 4;
+  repeated ShootingSavedCameraEdit edits = 1;
+  repeated ShootingSavedCameraPatchEntry patched = 2;
 }
 
 message ShootingAssetPatchEntry {
@@ -68,9 +101,10 @@ message ShootingSavedCameraPatchEntry {
 message ShootingAssetPatch {
   optional string name = 1;
   optional string url = 2;
-  repeated double origin = 3;
-  repeated double orientation = 4;
-  repeated double scale = 5;
+  optional string format = 3;
+  repeated double origin = 4;
+  optional ShootingAssignedQuaternion orientation = 5;
+  optional ShootingAssignedVector scale = 6;
 }
 
 message ShootingShotPatch {
@@ -79,11 +113,33 @@ message ShootingShotPatch {
   optional uint32 height = 3;
   optional string format = 4;
   optional string shape = 5;
+  optional ShootingAssignedString background = 6;
+  optional ShootingAssignedString camera_id = 7;
 }
 
 message ShootingSavedCameraPatch {
   optional string label = 1;
   optional ShootingCamera camera = 2;
+}
+
+message ShootingScenePatch {
+  optional string background = 1;
+  optional bool sun_enabled = 2;
+  optional double sun_azimuth = 3;
+  optional double sun_elevation = 4;
+  optional double sun_intensity = 5;
+  optional string sun_color = 6;
+  optional double ambient_intensity = 7;
+  optional string ambient_color = 8;
+  optional bool shadow_enabled = 9;
+  optional double shadow_opacity = 10;
+  optional double shadow_softness = 11;
+  optional string material_color = 12;
+  optional double material_metalness = 13;
+  optional double material_roughness = 14;
+  optional string material_emissive = 15;
+  optional double material_emissive_intensity = 16;
+  optional string material_stroke = 17;
 }
 
 message ShootingArtifact {

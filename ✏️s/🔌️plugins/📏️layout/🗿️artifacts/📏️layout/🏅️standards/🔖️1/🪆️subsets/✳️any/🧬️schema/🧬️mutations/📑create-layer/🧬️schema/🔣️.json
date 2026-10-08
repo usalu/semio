@@ -56,6 +56,30 @@
         "order": 30
       }
     },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint64",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based stacking position among the page's layers; empty or past the end appends.",
+          "de": "Nullbasierte Stapelposition unter den Ebenen der Seite; leer oder dahinter hängt an."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "placement",
+        "order": 35
+      }
+    },
     "remove": {
       "type": "boolean",
       "x-semio-ui": {

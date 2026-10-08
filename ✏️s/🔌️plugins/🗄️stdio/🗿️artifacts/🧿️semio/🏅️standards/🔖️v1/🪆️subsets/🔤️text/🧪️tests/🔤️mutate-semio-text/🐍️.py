@@ -32,7 +32,7 @@ from __future__ import annotations
 # region 🔖️Imports
 import json
 
-from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot, snapshot_patch_inverse
+from semio_repo_test import Adapter, Context, Outcome, digest
 
 # endregion 🔖️Imports
 
@@ -290,7 +290,7 @@ def pack_bytes(document: dict) -> bytes:
 
 
 # region 🔖️Mutations
-KINDS = ("insert-run", "remove-run", "edit-run", "change-run-language", "reorder-runs", "add-mark", "remove-mark", "patch-snapshot")
+KINDS = ("insert-run", "remove-run", "edit-run", "change-run-language", "reorder-runs", "add-mark", "remove-mark")
 
 #: 🏷️ The externally tagged JSON name of each kebab-case kind, as the committed specification
 #: vectors under `…/🧬️mutations/<kind>/🧪️tests/<fixture>/🦠️mutation/` spell it.
@@ -302,7 +302,6 @@ TAG_OF_KIND = {
     "reorder-runs": "ReorderRuns",
     "add-mark": "AddMark",
     "remove-mark": "RemoveMark",
-    "patch-snapshot": "PatchSnapshot",
 }
 
 
@@ -327,8 +326,6 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     silent no-op — a quietly skipped mutation would report as a pass."""
     result = json.loads(json.dumps(document))
     tag, args = tagged(mutation)
-    if tag == "PatchSnapshot":
-        return patched_snapshot(document, args["patch"])
     runs = result["runs"]
     if tag == "InsertRun":
         index = args["index"]
@@ -367,8 +364,6 @@ def inverse_mutation(document: dict, mutation: dict) -> dict:
     meanings — an insertion is undone by a removal at the position it took, an overwrite by an
     overwrite with the value it displaced, and a move by the opposite move."""
     tag, args = tagged(mutation)
-    if tag == "PatchSnapshot":
-        return {"PatchSnapshot": {"patch": snapshot_patch_inverse(document, args["patch"])}}
     if tag == "InsertRun":
         return {"RemoveRun": {"index": args["index"]}}
     if tag == "RemoveRun":

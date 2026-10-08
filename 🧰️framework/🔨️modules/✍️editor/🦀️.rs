@@ -1,9 +1,9 @@
 //! ✍️ Editor owns projection text and typed adornments; application document authority stays
 //! with the composing application.
 
-use canvas::camera::Viewport;
+use canvas::camera::{Camera, Viewport};
 use canvas::text as canvas_text;
-pub use infinite_canvas::{self as canvas, *};
+pub use canvas::{self, *};
 use serde::Deserialize;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -1297,10 +1297,10 @@ impl EditorSession {
         }
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let (render_ctx, renderer, surface) = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+            let admission = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
             let mut g = inner.borrow_mut();
             g.set_logical_size(lw, lh, dpr, pw, ph);
-            g.gpu.finish_attach(canvas, render_ctx, renderer, surface);
+            g.gpu.finish_attach(admission);
             Ok(JsValue::UNDEFINED)
         })
     }

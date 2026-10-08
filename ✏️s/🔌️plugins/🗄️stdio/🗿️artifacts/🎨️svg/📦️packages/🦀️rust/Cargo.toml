@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../.."
 name = "semio-s-artifact-stdio-svg"
 version.workspace = true
 edition.workspace = true
@@ -44,7 +44,7 @@ semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde_json = { workspace = true }
 semio-framework-async-macros = { workspace = true }

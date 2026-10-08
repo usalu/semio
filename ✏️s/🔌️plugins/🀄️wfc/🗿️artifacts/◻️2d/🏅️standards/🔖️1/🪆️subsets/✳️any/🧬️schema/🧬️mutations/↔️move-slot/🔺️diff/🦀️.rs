@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `MoveSlot` — a real id-keyed delta, never a whole-snapshot capture.
 
-use crate::diff::Wfc2dDiff;
+use crate::diff::{Wfc2dDiff, Wfc2dRowPatch, Wfc2dRows, Wfc2dSlotPatch};
 use crate::schema::snapshot::Wfc2dSnapshot;
 
 pub fn diff(payload: &super::MoveSlot, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
@@ -11,6 +11,5 @@ pub fn diff(payload: &super::MoveSlot, base: &Wfc2dSnapshot) -> protocol::Mutati
     if slot.x == payload.x && slot.y == payload.y {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Slot \"{}\" is already at that position.", payload.id));
     }
-    let moved = crate::schema::snapshot::Wfc2dSlot { x: payload.x, y: payload.y, ..slot.clone() };
-    protocol::MutationOutcome::new(Wfc2dDiff { slots_upserted: vec![(index, moved)], ..Default::default() })
+    protocol::MutationOutcome::new(Wfc2dDiff { slots: Wfc2dRows { patched: vec![Wfc2dRowPatch { id: slot.id.clone(), patch: Wfc2dSlotPatch { x: Some(payload.x), y: Some(payload.y), ..Default::default() } }], ..Default::default() }, ..Default::default() })
 }

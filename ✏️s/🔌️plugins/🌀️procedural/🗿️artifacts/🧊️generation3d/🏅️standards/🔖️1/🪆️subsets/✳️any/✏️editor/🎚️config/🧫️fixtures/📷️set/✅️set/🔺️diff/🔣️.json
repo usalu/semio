@@ -1,11 +1,7 @@
 {
-  "lodMode": "coarse",
-  "showMode": "shaded",
-  "camera": {
-    "x": 0.0,
-    "y": 0.0,
-    "zoom": 1.0
-  },
+  "lodMode": null,
+  "showMode": null,
+  "camera": null,
   "previewCamera": {
     "position": [
       2.0,
@@ -19,6 +15,6 @@
     ],
     "fov": 35.0
   },
-  "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+  "sunJson": null,
   "selectedGenerationId": null
 }

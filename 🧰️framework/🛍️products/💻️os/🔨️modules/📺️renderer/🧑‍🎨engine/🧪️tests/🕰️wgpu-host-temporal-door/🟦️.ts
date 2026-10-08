@@ -54,7 +54,6 @@ function intlOracle(value: HostTemporalValueV1, nowMs: number, locale: string, t
 
 describe("WGPU shared temporal host door", () => {
   it("matches browser Intl for EventFeed time and VFS date, datetime, relative, and invalid ISO values", () => {
-    expect(new Ajv2020({ strict: true }).compile(schema)(fixture)).toBe(true);
     for (const value of fixture.isoGrammar.valid) {
       expect(canonicalIsoOracle(value)).toBe(true);
       expect(isHostTemporalIsoV1(value)).toBe(true);

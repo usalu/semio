@@ -1,39 +1,26 @@
 {
-  "artifact": null,
-  "hostSnapshot": {
-    "schema": "flow.hostSnapshot",
-    "camera": {
-      "x": 0.0,
-      "y": 0.0,
-      "zoom": 1.0
-    },
-    "widgets": [
-      {
-        "kind": "inputNote",
-        "id": "note-a",
-        "text": "Alpha"
-      },
-      {
-        "kind": "inputNote",
-        "id": "note-b",
-        "text": "Beta"
-      }
-    ],
-    "synapses": [
+  "schema": null,
+  "camera": null,
+  "widgets": null,
+  "synapses": {
+    "added": [],
+    "removed": [],
+    "patched": [
       {
         "id": "link-ab",
-        "from": "note-a",
-        "to": "note-b",
-        "fromPort": "out",
-        "toPort": "alt"
+        "item": {
+          "id": "link-ab",
+          "from": "note-a",
+          "to": "note-b",
+          "fromPort": "out",
+          "toPort": "alt"
+        }
       }
     ],
-    "layout": {
-      "note-a": {
-        "x": 0.0,
-        "y": 0.0
-      }
-    }
+    "reordered": null
   },
-  "generation": null
+  "layout": null,
+  "generations": null,
+  "selectedGeneration": null,
+  "previewText": null
 }

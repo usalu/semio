@@ -3,7 +3,7 @@
  * a TAG-ID-keyed triple (`tag`, not array index — a `TiffTag` is a weak value, so
  * modified/added carry the whole new tag). */
 
-import type { TiffSampleBlock, TiffIfd, TiffValues } from '../📸️snapshot/🟦️.ts';
+import type { TiffSampleBlock, TiffIfd, TiffValues, TiffWord64 } from '../📸️snapshot/🟦️.ts';
 
 export interface TiffTagModified { tag: number; values: TiffValues }
 export interface TiffTagAdded { tag: number; values: TiffValues }
@@ -15,8 +15,11 @@ export interface TiffTagsDiff {
   added?: TiffTagAdded[];
 }
 
-/** One IFD's own delta: the recursive tag triple plus a whole-value slot for its raw strip payload. */
-export interface TiffIfdDiff { entries?: TiffTagsDiff; blocks?: TiffSampleBlock[] }
+/** One contiguous run of replacement words inside block `block`, starting at word `offset` of its pixel-major sample list. */
+export interface TiffSampleRun { block: number; offset: number; samples: TiffWord64[] }
+
+/** One IFD's own delta: the recursive tag triple, a whole-value slot for its block list and the sparse sample runs applied after it. */
+export interface TiffIfdDiff { entries?: TiffTagsDiff; blocks?: TiffSampleBlock[]; runs?: TiffSampleRun[] }
 export interface TiffIfdModified { index: number; diff: TiffIfdDiff }
 export interface TiffIfdAdded { index: number; ifd: TiffIfd }
 
@@ -91,9 +94,10 @@ export function parseTiffTagsDiff(value: unknown, at = "$"): TiffTagsDiff {
 }
 
 export function parseTiffIfdDiff(value:unknown,at="$"):TiffIfdDiff{
- const row=stdioTiff60DocumentDiffGuardObject(value,at);if(Object.keys(row).some(key=>!["entries","blocks"].includes(key)))throw Error(at+": foreign owned diff field");
- return {entries:row.entries===undefined?undefined:parseTiffTagsDiff(row.entries,at+".entries"),blocks:row.blocks===undefined?undefined:stdioTiff60DocumentDiffGuardArray(row.blocks,at+".blocks").map((v,i)=>parseTiffSampleBlock(v,at+".blocks["+i+"]"))}
+ const row=stdioTiff60DocumentDiffGuardObject(value,at);if(Object.keys(row).some(key=>!["entries","blocks","runs"].includes(key)))throw Error(at+": foreign owned diff field");
+ return {entries:row.entries===undefined?undefined:parseTiffTagsDiff(row.entries,at+".entries"),blocks:row.blocks===undefined?undefined:stdioTiff60DocumentDiffGuardArray(row.blocks,at+".blocks").map((v,i)=>parseTiffSampleBlock(v,at+".blocks["+i+"]")),runs:row.runs===undefined?undefined:stdioTiff60DocumentDiffGuardArray(row.runs,at+".runs").map((v,i)=>parseTiffSampleRun(v,at+".runs["+i+"]"))}
 }
+export function parseTiffSampleRun(value:unknown,at="$"):TiffSampleRun{const row=stdioTiff60DocumentDiffGuardObject(value,at);if(Object.keys(row).some(key=>!["block","offset","samples"].includes(key)))throw Error(at+": foreign sample run field");return {block:stdioTiff60DocumentDiffGuardInteger(row.block,at+".block",{minimum:0}),offset:stdioTiff60DocumentDiffGuardInteger(row.offset,at+".offset",{minimum:0}),samples:stdioTiff60DocumentDiffGuardArray(row.samples,at+".samples").map((word,index)=>{const w=stdioTiff60DocumentDiffGuardObject(word,at+".samples["+index+"]");return {lo:stdioTiff60DocumentDiffGuardInteger(w.lo,at+".samples["+index+"].lo",{minimum:0,maximum:4294967295}),hi:stdioTiff60DocumentDiffGuardInteger(w.hi,at+".samples["+index+"].hi",{minimum:0,maximum:4294967295})}})}}
 export function parseTiffIfdModified(value: unknown, at = "$"): TiffIfdModified {
   const row = stdioTiff60DocumentDiffGuardObject(value, at);
   return {
@@ -121,13 +125,13 @@ function same(left:unknown,right:unknown):boolean{if(left===right)return true;if
 /** 🔺️ Derives a sparse semantic delta by owned directory and tag identity. */
 export function tiffDiffBetween(base:TiffSnapshot,target:TiffSnapshot):TiffDiff{
  const removed:number[]=[],modified:TiffIfdModified[]=[],added:TiffIfdAdded[]=[];
- for(let i=0;i<Math.max(base.ifds.length,target.ifds.length);i++){const a=base.ifds[i],b=target.ifds[i];if(!b){removed.push(i);continue;}if(!a){added.push({index:i,ifd:structuredClone(b)});continue;}const tags:TiffTagsDiff={},byId=new Map(a.entries.map(entry=>[entry.tag,entry]));for(const entry of a.entries)if(!b.entries.some(value=>value.tag===entry.tag))(tags.removed??=[]).push(entry.tag);for(const entry of b.entries){const previous=byId.get(entry.tag);if(!previous)(tags.added??=[]).push(structuredClone(entry));else if(!same(previous,entry))(tags.modified??=[]).push(structuredClone(entry));}const diff:TiffIfdDiff={};if(Object.keys(tags).length)diff.entries=tags;if(!same(a.blocks,b.blocks))diff.blocks=structuredClone(b.blocks);if(Object.keys(diff).length)modified.push({index:i,diff});}
+ for(let i=0;i<Math.max(base.ifds.length,target.ifds.length);i++){const a=base.ifds[i],b=target.ifds[i];if(!b){removed.push(i);continue;}if(!a){added.push({index:i,ifd:structuredClone(b)});continue;}const tags:TiffTagsDiff={},byId=new Map(a.entries.map(entry=>[entry.tag,entry]));for(const entry of a.entries)if(!b.entries.some(value=>value.tag===entry.tag))(tags.removed??=[]).push(entry.tag);for(const entry of b.entries){const previous=byId.get(entry.tag);if(!previous)(tags.added??=[]).push(structuredClone(entry));else if(!same(previous,entry))(tags.modified??=[]).push(structuredClone(entry));}const diff:TiffIfdDiff={};if(Object.keys(tags).length)diff.entries=tags;const geometry=(blocks:typeof a.blocks)=>blocks.map(block=>[block.x,block.y,block.width,block.height,block.channels,block.samples.length]);if(!same(a.blocks,b.blocks)){if(same(geometry(a.blocks),geometry(b.blocks))){const runs:TiffSampleRun[]=[];a.blocks.forEach((block,at)=>{const next=b.blocks[at]!;let from=-1;for(let i=0;i<=block.samples.length;i++){const differs=i<block.samples.length&&!same(block.samples[i],next.samples[i]);if(differs&&from<0)from=i;else if(!differs&&from>=0){runs.push({block:at,offset:from,samples:structuredClone(next.samples.slice(from,i))});from=-1;}}});diff.runs=runs;}else diff.blocks=structuredClone(b.blocks);}if(Object.keys(diff).length)modified.push({index:i,diff});}
  return removed.length||modified.length||added.length?{ifds:{...(removed.length?{removed}:{}),...(modified.length?{modified}:{}),...(added.length?{added}:{})}}:{};
 }
 /** 🧬️ Applies one sparse owned delta before validating the complete result. */
 export function applyTiffDiff(base:TiffSnapshot,diff:TiffDiff):TiffSnapshot{
  const output=structuredClone(base),change=diff.ifds;if(!change)return output;
- for(const edit of change.modified??[]){const page=output.ifds[edit.index];if(!page)throw Error('tiff: modified directory missing');if(edit.diff.blocks!==undefined)page.blocks=structuredClone(edit.diff.blocks);const tags=edit.diff.entries;if(tags){page.entries=page.entries.filter(entry=>!tags.removed?.includes(entry.tag));for(const entry of tags.modified??[]){const index=page.entries.findIndex(value=>value.tag===entry.tag);if(index<0)throw Error('tiff: modified tag missing');page.entries[index]=structuredClone(entry);}for(const entry of tags.added??[]){if(page.entries.some(value=>value.tag===entry.tag))throw Error('tiff: added tag exists');page.entries.push(structuredClone(entry));}page.entries.sort((a,b)=>a.tag-b.tag);}}
+ for(const edit of change.modified??[]){const page=output.ifds[edit.index];if(!page)throw Error('tiff: modified directory missing');if(edit.diff.blocks!==undefined)page.blocks=structuredClone(edit.diff.blocks);for(const run of edit.diff.runs??[]){const words=page.blocks[run.block]?.samples;if(!words||run.offset+run.samples.length>words.length)throw Error('tiff: sample run leaves its block');run.samples.forEach((word,at)=>{words[run.offset+at]=structuredClone(word);});}const tags=edit.diff.entries;if(tags){page.entries=page.entries.filter(entry=>!tags.removed?.includes(entry.tag));for(const entry of tags.modified??[]){const index=page.entries.findIndex(value=>value.tag===entry.tag);if(index<0)throw Error('tiff: modified tag missing');page.entries[index]=structuredClone(entry);}for(const entry of tags.added??[]){if(page.entries.some(value=>value.tag===entry.tag))throw Error('tiff: added tag exists');page.entries.push(structuredClone(entry));}page.entries.sort((a,b)=>a.tag-b.tag);}}
  const removed=new Set(change.removed??[]);if(removed.size!==(change.removed??[]).length||[...removed].some(index=>index<0||index>=output.ifds.length))throw Error('tiff: removed directory identity');output.ifds=output.ifds.filter((_,index)=>!removed.has(index));for(const entry of [...change.added??[]].sort((a,b)=>a.index-b.index)){if(entry.index>output.ifds.length)throw Error('tiff: added directory position');output.ifds.splice(entry.index,0,structuredClone(entry.ifd));}return parseTiffSnapshot(output);
 }
 /** 🔁️ Composes deltas relative to the same explicit semantic base. */

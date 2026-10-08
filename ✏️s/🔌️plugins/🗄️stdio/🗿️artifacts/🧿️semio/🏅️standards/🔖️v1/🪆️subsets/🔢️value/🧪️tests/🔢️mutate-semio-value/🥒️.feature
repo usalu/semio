@@ -87,7 +87,6 @@ Feature: Apply every typed semio VALUE mutation to a real 424 KB building model,
     Then the independent implementation and the subject agree on the resulting document
     Examples:
       | id               | mutation |
-      | set-snapshot     | {"mutation":"setSnapshot","snapshot":{"schema":"stdio.semio.value","root":{"kind":"map","entries":[{"key":"schema","value":{"kind":"str","value":"spatial.modelspace"}},{"key":"revision","value":{"kind":"int","lexeme":"5"}},{"key":"models","value":{"kind":"list","items":[{"kind":"ref","id":{"value":"spatial.shape#objects"}}]}}]},"nodes":[{"id":{"value":"spatial.shape#objects"},"value":{"kind":"bytes","value":[222,173,190,239]}}]}} |
       | set-value        | {"mutation":"setValue","path":[{"kind":"key","key":"models"},{"kind":"index","index":0},{"kind":"key","key":"model"},{"kind":"key","key":"geometry"},{"kind":"key","key":"vertices"},{"kind":"index","index":0},{"kind":"key","key":"position"},{"kind":"index","index":1}],"value":{"kind":"int","lexeme":"5"}} |
       | set-map-entry    | {"mutation":"setMapEntry","path":[{"kind":"key","key":"models"},{"kind":"index","index":0},{"kind":"key","key":"model"}],"key":"revision","value":{"kind":"float","lexeme":"1.5"}} |
       | remove-map-entry | {"mutation":"removeMapEntry","path":[],"key":"revision"} |
@@ -95,18 +94,6 @@ Feature: Apply every typed semio VALUE mutation to a real 424 KB building model,
       | remove-list-item | {"mutation":"removeListItem","path":[{"kind":"key","key":"models"},{"kind":"index","index":0},{"kind":"key","key":"model"},{"kind":"key","key":"geometry"},{"kind":"key","key":"vertices"}],"index":0} |
       | set-node         | {"mutation":"setNode","id":{"value":"aec.building.energy#objects"},"value":{"kind":"bytes","value":[0,1,2,255]}} |
       | remove-node      | {"mutation":"removeNode","id":{"value":"aec.building.structure.classic#objects"}} |
-      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/nodes/0/value", "value": {"kind": "bytes", "value": [0, 1, 2, 255]}}} |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real building model
-    Given the real building model shared://🔢️mutate-semio-value/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio
-    When the no-mutation mutation is applied to the document parsed from it
-      """
-      {"mutation":"noMutation"}
-      """
-    Then the independent implementation and the subject agree on the resulting document
 
   @id-inverse
   @level-exhaustive
@@ -120,7 +107,6 @@ Feature: Apply every typed semio VALUE mutation to a real 424 KB building model,
     Then both sides restore the building model and agree on the mutated and the restored document
     Examples:
       | id               | mutation |
-      | set-snapshot     | {"mutation":"setSnapshot","snapshot":{"schema":"stdio.semio.value","root":{"kind":"map","entries":[{"key":"schema","value":{"kind":"str","value":"spatial.modelspace"}},{"key":"revision","value":{"kind":"int","lexeme":"5"}},{"key":"models","value":{"kind":"list","items":[{"kind":"ref","id":{"value":"spatial.shape#objects"}}]}}]},"nodes":[{"id":{"value":"spatial.shape#objects"},"value":{"kind":"bytes","value":[222,173,190,239]}}]}} |
       | set-value        | {"mutation":"setValue","path":[{"kind":"key","key":"models"},{"kind":"index","index":0},{"kind":"key","key":"model"},{"kind":"key","key":"geometry"},{"kind":"key","key":"vertices"},{"kind":"index","index":0},{"kind":"key","key":"position"},{"kind":"index","index":1}],"value":{"kind":"int","lexeme":"5"}} |
       | set-map-entry    | {"mutation":"setMapEntry","path":[{"kind":"key","key":"models"},{"kind":"index","index":0},{"kind":"key","key":"model"}],"key":"revision","value":{"kind":"float","lexeme":"1.5"}} |
       | remove-map-entry | {"mutation":"removeMapEntry","path":[],"key":"revision"} |
@@ -128,18 +114,6 @@ Feature: Apply every typed semio VALUE mutation to a real 424 KB building model,
       | remove-list-item | {"mutation":"removeListItem","path":[{"kind":"key","key":"models"},{"kind":"index","index":0},{"kind":"key","key":"model"},{"kind":"key","key":"geometry"},{"kind":"key","key":"vertices"}],"index":0} |
       | set-node         | {"mutation":"setNode","id":{"value":"aec.building.energy#objects"},"value":{"kind":"bytes","value":[0,1,2,255]}} |
       | remove-node      | {"mutation":"removeNode","id":{"value":"aec.building.structure.classic#objects"}} |
-      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/nodes/0/value", "value": {"kind": "bytes", "value": [0, 1, 2, 255]}}} |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing no-mutation restores the real building model
-    Given the real building model shared://🔢️mutate-semio-value/🌲️hexagonal-cut-concrete-forest/🗣️.dsl.semio
-    When the no-mutation mutation is applied to the document parsed from it and each side undoes it with its own computed inverse
-      """
-      {"mutation":"noMutation"}
-      """
-    Then both sides restore the building model and agree on the mutated and the restored document
 
   @id-spec-vector
   @level-exhaustive
@@ -152,8 +126,6 @@ Feature: Apply every typed semio VALUE mutation to a real 424 KB building model,
     Then each reaches the committed after-snapshot, each returns to the before-snapshot, and the two agree
     Examples:
       | id               | before                                                                                                                                                     | mutation                                                                                                                                                | after                                                                                                                                                     |
-      | no-mutation      | shared://🔢️mutate-semio-value/⬅️before/🔣️.json                                                                                                                                      | shared://🔢️mutate-semio-value/⏸️no-mutation.mutation.json                                                                                                                       | shared://🔢️mutate-semio-value/⬅️before/🔣️.json                                                                                                                                     |
-      | set-snapshot     | shared://🧬️mutations/📸️set-snapshot/🔄️retypes/📸️snapshot/⬅️before/🔣️.json | shared://🧬️mutations/📸️set-snapshot/🔄️retypes/🦠️mutation/🔣️.json | shared://🧬️mutations/📸️set-snapshot/🔄️retypes/📸️snapshot/➡️after/🔣️.json |
       | set-value        | shared://🔢️mutate-semio-value/⬅️before/🔣️.json                                                                                                                                      | shared://🔢️mutate-semio-value/🔁️set-value.mutation.json                                                                                                                         | shared://🔢️mutate-semio-value/🔢️set-value.after.json                                                                                                                              |
       | set-map-entry    | shared://🔢️mutate-semio-value/⬅️before/🔣️.json                                                                                                                                      | shared://🔢️mutate-semio-value/🗝️set-map-entry.mutation.json                                                                                                                     | shared://🔢️mutate-semio-value/🔑️set-map-entry.after.json                                                                                                                          |
       | remove-map-entry | shared://🔢️mutate-semio-value/⬅️before/🔣️.json                                                                                                                                      | shared://🔢️mutate-semio-value/✖️remove-map-entry.mutation.json                                                                                                                  | shared://🔢️mutate-semio-value/🧹️remove-map-entry.after.json                                                                                                                       |

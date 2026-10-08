@@ -18,11 +18,12 @@ pub struct CreateZone {
     pub multiplier: u32,
     pub conditioned: bool,
     pub part_of_total_floor_area: bool,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_zone(id: crate::model::EntityId, name: String, volume_m3: f64, multiplier: u32, conditioned: bool, part_of_total_floor_area: bool) -> EnergyModelMutation {
-    EnergyModelMutation::CreateZone(CreateZone { id, name, volume_m3, multiplier, conditioned, part_of_total_floor_area })
+pub fn create_zone(id: crate::model::EntityId, name: String, volume_m3: f64, multiplier: u32, conditioned: bool, part_of_total_floor_area: bool, index: Option<u32>) -> EnergyModelMutation {
+    EnergyModelMutation::CreateZone(CreateZone { id, name, volume_m3, multiplier, conditioned, part_of_total_floor_area, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateZone {

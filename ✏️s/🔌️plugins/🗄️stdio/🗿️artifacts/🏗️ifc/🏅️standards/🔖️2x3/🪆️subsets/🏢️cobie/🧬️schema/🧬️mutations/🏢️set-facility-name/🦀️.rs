@@ -1,6 +1,4 @@
-//! ⚙️ `set-facility-name` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🏢️ `set-facility-name` -- names the `IfcBuilding` a COBie Facility row is; the prior name (or none) is restored.
 
 use super::*;
 
@@ -15,18 +13,26 @@ pub struct SetFacilityName {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetFacilityName {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "facility-name", kind: "set-facility-name", record: "SetFacilityName" };
 
-    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<<Ifc2x3CobieMutation as Mutation<Ifc2x3Snapshot>>::Diff> {
-        agg_diff(&Ifc2x3CobieMutation::SetFacilityName(self.clone()), base)
+    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
+        let Self { building, name } = self;
+        match mvd::argument_diff(base, *building, &[BUILDING], NAME_INDEX, mvd::optional(name.clone().map(Part21Value::Str))) {
+            Ok(diff) => protocol::MutationOutcome::new(diff),
+            Err(message) => rejected(message),
+        }
     }
+
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Result<Vec<Ifc2x3CobieMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&Ifc2x3CobieMutation::SetFacilityName(self.clone()), base)?
-    
-    })
-}
+        let Self { building, .. } = self;
+        if !matches!(mvd::standing(base, *building, &[BUILDING]), mvd::Standing::Present { .. }) {
+            return Ok(Vec::new());
+        }
+        Ok(vec![Ifc2x3CobieMutation::SetFacilityName(SetFacilityName { building: *building, name: mvd::argument(base, *building, NAME_INDEX).and_then(Part21Value::as_str).map(str::to_string) })])
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set facility name", "Bauwerksname setzen")
     }
+
     fn target(&self) -> Vec<String> {
         Vec::new()
     }

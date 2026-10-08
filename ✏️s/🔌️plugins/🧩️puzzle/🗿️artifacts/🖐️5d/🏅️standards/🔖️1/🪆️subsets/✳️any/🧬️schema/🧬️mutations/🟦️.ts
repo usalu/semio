@@ -135,6 +135,7 @@ export interface ConnectGrips {
   tilt: Binary64;
   x: Binary64;
   y: Binary64;
+  index?: number | null;
 }
 
 /** ✂️ `disconnect-grips` payload — removes a fastener between two grips. */
@@ -185,6 +186,7 @@ export interface ConnectKindCompatibility {
   bidirectional: boolean;
   important: boolean;
   specificity: Puzzle5dCompatSpecificity;
+  index?: number | null;
 }
 
 /** 💔 `disconnect-kind-compatibility` payload — revokes one grip-kind-id pair's fasten allowance. */

@@ -13,6 +13,8 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[value(rename_all = "camelCase")]
 pub struct SetColorSpace {
     pub color_space: PdfNamedColorSpace,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfMutation> for SetColorSpace {
@@ -20,13 +22,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetColorSpace {
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         let _ = base;
-        MutationOutcome::new(diff::diff_set_color_space(base, self.color_space.clone()))
+        MutationOutcome::new(diff::diff_set_color_space(base, self.color_space.clone(), self.index))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        match base.color_spaces.iter().find(|item| item.name == self.color_space.name) { Some(previous) => vec![PdfMutation::SetColorSpace(SetColorSpace { color_space: previous.clone() })], None => vec![PdfMutation::RemoveColorSpace(super::remove_color_space::RemoveColorSpace { name: self.color_space.name.clone() })] }
+        match base.color_spaces.iter().find(|item| item.name == self.color_space.name) { Some(previous) => vec![PdfMutation::SetColorSpace(SetColorSpace { color_space: previous.clone(), index: None })], None => vec![PdfMutation::RemoveColorSpace(super::remove_color_space::RemoveColorSpace { name: self.color_space.name.clone() })] }
     
     })())
 }

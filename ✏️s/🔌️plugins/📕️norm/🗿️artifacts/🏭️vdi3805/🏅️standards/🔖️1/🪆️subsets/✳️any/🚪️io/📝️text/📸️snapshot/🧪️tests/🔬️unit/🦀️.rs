@@ -45,7 +45,7 @@ async fn regenerate_mutation_fixtures_when_env_set() {
         return;
     }
     use crate::{Vdi3805Diff, Vdi3805Mutation, Vdi3805Snapshot};
-    use protocol::{Mutation, MutationDiff};
+    use protocol::Mutation;
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let fixtures = root.join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations");
     let mut regenerated = 0usize;
@@ -80,7 +80,7 @@ async fn regenerate_mutation_fixtures_when_env_set() {
 
             let raised = Mutation::<Vdi3805Snapshot>::diff(&mutation, &before);
             let diff = raised.diff().clone();
-            let after = MutationDiff::<Vdi3805Snapshot>::apply(&diff, &before).unwrap_or_else(|e| panic!("apply {}: {e}", case_dir.display()));
+            let after = protocol::apply_diff(&diff, &before).unwrap_or_else(|e| panic!("apply {}: {e}", case_dir.display()));
             let diff_canon = serde_json::to_string_pretty(&diff).expect("encode diff") + "\n";
             let after_canon = serde_json::to_string_pretty(&after).expect("encode after") + "\n";
             std::fs::write(&diff_path, &diff_canon).expect("write diff");

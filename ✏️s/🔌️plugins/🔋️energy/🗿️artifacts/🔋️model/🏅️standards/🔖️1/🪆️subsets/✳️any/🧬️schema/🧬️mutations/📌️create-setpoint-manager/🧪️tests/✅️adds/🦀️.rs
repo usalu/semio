@@ -22,7 +22,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.zones.push(zone(2, "ZONE TWO"));
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 20.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 27.0 });
-    (snapshot(model), super::create_setpoint_manager(crate::model::EntityId(16), "SUPPLY SPM".to_string(), "Scheduled".to_string(), 0.0, 0.0, 0.0, 0.0, true, crate::model::ScheduleId(1)))
+    (snapshot(model), super::create_setpoint_manager(crate::model::EntityId(16), "SUPPLY SPM".to_string(), "Scheduled".to_string(), 0.0, 0.0, 0.0, 0.0, true, crate::model::ScheduleId(1), None))
 }
 
 fn case() -> Case {

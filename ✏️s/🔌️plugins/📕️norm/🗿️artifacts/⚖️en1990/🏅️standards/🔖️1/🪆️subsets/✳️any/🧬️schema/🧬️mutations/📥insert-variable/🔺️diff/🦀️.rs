@@ -2,8 +2,7 @@
 //! `mutation.clamped` warning and an id the document already holds is a `mutation.duplicate-id`.
 
 use super::InsertVariable;
-use crate::diff::En1990RowEdit as _;
-use crate::diff::{En1990Diff, En1990VariableEdit};
+use crate::diff::{En1990Diff, En1990VariableDelta};
 use crate::En1990Snapshot;
 use protocol::MutationOutcome;
 
@@ -13,7 +12,7 @@ pub fn diff(payload: &InsertVariable, base: &En1990Snapshot) -> MutationOutcome<
         return MutationOutcome::fatal("mutation.duplicate-id", format!("The variable action '{key}' already exists."), [key]);
     }
     let index = payload.index.min(base.variables.len());
-    let outcome = MutationOutcome::new(En1990Diff { variables: vec![En1990VariableEdit::insert(index, payload.item.clone())], ..En1990Diff::default() });
+    let outcome = MutationOutcome::new(En1990Diff { variables: En1990VariableDelta::insertion(&base.variables, index, payload.item.clone()), ..En1990Diff::default() });
     if index == payload.index {
         return outcome;
     }

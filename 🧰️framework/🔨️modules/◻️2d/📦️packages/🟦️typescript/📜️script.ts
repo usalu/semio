@@ -4,7 +4,7 @@ import { runVitestV1, readVitestPolicyV1 } from "../../../🏃️process/🧪️
 import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { cmdBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
 import { join } from "node:path";
-/** 🧭️ `@semio-tech/s-2d-js` router: `bun ./📜️script.ts test`. */
+/** 🧭️ `@semio-tech/framework-2d-js` router: `bun ./📜️script.ts test`. */
 
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";

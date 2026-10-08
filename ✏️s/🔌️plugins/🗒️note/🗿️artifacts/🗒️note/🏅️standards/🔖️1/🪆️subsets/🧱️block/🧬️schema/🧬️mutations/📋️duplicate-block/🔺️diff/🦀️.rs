@@ -1,9 +1,8 @@
 //! 🔺️ Diff fragment yielded by `DuplicateBlock`. Error `target-missing` on an absent source,
 //! Fatal `duplicate-id` when the new block's id already exists.
 use super::DuplicateBlock;
-use crate::schema::diff::note_block_added_diff;
-use crate::NoteDiff;
-use crate::NoteSnapshot;
+use crate::schema::diff::NoteBlockRow;
+use crate::{NoteDiff, NoteSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &DuplicateBlock, base: &NoteSnapshot) -> protocol::MutationOutcome<NoteDiff> {
@@ -14,6 +13,6 @@ pub fn diff(payload: &DuplicateBlock, base: &NoteSnapshot) -> protocol::Mutation
     if crate::schema::find_block(&base.blocks, new_id).is_some() {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A block with id \"{}\" already exists.", new_id), [new_id.to_string()]);
     }
-    protocol::MutationOutcome::new(note_block_added_diff(parent_id, Some(index + 1), (*payload.block).clone()))
+    protocol::MutationOutcome::new(NoteDiff::block_rows(vec![NoteBlockRow::Add { parent_id, index: index + 1, block: (*payload.block).clone() }]))
 }
 //#endregion 🔖️Diff

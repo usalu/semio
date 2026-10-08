@@ -11,24 +11,16 @@ start op
 # directly-observed `print_op()` shape for every variant -- not invented:
 #   set-version major=1 minor=4
 #   insert-vlr index=1 vlr=[<hex>,200,<hex>,<hex>]
-#   set-snapshot snapshot=[<header-25-tuple>,[<vlr>,...],[<point>,...]]
-# `set-snapshot`'s payload is a genuinely unbounded, arbitrarily-nested composite (a whole
-# `LasHeader` positional 25-tuple plus two runtime-length `vlrs`/`points` lists) -- modeled
-# honestly as `REST` (M1's raw-span terminal, reads the ORIGINAL source text to EOF past whatever
-# the shared lexer already fragmented, so it correctly swallows arbitrarily-nested `[`/`,` content
-# verbatim), the same honest-boundary treatment zip's own `set-snapshot`/`add-entry` variants use
-# for their own nested-block payloads. Every OTHER variant (13 of 14, every field a plain scalar or
-# one bounded fixed-shape record) is modeled precisely, field-for-field, token-for-token below.
+# Every variant (every field a plain scalar or one bounded fixed-shape record) is modeled precisely,
+# field-for-field, token-for-token below.
 
-op = set-snapshot | patch-snapshot | set-version | set-system-identifier | set-software-info | set-creation-date | set-scale-and-offset | set-bounds | set-points-by-return | insert-vlr | remove-vlr | set-vlr-data | insert-point | remove-point | set-point
+op = set-version | set-system-identifier | set-software-info | set-creation-date | set-scale-and-offset | set-bounds | set-points-by-return | insert-vlr | remove-vlr | set-vlr-data | insert-point | remove-point | set-point
 
 # `f64::to_string()` prints a whole value like `100.0` as `100` (no decimal point) -- both lex
 # through the shared lexer, `FLOAT` for a value with a `.`/exponent, `INT` otherwise.
 number = FLOAT | INT
 
 # Genuinely unbounded nested-record payload (`snapshot=[ ... ]`) -- see module doc comment.
-patch-snapshot = "patch-snapshot" "patch" "=" hex
-set-snapshot = "set-snapshot" REST
 
 set-version = "set-version" "major" "=" INT "minor" "=" INT
 

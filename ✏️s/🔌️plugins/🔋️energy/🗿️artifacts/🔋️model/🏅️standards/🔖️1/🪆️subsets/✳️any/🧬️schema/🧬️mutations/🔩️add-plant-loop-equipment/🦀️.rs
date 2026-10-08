@@ -14,11 +14,12 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 pub struct AddPlantLoopEquipment {
     pub id: crate::model::EntityId,
     pub equipment_id: crate::model::EntityId,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_plant_loop_equipment(id: crate::model::EntityId, equipment_id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::AddPlantLoopEquipment(AddPlantLoopEquipment { id, equipment_id })
+pub fn add_plant_loop_equipment(id: crate::model::EntityId, equipment_id: crate::model::EntityId, index: Option<u32>) -> EnergyModelMutation {
+    EnergyModelMutation::AddPlantLoopEquipment(AddPlantLoopEquipment { id, equipment_id, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddPlantLoopEquipment {

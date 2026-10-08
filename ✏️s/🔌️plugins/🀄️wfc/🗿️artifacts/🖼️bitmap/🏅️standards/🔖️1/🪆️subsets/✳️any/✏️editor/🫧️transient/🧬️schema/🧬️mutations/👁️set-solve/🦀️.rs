@@ -1,6 +1,6 @@
 //! 👁️ Replaces the app-local solve cache shared by the bitmap editor's output window.
 
-use super::{BitmapTransient, BitmapTransientMutation};
+use super::{BitmapTransient, BitmapTransientDiff, BitmapTransientMutation, BitmapTransientText};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "set-solve")]
@@ -15,8 +15,17 @@ pub struct SetSolve {
 
 impl protocol::MutationKind<BitmapTransient, BitmapTransientMutation> for SetSolve {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "solve", kind: "set-solve", record: "SetSolve" };
-    fn diff(&self, _base: &BitmapTransient) -> protocol::MutationOutcome<BitmapTransient> {
-        protocol::MutationOutcome::new(BitmapTransient { output_pixels: self.output_pixels.clone(), contradiction: self.contradiction, output_width: self.output_width, output_height: self.output_height })
+    fn diff(&self, base: &BitmapTransient) -> protocol::MutationOutcome<BitmapTransientDiff> {
+        let diff = BitmapTransientDiff {
+            output_pixels: (base.output_pixels != self.output_pixels).then(|| BitmapTransientText { value: self.output_pixels.clone() }),
+            contradiction: (base.contradiction != self.contradiction).then_some(self.contradiction),
+            output_width: (base.output_width != self.output_width).then_some(self.output_width),
+            output_height: (base.output_height != self.output_height).then_some(self.output_height),
+        };
+        if protocol::DiffAlgebra::<BitmapTransient>::is_empty(&diff) {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The solve already holds that result.");
+        }
+        protocol::MutationOutcome::new(diff)
     }
     fn inverse(&self, base: &BitmapTransient) -> Result<Vec<BitmapTransientMutation>, semio_framework_value::ValueError> {
     Ok((|| {

@@ -4,9 +4,9 @@
 
 use crate::editor::bcf::modes::edit;
 use crate::editor::bcf::modes::edit::windows::main;
-use crate::standards::v2_1::subsets::any::schema::mutations::{patch_snapshot::PatchSnapshot,set_snapshot::SetSnapshot,set_topic_markup::SetTopicMarkup,BcfMutation};
+use crate::standards::v2_1::subsets::any::schema::mutations::{insert_topic::InsertTopic,remove_topic::RemoveTopic,set_topic_markup::SetTopicMarkup,BcfMutation};
 
-use crate::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot;
+use crate::standards::v2_1::subsets::any::schema::snapshot::{BcfSnapshot, BcfTopic};
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -155,7 +155,8 @@ fn bcf_emit_at_revision(command: &BcfAnyEditCommand, snapshot: &BcfSnapshot, can
                     if topic.guid == *value {
                         return Ok(Emit::default());
                     }
-                    BcfMutation::PatchSnapshot(PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: format!("/topics/{row}/guid"), value: semio_framework_value::DslValue::String(value.clone()) } })
+                    let renamed = BcfTopic { guid: value.clone(), ..topic.clone() };
+                    return Ok(Emit::mutations(vec![BcfMutation::RemoveTopic(RemoveTopic { guid: topic.guid.clone() }), BcfMutation::InsertTopic(InsertTopic { topic: renamed, index: Some(*row as usize) })]));
                 }
                 1 => BcfMutation::SetTopicMarkup(SetTopicMarkup { guid: topic.guid.clone(), title: Some(value.clone()), description: None, status: None, priority: None, labels: None, creation_date: None, creation_author: None }),
                 2 => BcfMutation::SetTopicMarkup(SetTopicMarkup { guid: topic.guid.clone(), title: None, description: None, status: Some(value.clone()), priority: None, labels: None, creation_date: None, creation_author: None }),
@@ -425,7 +426,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for BcfAnyE
     }
 
     fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| BcfMutation::PatchSnapshot(PatchSnapshot { patch }), Some(|snapshot| BcfMutation::SetSnapshot(SetSnapshot { snapshot })))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::v2_1::subsets::any::schema::mutations::net_mutations)
     }
 }
 //#endregion 🔖️Editor

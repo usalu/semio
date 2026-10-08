@@ -1,6 +1,6 @@
 dialect grammar stdio.mp4.diff
 root = document
-; op codecs (📸️set-snapshot and every real mutation variant) are the handcrafted OpText/OpBinary
+; op codecs (every real mutation variant) are the handcrafted OpText/OpBinary
 ; Shared structured DslRecord text form used by DiffCodec::print_diff/parse_diff.
 document = hex_byte (WS hex_byte)*
 hex_byte = HEXDIG HEXDIG

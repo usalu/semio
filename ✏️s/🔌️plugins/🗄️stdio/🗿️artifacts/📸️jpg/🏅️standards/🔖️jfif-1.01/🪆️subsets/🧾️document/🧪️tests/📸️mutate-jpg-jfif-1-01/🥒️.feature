@@ -2,94 +2,11 @@
 @oracle-image-jpeg-jfif-1-01-mutate-reader
 @comparison-semantic-jpg-mutate-v1
 @mutations-jpg-jfif-1-01-document
-Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
-  The input is a real 483 KB, 2275x2560, 500 DPI JFIF 1.01 scan of a floor plan
-  (abbau-aufbau-masterarbeit-grundriss.jpg) — not a synthetic fixture — sourced from
-  🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets/ and already copied into this
-  artifact's own 🧫️fixtures/. Every scenario copies it into the case work directory before touching
-  it; the committed fixture is never written to.
-
-  The @id-mutate, @id-inverse and @id-identity-round-trip scenarios are laws the reference asserts on
-  its own, before any oracle/subject comparison: it applies the row's kind and requires the result to
-  be distinguishable from the unmutated document; it applies its own computed inverse on top of that
-  real forward result and requires the projection back; and the round trip additionally requires the
-  re-encoded bytes not to be bit-identical to the input. The slack every numeric comparison runs
-  under is the profile's, not the handler's.
-
-  The observability and inverse laws are stated against the document as an unchanged round trip leaves it —
-  ONE decode and re-encode by the reference — and not against the committed bytes. JPEG is lossy and
-  both codecs regenerate their quantization tables from re_encode_quality rather than preserving the
-  scanner's, so a single decode/re-encode already moves the raster and replaces the DQT. Measuring
-  against the untouched scan would fold that unavoidable normalization into every scenario, making
-  every kind look observable and every inverse look broken, both for the same reason and neither
-  about the mutation.
-
-  The slack exists because JPEG is lossy. Measured on this fixture (2275x2560 = 5 824 000 pixels),
-  one decode/re-encode at quality 90 moves at most 2018 pixels between luma buckets, a pass through
-  quality 50 at most 10 014 and through quality 5 at most 55 570 — all far inside it. Exact
-  per-bucket equality is a law JPEG does not have and is deliberately not asserted.
-
-  Every Examples `params` cell is exactly the leaf's wire payload — its `payload_value()`, camelCase,
-  no aggregate tag — decoded by the subject through the derive-generated `from_payload_value` and
-  read by the reference by the same field names; a replaced table, the removed table's key and an
-  inserted segment are stated in full as the vocabulary declares them. `replace-pixels` carries the
-  whole replacement RGBA raster, which for this scan would be 23.3 million numbers in one cell, so it
-  runs in its own outlines on the committed 32x24 document
-  (`shared://🔲️replace-pixels-applied/⬅️before.jpg`). That raster has 768 pixels, fewer than the
-  slack sized for the scan, so the slack would excuse any change on it: the raster outlines state
-  their observability law EXACTLY — the replacement must move the histogram at all — while the
-  inverse and the oracle/subject comparison keep the profile's slack.
-
-  Walking the fixture's own marker chain gives APP0 (JFIF, version 1.1, density unit 1 = dots per
-  inch, 500x500), APP1 carrying a real 31,385-byte Adobe XMP packet, two DQT, SOF0, four DHT and
-  SOS. That real APP1 is what remove-other-segment removes and what insert-other-segment is inserted
-  in front of; neither row addresses something the file does not have.
-
-  This subset's own codec (../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/🦀️component.rs) is a
-  complete from-scratch baseline JPEG codec, not a wrapper over the `image` reference crate, and it
-  deliberately regenerates fresh Annex K DQT/DHT tables scaled by `re_encode_quality` on every encode
-  rather than preserving whatever tables a mutation set on the decoded snapshot, and it never emits a
-  DRI/restart marker at all.
-
-  ⚠️ Consequence: replace-quant-table, remove-quant-table, replace-huffman-table, remove-huffman-table and
-  change-restart-interval mutate only the in-memory typed snapshot — none of the five is observable in
-  the re-serialized bytes, by design, not by test gap. They are the ONLY five kinds named in the
-  adapter's observability exemption list, and every other kind is required to move the compared
-  projection or its scenario fails.
-
-  change-jfif-header, insert-other-segment and remove-other-segment ARE written to real bytes — a real
-  JFIF APP0 built from the snapshot's own fields, and the retained segments echoed verbatim right
-  after it — so they are compared as real mutations here rather than reduced to "the file still
-  decodes". The oracle reaches the density unit and both density values through `image`'s own
-  `set_pixel_density`; the two JFIF version bytes (hard-coded to 1.2 in that crate's
-  `build_jfif_header`) and the APPn/COM segments (no API at all) are written back at their fixed
-  T.871 positions afterwards, which is stated in the oracle module against the crate's source.
-
-  The projection therefore has two halves. The LOSSY half is an 8-bucket luma histogram, never raw
-  samples: this platform's comparison tolerance is per-number and absolute with no aggregate mode, so
-  an unbounded sample array could never be compared honestly. It is the only numeric member, and the
-  only one the slack is for.
-
-  ⚠️ Every EXACT member — the dimensions, the JFIF version, the density unit and both densities, each
-  retained segment's marker/length/payload digest, and each DQT payload digest — is spelled as a
-  STRING on purpose. The comparison engine applies the profile's tolerance to every NUMBER in the
-  projection and compares strings by equality, so a numeric member cannot carry an exact claim at
-  all: reported as numbers under a 400 000 slack, this real 2275x2560 scan and a 3x2 stub compared
-  EQUAL, and so did every JFIF header field.
-
-  quantTables is the DQT payload each side actually wrote. It is a shared, encoder-independent
-  witness of the re-encode quality — `image`'s new_with_quality and this subset's own scale_quality
-  implement the same IJG mapping over the same Annex K.1 base tables and emit them through the same
-  zigzag — and it is what makes change-re-encode-quality observable at all, since a quality change is
-  otherwise entirely inside the histogram's slack. It is the one member the identity round trip
-  excludes from its own comparison, because BOTH codecs regenerate the DQT rather than carrying the
-  source's forward, so the committed scan's own tables are gone by construction.
-
-  The snapshot-editing kinds production dispatch offers are measured here too: `set-snapshot`
-  installs this subset's own committed 1x1 swatch (its `set-snapshot` wire witness) and `patch-snapshot`
-  sets the JFIF horizontal density through the editor's compact path-addressed patch. The oracle reads
-  both through its own model; a snapshot's quantization and Huffman tables, SOF marker and restart
-  interval are regenerated by both encoders, exactly as for the table kinds above.
+Feature: Apply semantic JPEG image intents through independent native reopen
+  Raster samples, JFIF metadata, thumbnails and ordered APP/COM content belong to the image.
+  Native process, entropy tables, restart intervals and export quality belong to I/O.
+  The independent image reader compares exact metadata and a bounded lossy luma histogram.
+  Every authored intent must change its semantic projection; no intent receives an exemption.
 
   @id-mutate
   @level-exhaustive
@@ -104,16 +21,9 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
     Examples:
       | id | params |
       | change-jfif-header | {"version":[1,2],"densityUnits":"pixelsPerCm","xDensity":300,"yDensity":300,"thumbnail":null} |
-      | replace-quant-table | {"table":{"id":0,"precision":0,"values":[12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12]}} |
-      | remove-quant-table | {"id":1} |
-      | replace-huffman-table | {"table":{"id":0,"class":"dc","bits":[9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9],"values":[9,10]}} |
-      | remove-huffman-table | {"key":{"class":"ac","id":0}} |
-      | change-restart-interval | {"restartInterval":16} |
       | insert-other-segment | {"index":0,"segment":{"marker":226,"data":[7,8]}} |
       | remove-other-segment | {"index":0} |
-      | {"quality":50} |
-      | set-snapshot | {"snapshot":{"arithmetic":false,"height":1,"huffmanTables":[],"jfifDensityUnits":"aspect","jfifVersion":[1,1],"jfifXDensity":1,"jfifYDensity":1,"otherSegments":[{"data":[83,119,97,116,99,104],"marker":254}],"pixels":[18,52,86,255],"quantTables":[],"schema":"stdio.jpg","sofMarker":0,"width":1}} |
-      | patch-snapshot | {"patch":{"operation":"set","path":"/jfifXDensity","value":300}} |
+      | replace-image | {"image":{"width":2,"height":1,"pixels":[10,20,30,255,40,50,60,255],"jfifVersion":[1,2],"jfifDensityUnits":"pixelsPerCm","jfifXDensity":118,"jfifYDensity":119,"jfifThumbnail":{"width":1,"height":1,"rgbData":[11,12,13]},"otherSegments":[{"marker":225,"data":[7,8]},{"marker":254,"data":[9]},{"marker":225,"data":[10]}]}} |
 
   @id-mutate
   @level-exhaustive
@@ -142,16 +52,9 @@ Feature: Apply every typed JFIF 1.01 mutation to a real-world scanned document
     Examples:
       | id | params |
       | change-jfif-header | {"version":[1,2],"densityUnits":"pixelsPerCm","xDensity":300,"yDensity":300,"thumbnail":null} |
-      | replace-quant-table | {"table":{"id":0,"precision":0,"values":[12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12]}} |
-      | remove-quant-table | {"id":1} |
-      | replace-huffman-table | {"table":{"id":0,"class":"dc","bits":[9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9],"values":[9,10]}} |
-      | remove-huffman-table | {"key":{"class":"ac","id":0}} |
-      | change-restart-interval | {"restartInterval":16} |
       | insert-other-segment | {"index":0,"segment":{"marker":226,"data":[7,8]}} |
       | remove-other-segment | {"index":0} |
-      | {"quality":50} |
-      | set-snapshot | {"snapshot":{"arithmetic":false,"height":1,"huffmanTables":[],"jfifDensityUnits":"aspect","jfifVersion":[1,1],"jfifXDensity":1,"jfifYDensity":1,"otherSegments":[{"data":[83,119,97,116,99,104],"marker":254}],"pixels":[18,52,86,255],"quantTables":[],"schema":"stdio.jpg","sofMarker":0,"width":1}} |
-      | patch-snapshot | {"patch":{"operation":"set","path":"/jfifXDensity","value":300}} |
+      | replace-image | {"image":{"width":2,"height":1,"pixels":[10,20,30,255,40,50,60,255],"jfifVersion":[1,2],"jfifDensityUnits":"pixelsPerCm","jfifXDensity":118,"jfifYDensity":119,"jfifThumbnail":{"width":1,"height":1,"rgbData":[11,12,13]},"otherSegments":[{"marker":225,"data":[7,8]},{"marker":254,"data":[9]},{"marker":225,"data":[10]}]}} |
 
   @id-inverse
   @level-exhaustive

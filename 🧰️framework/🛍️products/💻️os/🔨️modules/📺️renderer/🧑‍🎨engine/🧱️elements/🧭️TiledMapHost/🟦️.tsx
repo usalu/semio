@@ -29,7 +29,7 @@ import {
 } from "@semio-tech/ui-react";
 import { GestureRecognizer, applyPinchToCamera, type ComponentSceneHostProps, type MergeMode } from "@semio-tech/framework";
 import { type MapWasmSession, createMapSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
-import { EASED_SURFACE_TRAILING_WINDOW_MS, createDemandFrameScheduler } from "@semio-tech/infinite-canvas-react-renderer";
+import { EASED_SURFACE_TRAILING_WINDOW_MS, createDemandFrameScheduler } from "@semio-tech/canvas-react-renderer";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // 🐢️ Direct element-to-element imports — `World3dHost`/`🟦️Interpreter` already landed in a prior batch.
 import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";

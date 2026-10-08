@@ -12,27 +12,44 @@
   "inspectionLevel": null,
   "kFiDeclared": null,
   "betaComputed": null,
-  "permanents": null,
-  "variables": [
-    {
-      "id": "Q-office",
-      "category": "office",
-      "qk": 40000.0
-    },
-    {
-      "id": "Q-wind",
-      "category": "wind",
-      "qk": 20000.0
-    },
-    {
-      "id": "Q-snow",
-      "category": "snow",
-      "qk": 15000.0
-    }
-  ],
-  "accidentals": null,
-  "seismics": null,
-  "members": null,
-  "bridgeSls": null,
-  "effects": null
+  "permanents": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "variables": {
+    "removed": [],
+    "added": [
+      {
+        "after": "Q-wind",
+        "row": {
+          "id": "Q-snow",
+          "category": "snow",
+          "qk": 15000.0
+        }
+      }
+    ],
+    "modified": []
+  },
+  "accidentals": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "seismics": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "bridgeSls": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "effects": []
 }

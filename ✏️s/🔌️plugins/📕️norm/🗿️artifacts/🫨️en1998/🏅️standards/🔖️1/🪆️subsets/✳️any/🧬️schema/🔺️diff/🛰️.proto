@@ -2,130 +2,305 @@
 syntax = "proto3";
 package semio.s.norm.en1998.diff;
 
-enum En1998RowOp {
-  EN1998_ROW_OP_INSERT = 0;
-  EN1998_ROW_OP_REMOVE = 1;
-  EN1998_ROW_OP_REPLACE = 2;
-  EN1998_ROW_OP_PATCH = 3;
+message En1998SystemAddition {
+  optional string after = 1;
+  bytes row = 2;
 }
 
-message En1998BuildingEdit {
-  En1998RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-  optional En1998BuildingPatch patch = 5;
+message En1998SystemModification {
+  string key = 1;
+  En1998SystemPatch patch = 2;
 }
 
-message En1998BridgeEdit {
-  En1998RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-  optional En1998BridgePatch patch = 5;
-}
-
-message En1998AssessmentEdit {
-  En1998RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-  optional En1998AssessmentPatch patch = 5;
-}
-
-message En1998SiloEdit {
-  En1998RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-}
-
-message En1998TankEdit {
-  En1998RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-}
-
-message En1998FoundationEdit {
-  En1998RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-}
-
-message En1998RetainingWallEdit {
-  En1998RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-}
-
-message En1998TowerEdit {
-  En1998RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-  optional En1998TowerPatch patch = 5;
-}
-
-message En1998SystemEdit {
-  En1998RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-  optional En1998SystemPatch patch = 5;
-}
-
-message En1998StoreyEdit {
-  En1998RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-  optional En1998StoreyPatch patch = 5;
-}
-
-message En1998MemberEdit {
-  En1998RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-  optional En1998MemberPatch patch = 5;
-}
-
-message En1998BuildingPatch {
-  optional bool plan_regular = 1;
-  optional bool elevation_regular = 2;
-  optional double masonry_wall_area_ratio = 3;
-  repeated En1998SystemEdit systems = 4;
-  repeated En1998StoreyEdit storeys = 5;
-  repeated En1998MemberEdit members = 6;
-}
-
-message En1998BridgePatch {
-  optional double v_rd_n = 1;
-}
-
-message En1998AssessmentPatch {
-  optional double r_k_n = 1;
-}
-
-message En1998TowerPatch {
-  optional double m_rd_nm = 1;
+message En1998SystemDelta {
+  repeated string removed = 1;
+  repeated En1998SystemAddition added = 2;
+  repeated En1998SystemModification modified = 3;
 }
 
 message En1998SystemPatch {
-  optional double base_shear_resistance_n = 1;
+  optional string direction = 1;
+  optional string system_type = 2;
+  optional string material = 3;
+  optional string ductility_class = 4;
+  optional double q0 = 5;
+  optional double alpha_u_over_alpha_1 = 6;
+  optional double k_w = 7;
+  optional double base_shear_resistance_n = 8;
+}
+
+message En1998StoreyAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1998StoreyModification {
+  string key = 1;
+  En1998StoreyPatch patch = 2;
+}
+
+message En1998StoreyDelta {
+  repeated string removed = 1;
+  repeated En1998StoreyAddition added = 2;
+  repeated En1998StoreyModification modified = 3;
 }
 
 message En1998StoreyPatch {
-  optional double permanent_gk_n = 1;
-  optional double stiffness_x = 2;
-  optional double drift_x_m = 3;
+  optional double height_m = 1;
+  optional double permanent_gk_n = 2;
+  optional bool correlated_occupancy = 3;
+  optional bytes variables = 4;
+  optional double stiffness_x = 5;
+  optional double stiffness_y = 6;
+  optional double centre_of_mass_x_m = 7;
+  optional double centre_of_mass_y_m = 8;
+  optional double centre_of_stiffness_x_m = 9;
+  optional double centre_of_stiffness_y_m = 10;
+  optional double drift_x_m = 11;
+  optional double drift_y_m = 12;
+  optional double shear_resistance_n = 13;
+}
+
+message En1998MemberAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1998MemberModification {
+  string key = 1;
+  En1998MemberPatch patch = 2;
+}
+
+message En1998MemberDelta {
+  repeated string removed = 1;
+  repeated En1998MemberAddition added = 2;
+  repeated En1998MemberModification modified = 3;
 }
 
 message En1998MemberPatch {
-  optional bool detailing_compatible_with_q = 1;
+  optional string material = 1;
+  optional string role = 2;
+  optional bool detailing_compatible_with_q = 3;
+  optional double min_dimension_m = 4;
+  optional double rho = 5;
+  optional double rho_prime = 6;
+  optional double omega_wd = 7;
+  optional uint32 steel_section_class = 8;
+}
+
+message En1998BuildingAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1998BuildingModification {
+  string key = 1;
+  En1998BuildingPatch patch = 2;
+}
+
+message En1998BuildingDelta {
+  repeated string removed = 1;
+  repeated En1998BuildingAddition added = 2;
+  repeated En1998BuildingModification modified = 3;
+}
+
+message En1998BuildingPatch {
+  optional string name = 1;
+  optional double plan_width_m = 2;
+  optional double plan_length_m = 3;
+  En1998SystemDelta systems = 4;
+  En1998StoreyDelta storeys = 5;
+  En1998MemberDelta members = 6;
+  optional bool plan_regular = 7;
+  optional bool elevation_regular = 8;
+  optional string t1_method = 9;
+  optional double t1_given_s = 10;
+  optional double ct = 11;
+  optional string drift_limit_class = 12;
+  optional double nu = 13;
+  optional bool multiple_resisting_systems = 14;
+  optional bool claims_simple_masonry = 15;
+  optional double masonry_wall_area_ratio = 16;
+  optional double accidental_eccentricity_ratio = 17;
+}
+
+message En1998BridgeAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1998BridgeModification {
+  string key = 1;
+  En1998BridgePatch patch = 2;
+}
+
+message En1998BridgeDelta {
+  repeated string removed = 1;
+  repeated En1998BridgeAddition added = 2;
+  repeated En1998BridgeModification modified = 3;
+}
+
+message En1998BridgePatch {
+  optional double period_ratio = 1;
+  optional double fundamental_period_s = 2;
+  optional double v_rd_n = 3;
+  optional double bearing_d_rd_m = 4;
+  optional double permanent_gk_n = 5;
+  optional bool correlated_occupancy = 6;
+  optional bytes variables = 7;
+}
+
+message En1998AssessmentAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1998AssessmentModification {
+  string key = 1;
+  En1998AssessmentPatch patch = 2;
+}
+
+message En1998AssessmentDelta {
+  repeated string removed = 1;
+  repeated En1998AssessmentAddition added = 2;
+  repeated En1998AssessmentModification modified = 3;
+}
+
+message En1998AssessmentPatch {
+  optional string knowledge_level = 1;
+  optional string limit_state = 2;
+  optional string supported_building_id = 3;
+  optional double r_k_n = 4;
+  optional double gamma_el = 5;
+}
+
+message En1998SiloAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1998SiloModification {
+  string key = 1;
+  En1998SiloPatch patch = 2;
+}
+
+message En1998SiloDelta {
+  repeated string removed = 1;
+  repeated En1998SiloAddition added = 2;
+  repeated En1998SiloModification modified = 3;
+}
+
+message En1998SiloPatch {
+  optional double height_m = 1;
+  optional double radius_m = 2;
+  optional double permanent_gk_n = 3;
+  optional double content_qk_n = 4;
+  optional string content_category = 5;
+  optional double filling_ratio = 6;
+  optional double n_rd_n = 7;
+  optional double v_rd_n = 8;
+  optional double q_nominal = 9;
+}
+
+message En1998TankAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1998TankModification {
+  string key = 1;
+  En1998TankPatch patch = 2;
+}
+
+message En1998TankDelta {
+  repeated string removed = 1;
+  repeated En1998TankAddition added = 2;
+  repeated En1998TankModification modified = 3;
+}
+
+message En1998TankPatch {
+  optional double height_m = 1;
+  optional double radius_m = 2;
+  optional double permanent_gk_n = 3;
+  optional double content_qk_n = 4;
+  optional string content_category = 5;
+  optional double filling_ratio = 6;
+  optional double v_rd_n = 7;
+}
+
+message En1998FoundationAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1998FoundationModification {
+  string key = 1;
+  En1998FoundationPatch patch = 2;
+}
+
+message En1998FoundationDelta {
+  repeated string removed = 1;
+  repeated En1998FoundationAddition added = 2;
+  repeated En1998FoundationModification modified = 3;
+}
+
+message En1998FoundationPatch {
+  optional string supported_building_id = 1;
+  optional double area_m2 = 2;
+  optional double p_rd_pa = 3;
+  optional double h_rd_n = 4;
+  optional double k_foundation = 5;
+  optional double k_soil = 6;
+}
+
+message En1998RetainingWallAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1998RetainingWallModification {
+  string key = 1;
+  En1998RetainingWallPatch patch = 2;
+}
+
+message En1998RetainingWallDelta {
+  repeated string removed = 1;
+  repeated En1998RetainingWallAddition added = 2;
+  repeated En1998RetainingWallModification modified = 3;
+}
+
+message En1998RetainingWallPatch {
+  optional double height_m = 1;
+  optional double phi_deg = 2;
+  optional double soil_gamma = 3;
+  optional double r = 4;
+  optional double h_rd_n_per_m = 5;
+}
+
+message En1998TowerAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1998TowerModification {
+  string key = 1;
+  En1998TowerPatch patch = 2;
+}
+
+message En1998TowerDelta {
+  repeated string removed = 1;
+  repeated En1998TowerAddition added = 2;
+  repeated En1998TowerModification modified = 3;
+}
+
+message En1998TowerPatch {
+  optional double height_m = 1;
+  optional double m_rd_nm = 2;
+  optional bool is_chimney = 3;
+  optional double q_nominal = 4;
+  optional double permanent_gk_n = 5;
+  optional bool correlated_occupancy = 6;
+  optional bytes variables = 7;
 }
 
 message En1998Diff {
@@ -134,19 +309,19 @@ message En1998Diff {
   // @state artifact
   optional bytes site = 2;
   // @state artifact
-  repeated En1998BuildingEdit buildings = 3;
+  En1998BuildingDelta buildings = 3;
   // @state artifact
-  repeated En1998BridgeEdit bridges = 4;
+  En1998BridgeDelta bridges = 4;
   // @state artifact
-  repeated En1998AssessmentEdit assessments = 5;
+  En1998AssessmentDelta assessments = 5;
   // @state artifact
-  repeated En1998SiloEdit silos = 6;
+  En1998SiloDelta silos = 6;
   // @state artifact
-  repeated En1998TankEdit tanks = 7;
+  En1998TankDelta tanks = 7;
   // @state artifact
-  repeated En1998FoundationEdit foundations = 8;
+  En1998FoundationDelta foundations = 8;
   // @state artifact
-  repeated En1998RetainingWallEdit retaining_walls = 9;
+  En1998RetainingWallDelta retaining_walls = 9;
   // @state artifact
-  repeated En1998TowerEdit towers = 10;
+  En1998TowerDelta towers = 10;
 }

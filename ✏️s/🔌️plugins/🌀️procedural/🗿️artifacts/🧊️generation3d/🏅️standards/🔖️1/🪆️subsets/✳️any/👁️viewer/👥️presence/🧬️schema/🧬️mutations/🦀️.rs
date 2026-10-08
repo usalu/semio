@@ -3,7 +3,7 @@
 //! Two authored leaf directories, one per shareable live facet. Both are immediate children of this
 //! aggregate's own mutation root, so `dsl::Mutations`'s leaf-ownership contract holds.
 
-use super::Generation3dViewPresence;
+use super::{Generation3dViewPresence, Generation3dViewPresencePatch};
 use crate::viewer::generation3d::config::Generation3dViewCamera;
 
 #[path = "📷️set-preview/🦀️.rs"]
@@ -15,7 +15,7 @@ pub use set_preview_camera::SetPreviewCamera;
 pub use set_show_mode::SetShowMode;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
-#[mutations(snapshot = Generation3dViewPresence, diff = Generation3dViewPresence, schema = "generation3dview.presence")]
+#[mutations(snapshot = Generation3dViewPresence, diff = Generation3dViewPresencePatch, schema = "generation3dview.presence")]
 pub enum Generation3dViewPresenceMutation {
     #[dsl(key = "preview-camera")]
     SetPreviewCamera(SetPreviewCamera),

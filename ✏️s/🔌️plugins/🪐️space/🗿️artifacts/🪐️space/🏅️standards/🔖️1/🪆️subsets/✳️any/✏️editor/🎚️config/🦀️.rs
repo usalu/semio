@@ -133,62 +133,417 @@ impl store::ArtifactPack for SpaceIndexConfig {
 }
 //#endregion 🔖️ArtifactCodec
 
-store::impl_whole_record_config!(SpaceIndexConfig);
+impl store::ConfigRecord for SpaceIndexConfig {}
+
+/// 📇️ The directory-owned slice of the config (visibility, members, indexed documents): what a directory fold replaces as one entity.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(rename_all = "camelCase", default)]
+pub struct SpaceIndexDirectoryProjection {
+    pub visibility: String,
+    #[dsl(table)]
+    pub members: Vec<SpaceIndexMember>,
+    #[dsl(table)]
+    pub indexed_artifacts: Vec<SpaceArtifactRow>,
+}
+
+/// 🩹 Patch of one presence row.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct SpaceIndexPresencePatch {
+    pub artifact_id: String,
+    pub actors_csv: Option<String>,
+}
+
+/// 🧩 Artifact-keyed delta of the live presence rows.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct SpaceIndexPresenceDelta {
+    pub added: Vec<SpaceIndexArtifactPresence>,
+    pub removed: Vec<String>,
+    pub patched: Vec<SpaceIndexPresencePatch>,
+    pub reordered: Option<Vec<String>>,
+}
+
+/// 🔺️ Sparse field delta over [`SpaceIndexConfig`]; the directory slots are whole-entity replacements (their kind replaces exactly that
+/// slice), the presence slot is a keyed row delta.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct SpaceIndexConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub visibility: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub members: Option<Vec<SpaceIndexMember>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub indexed_artifacts: Option<Vec<SpaceArtifactRow>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub presence: Option<SpaceIndexPresenceDelta>,
+}
+
+//#region 🧺️KeyedDelta
+/// 🧺️ Id-keyed ordered-collection delta (`added`/`removed`/`patched`/`reordered`) and its algebra: apply, composition (create∘delete
+/// cancels, delete∘create replaces, patch∘patch composes, patch∘create folds), negative delta and state delta.
+pub trait KeyedDelta: Sized {
+    type Row: Clone;
+    type Patch: Clone;
+    fn added(&self) -> &[Self::Row];
+    fn removed(&self) -> &[String];
+    fn patched(&self) -> &[Self::Patch];
+    fn reordered(&self) -> Option<&[String]>;
+    fn assemble(added: Vec<Self::Row>, removed: Vec<String>, patched: Vec<Self::Patch>, reordered: Option<Vec<String>>) -> Self;
+    fn row_key(row: &Self::Row) -> &str;
+    fn patch_key(patch: &Self::Patch) -> &str;
+    fn patch_fold(patch: &Self::Patch, row: &mut Self::Row) -> Result<(), protocol::MutationApplyError>;
+    fn patch_compose(first: &Self::Patch, later: &Self::Patch) -> Self::Patch;
+    fn patch_inverse(patch: &Self::Patch, base: &Self::Row) -> Self::Patch;
+    fn patch_between(base: &Self::Row, other: &Self::Row) -> Option<Self::Patch>;
+    fn patch_is_empty(patch: &Self::Patch) -> bool;
+}
+
+fn keyed_error(code: &str, message: &str, at: [&str; 2]) -> protocol::MutationApplyError {
+    protocol::MutationApplyError::new(code, message).at(at)
+}
+
+pub fn keyed_apply<D: KeyedDelta>(rows: &[D::Row], delta: &D) -> Result<Vec<D::Row>, protocol::MutationApplyError> {
+    let key = D::row_key;
+    for (index, id) in delta.removed().iter().enumerate() {
+        if delta.removed()[..index].contains(id) {
+            return Err(keyed_error("mutation.apply.duplicate-target", "row is removed more than once", ["removed", &index.to_string()]));
+        }
+        if !rows.iter().any(|row| key(row) == id) {
+            return Err(keyed_error("mutation.apply.missing-target", "removed row does not exist", ["removed", &index.to_string()]));
+        }
+    }
+    let mut next: Vec<D::Row> = rows.iter().filter(|row| !delta.removed().iter().any(|id| id == key(row))).cloned().collect();
+    for (index, row) in delta.added().iter().enumerate() {
+        if next.iter().any(|existing| key(existing) == key(row)) {
+            return Err(keyed_error("mutation.apply.duplicate-target", "added row identity already exists", ["added", &index.to_string()]));
+        }
+        next.push(row.clone());
+    }
+    for (index, patch) in delta.patched().iter().enumerate() {
+        if delta.patched()[..index].iter().any(|earlier| D::patch_key(earlier) == D::patch_key(patch)) {
+            return Err(keyed_error("mutation.apply.duplicate-target", "row is patched more than once", ["patched", &index.to_string()]));
+        }
+        let row = next.iter_mut().find(|row| key(row) == D::patch_key(patch)).ok_or_else(|| keyed_error("mutation.apply.missing-target", "patched row does not exist", ["patched", &index.to_string()]))?;
+        D::patch_fold(patch, row).map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
+    }
+    let Some(order) = delta.reordered() else { return Ok(next) };
+    if order.len() != next.len() || order.iter().enumerate().any(|(index, id)| order[..index].contains(id) || !next.iter().any(|row| key(row) == id)) {
+        return Err(protocol::MutationApplyError::new("mutation.apply.invalid-order", "reorder must be a complete unique permutation").at(["reordered".to_string()]));
+    }
+    Ok(order.iter().filter_map(|id| next.iter().find(|row| key(row) == id).cloned()).collect())
+}
+
+fn canonical<D: KeyedDelta>(mut added: Vec<D::Row>, mut removed: Vec<String>, mut patched: Vec<D::Patch>, reordered: Option<Vec<String>>) -> D {
+    if let Some(order) = &reordered {
+        added.sort_by_key(|row| order.iter().position(|id| id == D::row_key(row)).unwrap_or(usize::MAX));
+    }
+    let reordered = reordered.filter(|order| {
+        let tail = added.len();
+        !(order.len() <= tail + 1 && order.len() >= tail && order[order.len() - tail..].iter().map(String::as_str).eq(added.iter().map(D::row_key)))
+    });
+    removed.sort();
+    removed.dedup();
+    patched.retain(|patch| !D::patch_is_empty(patch));
+    patched.sort_by(|left, right| D::patch_key(left).cmp(D::patch_key(right)));
+    D::assemble(added, removed, patched, reordered)
+}
+
+/// ➕️ Normal form of `first` then `later`: create∘delete cancels, delete∘create replaces, patch∘patch composes, patch∘create folds.
+pub fn keyed_absorb<D: KeyedDelta>(first: &D, later: &D) -> D {
+    let mut added: Vec<D::Row> = first.added().to_vec();
+    let mut removed: Vec<String> = first.removed().to_vec();
+    let mut patched: Vec<D::Patch> = Vec::new();
+    for patch in first.patched() {
+        match added.iter_mut().find(|row| D::row_key(row) == D::patch_key(patch)) {
+            Some(row) => {
+                let _ = D::patch_fold(patch, row);
+            }
+            None => patched.push(patch.clone()),
+        }
+    }
+    for id in later.removed() {
+        if let Some(position) = added.iter().position(|row| D::row_key(row) == id) {
+            added.remove(position);
+        } else {
+            patched.retain(|patch| D::patch_key(patch) != id);
+            if !removed.contains(id) {
+                removed.push(id.clone());
+            }
+        }
+    }
+    added.extend(later.added().iter().cloned());
+    for patch in later.patched() {
+        let key = D::patch_key(patch);
+        if let Some(row) = added.iter_mut().find(|row| D::row_key(row) == key) {
+            let _ = D::patch_fold(patch, row);
+        } else if let Some(existing) = patched.iter_mut().find(|existing| D::patch_key(existing) == key) {
+            *existing = D::patch_compose(existing, patch);
+        } else {
+            patched.push(patch.clone());
+        }
+    }
+    let reordered = match (later.reordered(), first.reordered()) {
+        (Some(order), _) => Some(order.to_vec()),
+        (None, Some(order)) => Some(order.iter().filter(|id| !later.removed().contains(id)).cloned().chain(later.added().iter().map(|row| D::row_key(row).to_string())).collect()),
+        (None, None) => None,
+    };
+    canonical::<D>(added, removed, patched, reordered)
+}
+
+fn ids_after<D: KeyedDelta>(base: &[String], delta: &D) -> Vec<String> {
+    match delta.reordered() {
+        Some(order) => order.to_vec(),
+        None => base.iter().filter(|id| !delta.removed().contains(id)).cloned().chain(delta.added().iter().map(|row| D::row_key(row).to_string())).collect(),
+    }
+}
+
+/// 🔁️ The negative delta: removes what `delta` added, restores what it removed, undoes its patches, restores the base order.
+pub fn keyed_inverse<D: KeyedDelta>(delta: &D, base: &[D::Row]) -> D {
+    let base_ids: Vec<String> = base.iter().map(|row| D::row_key(row).to_string()).collect();
+    let removed: Vec<String> = delta.added().iter().map(|row| D::row_key(row).to_string()).collect();
+    let added: Vec<D::Row> = delta.removed().iter().filter_map(|id| base.iter().find(|row| D::row_key(row) == id).cloned()).collect();
+    let patched: Vec<D::Patch> = delta
+        .patched()
+        .iter()
+        .filter(|patch| !removed.iter().any(|id| id == D::patch_key(patch)))
+        .filter_map(|patch| base.iter().find(|row| D::row_key(row) == D::patch_key(patch)).map(|row| D::patch_inverse(patch, row)))
+        .collect();
+    let after = ids_after(&base_ids, delta);
+    let natural: Vec<String> = after.iter().filter(|id| !removed.contains(id)).cloned().chain(added.iter().map(|row| D::row_key(row).to_string())).collect();
+    let reordered = (natural != base_ids).then_some(base_ids);
+    canonical::<D>(added, removed, patched, reordered)
+}
+
+/// 🧭️ The delta turning `base` into `other` (sync/import only).
+pub fn keyed_between<D: KeyedDelta>(base: &[D::Row], other: &[D::Row]) -> D {
+    let base_ids: Vec<String> = base.iter().map(|row| D::row_key(row).to_string()).collect();
+    let other_ids: Vec<String> = other.iter().map(|row| D::row_key(row).to_string()).collect();
+    let removed: Vec<String> = base_ids.iter().filter(|id| !other_ids.contains(id)).cloned().collect();
+    let added: Vec<D::Row> = other.iter().filter(|row| !base_ids.iter().any(|id| id == D::row_key(row))).cloned().collect();
+    let patched: Vec<D::Patch> = other.iter().filter_map(|row| base.iter().find(|candidate| D::row_key(candidate) == D::row_key(row)).and_then(|candidate| D::patch_between(candidate, row))).collect();
+    let natural: Vec<String> = base_ids.iter().filter(|id| !removed.contains(id)).cloned().chain(added.iter().map(|row| D::row_key(row).to_string())).collect();
+    let reordered = (natural != other_ids).then_some(other_ids);
+    canonical::<D>(added, removed, patched, reordered)
+}
+
+pub fn keyed_is_empty<D: KeyedDelta>(delta: &D) -> bool {
+    delta.added().is_empty() && delta.removed().is_empty() && delta.patched().iter().all(D::patch_is_empty) && delta.reordered().is_none()
+}
+//#endregion 🧺️KeyedDelta
+
+impl KeyedDelta for SpaceIndexPresenceDelta {
+    type Row = SpaceIndexArtifactPresence;
+    type Patch = SpaceIndexPresencePatch;
+    fn added(&self) -> &[SpaceIndexArtifactPresence] {
+        &self.added
+    }
+    fn removed(&self) -> &[String] {
+        &self.removed
+    }
+    fn patched(&self) -> &[SpaceIndexPresencePatch] {
+        &self.patched
+    }
+    fn reordered(&self) -> Option<&[String]> {
+        self.reordered.as_deref()
+    }
+    fn assemble(added: Vec<SpaceIndexArtifactPresence>, removed: Vec<String>, patched: Vec<SpaceIndexPresencePatch>, reordered: Option<Vec<String>>) -> Self {
+        Self { added, removed, patched, reordered }
+    }
+    fn row_key(row: &SpaceIndexArtifactPresence) -> &str {
+        &row.artifact_id
+    }
+    fn patch_key(patch: &SpaceIndexPresencePatch) -> &str {
+        &patch.artifact_id
+    }
+    fn patch_fold(patch: &SpaceIndexPresencePatch, row: &mut SpaceIndexArtifactPresence) -> Result<(), protocol::MutationApplyError> {
+        if let Some(actors_csv) = &patch.actors_csv {
+            row.actors_csv = actors_csv.clone();
+        }
+        Ok(())
+    }
+    fn patch_compose(first: &SpaceIndexPresencePatch, later: &SpaceIndexPresencePatch) -> SpaceIndexPresencePatch {
+        SpaceIndexPresencePatch { artifact_id: first.artifact_id.clone(), actors_csv: later.actors_csv.clone().or_else(|| first.actors_csv.clone()) }
+    }
+    fn patch_inverse(patch: &SpaceIndexPresencePatch, base: &SpaceIndexArtifactPresence) -> SpaceIndexPresencePatch {
+        SpaceIndexPresencePatch { artifact_id: patch.artifact_id.clone(), actors_csv: patch.actors_csv.as_ref().map(|_| base.actors_csv.clone()) }
+    }
+    fn patch_between(base: &SpaceIndexArtifactPresence, other: &SpaceIndexArtifactPresence) -> Option<SpaceIndexPresencePatch> {
+        (base.actors_csv != other.actors_csv).then(|| SpaceIndexPresencePatch { artifact_id: other.artifact_id.clone(), actors_csv: Some(other.actors_csv.clone()) })
+    }
+    fn patch_is_empty(patch: &SpaceIndexPresencePatch) -> bool {
+        patch.actors_csv.is_none()
+    }
+}
+
+impl protocol::MutationDiff<SpaceIndexConfig> for SpaceIndexConfigDiff {
+    fn apply(&self, base: &SpaceIndexConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SpaceIndexConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.visibility {
+            next.visibility = value.clone();
+        }
+        if let Some(value) = &self.members {
+            next.members = value.clone();
+        }
+        if let Some(value) = &self.indexed_artifacts {
+            next.indexed_artifacts = value.clone();
+        }
+        if let Some(delta) = &self.presence {
+            next.presence = keyed_apply(&next.presence, delta).map_err(|error| error.under(["presence"]))?;
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.visibility.is_some() {
+            self.visibility = other.visibility;
+        }
+        if other.members.is_some() {
+            self.members = other.members;
+        }
+        if other.indexed_artifacts.is_some() {
+            self.indexed_artifacts = other.indexed_artifacts;
+        }
+        self.presence = match (self.presence.take(), other.presence) {
+            (Some(first), Some(later)) => Some(keyed_absorb(&first, &later)),
+            (first, later) => later.or(first),
+        };
+    }
+}
+
+impl protocol::DiffAlgebra<SpaceIndexConfig> for SpaceIndexConfigDiff {
+    fn inverse(&self, base: &SpaceIndexConfig) -> Self {
+        Self {
+            visibility: self.visibility.as_ref().map(|_| base.visibility.clone()),
+            members: self.members.as_ref().map(|_| base.members.clone()),
+            indexed_artifacts: self.indexed_artifacts.as_ref().map(|_| base.indexed_artifacts.clone()),
+            presence: self.presence.as_ref().map(|delta| keyed_inverse(delta, &base.presence)),
+        }
+    }
+    fn between(base: &SpaceIndexConfig, other: &SpaceIndexConfig) -> Self {
+        let presence = keyed_between::<SpaceIndexPresenceDelta>(&base.presence, &other.presence);
+        Self {
+            visibility: (base.visibility != other.visibility).then(|| other.visibility.clone()),
+            members: (base.members != other.members).then(|| other.members.clone()),
+            indexed_artifacts: (base.indexed_artifacts != other.indexed_artifacts).then(|| other.indexed_artifacts.clone()),
+            presence: (!keyed_is_empty(&presence)).then_some(presence),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.visibility.is_none() && self.members.is_none() && self.indexed_artifacts.is_none() && self.presence.as_ref().is_none_or(keyed_is_empty)
+    }
+}
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutation
-/// 🧮️ Whole-record replace — the config is always folded/derived host-side (directory events,
-/// presence heartbeats) and pushed down as one snapshot, mirrors `DrawConfigMutation::Snapshot`.
+/// 🧮️ The config's mutation vocabulary: the host-folded directory slice replaces as one entity, and each presence heartbeat sets
+/// (or clears) the live actors of one artifact.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum SpaceIndexConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
+    #[dsl(key = "directory-projection")]
+    ReplaceDirectoryProjection {
         #[dsl(block)]
-        config: SpaceIndexConfig,
+        projection: SpaceIndexDirectoryProjection,
     },
+    #[dsl(key = "artifact-presence")]
+    SetArtifactPresence { artifact_id: String, actors_csv: String },
+    #[dsl(key = "clear-artifact-presence")]
+    ClearArtifactPresence { artifact_id: String },
 }
 
 impl Mutation<SpaceIndexConfig> for SpaceIndexConfigMutation {
-    type Diff = SpaceIndexConfig;
+    type Diff = SpaceIndexConfigDiff;
 
     /// 🧷️ Provisional per-variant leaf metadata for this hand-written (non-derived) aggregate — one
-    /// entry per variant, in declaration order. Mirrors the sibling `⚙️engine/🪐️space/🎚️config`
-    /// aggregate's own provisional shape: no authored leaf directory on disk yet for this whole-record
-    /// config mutation.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
-        schema_version: 1,
-        owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️snapshot",
-        semantic_kind: "snapshot",
-        display_name: "Set Snapshot",
-        emoji: "⚙️",
-        aggregate_variant: "Snapshot",
-        payload_schema: "🧬️schema/🔣️.json",
-        text_opcode: None,
-        binary_tag: None,
-        invertibility: protocol::MutationInvertibility::ExplicitMutation,
-        diff_participation: protocol::MutationDiffParticipation::Detect,
-        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-        composition: protocol::MutationComposition::Atomic,
-        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }];
+    /// entry per variant, in declaration order.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️replace-directory-projection",
+            semantic_kind: "replace-directory-projection",
+            display_name: "Replace Directory Projection",
+            emoji: "⚙️",
+            aggregate_variant: "ReplaceDirectoryProjection",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-artifact-presence",
+            semantic_kind: "set-artifact-presence",
+            display_name: "Set Artifact Presence",
+            emoji: "⚙️",
+            aggregate_variant: "SetArtifactPresence",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️clear-artifact-presence",
+            semantic_kind: "clear-artifact-presence",
+            display_name: "Clear Artifact Presence",
+            emoji: "⚙️",
+            aggregate_variant: "ClearArtifactPresence",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+    ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            SpaceIndexConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Self::ReplaceDirectoryProjection { .. } => &Self::DESCRIPTORS[0],
+            Self::SetArtifactPresence { .. } => &Self::DESCRIPTORS[1],
+            Self::ClearArtifactPresence { .. } => &Self::DESCRIPTORS[2],
         }
     }
 
-    fn diff(&self, _base: &SpaceIndexConfig) -> protocol::MutationOutcome<SpaceIndexConfig> {
-        let SpaceIndexConfigMutation::Snapshot { config } = self;
-        protocol::MutationOutcome::new(config.clone())
+    fn diff(&self, base: &SpaceIndexConfig) -> protocol::MutationOutcome<SpaceIndexConfigDiff> {
+        protocol::MutationOutcome::new(match self {
+            Self::ReplaceDirectoryProjection { projection } => SpaceIndexConfigDiff {
+                visibility: (base.visibility != projection.visibility).then(|| projection.visibility.clone()),
+                members: (base.members != projection.members).then(|| projection.members.clone()),
+                indexed_artifacts: (base.indexed_artifacts != projection.indexed_artifacts).then(|| projection.indexed_artifacts.clone()),
+                presence: None,
+            },
+            Self::SetArtifactPresence { artifact_id, actors_csv } => {
+                let delta = match base.presence.iter().find(|row| row.artifact_id == *artifact_id) {
+                    Some(row) if row.actors_csv == *actors_csv => None,
+                    Some(_) => Some(SpaceIndexPresenceDelta { patched: vec![SpaceIndexPresencePatch { artifact_id: artifact_id.clone(), actors_csv: Some(actors_csv.clone()) }], ..Default::default() }),
+                    None => Some(SpaceIndexPresenceDelta { added: vec![SpaceIndexArtifactPresence { artifact_id: artifact_id.clone(), actors_csv: actors_csv.clone() }], ..Default::default() }),
+                };
+                SpaceIndexConfigDiff { presence: delta, ..Default::default() }
+            }
+            Self::ClearArtifactPresence { artifact_id } => SpaceIndexConfigDiff { presence: base.presence.iter().any(|row| row.artifact_id == *artifact_id).then(|| SpaceIndexPresenceDelta { removed: vec![artifact_id.clone()], ..Default::default() }), ..Default::default() },
+        })
     }
 
     fn inverse(&self, base: &SpaceIndexConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![SpaceIndexConfigMutation::Snapshot { config: base.clone() }]
-    
-    })())
-}
+        Ok(match self {
+            Self::ReplaceDirectoryProjection { .. } => vec![Self::ReplaceDirectoryProjection { projection: SpaceIndexDirectoryProjection { visibility: base.visibility.clone(), members: base.members.clone(), indexed_artifacts: base.indexed_artifacts.clone() } }],
+            Self::SetArtifactPresence { artifact_id, .. } | Self::ClearArtifactPresence { artifact_id } => match base.presence.iter().find(|row| row.artifact_id == *artifact_id) {
+                Some(row) => vec![Self::SetArtifactPresence { artifact_id: artifact_id.clone(), actors_csv: row.actors_csv.clone() }],
+                None if matches!(self, Self::SetArtifactPresence { .. }) => vec![Self::ClearArtifactPresence { artifact_id: artifact_id.clone() }],
+                None => Vec::new(),
+            },
+        })
+    }
 }
 
 //#region 🔖️OpCodec

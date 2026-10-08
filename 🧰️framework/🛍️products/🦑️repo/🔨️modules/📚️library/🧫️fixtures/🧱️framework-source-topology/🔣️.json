@@ -651,7 +651,7 @@
   "scriptExtractions": [
     {
       "command": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📜️script.ts",
-      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/🟦️.ts",
+      "owner": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts",
       "exports": [
         "FONT_ASSET",
         "validateFontAsset"

@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "annex": null,
   "snowZone": null,
   "altitude": null,
@@ -65,36 +64,45 @@
   "assumedSiloPressure": null,
   "assumedSiloPatch": null,
   "assumedSiloWallFriction": null,
-  "floors": null,
-  "selfWeightElements": null,
-  "roofs": null,
-  "windFaces": {
-    "values": [
-      {
-        "id": "facade-d",
-        "zone": "D",
-        "z": 8.0,
-        "cPe10": 0.8,
-        "cPe1": 1.0,
-        "cPi": 0.2,
-        "cS": 1.0,
-        "cD": 1.0,
-        "loadedArea": 10.0,
-        "assumedWp": 100.0
-      },
-      {
-        "id": "facade-e",
-        "zone": "E",
-        "z": 8.0,
-        "cPe10": -0.5,
-        "cPe1": -0.7,
-        "cPi": -0.3,
-        "cS": 1.0,
-        "cD": 1.0,
-        "loadedArea": 10.0,
-        "assumedWp": 400.0
-      }
-    ]
+  "floors": {
+    "removed": [],
+    "added": [],
+    "modified": []
   },
-  "accidentalCases": null
+  "selfWeightElements": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "roofs": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "windFaces": {
+    "removed": [],
+    "added": [
+      {
+        "after": "facade-d",
+        "row": {
+          "id": "facade-e",
+          "zone": "E",
+          "z": 8.0,
+          "cPe10": -0.5,
+          "cPe1": -0.7,
+          "cPi": -0.3,
+          "cS": 1.0,
+          "cD": 1.0,
+          "loadedArea": 10.0,
+          "assumedWp": 400.0
+        }
+      }
+    ],
+    "modified": []
+  },
+  "accidentalCases": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

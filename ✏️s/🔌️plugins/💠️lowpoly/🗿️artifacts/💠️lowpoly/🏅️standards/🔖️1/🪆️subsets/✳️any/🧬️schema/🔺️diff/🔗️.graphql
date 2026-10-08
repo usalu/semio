@@ -1,10 +1,9 @@
 # import LowpolyMeshState,LowpolyMeshStateInput from "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🔗️.graphql"
 # 🧬️ Lowpoly diff schema — sparse field delta.
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
-# import LowpolyArtifact, LowpolyObject, LowpolyPaintLayer, LowpolyTransform from "../🔗️.graphql"
+# import LowpolyObject, LowpolyPaintLayer from "../🔗️.graphql"
 
 type LowpolyDiff {
-  artifact: LowpolyArtifact @state(class: ARTIFACT)
   schema: String @state(class: ARTIFACT)
   objects: LowpolyObjectsDelta @state(class: ARTIFACT)
 }
@@ -20,44 +19,47 @@ type LowpolyObjectPatchEntry {
   id: String!
   patch: LowpolyObjectPatch!
   paintLayers: LowpolyPaintLayersDelta
+  meshMotions: [LowpolyMeshMotion!]!
 }
 
 type LowpolyObjectPatch {
   name: String
   smoothShading: Boolean
-  transform: LowpolyTransform
+  position: [Float!]
+  rotation: [Float!]
+  scale: [Float!]
   mesh: ArtifactChild
   meshContent: String
   meshState: LowpolyMeshStateSlot
 }
 
-type LowpolyPaintLayersDelta {
-  added: [LowpolyIndexedPaintLayer!]!
-  removed: [Int!]!
-  patched: [LowpolyIndexedPaintLayerPatch!]!
-  strokes: [LowpolyPaintStrokeAt!]!
-}
+type LowpolyPaintLayersDelta { edits: [LowpolyPaintEdit!]! }
 
-type LowpolyIndexedPaintLayer {
-  index: Int!
-  layer: LowpolyPaintLayer!
-}
+union LowpolyPaintEdit = LowpolyPaintInsert | LowpolyPaintRemove | LowpolyPaintReplace | LowpolyPaintPatch | LowpolyPaintStroke
 
-type LowpolyIndexedPaintLayerPatch {
-  index: Int!
-  patch: LowpolyPaintLayerPatch!
-}
+type LowpolyPaintInsert { op: String! index: Int! layer: LowpolyPaintLayer! }
+
+type LowpolyPaintRemove { op: String! index: Int! }
+
+type LowpolyPaintReplace { op: String! index: Int! layer: LowpolyPaintLayer! }
+
+type LowpolyPaintPatch { op: String! index: Int! patch: LowpolyPaintLayerPatch! }
+
+type LowpolyPaintStroke { op: String! index: Int! runs: [PixelRun!]! }
+
+union LowpolyMeshMotion = LowpolyMeshOffset | LowpolyMeshTurn | LowpolyMeshStretch
+
+type LowpolyMeshOffset { motion: String! vertexIds: [Int!]! offset: [Float!]! }
+
+type LowpolyMeshTurn { motion: String! vertexIds: [Int!]! pivot: [Float!]! axis: [Float!]! angle: Float! }
+
+type LowpolyMeshStretch { motion: String! vertexIds: [Int!]! pivot: [Float!]! factor: [Float!]! }
 
 type LowpolyPaintLayerPatch {
   name: String
   visible: Boolean
   opacity: Float
   blendMode: String
-}
-
-type LowpolyPaintStrokeAt {
-  layerIndex: Int!
-  runs: [PixelRun!]!
 }
 
 type PixelRun {

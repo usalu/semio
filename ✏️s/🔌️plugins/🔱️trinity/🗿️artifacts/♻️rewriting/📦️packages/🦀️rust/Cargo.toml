@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../.."
 name = "semio-s-artifact-trinity-rewriting"
 version.workspace = true
 edition.workspace = true
@@ -56,7 +56,7 @@ semio-framework-ui-contract = { workspace = true, optional = true }
 
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 serde = { workspace = true }

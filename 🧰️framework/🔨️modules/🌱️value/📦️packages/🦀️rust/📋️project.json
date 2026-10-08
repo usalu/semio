@@ -8,6 +8,15 @@
     ]
   },
   "targets": {
+    "test-ordered-retirement-source": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": ["default"],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-ordered-retirement-source"
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "cache": true,

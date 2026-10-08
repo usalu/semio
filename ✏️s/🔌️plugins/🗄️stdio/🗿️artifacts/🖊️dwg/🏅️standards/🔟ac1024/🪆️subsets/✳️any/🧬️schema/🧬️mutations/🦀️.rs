@@ -6,10 +6,6 @@ use protocol::Mutation;
 
 //#region 🔖️Mutations
 //#region 🔖️Leaves
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "🏷️set-version-info/🦀️.rs"]
 pub mod set_version_info;
 //#endregion 🔖️Leaves
@@ -21,15 +17,13 @@ pub mod set_version_info;
 #[mutations(snapshot = DwgSnapshot, diff = DwgDiff, schema = "DwgMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum DwgMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetVersionInfo(set_version_info::SetVersionInfo),
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_dwg_mutation(snapshot: &mut DwgSnapshot, mutation: &DwgMutation) -> protocol::MutationOutcome<DwgDiff> {
     let outcome = mutation.diff(snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -55,8 +49,6 @@ impl DwgMutation {
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn kind(&self) -> &'static str {
         match self {
-            DwgMutation::SetSnapshot(_) => "set-snapshot",
-            DwgMutation::PatchSnapshot(_) => "patch-snapshot",
             DwgMutation::SetVersionInfo(_) => "set-version-info",
         }
     }
@@ -65,51 +57,28 @@ impl DwgMutation {
 /// 🏷️ Every declared kind, kebab-case, in the enum's own declaration order. ⚠️ It mirrors TWO
 /// catalogs, not one: `4️⃣ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs` is a `pub use`
 /// of this module, so AC1018 declares this same vocabulary and both manifests must list it.
-pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-version-info"];
+pub const KINDS: &[&str] = &["set-version-info"];
 //#endregion 🔖️Kinds
 
-//#region 🔖️MutationTrait
-/// 🧮️ Snapshot assignment validates the owned version sentinel; version edits retain their declared writer conformance.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn agg_diff(this: &DwgMutation, base: &DwgSnapshot) -> protocol::MutationOutcome<DwgDiff> {
-    let next = match this {
-        DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => std::borrow::Cow::Borrowed(snapshot.as_ref()),
-        DwgMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<DwgSnapshot, DwgMutation>>::diff(patch, base),
-        DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version, maintenance_version, codepage }) => std::borrow::Cow::Owned(diff::version_info_next(base, version, *maintenance_version, *codepage)),
-    };
-    let refusal=crate::standards::v_ac1024::subsets::any::schema::snapshot::unwritable_version(&next).filter(|(code,_)|!matches!(this,DwgMutation::SetSnapshot(_))||*code=="version-sentinel");
-    match refusal {
-        Some((_, message)) => protocol::MutationOutcome::fatal("mutation.invariant", message, Vec::<String>::new()),
-        None => protocol::MutationOutcome::new(diff::diff_set_snapshot(base, &next)),
+//#region 🔖️Net
+/// 🧮️ The leaves that carry `base` to exactly `next`: the preamble triple if any of its three fields moved. Every other field lives in the proprietary
+/// container, which no leaf can address, so a `next` that differs there answers nothing and the edit is refused rather than approximated.
+pub fn net_mutations(base: &DwgSnapshot, next: &DwgSnapshot) -> Vec<DwgMutation> {
+    let triple_moved = base.version != next.version || base.maintenance_version != next.maintenance_version || base.codepage != next.codepage;
+    let addressable = DwgSnapshot { version: next.version.clone(), maintenance_version: next.maintenance_version, codepage: next.codepage, ..base.clone() };
+    match (&addressable == next, triple_moved) {
+        (true, true) => vec![DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: next.version.clone(), maintenance_version: next.maintenance_version, codepage: next.codepage })],
+        _ => Vec::new(),
     }
 }
+//#endregion 🔖️Net
 
-/// 🛂️ The version-sentinel guard a path-scoped snapshot patch shares with snapshot assignment.
-pub(crate) fn version_sentinel_check(snapshot: &DwgSnapshot) -> Result<(), String> {
-    match crate::standards::v_ac1024::subsets::any::schema::snapshot::unwritable_version(snapshot) {
-        Some(("version-sentinel", message)) => Err(message),
-        _ => Ok(()),
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &DwgMutation, base: &DwgSnapshot) -> Result<Vec<DwgMutation>, semio_framework_value::ValueError> {
-    Ok({
-    match this {
-        DwgMutation::SetSnapshot(_) => vec![DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base.clone()) })],
-        DwgMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<DwgSnapshot, DwgMutation>>::inverse(patch, base)?),
-        DwgMutation::SetVersionInfo(_) => vec![DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: base.version.clone(), maintenance_version: base.maintenance_version, codepage: base.codepage })],
-    }
-
-    })
-}
 //#endregion 🔖️MutationTrait
 
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<DwgMutation> {
-    let base = crate::standards::v_ac1024::engine::demo_dwg_snapshot();
-    vec![DwgMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base) }), DwgMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }), DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: "AC1024".into(), maintenance_version: 9, codepage: 65001 })]
+    vec![DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: "AC1024".into(), maintenance_version: 9, codepage: 65001 })]
 }
 
 #[cfg(test)]
@@ -117,10 +86,4 @@ pub(crate) fn demo_mutation_cases() -> Vec<DwgMutation> {
 mod tests;
 
 //#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `📸️set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
-/// directory).
-#[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/✏️retitles/🦀️.rs"]
-mod set_snapshot_retitles_the_summary_and_records_the_last_editor;
 //#endregion 🧪️FixtureCases

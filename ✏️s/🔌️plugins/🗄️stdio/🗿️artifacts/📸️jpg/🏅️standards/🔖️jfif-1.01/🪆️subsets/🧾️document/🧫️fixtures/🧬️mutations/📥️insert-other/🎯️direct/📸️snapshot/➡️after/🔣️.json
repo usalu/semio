@@ -1,46 +1,44 @@
 {
-  "arithmetic": false,
-  "height": 1,
-  "huffmanTables": [],
-  "jfifDensityUnits": "aspect",
-  "jfifVersion": [
-    1,
-    1
-  ],
-  "jfifXDensity": 1,
-  "jfifYDensity": 1,
-  "otherSegments": [
-    {
-      "data": [
-        83,
-        119,
-        97,
-        116,
-        99,
-        104
-      ],
-      "marker": 254
-    },
-    {
-      "data": [
-        68,
-        105,
-        114,
-        101,
-        99,
-        116
-      ],
-      "marker": 254
-    }
-  ],
-  "pixels": [
-    18,
-    52,
-    86,
-    255
-  ],
-  "quantTables": [],
   "schema": "stdio.jpg",
-  "sofMarker": 0,
-  "width": 1
+  "image": {
+    "width": 1,
+    "height": 1,
+    "pixels": [
+      18,
+      52,
+      86,
+      255
+    ],
+    "jfifVersion": [
+      1,
+      1
+    ],
+    "jfifDensityUnits": "aspect",
+    "jfifXDensity": 1,
+    "jfifYDensity": 1,
+    "otherSegments": [
+      {
+        "data": [
+          83,
+          119,
+          97,
+          116,
+          99,
+          104
+        ],
+        "marker": 254
+      },
+      {
+        "data": [
+          68,
+          105,
+          114,
+          101,
+          99,
+          116
+        ],
+        "marker": 254
+      }
+    ]
+  }
 }

@@ -1,0 +1,80 @@
+cargo-features = ["trim-paths"]
+[package]
+workspace = "../../../../.."
+name = "semio-framework-surface"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Surface family — paint, board-2d, terrain, node-graph, tiled-map rendering sessions as one wasm-bindgen crate"
+
+[package.metadata.semio]
+role = "framework"
+
+[lints]
+workspace = true
+
+[features]
+default = ["session-bindgen"]
+# 🌉️ wasm-bindgen session wrappers (Map/Terrain/…) — disabled when this file is path-mounted into
+# infinite (avoids duplicate TerrainSession symbols linking surface+infinite into one cdylib).
+session-bindgen = []
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+# 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT. Applies when 📜️script.ts builds with wasm-pack
+# `--profile wasm-release` (wasm-pack 0.15+ maps any custom profile name to this `custom` section,
+# ignoring `profile.release` above). Runs after wasm-bindgen, mirroring os-dev's plugin -Oz post-pass
+# (WASM_OPT_ARGS) minus `--low-memory-unused`: this module's stack-first memory layout means the
+# "low 1KB is unused" assumption binaryen makes for that flag is unverified here.
+[package.metadata.wasm-pack.profile.custom]
+wasm-opt = ["-Oz", "--strip-debug", "--strip-producers", "--enable-bulk-memory", "--enable-bulk-memory-opt", "--enable-call-indirect-overlong", "--enable-extended-const", "--enable-multivalue", "--enable-mutable-globals", "--enable-nontrapping-float-to-int", "--enable-reference-types", "--enable-sign-ext"]
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-pack = { path = "../../../🎒️pack/📦️packages/🦀️rust" }
+semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
+semio-framework-pack-error = { path = "../../../🎒️pack/⚠️error/📦️packages/🦀️rust" }
+semio-framework-replication = { path = "../../../📡️replication/📦️packages/🦀️rust" }
+semio-framework-ui-viewport = { path = "../../../🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
+semio-framework-artifact-infinite-dag = { workspace = true }
+semio-framework-os-infinite = { path = "../../../../🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust" }
+semio-framework-async = { workspace = true }
+ui_styling = { path = "../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+canvas = { path = "../../../🖼️canvas/📦️packages/🦀️rust", package = "semio-framework-canvas" }
+semio-framework-os-kernel = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-job = { workspace = true }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+image = { version = "0.25", default-features = false, features = ["png"] }
+# 🏔️ Required by the path-mounted `🏔️terrain/🦀️.rs` above, which decodes Terrarium RGB-encoded
+# elevation PNGs via the first-party codec (no third-party runtime dependency) instead of `image`.
+# RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01).
+semio-framework-pixels = { path = "../../../🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
+
+# 🌉️ Browser-only `wasm_bridge` session wrappers (Terrain/NodeGraph/TiledMap/Paint — each wraps a
+# pure `*Core` type that stays target-neutral). Excluded from `wasm32-wasip2` because
+# `target_arch = "wasm32"` is TRUE for the WASI component target too — the wasip2 guest never
+# attaches an `HtmlCanvasElement`, so it needs none of this bridge.
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
+js-sys = "0.3.83"
+wasm-bindgen = "0.2.106"
+web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window"] }
+
+# 🗺️ Cargo derives an integration test's crate name from its file stem, and a crate name may only
+# contain ASCII — so the repo's emoji filename convention needs an explicit name/path pair here.
+[[test]]
+name = "tiled_map_mercator_oracle"
+path = "../../🧪️tests/🗺️tiled-map-mercator-oracle/🦀️.rs"
+
+[dev-dependencies]
+semio-framework-trace = { path = "../../../⏱️trace/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }

@@ -1,6 +1,4 @@
-//! ⭐️ `set-sample-sync` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! ⭐️ `set-sample-sync` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -18,14 +16,20 @@ pub struct SetSampleSync {
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetSampleSync {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "sample-sync", kind: "set-sample-sync", record: "SetSampleSync" };
     fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
-        agg_diff(&Mp4Mutation::SetSampleSync(self.clone()), base)
+        let Self { track_index, index, sync } = self;
+        protocol::MutationOutcome::new({
+            sample_diff_for(*track_index, IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: *index, diff: Mp4SampleDiff { data: None, duration: None, cts_offset: None, sync: Some(*sync) } }], added: vec![] }, None)
+        })
     }
     fn inverse(&self, base: &Mp4Snapshot) -> Result<Vec<Mp4Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&Mp4Mutation::SetSampleSync(self.clone()), base)?
-    
-    })
-}
+        let Self { track_index, index, .. } = self;
+        Ok({
+            match base.tracks.get(*track_index).and_then(|t| t.samples.get(*index)) {
+                Some(sample) => vec![Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index: *track_index, index: *index, sync: sample.sync })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set sample sync", "Sync-Kennung des Samples setzen")
     }

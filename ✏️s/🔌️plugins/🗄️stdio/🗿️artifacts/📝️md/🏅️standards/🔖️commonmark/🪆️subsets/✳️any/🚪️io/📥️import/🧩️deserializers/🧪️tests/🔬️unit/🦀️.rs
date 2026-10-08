@@ -7,7 +7,7 @@ use super::*;
 /// WRITER injects a literal `<!-- end list -->` separator between a list and a following code
 /// block (a conservative guard against an indented code block being absorbed — unnecessary for
 /// the fenced block it itself always writes), and its own reader then reports that separator as
-/// a sixth document block, so `mutate-md-commonmark :: mutate-set-snapshot` compares six oracle
+/// a sixth document block, so a `mutate-md-commonmark` run compares six oracle
 /// blocks against this repository's five. `📓️w13-final-audit.md` §2.2(11) attributed that to
 /// THIS parser dropping the node. It does not: fed the oracle's own output, this parser reports
 /// the `htmlBlock` in position 3, exactly as the oracle does. The divergence is the reference

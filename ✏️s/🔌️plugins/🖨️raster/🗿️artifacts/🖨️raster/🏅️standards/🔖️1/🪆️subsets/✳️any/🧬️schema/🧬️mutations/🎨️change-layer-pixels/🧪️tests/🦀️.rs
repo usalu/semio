@@ -1,6 +1,6 @@
 //! 🧪️ Pixel content replacement preserves metadata and has an exact nullable inverse.
 use crate::{RasterSnapshot, RasterMutation};
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{Mutation, OpBinary, OpText};
 
 #[test]
 fn change_layer_pixels_matches_independent_json_and_round_trips() {
@@ -12,7 +12,7 @@ fn change_layer_pixels_matches_independent_json_and_round_trips() {
     let mut expected = fixture["before"].clone();
     for key in ["imageKey", "width", "height"] { expected["layers"][0][key] = fixture["mutation"]["content"][key].clone(); }
     let (diff, _) = mutation.diff(&base).into_parts();
-    let actual = diff.apply(&base).unwrap();
+    let actual = protocol::apply_diff(&diff, &base).unwrap();
     let rendered: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&actual)))).unwrap();
     assert_eq!(json_numbers(rendered), json_numbers(expected));
     assert_eq!(RasterMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
@@ -20,7 +20,7 @@ fn change_layer_pixels_matches_independent_json_and_round_trips() {
     let mut restored = actual;
     for undo in inverse {
         let (change, _) = undo.diff(&restored).into_parts();
-        let previous = change.apply(&restored).unwrap();
+        let previous = protocol::apply_diff(&change, &restored).unwrap();
         MutationDiff::retire_cold(change);
         crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(restored);
         restored = previous;

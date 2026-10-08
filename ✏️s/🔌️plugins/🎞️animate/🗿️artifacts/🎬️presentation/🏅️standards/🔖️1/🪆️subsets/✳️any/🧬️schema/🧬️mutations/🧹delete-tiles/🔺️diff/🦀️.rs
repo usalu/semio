@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff construction for `delete-tiles`.
 use super::DeleteTiles;
-use crate::diff::PresentationDiff;
+use crate::diff::{diff_set_presentation, PresentationDiff, PresentationSourcePatch, PresentationTilePatch, PresentationTilesDelta};
 use crate::PresentationSnapshot;
 
 //#region 🔹Diff
@@ -8,9 +8,7 @@ use crate::PresentationSnapshot;
 /// tile, and mints a new content-addressed `presentation` handle for the result — real handcrafted
 /// construction from `(payload, base)`, never apply-then-capture.
 pub fn diff(payload: &DeleteTiles, base: &PresentationSnapshot) -> protocol::MutationOutcome<PresentationDiff> {
-    let (source, mut tiles) = crate::presentation_working_scene(base);
-    let targets: std::collections::HashSet<&str> = payload.ids.iter().map(String::as_str).collect();
-    let existing_ids: std::collections::HashSet<&str> = tiles.iter().map(|tile| tile.id.as_str()).collect();
+    let existing_ids: std::collections::HashSet<&str> = base.tiles.iter().map(|tile| tile.id.as_str()).collect();
     let missing: Vec<String> = payload.ids.iter().filter(|id| !existing_ids.contains(id.as_str())).cloned().collect();
     if missing.len() == payload.ids.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("No addressed tile(s) exist: {}.", missing.join(", ")), {
@@ -19,8 +17,8 @@ pub fn diff(payload: &DeleteTiles, base: &PresentationSnapshot) -> protocol::Mut
             target
         });
     }
-    tiles.retain(|tile| !targets.contains(tile.id.as_str()));
-    let outcome = protocol::MutationOutcome::new(crate::diff::diff_set_presentation(&source, &tiles));
+    let removed: Vec<String> = base.tiles.iter().filter(|tile| payload.ids.contains(&tile.id)).map(|tile| tile.id.clone()).collect();
+    let outcome = protocol::MutationOutcome::new(diff_set_presentation(base, None, Some(PresentationTilesDelta { removed, ..Default::default() })));
     if missing.is_empty() {
         outcome
     } else {

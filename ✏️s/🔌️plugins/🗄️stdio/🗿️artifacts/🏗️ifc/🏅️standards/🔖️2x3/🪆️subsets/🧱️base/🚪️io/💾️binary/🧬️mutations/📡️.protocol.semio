@@ -11,13 +11,9 @@ framing record
 header fixed 2
 field format u8
 field tag u8
-record set-snapshot tag=1
-field payload bytes
 record upsert-instance tag=2
 field payload bytes
 record remove-instance tag=3
 field payload bytes
 record set-header tag=4
-field payload bytes
-record patch-snapshot tag=5
 field payload bytes

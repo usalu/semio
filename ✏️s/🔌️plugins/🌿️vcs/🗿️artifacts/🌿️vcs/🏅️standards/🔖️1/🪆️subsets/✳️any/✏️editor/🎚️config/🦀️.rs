@@ -67,7 +67,31 @@ impl store::ArtifactPack for VcsDemoConfig {
 
 
 
-store::impl_whole_record_config!(VcsDemoConfig);
+impl store::ConfigRecord for VcsDemoConfig {}
+
+/// 🔺️ Sparse delta over [`VcsDemoConfig`]: the config record carries no field, so its delta names nothing.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct VcsDemoConfigDiff {}
+
+impl protocol::MutationDiff<VcsDemoConfig> for VcsDemoConfigDiff {
+    fn apply(&self, base: &VcsDemoConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<VcsDemoConfig> {
+        Ok(base.clone())
+    }
+    fn absorb(&mut self, _other: Self) {}
+}
+
+impl protocol::DiffAlgebra<VcsDemoConfig> for VcsDemoConfigDiff {
+    fn inverse(&self, _base: &VcsDemoConfig) -> Self {
+        Self {}
+    }
+    fn between(_base: &VcsDemoConfig, _other: &VcsDemoConfig) -> Self {
+        Self {}
+    }
+    fn is_empty(&self) -> bool {
+        true
+    }
+}
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutations
@@ -78,11 +102,8 @@ store::impl_whole_record_config!(VcsDemoConfig);
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum VcsDemoConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: VcsDemoConfig,
-    },
+    #[dsl(key = "noop")]
+    Noop,
 }
 
 //#region 🔖️OpCodec
@@ -141,15 +162,15 @@ impl protocol::OpBinary for VcsDemoConfigMutation {
 //#endregion 🔖️OpCodec
 
 impl Mutation<VcsDemoConfig> for VcsDemoConfigMutation {
-    type Diff = VcsDemoConfig;
+    type Diff = VcsDemoConfigDiff;
 
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
-        owner: "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄️snapshot",
-        semantic_kind: "snapshot",
-        display_name: "Snapshot",
-        emoji: "📄️",
-        aggregate_variant: "Snapshot",
+        owner: "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⏸️noop",
+        semantic_kind: "noop",
+        display_name: "Noop",
+        emoji: "⏸️",
+        aggregate_variant: "Noop",
         payload_schema: "🧬️schema/🔣️.json",
         text_opcode: None,
         binary_tag: None,
@@ -162,27 +183,17 @@ impl Mutation<VcsDemoConfig> for VcsDemoConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Self::Noop => &Self::DESCRIPTORS[0],
         }
     }
 
-    fn diff(&self, base: &VcsDemoConfig) -> protocol::MutationOutcome<VcsDemoConfig> {
-        match self {
-            VcsDemoConfigMutation::Snapshot { config } => {
-                if base == config {
-                    return protocol::MutationOutcome::empty().warning("mutation.no-op", "Config snapshot is already identical to the requested replacement.");
-                }
-                protocol::MutationOutcome::new(config.clone())
-            }
-        }
+    fn diff(&self, _base: &VcsDemoConfig) -> protocol::MutationOutcome<VcsDemoConfigDiff> {
+        protocol::MutationOutcome::empty().warning("mutation.no-op", "The VCS demo config carries no field.")
     }
 
-    fn inverse(&self, base: &VcsDemoConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![VcsDemoConfigMutation::Snapshot { config: base.clone() }]
-    
-    })())
-}
+    fn inverse(&self, _base: &VcsDemoConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+        Ok(vec![Self::Noop])
+    }
 }
 //#endregion 🔖️ConfigMutations
 

@@ -19,8 +19,8 @@ role = "hub"
 
 [[package.metadata.semio.playground]]
 variant = "gis2d"
-mcpHost = { cratePath = "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust", project = "@semio-tech/s-services-native", package = "semio-s-dev-services", binary = "semio-s-services-mcp", target = "mcp-build" }
-nativeHost = { cratePath = "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust", project = "@semio-tech/s-services-native", package = "semio-s-dev-services", binary = "semio-s-services-native", target = "native-build" }
+mcpHost = { cratePath = "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust", project = "@semio-tech/s-gis-services-native", package = "semio-s-dev-gis-services", binary = "semio-s-gis-services-mcp", target = "mcp-build" }
+nativeHost = { cratePath = "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust", project = "@semio-tech/s-gis-services-native", package = "semio-s-dev-gis-services", binary = "semio-s-gis-services-native", target = "native-build" }
 aliases = ["gis 2d"]
 app = "s.gis.gismap@1/*#editor"
 ports = { react = 6040, wgpu = 6140 }

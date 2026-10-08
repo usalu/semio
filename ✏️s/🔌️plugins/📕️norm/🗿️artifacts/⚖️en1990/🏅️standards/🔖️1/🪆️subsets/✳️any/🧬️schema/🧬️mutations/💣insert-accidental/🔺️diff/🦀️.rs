@@ -2,8 +2,7 @@
 //! `mutation.clamped` warning and an id the document already holds is a `mutation.duplicate-id`.
 
 use super::InsertAccidental;
-use crate::diff::En1990RowEdit as _;
-use crate::diff::{En1990Diff, En1990AccidentalEdit};
+use crate::diff::{En1990AccidentalDelta, En1990Diff};
 use crate::En1990Snapshot;
 use protocol::MutationOutcome;
 
@@ -13,7 +12,7 @@ pub fn diff(payload: &InsertAccidental, base: &En1990Snapshot) -> MutationOutcom
         return MutationOutcome::fatal("mutation.duplicate-id", format!("The accidental action '{key}' already exists."), [key]);
     }
     let index = payload.index.min(base.accidentals.len());
-    let outcome = MutationOutcome::new(En1990Diff { accidentals: vec![En1990AccidentalEdit::insert(index, payload.item.clone())], ..En1990Diff::default() });
+    let outcome = MutationOutcome::new(En1990Diff { accidentals: En1990AccidentalDelta::insertion(&base.accidentals, index, payload.item.clone()), ..En1990Diff::default() });
     if index == payload.index {
         return outcome;
     }

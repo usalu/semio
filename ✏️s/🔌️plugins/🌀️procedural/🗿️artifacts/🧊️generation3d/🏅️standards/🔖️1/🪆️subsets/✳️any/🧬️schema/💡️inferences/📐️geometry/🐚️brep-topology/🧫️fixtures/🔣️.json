@@ -1,0 +1,882 @@
+{
+  "description": "Language-agnostic laws of the brep.topology widgets. Component counts are the Euler counts of the primitives (a box has 8 vertices, 12 edges, 6 faces and one shell); lists are described by count plus a description every item satisfies. Selections name edges by their end points and faces by their planar outward normal, resolved to persistent labels of the input value; conversions and healing keep the analytic volume, area and bounds.",
+  "tolerance": 1e-06,
+  "meshTolerance": 1e-06,
+  "deflection": 0.05,
+  "cases": [
+    {
+      "name": "a vertex at a point",
+      "kind": "brep.topology.vertex",
+      "inputs": {
+        "point": [
+          1,
+          2,
+          3
+        ]
+      },
+      "outputs": {
+        "shape": {
+          "kind": "vertex",
+          "vertices": 1
+        }
+      }
+    },
+    {
+      "name": "deconstruct a box without selections",
+      "kind": "brep.topology.deconstruct",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        }
+      },
+      "outputs": {
+        "vertices": {
+          "count": 8,
+          "each": {
+            "kind": "vertex"
+          }
+        },
+        "edges": {
+          "count": 12,
+          "each": {
+            "kind": "edge"
+          }
+        },
+        "faces": {
+          "count": 6,
+          "each": {
+            "kind": "face",
+            "area": 4.0
+          }
+        },
+        "shells": {
+          "count": 1,
+          "each": {
+            "kind": "shell",
+            "area": 24.0
+          }
+        }
+      }
+    },
+    {
+      "name": "deconstruct a box with a selected edge and the selected top face",
+      "kind": "brep.topology.deconstruct",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "edges": {
+          "edges": [
+            {
+              "from": [
+                0,
+                0,
+                0
+              ],
+              "to": [
+                2,
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "faces": {
+          "normals": [
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        }
+      },
+      "outputs": {
+        "vertices": {
+          "count": 8,
+          "each": {
+            "kind": "vertex"
+          }
+        },
+        "edges": {
+          "count": 12,
+          "each": {
+            "kind": "edge"
+          }
+        },
+        "faces": {
+          "count": 6,
+          "each": {
+            "kind": "face",
+            "area": 4.0
+          }
+        },
+        "shells": {
+          "count": 1,
+          "each": {
+            "kind": "shell"
+          }
+        },
+        "selectedEdges": {
+          "count": 1,
+          "each": {
+            "kind": "edge"
+          }
+        },
+        "selectedFaces": {
+          "count": 1,
+          "each": {
+            "kind": "face",
+            "area": 4.0,
+            "bbox": [
+              [
+                0,
+                0,
+                2
+              ],
+              [
+                2,
+                2,
+                2
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "deconstruct with an empty selection extracts nothing",
+      "kind": "brep.topology.deconstruct",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "edges": {},
+        "faces": {}
+      },
+      "outputs": {
+        "vertices": {
+          "count": 8,
+          "each": {
+            "kind": "vertex"
+          }
+        },
+        "edges": {
+          "count": 12,
+          "each": {
+            "kind": "edge"
+          }
+        },
+        "faces": {
+          "count": 6,
+          "each": {
+            "kind": "face"
+          }
+        },
+        "shells": {
+          "count": 1,
+          "each": {
+            "kind": "shell"
+          }
+        },
+        "selectedEdges": [],
+        "selectedFaces": []
+      }
+    },
+    {
+      "name": "deconstruct a face",
+      "kind": "brep.topology.deconstruct",
+      "inputs": {
+        "shape": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [
+              2,
+              2,
+              2
+            ]
+          },
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "outputs": {
+        "vertices": {
+          "count": 4,
+          "each": {
+            "kind": "vertex"
+          }
+        },
+        "edges": {
+          "count": 4,
+          "each": {
+            "kind": "edge"
+          }
+        },
+        "faces": {
+          "count": 1,
+          "each": {
+            "kind": "face",
+            "area": 4.0
+          }
+        },
+        "shells": []
+      }
+    },
+    {
+      "name": "deconstruct a stale edge selection",
+      "kind": "brep.topology.deconstruct",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "edges": {
+          "stale": true
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.selection-stale",
+        "port": "edges"
+      }
+    },
+    {
+      "name": "a solid has one shell",
+      "kind": "brep.topology.shells",
+      "inputs": {
+        "solid": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        }
+      },
+      "outputs": {
+        "shells": {
+          "count": 1,
+          "each": {
+            "kind": "shell"
+          }
+        }
+      }
+    },
+    {
+      "name": "a shelled solid has the outer shell and the void",
+      "kind": "brep.topology.shells",
+      "inputs": {
+        "solid": {
+          "recipe": "shelled",
+          "of": {
+            "recipe": "box",
+            "size": [
+              2,
+              2,
+              2
+            ]
+          },
+          "thickness": 0.2
+        }
+      },
+      "outputs": {
+        "shells": {
+          "count": 2,
+          "each": {
+            "kind": "shell"
+          }
+        }
+      }
+    },
+    {
+      "name": "the shells of a compound are all member shells",
+      "kind": "brep.topology.shells",
+      "inputs": {
+        "solid": {
+          "recipe": "compound",
+          "of": [
+            {
+              "recipe": "box",
+              "size": [
+                2,
+                2,
+                2
+              ]
+            },
+            {
+              "recipe": "translate",
+              "of": {
+                "recipe": "box",
+                "size": [
+                  2,
+                  2,
+                  2
+                ]
+              },
+              "by": [
+                3,
+                0,
+                0
+              ]
+            }
+          ]
+        }
+      },
+      "outputs": {
+        "shells": {
+          "count": 2,
+          "each": {
+            "kind": "shell"
+          }
+        }
+      }
+    },
+    {
+      "name": "group two solids into a compound",
+      "kind": "brep.topology.compound",
+      "inputs": {
+        "solids": [
+          {
+            "recipe": "box",
+            "size": [
+              2,
+              2,
+              2
+            ]
+          },
+          {
+            "recipe": "translate",
+            "of": {
+              "recipe": "box",
+              "size": [
+                2,
+                2,
+                2
+              ]
+            },
+            "by": [
+              3,
+              0,
+              0
+            ]
+          }
+        ]
+      },
+      "outputs": {
+        "shape": {
+          "kind": "compound",
+          "solids": 2,
+          "volume": 16.0,
+          "area": 48.0,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              5,
+              2,
+              2
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "a compound of compounds is flat",
+      "kind": "brep.topology.compound",
+      "inputs": {
+        "solids": [
+          {
+            "recipe": "compound",
+            "of": [
+              {
+                "recipe": "box",
+                "size": [
+                  2,
+                  2,
+                  2
+                ]
+              },
+              {
+                "recipe": "translate",
+                "of": {
+                  "recipe": "box",
+                  "size": [
+                    2,
+                    2,
+                    2
+                  ]
+                },
+                "by": [
+                  3,
+                  0,
+                  0
+                ]
+              }
+            ]
+          },
+          {
+            "recipe": "translate",
+            "of": {
+              "recipe": "box",
+              "size": [
+                1,
+                1,
+                1
+              ]
+            },
+            "by": [
+              0,
+              10,
+              0
+            ]
+          }
+        ]
+      },
+      "outputs": {
+        "shape": {
+          "kind": "compound",
+          "solids": 3,
+          "volume": 17.0,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              5,
+              11,
+              2
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "explode a compound into its solids",
+      "kind": "brep.topology.explode",
+      "inputs": {
+        "compound": {
+          "recipe": "compound",
+          "of": [
+            {
+              "recipe": "box",
+              "size": [
+                2,
+                2,
+                2
+              ]
+            },
+            {
+              "recipe": "translate",
+              "of": {
+                "recipe": "box",
+                "size": [
+                  2,
+                  2,
+                  2
+                ]
+              },
+              "by": [
+                3,
+                0,
+                0
+              ]
+            }
+          ]
+        }
+      },
+      "outputs": {
+        "solids": {
+          "count": 2,
+          "each": {
+            "kind": "solid",
+            "volume": 8.0,
+            "area": 24.0
+          }
+        }
+      }
+    },
+    {
+      "name": "explode a solid is a kernel fault",
+      "kind": "brep.topology.explode",
+      "inputs": {
+        "compound": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.kernel"
+      }
+    },
+    {
+      "name": "the persistent label is a decimal number",
+      "kind": "brep.topology.label",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        }
+      },
+      "outputs": {
+        "label": {
+          "decimal": true
+        }
+      }
+    },
+    {
+      "name": "sew the six faces of a box into a solid",
+      "kind": "brep.topology.sew",
+      "inputs": {
+        "faces": [
+          {
+            "recipe": "face",
+            "of": {
+              "recipe": "box",
+              "size": [
+                2,
+                2,
+                2
+              ]
+            },
+            "normal": [
+              0,
+              0,
+              1
+            ]
+          },
+          {
+            "recipe": "face",
+            "of": {
+              "recipe": "box",
+              "size": [
+                2,
+                2,
+                2
+              ]
+            },
+            "normal": [
+              0,
+              0,
+              -1
+            ]
+          },
+          {
+            "recipe": "face",
+            "of": {
+              "recipe": "box",
+              "size": [
+                2,
+                2,
+                2
+              ]
+            },
+            "normal": [
+              1,
+              0,
+              0
+            ]
+          },
+          {
+            "recipe": "face",
+            "of": {
+              "recipe": "box",
+              "size": [
+                2,
+                2,
+                2
+              ]
+            },
+            "normal": [
+              -1,
+              0,
+              0
+            ]
+          },
+          {
+            "recipe": "face",
+            "of": {
+              "recipe": "box",
+              "size": [
+                2,
+                2,
+                2
+              ]
+            },
+            "normal": [
+              0,
+              1,
+              0
+            ]
+          },
+          {
+            "recipe": "face",
+            "of": {
+              "recipe": "box",
+              "size": [
+                2,
+                2,
+                2
+              ]
+            },
+            "normal": [
+              0,
+              -1,
+              0
+            ]
+          }
+        ],
+        "tolerance": 0.001
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 8.0,
+          "area": 24.0,
+          "faces": 6,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "heal a valid solid keeps it",
+      "kind": "brep.topology.heal",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "tolerance": 0.001
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 8.0,
+          "area": 24.0,
+          "faces": 6,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "heal a curve is a kernel fault",
+      "kind": "brep.topology.heal",
+      "inputs": {
+        "shape": {
+          "recipe": "circle",
+          "center": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "radius": 1
+        },
+        "tolerance": 0.001
+      },
+      "fault": {
+        "code": "generation3d.geometry.kernel"
+      }
+    },
+    {
+      "name": "convert a box to NURBS keeps its measures",
+      "kind": "brep.topology.convertToNurbs",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        }
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 8.0,
+          "area": 24.0,
+          "faces": 6,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "convert a cylinder to NURBS keeps its measures",
+      "kind": "brep.topology.convertToNurbs",
+      "inputs": {
+        "shape": {
+          "recipe": "cylinder",
+          "radius": 1,
+          "height": 2
+        }
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 6.283185307179586,
+          "area": 18.84955592153876,
+          "faces": 3,
+          "bbox": [
+            [
+              -1,
+              -1,
+              0
+            ],
+            [
+              1,
+              1,
+              2
+            ]
+          ]
+        }
+      },
+      "meshTolerance": 0.02,
+      "deflection": 0.02
+    },
+    {
+      "name": "convert every solid of a compound to NURBS",
+      "kind": "brep.topology.convertToNurbs",
+      "inputs": {
+        "shape": {
+          "recipe": "compound",
+          "of": [
+            {
+              "recipe": "box",
+              "size": [
+                2,
+                2,
+                2
+              ]
+            },
+            {
+              "recipe": "translate",
+              "of": {
+                "recipe": "box",
+                "size": [
+                  2,
+                  2,
+                  2
+                ]
+              },
+              "by": [
+                3,
+                0,
+                0
+              ]
+            }
+          ]
+        }
+      },
+      "outputs": {
+        "shape": {
+          "kind": "compound",
+          "solids": 2,
+          "volume": 16.0,
+          "area": 48.0
+        }
+      }
+    },
+    {
+      "name": "convert a face to NURBS is a kernel fault",
+      "kind": "brep.topology.convertToNurbs",
+      "inputs": {
+        "shape": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [
+              2,
+              2,
+              2
+            ]
+          },
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.kernel"
+      }
+    }
+  ]
+}

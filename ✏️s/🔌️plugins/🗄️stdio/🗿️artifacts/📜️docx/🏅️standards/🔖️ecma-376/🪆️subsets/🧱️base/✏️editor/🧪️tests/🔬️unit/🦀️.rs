@@ -63,8 +63,6 @@ fn natural_file_route_exports_edited_docx_xml_and_reopens_it() {
     assert!(text.contains("Natural Open Save"));
     let reopened = <DocxEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("DOCX natural bytes reopen");
     assert_eq!(run(&reopened).text, "Natural Open Save");
-    let Some(DocxMutation::SetSnapshot(set)) = <DocxEditor as ArtifactEditor>::whole_document_operation(reopened) else { panic!("natural DOCX opens through one event-sourced snapshot mutation") };
-    assert_eq!(run(&set.snapshot).text, "Natural Open Save");
 }
 
 #[test]

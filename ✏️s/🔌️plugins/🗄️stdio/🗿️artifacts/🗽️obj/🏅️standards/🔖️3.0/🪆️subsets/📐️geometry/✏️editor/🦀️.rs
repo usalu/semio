@@ -4,7 +4,7 @@
 
 use crate::editor::obj::modes::edit;
 use crate::editor::obj::modes::edit::windows::main;
-use crate::standards::v3_0::subsets::any::schema::mutations::{patch_snapshot,set_snapshot as snapshot_edit_set_snapshot,ObjMutation};
+use crate::standards::v3_0::subsets::any::schema::mutations::{ObjMutation};
 
 use crate::standards::v3_0::subsets::any::schema::snapshot::ObjSnapshot;
 use semio_framework_plugin::app::InteractionView;
@@ -289,7 +289,7 @@ impl editing::SnapshotEditingEditor for ObjAnyEditor {
         match command { ObjAnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_patch(event, snapshot, |patch| ObjMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| ObjMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot })))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::v3_0::subsets::any::schema::mutations::net_mutations)
     }
 }
 

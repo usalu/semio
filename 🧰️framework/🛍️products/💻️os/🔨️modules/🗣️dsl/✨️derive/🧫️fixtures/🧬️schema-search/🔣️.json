@@ -1,0 +1,156 @@
+{
+  "cases": [
+    {
+      "id": "domain-schema-index-excludes-examples-before-read",
+      "root": "owner",
+      "files": {
+        "🧬️schema/🔣️.json": {
+          "$id": "urn:semio:schema-search:0",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "🧬️schema/📸️snapshot/🔣️.json": {
+          "$id": "urn:semio:schema-search:1",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "🔨️modules/🧫️fixtures/🧬️schema/🔣️.json": {
+          "$id": "urn:semio:schema-search:2",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "🧬️schema/🧫️fixtures/parser/🔣️.json": {
+          "$id": "urn:semio:schema-search:3",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "🧫️fixtures/🧬️schema/🔣️.json": {
+          "$id": "urn:semio:schema-search:4",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "🧪️fixtures/🧬️schema/🔣️.json": {
+          "$id": "urn:semio:schema-search:5",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "🧪️tests/🧬️schema/🔣️.json": {
+          "$id": "urn:semio:schema-search:6",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "🧬️schema/🧪️tests/parser/🔣️.json": {
+          "$id": "urn:semio:schema-search:7",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "target/🧬️schema/🔣️.json": {
+          "$id": "urn:semio:schema-search:8",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "📦️packages/🧬️schema/🔣️.json": {
+          "$id": "urn:semio:schema-search:9",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "node_modules/🧬️schema/🔣️.json": {
+          "$id": "urn:semio:schema-search:10",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "dist/🧬️schema/🔣️.json": {
+          "$id": "urn:semio:schema-search:11",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "🗑️generated/🧬️schema/🔣️.json": {
+          "$id": "urn:semio:schema-search:12",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        ".private/🧬️schema/🔣️.json": {
+          "$id": "urn:semio:schema-search:13",
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "expected": {
+        "ids": [
+          "urn:semio:schema-search:0",
+          "urn:semio:schema-search:1",
+          "urn:semio:schema-search:2"
+        ]
+      }
+    },
+    {
+      "id": "collection-search-root-remains-empty",
+      "root": "owner/🧫️fixtures",
+      "files": {
+        "🧬️schema/🔣️.json": {
+          "$id": "urn:semio:example-root",
+          "type": "object"
+        }
+      },
+      "expected": {
+        "ids": []
+      }
+    }
+  ]
+}

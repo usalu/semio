@@ -103,6 +103,26 @@
         "group": "record",
         "order": 10
       }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based slot to insert at; appended when omitted.",
+          "de": "Nullbasierter Platz zum Einfügen; angehängt, wenn weggelassen."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "placement",
+        "order": 900
+      }
     }
   }
 }

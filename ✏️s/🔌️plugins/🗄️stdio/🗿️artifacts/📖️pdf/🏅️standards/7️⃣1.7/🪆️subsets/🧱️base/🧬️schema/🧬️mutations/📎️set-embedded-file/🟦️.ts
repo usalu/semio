@@ -3,4 +3,5 @@ import type { PdfDate, PdfEmbeddedFile } from '../../📸️snapshot/🟦️.ts'
 export interface SetEmbeddedFileMutation {
   mutation: 'setEmbeddedFile';
   file: PdfEmbeddedFile;
+  index?: number | null;
 }

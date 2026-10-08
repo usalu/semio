@@ -1,0 +1,9 @@
+{
+  "mutation": "removeRequiredExtension",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "extension": "KHR_b"
+    }
+  }
+}

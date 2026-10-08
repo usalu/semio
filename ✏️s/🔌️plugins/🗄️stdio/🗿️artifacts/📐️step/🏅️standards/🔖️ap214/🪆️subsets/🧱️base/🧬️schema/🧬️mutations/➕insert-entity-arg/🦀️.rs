@@ -1,7 +1,5 @@
-//! ➕️ `insert-entity-arg` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! ➕️ `insert-entity-arg` — authored as its own mutation leaf. It builds its own sparse diff and concrete
+//! inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -18,15 +16,20 @@ pub struct InsertEntityArg {
 impl protocol::MutationKind<StepSnapshot, StepMutation> for InsertEntityArg {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "entity-arg", kind: "insert-entity-arg", record: "InsertEntityArg" };
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepMutation as Mutation<StepSnapshot>>::Diff> {
-        agg_diff(&StepMutation::InsertEntityArg(self.clone()), base)
+    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
+        let Self { id, arg_index, value } = self;
+        protocol::MutationOutcome::new(StepDiff {
+            entities: Some(StepEntitiesDiff {
+                modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { args: Some(StepArgsDiff { added: vec![StepArgAdded { index: *arg_index, value: value.clone() }], ..Default::default() }), ..Default::default() } }],
+                ..Default::default()
+            }),
+            ..Default::default()
+        })
     }
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&StepMutation::InsertEntityArg(self.clone()), base)?
-    
-    })
-}
+        let Self { id, arg_index, .. } = self;
+        Ok(vec![StepMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id: *id, arg_index: *arg_index })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert entity arg", "Entitätsargument einfügen")
     }

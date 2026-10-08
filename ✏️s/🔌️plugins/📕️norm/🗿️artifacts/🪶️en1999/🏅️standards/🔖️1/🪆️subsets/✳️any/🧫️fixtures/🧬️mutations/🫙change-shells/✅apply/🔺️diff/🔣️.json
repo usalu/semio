@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "annex": null,
   "materials": null,
   "sections": null,
@@ -8,28 +7,34 @@
   "fireScenarios": null,
   "fatigueDetails": null,
   "coldFormed": null,
-  "shells": [
-    {
-      "id": "shell-pass",
-      "materialId": "mat-6082",
-      "radius": 0.5,
-      "thickness": 0.012,
-      "length": 2.0,
-      "actions": [
-        {
-          "id": "G-shell",
-          "kind": "permanent",
-          "category": "self",
-          "source": "external",
-          "gKLine": 800.0,
-          "qKLine": 0.0,
-          "nK": 29600000.0,
-          "vYK": 0.0,
-          "vZK": 3700000.0,
-          "mYK": 22200000.0,
-          "mZK": 0.0
-        }
-      ]
-    }
-  ]
+  "shells": {
+    "added": [
+      {
+        "id": "shell-pass",
+        "materialId": "mat-6082",
+        "radius": 0.5,
+        "thickness": 0.012,
+        "length": 2.0,
+        "actions": [
+          {
+            "id": "G-shell",
+            "kind": "permanent",
+            "category": "self",
+            "source": "external",
+            "gKLine": 800.0,
+            "qKLine": 0.0,
+            "nK": 29600000.0,
+            "vYK": 0.0,
+            "vZK": 3700000.0,
+            "mYK": 22200000.0,
+            "mZK": 0.0
+          }
+        ]
+      }
+    ],
+    "removed": [
+      "shell-pass"
+    ],
+    "order": null
+  }
 }

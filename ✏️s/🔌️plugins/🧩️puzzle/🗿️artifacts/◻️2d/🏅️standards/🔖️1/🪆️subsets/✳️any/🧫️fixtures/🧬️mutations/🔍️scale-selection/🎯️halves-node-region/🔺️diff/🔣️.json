@@ -9,29 +9,8 @@
       {
         "id": "node-a",
         "patch": {
-          "replacement": {
-            "anchor": "fixed",
-            "handles": [
-              {
-                "angle": 0.0,
-                "handleKind": "handle-kind-a",
-                "id": "handle-1"
-              },
-              {
-                "angle": 1.5,
-                "handleKind": "handle-kind-a",
-                "id": "handle-spare"
-              }
-            ],
-            "iconKind": "icon-alpha",
-            "id": "node-a",
-            "nodeKind": "node-kind-a",
-            "radius": 10.0,
-            "shape": "circle",
-            "text": "Alpha",
-            "x": 10.0,
-            "y": 5.0
-          }
+          "x": 10.0,
+          "y": 5.0
         }
       }
     ],
@@ -45,15 +24,10 @@
       {
         "id": "region-1",
         "patch": {
-          "replacement": {
-            "height": 30.25,
-            "hidden": false,
-            "id": "region-1",
-            "locked": false,
-            "width": 40.25,
-            "x": 3.75,
-            "y": -1.25
-          }
+          "height": 30.25,
+          "width": 40.25,
+          "x": 3.75,
+          "y": -1.25
         }
       }
     ],

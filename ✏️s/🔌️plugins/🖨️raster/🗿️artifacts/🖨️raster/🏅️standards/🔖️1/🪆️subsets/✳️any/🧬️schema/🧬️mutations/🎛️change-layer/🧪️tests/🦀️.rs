@@ -31,9 +31,9 @@ fn adjustment_parameter_diff_composition_keeps_brightness_and_contrast() {
     let id=crate::standards::v1::subsets::any::schema::layer_node_id(&layer).to_owned();before.layers.push(layer);
     let first=RasterMutation::ChangeLayerAdjustmentParameter(ChangeLayerAdjustmentParameter {layer_id:id.clone(),parameter:"brightness".into(),expected:None,value:Some(crate::RasterAdjustmentNumber::decimal(0.2))});
     let second=RasterMutation::ChangeLayerAdjustmentParameter(ChangeLayerAdjustmentParameter {layer_id:id,parameter:"contrast".into(),expected:None,value:Some(crate::RasterAdjustmentNumber::decimal(-0.3))});
-    let (mut combined,_)=first.diff(&before).into_parts();let middle=combined.apply(&before).unwrap();
-    let (tail,_)=second.diff(&middle).into_parts();let expected=tail.apply(&middle).unwrap();combined.absorb(tail);
-    let actual=combined.apply(&before).unwrap();assert_eq!(actual,expected);combined.retire_cold();
+    let (mut combined,_)=first.diff(&before).into_parts();let middle=protocol::apply_diff(&combined, &before).unwrap();
+    let (tail,_)=second.diff(&middle).into_parts();let expected=protocol::apply_diff(&tail, &middle).unwrap();combined.absorb(tail);
+    let actual=protocol::apply_diff(&combined, &before).unwrap();assert_eq!(actual,expected);combined.retire_cold();
     for document in [before,middle,actual,expected] {retire(document);}
 }
 
@@ -47,7 +47,7 @@ fn adjustment_parameter_diff_can_replace_a_key_at_map_capacity() {
     for index in 1..crate::RASTER_OWNED_MAP_CAPACITY {params.insert(format!("metadata-{index}"),semio_framework_value::DslValue::Bool(true)).unwrap();}
     before.layers.push(layer);
     let patch=RasterLayerPatch {adjustment_parameters:Some(vec![RasterAdjustmentParameter {parameter:"contrast".into(),value:Some(crate::RasterAdjustmentNumber::decimal(0.3))},RasterAdjustmentParameter {parameter:"brightness".into(),value:None}]),..Default::default()};
-    let diff=diff_patch_layer(&id,patch);let after=diff.apply(&before).unwrap();
+    let diff=diff_patch_layer(&id,patch);let after=protocol::apply_diff(&diff, &before).unwrap();
     let RasterLayerNode::Adjustment {params,..}=&after.layers[0] else {panic!("adjustment")};
     assert_eq!(params.len(),crate::RASTER_OWNED_MAP_CAPACITY);assert!(!params.contains_key("brightness"));assert_eq!(params.get("contrast").and_then(semio_framework_value::DslValue::as_f64),Some(0.3));
     diff.retire_cold();retire(before);retire(after);
@@ -63,7 +63,7 @@ fn adjustment_parameter_patch_vectors_match_schema_acceptance() {
         before.layers.push(layer);
         let patch:RasterLayerPatch=semio_framework_pack_json::from_json_str(&serde_json::json!({"adjustmentParameters":row["parameters"]}).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let diff=diff_patch_layer(&id,patch);
-        let result=diff.apply(&before);
+        let result=protocol::apply_diff(&diff, &before);
         assert_eq!(result.is_ok(),row["valid"].as_bool().unwrap(),"{row}");
         if let Ok(after)=result {retire(after);}
         diff.retire_cold();retire(before);

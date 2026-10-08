@@ -1,7 +1,6 @@
 # 🧬️ Fem2d diff schema — sparse field delta.
 
 type Fem2dDiff {
-  artifact: Fem2dArtifact @state(class: ARTIFACT)
   nodes: Fem2dNodesDelta @state(class: ARTIFACT)
   elements: Fem2dElementsDelta @state(class: ARTIFACT)
   regions: Fem2dRegionsDelta @state(class: ARTIFACT)
@@ -10,7 +9,7 @@ type Fem2dDiff {
   supports: Fem2dSupportsDelta @state(class: ARTIFACT)
   loadCases: Fem2dLoadCasesDelta @state(class: ARTIFACT)
   combinations: Fem2dCombinationsDelta @state(class: ARTIFACT)
-  analysis: FemAnalysisSettings @state(class: ARTIFACT)
+  analysis: Fem2dAnalysisPatch @state(class: ARTIFACT)
 }
 
 type Fem2dNodesDelta {
@@ -94,7 +93,25 @@ type Fem2dLoadCasesDelta {
 
 type Fem2dLoadCasesPatchEntry {
   id: String!
-  item: FemLoadCase!
+  patch: Fem2dLoadCasePatch!
+}
+
+type Fem2dLoadCasePatch {
+  name: String
+  selfWeight: Boolean
+  loads: Fem2dLoadsDelta
+}
+
+type Fem2dLoadsDelta {
+  added: [FemLoad!]!
+  removed: [String!]!
+  patched: [Fem2dLoadsPatchEntry!]!
+  reordered: [String!]
+}
+
+type Fem2dLoadsPatchEntry {
+  id: String!
+  item: FemLoad!
 }
 
 type Fem2dCombinationsDelta {
@@ -109,3 +126,8 @@ type Fem2dCombinationsPatchEntry {
   item: FemCombination!
 }
 
+type Fem2dAnalysisPatch {
+  modalCount: Int
+  bucklingCount: Int
+  deformationScale: Float
+}

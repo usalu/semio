@@ -10,6 +10,8 @@ pub struct CreateShell {
     pub id: String,
     #[value(default)]
     pub faces: Vec<BrepShellFace>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for CreateShell {

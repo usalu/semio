@@ -76,21 +76,8 @@
       "capability": "html-5-mutate",
       "standardDirectoryName": "🔖️5",
       "subsetDirectoryName": "✳️any",
-      "vectors": [
-        {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
-          "scenarios": [
-            {
-              "id": "declares-the-document-language-on-the-root-html-element",
-              "directoryName": "🗣️declares"
-            }
-          ]
-        }
-      ],
+      "vectors": [],
       "kinds": [
-        "set-snapshot",
         "set-doctype",
         "insert-node",
         "remove-node",
@@ -248,26 +235,6 @@
             "operation": "set-raw-text",
             "bridgeVersion": 1,
             "variant": "SetRawText"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "html-5-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "html5lib-html-5-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "html-5-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
           },
           "oracleRequirements": [
             {

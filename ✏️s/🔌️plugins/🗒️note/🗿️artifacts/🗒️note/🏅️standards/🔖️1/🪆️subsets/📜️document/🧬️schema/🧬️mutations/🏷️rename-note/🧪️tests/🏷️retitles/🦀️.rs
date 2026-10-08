@@ -99,7 +99,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-note/retitles-the-document: committed diff did not carry before to after");
 }
 
@@ -113,4 +113,10 @@ async fn only_the_document_title_changes() {
     assert_eq!(applied.blocks, base.blocks, "rename-note must never touch the block tree");
     assert_eq!(applied.assets, base.assets, "rename-note must never touch the asset map");
     assert_eq!((applied.grid_spacing, applied.snap_enabled, applied.pencil_width), (base.grid_spacing, base.snap_enabled, base.pencil_width), "rename-note must never touch grid/snap/tool settings");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

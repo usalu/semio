@@ -1,7 +1,4 @@
-//! ✍️ `set-entry-data` — authored as its own mutation leaf. The aggregate's original
-//! `diff`/`inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf
-//! reconstructs its aggregate value and delegates, so the semantics are preserved by
-//! construction rather than re-derived.
+//! ✍️ `set-entry-data` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -19,14 +16,17 @@ impl protocol::MutationKind<ZipSnapshot, ZipMutation> for SetEntryData {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entry-data", kind: "set-entry-data", record: "SetEntryData" };
 
     fn diff(&self, base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipMutation as protocol::Mutation<ZipSnapshot>>::Diff> {
-        agg_diff(&ZipMutation::SetEntryData(self.clone()), base)
+        let Self { name, data } = self;
+        protocol::MutationOutcome::new(diff::diff_set_entry_data(name, data.clone()))
     }
     fn inverse(&self, base: &ZipSnapshot) -> Result<Vec<ZipMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&ZipMutation::SetEntryData(self.clone()), base)?
-    
-    })
-}
+        let Self { name, .. } = self;
+        Ok({
+            {
+                base.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipMutation::SetEntryData(set_entry_data::SetEntryData { name: name.clone(), data: entry.data.clone() })]).unwrap_or_default()
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set entry data", "Daten des Eintrags setzen")
     }

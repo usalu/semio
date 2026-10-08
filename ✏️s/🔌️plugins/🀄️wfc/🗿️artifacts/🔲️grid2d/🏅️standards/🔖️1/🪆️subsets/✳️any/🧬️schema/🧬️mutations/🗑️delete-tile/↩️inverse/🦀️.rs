@@ -13,6 +13,7 @@ pub fn inverse(payload: &super::DeleteTile, base: &Grid2dSnapshot) -> Result<Vec
     let mut restore = vec![create_tile(tile.clone())];
     restore.extend(base.rules.iter().filter(|rule| rule.tile_a_id == payload.id || rule.tile_b_id == payload.id).map(|rule| create_rule(rule.clone())));
     restore.extend(base.pinned.iter().filter(|cell| cell.tile_id == payload.id).map(|cell| pin_cell(cell.x, cell.y, cell.tile_id.clone())));
+    restore.reverse();
     restore
 
     })())

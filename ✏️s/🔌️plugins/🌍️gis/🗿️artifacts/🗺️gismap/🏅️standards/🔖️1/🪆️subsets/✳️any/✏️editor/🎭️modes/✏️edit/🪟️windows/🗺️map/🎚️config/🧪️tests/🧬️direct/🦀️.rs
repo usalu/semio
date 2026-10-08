@@ -1,7 +1,7 @@
 //! 🧪️ Direct configuration identity, sparse composition and exact map-entry inverse laws.
 
 use super::*;
-use protocol::{Mutation, MutationDiff, MutationLeaf, OpBinary, OpText};
+use protocol::{Mutation, MutationLeaf, OpBinary, OpText};
 
 //#region 🧪️DirectContracts
 fn fixture() -> serde_json::Value {
@@ -59,6 +59,16 @@ fn neutral_envelopes_share_json_text_binary_and_inverse_contracts() {
     assert!(MapWindowConfigMutation::decode_op(&[1, 7]).is_err());
 }
 
+/// ⚖️ Every valid neutral envelope's concrete inverse sums to exactly the negative of its sparse diff, and `between` is the state delta.
+#[semio_framework_async_macros::async_test]
+async fn every_neutral_envelope_inverse_sums_to_the_negative_diff() {
+    for row in fixture()["valid"].as_array().unwrap() {
+        let operation: MapWindowConfigMutation = semio_framework_pack_json::from_json_str(&(row["payload"].clone()).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&operation, &populated()).await;
+        protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<MapWindowConfig, MapWindowConfigDiff>(&populated(), &apply(&populated(), &operation)).await;
+    }
+}
+
 #[test]
 fn neutral_state_cases_match_stored_and_replayed_inverse_order() {
     for row in fixture()["stateCases"].as_array().unwrap() {
@@ -73,7 +83,7 @@ fn neutral_state_cases_match_stored_and_replayed_inverse_order() {
             if row["expected"]["outcome"] == "warning" {
                 assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Warning));
             }
-            after = outcome.diff().apply(&after).unwrap();
+            after = protocol::apply_diff(outcome.diff(), &after).unwrap();
         }
         if row["expected"]["afterEqualsBefore"] == true {
             assert_eq!(after, before);
@@ -111,7 +121,7 @@ fn populated() -> MapWindowConfig {
 }
 
 fn apply(base: &MapWindowConfig, operation: &MapWindowConfigMutation) -> MapWindowConfig {
-    operation.diff(base).diff().apply(base).expect("valid configuration diff")
+    protocol::apply_diff(operation.diff(base).diff(), base).expect("valid configuration diff")
 }
 
 fn undo(base: &MapWindowConfig, operation: &MapWindowConfigMutation) -> MapWindowConfig {
@@ -125,7 +135,7 @@ fn no_op_preserves_every_populated_field() {
     let outcome = operation.diff(&base);
     assert_eq!(outcome.diff(), &MapWindowConfigDiff::default());
     assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Warning));
-    assert_eq!(outcome.diff().apply(&base).unwrap(), base);
+    assert_eq!(protocol::apply_diff(outcome.diff(), &base).unwrap(), base);
 }
 //#endregion 🧪️Identity
 
@@ -173,7 +183,7 @@ fn independent_sparse_writes_compose_and_serde_retains_removal() {
     let mut combined = camera.diff(&base).into_parts().0;
     combined.absorb(clear.diff(&base).into_parts().0);
     let decoded = semio_framework_pack_json::from_json_str::<MapWindowConfigDiff>(&(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&combined)).unwrap()).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let actual = decoded.apply(&base).unwrap();
+    let actual = protocol::apply_diff(&decoded, &base).unwrap();
     assert_eq!(actual, apply(&apply(&base, &camera), &clear));
     assert_eq!(actual.camera_json, "{}");
     assert_eq!(actual.layer_visibility.get("water"), None);
@@ -185,7 +195,7 @@ fn invalid_numeric_delta_cannot_be_hidden_by_a_later_write() {
     let base = populated();
     let mut invalid = MapWindowConfigDiff::from(MapWindowConfigDelta { layer_stroke_scale: BTreeMap::from([("roads".into(), Some(f64::NAN))]), ..Default::default() });
     invalid.absorb(MapWindowConfigDiff::from(MapWindowConfigDelta { layer_stroke_scale: BTreeMap::from([("roads".into(), Some(2.0))]), ..Default::default() }));
-    assert_eq!(invalid.apply(&base).unwrap_err().code, "mutation.apply.invalid-number");
+    assert_eq!(protocol::apply_diff(&invalid, &base).unwrap_err().code, "mutation.apply.invalid-number");
     assert_eq!(base, populated());
 }
 
@@ -196,7 +206,7 @@ fn non_finite_operations_are_rejected_before_persisting_config_diff() {
         let base = populated();
         let outcome = operation.diff(&base);
         assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
-        assert_eq!(outcome.diff().apply(&base).unwrap(), base);
+        assert_eq!(protocol::apply_diff(outcome.diff(), &base).unwrap(), base);
         let delta = MapWindowConfigDelta { layer_stroke_scale: BTreeMap::from([("roads".into(), Some(value))]), ..Default::default() };
         assert!(serde_json::to_string(&MapWindowConfigDiff::from(delta)).is_err());
     }

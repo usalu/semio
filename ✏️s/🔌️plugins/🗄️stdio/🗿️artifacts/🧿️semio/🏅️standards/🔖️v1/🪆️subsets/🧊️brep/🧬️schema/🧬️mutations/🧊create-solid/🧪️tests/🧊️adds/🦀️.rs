@@ -33,7 +33,7 @@ fn mutation() -> SemioBrepMutation {
 #[semio_framework_async_macros::async_test]
 async fn adds_the_second_solid_treating_the_shell_as_a_void() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("create-solid applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("create-solid applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "create-solid/adds-a-second-solid-that-treats-the-shell-as-a-void: applied state differs from the committed after-snapshot");
     assert_eq!(produced.solids.len(), base.solids.len() + 1, "create-solid adds exactly one solid");
     let created = produced.solids.last().expect("the created solid is appended — id-keyed collections have no insertion index");
@@ -48,11 +48,12 @@ async fn adds_the_second_solid_treating_the_shell_as_a_void() {
 async fn the_undo_delete_solid_removes_the_second_solid_again() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "create-solid undoes as exactly one delete-solid");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward create-solid applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo delete-solid applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward create-solid applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo delete-solid applies");
     }
     assert_eq!(current, base, "create-solid/adds-a-second-solid-that-treats-the-shell-as-a-void: the undo did not restore the before-snapshot");
 }
@@ -109,6 +110,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded = decode_semio_brep_diff_json(DIFF).expect("committed create-solid diff decodes");
-    let produced = decoded.apply(&before()).expect("committed create-solid diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed create-solid diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-solid/adds-a-second-solid-that-treats-the-shell-as-a-void: committed diff did not carry before to after");
 }

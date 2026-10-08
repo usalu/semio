@@ -1,18 +1,19 @@
 {
-  "artifact": null,
   "annex": null,
   "title": null,
   "designWorkingLifeYears": null,
   "deltaCDev": null,
   "cementType": null,
   "concreteGrades": {
-    "values": [
+    "added": [],
+    "removed": [],
+    "modified": [
       {
         "id": "c35",
-        "name": "C35/45",
         "fCk": 45000000.0
       }
-    ]
+    ],
+    "order": null
   },
   "reinforcementGrades": null,
   "prestressSteels": null,

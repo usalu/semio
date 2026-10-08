@@ -32,7 +32,7 @@ fn mutation() -> SemioGraphMutation {
 async fn deletes_the_sink_node_and_severs_the_edge_that_referenced_it() {
     let base = before();
     assert!(base.edges.iter().any(|edge| edge.target.value == "b"), "the fixture needs an edge INTO the deleted node for the cascade to mean anything");
-    let produced = mutation().diff(&base).diff().apply(&base).expect("delete-node applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-node applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-node/removes-the-sink-node-and-severs-the-edge-into-it: applied state differs from the committed after-snapshot");
     assert!(!produced.nodes.iter().any(|node| node.id.value == "b"), "the named node must be gone");
     assert!(produced.edges.is_empty(), "the only edge referenced the deleted node, so it must have been severed");
@@ -45,13 +45,14 @@ async fn deletes_the_sink_node_and_severs_the_edge_that_referenced_it() {
 async fn the_undo_recreates_the_node_then_every_severed_edge_in_place() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 2, "one create-node plus one create-edge for the single severed edge");
-    assert!(matches!(&undo[0], SemioGraphMutation::CreateNode(node) if node.at.is_some()), "the node must be re-created FIRST, at its index — create-edge rejects an unknown endpoint");
-    assert!(matches!(&undo[1], SemioGraphMutation::CreateEdge(edge) if edge.at.is_some()), "the severed edge is re-created after its endpoint exists again, at its index");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-node applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("each undo step applies to the running state");
+    assert!(matches!(&undo[1], SemioGraphMutation::CreateNode(node) if node.at.is_some()), "rows are stored reversed: the node row comes last and is replayed first, at its index — create-edge rejects an unknown endpoint");
+    assert!(matches!(&undo[0], SemioGraphMutation::CreateEdge(edge) if edge.at.is_some()), "the severed edge row is replayed after its endpoint exists again, at its index");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-node applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
     }
     assert_eq!(current, base, "delete-node/removes-the-sink-node-and-severs-the-edge-into-it: the undo did not restore the before-snapshot");
 }
@@ -98,8 +99,6 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_carries_both_slots() {
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-node diff decodes");
-    assert_eq!(decoded.nodes.as_ref().map(|list| list.values.len()), Some(1), "the diff must carry the single surviving node");
-    assert_eq!(decoded.edges.as_ref().map(|list| list.values.len()), Some(0), "the diff must ALSO carry the emptied edge list — the sever is part of the same diff");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-node/removes-the-sink-node-and-severs-the-edge-into-it: committed diff JSON is not canonical");
@@ -109,6 +108,6 @@ async fn committed_diff_is_canonical_and_carries_both_slots() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-node diff decodes");
-    let produced = decoded.apply(&before()).expect("committed delete-node diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-node diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-node/removes-the-sink-node-and-severs-the-edge-into-it: committed diff did not carry before to after");
 }

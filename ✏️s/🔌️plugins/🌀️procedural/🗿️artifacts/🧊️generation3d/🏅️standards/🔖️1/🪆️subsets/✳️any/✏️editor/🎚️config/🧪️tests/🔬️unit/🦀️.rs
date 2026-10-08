@@ -71,7 +71,6 @@ fn config_op_text_round_trips_every_variant() {
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetPreviewCamera(SetPreviewCamera { camera: Generation3dPreviewCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], fov: 45.0 } }));
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetSun(SetSun { json: "{}".into() }));
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetSelectedGeneration(SetSelectedGeneration { selected_generation_id: Some("g1".into()) }));
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetSnapshot(SetSnapshot { config: Generation3dConfig::default() }));
 }
 
 /// 📜️ Every leaf descriptor's `owner` must name a REAL directory that is an immediate child of this
@@ -92,5 +91,5 @@ fn every_config_leaf_owner_directory_exists_on_disk() {
 #[test]
 fn config_leaf_descriptors_cover_every_variant_in_tag_order() {
     let kinds: Vec<&str> = <Generation3dConfigMutation as Mutation<Generation3dConfig>>::DESCRIPTORS.iter().map(|descriptor| descriptor.semantic_kind).collect();
-    assert_eq!(kinds, vec!["set-snapshot", "set-lod-mode", "set-show-mode", "set-camera", "set-preview-camera", "set-sun", "set-selected-generation"]);
+    assert_eq!(kinds, vec!["set-lod-mode", "set-show-mode", "set-camera", "set-preview-camera", "set-sun", "set-selected-generation"]);
 }

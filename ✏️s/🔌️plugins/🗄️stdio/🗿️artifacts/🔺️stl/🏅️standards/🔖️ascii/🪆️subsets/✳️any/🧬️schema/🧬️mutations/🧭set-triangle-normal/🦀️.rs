@@ -1,7 +1,4 @@
-//! 🧭️ `set-triangle-normal` — authored as its own mutation leaf. The aggregate's original
-//! `diff`/`inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs
-//! its aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 🧭️ `set-triangle-normal` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -18,14 +15,18 @@ impl protocol::MutationKind<StlSnapshot, StlMutation> for SetTriangleNormal {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "triangle-normal", kind: "set-triangle-normal", record: "SetTriangleNormal" };
 
     fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as Mutation<StlSnapshot>>::Diff> {
-        agg_diff(&StlMutation::SetTriangleNormal(self.clone()), base)
+        let Self { index, normal } = self;
+        protocol::MutationOutcome::new(diff::diff_set_triangle_normal(*index, *normal))
     }
     fn inverse(&self, base: &StlSnapshot) -> Result<Vec<StlMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&StlMutation::SetTriangleNormal(self.clone()), base)?
-    
-    })
-}
+        let Self { index, .. } = self;
+        Ok({
+            match base.triangles.get(*index) {
+                Some(t) => vec![StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: *index, normal: t.normal })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set triangle normal", "Normale des Dreiecks setzen")
     }

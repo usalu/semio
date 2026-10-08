@@ -1,6 +1,6 @@
 //! 🧬️ LasMutation — document mutation dispatch. Ticket
-//! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: real vocabulary beyond
-//! the universal `{NoMutation, SetSnapshot}` stub — header fields grouped sensibly
+//! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: real vocabulary: header
+//! fields grouped sensibly
 //! (`SetVersion`/`SetSystemIdentifier`/`SetSoftwareInfo`/`SetCreationDate`/`SetScaleAndOffset`/
 //! `SetBounds`/`SetPointsByReturn`), `InsertVlr`/`RemoveVlr`/`SetVlrData` and
 //! `InsertPoint`/`RemovePoint`/`SetPoint` cover the index-keyed collections. Every variant's
@@ -39,10 +39,6 @@ pub mod set_points_by_return;
 pub mod set_scale_and_offset;
 /// 📐️ Typed content mutation for `stdio.las`.
 //#region 🔖️Leaves
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "🛠️set-software-info/🦀️.rs"]
 pub mod set_software_info;
 #[path = "🏢set-system-identifier/🦀️.rs"]
@@ -57,8 +53,6 @@ pub mod set_vlr_data;
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = LasSnapshot, diff = LasDiff, schema = "s.stdio.las")]
 pub enum LasMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetVersion(set_version::SetVersion),
     SetSystemIdentifier(set_system_identifier::SetSystemIdentifier),
     SetSoftwareInfo(set_software_info::SetSoftwareInfo),
@@ -80,7 +74,6 @@ pub enum LasMutation {
 /// `../../🔣️oracle.json`'s `las-1-0-any` catalog is measured against. Kept honest by
 /// `kinds_match_enum_and_catalog` below (the framework never parses Rust to learn this list).
 pub const KINDS: &[&str] = &[
-    "set-snapshot", "patch-snapshot",
     "set-version",
     "set-system-identifier",
     "set-software-info",
@@ -106,7 +99,7 @@ pub const KINDS: &[&str] = &[
 /// sync is a snapshot-level consistency guarantee, not the sole source of correctness).
 pub fn apply_las_mutation(snapshot: &mut LasSnapshot, mutation: &LasMutation) -> protocol::MutationOutcome<LasDiff> {
     let outcome = <LasMutation as Mutation<LasSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -117,76 +110,58 @@ pub fn apply_las_mutation(snapshot: &mut LasSnapshot, mutation: &LasMutation) ->
 //#endregion 🔖️Apply
 
 
-//#region 🔖️MutationTrait
-/// ▶️ Every variant's `diff()`, dispatched by the leaf that wraps it. Lifted verbatim from the
-/// former `impl Mutation<LasSnapshot> for LasMutation` — only each match arm's pattern head
-/// changed, from `LasMutation::Variant { a, b }` to `LasMutation::Variant(variant_mod::Variant {
-/// a, b })`.
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &LasMutation, base: &LasSnapshot) -> protocol::MutationOutcome<LasDiff> {
-    protocol::MutationOutcome::new(match this {
-        LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff::diff_set_snapshot(base, snapshot),
-        LasMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<LasSnapshot, LasMutation>>::diff(patch, base),
-        LasMutation::SetVersion(set_version::SetVersion { major, minor }) => diff::diff_set_version(*major, *minor),
-        LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier }) => diff::diff_set_system_identifier(system_identifier),
-        LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software }) => diff::diff_set_software_info(generating_software),
-        LasMutation::SetCreationDate(set_creation_date::SetCreationDate { day_of_year, year }) => diff::diff_set_creation_date(*day_of_year, *year),
-        LasMutation::SetScaleAndOffset(set_scale_and_offset::SetScaleAndOffset { scale, offset }) => diff::diff_set_scale_and_offset(base, *scale, *offset),
-        LasMutation::SetBounds(set_bounds::SetBounds { max, min }) => diff::diff_set_bounds(*max, *min),
-        LasMutation::SetPointsByReturn(set_points_by_return::SetPointsByReturn { counts }) => diff::diff_set_points_by_return(*counts),
-        LasMutation::InsertVlr(insert_vlr::InsertVlr { index, vlr }) => diff::diff_insert_vlr(base, *index, vlr.clone()),
-        LasMutation::RemoveVlr(remove_vlr::RemoveVlr { index }) => diff::diff_remove_vlr(base, *index),
-        LasMutation::SetVlrData(set_vlr_data::SetVlrData { index, data }) => diff::diff_set_vlr_data(*index, data.clone()),
-        LasMutation::InsertPoint(insert_point::InsertPoint { index, point }) => diff::diff_insert_point(base, *index, point.clone()),
-        LasMutation::RemovePoint(remove_point::RemovePoint { index }) => diff::diff_remove_point(base, *index),
-        LasMutation::SetPoint(set_point::SetPoint { index, point }) => diff::diff_set_point(base, *index, point),
-    })
-}
-
-/// ↩️ Handcrafted, index-aware mutation-level inverses. Index-targeted variants look the prior
-/// value up in `base`; a stale/out-of-range index inverts to an empty inverse list (nothing to
-/// undo) — lifted verbatim from the former `impl Mutation`, `NoMutation`'s single-element
-/// `vec![LasMutation::NoMutation]` sentinel replaced by `Vec::new()` now that no unit "do
-/// nothing" variant exists (same convention `stdio.csv`'s `agg_inverse` uses for its own
-/// out-of-range cases).
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &LasMutation, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
-    Ok({
-    match this {
-        LasMutation::SetSnapshot(_) => vec![LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        LasMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<LasSnapshot, LasMutation>>::inverse(patch, base)?),
-        LasMutation::SetVersion(_) => vec![LasMutation::SetVersion(set_version::SetVersion { major: base.header.version_major, minor: base.header.version_minor })],
-        LasMutation::SetSystemIdentifier(_) => vec![LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: base.header.system_identifier.clone() })],
-        LasMutation::SetSoftwareInfo(_) => vec![LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software: base.header.generating_software.clone() })],
-        LasMutation::SetCreationDate(_) => vec![LasMutation::SetCreationDate(set_creation_date::SetCreationDate { day_of_year: base.header.creation_day_of_year, year: base.header.creation_year })],
-        LasMutation::SetScaleAndOffset(_) => {
-            vec![LasMutation::SetScaleAndOffset(set_scale_and_offset::SetScaleAndOffset { scale: (base.header.x_scale, base.header.y_scale, base.header.z_scale), offset: (base.header.x_offset, base.header.y_offset, base.header.z_offset) })]
-        }
-        LasMutation::SetBounds(_) => vec![LasMutation::SetBounds(set_bounds::SetBounds { max: (base.header.max_x, base.header.max_y, base.header.max_z), min: (base.header.min_x, base.header.min_y, base.header.min_z) })],
-        LasMutation::SetPointsByReturn(_) => vec![LasMutation::SetPointsByReturn(set_points_by_return::SetPointsByReturn { counts: base.header.points_by_return })],
-        LasMutation::InsertVlr(insert_vlr::InsertVlr { index, .. }) => vec![LasMutation::RemoveVlr(remove_vlr::RemoveVlr { index: (*index).min(base.vlrs.len()) })],
-        LasMutation::RemoveVlr(remove_vlr::RemoveVlr { index }) => match base.vlrs.get(*index) {
-            Some(v) => vec![LasMutation::InsertVlr(insert_vlr::InsertVlr { index: *index, vlr: v.clone() })],
-            None => Vec::new(),
-        },
-        LasMutation::SetVlrData(set_vlr_data::SetVlrData { index, .. }) => match base.vlrs.get(*index) {
-            Some(v) => vec![LasMutation::SetVlrData(set_vlr_data::SetVlrData { index: *index, data: v.data.clone() })],
-            None => Vec::new(),
-        },
-        LasMutation::InsertPoint(insert_point::InsertPoint { index, .. }) => vec![LasMutation::RemovePoint(remove_point::RemovePoint { index: (*index).min(base.points.len()) })],
-        LasMutation::RemovePoint(remove_point::RemovePoint { index }) => match base.points.get(*index) {
-            Some(p) => vec![LasMutation::InsertPoint(insert_point::InsertPoint { index: *index, point: p.clone() })],
-            None => Vec::new(),
-        },
-        LasMutation::SetPoint(set_point::SetPoint { index, .. }) => match base.points.get(*index) {
-            Some(p) => vec![LasMutation::SetPoint(set_point::SetPoint { index: *index, point: p.clone() })],
-            None => Vec::new(),
-        },
-    }
-
-    })
-}
 //#endregion 🔖️MutationTrait
+
+//#region 🔖️Net
+/// 🧮️ The leaves that carry `base` to exactly `next`: the header groups that moved, then each VLR and point row in place (its
+/// data alone via `set-vlr-data`, a whole point via `set-point`, any other VLR change as remove-then-insert), then the diverging
+/// tails. The snapshot `schema` is a constant of the artifact; header fields the collections keep in sync are never leaves.
+pub fn net_mutations(base: &LasSnapshot, next: &LasSnapshot) -> Vec<LasMutation> {
+    let (old, new) = (&base.header, &next.header);
+    let mut leaves = Vec::new();
+    if (old.version_major, old.version_minor) != (new.version_major, new.version_minor) {
+        leaves.push(LasMutation::SetVersion(set_version::SetVersion { major: new.version_major, minor: new.version_minor }));
+    }
+    if old.system_identifier != new.system_identifier {
+        leaves.push(LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: new.system_identifier.clone() }));
+    }
+    if old.generating_software != new.generating_software {
+        leaves.push(LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software: new.generating_software.clone() }));
+    }
+    if (old.creation_day_of_year, old.creation_year) != (new.creation_day_of_year, new.creation_year) {
+        leaves.push(LasMutation::SetCreationDate(set_creation_date::SetCreationDate { day_of_year: new.creation_day_of_year, year: new.creation_year }));
+    }
+    let scale_and_offset = |header: &LasHeader| ((header.x_scale, header.y_scale, header.z_scale), (header.x_offset, header.y_offset, header.z_offset));
+    if scale_and_offset(old) != scale_and_offset(new) {
+        let (scale, offset) = scale_and_offset(new);
+        leaves.push(LasMutation::SetScaleAndOffset(set_scale_and_offset::SetScaleAndOffset { scale, offset }));
+    }
+    let bounds = |header: &LasHeader| ((header.max_x, header.max_y, header.max_z), (header.min_x, header.min_y, header.min_z));
+    if bounds(old) != bounds(new) {
+        let (max, min) = bounds(new);
+        leaves.push(LasMutation::SetBounds(set_bounds::SetBounds { max, min }));
+    }
+    if old.points_by_return != new.points_by_return {
+        leaves.push(LasMutation::SetPointsByReturn(set_points_by_return::SetPointsByReturn { counts: new.points_by_return }));
+    }
+    let paired = base.vlrs.len().min(next.vlrs.len());
+    for (index, (before, after)) in base.vlrs.iter().zip(&next.vlrs).enumerate().filter(|(_, (before, after))| before != after) {
+        if (&before.user_id, before.record_id, &before.description) == (&after.user_id, after.record_id, &after.description) {
+            leaves.push(LasMutation::SetVlrData(set_vlr_data::SetVlrData { index, data: after.data.clone() }));
+        } else {
+            leaves.push(LasMutation::RemoveVlr(remove_vlr::RemoveVlr { index }));
+            leaves.push(LasMutation::InsertVlr(insert_vlr::InsertVlr { index, vlr: after.clone() }));
+        }
+    }
+    leaves.extend((paired..base.vlrs.len()).rev().map(|index| LasMutation::RemoveVlr(remove_vlr::RemoveVlr { index })));
+    leaves.extend(next.vlrs.iter().enumerate().skip(paired).map(|(index, vlr)| LasMutation::InsertVlr(insert_vlr::InsertVlr { index, vlr: vlr.clone() })));
+    let paired = base.points.len().min(next.points.len());
+    leaves.extend(base.points.iter().zip(&next.points).enumerate().filter(|(_, (before, after))| before != after).map(|(index, (_, after))| LasMutation::SetPoint(set_point::SetPoint { index, point: after.clone() })));
+    leaves.extend((paired..base.points.len()).rev().map(|index| LasMutation::RemovePoint(remove_point::RemovePoint { index })));
+    leaves.extend(next.points.iter().enumerate().skip(paired).map(|(index, point)| LasMutation::InsertPoint(insert_point::InsertPoint { index, point: point.clone() })));
+    leaves
+}
+//#endregion 🔖️Net
 
 //#region OpCodecs
 /// 🧪️ F6 (las, recon-gap-fill): **hand-rolled** `OpText`/`OpBinary` for `LasMutation` — the
@@ -196,9 +171,8 @@ pub(crate) fn agg_inverse(this: &LasMutation, base: &LasSnapshot) -> Result<Vec<
 /// (`scale`/`offset`/`max`/`min`: `(f64, f64, f64)`) — real compiler output:
 /// `error[E0277]: the trait bound `(f64, f64, f64): DslField` is not satisfied` (4 occurrences).
 /// Root cause: no blanket `impl<..> DslField for (A, B, C)` exists in the `dsl` crate (same gap
-/// class as `LasDiff`'s tri-state blocker — see that module's doc comment). `SetSnapshot`
-/// independently fails too, transitively: `LasSnapshot` embeds `LasPoint::rgb: Option<(u16, u16,
-/// u16)>`, the exact same bare-tuple gap. This gap is orthogonal to the `#[derive(dsl::MutationLeaf)]`
+/// class as `LasDiff`'s tri-state blocker — see that module's doc comment). `InsertPoint`/`SetPoint`
+/// fail too, transitively: `LasPoint::rgb` is `Option<(u16, u16, u16)>`, the exact same bare-tuple gap. This gap is orthogonal to the `#[derive(dsl::MutationLeaf)]`
 /// used by each leaf's payload struct below (a different derive, unaffected by it), so leaves keep
 /// that derive while the AGGREGATE keeps this hand-rolled `OpText`/`OpBinary` pair.
 ///
@@ -258,19 +232,15 @@ pub(crate) fn base_snapshot() -> LasSnapshot {
 /// `LasMutation` cases, one per variant (14 total) — single source of truth shared by
 /// `op_text_binary_roundtrip_law` below AND `⚙️engine/🦀️.rs`'s
 /// `ops_grammar_conformance_law`/`protocol_walk_law` conformance tests, per CLAUDE.md (no
-/// duplicated literal case lists). Exercises `SetSnapshot` (whole-header + vlrs + points
-/// positional codec), both bare-tuple variants (`SetScaleAndOffset`/`SetBounds`), the `[u32; 5]`
+/// duplicated literal case lists). Exercises both bare-tuple variants (`SetScaleAndOffset`/`SetBounds`), the `[u32; 5]`
 /// array (`SetPointsByReturn`), and a point/VLR carrying both tri-state-capable fields set
 /// (`gps_time`/`rgb`).
 #[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<LasMutation> {
-    let base = base_snapshot();
     let mut rich_point = point(9);
     rich_point.gps_time = Some(1234.5);
     rich_point.rgb = Some((11, 22, 33));
     vec![
-        LasMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
-        LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: LasSnapshot { header: LasHeader { creation_year: 2031, ..base.header.clone() }, ..base.clone() } }),
         LasMutation::SetVersion(set_version::SetVersion { major: 1, minor: 4 }),
         LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: "semio".into() }),
         LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software: "semio-las-writer".into() }),
@@ -293,17 +263,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<LasMutation> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion Tests
-
-//#region 🧪️FixtureTests
-// 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
-// agents migrating the other stdio artifacts, so the production mounts there stay untouched while
-// this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
-// directory, which is what makes the leaf-relative path below resolve.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-//#endregion 🧪️FixtureTests
 
 /// 📍️ A point as the decoder yields it under the default header (`scale 0.01`, `offset 0`):
 /// every coordinate is `record * scale + offset` of an integer record, so a scale/offset edit

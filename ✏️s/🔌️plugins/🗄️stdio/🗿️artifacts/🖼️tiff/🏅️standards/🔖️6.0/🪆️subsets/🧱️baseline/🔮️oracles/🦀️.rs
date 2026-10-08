@@ -19,7 +19,7 @@ use semio_repo_test_host::Json;
 
 //#region 🔖️Axes
 /// 🧭️ IFD 0's Baseline axes as the third-party reader sees them. `None` is an absent tag; `tags` is IFD 0's entry
-/// order, which names the field a `patch-snapshot` pointer `/ifds/0/entries/{i}` addresses.
+/// order.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Axes {
     pub tags: Vec<u32>,
@@ -106,31 +106,11 @@ fn snapshot_axes(snapshot: &Json) -> Axes {
 }
 
 /// 🦠️ Applies one kind to the axes as TIFF 6.0 defines the field it names: a set writes the field, a removal
-/// deletes it, and `set-snapshot` replaces the whole document with the wire snapshot's own axes. `params` is the
+/// deletes it. `params` is the
 /// leaf's wire payload (`payload_value()`).
 pub fn apply(axes: &Axes, kind: &str, params: &Json) -> Result<Axes, String> {
     let mut next = axes.clone();
     match kind {
-        "set-snapshot" => next = snapshot_axes(params.get("snapshot").ok_or("set-snapshot carries no snapshot")?),
-        "patch-snapshot" => {
-            let patch = params.get("patch").ok_or("patch-snapshot carries no patch")?;
-            let path = patch.str("path");
-            let segments: Vec<&str> = path.split('/').skip(1).collect();
-            let tag = match (patch.str("operation").as_str(), segments.as_slice()) {
-                ("set", ["ifds", "0", "entries", entry, "values", "value"]) => entry.parse::<usize>().ok().and_then(|entry| axes.tags.get(entry).copied()),
-                _ => None,
-            };
-            let values = Some(numbers(&Json::Object(vec![("value".to_string(), patch.get("value").cloned().unwrap_or(Json::Null))]), "value"));
-            match tag {
-                Some(259) => next.compression = values,
-                Some(262) => next.photometric = values,
-                Some(258) => next.bits_per_sample = values,
-                Some(322) => next.tile_width = values,
-                Some(323) => next.tile_length = values,
-                Some(273) => next.strip_offsets = values,
-                _ => return Err(format!("patch-snapshot {path} addresses no TIFF 6.0 Baseline axis")),
-            }
-        }
         "set-compression" => next.compression = Some(vec![number(params, "compression")?]),
         "set-photometric-interpretation" => next.photometric = Some(vec![number(params, "photometric")?]),
         "set-bits-per-sample" => next.bits_per_sample = Some(numbers(params, "bits")),

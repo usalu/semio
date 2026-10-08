@@ -7,4 +7,5 @@ import "../../🔺️diff/🛰️.proto";
 // 🏞️ Direct set-image protobuf payload.
 message SetImageMutation {
   PdfImage image = 1;
+  optional uint64 index = 2;
 }

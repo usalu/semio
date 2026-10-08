@@ -46,7 +46,7 @@ impl<'a> NativeEncodeControl<'a> {
     /// 🔢️ Advances one explicit owned field or collection item.
     pub fn step(&mut self)->Result<(),ValueError>{self.advance(1)}
     /// 📦️ Admits storage before an allocation, preserving all previous charges.
-    pub fn charge(&mut self,bytes:usize)->Result<(),ValueError>{let next=self.owned_bytes.checked_add(bytes).filter(|next|*next<=self.maximum_bytes).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "native encoding ownership exceeds caller limit"))?;if !self.started||bytes>65536{self.checkpoint()?;}self.owned_bytes=next;Ok(())}
+    pub fn charge(&mut self,bytes:usize)->Result<(),ValueError>{let next=self.owned_bytes.checked_add(bytes).filter(|next|*next<=self.maximum_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "native encoding ownership exceeds caller limit"))?;if !self.started||bytes>65536{self.checkpoint()?;}self.owned_bytes=next;Ok(())}
     /// 🗂️ Reserves a known typed frontier before creating its slots.
     pub fn allocate_vec<T>(&mut self,count:usize)->Result<Vec<T>,ValueError>{let bytes=count.checked_mul(std::mem::size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "native encoding collection size overflow"))?;self.charge(bytes)?;let mut output=Vec::new();output.try_reserve_exact(count).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "native encoding collection allocation failed"))?;Ok(output)}
     /// 🔤️ Owns exact UTF-8 through cancellable64KiB spans.

@@ -1,0 +1,5 @@
+# Controlled provider discovery TDD
+
+The separate provider caller test command retains the exact frozen epoch12 core source authority and does not edit the whole execution producer. It runs all original nine provider admission/selection assertions and new schema-first language-neutral discovery cases using an independent Iarna TOML parse. The cases cover absent metadata, the same admitted metadata, optional absent roots, duplicate roots, extra fields, escaped physical paths, and malformed Semio tables. Real Cargo operations test cancellation before any owner and at the physical script observation. Red uses the current synchronous/reparsing provider body; green uses the guarded mandatory-operation proposal. Both keep long level and 60000 ms timeout.
+
+Only provider discovery is tested by these commands. The other four current Stdio/GIS/inventory caller proposals remain outside runtime acceptance. No source publication occurs. This report records authored controls; neither command has executed yet.

@@ -1,0 +1,6 @@
+{
+  "kind": "brep.primitive.box",
+  "quality": "approximate",
+  "builtinQuality": "exact-analytic",
+  "duplicateIdentityRefused": true
+}

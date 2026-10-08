@@ -71,14 +71,6 @@ mod live {
     /// silent no-op: a quietly skipped mutation reports as a passing test.
     pub fn apply(doc: &mut MarkupDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "set-snapshot" => {
-                *doc = doc_from_wire(&member(&member(params, "snapshot"), "doc"))?;
-                Ok(())
-            }
-            "patch-snapshot" => {
-                *doc = patched_markup(doc, "stdio.svg", &member(params, "patch"))?;
-                Ok(())
-            }
             "stamp-base-profile" => {
                 let root = doc.root.as_mut().ok_or("stamp-base-profile: document has no root element")?;
                 set_attr(root, "baseProfile", non_empty_str(params, "baseProfile"));
@@ -132,6 +124,7 @@ mod live {
                 rewrite_elements(root, &mut |_, attrs| attrs.retain(|(key, _)| !is_blocked_attr(key)));
                 Ok(())
             }
+            "restore-non-tiny" => Err("restore-non-tiny is the inverse of strip-non-tiny and is exercised only through that kind's inverse scenario".into()),
             other => Err(format!("mutation kind {other:?} has no oracle implementation")),
         }
     }
@@ -144,12 +137,11 @@ mod live {
     /// defines for the subject, computed independently here so the property has two producers to
     /// disagree.
     ///
-    /// `set-snapshot` and `strip-non-tiny` both restore the whole prior document: a strip that
-    /// removed 335 excluded attributes has no smaller undo, and the subject's own inverse is the
-    /// same `SetSnapshot{base}`. Stated rather than hidden.
+    /// `strip-non-tiny` restores the whole prior document: the subject's own inverse is the
+    /// `restore-non-tiny` row set that puts back every removed element and attribute at its position.
     pub fn invert(base: &MarkupDoc, mut mutated: MarkupDoc, kind: &str, params: &Json) -> Result<MarkupDoc, String> {
         match kind {
-            "set-snapshot" | "patch-snapshot" | "strip-non-tiny" => Ok(base.clone()),
+            "strip-non-tiny" => Ok(base.clone()),
             "stamp-base-profile" => {
                 let prior_profile = node_at(base, &[]).ok().and_then(|node| element_attr(node, "baseProfile")).map(|s| s.to_string());
                 let prior_version = node_at(base, &[]).ok().and_then(|node| element_attr(node, "version")).map(|s| s.to_string());

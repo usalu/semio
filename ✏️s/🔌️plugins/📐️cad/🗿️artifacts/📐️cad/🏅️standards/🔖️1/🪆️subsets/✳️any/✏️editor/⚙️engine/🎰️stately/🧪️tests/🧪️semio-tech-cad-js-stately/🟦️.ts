@@ -3,7 +3,7 @@ import type { EdgeRef, FaceRef, Model, VertexRef, WireRef } from "../../../../..
 import type { Command } from "@semio-tech/machine";
 import type { InteractionRuntime } from "../../../🗿️artifact/🟦️.ts";
 import type { ModelDiff } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
-import type { Vec3 } from "@semio-tech/s-3d-js";
+import type { Vec3 } from "@semio-tech/framework-3d-js";
 
 type TestSource = { readonly url: string };
 

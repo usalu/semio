@@ -8,7 +8,6 @@
 //!
 //! | kind | production rule it addresses |
 //! |---|---|
-//! | `set-snapshot` | `CODE_FILE_SCHEMA` — the document must declare `IFC2X3` |
 //! | `set-view-definition` | `CODE_VIEW_DEFINITION` — `FILE_DESCRIPTION` must name `CoordinationView` |
 //! | `set-structural-entity` | `CODE_STRUCTURAL_ENTITY` — CV2.0's architectural scope forbids structural-analysis entities |
 //! | `set-project-units` | `CODE_PROJECT_UNITS` — `IfcProject.UnitsInContext` must resolve |
@@ -64,7 +63,7 @@ mod oracles {
                     return Err(format!("{type_name} is not one of the structural types Coordination View 2.0 excludes ({FORBIDDEN_STRUCTURAL_TYPES:?})"));
                 }
                 let args = vec![Parameter::String(part21::str_field(entity, "globalId")?), Parameter::NotProvided, Parameter::String(part21::str_field(entity, "name")?)];
-                part21::upsert_simple(exchange, id, &type_name, args)
+                part21::upsert_simple_at(exchange, id, &type_name, args, part21::opt_usize_field(params, "index")?)
             }
         }
     }
@@ -104,7 +103,6 @@ mod oracles {
     /// error, never a silent no-op: a quietly skipped mutation reports as a passing test.
     fn apply(exchange: &mut Exchange, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "set-snapshot" => part21::replace_with_snapshot(exchange, params.get("snapshot").ok_or("set-snapshot carries `snapshot`")?),
             "set-view-definition" => part21::set_view_definition(exchange, &part21::str_field(params, "view")?),
             "set-structural-entity" => set_structural_entity(exchange, params),
             "set-project-units" => set_project_units(exchange, params),
@@ -124,10 +122,6 @@ mod oracles {
         Ok(part21::write(&part21::read(input)?))
     }
 
-    /// 📸️ The untouched document as the `set-snapshot` payload that restores it.
-    pub fn snapshot_payload(input: &[u8]) -> Result<Json, String> {
-        Ok(part21::snapshot_payload(&part21::read(input)?))
-    }
     //#endregion 🔖️Apply
 
     //#region 🔖️Projection
@@ -181,12 +175,6 @@ pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     oracles::round_trip(input)
 }
 
-/// 📸️ The untouched artifact as the `set-snapshot` wire payload that restores it — the inverse of `set-snapshot`.
-#[cfg(feature = "oracles")]
-pub fn oracle_snapshot_payload(input: &[u8]) -> Result<Json, String> {
-    oracles::snapshot_payload(input)
-}
-
 /// 👁️ This subset's own semantic projection, read back through the independent `ruststep` parser.
 #[cfg(feature = "oracles")]
 pub fn project_ifc_2x3_cv20(bytes: &[u8]) -> Result<Json, String> {
@@ -201,11 +189,6 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
-
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_snapshot_payload(_input: &[u8]) -> Result<Json, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

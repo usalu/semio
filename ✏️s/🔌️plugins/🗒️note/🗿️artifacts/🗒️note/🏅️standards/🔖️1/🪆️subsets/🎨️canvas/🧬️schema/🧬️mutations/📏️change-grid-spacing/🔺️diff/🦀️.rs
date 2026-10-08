@@ -13,6 +13,6 @@ pub fn diff(payload: &ChangeGridSpacing, base: &NoteSnapshot) -> protocol::Mutat
     if payload.new_spacing == base.grid_spacing {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Grid spacing already has this value.");
     }
-    protocol::MutationOutcome::new(NoteDiff { grid_spacing: Some(payload.new_spacing), ..Default::default() })
+    protocol::MutationOutcome::new(NoteDiff { grid_spacing: Some(crate::schema::diff::NoteAssigned::new(payload.new_spacing)), ..Default::default() })
 }
 //#endregion 🔖️Diff

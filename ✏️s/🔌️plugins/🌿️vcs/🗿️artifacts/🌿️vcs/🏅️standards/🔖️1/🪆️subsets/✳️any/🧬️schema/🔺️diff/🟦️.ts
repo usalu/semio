@@ -2,8 +2,6 @@
 
 export interface VcsDiff {
   /** @state artifact */
-  artifact?: VcsArtifact;
-  /** @state artifact */
   schema?: string;
   /** @state artifact */
   title?: string;
@@ -24,16 +22,9 @@ export interface VcsStringList {
 export interface VcsTagsDelta {
   added: string[];
   removed: string[];
+  reordered?: string[];
 }
 
-export interface VcsArtifact {
-  schema: string;
-  title: string;
-  counter: number;
-  notes: string;
-  status: string;
-  tags: string[];
-}
 
 //#region 🚪️Parsers
 /** 🚪️ Refusal of one instance position, the shape every `parse<Export>` below rejects with. */
@@ -85,7 +76,6 @@ export const vcsVcsDiffGuardConstant = <T extends string | number | boolean>(val
 export function parseVcsDiff(value: unknown, at = "$"): VcsDiff {
   const row = vcsVcsDiffGuardObject(value, at);
   return {
-    artifact: row["artifact"] === undefined ? undefined : vcsVcsDiffGuardObject(row["artifact"], `${at}.artifact`),
     schema: row["schema"] === undefined ? undefined : vcsVcsDiffGuardString(row["schema"], `${at}.schema`),
     title: row["title"] === undefined ? undefined : vcsVcsDiffGuardString(row["title"], `${at}.title`),
     counter: row["counter"] === undefined ? undefined : vcsVcsDiffGuardInteger(row["counter"], `${at}.counter`),
@@ -107,5 +97,6 @@ export function parseVcsTagsDelta(value: unknown, at = "$"): VcsTagsDelta {
   return {
     added: vcsVcsDiffGuardArray(row["added"], `${at}.added`).map((item, index) => vcsVcsDiffGuardString(item, `${at}.added[${index}]`)),
     removed: vcsVcsDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => vcsVcsDiffGuardString(item, `${at}.removed[${index}]`)),
+    reordered: row["reordered"] === undefined ? undefined : vcsVcsDiffGuardArray(row["reordered"], `${at}.reordered`).map((item, index) => vcsVcsDiffGuardString(item, `${at}.reordered[${index}]`)),
   };
 }

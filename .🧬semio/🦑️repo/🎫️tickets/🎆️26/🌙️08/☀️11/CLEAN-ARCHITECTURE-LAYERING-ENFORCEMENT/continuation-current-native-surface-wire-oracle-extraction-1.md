@@ -1,0 +1,9 @@
+# Surface Wire Oracle Ownership
+
+The fixed browser Body embeds use actual Float64 tags, including integral JavaScript values. Native scene run 5 passed the allocator and structural/cancellation laws, but the output law incorrectly compared independent Serde Number(7.0) to fixture Number(7). Explicit hand-authored nativeJson strings now preserve the actual canonical F64 lexical output; both direct text and independent Serde syntax are asserted. TypeScript checks those strings parse to the unchanged neutral values. No runtime numeric coercion was introduced.
+
+The General Surface source suite formerly imported the whole Specific OS producer. The producer interoperability law now lives in OS tests and has a permanent ScriptRouter/Nx/launch target. Registered source extraction 4 ran that actual OS integration law successfully. General tests now consume the independent General intrinsic reader with exact Float64 bit observations. Their first run exposed the reader deliberately returns bit witnesses rather than JavaScript numbers; the fixture expectation now computes the exact F64 bits independently with DataView. This fixed fixture oracle preserves type evidence instead of rewriting runtime values. Fresh General source 5 is running.
+
+The new Scene cursor still needs full owning/native closure, complete request retirement-capacity accounting, actual Wasm/browser caller ports, and removal of its current OS DAG integration dependency.
+
+General source 5 physically closed Nx 0 / Bun 0 all three laws and 72 assertions; OS producer extraction 4 physically closed Nx 0 / Bun 0 its original law and 37 assertions. Native 6 again passed the allocator and structural laws, then exposed the new exact-text expectation authored in fixture insertion order rather than the already-canonical Pack key order. The two affected hand-authored strings now use canonical key order; no runtime sorting or coercion was added. Native 7 is the fresh attempt.

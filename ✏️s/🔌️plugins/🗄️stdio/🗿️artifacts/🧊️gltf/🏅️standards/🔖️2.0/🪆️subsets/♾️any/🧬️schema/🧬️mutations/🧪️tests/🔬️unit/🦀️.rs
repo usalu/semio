@@ -21,7 +21,7 @@ fn mutation_rejection_messages_match_the_language_neutral_json_oracle() {
 }
 
 #[test]
-fn mutation_restore_preserves_the_language_neutral_wire_and_inverse() {
+fn mutation_inverse_is_a_concrete_kind_on_the_language_neutral_wire() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📨️mutation-carriers/🔣️.json")).unwrap();
     let mutation: GltfMutation = semio_framework_pack_json::from_json_str(&fixture["apply"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut base = GltfSnapshot::default();
@@ -29,15 +29,15 @@ fn mutation_restore_preserves_the_language_neutral_wire_and_inverse() {
     base.document.scenes = vec![Default::default(), Default::default()];
     let outcome = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(&mutation, &base);
     assert!(outcome.messages().is_empty());
-    let next = protocol::MutationDiff::apply(outcome.diff(), &base).unwrap();
+    let next = protocol::apply_diff(outcome.diff(), &base).unwrap();
     assert_eq!(next.document.scene, Some(1));
     let inverse = <GltfMutation as protocol::Mutation<GltfSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
     let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&inverse[0])).unwrap();
-    assert_eq!(encoded, fixture["restore"]);
+    assert_eq!(encoded, fixture["inverse"]);
     let restored: GltfMutation = semio_framework_pack_json::from_json_str(&encoded.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let outcome = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(&restored, &next);
     assert!(outcome.messages().is_empty());
-    assert_eq!(protocol::MutationDiff::apply(outcome.diff(), &next).unwrap(), base);
+    assert_eq!(protocol::apply_diff(outcome.diff(), &next).unwrap(), base);
     assert!(size_of::<GltfMutation>() <= fixture["maximumInlineBytes"].as_u64().unwrap() as usize);
 }

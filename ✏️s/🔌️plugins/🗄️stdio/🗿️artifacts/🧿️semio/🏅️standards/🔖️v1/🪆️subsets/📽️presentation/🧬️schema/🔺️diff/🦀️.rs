@@ -18,7 +18,7 @@
 //! `DocBlock` is a value struct it does not own the internals of, so it is never sub-diffed here.
 
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff, NamedAdded};
 
 
 
@@ -36,8 +36,8 @@ pub type SlideShapesDiff = IndexedTripleDiff<SlideShapeDiff, SlideShape>;
 pub type DocBlocksDiff = IndexedTripleDiff<DocBlock, DocBlock>;
 pub type SlideTableRowsDiff = IndexedTripleDiff<SlideTableRowDiff, SlideTableRow>;
 pub type SlideTableCellsDiff = IndexedTripleDiff<SlideTableCellDiff, SlideTableCell>;
-pub type SlideMastersDiff = NamedTripleDiff<String, SlideMasterDiff, SlideMaster>;
-pub type SlideLayoutsDiff = NamedTripleDiff<String, SlideLayoutDiff, SlideLayout>;
+pub type SlideMastersDiff = NamedTripleDiff<String, SlideMasterDiff, NamedAdded<SlideMaster>>;
+pub type SlideLayoutsDiff = NamedTripleDiff<String, SlideLayoutDiff, NamedAdded<SlideLayout>>;
 pub type SlidesDiff = IndexedTripleDiff<SlideDiff, Slide>;
 //#endregion 🔖️CollectionDiffAliases
 
@@ -353,7 +353,7 @@ where
 
 //#region 🔖️GenericNamedEngine
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
+fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, NamedAdded<T>>>
 where
     K: PartialEq + Clone,
     T: Clone + PartialEq,
@@ -373,21 +373,38 @@ where
         }
     }
     let mut added = Vec::new();
-    for o in other {
+    for (index, o) in other.iter().enumerate() {
         let ok = key_of(o);
         if !base.iter().any(|b| key_of(b) == ok) {
-            added.push(o.clone());
+            added.push(NamedAdded { index, item: o.clone() });
         }
     }
     if removed.is_empty() && modified.is_empty() && added.is_empty() {
-        None
-    } else {
-        Some(NamedTripleDiff { removed, modified, added })
+        return None;
     }
+    if !reproduces_order(base, other, &removed, &added, &key_of) {
+        return Some(NamedTripleDiff { removed: base.iter().map(&key_of).collect(), modified: Vec::new(), added: other.iter().cloned().enumerate().map(|(index, item)| NamedAdded { index, item }).collect() });
+    }
+    Some(NamedTripleDiff { removed, modified, added })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
+fn reproduces_order<K, T>(base: &[T], other: &[T], removed: &[K], added: &[NamedAdded<T>], key_of: &impl Fn(&T) -> K) -> bool
+where
+    K: PartialEq,
+{
+    let mut keys: Vec<K> = base.iter().map(key_of).filter(|k| !removed.contains(k)).collect();
+    let mut ascending: Vec<&NamedAdded<T>> = added.iter().collect();
+    ascending.sort_by_key(|a| a.index);
+    for a in ascending {
+        let at = a.index.min(keys.len());
+        keys.insert(at, key_of(&a.item));
+    }
+    keys.len() == other.len() && keys.iter().zip(other.iter().map(key_of)).all(|(produced, expected)| *produced == expected)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, NamedAdded<T>>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -398,41 +415,40 @@ where
             apply_item(item, &m.diff);
         }
     }
-    for item in &diff.added {
-        items.push(item.clone());
+    let mut ascending: Vec<&NamedAdded<T>> = diff.added.iter().collect();
+    ascending.sort_by_key(|a| a.index);
+    for a in ascending {
+        let at = a.index.min(items.len());
+        items.insert(at, a.item.clone());
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
+fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, NamedAdded<T>>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, NamedAdded<T>>
 where
     K: PartialEq + Clone,
     T: Clone,
 {
-    let removed: Vec<K> = diff.added.iter().map(&key_of).collect();
+    let removed: Vec<K> = diff.added.iter().map(|a| key_of(&a.item)).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
         if let Some(original) = base_items.iter().find(|i| key_of(i) == m.key) {
             modified.push(NamedModified { key: m.key.clone(), diff: inverse_item(original, &m.diff) });
         }
     }
-    let mut added = Vec::new();
-    for k in &diff.removed {
-        if let Some(original) = base_items.iter().find(|i| &key_of(i) == k) {
-            added.push(original.clone());
-        }
-    }
+    let mut added: Vec<NamedAdded<T>> = diff.removed.iter().filter_map(|k| base_items.iter().position(|i| &key_of(i) == k).map(|index| NamedAdded { index, item: base_items[index].clone() })).collect();
+    added.sort_by_key(|a| a.index);
     NamedTripleDiff { removed, modified, added }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, NamedAdded<T>>, d2: &NamedTripleDiff<K, D, NamedAdded<T>>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, NamedAdded<T>>
 where
     K: PartialEq + Clone,
     T: Clone,
     D: Clone,
 {
-    let d1_added_keys: Vec<K> = d1.added.iter().map(&key_of).collect();
+    let d1_added_keys: Vec<K> = d1.added.iter().map(|a| key_of(&a.item)).collect();
     let mut removed = d1.removed.clone();
     let mut annihilated: Vec<K> = Vec::new();
     for k in &d2.removed {
@@ -442,11 +458,11 @@ where
             removed.push(k.clone());
         }
     }
-    let mut working_added: Vec<T> = d1.added.into_iter().filter(|a| !annihilated.contains(&key_of(a))).collect();
+    let mut working_added: Vec<NamedAdded<T>> = d1.added.into_iter().filter(|a| !annihilated.contains(&key_of(&a.item))).collect();
     let mut modified: Vec<NamedModified<K, D>> = d1.modified.into_iter().filter(|m| !removed.contains(&m.key)).collect();
     for m2 in &d2.modified {
-        if let Some(added) = working_added.iter_mut().find(|a| key_of(a) == m2.key) {
-            apply_item(added, &m2.diff);
+        if let Some(added) = working_added.iter_mut().find(|a| key_of(&a.item) == m2.key) {
+            apply_item(&mut added.item, &m2.diff);
             continue;
         }
         if removed.contains(&m2.key) {
@@ -458,8 +474,8 @@ where
         }
     }
     for a2 in &d2.added {
-        let k2 = key_of(a2);
-        match working_added.iter_mut().find(|a| key_of(a) == k2) {
+        let k2 = key_of(&a2.item);
+        match working_added.iter_mut().find(|a| key_of(&a.item) == k2) {
             Some(existing) => *existing = a2.clone(),
             None => working_added.push(a2.clone()),
         }
@@ -897,11 +913,11 @@ impl MutationDiff<SemioPresentationSnapshot> for SemioPresentationDiff {
     fn apply(&self, base: &SemioPresentationSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioPresentationSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.masters {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.masters, d, |item| item.id.clone(), |item| item.id.clone(), ["masters"])?;
+            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.masters, d, |item| item.id.clone(), |added| added.item.id.clone(), ["masters"])?;
             apply_named(&mut next.masters, d, |m| m.id.clone(), apply_master);
         }
         if let Some(d) = &self.layouts {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.layouts, d, |item| item.id.clone(), |item| item.id.clone(), ["layouts"])?;
+            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.layouts, d, |item| item.id.clone(), |added| added.item.id.clone(), ["layouts"])?;
             apply_named(&mut next.layouts, d, |l| l.id.clone(), apply_layout);
         }
         if let Some(d) = &self.slides {
@@ -939,13 +955,7 @@ impl DiffAlgebra<SemioPresentationSnapshot> for SemioPresentationDiff {
 }
 //#endregion 🔖️DiffAlgebra
 
-//#region 🔖️MutationDiffHelpers
-/// 🧩 `SetSnapshot`'s diff — no `snapshot: Option<...>` full-replace slot, this IS
-/// `SemioPresentationDiff::between`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &SemioPresentationSnapshot, next: &SemioPresentationSnapshot) -> SemioPresentationDiff {
-    SemioPresentationDiff::between(base, next)
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn wrap_slide_diff(index: usize, sd: SlideDiff) -> SemioPresentationDiff {
@@ -1031,8 +1041,9 @@ fn shape_diff_frame_only(shape: &SlideShape, frame_diff: SlideFrameDiff) -> Slid
 
 /// 🧩 Diff for inserting a master.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_insert_master(master: SlideMaster) -> SemioPresentationDiff {
-    SemioPresentationDiff { masters: Some(SlideMastersDiff { added: vec![master], ..Default::default() }), layouts: None, slides: None }
+pub fn diff_insert_master(base: &SemioPresentationSnapshot, master: SlideMaster, at: Option<usize>) -> SemioPresentationDiff {
+    let index = at.map_or(base.masters.len(), |at| at.min(base.masters.len()));
+    SemioPresentationDiff { masters: Some(SlideMastersDiff { added: vec![NamedAdded { index, item: master }], ..Default::default() }), layouts: None, slides: None }
 }
 /// 🧩 Diff for removing the master with id `id`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1041,8 +1052,9 @@ pub fn diff_remove_master(id: &str) -> SemioPresentationDiff {
 }
 /// 🧩 Diff for inserting a layout.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_insert_layout(layout: SlideLayout) -> SemioPresentationDiff {
-    SemioPresentationDiff { masters: None, layouts: Some(SlideLayoutsDiff { added: vec![layout], ..Default::default() }), slides: None }
+pub fn diff_insert_layout(base: &SemioPresentationSnapshot, layout: SlideLayout, at: Option<usize>) -> SemioPresentationDiff {
+    let index = at.map_or(base.layouts.len(), |at| at.min(base.layouts.len()));
+    SemioPresentationDiff { masters: None, layouts: Some(SlideLayoutsDiff { added: vec![NamedAdded { index, item: layout }], ..Default::default() }), slides: None }
 }
 /// 🧩 Diff for removing the layout with id `id`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

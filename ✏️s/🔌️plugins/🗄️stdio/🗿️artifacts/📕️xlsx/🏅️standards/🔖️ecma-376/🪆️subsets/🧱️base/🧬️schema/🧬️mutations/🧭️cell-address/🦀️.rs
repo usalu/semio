@@ -319,6 +319,13 @@ pub fn xlsx_cell_address(snapshot: &XlsxSnapshot, sheet_name: &str, row: u32, co
 pub fn xlsx_cell_address_at_path(snapshot: &XlsxSnapshot, part_path: &str, node_path: Vec<usize>) -> Result<XlsxCellAddress, String> {
     let part = snapshot.xml_part(part_path).ok_or_else(|| format!("missing worksheet part {part_path}"))?;
     let root = part.document.root.as_ref().ok_or_else(|| format!("worksheet part {part_path} has no root"))?;
+    cell_address_in(snapshot, part_path, root, node_path)
+}
+
+/// 🔮️ The address the cell at `node_path` WOULD carry once worksheet part `part_path` holds `root`: the revision is hashed over `root`
+/// itself (and over the shared-string entry `snapshot` holds), so an inverse can name the cell in the state its forward leaves behind.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(super) fn cell_address_in(snapshot: &XlsxSnapshot, part_path: &str, root: &XmlNode, node_path: Vec<usize>) -> Result<XlsxCellAddress, String> {
     let (node, bindings) = scoped_node_at_path(root, &node_path)?;
     let (namespace_uri, local_name) = match node {
         XmlNode::Element { name, .. } => expanded_element_name(name, &bindings)?,
@@ -326,6 +333,18 @@ pub fn xlsx_cell_address_at_path(snapshot: &XlsxSnapshot, part_path: &str, node_
     };
     let revision = address_revision(snapshot, root, &node_path)?;
     Ok(XlsxCellAddress { part_path: part_path.into(), node_path, namespace_uri, local_name, revision })
+}
+
+/// 🔮️ The worksheet (`sheetData`) address the node at `node_path` WOULD carry once worksheet part `part_path` holds `root`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(super) fn worksheet_address_in(snapshot: &XlsxSnapshot, part_path: &str, root: &XmlNode, node_path: Vec<usize>) -> Result<XlsxWorksheetAddress, String> {
+    let (node, bindings) = scoped_node_at_path(root, &node_path)?;
+    let (namespace_uri, local_name) = match node {
+        XmlNode::Element { name, .. } => expanded_element_name(name, &bindings)?,
+        _ => return Err("worksheet address resolved a non-element".into()),
+    };
+    let revision = address_revision(snapshot, root, &node_path)?;
+    Ok(XlsxWorksheetAddress { part_path: part_path.into(), node_path, namespace_uri, local_name, revision })
 }
 
 pub fn resolve_xlsx_cell_address<'a>(snapshot: &'a XlsxSnapshot, address: &XlsxCellAddress) -> Result<ResolvedXlsxCellAddress<'a>, String> {

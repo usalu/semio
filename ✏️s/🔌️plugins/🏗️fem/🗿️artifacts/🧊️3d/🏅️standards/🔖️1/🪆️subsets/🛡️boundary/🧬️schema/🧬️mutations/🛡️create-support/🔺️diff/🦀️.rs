@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateSupport`.
 use super::CreateSupport;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSupportsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSupportsDelta, insertion_order};
 use crate::Fem3dSnapshot;
 
 //#region 🔖️Diff
@@ -11,6 +11,6 @@ pub fn diff(payload: &CreateSupport, base: &Fem3dSnapshot) -> protocol::Mutation
     if !base.nodes.iter().any(|node| node.id == payload.support.node_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Node \"{}\" does not exist.", payload.support.node_id), [payload.support.node_id.clone()]);
     }
-    protocol::MutationOutcome::new(Fem3dDiff { supports: Some(Fem3dSupportsDelta { added: vec![payload.support.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem3dDiff { supports: Some(Fem3dSupportsDelta { added: vec![payload.support.clone()], reordered: insertion_order(base.supports.iter().map(|item| item.id.as_str()), &payload.support.id, payload.index), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

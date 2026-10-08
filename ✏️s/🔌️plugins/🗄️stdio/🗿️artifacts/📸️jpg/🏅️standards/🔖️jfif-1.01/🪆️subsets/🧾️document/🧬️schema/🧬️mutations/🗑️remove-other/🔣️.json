@@ -7,7 +7,7 @@
   "aggregateVariant": "RemoveOtherSegment",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "remove-other-segment",
-  "binaryTag": 9,
+  "binaryTag": 3,
   "invertibility": "explicit-mutation",
   "diffParticipation": "apply-only",
   "outcomeClasses": [

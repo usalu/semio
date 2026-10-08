@@ -1,0 +1,857 @@
+{
+  "description": "Language-agnostic laws of the brep.feature widgets. Every case names a catalogue kind, its inputs (shape recipes, selections by plane normal, edge ends, curved faces or stale labels, plain numbers) and either the expected outputs or the expected fault. Shape outputs state their analytic kind, volume, area and bounds, derived by hand in the case names' formulas: a straight edge strip removes (1 - pi/4) r^2 per unit length, a chamfer prism d^2/2, the all-edge chamfer is the cube clipped by twelve half-spaces. Rust runs the fixture against the kernel and the pinned tessellations; the TypeScript oracle recomputes volume, area, bounds and closedness of every pinned mesh with three.",
+  "tolerance": 1e-06,
+  "meshTolerance": 1e-06,
+  "deflection": 0.05,
+  "cases": [
+    {
+      "name": "fillet rounds all twelve edges with spherical corners",
+      "kind": "brep.feature.fillet",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "radius": 0.25
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 7.699022781,
+          "area": 21.353981634,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      },
+      "meshTolerance": 0.02
+    },
+    {
+      "name": "fillet one edge",
+      "kind": "brep.feature.filletEdges",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "edges": {
+          "edges": [
+            {
+              "from": [
+                0,
+                0,
+                0
+              ],
+              "to": [
+                2,
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "radius": 0.25
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 7.97317477,
+          "area": 23.758572934,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      },
+      "meshTolerance": 0.02
+    },
+    {
+      "name": "fillet two parallel edges",
+      "kind": "brep.feature.filletEdges",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "edges": {
+          "edges": [
+            {
+              "from": [
+                0,
+                0,
+                0
+              ],
+              "to": [
+                2,
+                0,
+                0
+              ]
+            },
+            {
+              "from": [
+                0,
+                2,
+                0
+              ],
+              "to": [
+                2,
+                2,
+                0
+              ]
+            }
+          ]
+        },
+        "radius": 0.25
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 7.946349541,
+          "area": 23.517145868,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      },
+      "meshTolerance": 0.02
+    },
+    {
+      "name": "fillet the same edge listed twice is one edge",
+      "kind": "brep.feature.filletEdges",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "edges": {
+          "edges": [
+            {
+              "from": [
+                0,
+                0,
+                0
+              ],
+              "to": [
+                2,
+                0,
+                0
+              ]
+            },
+            {
+              "from": [
+                0,
+                0,
+                0
+              ],
+              "to": [
+                2,
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "radius": 0.25
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 7.97317477,
+          "area": 23.758572934,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      },
+      "meshTolerance": 0.02
+    },
+    {
+      "name": "variable fillet ramps along the first edge",
+      "kind": "brep.feature.filletVariable",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "radiusStart": 0.1,
+        "radiusEnd": 0.3
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 7.981401174,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      },
+      "meshTolerance": 0.02
+    },
+    {
+      "name": "chamfer all twelve edges",
+      "kind": "brep.feature.chamfer",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "distance": 0.25
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 7.34375,
+          "area": 20.394291117,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "chamfer one edge",
+      "kind": "brep.feature.chamferEdges",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "edges": {
+          "edges": [
+            {
+              "from": [
+                0,
+                0,
+                0
+              ],
+              "to": [
+                2,
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "distance": 0.25
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 7.9375,
+          "area": 23.644606781,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "asymmetric chamfer removes between the two symmetric volumes",
+      "kind": "brep.feature.chamferAsymmetric",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "d1": 0.3,
+        "d2": 0.15
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volumeWithin": [
+            7.082,
+            7.75025
+          ],
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "shell with the top face open",
+      "kind": "brep.feature.shell",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "thickness": 0.2,
+        "openFaces": {
+          "normals": [
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        }
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 3.392,
+          "area": 35.52,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "shell closed leaves an inner void",
+      "kind": "brep.feature.shell",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "thickness": 0.2
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 3.904,
+          "area": 39.36,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ],
+          "shells": 2
+        }
+      }
+    },
+    {
+      "name": "draft tilts the selected face about the neutral plane",
+      "kind": "brep.feature.draft",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "faces": {
+          "normals": [
+            [
+              1,
+              0,
+              0
+            ]
+          ]
+        },
+        "pullDirection": [
+          0,
+          0,
+          1
+        ],
+        "neutralPoint": [
+          0,
+          0,
+          0
+        ],
+        "angle": 0.1
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 7.598661312,
+          "area": 23.217406297,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      },
+      "meshTolerance": 0.0001
+    },
+    {
+      "name": "offset grows the solid",
+      "kind": "brep.feature.offsetSolid",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "distance": 0.25
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "bbox": [
+            [
+              -0.25,
+              -0.25,
+              -0.25
+            ],
+            [
+              2.25,
+              2.25,
+              2.25
+            ]
+          ]
+        }
+      },
+      "meshTolerance": 0.0001
+    },
+    {
+      "name": "offset shrinks the solid",
+      "kind": "brep.feature.offsetSolid",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "distance": -0.25
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 3.375,
+          "area": 13.5,
+          "bbox": [
+            [
+              0.25,
+              0.25,
+              0.25
+            ],
+            [
+              1.75,
+              1.75,
+              1.75
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "thicken gives a face a thickness",
+      "kind": "brep.feature.thicken",
+      "inputs": {
+        "face": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [
+              2,
+              2,
+              2
+            ]
+          },
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        "thickness": 0.5
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 2.0,
+          "area": 12.0
+        }
+      }
+    },
+    {
+      "name": "defeature fills the through hole",
+      "kind": "brep.feature.defeature",
+      "inputs": {
+        "shape": {
+          "recipe": "cut",
+          "target": {
+            "recipe": "box",
+            "size": [
+              4,
+              4,
+              1
+            ]
+          },
+          "tool": {
+            "recipe": "translate",
+            "of": {
+              "recipe": "cylinder",
+              "radius": 0.5,
+              "height": 3
+            },
+            "by": [
+              2,
+              2,
+              -1
+            ]
+          }
+        },
+        "faces": {
+          "curved": true
+        }
+      },
+      "outputs": {
+        "shape": {
+          "kind": "solid",
+          "volume": 16.0,
+          "area": 40.0,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              4,
+              4,
+              1
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "fillet radius larger than the solid is a kernel fault",
+      "kind": "brep.feature.fillet",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "radius": 1.5
+      },
+      "fault": {
+        "code": "generation3d.geometry.kernel"
+      }
+    },
+    {
+      "name": "chamfer distance larger than the solid is a kernel fault",
+      "kind": "brep.feature.chamfer",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "distance": 1.5
+      },
+      "fault": {
+        "code": "generation3d.geometry.kernel"
+      }
+    },
+    {
+      "name": "fillet edges with a label the solid never had is stale",
+      "kind": "brep.feature.filletEdges",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "edges": {
+          "stale": true
+        },
+        "radius": 0.25
+      },
+      "fault": {
+        "code": "generation3d.geometry.selection-stale",
+        "port": "edges"
+      }
+    },
+    {
+      "name": "fillet edges given faces is a component fault",
+      "kind": "brep.feature.filletEdges",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "edges": {
+          "component": "face",
+          "normals": [
+            [
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "radius": 0.25
+      },
+      "fault": {
+        "code": "generation3d.geometry.selection-component",
+        "port": "edges"
+      }
+    },
+    {
+      "name": "chamfer edges with stale labels is stale",
+      "kind": "brep.feature.chamferEdges",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "edges": {
+          "stale": true
+        },
+        "distance": 0.25
+      },
+      "fault": {
+        "code": "generation3d.geometry.selection-stale",
+        "port": "edges"
+      }
+    },
+    {
+      "name": "shell with a stale open face is stale",
+      "kind": "brep.feature.shell",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "thickness": 0.2,
+        "openFaces": {
+          "stale": true
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.selection-stale",
+        "port": "openFaces"
+      }
+    },
+    {
+      "name": "draft with a stale face is stale",
+      "kind": "brep.feature.draft",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "faces": {
+          "stale": true
+        },
+        "pullDirection": [
+          0,
+          0,
+          1
+        ],
+        "neutralPoint": [
+          0,
+          0,
+          0
+        ],
+        "angle": 0.1
+      },
+      "fault": {
+        "code": "generation3d.geometry.selection-stale",
+        "port": "faces"
+      }
+    },
+    {
+      "name": "defeature with a stale face is stale",
+      "kind": "brep.feature.defeature",
+      "inputs": {
+        "shape": {
+          "recipe": "cut",
+          "target": {
+            "recipe": "box",
+            "size": [
+              4,
+              4,
+              1
+            ]
+          },
+          "tool": {
+            "recipe": "translate",
+            "of": {
+              "recipe": "cylinder",
+              "radius": 0.5,
+              "height": 3
+            },
+            "by": [
+              2,
+              2,
+              -1
+            ]
+          }
+        },
+        "faces": {
+          "stale": true
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.selection-stale",
+        "port": "faces"
+      }
+    }
+  ]
+}

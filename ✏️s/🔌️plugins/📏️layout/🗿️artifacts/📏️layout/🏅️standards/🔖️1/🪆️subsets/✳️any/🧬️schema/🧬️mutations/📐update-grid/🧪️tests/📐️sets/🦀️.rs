@@ -28,7 +28,7 @@ fn mutation() -> LayoutMutation {
 }
 fn applied() -> LayoutSnapshot {
     let base = before();
-    mutation().diff(&base).diff().apply(&base).expect("update-grid applies to its committed before-snapshot")
+    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("update-grid applies to its committed before-snapshot")
 }
 
 /// ▶️ `update-grid` writes all three grid fields and nothing else.
@@ -54,7 +54,7 @@ async fn inverse_restores_the_twelve_point_grid() {
     }
     let mut snapshot = applied();
     for step in &inverse {
-        snapshot = step.diff(&snapshot).diff().apply(&snapshot).expect("update-grid/sets-an-18-point-baseline: inverse step applies");
+        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("update-grid/sets-an-18-point-baseline: inverse step applies");
     }
     assert_eq!(snapshot, base, "update-grid/sets-an-18-point-baseline: inverse did not restore the before-snapshot");
 }

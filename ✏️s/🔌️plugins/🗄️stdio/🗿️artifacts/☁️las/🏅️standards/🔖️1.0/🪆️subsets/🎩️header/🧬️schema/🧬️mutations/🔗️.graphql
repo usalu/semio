@@ -1,6 +1,5 @@
 # 🧬️ LasMutation
 enum LasMutationKind {
-  SET_SNAPSHOT
   SET_VERSION
   SET_SYSTEM_IDENTIFIER
   SET_SOFTWARE_INFO

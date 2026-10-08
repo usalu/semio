@@ -57,7 +57,7 @@ fn puzzle3d_ops(provisional: &[Puzzle5dMutation]) -> Result<Vec<Puzzle3dMutation
         .iter()
         .map(|mutation| match mutation {
             Puzzle5dMutation::CreatePart(create) => Ok(create_object(puzzle3d_object(&editor_part(&create.part)?, None), None)),
-            Puzzle5dMutation::ConnectGrips(connect) => Ok(connect_vortices(connect.id.clone(), connect.source.clone(), connect.target.clone(), connect.gap, connect.shift, connect.rise, connect.rotation, connect.turn, connect.tilt, connect.x, connect.y)),
+            Puzzle5dMutation::ConnectGrips(connect) => Ok(connect_vortices(connect.id.clone(), connect.source.clone(), connect.target.clone(), connect.gap, connect.shift, connect.rise, connect.rotation, connect.turn, connect.tilt, connect.x, connect.y, None)),
             Puzzle5dMutation::CreateTargetVolume(create) => Ok(create_target_volume(puzzle3d_target_volume(&editor_target_volume(&create.target_volume)?), create.index)),
             Puzzle5dMutation::DeleteTargetVolume(delete) => Ok(delete_target_volume(delete.id.clone())),
             Puzzle5dMutation::MoveTargetVolume(moved) => Ok(move_target_volume(moved.id.clone(), moved.new_origin)),

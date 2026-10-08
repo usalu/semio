@@ -14,7 +14,14 @@ fn cold_document() -> Din18599Snapshot {
     let potsdam = Din18599Snapshot::default();
     let new_climate = MonthlyClimate { theta_e_c: potsdam.climate.theta_e_c.map(|theta| theta - 6.0), g_h_w_m2: potsdam.climate.g_h_w_m2.map(|g| g * 0.8) };
     let raised = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::diff(&Din18599Mutation::UpdateClimate(UpdateClimate { new_climate }), &potsdam);
-    <Din18599Diff as protocol::MutationDiff<Din18599Snapshot>>::apply(raised.diff(), &potsdam).expect("update-climate applies")
+    protocol::apply_diff(raised.diff(), &potsdam).expect("update-climate applies")
+}
+
+#[semio_framework_async_macros::async_test]
+async fn update_climate_inverse_sums_to_the_negative_diff() {
+    let potsdam = Din18599Snapshot::default();
+    let new_climate = MonthlyClimate { theta_e_c: potsdam.climate.theta_e_c.map(|theta| theta - 6.0), g_h_w_m2: potsdam.climate.g_h_w_m2.map(|g| g * 0.8) };
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&Din18599Mutation::UpdateClimate(UpdateClimate { new_climate }), &potsdam).await;
 }
 
 #[test]

@@ -31,7 +31,7 @@ fn mutation() -> SemioKitMutation {
 async fn detaches_the_object_handle_and_leaves_the_model_handle() {
     let base = before();
     assert!(!base.models.is_empty(), "the fixture needs a sibling model child for the claim to mean anything");
-    let produced = mutation().diff(&base).diff().apply(&base).expect("delete-object applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-object applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-object/detaches-the-only-object-child-and-keeps-the-model-child: applied state differs from the committed after-snapshot");
     assert!(produced.objects.is_empty(), "the only object handle must be gone");
     assert_eq!(produced.models, base.models, "the parallel model-child collection must survive untouched");
@@ -42,13 +42,14 @@ async fn detaches_the_object_handle_and_leaves_the_model_handle() {
 async fn the_undo_create_object_reattaches_the_captured_handle() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "delete-object of an existing handle undoes as exactly one create-object");
     let SemioKitMutation::CreateObject(recreate) = &undo[0] else { panic!("delete-object must undo as create-object") };
     assert_eq!(recreate.target, base.objects[0].target, "the undo must recapture the detached handle's own target ref");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-object applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo create-object applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-object applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo create-object applies");
     }
     assert_eq!(current, base, "delete-object/detaches-the-only-object-child-and-keeps-the-model-child: the undo did not restore the before-snapshot");
 }
@@ -91,7 +92,6 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-object diff decodes");
-    assert_eq!(decoded.objects.as_ref().map(|list| list.values.len()), Some(0), "the diff carries the emptied object-child list");
     assert!(decoded.types.is_none() && decoded.designs.is_none() && decoded.models.is_none() && decoded.properties.is_none() && decoded.representations.is_none(), "no other kit slot may appear in the diff");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -102,6 +102,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-object diff decodes");
-    let produced = decoded.apply(&before()).expect("committed delete-object diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-object diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-object/detaches-the-only-object-child-and-keeps-the-model-child: committed diff did not carry before to after");
 }

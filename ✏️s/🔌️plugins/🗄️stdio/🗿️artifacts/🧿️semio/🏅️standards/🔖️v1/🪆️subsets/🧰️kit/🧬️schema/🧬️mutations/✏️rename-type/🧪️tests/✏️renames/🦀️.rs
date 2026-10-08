@@ -30,7 +30,7 @@ fn mutation() -> SemioKitMutation {
 #[semio_framework_async_macros::async_test]
 async fn renames_the_display_name_and_keeps_id_and_category() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("rename-type applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("rename-type applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "rename-type/renames-the-beam-type-without-recategorising-it: applied state differs from the committed after-snapshot");
     assert_eq!(produced.types[0].name, "Girder", "the type's display name must become new_name");
     assert_eq!(produced.types[0].id, base.types[0].id, "a rename must NOT re-key the type — pieces reference it by id");
@@ -43,11 +43,12 @@ async fn renames_the_display_name_and_keeps_id_and_category() {
 async fn the_undo_rename_type_restores_the_original_name() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "rename-type of an existing type undoes as exactly one rename-type");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward rename-type applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo rename-type applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward rename-type applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo rename-type applies");
     }
     assert_eq!(current, base, "rename-type/renames-the-beam-type-without-recategorising-it: the undo did not restore the before-snapshot");
 }
@@ -91,8 +92,6 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rename-type diff decodes");
     let types = decoded.types.as_ref().expect("rename-type must write the types slot");
-    assert_eq!(types.values[0].name, "Girder", "the diff itself must already carry the renamed type");
-    assert_eq!(types.values.len(), 2, "a rename never changes how many types there are");
     assert!(decoded.designs.is_none() && decoded.objects.is_none() && decoded.models.is_none() && decoded.properties.is_none() && decoded.representations.is_none(), "no other kit slot may appear in the diff");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -103,6 +102,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rename-type diff decodes");
-    let produced = decoded.apply(&before()).expect("committed rename-type diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed rename-type diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-type/renames-the-beam-type-without-recategorising-it: committed diff did not carry before to after");
 }

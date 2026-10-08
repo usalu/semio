@@ -1,9 +1,9 @@
 //! 🔺️ `change-block-field` — sparse diff construction: locates the question in whichever step holds it, refuses a value that
-//! breaks the question's own invariants, and clones only that step's `blocks` Vec.
+//! breaks the question's own invariants, and emits exactly the one field setting.
 
 use super::mutation::{BlockField, ChangeBlockField};
 use crate::schema::diff::forms_diff_from_delta;
-use crate::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
+use crate::schema::diff::{FormsQuestionPatch, FormsQuestionsDelta, FormsStepPatch, FormsStepsDelta};
 use crate::{forms_steps, FormQuestion, FormsDiff, FormsSnapshot};
 
 //#region 🔖️Diff
@@ -20,9 +20,8 @@ pub fn diff_change_block_field(payload: &ChangeBlockField, base: &FormsSnapshot)
     if let Some((code, reason)) = refusal(&next, &payload.change) {
         return protocol::MutationOutcome::fatal(code, reason, vec![payload.block_id.clone()]);
     }
-    let blocks: Vec<_> = step.blocks.iter().map(|block| if block.id == payload.block_id { next.clone() } else { block.clone() }).collect();
-    let patch = FormsStepPatch { blocks: Some(blocks), ..Default::default() };
-    protocol::MutationOutcome::new(forms_diff_from_delta(&FormsStepsDelta { patched: vec![FormsStepPatchEntry { id: step.id.clone(), patch }], ..Default::default() }, base))
+    let blocks = FormsQuestionsDelta { patched: vec![FormsQuestionPatch { id: payload.block_id.clone(), kind: None, changes: vec![payload.change.clone()] }], ..Default::default() };
+    protocol::MutationOutcome::new(forms_diff_from_delta(&FormsStepsDelta { patched: vec![FormsStepPatch { id: step.id.clone(), blocks: Some(blocks), ..Default::default() }], ..Default::default() }, base))
 }
 
 /// 🛡️ Why `next` (the question with `change` set) breaks an invariant of the field `change` sets: a non-finite or inverted

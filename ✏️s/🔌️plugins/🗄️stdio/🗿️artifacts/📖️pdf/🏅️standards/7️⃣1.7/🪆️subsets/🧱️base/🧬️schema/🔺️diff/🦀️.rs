@@ -1617,21 +1617,22 @@ fn absorb_law_objects_diff(d1: PdfObjectsDiff, d2: PdfObjectsDiff) -> PdfObjects
         added.push(a);
     }
     added.sort_by_key(|a| a.index);
+    removed.sort_by_key(|id| (id.num, id.gen));
+    removed.dedup();
+    modified.sort_by_key(|item| (item.id.num, item.id.gen));
     PdfObjectsDiff { removed, modified, added }
 }
 /// ↩️ The negative objects triple over `base`: it removes the objects `diff` added, patches every modified object back through
 /// its negative value diff and re-adds every removed object at its base index.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_objects_diff(diff: &PdfObjectsDiff, base: &[PdfIndirectObject]) -> PdfObjectsDiff {
-    PdfObjectsDiff {
-        removed: diff.added.iter().map(|item| item.id).collect(),
-        modified: diff.modified.iter().filter_map(|item| base.iter().find(|object| object.id == item.id).map(|object| PdfObjectModified { id: item.id, diff: inverse_value_diff(&item.diff, &object.value) })).collect(),
-        added: {
-            let mut added: Vec<PdfObjectAdded> = diff.removed.iter().filter_map(|id| base.iter().position(|object| &object.id == id).map(|index| PdfObjectAdded { index, id: *id, value: base[index].value.clone() })).collect();
-            added.sort_by_key(|item| item.index);
-            added
-        },
-    }
+    let mut removed: Vec<ObjRef> = diff.added.iter().map(|item| item.id).collect();
+    removed.sort_by_key(|id| (id.num, id.gen));
+    let mut modified: Vec<PdfObjectModified> = diff.modified.iter().filter_map(|item| base.iter().find(|object| object.id == item.id).map(|object| PdfObjectModified { id: item.id, diff: inverse_value_diff(&item.diff, &object.value) })).collect();
+    modified.sort_by_key(|item| (item.id.num, item.id.gen));
+    let mut added: Vec<PdfObjectAdded> = diff.removed.iter().filter_map(|id| base.iter().position(|object| &object.id == id).map(|index| PdfObjectAdded { index, id: *id, value: base[index].value.clone() })).collect();
+    added.sort_by_key(|item| item.index);
+    PdfObjectsDiff { removed, modified, added }
 }
 //#endregion 🔖️ObjectsTriple
 
@@ -2221,6 +2222,17 @@ fn page_patch(index: usize, diff: PdfPageDiff) -> PdfDiff {
 pub fn diff_insert_page(index: usize, page: PdfPage) -> PdfDiff {
     PdfDiff { pages: Some(PdfPagesDiff { added: vec![PdfPageAdded { index, page }], ..Default::default() }), ..Default::default() }
 }
+/// 📄️ Replaces page `index` with `page`: the patch names exactly the fields the two pages differ in, so a page edited in one
+/// field costs one field.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_replace_page(base: &PdfSnapshot, index: usize, page: &PdfPage) -> PdfDiff {
+    let Some(current) = base.pages.get(index) else { return PdfDiff::default() };
+    let patch = page_diff_between(current, page);
+    if patch == PdfPageDiff::default() {
+        return PdfDiff::default();
+    }
+    page_patch(index, patch)
+}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_remove_page(index: usize) -> PdfDiff {
     PdfDiff { pages: Some(PdfPagesDiff { removed: vec![index], ..Default::default() }), ..Default::default() }
@@ -2316,14 +2328,14 @@ pub fn diff_set_info(base: &PdfSnapshot, info: &PdfInfo) -> PdfDiff {
     PdfDiff { info: (!diff.is_empty()).then_some(diff), ..Default::default() }
 }
 
-/// 🆔 Upsert of one keyed collection item: `modified` when the key exists in `base`, `added`
-/// at the end otherwise.
+/// 🆔 Upsert of one keyed collection item: `modified` when the key exists in `base`, `added` at `index` (clamped; absent appends)
+/// otherwise.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn keyed_upsert<T: Clone + PartialEq + Keyed>(base: &[T], value: T) -> Option<PdfKeyedDiff<T>> {
+pub fn keyed_upsert<T: Clone + PartialEq + Keyed>(base: &[T], value: T, index: Option<usize>) -> Option<PdfKeyedDiff<T>> {
     match base.iter().find(|item| item.key() == value.key()) {
         Some(existing) if *existing == value => None,
         Some(_) => Some(PdfKeyedDiff { modified: vec![PdfKeyedItem { key: value.key().to_string(), value }], ..Default::default() }),
-        None => Some(PdfKeyedDiff { added: vec![PdfIndexedItem { index: base.len(), value }], ..Default::default() }),
+        None => Some(PdfKeyedDiff { added: vec![PdfIndexedItem { index: index.map_or(base.len(), |at| at.min(base.len())), value }], ..Default::default() }),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -2334,8 +2346,8 @@ macro_rules! keyed_builders {
     ($($set:ident / $remove:ident => $field:ident : $ty:ty),* $(,)?) => {
         $(
             // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-            pub fn $set(base: &PdfSnapshot, value: $ty) -> PdfDiff {
-                PdfDiff { $field: keyed_upsert(&base.$field, value), ..Default::default() }
+            pub fn $set(base: &PdfSnapshot, value: $ty, index: Option<usize>) -> PdfDiff {
+                PdfDiff { $field: keyed_upsert(&base.$field, value, index), ..Default::default() }
             }
             // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
             pub fn $remove(base: &PdfSnapshot, key: &str) -> PdfDiff {
@@ -2362,11 +2374,11 @@ pub fn diff_set_outlines(base: &PdfSnapshot, outlines: &[PdfOutlineItem]) -> Pdf
     PdfDiff { outlines: (!d.is_empty()).then_some(d), ..Default::default() }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_named_destination(base: &PdfSnapshot, destination: PdfNamedDestination) -> PdfDiff {
+pub fn diff_set_named_destination(base: &PdfSnapshot, destination: PdfNamedDestination, index: Option<usize>) -> PdfDiff {
     let d = match base.named_destinations.iter().position(|item| item.name == destination.name) {
-        Some(index) if base.named_destinations[index] == destination => return PdfDiff::default(),
-        Some(index) => PdfIndexedDiff { modified: vec![PdfIndexedItem { index, value: destination }], ..Default::default() },
-        None => PdfIndexedDiff { added: vec![PdfIndexedItem { index: base.named_destinations.len(), value: destination }], ..Default::default() },
+        Some(at) if base.named_destinations[at] == destination => return PdfDiff::default(),
+        Some(at) => PdfIndexedDiff { modified: vec![PdfIndexedItem { index: at, value: destination }], ..Default::default() },
+        None => PdfIndexedDiff { added: vec![PdfIndexedItem { index: index.map_or(base.named_destinations.len(), |at| at.min(base.named_destinations.len())), value: destination }], ..Default::default() },
     };
     PdfDiff { named_destinations: Some(d), ..Default::default() }
 }
@@ -2412,13 +2424,13 @@ tri_builders!(
 );
 /// 🔧️ Upserts `key` in the catalog's retained entries.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_catalog_entry(base: &PdfSnapshot, key: &str, value: PdfObject) -> PdfDiff {
+pub fn diff_set_catalog_entry(base: &PdfSnapshot, key: &str, value: PdfObject, index: Option<usize>) -> PdfDiff {
     let leaf = match base.catalog_extra.iter().position(|e| e.key == key) {
         Some(pos) => match value_diff_between(&base.catalog_extra[pos].value, &value) {
             None => return PdfDiff::default(),
             Some(d) => PdfDictDiff { modified: vec![PdfDictModified { key: key.to_string(), diff: d }], ..Default::default() },
         },
-        None => PdfDictDiff { added: vec![PdfDictAdded { index: base.catalog_extra.len(), key: key.to_string(), item: value }], ..Default::default() },
+        None => PdfDictDiff { added: vec![PdfDictAdded { index: index.map_or(base.catalog_extra.len(), |at| at.min(base.catalog_extra.len())), key: key.to_string(), item: value }], ..Default::default() },
     };
     PdfDiff { catalog_extra: Some(leaf), ..Default::default() }
 }
@@ -2440,20 +2452,20 @@ pub fn diff_remove_object(id: ObjRef) -> PdfDiff {
 /// 🔧️ Upserts object `id`'s value: `modified` against BASE if present, `added` (at the final Vec
 /// position) otherwise.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_object_value(base: &PdfSnapshot, id: ObjRef, value: PdfObject) -> PdfDiff {
+pub fn diff_set_object_value(base: &PdfSnapshot, id: ObjRef, value: PdfObject, index: Option<usize>) -> PdfDiff {
     match base.objects.iter().find(|o| o.id == id) {
         Some(existing) => match value_diff_between(&existing.value, &value) {
             None => PdfDiff::default(),
             Some(d) => PdfDiff { objects: Some(PdfObjectsDiff { modified: vec![PdfObjectModified { id, diff: d }], ..Default::default() }), ..Default::default() },
         },
-        None => diff_insert_object(id, base.objects.len(), value),
+        None => diff_insert_object(id, index.map_or(base.objects.len(), |at| at.min(base.objects.len())), value),
     }
 }
 /// 🔧️ Upserts `key` at `path` inside object `id`'s value tree (`modified` if `key` already
 /// exists at that container, `added` otherwise). Graceful empty diff if `id`/`path` don't
 /// resolve to a real `Dict`/`Stream` container in `base`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_dict_entry(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], key: &str, value: PdfObject) -> PdfDiff {
+pub fn diff_set_dict_entry(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegment], key: &str, value: PdfObject, index: Option<usize>) -> PdfDiff {
     let Some(obj) = base.objects.iter().find(|o| o.id == id) else { return PdfDiff::default() };
     let Some(container) = resolve_value(&obj.value, path) else { return PdfDiff::default() };
     let Some(entries) = dict_entries_of(container) else { return PdfDiff::default() };
@@ -2463,7 +2475,7 @@ pub fn diff_set_dict_entry(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSegmen
             None => return PdfDiff::default(),
             Some(d) => PdfDictDiff { modified: vec![PdfDictModified { key: key.to_string(), diff: d }], ..Default::default() },
         },
-        None => PdfDictDiff { added: vec![PdfDictAdded { index: entries.len(), key: key.to_string(), item: value }], ..Default::default() },
+        None => PdfDictDiff { added: vec![PdfDictAdded { index: index.map_or(entries.len(), |at| at.min(entries.len())), key: key.to_string(), item: value }], ..Default::default() },
     };
     diff_at_object_path(id, path, is_root_stream, leaf)
 }
@@ -2483,13 +2495,13 @@ pub fn diff_remove_dict_entry(base: &PdfSnapshot, id: ObjRef, path: &[PdfPathSeg
 }
 /// 🔧️ Upserts `key` in the top-level trailer dictionary.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_trailer_entry(base: &PdfSnapshot, key: &str, value: PdfObject) -> PdfDiff {
+pub fn diff_set_trailer_entry(base: &PdfSnapshot, key: &str, value: PdfObject, index: Option<usize>) -> PdfDiff {
     let leaf = match base.trailer.iter().position(|e| e.key == key) {
         Some(pos) => match value_diff_between(&base.trailer[pos].value, &value) {
             None => return PdfDiff::default(),
             Some(d) => PdfDictDiff { modified: vec![PdfDictModified { key: key.to_string(), diff: d }], ..Default::default() },
         },
-        None => PdfDictDiff { added: vec![PdfDictAdded { index: base.trailer.len(), key: key.to_string(), item: value }], ..Default::default() },
+        None => PdfDictDiff { added: vec![PdfDictAdded { index: index.map_or(base.trailer.len(), |at| at.min(base.trailer.len())), key: key.to_string(), item: value }], ..Default::default() },
     };
     PdfDiff { trailer: Some(leaf), ..Default::default() }
 }
@@ -2513,7 +2525,7 @@ pub fn graph_edit(rows: PdfDiff) -> PdfDiff {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn sequence(first: PdfDiff, second: PdfDiff) -> PdfDiff {
     let mut diff = first;
-    MutationDiff::absorb(&mut diff, second);
+    <PdfDiff as MutationDiff<PdfSnapshot>>::absorb(&mut diff, second);
     diff
 }
 

@@ -1,7 +1,7 @@
 // #region 🧲️Header
 // 💻️ ✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🧊️storybook-spatial/🟦️.ts
 // Specs: End-to-end smoke + light-interaction checks for the `puzzle/3d`, `puzzle/5d`, and `infinite` Storybook scopes' new real-fixture stories, plus `puzzle/2d`'s `Fixtures.stories.tsx`.
-// Summary: Every story gets the same base assertion as the sibling 2D Storybook case's `expectBoardStory` (page loads, no page/console errors, `#storybook-root` mounts) via `expectStoryLoads`; a handful of stories get an additional readout/interaction assertion (fixture counts via each story's `data-testid` debug `<pre>`, the puzzle-5d timeline scrub, the mock GraphWasmCanvas pointer counter, ReferenceMedia's per-file load status).
+// Summary: Every story gets the same base assertion as the sibling 2D Storybook case's `expectBoardStory` (page loads, no page/console errors, `#storybook-root` mounts) via `expectStoryLoads`; a handful of stories get an additional readout/interaction assertion (fixture counts via each story's `data-testid` debug `<pre>`, the puzzle-5d timeline scrub, the mock WasmCanvas pointer counter, ReferenceMedia's per-file load status).
 // Summary: The registered Storybook browser runner includes this case and exercises it against a built Storybook with the puzzle and infinite scopes active.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
@@ -78,8 +78,8 @@ test("puzzle5d timeline nakagin: boots fully assembled (revealCount === partCoun
 });
 //#endregion puzzle/5d Timeline
 
-//#region infinite/GraphWasmCanvas
-test("infinite GraphWasmCanvas mock session: paints without WASM and counts pointer events", async ({ page }) => {
+//#region infinite/WasmCanvas
+test("infinite WasmCanvas mock session: paints without WASM and counts pointer events", async ({ page }) => {
   await expectStoryLoads(page, "♾️infinite-graphwasmcanvas--mock-session");
   const canvas = page.locator(".semio-graph-wasm-canvas-story canvas");
   await expect(canvas).toBeVisible();
@@ -88,7 +88,7 @@ test("infinite GraphWasmCanvas mock session: paints without WASM and counts poin
   await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2);
   await expect.poll(async () => JSON.parse(await page.getByTestId("graph-wasm-canvas-debug").innerText()).pointerEvents).toBeGreaterThan(0);
 });
-//#endregion infinite/GraphWasmCanvas
+//#endregion infinite/WasmCanvas
 
 //#region infinite/WorldR3f
 test("infinite WorldR3f chunked field: renders a canvas with the chunked/LOD layer primitives, no console errors", async ({ page }) => {

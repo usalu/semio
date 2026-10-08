@@ -1,4 +1,5 @@
 use super::*;
+use crate::model::{Surface, Thermostat};
 use std::collections::BTreeSet;
 
 fn definition() -> semio_framework_plugin::AppDefinition {
@@ -1014,21 +1015,13 @@ async fn the_action_bridge_accepts_the_inspector_field_id_value_payload() {
     assert_eq!(command, fenestration_property(50, "uValueWM2K", "1.4"));
 }
 
-/// 🧱️ The material and thermostat diffs gained the two fields they were missing — a material rename
-/// and a thermostat re-homing now emit their own kinds instead of being masked by the probe.
+/// 🧱️ A material rename and a thermostat's setpoint edit emit their own kinds, and restating a stored value emits nothing.
 #[semio_framework_async_macros::async_test]
-async fn the_material_and_thermostat_diffs_cover_their_reference_fields() {
-    let base = inspector_model();
-    let mut edited = base.clone();
-    edited.materials[0].name = "Cedar Siding".into();
-    use protocol::SemanticMutation as _;
-    let emit = model_edit("rename-material", &base, &edited).expect("the rename diffs");
-    assert_eq!(emit.artifact_mutations.iter().map(|mutation| mutation.semantics().kind).collect::<Vec<_>>(), vec!["rename-material"]);
-    let mut rehomed = base.clone();
-    rehomed.zones.push(Zone { id: EntityId(2), name: "Attic".into(), volume_m3: 40.0, multiplier: 1, conditioned: false, part_of_total_floor_area: true });
-    rehomed.thermostats[0].zone_id = EntityId(2);
-    let emit = model_edit("change-thermostat-zone", &base, &rehomed).expect("the re-homing diffs");
-    assert!(emit.artifact_mutations.iter().any(|mutation| mutation.semantics().kind == "change-thermostat-zone"), "a thermostat's zone is no longer masked");
+async fn the_material_and_thermostat_verbs_emit_only_their_own_kinds() {
+    let snapshot = snapshot_of(&inspector_model());
+    assert_eq!(emitted_kinds(&snapshot, &material_property(1, "name", "Cedar Siding")), vec!["rename-material".to_string()]);
+    let stored = snapshot.model.materials[0].name.clone();
+    assert!(emitted_kinds(&snapshot, &material_property(1, "name", &stored)).is_empty(), "restating the stored name is not an edit");
 }
 
 fn glazing_property(material: u32, property: &str, value: &str) -> EnergyModelEditorCommand {
@@ -1211,40 +1204,38 @@ async fn the_construction_property_verb_refuses_the_four_bad_payloads() {
     assert_eq!(refusal(&snapshot, &construction_property(9_999, "name", "Ghost")), "mutation.target-missing");
 }
 
-/// 🔬️ The masking gap this lane closed: `probe.materials` used to CLONE, so a field with no mutation
-/// kind vanished silently. Roughness was the live case — now it emits its own kind, and every one of
-/// the four newly projected collections reports back exactly what it diffed.
+/// 🔬️ Each projected field emits its granular mutation through the real editor command and central diff applier.
 #[semio_framework_async_macros::async_test]
 async fn the_four_projected_collections_emit_a_step_for_every_field_they_carry() {
     let base = inspector_model();
     let snapshot = snapshot_of(&base);
-
     let mut roughened = base.clone();
     roughened.materials[0].roughness = crate::model::SurfaceRoughness::VerySmooth;
-    assert_eq!(model_edit_kinds(&base, &roughened), vec!["change-material-roughness".to_string()], "a roughness edit is no longer masked by a cloning probe");
-
+    let command = material_property(base.materials[0].id.0, "roughness", "verySmooth");
+    assert_eq!(emitted_kinds(&snapshot, &command), vec!["change-material-roughness".to_string()]);
+    assert_eq!(applied(&snapshot, &command), roughened);
     let mut renamed = base.clone();
     renamed.zones[0].name = "Attic".into();
-    assert_eq!(model_edit_kinds(&base, &renamed), vec!["rename-zone".to_string()]);
-
+    let command = zone_property(base.zones[0].id.0, "name", "Attic");
+    assert_eq!(emitted_kinds(&snapshot, &command), vec!["rename-zone".to_string()]);
+    assert_eq!(applied(&snapshot, &command), renamed);
     let mut resurfaced = base.clone();
     resurfaced.surfaces[0].multiplier = 3;
-    assert_eq!(model_edit_kinds(&base, &resurfaced), vec!["change-surface-multiplier".to_string()]);
-
+    let command = surface_property(base.surfaces[0].id.0, "multiplier", "3");
+    assert_eq!(emitted_kinds(&snapshot, &command), vec!["change-surface-multiplier".to_string()]);
+    assert_eq!(applied(&snapshot, &command), resurfaced);
     let mut rehomed = base.clone();
     rehomed.thermostats[0].heating_throttle_range_k = 3.5;
-    assert_eq!(model_edit_kinds(&base, &rehomed), vec!["change-thermostat-heating-throttle-range".to_string()]);
-
+    let thermostat = &base.thermostats[0];
+    let command = EnergyModelEditorCommand::SetThermostatSetpoints { thermostat: thermostat.id.0, heating_schedule: thermostat.heating_setpoint_schedule_id.0, cooling_schedule: thermostat.cooling_setpoint_schedule_id.0, heating_throttle_range_k: 3.5, cooling_throttle_range_k: thermostat.cooling_throttle_range_k };
+    assert_eq!(emitted_kinds(&snapshot, &command), vec!["change-thermostat-heating-throttle-range".to_string()]);
+    assert_eq!(applied(&snapshot, &command), rehomed);
     let mut relayered = base.clone();
     let construction = relayered.constructions.iter_mut().find(|entry| entry.layer_material_ids.len() >= 2).expect("a multi-layer construction");
     construction.layer_material_ids.swap(0, 1);
-    assert_eq!(model_edit_kinds(&base, &relayered), vec!["reorder-construction-layers".to_string()], "constructions are projected too — the probe never compared them before");
-}
-
-/// 🔬️ Runs the mutation seam directly over a (base, edited) pair and names the steps it emitted.
-fn model_edit_kinds(base: &crate::model::Model, edited: &crate::model::Model) -> Vec<String> {
-    use protocol::SemanticMutation as _;
-    super::model_edit("probe", base, edited).expect("the seam names every edited field").artifact_mutations.iter().map(|mutation| mutation.semantics().kind.to_string()).collect()
+    let command = construction_property(construction.id.0, "moveLayerDown", "0");
+    assert_eq!(emitted_kinds(&snapshot, &command), vec!["reorder-construction-layers".to_string()]);
+    assert_eq!(applied(&snapshot, &command), relayered);
 }
 //#endregion 🧱️MaterialAndConstructionVerbs
 

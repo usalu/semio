@@ -30,7 +30,7 @@ fn mutation() -> SemioMeshMutation {
 #[semio_framework_async_macros::async_test]
 async fn adds_the_second_material_without_binding_it_to_anything() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("create-material applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("create-material applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "create-material/adds-a-second-material-at-the-end: applied state differs from the committed after-snapshot");
     assert_eq!(produced.materials.len(), base.materials.len() + 1, "create-material adds exactly one material");
     assert_eq!(produced.materials[1].id, "mat-b", "the new material occupies the index the NamedAdded entry recorded");
@@ -43,11 +43,12 @@ async fn adds_the_second_material_without_binding_it_to_anything() {
 async fn the_undo_delete_material_removes_the_second_material_again() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "create-material undoes as exactly one delete-material");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward create-material applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo delete-material applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward create-material applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo delete-material applies");
     }
     assert_eq!(current, base, "create-material/adds-a-second-material-at-the-end: the undo did not restore the before-snapshot");
 }
@@ -104,6 +105,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-material diff decodes");
-    let produced = decoded.apply(&before()).expect("committed create-material diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed create-material diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-material/adds-a-second-material-at-the-end: committed diff did not carry before to after");
 }

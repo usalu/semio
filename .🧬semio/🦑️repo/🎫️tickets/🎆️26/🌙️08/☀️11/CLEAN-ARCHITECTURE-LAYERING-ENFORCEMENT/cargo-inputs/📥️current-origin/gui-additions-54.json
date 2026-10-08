@@ -1,0 +1,16 @@
+[
+  {
+    "name": "📦️artifact-package-contract-current-1🧪️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run repo:artifact-package-contract --skip-nx-cache > \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/artifact-package-contract-current-1.outer.log\" 2>&1",
+    "cwd": "${workspaceFolder}",
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.309
+    },
+    "env": {
+      "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/controlled-cargo-callers/artifact-package-contract-current-1"
+    }
+  }
+]

@@ -425,40 +425,6 @@ fn parse_face(value: &Json) -> Result<Face, String> {
     Ok(Face { vertices })
 }
 
-/// 📦️ The whole-document payload `set-snapshot` carries — parsed independently of this subset's
-/// own `ObjSnapshot` deserialization.
-#[cfg(feature = "oracles")]
-fn model_from_json(value: &Json) -> Result<Model, String> {
-    let mut model = Model::default();
-    for entry in value.array("vertices") {
-        model.vertices.push(parse_vertex(&entry)?);
-    }
-    for entry in value.array("texcoords") {
-        model.texcoords.push(parse_texcoord(&entry)?);
-    }
-    for entry in value.array("normals") {
-        model.normals.push(parse_normal(&entry)?);
-    }
-    for entry in value.array("faces") {
-        model.faces.push(parse_face(&entry)?);
-    }
-    for entry in value.array("groups") {
-        model.groups.push((str_field(&entry, "name")?, usize_array(&entry, "faces")?));
-    }
-    for entry in value.array("objects") {
-        model.objects.push((str_field(&entry, "name")?, usize_array(&entry, "faces")?));
-    }
-    model.mtllib = str_opt(value, "mtllib");
-    for entry in value.array("usemtl") {
-        model.usemtl.push((usize_field(&entry, "faceIndexFrom")?, str_field(&entry, "material")?));
-    }
-    for entry in value.array("smoothingGroups") {
-        model.smoothing.push((usize_field(&entry, "faceIndexFrom")?, num_opt(&entry, "group").map(|number| number as u32)));
-    }
-    model.unknown = unknown_statements(&value.array("unknownStatements"))?;
-    Ok(model)
-}
-
 /// 🕳️ `ObjUnknownStatement` wire entries — `{lineIndex, raw}` — as the model's retained lines.
 #[cfg(feature = "oracles")]
 fn unknown_statements(entries: &[Json]) -> Result<Vec<(usize, String)>, String> {
@@ -528,10 +494,8 @@ fn membership_to_json(entries: &[(String, Vec<usize>)]) -> Json {
     Json::Array(entries.iter().map(|(name, faces)| json_object(vec![("name", Json::String(name.clone())), ("faces", Json::Array(faces.iter().map(|index| Json::Number(*index as f64)).collect()))])).collect())
 }
 
-/// 📦️ The exact `snapshot` payload [`model_from_json`] consumes — the `ObjSnapshot` wire — emitted from an
-/// independently parsed model — the round trip `set-snapshot`'s own inverse needs. Without it an adapter has no
-/// honest way to say "put the whole document back": it would have to hand the pristine input bytes
-/// straight to the comparison, which asserts nothing about the reference at all.
+/// 📦️ The `ObjSnapshot` wire emitted from an independently parsed model — what an adapter reads the pristine document's
+/// memberships and statements out of, instead of handing the pristine input bytes to the comparison.
 #[cfg(feature = "oracles")]
 fn model_to_json(model: &Model) -> Json {
     let mut entries = vec![
@@ -702,14 +666,6 @@ fn shift_face_index_space_for_remove(model: &mut Model, index: usize) {
 #[cfg(feature = "oracles")]
 fn apply(model: &mut Model, kind: &str, params: &Json) -> Result<(), String> {
     match kind {
-        "set-snapshot" => {
-            *model = model_from_json(params.get("snapshot").ok_or("set-snapshot requires a snapshot field")?)?;
-            Ok(())
-        }
-        "patch-snapshot" => {
-            *model = model_from_json(&semio_repo_test_host::law::patched_snapshot(&model_to_json(model), params.get("patch").ok_or("patch-snapshot requires a patch field")?)?)?;
-            Ok(())
-        }
         "insert-vertex" => {
             let index = usize_field(params, "index")?.min(model.vertices.len());
             model.vertices.insert(index, parse_vertex(params.get("vertex").ok_or("insert-vertex requires a vertex field")?)?);
@@ -871,9 +827,7 @@ pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     Ok(render(&parse(text)?).into_bytes())
 }
 
-/// 📦️ The whole document as the `snapshot` payload `set-snapshot` carries, read independently of
-/// this subset's own `ObjSnapshot`. This is what makes `set-snapshot`'s INVERSE a real mutation
-/// (replace the document with the original one) instead of a hand-back of the pristine input bytes.
+/// 📦️ The whole document as the `ObjSnapshot` wire, read independently of this subset's own `ObjSnapshot`.
 #[cfg(feature = "oracles")]
 pub fn oracle_snapshot_json(input: &[u8]) -> Result<Json, String> {
     let text = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;

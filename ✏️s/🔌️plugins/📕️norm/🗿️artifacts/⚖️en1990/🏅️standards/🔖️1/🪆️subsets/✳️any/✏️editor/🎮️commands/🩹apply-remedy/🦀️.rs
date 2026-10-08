@@ -16,6 +16,6 @@ pub struct ApplyRemedy {
 
 //#region 🔖️Handler
 pub fn handle(payload: &ApplyRemedy, doc: &ArtifactView<'_, En1990Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1990Mutation, NoConfigMutation>, Fault> {
-    crate::app_surface::dispatch_apply_remedy::<crate::editor::en1990::En1990Family, _>(doc.snapshot, &payload.check_id, payload.remedy_index as usize, |base, target| En1990Mutation::from_snapshot(base, target))
+    crate::app_surface::dispatch_apply_remedy::<crate::editor::en1990::En1990Family, _>(doc.snapshot, &payload.check_id, payload.remedy_index as usize, |document, edit| crate::mutations::EDIT_RULES.resolve(document, edit))
 }
 //#endregion 🔖️Handler

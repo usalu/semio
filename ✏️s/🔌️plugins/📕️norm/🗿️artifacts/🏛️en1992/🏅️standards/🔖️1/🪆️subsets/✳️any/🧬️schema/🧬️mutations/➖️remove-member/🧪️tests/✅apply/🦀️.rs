@@ -10,7 +10,7 @@ fn mutation() -> En1992Mutation { semio_framework_pack_json::from_json_str(MUTAT
 fn apply(mutation: &En1992Mutation, base: &En1992Snapshot) -> En1992Snapshot {
     let raised = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(mutation, base);
     assert!(raised.messages().is_empty(), "remove-member raised {:?}", raised.messages());
-    <En1992Diff as protocol::MutationDiff<En1992Snapshot>>::apply(raised.diff(), base).expect("apply")
+    protocol::apply_diff(raised.diff(), base).expect("apply")
 }
 #[test]
 fn mutation_is_the_canonical_wire() {
@@ -36,4 +36,8 @@ fn inverse_restores_before() {
 #[test]
 fn declared_outcome_holds() {
     assert_eq!(serde_json::from_str::<serde_json::Value>(OUTCOME).expect("outcome")["status"], "applied");
+}
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

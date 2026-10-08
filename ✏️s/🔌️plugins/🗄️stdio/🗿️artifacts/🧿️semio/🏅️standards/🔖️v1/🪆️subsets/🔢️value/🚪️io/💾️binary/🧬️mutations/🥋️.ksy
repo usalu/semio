@@ -17,7 +17,7 @@ seq:
   - id: tag
     type: u1
     doc: >
-      0=set-snapshot 1=set-value 2=set-map-entry 3=remove-map-entry 4=insert-list-item
+      1=set-value 2=set-map-entry 3=remove-map-entry 4=insert-list-item
       5=remove-list-item 6=set-node 7=remove-node
   - id: payload
     size-eos: true

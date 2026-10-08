@@ -84,7 +84,39 @@ impl store::ArtifactPack for RetainedLoadCameraConfig {
     }
 }
 
-store::impl_whole_record_config!(RetainedLoadCameraConfig);
+impl store::ConfigRecord for RetainedLoadCameraConfig {}
+
+/// 🔺️ Sparse diff of [`RetainedLoadCameraConfig`]: the absolute new value of each field the mutation moves.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub(super) struct RetainedLoadCameraConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub viewport: Option<semio_framework_os_kernel::Viewport2d>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub eye: Option<[f64; 3]>,
+}
+
+impl protocol::MutationDiff<RetainedLoadCameraConfig> for RetainedLoadCameraConfigDiff {
+    fn apply(&self, base: &RetainedLoadCameraConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RetainedLoadCameraConfig> {
+        Ok(RetainedLoadCameraConfig { viewport: self.viewport.unwrap_or(base.viewport), eye: self.eye.unwrap_or(base.eye) })
+    }
+    fn absorb(&mut self, other: Self) {
+        self.viewport = other.viewport.or(self.viewport);
+        self.eye = other.eye.or(self.eye);
+    }
+}
+
+impl protocol::DiffAlgebra<RetainedLoadCameraConfig> for RetainedLoadCameraConfigDiff {
+    fn inverse(&self, base: &RetainedLoadCameraConfig) -> Self {
+        Self { viewport: self.viewport.map(|_| base.viewport), eye: self.eye.map(|_| base.eye) }
+    }
+    fn between(base: &RetainedLoadCameraConfig, other: &RetainedLoadCameraConfig) -> Self {
+        Self { viewport: (base.viewport != other.viewport).then_some(other.viewport), eye: (base.eye != other.eye).then_some(other.eye) }
+    }
+    fn is_empty(&self) -> bool {
+        self.viewport.is_none() && self.eye.is_none()
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
@@ -123,7 +155,7 @@ impl protocol::OpBinary for RetainedLoadCameraConfigMutation {
 }
 
 impl protocol::Mutation<RetainedLoadCameraConfig> for RetainedLoadCameraConfigMutation {
-    type Diff = RetainedLoadCameraConfig;
+    type Diff = RetainedLoadCameraConfigDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/📥️retained-pack-load",
@@ -143,13 +175,13 @@ impl protocol::Mutation<RetainedLoadCameraConfig> for RetainedLoadCameraConfigMu
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         &Self::DESCRIPTORS[0]
     }
-    fn diff(&self, _base: &RetainedLoadCameraConfig) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &RetainedLoadCameraConfig) -> protocol::MutationOutcome<Self::Diff> {
         match self {
-            Self::Snapshot { config } => protocol::MutationOutcome::new(config.as_ref().clone()),
+            Self::Snapshot { config } => protocol::MutationOutcome::new(RetainedLoadCameraConfigDiff { viewport: (config.viewport != base.viewport).then_some(config.viewport), eye: (config.eye != base.eye).then_some(config.eye) }),
         }
     }
     fn inverse(&self, base: &RetainedLoadCameraConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-        Ok((|| vec![Self::Snapshot { config: Box::new(base.clone()) }])())
+        Ok(vec![Self::Snapshot { config: Box::new(RetainedLoadCameraConfig { viewport: base.viewport, eye: base.eye }) }])
     }
 }
 

@@ -52,7 +52,6 @@ type Recipe = Readonly<{ id: string; directoryName: string; subset: "hdrl" | "id
  *  comments for exactly which real error code each rejection corresponds to). */
 const RECIPES: readonly Recipe[] = [
   { id: "no-mutation-applied", directoryName: "⏸️no-mutation-applied", subset: "hdrl", mutation: "no-mutation", outcome: "applied", notes: "Identity — before and after bytes are the same document." },
-  { id: "set-snapshot-applied", directoryName: "📸️set-snapshot-applied", subset: "hdrl", mutation: "set-snapshot", outcome: "applied", notes: "Whole-document replace: main header, a stream's strh.rate/length and a new movi chunk all change together." },
   { id: "set-main-header-applied", directoryName: "🧾️set-main-header-applied", subset: "hdrl", mutation: "set-main-header", outcome: "applied", notes: "Only avih fields change; streams/idx1/unknown chunks untouched." },
   { id: "set-idx1-present-applied", directoryName: "📇️set-idx1-present-applied", subset: "idx1", mutation: "set-idx1-present", outcome: "applied", notes: "idx1Present flips false; the idx1 chunk is omitted entirely on encode." },
   { id: "insert-stream-applied", directoryName: "📥️insert-stream-applied", subset: "hdrl", mutation: "insert-stream", outcome: "applied", notes: "A third stream is appended; mainHeader.streams is left stale at 2, matching real dispatch." },

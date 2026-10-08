@@ -1,4 +1,6 @@
 //! 🧬️ Direct bind-primitive-indices mutation owner: payload, validation, typed diff, inverse, and outcomes.
+use crate::schema::diff::*;
+use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::modules::mutation_support::structure_geometry::checked_index;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
@@ -22,11 +24,21 @@ pub fn validate(payload: &GltfBindPrimitiveIndicesPayload, base: &GltfSnapshot) 
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfBindPrimitiveIndicesPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
-    let mut next = base.clone();
-    next.document.meshes[payload.mesh].primitives[payload.primitive].indices = Some(payload.accessor);
-    Ok(next)
+pub fn plan(p: &GltfBindPrimitiveIndicesPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
+    validate(p, base)?;
+    let value = Some(p.accessor);
+    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { indices: (value != base.document.meshes[p.mesh].primitives[p.primitive].indices).then(|| value), ..Default::default() }), ..Default::default() })
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(p: &GltfBindPrimitiveIndicesPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    if validate(p, base).is_err() {
+        return Vec::new();
+    }
+    match base.document.meshes[p.mesh].primitives[p.primitive].indices {
+        Some(current) if current == p.accessor => Vec::new(),
+        Some(current) => vec![super::bind_primitive_indices::mutation(super::bind_primitive_indices::GltfBindPrimitiveIndicesPayload { mesh: p.mesh, primitive: p.primitive, accessor: current })],
+        None => vec![super::unbind_primitive_indices::mutation(super::unbind_primitive_indices::GltfUnbindPrimitiveIndicesPayload { mesh: p.mesh, primitive: p.primitive })],
+    }
 }
 
 //#region 🧬️DirectMutation
@@ -35,7 +47,11 @@ pub fn apply(payload: &GltfBindPrimitiveIndicesPayload, base: &GltfSnapshot) -> 
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum BindPrimitiveIndicesMutation {
     Apply(GltfBindPrimitiveIndicesPayload),
-    Restore(Box<crate::schema::diff::GltfDiff>),
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutation(payload: GltfBindPrimitiveIndicesPayload) -> super::GltfMutation {
+    super::GltfMutation::BindPrimitiveIndices(BindPrimitiveIndicesMutation::Apply(payload))
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindPrimitiveIndicesMutation {
@@ -43,28 +59,18 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for BindPrimitive
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => match apply(payload, base) {
-                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Self::Apply(payload) => match plan(payload, base) {
+                Ok(diff) => protocol::MutationOutcome::new(diff),
                 Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
-            },
-            Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
-                Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-                Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
             },
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
-            return Vec::new();
+        match self {
+            Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::GltfMutation::BindPrimitiveIndices(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Bind Primitive Indices", "Primitivindizes binden")

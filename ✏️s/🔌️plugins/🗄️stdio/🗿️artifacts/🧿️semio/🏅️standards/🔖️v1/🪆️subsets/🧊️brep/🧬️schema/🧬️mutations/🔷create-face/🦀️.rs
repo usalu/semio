@@ -14,6 +14,8 @@ pub struct CreateFace {
     pub surface: BrepSurface,
     pub orientation: bool,
     pub tol: f64,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for CreateFace {

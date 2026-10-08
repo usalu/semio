@@ -4,7 +4,7 @@ export type * from "../../../../../🧬️schema/🧬️mutations/💎️materia
 /** 🗑️ `delete-material` wire twin: the flat `Apply` payload `GltfDeleteMaterialPayload` and the phase wire `DeleteMaterialMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
 export const parseGltfDeleteMaterialPayload = gltfWireObject<GltfDeleteMaterialPayload>({ index: gltfWireRequired(gltfWireIndex) });
-export const parseDeleteMaterialMutation = gltfWirePhase(parseGltfDeleteMaterialPayload, parseGltfDiff);
+export const parseDeleteMaterialMutation = gltfWireApplyPhase(parseGltfDeleteMaterialPayload);

@@ -548,7 +548,7 @@ fn locale_and_terminology_changes_require_one_full_guest_refresh_and_settle() {
     assert_eq!(contract["requiresGuestRefresh"].as_bool(), Some(true));
     assert_eq!(contract["refreshScope"].as_str(), Some("full"));
     assert_eq!(contract["settleRequired"].as_bool(), Some(true));
-    for (action, value) in [("setLocale", contract["nextLocale"].as_str().unwrap()), ("setTerminology", "de")] {
+    for (action, value) in [("setLocale", contract["nextLocale"].as_str().unwrap()), ("setTerminology", Terminology::Reuse.as_str())] {
         let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
         shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 1, app: super::command_registry_tests::test_app(Vec::new(), Vec::new()), view_state: ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
         shell.chrome_present.maintenance.load_requested = false;

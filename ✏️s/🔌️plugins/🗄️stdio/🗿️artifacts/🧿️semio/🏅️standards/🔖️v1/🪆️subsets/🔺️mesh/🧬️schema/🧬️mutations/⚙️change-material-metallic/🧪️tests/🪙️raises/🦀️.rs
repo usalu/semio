@@ -31,7 +31,7 @@ fn mutation() -> SemioMeshMutation {
 #[semio_framework_async_macros::async_test]
 async fn raises_metallic_without_touching_roughness() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("change-material-metallic applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("change-material-metallic applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: applied state differs from the committed after-snapshot");
     assert_eq!(produced.materials[0].metallic, 1.0, "the metallic factor must take the payload's absolute value");
     assert_eq!(produced.materials[0].roughness, base.materials[0].roughness, "the sibling roughness factor is a SEPARATE triad and must not move");
@@ -43,13 +43,14 @@ async fn raises_metallic_without_touching_roughness() {
 async fn the_undo_change_material_metallic_restores_the_original_factor() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "change-material-metallic undoes as exactly one change-material-metallic");
     let SemioMeshMutation::ChangeMaterialMetallic(restore) = &undo[0] else { panic!("change-material-metallic must undo as itself") };
     assert_eq!(restore.new_metallic, base.materials[0].metallic, "the undo must recapture BASE's own metallic factor");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward change-material-metallic applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo change-material-metallic applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward change-material-metallic applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo change-material-metallic applies");
     }
     assert_eq!(current, base, "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: the undo did not restore the before-snapshot");
 }
@@ -106,6 +107,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-material-metallic diff decodes");
-    let produced = decoded.apply(&before()).expect("committed change-material-metallic diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed change-material-metallic diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-material-metallic/raises-the-metallic-factor-to-fully-metallic: committed diff did not carry before to after");
 }

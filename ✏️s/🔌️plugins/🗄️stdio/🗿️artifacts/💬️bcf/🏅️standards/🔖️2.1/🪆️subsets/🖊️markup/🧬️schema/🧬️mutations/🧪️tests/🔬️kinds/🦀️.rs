@@ -4,8 +4,6 @@ use super::*;
 #[test]
 fn kinds_const_matches_enum_variants_in_declaration_order() {
     let one_per_variant = vec![
-        BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: BcfSnapshot::default() }),
-        BcfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         BcfMutation::SetVersion(set_version::SetVersion { version: "2.2".into() }),
         BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: BcfTopic::default() }),
         BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: "t".into() }),

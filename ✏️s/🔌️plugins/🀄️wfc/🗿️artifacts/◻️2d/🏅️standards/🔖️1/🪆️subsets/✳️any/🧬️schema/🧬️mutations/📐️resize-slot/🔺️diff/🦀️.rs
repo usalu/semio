@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ResizeSlot` — a real id-keyed delta, never a whole-snapshot capture.
 
-use crate::diff::Wfc2dDiff;
+use crate::diff::{Wfc2dDiff, Wfc2dRowPatch, Wfc2dRows, Wfc2dSlotPatch};
 use crate::schema::snapshot::Wfc2dSnapshot;
 
 pub fn diff(payload: &super::ResizeSlot, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
@@ -14,6 +14,5 @@ pub fn diff(payload: &super::ResizeSlot, base: &Wfc2dSnapshot) -> protocol::Muta
     if slot.width == payload.width && slot.height == payload.height {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Slot \"{}\" already has that size.", payload.id));
     }
-    let resized = crate::schema::snapshot::Wfc2dSlot { width: payload.width, height: payload.height, ..slot.clone() };
-    protocol::MutationOutcome::new(Wfc2dDiff { slots_upserted: vec![(index, resized)], ..Default::default() })
+    protocol::MutationOutcome::new(Wfc2dDiff { slots: Wfc2dRows { patched: vec![Wfc2dRowPatch { id: slot.id.clone(), patch: Wfc2dSlotPatch { width: Some(payload.width), height: Some(payload.height), ..Default::default() } }], ..Default::default() }, ..Default::default() })
 }

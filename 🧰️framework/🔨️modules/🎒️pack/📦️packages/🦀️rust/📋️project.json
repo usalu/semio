@@ -89,6 +89,33 @@
         "forwardAllArgs": false
       },
       "cache": false
+    },
+    "test-retained-intrinsic-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-retained-intrinsic-native",
+        "forwardAllArgs": false
+      },
+      "cache": false
+    },
+    "test-retained-intrinsic-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-retained-intrinsic-source",
+        "forwardAllArgs": false
+      },
+      "cache": false
+    },
+    "test-intrinsic-schema-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-intrinsic-schema-native",
+        "forwardAllArgs": false
+      },
+      "cache": false
     }
   }
 }

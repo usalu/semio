@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::document::io::binary::diff::{encode_option, d
 use crate::standards::v1::subsets::document::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, dec_named_added, dec_named_triple, enc_indexed_triple, enc_named_added, enc_named_triple};
 use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
 use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocListItem, DocRun, DocStyle, DocTableCell, DocTableRow, RunStyle, SemioDocumentSnapshot};
@@ -335,22 +335,22 @@ pub(crate) fn dec_table_cells_diff(s: &str) -> Result<TableCellsDiff, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_styles_diff(d: &StylesDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_style_diff, enc_style)
+    enc_named_triple(d, |k| enc_str(k), enc_style_diff, |a| enc_named_added(a, enc_style))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_styles_diff(s: &str) -> Result<StylesDiff, String> {
-    dec_named_triple(s, dec_str, dec_style_diff, dec_style)
+    dec_named_triple(s, dec_str, dec_style_diff, |t| dec_named_added(t, dec_style))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_images_diff(d: &ImagesDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_image_diff, enc_image)
+    enc_named_triple(d, |k| enc_str(k), enc_image_diff, |a| enc_named_added(a, enc_image))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_images_diff(s: &str) -> Result<ImagesDiff, String> {
-    dec_named_triple(s, dec_str, dec_image_diff, dec_image)
+    dec_named_triple(s, dec_str, dec_image_diff, |t| dec_named_added(t, dec_image))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

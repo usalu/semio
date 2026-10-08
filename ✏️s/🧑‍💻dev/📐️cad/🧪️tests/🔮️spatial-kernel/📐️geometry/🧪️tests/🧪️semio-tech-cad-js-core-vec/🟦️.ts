@@ -4,7 +4,7 @@ import { CAD_GUMBALL_HIDDEN, cadGumballConfigVisible, collectGeometrySelectionTa
 import { preciseSpatialKernelMath } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
 import type { EdgeRecord, EdgeRef, Expr, ModelSpaceJson, ObjectRef, SelectionEvent, SelectionSpec, TypologyRef, VertexRef } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
 import type { SpatialKernel, SpatialPreviewKernel } from "../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
-import type { Vec3 } from "@semio-tech/s-3d-js";
+import type { Vec3 } from "@semio-tech/framework-3d-js";
 
 type TestSource = { readonly url: string };
 

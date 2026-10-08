@@ -4,6 +4,7 @@
 //! [`process3d_step_timeline_diff`](crate::process3d_step_timeline_diff).
 //! Error `target-missing` when the step is absent, Warning `no-op` when the origin is unchanged.
 
+use crate::diff::{Process3dOptionalOrigin, Process3dStepPatch, Process3dStepsDelta};
 use crate::diff::Process3dDiff;
 use crate::{process3d_step_timeline_diff, Process3dSnapshot};
 
@@ -15,10 +16,6 @@ pub fn diff(payload: &super::ChangeStepOrigin, base: &Process3dSnapshot) -> prot
     if existing.origin == payload.new_origin {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Step \"{}\" origin is unchanged.", payload.id));
     }
-    let mut steps = base.step_payloads.clone();
-    if let Some(step) = steps.iter_mut().find(|step| step.id == payload.id) {
-        step.origin = payload.new_origin.clone();
-    }
-    protocol::MutationOutcome::new(process3d_step_timeline_diff(base, steps))
+    protocol::MutationOutcome::new(process3d_step_timeline_diff(base, Process3dStepsDelta { patched: vec![Process3dStepPatch { id: payload.id.clone(), origin: Some(Process3dOptionalOrigin { value: payload.new_origin.clone() }), ..Default::default() }], ..Default::default() }))
 }
 //#endregion 🔖️Diff

@@ -31,7 +31,7 @@ fn mutation() -> SemioDrawingMutation {
 #[semio_framework_async_macros::async_test]
 async fn scales_the_group_non_uniformly_and_keeps_everything_else() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("scale applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("scale applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "scale/scales-the-nested-group-non-uniformly: applied state differs from the committed after-snapshot");
     let DrawNode::Group { children, .. } = &produced.layers[0].root else { panic!("the layer root is a group") };
     let DrawNode::Group { transform, children: nested } = &children[2] else { panic!("child #2 is the nested group") };
@@ -46,13 +46,14 @@ async fn scales_the_group_non_uniformly_and_keeps_everything_else() {
 async fn the_undo_scale_restores_the_unit_scale() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "scale of a group undoes as exactly one scale");
     let SemioDrawingMutation::ScaleNode(restore) = &undo[0] else { panic!("scale must undo as scale") };
     assert_eq!((restore.new_scale.x, restore.new_scale.y), (1.0, 1.0), "the undo must recapture BASE's own unit scale");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward scale applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo scale applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward scale applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo scale applies");
     }
     assert_eq!(current, base, "scale/scales-the-nested-group-non-uniformly: the undo did not restore the before-snapshot");
 }
@@ -118,6 +119,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed scale diff decodes");
-    let produced = decoded.apply(&before()).expect("committed scale diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed scale diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "scale/scales-the-nested-group-non-uniformly: committed diff did not carry before to after");
 }

@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "cases": [
+    { "name": "Empty Parent", "members": [], "children": ["plugins"], "accepted": true },
+    { "name": "Owned Module", "members": ["modules/session/packages/rust"], "children": ["plugins", "deployments"], "accepted": true },
+    { "name": "Concrete Child Member", "members": ["plugins/alpha/packages/rust"], "children": ["plugins"], "accepted": false },
+    { "name": "Relative Escape", "members": ["../other/packages/rust"], "children": [], "accepted": false },
+    { "name": "Absolute Escape", "members": ["/other/packages/rust"], "children": [], "accepted": false },
+    { "name": "Normalized Child Escape", "members": ["modules/../artifacts/red/packages/rust"], "children": ["artifacts"], "accepted": false },
+    { "name": "Distinct Prefix", "members": ["artifacts-contract/packages/rust"], "children": ["artifacts"], "accepted": true },
+    { "name": "Duplicate Member", "members": ["packages/rust", "packages/rust"], "children": [], "accepted": false },
+    { "name": "Nested Owner", "members": ["engine/packages/rust", "registry/contract/packages/rust"], "children": ["artifacts", "extensions"], "accepted": true },
+    { "name": "Normalized Duplicate Member", "members": ["packages/rust", "packages/./rust"], "children": [], "accepted": false },
+    { "name": "Windows Absolute Member", "members": ["C:/other/packages/rust"], "children": [], "accepted": false },
+    { "name": "Windows Drive Relative Member", "members": ["C:packages/rust"], "children": [], "accepted": false },
+    { "name": "Windows Network Member", "members": ["\\\\server\\share\\packages\\rust"], "children": [], "accepted": false },
+    { "name": "Noncanonical Member Separator", "members": ["packages\\rust"], "children": [], "accepted": false }
+  ],
+  "ownershipCases": [
+    {
+      "name": "Empty Parent After Children Deleted",
+      "accepted": true,
+      "boundaries": [{ "owner": "s", "children": ["plugins", "deployments"] }],
+      "manifests": [{ "path": "s/Cargo.toml", "source": "[workspace]\nmembers = []\n" }]
+    },
+    {
+      "name": "Intrinsic Parent With Child Absent",
+      "accepted": true,
+      "boundaries": [{ "owner": "s/plugins/alpha", "children": ["artifacts", "extensions"] }],
+      "manifests": [
+        { "path": "s/plugins/alpha/Cargo.toml", "source": "[workspace]\nmembers = [\"engine\"]\n" },
+        { "path": "s/plugins/alpha/engine/Cargo.toml", "source": "[package]\nname = \"alpha-engine\"\nworkspace = \"..\"\n" }
+      ]
+    },
+    {
+      "name": "Undeclared Intrinsic Package",
+      "accepted": false,
+      "boundaries": [],
+      "manifests": [
+        { "path": "s/Cargo.toml", "source": "[workspace]\nmembers = []\n" },
+        { "path": "s/engine/Cargo.toml", "source": "[package]\nname = \"engine\"\nworkspace = \"..\"\n" }
+      ]
+    },
+    {
+      "name": "Missing Inherited Provider",
+      "accepted": false,
+      "boundaries": [],
+      "manifests": [
+        { "path": "s/Cargo.toml", "source": "[workspace]\nmembers = [\"engine\"]\n" },
+        { "path": "s/engine/Cargo.toml", "source": "[package]\nname = \"engine\"\nworkspace = \"..\"\n[dependencies]\nmissing.workspace = true\n" }
+      ]
+    },
+    {
+      "name": "Descendant Target Dependency",
+      "accepted": false,
+      "boundaries": [{ "owner": "s/plugins/alpha", "children": ["artifacts", "extensions"] }],
+      "manifests": [
+        { "path": "s/plugins/alpha/Cargo.toml", "source": "[workspace]\nmembers = [\"engine\"]\n" },
+        { "path": "s/plugins/alpha/engine/Cargo.toml", "source": "[package]\nname = \"engine\"\nworkspace = \"..\"\n[target.'cfg(unix)'.dependencies]\nchild.path = \"../artifacts/red\"\n" },
+        { "path": "s/plugins/alpha/artifacts/red/Cargo.toml", "source": "[workspace]\n[package]\nname = \"red\"\n" }
+      ]
+    },
+    {
+      "name": "Descendant Unused Provider",
+      "accepted": false,
+      "boundaries": [{ "owner": "s/plugins/alpha", "children": ["artifacts", "extensions"] }],
+      "manifests": [
+        { "path": "s/plugins/alpha/Cargo.toml", "source": "[workspace]\nmembers = []\n[workspace.dependencies]\nchild.path = \"artifacts/red\"\n" },
+        { "path": "s/plugins/alpha/artifacts/red/Cargo.toml", "source": "[workspace]\n[package]\nname = \"red\"\n" }
+      ]
+    },
+    {
+      "name": "Foreign Explicit Workspace",
+      "accepted": false,
+      "boundaries": [],
+      "manifests": [
+        { "path": "s/Cargo.toml", "source": "[workspace]\nmembers = [\"engine\"]\n" },
+        { "path": "s/private/Cargo.toml", "source": "[workspace]\nmembers = []\n" },
+        { "path": "s/engine/Cargo.toml", "source": "[package]\nname = \"engine\"\nworkspace = \"../private\"\n" }
+      ]
+    },
+    {
+      "name": "Private Child Workspace Membership",
+      "accepted": false,
+      "boundaries": [],
+      "manifests": [
+        { "path": "s/Cargo.toml", "source": "[workspace]\nmembers = [\"private/engine\"]\n" },
+        { "path": "s/private/Cargo.toml", "source": "[workspace]\nmembers = [\"engine\"]\n" },
+        { "path": "s/private/engine/Cargo.toml", "source": "[package]\nname = \"engine\"\nworkspace = \"..\"\n" }
+      ]
+    },
+    {
+      "name": "Missing Build Dependency Path",
+      "accepted": false,
+      "boundaries": [],
+      "manifests": [{ "path": "s/Cargo.toml", "source": "[workspace]\n[package]\nname = \"engine\"\n[build-dependencies]\nmissing.path = \"missing\"\n" }]
+    },
+    {
+      "name": "Owned Direct And Inherited Providers",
+      "accepted": true,
+      "boundaries": [{ "owner": "s", "children": ["plugins"] }],
+      "manifests": [
+        { "path": "s/Cargo.toml", "source": "[workspace]\nmembers = [\"engine\", \"value\"]\n[workspace.dependencies]\nvalue.path = \"value\"\n" },
+        { "path": "s/engine/Cargo.toml", "source": "[package]\nname = \"engine\"\nworkspace = \"..\"\n[dependencies]\nvalue.workspace = true\n[dev-dependencies]\nvalue.path = \"../value\"\n" },
+        { "path": "s/value/Cargo.toml", "source": "[package]\nname = \"value\"\nworkspace = \"..\"\n" }
+      ]
+    }
+  ]
+}

@@ -15,11 +15,17 @@ use crate::standards::v1::subsets::any::schema::mutations::Block3dMutation;
 pub struct CreateVortexKind {
     #[dsl(block)]
     pub vortex_kind: Block3dVortexKind,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 pub fn create_vortex_kind(vortex_kind: Block3dVortexKind) -> Block3dMutation {
-    Block3dMutation::CreateVortexKind(CreateVortexKind { vortex_kind })
+    Block3dMutation::CreateVortexKind(CreateVortexKind { vortex_kind, index: None })
+}
+
+/// 📍️ Builder — like [`create_vortex_kind`] but inserts the row at `index`.
+pub fn create_vortex_kind_at(vortex_kind: Block3dVortexKind, index: u32) -> Block3dMutation {
+    Block3dMutation::CreateVortexKind(CreateVortexKind { vortex_kind, index: Some(index) })
 }
 
 impl protocol::MutationKind<Block3dSnapshot, Block3dMutation> for CreateVortexKind {

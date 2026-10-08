@@ -1,15 +1,16 @@
-use crate::diff::{En1992Diff, En1992ReinforcementGradeList};
-use crate::mutations::change_reinforcement_f_yk::ChangeReinforcementFYk;
+use crate::diff::{En1992Diff, En1992ReinforcementGradesRows, En1992ReinforcementGradesPatch};
+use super::ChangeReinforcementFYk;
 use crate::En1992Snapshot;
 
 pub fn diff(payload: &ChangeReinforcementFYk, base: &En1992Snapshot) -> protocol::MutationOutcome<En1992Diff> {
-    let mut grades = base.reinforcement_grades.clone();
-    let Some(g) = grades.iter_mut().find(|g| g.id == payload.grade_id) else {
+    let Some(g) = base.reinforcement_grades.iter().find(|g| g.id == payload.grade_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Grade {} not found.", payload.grade_id), Vec::<String>::new());
     };
     if (g.f_yk - payload.new_f_yk).abs() < f64::EPSILON {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
-    g.f_yk = payload.new_f_yk;
-    protocol::MutationOutcome::new(En1992Diff { reinforcement_grades: Some(En1992ReinforcementGradeList { values: grades }), ..Default::default() })
+    protocol::MutationOutcome::new(En1992Diff {
+        reinforcement_grades: Some(En1992ReinforcementGradesRows { modified: vec![En1992ReinforcementGradesPatch { id: payload.grade_id.clone(), f_yk: Some(payload.new_f_yk), ..Default::default() }], ..Default::default() }),
+        ..Default::default()
+    })
 }

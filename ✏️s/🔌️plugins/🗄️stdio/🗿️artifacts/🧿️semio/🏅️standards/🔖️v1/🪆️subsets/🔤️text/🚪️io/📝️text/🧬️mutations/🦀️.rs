@@ -8,7 +8,7 @@
 use crate::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
 
 use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::text::schema::mutations::{
+use crate::standards::v1::subsets::text::schema::mutations::{add_mark::AddMark, change_run_language::ChangeRunLanguage, edit_run::EditRun, insert_run::InsertRun, remove_mark::RemoveMark, remove_run::RemoveRun, reorder_runs::ReorderRuns};
 use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun};
 
 //#region 📖️SemioGrammar
@@ -101,12 +101,6 @@ fn print_text_mutation(m: &SemioTextMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_text_mutation(line: &str) -> Result<SemioTextMutation, String> {
-    if let Some(payload) = line.strip_prefix("setSnapshot:") {
-        let bytes = hex_decode(payload)?;
-        let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
-        let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-        let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
-    }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("text mutation: missing ':' in {line:?}"))?;
     match tag {
         "insertRun" => {
@@ -181,13 +175,6 @@ use super::*;
 use crate::standards::v1::subsets::text::schema::mutations::*;
 use crate::standards::v1::subsets::text::schema::diff::SemioTextDiff;
 use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
-use crate::standards::v1::subsets::text::schema::mutations::add_mark;
-use crate::standards::v1::subsets::text::schema::mutations::change_run_language;
-use crate::standards::v1::subsets::text::schema::mutations::edit_run;
-use crate::standards::v1::subsets::text::schema::mutations::insert_run;
-use crate::standards::v1::subsets::text::schema::mutations::remove_mark;
-use crate::standards::v1::subsets::text::schema::mutations::remove_run;
-use crate::standards::v1::subsets::text::schema::mutations::reorder_runs;
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<SemioTextSnapshot, SemioTextMutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`. This
 /// plugin crate reaches the derive through the `dsl` extern-crate alias `🦀️.rs` declares

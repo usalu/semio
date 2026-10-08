@@ -236,9 +236,9 @@ pub(crate) fn fixture() -> SemioMeshSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioMeshMutation> {
     vec![
-        SemioMeshMutation::CreateMesh(create_mesh::CreateMesh { mesh: SemioMesh { id: "mesh-b".into(), primitives: vec![] } }),
+        SemioMeshMutation::CreateMesh(create_mesh::CreateMesh { mesh: SemioMesh { id: "mesh-b".into(), primitives: vec![] }, at: None }),
         SemioMeshMutation::DeleteMesh(delete_mesh::DeleteMesh { id: "mesh-a".into() }),
-        SemioMeshMutation::CreatePrimitive(create_primitive::CreatePrimitive { mesh_id: "mesh-a".into(), primitive: SemioPrimitive { id: "prim-b".into(), ..Default::default() } }),
+        SemioMeshMutation::CreatePrimitive(create_primitive::CreatePrimitive { mesh_id: "mesh-a".into(), primitive: SemioPrimitive { id: "prim-b".into(), ..Default::default() }, at: None }),
         SemioMeshMutation::DeletePrimitive(delete_primitive::DeletePrimitive { mesh_id: "mesh-a".into(), primitive_id: "prim-a".into() }),
         SemioMeshMutation::SetPrimitiveTopology(set_primitive_topology::SetPrimitiveTopology { mesh_id: "mesh-a".into(), primitive_id: "prim-a".into(), topology: SemioTopology::Lines }),
         SemioMeshMutation::ReplacePrimitiveGeometry(replace_primitive_geometry::ReplacePrimitiveGeometry {
@@ -251,12 +251,12 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioMeshMutation> {
             indices: vec![],
         }),
         SemioMeshMutation::SetPrimitiveMaterial(set_primitive_material::SetPrimitiveMaterial { mesh_id: "mesh-a".into(), primitive_id: "prim-a".into(), material_id: None }),
-        SemioMeshMutation::CreateMaterial(create_material::CreateMaterial { material: SemioMaterial { id: "mat-b".into(), ..Default::default() } }),
+        SemioMeshMutation::CreateMaterial(create_material::CreateMaterial { material: SemioMaterial { id: "mat-b".into(), ..Default::default() }, at: None }),
         SemioMeshMutation::DeleteMaterial(delete_material::DeleteMaterial { id: "mat-a".into() }),
         SemioMeshMutation::ChangeMaterialBaseColor(change_material_base_color::ChangeMaterialBaseColor { id: "mat-a".into(), new_base_color: SemioRgba { r: 0.0, g: 0.0, b: 1.0, a: 1.0 } }),
         SemioMeshMutation::ChangeMaterialMetallic(change_material_metallic::ChangeMaterialMetallic { id: "mat-a".into(), new_metallic: 0.9 }),
         SemioMeshMutation::ChangeMaterialRoughness(change_material_roughness::ChangeMaterialRoughness { id: "mat-a".into(), new_roughness: 0.1 }),
-        SemioMeshMutation::CreateTexture(create_texture::CreateTexture { texture: SemioTexture { id: "tex-b".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] } }),
+        SemioMeshMutation::CreateTexture(create_texture::CreateTexture { texture: SemioTexture { id: "tex-b".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] }, at: None }),
         SemioMeshMutation::DeleteTexture(delete_texture::DeleteTexture { id: "tex-a".into() }),
         SemioMeshMutation::ChangeTextureMime(change_texture_mime::ChangeTextureMime { id: "tex-a".into(), new_mime: "image/bmp".into() }),
         SemioMeshMutation::ReplaceTextureBytes(replace_texture_bytes::ReplaceTextureBytes { id: "tex-a".into(), new_bytes: vec![9] }),

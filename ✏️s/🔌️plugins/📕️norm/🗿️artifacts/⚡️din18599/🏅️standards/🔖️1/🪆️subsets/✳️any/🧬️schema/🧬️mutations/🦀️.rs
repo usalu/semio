@@ -4,6 +4,10 @@ use crate::diff::Din18599Diff;
 use crate::Din18599Snapshot;
 
 //#region 🔖️Leaves
+#[path = "🧭️edit-rules/🦀️.rs"]
+mod edit_rules;
+pub use edit_rules::{resolve_edit, EDIT_RULES};
+
 use super::change_building_category;
 use super::change_attachment;
 use super::change_use_class;
@@ -182,7 +186,7 @@ mod tests;
 pub fn apply_din18599_mutation(base: &Din18599Snapshot, mutation: &Din18599Mutation) -> Result<(Din18599Snapshot, Vec<String>), String> {
     let raised = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = <Din18599Diff as protocol::MutationDiff<Din18599Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
 
@@ -205,3 +209,7 @@ mod kinds_catalog;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture;
 //#endregion 🧪️FixtureCorpus
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row;

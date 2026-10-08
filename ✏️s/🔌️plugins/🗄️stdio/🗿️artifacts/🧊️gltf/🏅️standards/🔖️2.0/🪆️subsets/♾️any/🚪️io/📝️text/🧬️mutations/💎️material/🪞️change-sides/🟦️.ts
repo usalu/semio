@@ -4,7 +4,7 @@ export type * from "../../../../../🧬️schema/🧬️mutations/💎️materia
 /** 🪞️ `change-material-double-sided` wire twin: the flat `Apply` payload `GltfChangeMaterialDoubleSidedPayload` and the phase wire `ChangeMaterialDoubleSidedMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { gltfWireBoolean, gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
 export const parseGltfChangeMaterialDoubleSidedPayload = gltfWireObject<GltfChangeMaterialDoubleSidedPayload>({ material: gltfWireRequired(gltfWireIndex), doubleSided: gltfWireRequired(gltfWireBoolean) });
-export const parseChangeMaterialDoubleSidedMutation = gltfWirePhase(parseGltfChangeMaterialDoubleSidedPayload, parseGltfDiff);
+export const parseChangeMaterialDoubleSidedMutation = gltfWireApplyPhase(parseGltfChangeMaterialDoubleSidedPayload);

@@ -22,30 +22,30 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 fn large_raster_density_edit_uses_compact_owned_event() {
     register_document_schema();
     let mut snapshot = JpgSnapshot::default();
-    snapshot.pixels = vec![7; 2 * 1_024 * 1_024];
-    snapshot.jfif_x_density = 80;
-    let event = editing::SnapshotEditEvent::SetValue { path: "/jfifXDensity".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(75)) };
+    snapshot.image.pixels = vec![7; 2 * 1_024 * 1_024];
+    snapshot.image.jfif_x_density = 80;
+    let event = editing::SnapshotEditEvent::SetValue { path: "/image/jfifXDensity".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(75)) };
     assert!(<JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_is_admitted(&event, &snapshot));
     let emit = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("density edit emits");
-    let [JpgMutation::PatchSnapshot(_payload)] = emit.artifact_mutations.as_slice() else { panic!("density edit must use its owned path patch") };
+    let [JpgMutation::ChangeJfifHeader(_payload)] = emit.artifact_mutations.as_slice() else { panic!("density edit must use its typed JFIF header intent") };
     
     assert!(<JpgMutation as protocol::OpBinary>::encode_op(&emit.artifact_mutations[0]).expect("density mutation encodes").len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
-    let next = protocol::MutationDiff::apply(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("density mutation applies");
-    assert_eq!(next.jfif_x_density, 75);
-    assert_eq!(next.pixels, snapshot.pixels);
+    let next = protocol::apply_diff(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("density mutation applies");
+    assert_eq!(next.image.jfif_x_density, 75);
+    assert_eq!(next.image.pixels, snapshot.image.pixels);
     let inverse = <JpgMutation as protocol::Mutation<JpgSnapshot>>::inverse(&emit.artifact_mutations[0], &snapshot).expect("valid retained mutation inverse fixture");
     assert!(inverse.iter().all(|mutation| <JpgMutation as protocol::OpBinary>::encode_op(mutation).is_ok_and(|bytes| bytes.len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES)));
-    let restored = inverse.into_iter().fold(next, |current, mutation| protocol::MutationDiff::apply(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&mutation, &current).diff(), &current).expect("density inverse applies"));
+    let restored = inverse.into_iter().fold(next, |current, mutation| protocol::apply_diff(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&mutation, &current).diff(), &current).expect("density inverse applies"));
     assert_eq!(restored, snapshot);
 
     let native_base = crate::schema::demo_jpg_snapshot();
     let native_emit = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &native_base).expect("native density edit emits");
-    let native_edited = protocol::MutationDiff::apply(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&native_emit.artifact_mutations[0], &native_base).diff(), &native_base).expect("native density mutation applies");
-    let base_bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&native_base, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(native_base.frame.as_ref())).expect("base JPEG encodes");
-    let edited_bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&native_edited, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(native_edited.frame.as_ref())).expect("edited JPEG encodes");
+    let native_edited = protocol::apply_diff(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&native_emit.artifact_mutations[0], &native_base).diff(), &native_base).expect("native density mutation applies");
+    let base_bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&native_base, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).expect("base JPEG encodes");
+    let edited_bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&native_edited, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).expect("edited JPEG encodes");
     assert_ne!(edited_bytes, base_bytes, "the density edit must affect the native JPEG export");
     let reopened = crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg(&edited_bytes).expect("edited native JPEG reopens");
-    assert_eq!((reopened.width, reopened.height), (native_edited.width, native_edited.height));
+    assert_eq!((reopened.image.width, reopened.image.height), (native_edited.image.width, native_edited.image.height));
 }
 
 #[test]
@@ -53,22 +53,22 @@ fn payload_detail_edits_publish_the_exact_requested_value() {
     register_document_schema();
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🧫️fixtures/🔣️.json"))).unwrap();
     let mut snapshot = JpgSnapshot::default();
-    snapshot.pixels = vec![7, 9];
+    snapshot.image.pixels = vec![7, 9];
     let base: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&snapshot))).unwrap();
     for row in fixture["payload"]["cases"].as_array().unwrap() {
         let mut event = row["event"].clone();
-        event["path"] = format!("/pixels{}", event["path"].as_str().unwrap()).into();
+        event["path"] = format!("/image/pixels{}", event["path"].as_str().unwrap()).into();
         if let Some(from) = event.get_mut("from") {
-            *from = format!("/pixels{}", from.as_str().unwrap()).into();
+            *from = format!("/image/pixels{}", from.as_str().unwrap()).into();
         }
         let event: editing::SnapshotEditEvent = semio_framework_pack_json::from_json_str(&event.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let emitted = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).unwrap_or_else(|error| panic!("{}: {error:?}", row["id"]));
         let mut next = snapshot.clone();
         for mutation in emitted.artifact_mutations {
-            next = protocol::MutationDiff::apply(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&mutation, &next).diff(), &next).unwrap();
+            next = protocol::apply_diff(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&mutation, &next).diff(), &next).unwrap();
         }
         let mut expected = base.clone();
-        *expected.pointer_mut("/pixels").unwrap() = row["expected"].clone();
+        *expected.pointer_mut("/image/pixels").unwrap() = row["expected"].clone();
         let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(&next))).unwrap();
         assert_eq!(actual, expected, "{}", row["id"]);
     }

@@ -6,11 +6,6 @@
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "artifact": {
-      "title": "Fem2dArtifact",
-      "type": "object",
-      "x-semio-state": "artifact"
-    },
     "nodes": {
       "$ref": "#/$defs/Fem2dNodesDelta",
       "x-semio-state": "artifact"
@@ -44,7 +39,7 @@
       "x-semio-state": "artifact"
     },
     "analysis": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/fem/fem2d/artifact.json#/$defs/FemAnalysisSettings",
+      "$ref": "#/$defs/Fem2dAnalysisPatch",
       "x-semio-state": "artifact"
     }
   },
@@ -334,6 +329,77 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "Fem2dLoadCasePatch": {
+      "title": "Fem2dLoadCasePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "selfWeight": {
+          "type": "boolean"
+        },
+        "loads": {
+          "$ref": "#/$defs/Fem2dLoadsDelta"
+        }
+      }
+    },
+    "Fem2dLoadsDelta": {
+      "title": "Fem2dLoadsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Fem2dAnalysisPatch": {
+      "title": "Fem2dAnalysisPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "modalCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bucklingCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "deformationScale": {
+          "type": "number",
+          "exclusiveMinimum": 0
         }
       }
     }

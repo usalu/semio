@@ -55,6 +55,7 @@ trait ObjIndexElem: Clone + PartialEq {
     type Diff: Clone + PartialEq;
     fn diff_is_empty(d: &Self::Diff) -> bool;
     fn diff_between(a: &Self, b: &Self) -> Self::Diff;
+    fn diff_inverse(d: &Self::Diff, base: &Self) -> Self::Diff;
     fn diff_apply(d: &Self::Diff, item: &mut Self);
     fn diff_absorb(base: &mut Self::Diff, other: Self::Diff);
 }
@@ -96,6 +97,26 @@ fn generic_between<T: ObjIndexElem>(base: &[T], other: &[T]) -> IndexedDiffParts
     let removed: Vec<usize> = if base.len() > other.len() { (other.len()..base.len()).collect() } else { Vec::new() };
     let added: Vec<(usize, T)> = if other.len() > base.len() { (base.len()..other.len()).map(|i| (i, other[i].clone())).collect() } else { Vec::new() };
     (removed, modified, added)
+}
+
+/// ↩️ Negative rows of a `(removed, modified, added)` triple against its BASE items: added rows become removals at their final
+/// index, removed rows return at their base index, and each modified row restores its base fields at the index the row has after
+/// the diff. Every list comes back ascending, the normal form [`generic_absorb_pair`] emits.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn generic_inverse<T: ObjIndexElem>(removed: &[usize], modified: &[(usize, T::Diff)], added: &[(usize, T)], base: &[T]) -> IndexedDiffParts<T::Diff, T> {
+    let mut removed_sorted = removed.to_vec();
+    removed_sorted.sort_unstable();
+    removed_sorted.dedup();
+    let mut added_final: Vec<usize> = added.iter().map(|(index, _)| *index).collect();
+    added_final.sort_unstable();
+    let after_index = |index: usize| {
+        let survivor = index - removed_sorted.iter().filter(|dropped| **dropped < index).count();
+        added_final.iter().fold(survivor, |position, inserted| if *inserted <= position { position + 1 } else { position })
+    };
+    let mut inverse_modified: Vec<(usize, T::Diff)> = modified.iter().filter_map(|(index, diff)| base.get(*index).map(|item| (after_index(*index), T::diff_inverse(diff, item)))).collect();
+    inverse_modified.sort_by_key(|(index, _)| *index);
+    let inverse_added = removed_sorted.iter().filter_map(|index| base.get(*index).map(|item| (*index, item.clone()))).collect();
+    (added_final, inverse_modified, inverse_added)
 }
 
 /// 🏷️ A structural, base-free label used only inside [`generic_absorb_pair`] to simulate the
@@ -231,6 +252,9 @@ impl ObjIndexElem for ObjVertex {
     fn diff_between(a: &ObjVertex, b: &ObjVertex) -> ObjVertexDiff {
         ObjVertexDiff { x: (a.x != b.x).then_some(b.x), y: (a.y != b.y).then_some(b.y), z: (a.z != b.z).then_some(b.z), w: (a.w != b.w).then_some(b.w) }
     }
+    fn diff_inverse(d: &ObjVertexDiff, base: &ObjVertex) -> ObjVertexDiff {
+        ObjVertexDiff { x: d.x.map(|_| base.x), y: d.y.map(|_| base.y), z: d.z.map(|_| base.z), w: d.w.map(|_| base.w) }
+    }
     fn diff_apply(d: &ObjVertexDiff, item: &mut ObjVertex) {
         if let Some(v) = d.x {
             item.x = v;
@@ -296,6 +320,18 @@ impl ObjVerticesDiff {
         generic_apply(base, &self.removed, &modified, &added)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base: &[ObjVertex]) -> Option<Self> {
+        let modified: Vec<(usize, ObjVertexDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
+        let added: Vec<(usize, ObjVertex)> = self.added.iter().map(|a| (a.index, a.vertex.clone())).collect();
+        let (removed, modified, added) = generic_inverse(&self.removed, &modified, &added, base);
+        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjVertexModified { index, diff }).collect(), added: added.into_iter().map(|(index, vertex)| ObjVertexAdded { index, vertex }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn between(base: &[ObjVertex], other: &[ObjVertex]) -> Option<Self> {
         let (removed, modified, added) = generic_between(base, other);
         let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjVertexModified { index, diff }).collect(), added: added.into_iter().map(|(index, vertex)| ObjVertexAdded { index, vertex }).collect() };
@@ -340,6 +376,9 @@ impl ObjIndexElem for ObjTexCoord {
     }
     fn diff_between(a: &ObjTexCoord, b: &ObjTexCoord) -> ObjTexCoordDiff {
         ObjTexCoordDiff { u: (a.u != b.u).then_some(b.u), v: (a.v != b.v).then_some(b.v), w: (a.w != b.w).then_some(b.w) }
+    }
+    fn diff_inverse(d: &ObjTexCoordDiff, base: &ObjTexCoord) -> ObjTexCoordDiff {
+        ObjTexCoordDiff { u: d.u.map(|_| base.u), v: d.v.map(|_| base.v), w: d.w.map(|_| base.w) }
     }
     fn diff_apply(d: &ObjTexCoordDiff, item: &mut ObjTexCoord) {
         if let Some(v) = d.u {
@@ -398,6 +437,18 @@ impl ObjTexCoordsDiff {
         generic_apply(base, &self.removed, &modified, &added)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base: &[ObjTexCoord]) -> Option<Self> {
+        let modified: Vec<(usize, ObjTexCoordDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
+        let added: Vec<(usize, ObjTexCoord)> = self.added.iter().map(|a| (a.index, a.texcoord.clone())).collect();
+        let (removed, modified, added) = generic_inverse(&self.removed, &modified, &added, base);
+        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjTexCoordModified { index, diff }).collect(), added: added.into_iter().map(|(index, texcoord)| ObjTexCoordAdded { index, texcoord }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn between(base: &[ObjTexCoord], other: &[ObjTexCoord]) -> Option<Self> {
         let (removed, modified, added) = generic_between(base, other);
         let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjTexCoordModified { index, diff }).collect(), added: added.into_iter().map(|(index, texcoord)| ObjTexCoordAdded { index, texcoord }).collect() };
@@ -442,6 +493,9 @@ impl ObjIndexElem for ObjNormal {
     }
     fn diff_between(a: &ObjNormal, b: &ObjNormal) -> ObjNormalDiff {
         ObjNormalDiff { x: (a.x != b.x).then_some(b.x), y: (a.y != b.y).then_some(b.y), z: (a.z != b.z).then_some(b.z) }
+    }
+    fn diff_inverse(d: &ObjNormalDiff, base: &ObjNormal) -> ObjNormalDiff {
+        ObjNormalDiff { x: d.x.map(|_| base.x), y: d.y.map(|_| base.y), z: d.z.map(|_| base.z) }
     }
     fn diff_apply(d: &ObjNormalDiff, item: &mut ObjNormal) {
         if let Some(v) = d.x {
@@ -500,6 +554,18 @@ impl ObjNormalsDiff {
         generic_apply(base, &self.removed, &modified, &added)
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base: &[ObjNormal]) -> Option<Self> {
+        let modified: Vec<(usize, ObjNormalDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
+        let added: Vec<(usize, ObjNormal)> = self.added.iter().map(|a| (a.index, a.normal.clone())).collect();
+        let (removed, modified, added) = generic_inverse(&self.removed, &modified, &added, base);
+        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjNormalModified { index, diff }).collect(), added: added.into_iter().map(|(index, normal)| ObjNormalAdded { index, normal }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn between(base: &[ObjNormal], other: &[ObjNormal]) -> Option<Self> {
         let (removed, modified, added) = generic_between(base, other);
         let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjNormalModified { index, diff }).collect(), added: added.into_iter().map(|(index, normal)| ObjNormalAdded { index, normal }).collect() };
@@ -544,6 +610,9 @@ impl ObjIndexElem for ObjFace {
     fn diff_between(a: &ObjFace, b: &ObjFace) -> ObjFaceDiff {
         ObjFaceDiff { vertices: (a.vertices != b.vertices).then(|| b.vertices.clone()) }
     }
+    fn diff_inverse(d: &ObjFaceDiff, base: &ObjFace) -> ObjFaceDiff {
+        ObjFaceDiff { vertices: d.vertices.as_ref().map(|_| base.vertices.clone()) }
+    }
     fn diff_apply(d: &ObjFaceDiff, item: &mut ObjFace) {
         if let Some(v) = &d.vertices {
             item.vertices = v.clone();
@@ -587,6 +656,18 @@ impl ObjFacesDiff {
         let modified: Vec<(usize, ObjFaceDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
         let added: Vec<(usize, ObjFace)> = self.added.iter().map(|a| (a.index, a.face.clone())).collect();
         generic_apply(base, &self.removed, &modified, &added)
+    }
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base: &[ObjFace]) -> Option<Self> {
+        let modified: Vec<(usize, ObjFaceDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
+        let added: Vec<(usize, ObjFace)> = self.added.iter().map(|a| (a.index, a.face.clone())).collect();
+        let (removed, modified, added) = generic_inverse(&self.removed, &modified, &added, base);
+        let d = Self { removed, modified: modified.into_iter().map(|(index, diff)| ObjFaceModified { index, diff }).collect(), added: added.into_iter().map(|(index, face)| ObjFaceAdded { index, face }).collect() };
+        if d.is_empty() {
+            None
+        } else {
+            Some(d)
+        }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn between(base: &[ObjFace], other: &[ObjFace]) -> Option<Self> {
@@ -1054,11 +1135,47 @@ impl MutationDiff<ObjSnapshot> for ObjDiff {
     }
 }
 
+/// ↩️ Negative rows for the groups triple against its BASE groups; removed groups return at their base index.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_groups(diff: &ObjGroupsDiff, base: &[ObjGroup]) -> ObjGroupsDiff {
+    let mut added_final: Vec<&ObjGroupAdded> = diff.added.iter().collect();
+    added_final.sort_by_key(|added| added.index);
+    let removed = added_final.iter().map(|added| added.group.name.clone()).collect();
+    let modified = diff.modified.iter().filter_map(|row| base.iter().find(|group| group.name == row.name).map(|group| ObjGroupModified { name: row.name.clone(), diff: ObjGroupDiff { faces: row.diff.faces.as_ref().map(|_| group.faces.clone()) } })).collect();
+    let mut restored: Vec<ObjGroupAdded> = diff.removed.iter().filter_map(|name| base.iter().position(|group| &group.name == name).map(|index| ObjGroupAdded { index, group: base[index].clone() })).collect();
+    restored.sort_by_key(|added| added.index);
+    ObjGroupsDiff { removed, modified, added: restored }
+}
+
+/// ↩️ Negative rows for the objects triple against its BASE objects; removed objects return at their base index.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_objects(diff: &ObjObjectsDiff, base: &[ObjObject]) -> ObjObjectsDiff {
+    let mut added_final: Vec<&ObjObjectAdded> = diff.added.iter().collect();
+    added_final.sort_by_key(|added| added.index);
+    let removed = added_final.iter().map(|added| added.object.name.clone()).collect();
+    let modified = diff.modified.iter().filter_map(|row| base.iter().find(|object| object.name == row.name).map(|object| ObjGroupModified { name: row.name.clone(), diff: ObjGroupDiff { faces: row.diff.faces.as_ref().map(|_| object.faces.clone()) } })).collect();
+    let mut restored: Vec<ObjObjectAdded> = diff.removed.iter().filter_map(|name| base.iter().position(|object| &object.name == name).map(|index| ObjObjectAdded { index, object: base[index].clone() })).collect();
+    restored.sort_by_key(|added| added.index);
+    ObjObjectsDiff { removed, modified, added: restored }
+}
+
 impl DiffAlgebra<ObjSnapshot> for ObjDiff {
-    /// 🔁️ Diff-level undo, derived generically (correct by construction) via `apply` + `between`.
+    /// ↩️ Concrete diff-level undo: every index-keyed collection turns into its negative rows (removed rows return at their base
+    /// index), the name-keyed groups and objects restore their base membership and return at their base index, and the replaced
+    /// scalars return to their base values.
     fn inverse(&self, base: &ObjSnapshot) -> Self {
-        let mutated = apply_obj_diff_unchecked(self, base);
-        Self::between(&mutated, base)
+        ObjDiff {
+            vertices: self.vertices.as_ref().and_then(|d| d.inverse(&base.vertices)),
+            texcoords: self.texcoords.as_ref().and_then(|d| d.inverse(&base.texcoords)),
+            normals: self.normals.as_ref().and_then(|d| d.inverse(&base.normals)),
+            faces: self.faces.as_ref().and_then(|d| d.inverse(&base.faces)),
+            groups: self.groups.as_ref().map(|d| inverse_groups(d, &base.groups)).filter(|d| !d.is_empty()),
+            objects: self.objects.as_ref().map(|d| inverse_objects(d, &base.objects)).filter(|d| !d.is_empty()),
+            mtllib: self.mtllib.as_ref().map(|_| base.mtllib.clone()),
+            usemtl: self.usemtl.as_ref().map(|_| base.usemtl.clone()),
+            smoothing_groups: self.smoothing_groups.as_ref().map(|_| base.smoothing_groups.clone()),
+            unknown_statements: self.unknown_statements.as_ref().map(|_| base.unknown_statements.clone()),
+        }
     }
 
     fn between(base: &ObjSnapshot, other: &ObjSnapshot) -> Self {
@@ -1139,12 +1256,6 @@ impl DiffAlgebra<ObjSnapshot> for ObjDiff {
     }
 }
 
-/// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
-/// slot exists on `ObjDiff` to short-circuit into.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &ObjSnapshot, next: &ObjSnapshot) -> ObjDiff {
-    ObjDiff::between(base, next)
-}
 //#endregion 🔖️Diff
 
 //#region 🔖️HandcraftedDiffCodec

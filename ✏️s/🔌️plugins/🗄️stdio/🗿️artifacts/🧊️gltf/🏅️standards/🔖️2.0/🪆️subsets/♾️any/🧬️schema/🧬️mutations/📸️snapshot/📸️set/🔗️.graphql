@@ -1,2 +1,0 @@
-# 📸️ Whole GltfSnapshot replacement.
-input SetSnapshot { snapshot: GltfSnapshot! }

@@ -40,10 +40,11 @@ fn base_fixture() -> SemioValueSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn apply_and_check(base: &SemioValueSnapshot, mutation: SemioValueMutation) -> (SemioValueSnapshot, protocol::MutationOutcome<SemioValueTreeDiff>) {
     let mut via_apply = base.clone();
-    let returned = apply_semio_value_mutation(&mut via_apply, &mutation);
+    let (__next, returned) = crate::applied(&via_apply, &mutation);
+    via_apply = __next;
     let expected_diff = mutation.diff(base);
     assert_eq!(returned, expected_diff, "apply_semio_value_mutation must return mutation.diff(base)");
-    let via_diff_apply = expected_diff.diff().apply(base).expect("apply must succeed for a well-formed fixture");
+    let via_diff_apply = protocol::apply_diff(expected_diff.diff(), base).expect("apply must succeed for a well-formed fixture");
     assert_eq!(via_apply, via_diff_apply, "m.diff(base).diff().apply(base) must equal apply_semio_value_mutation's result");
     (via_apply, returned)
 }
@@ -53,22 +54,21 @@ fn apply_and_check(base: &SemioValueSnapshot, mutation: SemioValueMutation) -> (
 async fn mutation_diff_law_all_variants() {
     let base = base_fixture();
 
-    apply_and_check(&base, SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snap(SemioValue::Bool { value: true }, vec![]) }));
     apply_and_check(&base, SemioValueMutation::SetValue(set_value::SetValue { path: vec![SemioValuePathSegment::Key { key: "a".into() }], value: intv("2") }));
-    apply_and_check(&base, SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![], key: "a".into(), value: intv("2") }));
-    apply_and_check(&base, SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![], key: "new".into(), value: strv("fresh") }));
+    apply_and_check(&base, SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![], key: "a".into(), value: intv("2"), at: None }));
+    apply_and_check(&base, SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![], key: "new".into(), value: strv("fresh"), at: None }));
     apply_and_check(&base, SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path: vec![], key: "a".into() }));
     apply_and_check(&base, SemioValueMutation::InsertListItem(insert_list_item::InsertListItem { path: vec![SemioValuePathSegment::Key { key: "list".into() }], index: 1, value: intv("99") }));
     apply_and_check(&base, SemioValueMutation::RemoveListItem(remove_list_item::RemoveListItem { path: vec![SemioValuePathSegment::Key { key: "list".into() }], index: 0 }));
-    apply_and_check(&base, SemioValueMutation::SetNode(set_node::SetNode { id: ValueId::new("n1"), value: strv("updated") }));
-    apply_and_check(&base, SemioValueMutation::SetNode(set_node::SetNode { id: ValueId::new("n2"), value: strv("brand-new") }));
+    apply_and_check(&base, SemioValueMutation::SetNode(set_node::SetNode { id: ValueId::new("n1"), value: strv("updated"), at: None }));
+    apply_and_check(&base, SemioValueMutation::SetNode(set_node::SetNode { id: ValueId::new("n2"), value: strv("brand-new"), at: None }));
     apply_and_check(&base, SemioValueMutation::RemoveNode(remove_node::RemoveNode { id: ValueId::new("n1") }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_map_entry_on_missing_key_adds_at_end() {
     let base = snap(mapv(vec![("a", intv("1"))]), vec![]);
-    let (result, _) = apply_and_check(&base, SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![], key: "b".into(), value: intv("2") }));
+    let (result, _) = apply_and_check(&base, SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![], key: "b".into(), value: intv("2"), at: None }));
     assert_eq!(result.root, mapv(vec![("a", intv("1")), ("b", intv("2"))]));
 }
 
@@ -83,14 +83,14 @@ async fn remove_map_entry_missing_key_is_noop() {
 #[semio_framework_async_macros::async_test]
 async fn nested_path_targets_inner_entry() {
     let base = snap(mapv(vec![("outer", mapv(vec![("inner", intv("1"))]))]), vec![]);
-    let (result, _) = apply_and_check(&base, SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![SemioValuePathSegment::Key { key: "outer".into() }], key: "inner".into(), value: intv("42") }));
+    let (result, _) = apply_and_check(&base, SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![SemioValuePathSegment::Key { key: "outer".into() }], key: "inner".into(), value: intv("42"), at: None }));
     assert_eq!(result.root, mapv(vec![("outer", mapv(vec![("inner", intv("42"))]))]));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_node_on_missing_id_inserts() {
     let base = snap(SemioValue::Null, vec![node("n1", strv("a"))]);
-    let (result, _) = apply_and_check(&base, SemioValueMutation::SetNode(set_node::SetNode { id: ValueId::new("n2"), value: strv("b") }));
+    let (result, _) = apply_and_check(&base, SemioValueMutation::SetNode(set_node::SetNode { id: ValueId::new("n2"), value: strv("b"), at: None }));
     assert_eq!(result.nodes, vec![node("n1", strv("a")), node("n2", strv("b"))]);
 }
 //#endregion mutation_diff_law
@@ -100,21 +100,21 @@ async fn set_node_on_missing_id_inserts() {
 async fn inverse_law_mutation_level_round_trips() {
     let base = base_fixture();
     let mutations = vec![
-        SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![], key: "a".into(), value: intv("2") }),
-        SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![], key: "new".into(), value: strv("fresh") }),
+        SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![], key: "a".into(), value: intv("2"), at: None }),
+        SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![], key: "new".into(), value: strv("fresh"), at: None }),
         SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path: vec![], key: "a".into() }),
         SemioValueMutation::InsertListItem(insert_list_item::InsertListItem { path: vec![SemioValuePathSegment::Key { key: "list".into() }], index: 1, value: intv("99") }),
         SemioValueMutation::RemoveListItem(remove_list_item::RemoveListItem { path: vec![SemioValuePathSegment::Key { key: "list".into() }], index: 0 }),
         SemioValueMutation::SetValue(set_value::SetValue { path: vec![SemioValuePathSegment::Key { key: "a".into() }], value: strv("replaced") }),
-        SemioValueMutation::SetNode(set_node::SetNode { id: ValueId::new("n1"), value: strv("updated") }),
-        SemioValueMutation::SetNode(set_node::SetNode { id: ValueId::new("n9"), value: strv("brand-new") }),
+        SemioValueMutation::SetNode(set_node::SetNode { id: ValueId::new("n1"), value: strv("updated"), at: None }),
+        SemioValueMutation::SetNode(set_node::SetNode { id: ValueId::new("n9"), value: strv("brand-new"), at: None }),
         SemioValueMutation::RemoveNode(remove_node::RemoveNode { id: ValueId::new("n1") }),
     ];
     for mutation in mutations {
         let mut state = base.clone();
-        apply_semio_value_mutation(&mut state, &mutation);
-        for undo in <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
-            apply_semio_value_mutation(&mut state, &undo);
+        state = crate::applied(&state, &mutation).0;
+        for undo in <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            state = crate::applied(&state, &undo).0;
         }
         assert_eq!(state, base, "mutation {mutation:?} did not round-trip via its inverse");
     }
@@ -123,11 +123,11 @@ async fn inverse_law_mutation_level_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_law_diff_level_matches_mutation_diff() {
     let base = snap(mapv(vec![("a", intv("1"))]), vec![]);
-    let mutation = SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![], key: "a".into(), value: intv("2") });
+    let mutation = SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![], key: "a".into(), value: intv("2"), at: None });
     let diff = mutation.diff(&base);
-    let mid = diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
+    let mid = protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
     let inv = diff.diff().inverse(&base);
-    assert_eq!(inv.apply(&mid).expect("apply must succeed for a well-formed fixture"), base);
+    assert_eq!(protocol::apply_diff(&inv, &mid).expect("apply must succeed for a well-formed fixture"), base);
 }
 //#endregion inverse_law
 
@@ -157,8 +157,6 @@ async fn op_text_binary_roundtrip_law() {
 /// no arm here, so the crate stops building until both this match and `KINDS` name it.
 fn kind_of(mutation: &SemioValueMutation) -> &'static str {
     match mutation {
-        SemioValueMutation::PatchSnapshot(_) => "patch-snapshot",
-        SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { .. }) => "set-snapshot",
         SemioValueMutation::SetValue(set_value::SetValue { .. }) => "set-value",
         SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { .. }) => "set-map-entry",
         SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { .. }) => "remove-map-entry",
@@ -175,14 +173,12 @@ fn kind_of(mutation: &SemioValueMutation) -> &'static str {
 #[test]
 fn kinds_match_the_enum_and_the_catalog() {
     let one_per_variant = [
-        SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: SemioValueSnapshot::default() }),
-        SemioValueMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("owned schema".into()) } }),
         SemioValueMutation::SetValue(set_value::SetValue { path: Vec::new(), value: SemioValue::Null }),
-        SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: Vec::new(), key: "status".into(), value: SemioValue::Null }),
+        SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: Vec::new(), key: "status".into(), value: SemioValue::Null, at: None }),
         SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path: Vec::new(), key: "status".into() }),
         SemioValueMutation::InsertListItem(insert_list_item::InsertListItem { path: Vec::new(), index: 0, value: SemioValue::Null }),
         SemioValueMutation::RemoveListItem(remove_list_item::RemoveListItem { path: Vec::new(), index: 0 }),
-        SemioValueMutation::SetNode(set_node::SetNode { id: ValueId::new("n-1"), value: SemioValue::Null }),
+        SemioValueMutation::SetNode(set_node::SetNode { id: ValueId::new("n-1"), value: SemioValue::Null, at: None }),
         SemioValueMutation::RemoveNode(remove_node::RemoveNode { id: ValueId::new("n-1") }),
     ];
     assert_eq!(KINDS.len(), one_per_variant.len(), "KINDS must name exactly one entry per declared variant");
@@ -195,3 +191,18 @@ fn kinds_match_the_enum_and_the_catalog() {
     }
 }
 //#endregion 🔖️CatalogLaw
+
+/// 🎯️ Position law: removing ANY map entry or node (first, middle, last) is undone at its original index.
+#[semio_framework_async_macros::async_test]
+async fn removals_invert_at_every_position() {
+    let base = crate::standards::v1::subsets::value::schema::snapshot::demo_semio_value_snapshot();
+    for node in &base.nodes {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioValueMutation::RemoveNode(remove_node::RemoveNode { id: node.id.clone() }), &base).await;
+    }
+    if let crate::standards::v1::subsets::value::schema::snapshot::SemioValue::Map { entries } = &base.root {
+        for entry in entries {
+            protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path: vec![], key: entry.key.clone() }), &base).await;
+        }
+    }
+}
+

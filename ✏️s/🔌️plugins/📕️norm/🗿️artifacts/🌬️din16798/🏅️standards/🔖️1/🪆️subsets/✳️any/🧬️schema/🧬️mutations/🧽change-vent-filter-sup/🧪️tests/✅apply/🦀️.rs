@@ -23,3 +23,9 @@ async fn applies_change_vent_filter_sup() {
 fn sample_mutation(base: &Din16798Snapshot) -> Din16798Mutation {
     Din16798Mutation::ChangeVentFilterSup(change_vent_filter_sup::ChangeVentFilterSup { vent_id: base.vent_systems[0].id.clone(), new_filter_sup_class: "ePM1_80".into() })
 }
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    let base = Din16798Snapshot::default();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&sample_mutation(&base), &base).await;
+}

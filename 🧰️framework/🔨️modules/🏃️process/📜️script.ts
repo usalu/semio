@@ -6,6 +6,16 @@ import { runOwnedCommand } from "./🎛️owned-execution/🟦️.ts";
 import { TEST_LEVEL_BUDGET_MS } from "./🧪️testing/🎚️budget/🟦️.ts";
 import { BundleScript, ScriptRouter } from "./🧭️routing/🟦️.ts";
 import { runScriptMain } from "./🧭️routing/🚪️entrypoint/🟦️.ts";
+import {executeCommandV1} from "./🧭️routing/🎛️command/🟦️.ts";
+import {parseCommandArgumentsV1,resolveCommandConfigurationV1} from "./🧭️routing/🎛️command/⚙️configuration/🟦️.ts";
+
+/** 🎛️ Runs a configured neutral command with exact context and artifact custody. */
+class CommandScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  const plan=resolveCommandConfigurationV1(parseCommandArgumentsV1(segments),process.env);let cancelled=false;const stop=()=>{cancelled=true;};process.once("SIGINT",stop);process.once("SIGTERM",stop);
+  try{const result=await executeCommandV1(plan.request,plan.policy,{environment:plan.environment,cancelled:()=>cancelled,onProgress:event=>process.stderr.write(`[DEBUG] General command ${event.phase} elapsedMs=${event.elapsedMs}\n`)});process.stdout.write(result.stdout);process.stderr.write(result.stderr);process.exitCode=result.reason==="exit"?result.status??1:1;console.error(`[DEBUG] General command receipt=${result.receiptPath} reason=${result.reason} status=${result.status}`);}finally{process.off("SIGINT",stop);process.off("SIGTERM",stop);}
+ }
+}
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -24,6 +34,9 @@ class TestScript extends BundleScript {
     }
     const suites: Readonly<Record<string, { source: string; budgetMs: number }>> = {
       capture: { source: "📥️capture/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
+      command: { source: "🧭️routing/🎛️command/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
+      "command-boundary": { source: "🧭️routing/🎛️command/🧪️tests/🚧️boundary/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
+      "command-cold": { source: "🧭️routing/🎛️command/🧪️tests/❄️cold/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
       "wasm-build": { source: "📦️artifacts/🕸️wasm-build/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
       "native-artifacts": { source: "📦️artifacts/🏗️native-build/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
       "exact-cargo-laws": { source: "🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
@@ -43,4 +56,4 @@ class TestScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript));
+if (import.meta.main) await runScriptMain(new ScriptRouter(import.meta.dir,resolve(import.meta.dir,"../..")).register("command",CommandScript).register("test", TestScript));

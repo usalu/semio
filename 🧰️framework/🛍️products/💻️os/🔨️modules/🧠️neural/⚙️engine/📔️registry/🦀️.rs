@@ -156,4 +156,4 @@ impl Drop for RegistryRetirement {
 
 #[cfg(test)]
 #[path = "🧪️tests/📔️registry/🦀️.rs"]
-mod tests;
+pub(crate) mod tests;

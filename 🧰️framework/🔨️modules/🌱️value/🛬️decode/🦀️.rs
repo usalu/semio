@@ -54,7 +54,7 @@ impl<'a> NativeDecodeControl<'a> {
     /// 📏️ Returns the caller's complete native allocation allowance.
     pub fn maximum_bytes(&self)->usize { self.maximum_bytes }
     /// 🛑️ Checks cancellation before an explicitly owned expensive operation.
-    pub fn checkpoint(&mut self)->Result<(),ValueError> { if(self.callback)(NativeDecodeProgress{completed:self.completed,total:self.total,owned_bytes:self.owned_bytes}){self.started=true;Ok(())}else{Err(ValueError::new(ValueRefusalKind::Canceled, "native decoding canceled"))} }
+    pub fn checkpoint(&mut self)->Result<(),ValueError> { let owned_bytes=self.owned_bytes();if(self.callback)(NativeDecodeProgress{completed:self.completed,total:self.total,owned_bytes}){self.started=true;Ok(())}else{Err(ValueError::new(ValueRefusalKind::Canceled, "native decoding canceled"))} }
     /// 🧭️ Begins a known stage workload while retaining every previously admitted byte.
     pub fn begin_stage(&mut self,total:usize)->Result<(),ValueError>{self.stage=self.stage.checked_add(1).ok_or_else(|| ValueError::new(ValueRefusalKind::WorkLimit, "native decoding stage overflow"))?;self.completed=0;self.total=total;self.started=false;self.checkpoint()}
     /// 🪆️ Restores a parent workload after a child begins its own stage, preserving cumulative ownership.
@@ -73,7 +73,7 @@ impl<'a> NativeDecodeControl<'a> {
     pub fn charge(&mut self,bytes:usize)->Result<(),ValueError> { let next=self.owned_bytes.checked_add(bytes).filter(|next|*next<=self.maximum_bytes).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "native decoding ownership exceeds caller limit"))?;if !self.started||bytes>65536 {self.checkpoint()?;}self.owned_bytes=next;Ok(()) }
     /// 🗂️ Reserves typed collection slots after overflow and caller-bound admission.
     pub fn allocate_vec<T>(&mut self,count:usize)->Result<Vec<T>,ValueError> { let bytes=count.checked_mul(std::mem::size_of::<T>()).filter(|bytes|*bytes<=isize::MAX as usize).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "native decoding collection size overflow"))?;self.charge(bytes)?;let mut output=Vec::new();output.try_reserve_exact(count).map_err(|_| ValueError::new(ValueRefusalKind::AllocationFailed, "native decoding collection allocation failed"))?;Ok(output) }
-    fn copy_checkpoint(&mut self,completed:usize,total:usize)->Result<(),ValueError>{if(self.callback)(NativeDecodeProgress{completed,total,owned_bytes:self.owned_bytes}){Ok(())}else{Err(ValueError::new(ValueRefusalKind::Canceled, "native decoding canceled"))}}
+    fn copy_checkpoint(&mut self,completed:usize,total:usize)->Result<(),ValueError>{let owned_bytes=self.owned_bytes();if(self.callback)(NativeDecodeProgress{completed,total,owned_bytes}){Ok(())}else{Err(ValueError::new(ValueRefusalKind::Canceled, "native decoding canceled"))}}
     /// 🔎️ Validates borrowed UTF-8 in bounded spans without owning a second text buffer.
     pub fn borrow_text<'text>(&mut self,bytes:&'text[u8])->Result<&'text str,ValueError>{
         self.copy_checkpoint(0,bytes.len())?;let mut position=0;

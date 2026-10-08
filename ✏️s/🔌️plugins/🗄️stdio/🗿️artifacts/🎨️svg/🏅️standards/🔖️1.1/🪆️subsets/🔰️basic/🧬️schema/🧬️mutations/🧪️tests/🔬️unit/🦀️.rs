@@ -21,17 +21,15 @@ fn document() -> SvgSnapshot {
 #[test]
 fn kinds_matches_enum_variants_and_manifest() {
     let every = vec![
-        SvgBasicMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: SvgSnapshot::default() }),
-        SvgBasicMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
-        SvgBasicMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: None, version: None }),
+        SvgBasicMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: None, version: None, base_profile_index: None, version_index: None }),
         SvgBasicMutation::InsertBasicElement(insert_basic_element::InsertBasicElement { parent: Vec::new(), index: 0, node: elem("rect", vec![], vec![]) }),
         SvgBasicMutation::RemoveElement(remove_element::RemoveElement { parent: Vec::new(), index: 0 }),
-        SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute { path: Vec::new(), name: "fill".into(), value: None }),
+        SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute { path: Vec::new(), name: "fill".into(), value: None, index: None }),
         SvgBasicMutation::SetClipPathReference(set_clip_path_reference::SetClipPathReference { path: Vec::new(), clip_path_id: None }),
         SvgBasicMutation::InsertClipPathShape(insert_clip_path_shape::InsertClipPathShape { clip_path_id: "shape".into(), index: 0, node: elem("circle", vec![], vec![]) }),
         SvgBasicMutation::SetText(set_text::SetText { path: Vec::new(), text: String::new() }),
-        SvgBasicMutation::SetViewBox(set_view_box::SetViewBox { path: Vec::new(), view_box: None }),
-        SvgBasicMutation::SetTransform(set_transform::SetTransform { path: Vec::new(), transform: None }),
+        SvgBasicMutation::SetViewBox(set_view_box::SetViewBox { path: Vec::new(), view_box: None, index: None }),
+        SvgBasicMutation::SetTransform(set_transform::SetTransform { path: Vec::new(), transform: None, index: None }),
     ];
     let spelled: Vec<&'static str> = every.iter().map(kind_of).collect();
     assert_eq!(spelled, KINDS.to_vec(), "KINDS must spell every variant, in declaration order");
@@ -133,4 +131,22 @@ fn insert_clip_path_shape_adds_a_real_shape_and_inverts() {
         apply_svg_basic_mutation(&mut snapshot, step);
     }
     assert_eq!(snapshot, base, "adding and removing the clip shape must restore the document");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn every_leaf_satisfies_the_inverse_sum_law() {
+    let base = document();
+    let view_box = crate::schema::snapshot::ViewBox { min_x: 0.0, min_y: 0.0, width: 10.0, height: 20.0 };
+    for mutation in [
+        SvgBasicMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: Some("basic".into()), version: Some("1.1".into()), base_profile_index: None, version_index: None }),
+        SvgBasicMutation::InsertBasicElement(insert_basic_element::InsertBasicElement { parent: Vec::new(), index: 1, node: elem("rect", vec![], vec![]) }),
+        SvgBasicMutation::RemoveElement(remove_element::RemoveElement { parent: Vec::new(), index: 1 }),
+        SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute { path: Vec::new(), name: "fill".into(), value: Some(SvgAttributeValue::Text("red".into())), index: None }),
+        SvgBasicMutation::SetClipPathReference(set_clip_path_reference::SetClipPathReference { path: vec![1], clip_path_id: Some("shape".into()) }),
+        SvgBasicMutation::InsertClipPathShape(insert_clip_path_shape::InsertClipPathShape { clip_path_id: "shape".into(), index: 1, node: elem("circle", vec![], vec![]) }),
+        SvgBasicMutation::SetViewBox(set_view_box::SetViewBox { path: Vec::new(), view_box: Some(view_box), index: None }),
+        SvgBasicMutation::SetTransform(set_transform::SetTransform { path: vec![1], transform: Some(vec![TransformOp::Scale { x: 2.0, y: None }]), index: None }),
+    ] {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
 }

@@ -62,8 +62,6 @@
       "subsetDirectoryName": "🔬️tiny",
       "vectors": [],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "stamp-base-profile",
         "insert-tiny-element",
         "remove-element",
@@ -71,7 +69,8 @@
         "set-text",
         "set-view-box",
         "set-transform",
-        "strip-non-tiny"
+        "strip-non-tiny",
+        "restore-non-tiny"
       ]
     }
   ],
@@ -125,47 +124,6 @@
             "operation": "remove-element",
             "bridgeVersion": 1,
             "variant": "RemoveElement"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "svg-1-1-tiny-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "lxml-svg-1-1-tiny-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "svg-1-1-tiny-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "svg-1-1-tiny-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "lxml-svg-1-1-tiny-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "svg-1-1-tiny-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {
@@ -299,6 +257,27 @@
               "oracle": "lxml-svg-1-1-tiny-mutate-reader"
             }
           ]
+        },
+        {
+          "id": "restore-non-tiny",
+          "capability": "svg-1-1-tiny-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "restore-non-tiny",
+            "bridgeVersion": 1,
+            "variant": "RestoreNonTiny"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "svg-1-1-tiny-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "lxml-svg-1-1-tiny-mutate-reader"
+            }
+          ]
         }
       ]
     }
@@ -403,56 +382,6 @@
       "reproducible": true,
       "family": "structural",
       "notes": "The <line> element removed from the root, inverse of insert-tiny-element."
-    },
-    {
-      "id": "set-snapshot-applied",
-      "class": "third-party-generated",
-      "target": {
-        "artifact": "s.stdio.svg",
-        "standard": "1.1",
-        "subset": "tiny"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before-svg",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.svg",
-          "mediaType": "image/svg+xml",
-          "sha256": "sha256:c08c609e2add221f09c248dbc0bfdf0fb56773d5c210bdd09e2f60e4f4872c6a",
-          "bytes": 212
-        },
-        {
-          "role": "expected-after-svg",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.svg",
-          "mediaType": "image/svg+xml",
-          "sha256": "sha256:76579386ff3bbe0c6fb9565b01c825310a836acaa7c68a865608b27efcfa529b",
-          "bytes": 234
-        }
-      ],
-      "generator": {
-        "oracle": "lxml-svg-1-1-tiny-mutate-reader",
-        "packageVersion": "6.1.3",
-        "engineFamily": "lxml",
-        "engineVersion": "6.1.3",
-        "command": "uv run python3 🔨️f2-gen-svg-fixtures.py (lxml.etree.parse -> lxml.etree.tostring round-trip)",
-        "platform": "darwin-arm64"
-      },
-      "provenance": {
-        "source": "generated",
-        "license": "MIT (lxml, wraps libxml2 MIT/libxml2-license)",
-        "attribution": "Serialized by lxml 6.1.3's own etree.tostring after an lxml.etree.parse round-trip",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "utf8-text-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": "Whole-document snapshot replace: an unrelated valid document substituted wholesale."
     },
     {
       "id": "set-text-applied",

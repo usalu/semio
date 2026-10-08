@@ -12,22 +12,44 @@
   "inspectionLevel": null,
   "kFiDeclared": null,
   "betaComputed": null,
-  "permanents": null,
-  "variables": null,
-  "accidentals": null,
-  "seismics": [
-    {
-      "id": "E-1",
-      "aEk": 60000.0,
-      "importanceClass": "II"
-    },
-    {
-      "id": "E-2",
-      "aEk": 45000.0,
-      "importanceClass": "IV"
-    }
-  ],
-  "members": null,
-  "bridgeSls": null,
-  "effects": null
+  "permanents": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "variables": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "accidentals": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "seismics": {
+    "removed": [],
+    "added": [
+      {
+        "after": "E-1",
+        "row": {
+          "id": "E-2",
+          "aEk": 45000.0,
+          "importanceClass": "IV"
+        }
+      }
+    ],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "bridgeSls": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "effects": []
 }

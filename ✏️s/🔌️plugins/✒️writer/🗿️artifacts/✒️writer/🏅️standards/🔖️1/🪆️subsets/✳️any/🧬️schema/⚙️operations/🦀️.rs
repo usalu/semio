@@ -5,15 +5,12 @@ use crate::schema::mutations::WriterMutation;
 use crate::schema::mutations::{ChangeLanguage, ChangeUri, EditText, RenameWriter};
 use crate::WriterDiff;
 use crate::WriterSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 //#region ⚙️Operations
-/// 🧮️ Diff-first apply — matches every other migrated facet (`operation.diff(base).apply(base)`,
-/// per wave 0's confirmation that `vcs::apply_mutation` is already diff-first under the hood).
+/// 🧮️ Diff-first apply — the mutation's diff folded through the central applier `protocol::apply_diff`.
 pub fn apply_writer_mutation(snapshot: &mut WriterSnapshot, mutation: &WriterMutation) -> protocol::MutationApplyResult<()> {
-    let next = mutation.diff(snapshot).diff().apply(snapshot)?;
-
-    *snapshot = next;
+    *snapshot = protocol::apply_diff(mutation.diff(snapshot).diff(), snapshot)?;
     Ok(())
 }
 
@@ -31,7 +28,10 @@ pub fn inverse_writer_mutation(snapshot: &WriterSnapshot, mutation: &WriterMutat
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
 pub fn apply_writer_mutation_outcome(snapshot: &mut WriterSnapshot, mutation: &WriterMutation) -> protocol::MutationOutcome<WriterDiff> {
     let outcome = <WriterMutation as Mutation<WriterSnapshot>>::diff(mutation, snapshot);
-    outcome.apply_to(snapshot)
+    if let Ok(next) = protocol::apply_diff(outcome.diff(), &*snapshot) {
+        *snapshot = next;
+    }
+    outcome
 }
 
 /// ↩️ `mutation`'s own inverse against `base`, as the step LIST `protocol::Mutation::inverse`

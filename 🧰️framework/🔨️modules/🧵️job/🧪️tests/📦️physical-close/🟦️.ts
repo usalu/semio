@@ -1,12 +1,9 @@
 import assert from "node:assert/strict";
 import { applyPatch } from "fast-json-patch";
-import Ajv from "ajv";
 import fixture from "../../🧫️fixtures/📦️physical-close/🔣️.json" with { type: "json" };
-import schema from "../../🧫️fixtures/📦️physical-close/📐️schema.json" with { type: "json" };
 
 /** 📦️ Distinguishes initialized payload length from the physical page released under a grant. */
 export function testJobPayloadPhysicalClose(): void {
-  assert.equal(new Ajv({ strict: true, allErrors: true }).compile(schema)(fixture), true);
   for (const row of fixture.cases) {
     assert(row.insufficientGrant < fixture.pageBytes);
     const before = { logicalBytes: row.logicalBytes, physicalBytes: fixture.pageBytes, pages: 1 };

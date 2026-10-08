@@ -55,22 +55,8 @@
       "capability": "semio-v1-value-mutate",
       "standardDirectoryName": "🔖️v1",
       "subsetDirectoryName": "🔢️value",
-      "vectors": [
-        {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
-          "scenarios": [
-            {
-              "id": "retypes-a-map-member-and-repoints-a-graph-node",
-              "directoryName": "🔄️retypes"
-            }
-          ]
-        }
-      ],
+      "vectors": [],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "set-value",
         "set-map-entry",
         "remove-map-entry",
@@ -208,47 +194,6 @@
             "operation": "set-node",
             "bridgeVersion": 1,
             "variant": "SetNode"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-value-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "semio-v1-value-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-value-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "semio-v1-value-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

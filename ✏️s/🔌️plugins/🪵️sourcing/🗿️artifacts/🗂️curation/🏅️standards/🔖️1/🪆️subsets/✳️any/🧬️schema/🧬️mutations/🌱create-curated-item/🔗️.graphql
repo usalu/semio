@@ -1,6 +1,7 @@
 """🌱 Direct create-curated-item payload."""
 input CreateCuratedItemInput {
   item: CuratedItemInput!
+  index: Int
 }
 
 input CuratedItemInput {

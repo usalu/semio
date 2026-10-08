@@ -1,4 +1,3 @@
-import {applySnapshotPatch} from "../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts";
 /** ⚙️ Pure BMP revisions and native sample paint operations. */
 import {parseBmpSnapshot,bmpBitsPerPixel,bmpMaskMaximum,type BmpSnapshot,type BmpRegion,type BmpColor} from "../📸️snapshot/🟦️.ts";
 import type {BmpMutation} from "../🧬️mutations/🟦️.ts";
@@ -20,4 +19,4 @@ async function paint(snapshot:BmpSnapshot,revision:string,region:BmpRegion,color
 export function paintBmpIndexedRegion(snapshot:BmpSnapshot,revision:string,region:BmpRegion,index:number,control:BmpOperationControl={}):Promise<BmpSnapshot>{return paint(snapshot,revision,region,index,control);}
 export function paintBmpDirectRegion(snapshot:BmpSnapshot,revision:string,region:BmpRegion,color:BmpColor,control:BmpOperationControl={}):Promise<BmpSnapshot>{return paint(snapshot,revision,region,color,control);}
 export function bmpDimensions(snapshot:BmpSnapshot){const image=snapshot.image;return{width:image.width,height:image.height,bitDepth:bmpBitsPerPixel(image.profile),hasAlpha:image.masks[3]!==0,pixelCount:image.width*image.height};}
-export async function applyBmpMutation(snapshot:BmpSnapshot,mutation:BmpMutation,control:BmpOperationControl={}):Promise<BmpSnapshot>{const {mutation:kind,payload:p}=mutation;switch(kind){case"set-snapshot":return parseBmpSnapshot(p.snapshot);case"patch-snapshot":return parseBmpSnapshot(applySnapshotPatch(snapshot as unknown as Parameters<typeof applySnapshotPatch>[0],p.patch));case"paint-indexed-region":return paintBmpIndexedRegion(snapshot,p.revision,p,p.paletteIndex,control);case"paint-direct-region":return paintBmpDirectRegion(snapshot,p.revision,p,p,control);}}
+export async function applyBmpMutation(snapshot:BmpSnapshot,mutation:BmpMutation,control:BmpOperationControl={}):Promise<BmpSnapshot>{const {mutation:kind,payload:p}=mutation;switch(kind){case"replace-image":return parseBmpSnapshot({schema:snapshot.schema,image:p.image});case"paint-indexed-region":return paintBmpIndexedRegion(snapshot,p.revision,p,p.paletteIndex,control);case"paint-direct-region":return paintBmpDirectRegion(snapshot,p.revision,p,p,control);}}

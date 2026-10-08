@@ -47,13 +47,13 @@
       "cache": true,
       "inputs": [
         "{projectRoot}/📜️script.ts",
-        "{projectRoot}/../../🖼️canvas/🔤️fonts/🟦️.ts",
+        "{projectRoot}/../../../../../../🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts",
         {
           "dependentTasksOutputFiles": "**/*"
         }
       ],
       "dependsOn": [
-        "semio-framework-os-font-assets:build"
+        "semio-framework-canvas-font-assets:build"
       ],
       "outputs": [
         "{projectRoot}/dist/fonts"

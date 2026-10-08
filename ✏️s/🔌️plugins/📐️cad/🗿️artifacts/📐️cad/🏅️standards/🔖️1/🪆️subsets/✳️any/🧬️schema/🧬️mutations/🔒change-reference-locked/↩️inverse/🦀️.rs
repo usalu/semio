@@ -5,13 +5,10 @@ use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &ChangeReferenceLocked, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    base.references_by_model_definition_id
+    Ok(base.references_by_model_definition_id
         .get(&payload.model_definition_id)
         .and_then(|references| references.iter().find(|reference| reference.id == payload.reference_id))
         .map(|reference| vec![CadMutation::ChangeReferenceLocked(ChangeReferenceLocked { model_definition_id: payload.model_definition_id.clone(), reference_id: payload.reference_id.clone(), new_locked: reference.locked })])
-        .unwrap_or_default()
-
-    })())
+        .unwrap_or_default())
 }
 //#endregion 🔖️Inverse

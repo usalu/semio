@@ -7,4 +7,5 @@ import "../../🔺️diff/🛰️.proto";
 // 🎯️ Direct set-named-destination protobuf payload.
 message SetNamedDestinationMutation {
   PdfNamedDestination destination = 1;
+  optional uint64 index = 2;
 }

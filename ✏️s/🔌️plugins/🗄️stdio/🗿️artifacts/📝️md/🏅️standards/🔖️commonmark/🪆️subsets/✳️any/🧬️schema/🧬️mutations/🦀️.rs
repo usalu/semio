@@ -34,7 +34,7 @@ pub use crate::schema::diff::MdPathStep;
 
 
 
-use crate::schema::diff::{diff_at_path, diff_set_snapshot, MdBlockDiff, MdBlocksLeafDiff, MdDiff};
+use crate::schema::diff::{diff_at_path, MdBlockDiff, MdBlocksLeafDiff, MdDiff};
 use crate::schema::snapshot::{MdBlock, MdInline};
 use crate::MdSnapshot;
 use protocol::{Mutation};
@@ -52,23 +52,18 @@ pub mod set_inlines;
 /// CONTAINER (the `Vec<MdBlock>` -- top level, a block-quote's `blocks`, or a list item's
 /// content) the mutation's `index` lives in; `path == []` addresses the top-level `blocks`.
 /// 🧪️ F6: `#[derive(dsl::DslOps)]` on this enum is structurally blocked the SAME way
-/// `SvgMutation`'s was — `SetSnapshot`'s `snapshot: MdSnapshot` recursively contains `MdBlock`
-/// (a genuine data-carrying enum, no `DslField` impl, same `E0277` shape `SvgNodeDiff`/`XmlNode`
-/// hit via `SvgSnapshot`), and `InsertBlock`/`ReplaceBlock`'s `block: MdBlock` /
+/// `SvgMutation`'s was — `InsertBlock`/`ReplaceBlock`'s `block: MdBlock` /
 /// `SetInlines`'s `inlines: Vec<MdInline>` carry an enum-shaped payload DIRECTLY as a leaf
 /// field, not just via a nested snapshot — the mutation-side twin of the diff-side blocker cited on
 /// `MdDiff`'s own doc comment. `OpText`/`OpBinary` hand-rolled below, reusing `MdDiff`'s
 /// `pub(crate)` grammar primitives (`enc_block`/`enc_inline_list`/`split_top_level`/...).
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 //#endregion 🔖️Leaves
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = MdSnapshot, diff = MdDiff, schema = "MdMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum MdMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
     /// ➕️ Inserts `block` at `index` within the container addressed by `path`.
     InsertBlock(insert_block::InsertBlock),
     /// ➖️ Removes the block at `index` within the container addressed by `path`.
@@ -95,7 +90,7 @@ pub enum MdMutation {
 /// names no `MdMutation` variant (dropped by the `26/08/29/S-END-TO-END` mutation-leaf migration:
 /// `no` is not an approved semantic verb) and is handled directly by that adapter's `mutate`/
 /// `inverse` functions rather than through this vocabulary.
-pub const KINDS: &[&str] = &["set-snapshot", "insert-block", "remove-block", "replace-block", "set-inlines"];
+pub const KINDS: &[&str] = &["insert-block", "remove-block", "replace-block", "set-inlines"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Apply
@@ -105,7 +100,7 @@ pub const KINDS: &[&str] = &["set-snapshot", "insert-block", "remove-block", "re
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_md_mutation(snapshot: &mut MdSnapshot, mutation: &MdMutation) -> protocol::MutationOutcome<MdDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -116,59 +111,6 @@ pub fn apply_md_mutation(snapshot: &mut MdSnapshot, mutation: &MdMutation) -> pr
 
 //#endregion 🔖️Apply
 
-//#region 🔖️MutationTrait
-/// 🧷️ Lifted verbatim from the former `impl Mutation<MdSnapshot> for MdMutation`'s own `diff` body
-/// — only each match arm's pattern head changed, from `MdMutation::Variant { .. }` to
-/// `MdMutation::Variant(variant_mod::Variant { .. })`, to destructure the leaf payload each variant
-/// now wraps.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn agg_diff(this: &MdMutation, base: &MdSnapshot) -> protocol::MutationOutcome<MdDiff> {
-    protocol::MutationOutcome::new(match this {
-        MdMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
-        MdMutation::InsertBlock(insert_block::InsertBlock { path, index, block }) => diff_at_path(path, *index, MdBlocksLeafDiff::Added(block.clone())),
-        MdMutation::RemoveBlock(remove_block::RemoveBlock { path, index }) => diff_at_path(path, *index, MdBlocksLeafDiff::Removed),
-        MdMutation::ReplaceBlock(replace_block::ReplaceBlock { path, index, block }) => diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Replace { block: block.clone() })),
-        MdMutation::SetInlines(set_inlines::SetInlines { path, index, inlines }) => match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)) {
-            Some(MdBlock::Heading { .. }) => diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Heading { level: None, inlines: Some(inlines.clone()) })),
-            Some(MdBlock::Paragraph { .. }) => diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Paragraph { inlines: Some(inlines.clone()) })),
-            _ => MdDiff::default(),
-        },
-    })
-}
-
-/// ↩️ Lifted verbatim from the former `impl Mutation<MdSnapshot> for MdMutation`'s own `inverse`
-/// body. A mutation with nothing to invert against now inverts to the EMPTY vec (`NoMutation`,
-/// dropped by this migration, used to carry this case as a no-op sentinel; there is nothing to
-/// undo, so there is nothing to return).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn agg_inverse(this: &MdMutation, base: &MdSnapshot) -> Result<Vec<MdMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    match this {
-        MdMutation::SetSnapshot(_) => vec![MdMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        MdMutation::InsertBlock(insert_block::InsertBlock { path, index, .. }) => vec![MdMutation::RemoveBlock(remove_block::RemoveBlock { path: path.clone(), index: *index })],
-        MdMutation::RemoveBlock(remove_block::RemoveBlock { path, index }) => match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)).cloned() {
-            Some(block) => vec![MdMutation::InsertBlock(insert_block::InsertBlock { path: path.clone(), index: *index, block })],
-            None => Vec::new(),
-        },
-        MdMutation::ReplaceBlock(replace_block::ReplaceBlock { path, index, .. }) => match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)).cloned() {
-            Some(block) => vec![MdMutation::ReplaceBlock(replace_block::ReplaceBlock { path: path.clone(), index: *index, block })],
-            None => Vec::new(),
-        },
-        MdMutation::SetInlines(set_inlines::SetInlines { path, index, .. }) => {
-            let original = match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)) {
-                Some(MdBlock::Heading { inlines, .. }) => Some(inlines.clone()),
-                Some(MdBlock::Paragraph { inlines }) => Some(inlines.clone()),
-                _ => None,
-            };
-            match original {
-                Some(inlines) => vec![MdMutation::SetInlines(set_inlines::SetInlines { path: path.clone(), index: *index, inlines })],
-                None => Vec::new(),
-            }
-        }
-    }
-
-    })())
-}
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
@@ -213,7 +155,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<MdMutation> {
     let base = MdSnapshot { schema: crate::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "hi".into() }] }] };
     let list_block = MdBlock::List { ordered: true, start: Some(2), tight: false, items: vec![vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "one".into() }] }], vec![MdBlock::BlockQuote { blocks: vec![MdBlock::ThematicBreak] }]] };
     vec![
-        MdMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base }),
         MdMutation::InsertBlock(insert_block::InsertBlock { path: Vec::new(), index: 1, block: list_block.clone() }),
         MdMutation::InsertBlock(insert_block::InsertBlock { path: vec![MdPathStep::BlockQuote { index: 0 }], index: 0, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } }),
         MdMutation::RemoveBlock(remove_block::RemoveBlock { path: Vec::new(), index: 0 }),
@@ -241,16 +182,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<MdMutation> {
 mod op_codec_tests;
 //#endregion 🧪️Tests
 
-//#region 🧪️FixtureTests
-// 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
-// agents migrating the other stdio artifacts, so the production mounts there stay untouched while
-// this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
-// directory, which is what makes the leaf-relative path below resolve.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-//#endregion 🧪️FixtureTests
+
 
 #[cfg(test)]
 use protocol::{OpText};

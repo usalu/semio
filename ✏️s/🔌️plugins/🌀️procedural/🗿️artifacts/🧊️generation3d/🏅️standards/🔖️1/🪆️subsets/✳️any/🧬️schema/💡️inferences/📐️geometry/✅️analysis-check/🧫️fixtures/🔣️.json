@@ -1,0 +1,683 @@
+{
+  "description": "Language-agnostic laws of the analysis.check geometry widgets. Shapes are the recipes of the analysis.measure fixture; a mesh is a recipe with explicit positions and polygon faces (indices wound counter-clockwise seen from outside). A validity report is one line per kernel finding followed by `verdict <watertight|open|non-manifold|misoriented>`. Edge counts exclude edges that collapse to a point, so V - E + F - (inner loops) is the Euler characteristic. An interference result states the overlap by kind and volume; the shape output is absent when the solids do not overlap. Outputs match to `tolerance` (absolute, relative above magnitude one); the oracle recomputes them from triangle meshes with manifold-3d and three to `oracleTolerance`.",
+  "tolerance": 0.000001,
+  "oracleTolerance": 0.000001,
+  "cases": [
+    {
+      "name": "a box is valid and watertight",
+      "kind": "analysis.validity",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        }
+      },
+      "outputs": {
+        "valid": true,
+        "watertight": true,
+        "report": "verdict watertight"
+      }
+    },
+    {
+      "name": "a sphere is valid and watertight",
+      "kind": "analysis.validity",
+      "inputs": {
+        "shape": {
+          "recipe": "sphere",
+          "radius": 1.5
+        }
+      },
+      "outputs": {
+        "valid": true,
+        "watertight": true,
+        "report": "verdict watertight"
+      }
+    },
+    {
+      "name": "a cylinder is valid and watertight",
+      "kind": "analysis.validity",
+      "inputs": {
+        "shape": {
+          "recipe": "cylinder",
+          "radius": 1,
+          "height": 2
+        }
+      },
+      "outputs": {
+        "valid": true,
+        "watertight": true,
+        "report": "verdict watertight"
+      }
+    },
+    {
+      "name": "a box with a cylindrical hole is valid and watertight",
+      "kind": "analysis.validity",
+      "inputs": {
+        "shape": {
+          "recipe": "cut",
+          "target": {
+            "recipe": "box",
+            "size": [4, 4, 4]
+          },
+          "tool": {
+            "recipe": "translate",
+            "of": {
+              "recipe": "cylinder",
+              "radius": 1,
+              "height": 6
+            },
+            "by": [2, 2, -1]
+          }
+        }
+      },
+      "outputs": {
+        "valid": true,
+        "watertight": true,
+        "report": "verdict watertight"
+      }
+    },
+    {
+      "name": "a compound of two boxes is valid and watertight",
+      "kind": "analysis.validity",
+      "inputs": {
+        "shape": {
+          "recipe": "compound",
+          "of": [
+            {
+              "recipe": "box",
+              "size": [1, 1, 1]
+            },
+            {
+              "recipe": "translate",
+              "of": {
+                "recipe": "box",
+                "size": [2, 1, 1]
+              },
+              "by": [3, 0, 0]
+            }
+          ]
+        }
+      },
+      "outputs": {
+        "valid": true,
+        "watertight": true,
+        "report": "verdict watertight"
+      }
+    },
+    {
+      "name": "a single face is valid but open",
+      "kind": "analysis.validity",
+      "inputs": {
+        "shape": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "normal": [0, 0, 1]
+        }
+      },
+      "outputs": {
+        "valid": true,
+        "watertight": false,
+        "report": "verdict open"
+      }
+    },
+    {
+      "name": "a bare curve has no topology to check",
+      "kind": "analysis.validity",
+      "inputs": {
+        "shape": {
+          "recipe": "line",
+          "start": [0, 0, 0],
+          "end": [3, 4, 0]
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.no-topology",
+        "port": "shape"
+      }
+    },
+    {
+      "name": "counts of a box",
+      "kind": "analysis.topologyCounts",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        }
+      },
+      "outputs": {
+        "vertices": 8,
+        "edges": 12,
+        "faces": 6,
+        "shells": 1,
+        "solids": 1,
+        "euler": 2
+      }
+    },
+    {
+      "name": "counts of a sphere",
+      "kind": "analysis.topologyCounts",
+      "inputs": {
+        "shape": {
+          "recipe": "sphere",
+          "radius": 1.5
+        }
+      },
+      "outputs": {
+        "vertices": 2,
+        "edges": 1,
+        "faces": 1,
+        "shells": 1,
+        "solids": 1,
+        "euler": 2
+      }
+    },
+    {
+      "name": "counts of a cylinder",
+      "kind": "analysis.topologyCounts",
+      "inputs": {
+        "shape": {
+          "recipe": "cylinder",
+          "radius": 1,
+          "height": 2
+        }
+      },
+      "outputs": {
+        "vertices": 2,
+        "edges": 3,
+        "faces": 3,
+        "shells": 1,
+        "solids": 1,
+        "euler": 2
+      }
+    },
+    {
+      "name": "counts of a box with a cylindrical hole",
+      "kind": "analysis.topologyCounts",
+      "inputs": {
+        "shape": {
+          "recipe": "cut",
+          "target": {
+            "recipe": "box",
+            "size": [4, 4, 4]
+          },
+          "tool": {
+            "recipe": "translate",
+            "of": {
+              "recipe": "cylinder",
+              "radius": 1,
+              "height": 6
+            },
+            "by": [2, 2, -1]
+          }
+        }
+      },
+      "outputs": {
+        "vertices": 10,
+        "edges": 15,
+        "faces": 7,
+        "shells": 1,
+        "solids": 1,
+        "euler": 0
+      }
+    },
+    {
+      "name": "counts of a compound of two boxes",
+      "kind": "analysis.topologyCounts",
+      "inputs": {
+        "shape": {
+          "recipe": "compound",
+          "of": [
+            {
+              "recipe": "box",
+              "size": [1, 1, 1]
+            },
+            {
+              "recipe": "translate",
+              "of": {
+                "recipe": "box",
+                "size": [2, 1, 1]
+              },
+              "by": [3, 0, 0]
+            }
+          ]
+        }
+      },
+      "outputs": {
+        "vertices": 16,
+        "edges": 24,
+        "faces": 12,
+        "shells": 2,
+        "solids": 2,
+        "euler": 4
+      }
+    },
+    {
+      "name": "counts of a single face",
+      "kind": "analysis.topologyCounts",
+      "inputs": {
+        "shape": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "normal": [0, 0, 1]
+        }
+      },
+      "outputs": {
+        "vertices": 4,
+        "edges": 4,
+        "faces": 1,
+        "shells": 0,
+        "solids": 0,
+        "euler": 1
+      }
+    },
+    {
+      "name": "counts of a vertex",
+      "kind": "analysis.topologyCounts",
+      "inputs": {
+        "shape": {
+          "recipe": "vertex",
+          "point": [1, 2, 3]
+        }
+      },
+      "outputs": {
+        "vertices": 1,
+        "edges": 0,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "euler": 1
+      }
+    },
+    {
+      "name": "counts of a single edge",
+      "kind": "analysis.topologyCounts",
+      "inputs": {
+        "shape": {
+          "recipe": "edge",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "from": [0, 0, 0],
+          "to": [2, 0, 0]
+        }
+      },
+      "outputs": {
+        "vertices": 2,
+        "edges": 1,
+        "faces": 0,
+        "shells": 0,
+        "solids": 0,
+        "euler": 1
+      }
+    },
+    {
+      "name": "overlapping boxes interfere",
+      "kind": "analysis.interference",
+      "inputs": {
+        "a": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "b": {
+          "recipe": "translate",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "by": [1, 1, 1]
+        }
+      },
+      "outputs": {
+        "interferes": true,
+        "volume": 6,
+        "shape": {
+          "kind": "solid",
+          "volume": 6
+        }
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "a contained box interferes with its volume",
+      "kind": "analysis.interference",
+      "inputs": {
+        "a": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "b": {
+          "recipe": "translate",
+          "of": {
+            "recipe": "box",
+            "size": [1, 1, 1]
+          },
+          "by": [0.5, 0.5, 0.5]
+        }
+      },
+      "outputs": {
+        "interferes": true,
+        "volume": 1,
+        "shape": {
+          "kind": "solid",
+          "volume": 1
+        }
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "separated boxes do not interfere",
+      "kind": "analysis.interference",
+      "inputs": {
+        "a": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "b": {
+          "recipe": "translate",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "by": [5, 0, 0]
+        }
+      },
+      "outputs": {
+        "interferes": false,
+        "volume": 0
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "touching boxes do not interfere",
+      "kind": "analysis.interference",
+      "inputs": {
+        "a": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "b": {
+          "recipe": "translate",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "by": [2, 0, 0]
+        }
+      },
+      "outputs": {
+        "interferes": false,
+        "volume": 0
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "a cylinder and a box interfere in a circular segment",
+      "kind": "analysis.interference",
+      "inputs": {
+        "a": {
+          "recipe": "cylinder",
+          "radius": 1,
+          "height": 2
+        },
+        "b": {
+          "recipe": "translate",
+          "of": {
+            "recipe": "box",
+            "size": [3, 4, 4]
+          },
+          "by": [0.5, -2, -1]
+        }
+      },
+      "outputs": {
+        "interferes": true,
+        "volume": 1.2283696986087567,
+        "shape": {
+          "kind": "solid",
+          "volume": 1.2283696986087567
+        }
+      },
+      "tolerance": 0.00001,
+      "oracleTolerance": 0.005
+    },
+    {
+      "name": "a compound overlaps a box in two places",
+      "kind": "analysis.interference",
+      "inputs": {
+        "a": {
+          "recipe": "compound",
+          "of": [
+            {
+              "recipe": "box",
+              "size": [1, 1, 1]
+            },
+            {
+              "recipe": "translate",
+              "of": {
+                "recipe": "box",
+                "size": [2, 1, 1]
+              },
+              "by": [3, 0, 0]
+            }
+          ]
+        },
+        "b": {
+          "recipe": "translate",
+          "of": {
+            "recipe": "box",
+            "size": [3.5, 1, 1]
+          },
+          "by": [0.5, 0, 0]
+        }
+      },
+      "outputs": {
+        "interferes": true,
+        "volume": 1.5,
+        "shape": {
+          "kind": "compound",
+          "volume": 1.5
+        }
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "a tetrahedron is closed with its volume",
+      "kind": "analysis.meshQuality",
+      "inputs": {
+        "mesh": {
+          "recipe": "mesh",
+          "positions": [
+            [0, 0, 0],
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1]
+          ],
+          "faces": [
+            [0, 2, 1],
+            [0, 1, 3],
+            [0, 3, 2],
+            [1, 2, 3]
+          ]
+        }
+      },
+      "outputs": {
+        "vertices": 4,
+        "faces": 4,
+        "edges": 6,
+        "triangles": 4,
+        "boundaryEdges": 0,
+        "nonManifoldEdges": 0,
+        "inconsistentEdges": 0,
+        "degenerateTriangles": 0,
+        "closed": true,
+        "area": 2.3660254037844384,
+        "minimum": [0, 0, 0],
+        "maximum": [1, 1, 1],
+        "volume": 0.16666666666666666
+      },
+      "tolerance": 0.000001
+    },
+    {
+      "name": "a quad cube is closed with twelve triangles",
+      "kind": "analysis.meshQuality",
+      "inputs": {
+        "mesh": {
+          "recipe": "mesh",
+          "positions": [
+            [0, 0, 0],
+            [1, 0, 0],
+            [1, 1, 0],
+            [0, 1, 0],
+            [0, 0, 1],
+            [1, 0, 1],
+            [1, 1, 1],
+            [0, 1, 1]
+          ],
+          "faces": [
+            [0, 3, 2, 1],
+            [4, 5, 6, 7],
+            [0, 1, 5, 4],
+            [3, 7, 6, 2],
+            [0, 4, 7, 3],
+            [1, 2, 6, 5]
+          ]
+        }
+      },
+      "outputs": {
+        "vertices": 8,
+        "faces": 6,
+        "edges": 12,
+        "triangles": 12,
+        "boundaryEdges": 0,
+        "nonManifoldEdges": 0,
+        "inconsistentEdges": 0,
+        "degenerateTriangles": 0,
+        "closed": true,
+        "area": 6,
+        "minimum": [0, 0, 0],
+        "maximum": [1, 1, 1],
+        "volume": 1
+      },
+      "tolerance": 0.000001
+    },
+    {
+      "name": "a lone triangle is open",
+      "kind": "analysis.meshQuality",
+      "inputs": {
+        "mesh": {
+          "recipe": "mesh",
+          "positions": [
+            [0, 0, 0],
+            [1, 0, 0],
+            [0, 1, 0]
+          ],
+          "faces": [
+            [0, 1, 2]
+          ]
+        }
+      },
+      "outputs": {
+        "vertices": 3,
+        "faces": 1,
+        "edges": 3,
+        "triangles": 1,
+        "boundaryEdges": 3,
+        "nonManifoldEdges": 0,
+        "inconsistentEdges": 0,
+        "degenerateTriangles": 0,
+        "closed": false,
+        "area": 0.5,
+        "minimum": [0, 0, 0],
+        "maximum": [1, 1, 0]
+      },
+      "tolerance": 0.000001
+    },
+    {
+      "name": "a collinear triangle is degenerate",
+      "kind": "analysis.meshQuality",
+      "inputs": {
+        "mesh": {
+          "recipe": "mesh",
+          "positions": [
+            [0, 0, 0],
+            [1, 0, 0],
+            [2, 0, 0]
+          ],
+          "faces": [
+            [0, 1, 2]
+          ]
+        }
+      },
+      "outputs": {
+        "vertices": 3,
+        "faces": 1,
+        "edges": 3,
+        "triangles": 1,
+        "boundaryEdges": 3,
+        "nonManifoldEdges": 0,
+        "inconsistentEdges": 0,
+        "degenerateTriangles": 1,
+        "closed": false,
+        "area": 0,
+        "minimum": [0, 0, 0],
+        "maximum": [2, 0, 0]
+      },
+      "tolerance": 0.000001
+    },
+    {
+      "name": "two triangles wound against each other have one inconsistent edge",
+      "kind": "analysis.meshQuality",
+      "inputs": {
+        "mesh": {
+          "recipe": "mesh",
+          "positions": [
+            [0, 0, 0],
+            [1, 0, 0],
+            [0, 1, 0],
+            [1, 1, 0]
+          ],
+          "faces": [
+            [0, 1, 2],
+            [0, 1, 3]
+          ]
+        }
+      },
+      "outputs": {
+        "vertices": 4,
+        "faces": 2,
+        "edges": 5,
+        "triangles": 2,
+        "boundaryEdges": 4,
+        "nonManifoldEdges": 0,
+        "inconsistentEdges": 1,
+        "degenerateTriangles": 0,
+        "closed": false,
+        "area": 1,
+        "minimum": [0, 0, 0],
+        "maximum": [1, 1, 0]
+      },
+      "tolerance": 0.000001
+    },
+    {
+      "name": "an empty mesh has nothing to measure",
+      "kind": "analysis.meshQuality",
+      "inputs": {
+        "mesh": {
+          "recipe": "mesh",
+          "positions": [],
+          "faces": []
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.mesh-empty",
+        "port": "mesh"
+      }
+    }
+  ]
+}

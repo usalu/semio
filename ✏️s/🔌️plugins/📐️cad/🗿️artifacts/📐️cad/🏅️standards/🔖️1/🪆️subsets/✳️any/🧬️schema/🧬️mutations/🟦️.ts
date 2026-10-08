@@ -52,10 +52,11 @@ export interface CreateStructureClassicModel {
 /** 💣️ `delete-structure-classic-model` payload — clears the `structure_classic_model` child slot. */
 export type DeleteStructureClassicModel = Record<string, never>;
 
-/** 📐️ `create-drawing` payload — appends a new owned drawing child handle. */
+/** 📐️ `create-drawing` payload — inserts a new owned drawing child handle at `index`, appending when absent. */
 export interface CreateDrawing {
   childId: string;
   target: ArtifactRef;
+  index?: number | null;
 }
 
 /** 🧹️ `delete-drawing` payload — removes the entry matching `childId` from `drawings`. */
@@ -71,6 +72,7 @@ export interface DeleteBrep { childId: string }
 /** ➕️ `create-node` payload — brings a new node into existence in the scene graph tree. */
 export interface CreateNode {
   node: CadNode;
+  index?: number | null;
 }
 
 /** 🗑️ `delete-node` payload — removes an existing node from the scene graph tree. */

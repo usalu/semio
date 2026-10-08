@@ -15,7 +15,7 @@ pub fn diff(payload: &super::ResizeGrid, base: &Grid2dSnapshot) -> protocol::Mut
     let pinned_removed: Vec<String> = base.pinned.iter().filter(|cell| outside(cell.x, cell.y)).map(|cell| cell_id(cell.x, cell.y)).collect();
     let masked_removed: Vec<String> = base.masked.iter().filter(|cell| outside(cell.x, cell.y)).map(|cell| cell_id(cell.x, cell.y)).collect();
     let dropped = pinned_removed.len() + masked_removed.len();
-    let outcome = protocol::MutationOutcome::new(Grid2dDiff { width: Some(payload.width), height: Some(payload.height), pinned_removed, masked_removed, ..Default::default() });
+    let outcome = protocol::MutationOutcome::new(Grid2dDiff { width: Some(payload.width), height: Some(payload.height), pinned: Grid2dRows { removed: pinned_removed, ..Default::default() }, masked: Grid2dRows { removed: masked_removed, ..Default::default() }, ..Default::default() });
     if dropped == 0 {
         outcome
     } else {

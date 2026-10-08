@@ -1,48 +1,23 @@
 {
   "nodes": {
-    "values": [
+    "modified": [
       {
-        "id": {
-          "value": "a"
-        },
-        "kind": "source",
-        "label": "Source",
-        "position": {
-          "x": 0.0,
-          "y": 0.0
-        },
-        "ports": [
-          {
-            "name": "reset",
-            "kind": "in",
-            "category": "",
-            "properties": []
-          },
-          {
-            "name": "out",
-            "kind": "out",
-            "category": "",
-            "properties": []
+        "index": 0,
+        "diff": {
+          "ports": {
+            "added": [
+              {
+                "index": 0,
+                "item": {
+                  "name": "reset",
+                  "kind": "in",
+                  "category": "",
+                  "properties": []
+                }
+              }
+            ]
           }
-        ],
-        "properties": [],
-        "width": 0.0,
-        "height": 0.0
-      },
-      {
-        "id": {
-          "value": "b"
-        },
-        "kind": "sink",
-        "label": "Sink",
-        "position": {
-          "x": 4.0,
-          "y": 0.0
-        },
-        "ports": [],
-        "properties": [],
-        "width": 0.0,
-        "height": 0.0
+        }
       }
     ]
   }

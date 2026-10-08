@@ -1,6 +1,4 @@
-//! 🔁️ `replace-block` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🔁️ `replace-block` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -17,14 +15,16 @@ impl protocol::MutationKind<MdSnapshot, MdMutation> for ReplaceBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "block", kind: "replace-block", record: "ReplaceBlock" };
 
     fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as Mutation<MdSnapshot>>::Diff> {
-        agg_diff(&MdMutation::ReplaceBlock(self.clone()), base)
+        let Self { path, index, block } = self;
+        protocol::MutationOutcome::new(diff_at_path(path, *index, MdBlocksLeafDiff::Modified(MdBlockDiff::Replace { block: block.clone() })))
     }
     fn inverse(&self, base: &MdSnapshot) -> Result<Vec<MdMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&MdMutation::ReplaceBlock(self.clone()), base)?
-    
-    })
-}
+        let Self { path, index, .. } = self;
+        Ok(match navigate_container(&base.blocks, path).and_then(|c| c.get(*index)).cloned() {
+            Some(block) => vec![MdMutation::ReplaceBlock(replace_block::ReplaceBlock { path: path.clone(), index: *index, block })],
+            None => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Replace block", "Block ersetzen")
     }

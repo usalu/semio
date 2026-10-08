@@ -7,5 +7,5 @@ pub fn diff(payload: &super::UnmaskCell, base: &Grid2dSnapshot) -> protocol::Mut
     if !base.masked.iter().any(|cell| cell.x == payload.x && cell.y == payload.y) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Cell ({}, {}) is not masked.", payload.x, payload.y), [cell_id(payload.x, payload.y)]);
     }
-    protocol::MutationOutcome::new(Grid2dDiff { masked_removed: vec![cell_id(payload.x, payload.y)], ..Default::default() })
+    protocol::MutationOutcome::new(Grid2dDiff { masked: Grid2dRows { removed: vec![cell_id(payload.x, payload.y)], ..Default::default() }, ..Default::default() })
 }

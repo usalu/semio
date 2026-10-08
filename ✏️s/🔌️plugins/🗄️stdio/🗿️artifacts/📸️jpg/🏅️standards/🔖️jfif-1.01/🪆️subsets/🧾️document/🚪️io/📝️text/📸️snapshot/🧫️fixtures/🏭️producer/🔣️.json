@@ -57,42 +57,6 @@
     },
     {
       "id": 10,
-      "key": "frame",
-      "shape": "Value",
-      "optional": false
-    },
-    {
-      "id": 11,
-      "key": "sofMarker",
-      "shape": "UInt",
-      "optional": false
-    },
-    {
-      "id": 12,
-      "key": "arithmetic",
-      "shape": "Bool",
-      "optional": false
-    },
-    {
-      "id": 13,
-      "key": "quantTables",
-      "shape": "Value",
-      "optional": false
-    },
-    {
-      "id": 14,
-      "key": "huffmanTables",
-      "shape": "Value",
-      "optional": false
-    },
-    {
-      "id": 15,
-      "key": "restartInterval",
-      "shape": "Value",
-      "optional": false
-    },
-    {
-      "id": 16,
       "key": "otherSegments",
       "shape": "Value",
       "optional": false

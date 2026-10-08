@@ -6,7 +6,6 @@ scalar ObjSourceUInt64
 # per-variant payload fields, mirroring the JSON Schema facet's oneOf shape).
 
 enum ObjMutationTag {
-  SET_SNAPSHOT
   INSERT_VERTEX
   REMOVE_VERTEX
   SET_VERTEX

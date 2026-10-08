@@ -19,7 +19,7 @@ fn svg_import_cancels_without_a_partial_document(){
 
 #[semio_framework_async_macros::async_test]
 async fn registered_svg_deserializer_accepts_text_and_utf8_bytes() {
-    use semio_framework::io::io_mechanism::Deserializer;
+    use semio_framework_os_kernel::io::io_mechanism::Deserializer;
     use semio_framework::io_schema::IoPayload;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::svg::v1_1::any::SvgIntoDraw;
     let source="<svg><g><path d=\"M0 0L2 3\"/></g></svg>";

@@ -11,9 +11,9 @@ type CreateEnergyModel { mutation: String! childId: String! target: ArtifactRef!
 type DeleteEnergyModel { mutation: String!  }
 type CreateStructureClassicModel { mutation: String! childId: String! target: ArtifactRef! }
 type DeleteStructureClassicModel { mutation: String!  }
-type CreateDrawing { mutation: String! childId: String! target: ArtifactRef! }
+type CreateDrawing { mutation: String! childId: String! target: ArtifactRef! index: UInt32 }
 type DeleteDrawing { mutation: String! childId: String! }
-type CreateNode { mutation: String! node: CadNode! }
+type CreateNode { mutation: String! node: CadNode! index: UInt32 }
 type DeleteNode { mutation: String! nodeId: String! }
 type RenameNode { mutation: String! nodeId: String! newLabel: String! }
 type ChangeReferenceHidden { mutation: String! modelDefinitionId: String! referenceId: String! newHidden: Boolean! }

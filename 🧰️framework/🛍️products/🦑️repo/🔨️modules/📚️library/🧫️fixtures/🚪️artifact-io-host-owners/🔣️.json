@@ -45,6 +45,34 @@
     {
       "source": "// ArtifactStore and Generation2dPublicationLease are host responsibilities\nconst NOTE:&str=\"DocumentStoreOwners\";",
       "host": []
+    },
+    {
+      "source": "macro_rules! own { ($name:ident) => { impl store::ArtifactEnvelopeSnapshotFieldAuthority<P> for $name {} }; }",
+      "host": [
+        "ArtifactEnvelopeSnapshotFieldAuthority"
+      ]
+    },
+    {
+      "source": "impl store::ArtifactEnvelopeMutationFieldAuthority<P,M> for Decoder {}",
+      "host": [
+        "ArtifactEnvelopeMutationFieldAuthority"
+      ]
+    },
+    {
+      "source": "macro_rules! own { () => { pub fn begin() -> Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<P,M>> { todo!() } }; }",
+      "host": [
+        "ArtifactEnvelopeVcsFieldAuthority"
+      ]
+    },
+    {
+      "source": "pub trait LayoutProjectionAdoptionTarget { fn publish(&mut self); }",
+      "host": [
+        "LayoutProjectionAdoptionTarget"
+      ]
+    },
+    {
+      "source": "macro_rules! note { () => { const TEXT: &str = \"ArtifactEnvelopeSnapshotFieldAuthority\"; }; }",
+      "host": []
     }
   ]
 }

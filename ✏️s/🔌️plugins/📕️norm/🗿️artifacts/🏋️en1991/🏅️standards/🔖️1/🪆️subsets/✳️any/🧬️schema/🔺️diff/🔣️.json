@@ -5,17 +5,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "artifact": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/artifact.json"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "annex": {
       "anyOf": [
         {
@@ -732,104 +721,776 @@
       "x-semio-state": "artifact"
     },
     "floors": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/floors"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "$ref": "#/$defs/En1991FloorDelta",
       "x-semio-state": "artifact"
     },
     "selfWeightElements": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/selfWeightElements"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "$ref": "#/$defs/En1991SelfWeightElementDelta",
       "x-semio-state": "artifact"
     },
     "roofs": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/roofs"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "$ref": "#/$defs/En1991RoofDelta",
       "x-semio-state": "artifact"
     },
     "windFaces": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/windFaces"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "$ref": "#/$defs/En1991WindFaceDelta",
       "x-semio-state": "artifact"
     },
     "accidentalCases": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/accidentalCases"
+      "$ref": "#/$defs/En1991AccidentalCaseDelta",
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "En1991FloorPatch": {
+      "title": "En1991FloorPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea/properties/category"
+            },
+            {
+              "type": "null"
             }
+          ]
+        },
+        "area": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea/properties/area"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "assumedQk": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea/properties/assumedQk"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "assumedQkConcentrated": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea/properties/assumedQkConcentrated"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "assumedPartitions": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea/properties/assumedPartitions"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991FloorAddition": {
+      "title": "En1991FloorAddition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after",
+        "row"
+      ],
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991FloorModification": {
+      "title": "En1991FloorModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1991FloorPatch"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991FloorDelta": {
+      "title": "En1991FloorDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         },
-        {
-          "type": "null"
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1991FloorAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1991FloorModification"
+          }
         }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991SelfWeightElementPatch": {
+      "title": "En1991SelfWeightElementPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "material": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SelfWeightElement/properties/material"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "thickness": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SelfWeightElement/properties/thickness"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "assumedGk": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SelfWeightElement/properties/assumedGk"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991SelfWeightElementAddition": {
+      "title": "En1991SelfWeightElementAddition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after",
+        "row"
       ],
-      "x-semio-state": "artifact"
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SelfWeightElement"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991SelfWeightElementModification": {
+      "title": "En1991SelfWeightElementModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1991SelfWeightElementPatch"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991SelfWeightElementDelta": {
+      "title": "En1991SelfWeightElementDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1991SelfWeightElementAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1991SelfWeightElementModification"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991RoofPatch": {
+      "title": "En1991RoofPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "roofType": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/roofType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pitchDeg": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/pitchDeg"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cE": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/cE"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cT": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/cT"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hasParapet": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/hasParapet"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parapetHeight": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/parapetHeight"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "driftObstructionHeight": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/driftObstructionHeight"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "multiSpan": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/multiSpan"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "assumedSk": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/assumedSk"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991RoofAddition": {
+      "title": "En1991RoofAddition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after",
+        "row"
+      ],
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991RoofModification": {
+      "title": "En1991RoofModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1991RoofPatch"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991RoofDelta": {
+      "title": "En1991RoofDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1991RoofAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1991RoofModification"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991WindFacePatch": {
+      "title": "En1991WindFacePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "zone": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/zone"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "z": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/z"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cPe10": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/cPe10"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cPe1": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/cPe1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cPi": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/cPi"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cS": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/cS"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cD": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/cD"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "loadedArea": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/loadedArea"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "assumedWp": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/assumedWp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991WindFaceAddition": {
+      "title": "En1991WindFaceAddition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after",
+        "row"
+      ],
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991WindFaceModification": {
+      "title": "En1991WindFaceModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1991WindFacePatch"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991WindFaceDelta": {
+      "title": "En1991WindFaceDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1991WindFaceAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1991WindFaceModification"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991AccidentalCasePatch": {
+      "title": "En1991AccidentalCasePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "impact": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/AccidentalCase/properties/impact"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "explosion": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/AccidentalCase/properties/explosion"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991AccidentalCaseAddition": {
+      "title": "En1991AccidentalCaseAddition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after",
+        "row"
+      ],
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/AccidentalCase"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991AccidentalCaseModification": {
+      "title": "En1991AccidentalCaseModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1991AccidentalCasePatch"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1991AccidentalCaseDelta": {
+      "title": "En1991AccidentalCaseDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1991AccidentalCaseAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1991AccidentalCaseModification"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
     }
   }
 }

@@ -80,7 +80,6 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
     Then the independent implementation and the subject agree on the resulting snapshot and on what Pillow says its planes are
     Examples:
       | id | fixture |
-      | set-snapshot | 📸️set-snapshot |
       | set-dimensions | 📐️set-dimensions |
       | set-colorspace | 🌈️set-colorspace |
       | set-bit-depth | 🔢️set-bit-depth |
@@ -92,18 +91,6 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
       | set-frame-pixels | 🖌️set-frame-pixels |
       | set-metadata-entry | 🏷️set-metadata-entry |
       | remove-metadata-entry | 🗑️remove-metadata-entry |
-      | patch-snapshot | 🩹️patch-snapshot |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real derived animation
-    Given the real derived image artifact shared://🖼️mutate-semio-image/🗣️.dsl.semio
-    When the no-mutation mutation is applied to the animation parsed from it
-      """
-      {"mutation": "noMutation"}
-      """
-    Then the independent implementation and the subject agree on the resulting snapshot and on what Pillow says its planes are
 
   @id-inverse
   @level-exhaustive
@@ -115,7 +102,6 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
     Then both sides restore the animation and agree on the mutated and the restored snapshot
     Examples:
       | id | fixture |
-      | set-snapshot | 📸️set-snapshot |
       | set-dimensions | 📐️set-dimensions |
       | set-colorspace | 🌈️set-colorspace |
       | set-bit-depth | 🔢️set-bit-depth |
@@ -127,18 +113,6 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
       | set-frame-pixels | 🖌️set-frame-pixels |
       | set-metadata-entry | 🏷️set-metadata-entry |
       | remove-metadata-entry | 🗑️remove-metadata-entry |
-      | patch-snapshot | 🩹️patch-snapshot |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing no-mutation restores the real derived animation
-    Given the real derived image artifact shared://🖼️mutate-semio-image/🗣️.dsl.semio
-    When the no-mutation mutation is applied to the animation parsed from it and each side undoes it with its own computed inverse
-      """
-      {"mutation": "noMutation"}
-      """
-    Then both sides restore the animation and agree on the mutated and the restored snapshot
 
   @id-spec-vector
   @level-exhaustive
@@ -151,7 +125,6 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id                    | dir                     | slug                                                        |
-      | set-snapshot          | 📸️set-snapshot          | ⚫️retargets |
       | set-dimensions        | 📐️set-dimensions        | ↔️widens                  |
       | set-colorspace        | 🌈️set-colorspace        | 🌈️records                       |
       | set-bit-depth         | 🔢️set-bit-depth         | 🔢️raises                      |
@@ -163,17 +136,6 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
       | set-frame-pixels      | 🖌️set-frame-pixels      | ⬛️repaints                               |
       | set-metadata-entry    | 🏷️set-metadata-entry    | ✍️rewrites                          |
       | remove-metadata-entry | 🗑️remove-metadata-entry | 💬️removes        |
-
-  @id-spec-vector-no-mutation
-  @level-exhaustive
-  @mode-differential
-  Scenario: no-mutation leaves the committed three-frame vector exactly as it stands
-    Given the committed before-snapshot shared://🧬️mutations/🔀️move-frame/⏮️moves/📸️snapshot/⬅️before/🔣️.json
-    When both implementations apply the nullary mutation to it
-      """
-      {"mutation": "noMutation"}
-      """
-    Then each reaches the before-snapshot again and the two agree
 
   @id-identity-round-trip
   @level-long

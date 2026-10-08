@@ -1,0 +1,5 @@
+# 🪄️ Direct replace-page GraphQL payload.
+input ReplacePageMutationInput {
+  index: Int
+  page: PdfPageInput
+}

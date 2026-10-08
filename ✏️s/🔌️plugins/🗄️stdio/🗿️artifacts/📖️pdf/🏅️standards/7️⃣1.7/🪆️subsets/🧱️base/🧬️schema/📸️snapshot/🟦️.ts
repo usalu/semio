@@ -7052,7 +7052,8 @@ export const schema = {
               "type": "array",
               "items": {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0,
+                "maximum": 4294967295
               }
             }
           },

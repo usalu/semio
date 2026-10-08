@@ -88,6 +88,7 @@ message AddOutputVariable {
   string name = 1;
   string key = 2;
   string reporting_frequency = 3;
+  optional uint32 index = 4;
 }
 
 message RemoveOutputVariable {
@@ -139,6 +140,7 @@ message CreateZone {
   uint32 multiplier = 4;
   bool conditioned = 5;
   bool part_of_total_floor_area = 6;
+  optional uint32 index = 7;
 }
 
 message DeleteZone {
@@ -150,6 +152,7 @@ message CreateSpace {
   string name = 2;
   uint32 zone_id = 3;
   double floor_area_m2 = 4;
+  optional uint32 index = 5;
 }
 
 message DeleteSpace {
@@ -183,6 +186,7 @@ message CreateSurface {
   bool sun_exposed = 9;
   bool wind_exposed = 10;
   uint32 multiplier = 11;
+  optional uint32 index = 12;
 }
 
 message DeleteSurface {
@@ -252,6 +256,7 @@ message CreateFenestration {
   double fin_depth_m = 14;
   double fin_offset_m = 15;
   optional uint32 glazing_construction_id = 16;
+  optional uint32 index = 17;
 }
 
 message DeleteFenestration {
@@ -303,6 +308,7 @@ message CreateShadingSurface {
   string name = 2;
   repeated Vertex3 vertices_m = 3;
   optional uint32 transmittance_schedule_id = 4;
+  optional uint32 index = 5;
 }
 
 message DeleteShadingSurface {
@@ -327,6 +333,7 @@ message ChangeShadingSurfaceTransmittanceSchedule {
 message ConnectSurfaces {
   uint32 surface_a_id = 1;
   uint32 surface_b_id = 2;
+  optional uint32 index = 3;
 }
 
 message DisconnectSurfaces {
@@ -725,6 +732,7 @@ message CreateThermostat {
   uint32 cooling_setpoint_schedule_id = 4;
   double heating_throttle_range_k = 5;
   double cooling_throttle_range_k = 6;
+  optional uint32 index = 7;
 }
 
 message DeleteThermostat {
@@ -763,6 +771,7 @@ message CreateHumidistat {
   uint32 dehumidifying_setpoint_schedule_id = 4;
   double humidifying_throttle_range = 5;
   double dehumidifying_throttle_range = 6;
+  optional uint32 index = 7;
 }
 
 message DeleteHumidistat {
@@ -805,6 +814,7 @@ message CreateIdealLoadsSystem {
   double max_cooling_capacity_w = 8;
   double outdoor_air_per_person_m3_s = 9;
   double outdoor_air_per_area_m3_s_m2 = 10;
+  optional uint32 index = 11;
 }
 
 message DeleteIdealLoadsSystem {
@@ -855,6 +865,7 @@ message CreateZoneEquipment {
   uint32 priority = 4;
   double heating_capacity_w = 5;
   double cooling_capacity_w = 6;
+  optional uint32 index = 7;
 }
 
 message DeleteZoneEquipment {
@@ -892,6 +903,7 @@ message CreateDaylightZone {
   double illuminance_target_lux = 3;
   double glare_limit = 4;
   double window_transmittance = 5;
+  optional uint32 index = 6;
 }
 
 message DeleteDaylightZone {
@@ -923,6 +935,7 @@ message CreateSizingObject {
   uint32 zone_id = 2;
   string sizing_type = 3;
   string design_day_type = 4;
+  optional uint32 index = 5;
 }
 
 message DeleteSizingObject {
@@ -947,6 +960,7 @@ message ChangeSizingObjectDesignDayType {
 message CreateRoomAirModelAssignment {
   uint32 zone_id = 1;
   string model = 2;
+  optional uint32 index = 3;
 }
 
 message DeleteRoomAirModelAssignment {
@@ -968,6 +982,7 @@ message CreateSetpointManager {
   double high_setpoint_c = 7;
   bool schedule_present = 8;
   uint32 schedule_id = 9;
+  optional uint32 index = 10;
 }
 
 message DeleteSetpointManager {
@@ -1001,6 +1016,7 @@ message CreateAirLoop {
   uint32 return_node_id = 4;
   double design_supply_air_flow_m3_s = 5;
   repeated uint32 terminal_zone_ids = 6;
+  optional uint32 index = 7;
 }
 
 message DeleteAirLoop {
@@ -1030,6 +1046,7 @@ message ChangeAirLoopDesignSupplyAirFlow {
 message AddAirLoopTerminalZone {
   uint32 id = 1;
   uint32 zone_id = 2;
+  optional uint32 index = 3;
 }
 
 message RemoveAirLoopTerminalZone {
@@ -1045,6 +1062,7 @@ message CreatePlantLoop {
   double return_temperature_c = 5;
   double design_flow_kg_s = 6;
   repeated uint32 equipment_ids = 7;
+  optional uint32 index = 8;
 }
 
 message DeletePlantLoop {
@@ -1079,6 +1097,7 @@ message ChangePlantLoopDesignFlow {
 message AddPlantLoopEquipment {
   uint32 id = 1;
   uint32 equipment_id = 2;
+  optional uint32 index = 3;
 }
 
 message RemovePlantLoopEquipment {
@@ -1091,6 +1110,7 @@ message CreateOutdoorAirSystem {
   uint32 air_loop_id = 2;
   double min_oa_flow_m3_s = 3;
   bool economizer_enabled = 4;
+  optional uint32 index = 5;
 }
 
 message DeleteOutdoorAirSystem {

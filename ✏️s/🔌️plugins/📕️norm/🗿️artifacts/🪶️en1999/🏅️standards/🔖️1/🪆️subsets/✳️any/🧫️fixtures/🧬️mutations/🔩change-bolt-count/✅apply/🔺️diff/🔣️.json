@@ -1,62 +1,21 @@
 {
-  "artifact": null,
   "annex": null,
   "materials": null,
   "sections": null,
   "members": null,
-  "connections": [
-    {
-      "id": "support-weld",
-      "memberId": "purlin-1",
-      "materialId": "mat-6082",
-      "kind": "combined",
-      "actions": [
-        {
-          "id": "G-conn",
-          "kind": "permanent",
-          "category": "self",
-          "source": "external",
-          "gKLine": 800.0,
-          "qKLine": 0.0,
-          "nK": 1500.0,
-          "vYK": 200.0,
-          "vZK": 3500.0,
-          "mYK": 400.0,
-          "mZK": 150.0
-        },
-        {
-          "id": "Q-conn",
-          "kind": "snow",
-          "category": "snow",
-          "source": "external",
-          "gKLine": 0.0,
-          "qKLine": 600.0,
-          "nK": 800.0,
-          "vYK": 150.0,
-          "vZK": 2500.0,
-          "mYK": 250.0,
-          "mZK": 100.0
-        }
-      ],
-      "bolts": {
-        "material": "8.8",
-        "diameter": 0.012,
-        "rows": 3,
-        "boltsPerRow": 2,
-        "edgeDistance": 0.024,
-        "pitch": 0.036,
-        "gauge": 0.016,
-        "plateThickness": 0.008
-      },
-      "welds": {
-        "fillerAlloy": "4043",
-        "throat": 0.005,
-        "length": 0.16,
-        "betaW": 0.63,
-        "hazExtent": 0.025
+  "connections": {
+    "added": [],
+    "removed": [],
+    "modified": [
+      {
+        "id": "support-weld",
+        "weldsThroat": null,
+        "boltsRows": 3,
+        "boltsBoltsPerRow": null
       }
-    }
-  ],
+    ],
+    "order": null
+  },
   "fireScenarios": null,
   "fatigueDetails": null,
   "coldFormed": null,

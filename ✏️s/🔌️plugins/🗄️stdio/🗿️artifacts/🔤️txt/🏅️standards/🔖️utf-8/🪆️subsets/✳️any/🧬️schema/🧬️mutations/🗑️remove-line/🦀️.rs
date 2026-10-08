@@ -21,38 +21,41 @@ pub fn decode_remove_line_payload(value: &semio_framework_value::DslValue) -> Re
 //#endregion 🔖️Payload
 
 //#region ⚙️Semantics
+impl RemoveLineMutation {
+    /// 🧭️ The refusal reason, `None` for an unaddressable line (nothing to do), or the base line index this removal drops.
+    fn plan(&self, base: &TxtSnapshot) -> Result<Option<usize>, String> {
+        if let Some(reason) = native_snapshot_error(base) {
+            return Err(reason);
+        }
+        let Ok(index) = txt_u32_to_usize(self.index) else { return Ok(None) };
+        if index >= base.lines.len() {
+            return Ok(None);
+        }
+        let last_empty = if index == base.lines.len() - 1 { base.lines.len().checked_sub(2).and_then(|index| base.lines.get(index)).is_some_and(|line| line.is_empty()) } else { base.lines.last().is_some_and(|line| line.is_empty()) };
+        if let Some(reason) = native_shape_error(base.lines.len() - 1, last_empty, base.trailing_newline, base.line_ending) {
+            return Err(reason);
+        }
+        Ok(Some(index))
+    }
+}
+
 impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for RemoveLineMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "line", kind: "remove-line", record: "RemovedLine" };
 
     fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<TxtDiff> {
-        if let Some(reason) = native_snapshot_error(base) {
-            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
+        match self.plan(base) {
+            Err(reason) => protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new()),
+            Ok(None) => protocol::MutationOutcome::new(TxtDiff::default()),
+            Ok(Some(index)) => protocol::MutationOutcome::new(TxtDiff { lines: Some(TxtLinesDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }),
         }
-        let index = match txt_u32_to_usize(self.index) {
-            Ok(index) => index,
-            Err(_) => return protocol::MutationOutcome::new(TxtDiff::default()),
-        };
-        if index >= base.lines.len() {
-            return protocol::MutationOutcome::new(TxtDiff::default());
-        }
-        let last_empty = if index == base.lines.len() - 1 { base.lines.len().checked_sub(2).and_then(|index| base.lines.get(index)).is_some_and(|line| line.is_empty()) } else { base.lines.last().is_some_and(|line| line.is_empty()) };
-        if let Some(reason) = native_shape_error(base.lines.len() - 1, last_empty, base.trailing_newline, base.line_ending) {
-            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
-        }
-        protocol::MutationOutcome::new(TxtDiff { lines: Some(TxtLinesDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() })
     }
 
     fn inverse(&self, base: &TxtSnapshot) -> Result<Vec<super::TxtMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = self.diff(base);
-        if !outcome.messages().is_empty() || outcome.diff().lines.is_none() {
-            return Vec::new();
-        }
-        let index = txt_u32_to_usize(self.index).expect("a non-empty diff has a representable line index");
-        vec![super::TxtMutation::InsertLine(super::InsertLineMutation { index: self.index, text: base.lines[index].clone() })]
-    
-    })())
-}
+        Ok(match self.plan(base) {
+            Ok(Some(index)) => vec![super::TxtMutation::InsertLine(super::InsertLineMutation { index: self.index, text: base.lines[index].clone() })],
+            _ => Vec::new(),
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove Line", "Zeile entfernen")

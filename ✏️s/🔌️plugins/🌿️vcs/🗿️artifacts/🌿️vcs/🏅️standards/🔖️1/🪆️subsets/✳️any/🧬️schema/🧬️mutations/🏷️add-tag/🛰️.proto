@@ -4,4 +4,5 @@ package semio.s.vcs.vcs.mutation;
 // 🏷️ Direct add-tag payload.
 message AddTag {
   string tag = 1;
+  optional uint32 index = 2;
 }

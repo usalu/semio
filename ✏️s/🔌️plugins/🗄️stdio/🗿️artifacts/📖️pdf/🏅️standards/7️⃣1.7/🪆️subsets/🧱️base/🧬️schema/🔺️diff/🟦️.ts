@@ -1,6 +1,6 @@
 /** 🧬️ PdfDiff — TypeScript facet of `s.stdio.pdf.1.7` (diff), generated from the Rust model
  *  by 🐍️generate-schema-facets.py (ticket 26/09/18/PDF-ARTIFACT-SPEC-COMPLETE). */
-import type { ObjRef, PdfAcroForm, PdfAction, PdfActionKind, PdfAnnotation, PdfAnnotationKind, PdfAppearance, PdfAppearanceEntry, PdfAppearanceState, PdfBorderStyle, PdfCcittParameters, PdfColorSpace, PdfDate, PdfDecimal, PdfDestination, PdfDestinationFit, PdfDictEntry, PdfEncryption, PdfEncryptionAlgorithm, PdfFileSpecification, PdfFormField, PdfFormFieldKind, PdfFunction, PdfInfo, PdfInlineImage, PdfLineCap, PdfLineJoin, PdfMarkInfo, PdfMarkupAnnotation, PdfObject, PdfOp, PdfOpenAction, PdfOptionalContent, PdfOptionalContentGroup, PdfPage, PdfPageLayout, PdfPageMode, PdfPredictor, PdfPropertyList, PdfStreamFilter, PdfTextArrayItem, PdfTextString, PdfTransparencyGroup, PdfViewerPreferences } from '../📸️snapshot/🟦️.ts';
+import type { ObjRef, PdfAcroForm, PdfAction, PdfActionKind, PdfAnnotation, PdfAnnotationKind, PdfAppearance, PdfAppearanceEntry, PdfAppearanceState, PdfBorderStyle, PdfCcittParameters, PdfColorSpace, PdfDate, PdfDecimal, PdfDestination, PdfDestinationFit, PdfDictEntry, PdfEncryption, PdfEncryptionAlgorithm, PdfFileSpecification, PdfFormField, PdfFormFieldKind, PdfFunction, PdfInlineImage, PdfLineCap, PdfLineJoin, PdfMarkInfo, PdfMarkupAnnotation, PdfObject, PdfOp, PdfOpenAction, PdfOptionalContent, PdfOptionalContentGroup, PdfPage, PdfPageLayout, PdfPageMode, PdfPredictor, PdfPropertyList, PdfStreamFilter, PdfTextArrayItem, PdfTextString, PdfTransparencyGroup, PdfViewerPreferences } from '../📸️snapshot/🟦️.ts';
 import { schema as snapshotSchema, registerSchemaDocument as registerOther, validateAgainst as _validateOther } from '../📸️snapshot/🟦️.ts';
 
 export interface PdfDiff {
@@ -30,11 +30,29 @@ export interface PdfDiff {
   metadata?: PdfSetString | null;
   documentId?: PdfSetArrVec_u8x2 | null;
   encryption?: PdfSetPdfEncryption | null;
-  info?: PdfInfo | null;
+  info?: PdfInfoDiff | null;
   catalogExtra?: PdfDictDiff | null;
   objects?: PdfObjectsDiff | null;
   trailer?: PdfDictDiff | null;
+  graphEdit?: boolean;
 }
+
+export interface PdfInfoDiff {
+  title?: PdfSetString | null;
+  author?: PdfSetString | null;
+  subject?: PdfSetString | null;
+  keywords?: PdfSetString | null;
+  creator?: PdfSetString | null;
+  producer?: PdfSetString | null;
+  creationDate?: PdfSetPdfDate | null;
+  modificationDate?: PdfSetPdfDate | null;
+  trapped?: PdfSetString | null;
+  extra?: PdfDictEntry[] | null;
+}
+
+export type PdfSetPdfDate =
+  | { kind: "clear" }
+  | { kind: "set"; value: PdfDate };
 
 export interface PdfDictDiff {
   removed?: string[];
@@ -572,7 +590,7 @@ export const schema = {
     "info": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfInfo"
+          "$ref": "#/$defs/PdfInfoDiff"
         },
         {
           "type": "null"
@@ -608,6 +626,9 @@ export const schema = {
           "type": "null"
         }
       ]
+    },
+    "graphEdit": {
+      "type": "boolean"
     }
   },
   "$defs": {
@@ -884,6 +905,114 @@ export const schema = {
         "index",
         "value"
       ]
+    },
+    "PdfInfoDiff": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "author": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "subject": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "keywords": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "creator": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "producer": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "creationDate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetPdfDate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "modificationDate": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetPdfDate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "trapped": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PdfSetString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "extra": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfDictEntry"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
     },
     "PdfKeyedDiffPdfEmbeddedFile": {
       "type": "object",
@@ -1508,6 +1637,36 @@ export const schema = {
             },
             "value": {
               "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfAcroForm"
+            }
+          },
+          "required": [
+            "kind",
+            "value"
+          ]
+        }
+      ]
+    },
+    "PdfSetPdfDate": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "clear"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "set"
+            },
+            "value": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfDate"
             }
           },
           "required": [
@@ -2217,3 +2376,5 @@ export const parsePdfIndexedDiffPdfOp = (value: unknown): PdfIndexedDiffPdfOp =>
 export const parsePdfSetPdfRect = (value: unknown): PdfSetPdfRect => validateAgainst<PdfSetPdfRect>(schema, "/$defs/PdfSetPdfRect", value);
 export const parsePdfPathSegment = (value: unknown): PdfPathSegment => validateAgainst<PdfPathSegment>(schema, "/$defs/PdfPathSegment", value);
 export const parsePdfPageBox = (value: unknown): PdfPageBox => validateAgainst<PdfPageBox>(schema, "/$defs/PdfPageBox", value);
+export const parsePdfInfoDiff = (value: unknown): PdfInfoDiff => validateAgainst<PdfInfoDiff>(schema, "/$defs/PdfInfoDiff", value);
+export const parsePdfSetPdfDate = (value: unknown): PdfSetPdfDate => validateAgainst<PdfSetPdfDate>(schema, "/$defs/PdfSetPdfDate", value);

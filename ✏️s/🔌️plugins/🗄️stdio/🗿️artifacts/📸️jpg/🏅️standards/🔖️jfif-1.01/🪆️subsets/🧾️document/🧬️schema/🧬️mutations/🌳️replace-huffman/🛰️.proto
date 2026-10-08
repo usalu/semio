@@ -1,4 +1,0 @@
-syntax = "proto3";
-package stdio.jpg.mutation;
-// 🧬️ replace-huffman-table/ReplaceHuffmanTable; complex fields follow the direct payload schema.
-message ReplaceHuffmanTableMutation { bytes table = 1; }

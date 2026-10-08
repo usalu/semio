@@ -398,6 +398,7 @@ pub fn verify(bytes: &[u8]) -> SemioResult<()> {
 
 //#region 🔖️Cli
 /// ⌨️ `semio` CLI entry (`inspect`, `open`, `convert`, `verify`).
+#[cfg(all(not(target_arch = "wasm32"), feature = "native-bin"))]
 pub mod cli {
     use super::*;
 

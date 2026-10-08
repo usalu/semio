@@ -19,6 +19,9 @@ pub fn inverse(payload: &super::CreateAirLoop, base: &EnergyModelSnapshot) -> Re
     {
         return Vec::new();
     }
+    if payload.index.is_some_and(|index| index as usize > base.model.air_loops.len()) {
+        return Vec::new();
+    }
     vec![vocabulary::delete_air_loop(payload.id)]
 
     })())

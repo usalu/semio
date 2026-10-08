@@ -1598,6 +1598,25 @@ impl SceneColorSource3d {
     }
 }
 
+/// ✂️ How one instance takes part in the pass's section plane ([`ScenePass3d::section_clip`]). `Clipped` fragments on the removed side of the plane are discarded;
+/// `StencilToggle` is the cap's parity pass over a clipped solid (it writes only the stencil's section bit, never colour or depth);
+/// `Cap` is the flat plane that is drawn where that bit is set and the cut therefore exposes a solid's inside.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum SceneSectionRole3d {
+    #[default]
+    None,
+    Clipped,
+    StencilToggle,
+    Cap,
+}
+
+impl SceneSectionRole3d {
+    /// ✂️ Whether the instance's fragments are tested against the section plane.
+    pub fn clips(self) -> bool {
+        matches!(self, Self::Clipped | Self::StencilToggle)
+    }
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SceneInstanceMaterial3d {
@@ -1606,11 +1625,12 @@ pub struct SceneInstanceMaterial3d {
     pub emissive_intensity: f32,
     pub metalness: f32,
     pub roughness: f32,
+    pub section: SceneSectionRole3d,
 }
 
 impl Default for SceneInstanceMaterial3d {
     fn default() -> Self {
-        Self { color_source: SceneColorSource3d::default(), preserve_vertex_color: false, emissive_intensity: 0.0, metalness: 0.0, roughness: 1.0 }
+        Self { color_source: SceneColorSource3d::default(), preserve_vertex_color: false, emissive_intensity: 0.0, metalness: 0.0, roughness: 1.0, section: SceneSectionRole3d::None }
     }
 }
 
@@ -1860,6 +1880,9 @@ pub struct ScenePass3d {
     pub lighting: SceneLighting3d,
     pub neutral_material: SceneMaterial3d,
     pub shadow: SceneShadow3d,
+    /// ✂️ The section plane `[nx, ny, nz, constant]` (a fragment is discarded where `n · p + constant < 0`, the three.js clipping-plane convention) applied to every instance whose
+    /// [`SceneInstanceMaterial3d::section`] clips; `None` clips nothing.
+    pub section_clip: Option<[f32; 4]>,
     pub procedural_grid: Option<ProceduralGrid3d>,
     pub shadow_draws: Vec<SceneDraw3d>,
     pub draws: Vec<SceneDraw3d>,

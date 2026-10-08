@@ -12,10 +12,9 @@
 //! the three is computable by `describe()` itself, running inside the not-yet-hashed wasm. Unchanged
 //! from E1's own placeholder.
 
-use semio_framework::{
-    io, kernel, AppDefinition, AssetDeclaration, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, ExecutionProtocol, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, MediaClass, MediaForm, MediaType,
-    PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition, PluginManifest,
-};
+use semio_framework::{ kernel, AppDefinition, AssetDeclaration, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, ExecutionProtocol, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, MediaClass, MediaForm, MediaType,
+    PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition, PluginManifest};
+use semio_framework_os_kernel::io;
 
 /// 📚️ The largest example document body a descriptor still carries inline.
 ///

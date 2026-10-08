@@ -1,21 +1,100 @@
-# 🧬️ En1992 diff schema — sparse hierarchical field delta.
+# 🧬️ En1992 diff schema — keyed sparse diff: scalar setters, id/index/key keyed row diffs and per-field section patches.
 
-type En1992ConcreteGradeList { values: [ConcreteGrade!]! }
-type En1992ReinforcementGradeList { values: [ReinforcementGrade!]! }
-type En1992PrestressSteelList { values: [PrestressSteel!]! }
-type En1992MemberList { values: [RcMember!]! }
-type En1992AnchorList { values: [Anchor!]! }
+type En1992ConcreteGradesPatch {
+  id: String!
+  fCk: Float
+}
+
+type En1992ConcreteGradesRows {
+  added: [ConcreteGrade!]!
+  removed: [String!]!
+  modified: [En1992ConcreteGradesPatch!]!
+  order: [String!]
+}
+
+type En1992ReinforcementGradesPatch {
+  id: String!
+  fYk: Float
+}
+
+type En1992ReinforcementGradesRows {
+  added: [ReinforcementGrade!]!
+  removed: [String!]!
+  modified: [En1992ReinforcementGradesPatch!]!
+  order: [String!]
+}
+
+type En1992PrestressSteelsRows {
+  added: [PrestressSteel!]!
+  removed: [String!]!
+  order: [String!]
+}
+
+type En1992MembersLongitudinalPatch {
+  id: String!
+  diameter: Float
+  count: Int
+}
+
+type En1992MembersLongitudinalRows {
+  modified: [En1992MembersLongitudinalPatch!]!
+}
+
+type En1992MembersActionsPatch {
+  id: String!
+  mK: Float
+  nK: Float
+  vK: Float
+}
+
+type En1992MembersActionsRows {
+  modified: [En1992MembersActionsPatch!]!
+}
+
+type En1992MembersPatch {
+  id: String!
+  exposure: ExposureClass
+  width: Float
+  height: Float
+  effectiveDepth: Float
+  cover: Float
+  span: Float
+  fireRating: FireRating
+  fireAxisDistance: Float
+  stirrupsSpacing: Float
+  longitudinal: En1992MembersLongitudinalRows
+  actions: En1992MembersActionsRows
+}
+
+type En1992MembersRows {
+  added: [RcMember!]!
+  removed: [String!]!
+  modified: [En1992MembersPatch!]!
+  order: [String!]
+}
+
+type En1992AnchorsPatch {
+  id: String!
+  hEf: Float
+  aS: Float
+}
+
+type En1992AnchorsRows {
+  added: [Anchor!]!
+  removed: [String!]!
+  modified: [En1992AnchorsPatch!]!
+  order: [String!]
+}
 
 type En1992Diff {
-  artifact: En1992Artifact @state(class: ARTIFACT)
-  annex: String @state(class: ARTIFACT)
+  annex: AnnexChoice @state(class: ARTIFACT)
   title: String @state(class: ARTIFACT)
   designWorkingLifeYears: Float @state(class: ARTIFACT)
   deltaCDev: Float @state(class: ARTIFACT)
   cementType: String @state(class: ARTIFACT)
-  concreteGrades: En1992ConcreteGradeList @state(class: ARTIFACT)
-  reinforcementGrades: En1992ReinforcementGradeList @state(class: ARTIFACT)
-  prestressSteels: En1992PrestressSteelList @state(class: ARTIFACT)
-  members: En1992MemberList @state(class: ARTIFACT)
-  anchors: En1992AnchorList @state(class: ARTIFACT)
+  concreteGrades: En1992ConcreteGradesRows @state(class: ARTIFACT)
+  reinforcementGrades: En1992ReinforcementGradesRows @state(class: ARTIFACT)
+  prestressSteels: En1992PrestressSteelsRows @state(class: ARTIFACT)
+  members: En1992MembersRows @state(class: ARTIFACT)
+  anchors: En1992AnchorsRows @state(class: ARTIFACT)
 }

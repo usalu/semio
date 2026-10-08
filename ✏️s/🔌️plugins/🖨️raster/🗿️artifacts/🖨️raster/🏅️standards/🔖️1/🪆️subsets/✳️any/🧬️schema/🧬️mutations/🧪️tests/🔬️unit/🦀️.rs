@@ -78,8 +78,7 @@ async fn every_variant_registers_an_approved_semantic_descriptor() {
     assert_eq!(<RasterMutation as protocol::SemanticMutation<RasterSnapshot>>::kinds().len(), every_mutation().len(), "kinds() must register exactly one descriptor per dispatch variant");
 }
 
-#[semio_framework_async_macros::async_test]
-async fn every_variant_round_trips_via_inverse() {
+fn populated_base() -> RasterSnapshot {
     let mut base = empty_raster_snapshot();
     base.layers.push(pixel_layer("l1", "Base"));
     base.layers.push(RasterLayerNode::Adjustment {
@@ -94,8 +93,29 @@ async fn every_variant_round_trips_via_inverse() {
     });
     let seed_asset = RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() };
     base.assets.insert("asset-1".into(), crate::mint_raster_asset_child("asset-1", &seed_asset)).expect("bounded fixture operation succeeds");
+    base
+}
+
+#[semio_framework_async_macros::async_test]
+async fn every_variant_round_trips_via_inverse() {
+    let base = populated_base();
     for mutation in every_mutation() {
         crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(round_trip(&base, &mutation));
+        protocol::Mutation::retire_cold(mutation);
+    }
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(base);
+}
+
+/// ⚖️ Every applied variant's concrete inverse sums to exactly the negative of its forward diff on the populated document.
+#[semio_framework_async_macros::async_test]
+async fn every_applied_variant_inverse_sums_to_the_negative_diff() {
+    let base = populated_base();
+    for mutation in every_mutation() {
+        let (diff, messages) = mutation.diff(&base).into_parts();
+        protocol::MutationDiff::retire_cold(diff);
+        if !messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
+            super::sum_law::assert_raster_inverse_sum_law(&mutation, &base).await;
+        }
         protocol::Mutation::retire_cold(mutation);
     }
     crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(base);
@@ -351,14 +371,10 @@ fn retire_projection_closes_every_owned_map_in_a_displaced_projection() {
     <crate::diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_projection(projection);
 }
 
-/// 🧊️ The same law one level up: a cold diff nobody will apply again owns both a whole replacement
-/// artifact and the layers its `added` insertions carry, each of which can hide a populated map.
+/// 🧊️ The same law one level up: a cold diff nobody will apply again owns the layers its `added` insertions carry,
+/// each of which can hide a populated map.
 #[test]
 fn retire_cold_closes_every_owned_map_in_a_displaced_diff() {
-    let mut replacement = empty_raster_snapshot();
-    replacement.layers.push(adjustment_layer_with_params("replacement-brighten"));
-    let whole = crate::standards::v1::subsets::any::schema::diff::diff_from_snapshot(replacement);
-    <crate::diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_cold(whole);
     let sparse = crate::standards::v1::subsets::any::schema::diff::diff_add_layer(None, 0, adjustment_layer_with_params("added-brighten"));
     <crate::diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_cold(sparse);
 }
@@ -416,3 +432,19 @@ fn json_export_serializes_a_populated_document() {
     assert!(text.contains("\"childId\""), "each exported asset projects its composed child handle: {text}");
 }
 //#endregion 🧪️WholeDocumentJsonRoutes
+
+/// ⚖️ Ordered-collection law on a MIDDLE row: deleting or moving the middle layer inverts to its original index.
+#[semio_framework_async_macros::async_test]
+async fn deleting_or_moving_a_middle_layer_inverts_at_its_original_index() {
+    let mut base = empty_raster_snapshot();
+    for (id, name) in [("a", "A"), ("b", "B"), ("c", "C")] {
+        base.layers.push(pixel_layer(id, name));
+    }
+    let delete = RasterMutation::DeleteLayer(delete_layer::DeleteLayer { layer_id: "b".into() });
+    super::sum_law::assert_raster_inverse_sum_law(&delete, &base).await;
+    let reorder = RasterMutation::ReorderLayers(reorder_layers::ReorderLayers { layer_id: "b".into(), parent_id: None, index: 0 });
+    super::sum_law::assert_raster_inverse_sum_law(&reorder, &base).await;
+    let insert = RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 1, layer: Box::new(pixel_layer("n", "N")) });
+    super::sum_law::assert_raster_inverse_sum_law(&insert, &base).await;
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(base);
+}

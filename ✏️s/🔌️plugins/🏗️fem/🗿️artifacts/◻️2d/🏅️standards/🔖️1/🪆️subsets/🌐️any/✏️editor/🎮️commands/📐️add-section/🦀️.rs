@@ -40,5 +40,5 @@ pub struct AddSection {
 pub fn handle(payload: &AddSection, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.sections.iter().map(|s| s.id.clone()), "s");
-    Ok(Emit::mutations(vec![Fem2dMutation::CreateSection(crate::standards::v1::subsets::any::schema::mutations::create_section::CreateSection { section: FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy } })]))
+    Ok(Emit::mutations(vec![Fem2dMutation::CreateSection(crate::standards::v1::subsets::any::schema::mutations::create_section::CreateSection { section: FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy }, index: None })]))
 }

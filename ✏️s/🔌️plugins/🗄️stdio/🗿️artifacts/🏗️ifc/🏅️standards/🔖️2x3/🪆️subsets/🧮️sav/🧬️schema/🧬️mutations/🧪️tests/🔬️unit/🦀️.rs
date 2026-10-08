@@ -17,7 +17,7 @@ fn base() -> Ifc2x3Snapshot {
     Ifc2x3Snapshot { schema: "stdio.ifc.2x3".into(), document: Part21Document { header, instances: vec![wall, model, assignment] }, edm_preamble: None }
 }
 
-fn round_trip(mutation: Ifc2x3SavMutation) {
+async fn round_trip(mutation: Ifc2x3SavMutation) {
     let start = base();
     let mut mutated = start.clone();
     let outcome = apply_ifc2x3_sav_mutation(&mut mutated, &mutation);
@@ -26,23 +26,24 @@ fn round_trip(mutation: Ifc2x3SavMutation) {
     let inverse = Mutation::inverse(&mutation, &start).expect("valid retained mutation inverse fixture").into_iter().next().expect("one inverse");
     apply_ifc2x3_sav_mutation(&mut mutated, &inverse);
     assert_eq!(mvd::canonical(&mutated), mvd::canonical(&start), "{mutation:?} then its inverse must restore the base exchange structure");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &start).await;
 }
 
-#[test]
-fn every_concept_kind_round_trips_through_its_own_inverse() {
-    round_trip(Ifc2x3SavMutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: "CoordinationView_V2.0".into() }));
-    round_trip(Ifc2x3SavMutation::SetAnalysisModel(set_analysis_model::SetAnalysisModel { id: 1, model: None }));
+#[semio_framework_async_macros::async_test]
+async fn every_concept_kind_round_trips_through_its_own_inverse() {
+    round_trip(Ifc2x3SavMutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: "CoordinationView_V2.0".into() })).await;
+    round_trip(Ifc2x3SavMutation::SetAnalysisModel(set_analysis_model::SetAnalysisModel { id: 1, model: None, index: None })).await;
     round_trip(Ifc2x3SavMutation::SetLoadGroup(set_load_group::SetLoadGroup {
         id: 9,
-        group: Some(SavLoadGroup { global_id: "loads".into(), owner_history: None, name: "Self weight".into(), predefined_type: None, action_type: None, action_source: None }),
-    }));
-    round_trip(Ifc2x3SavMutation::SetGroupAssignment(set_group_assignment::SetGroupAssignment { id: 2, assignment: None }));
+        group: Some(SavLoadGroup { global_id: "loads".into(), owner_history: None, name: "Self weight".into(), predefined_type: None, action_type: None, action_source: None }), index: None
+    })).await;
+    round_trip(Ifc2x3SavMutation::SetGroupAssignment(set_group_assignment::SetGroupAssignment { id: 2, assignment: None, index: None })).await;
 }
 
 #[test]
 fn removing_the_only_analysis_model_is_what_the_hard_rule_catches() {
     let mut snapshot = base();
-    apply_ifc2x3_sav_mutation(&mut snapshot, &Ifc2x3SavMutation::SetAnalysisModel(set_analysis_model::SetAnalysisModel { id: 1, model: None }));
+    apply_ifc2x3_sav_mutation(&mut snapshot, &Ifc2x3SavMutation::SetAnalysisModel(set_analysis_model::SetAnalysisModel { id: 1, model: None, index: None }));
     assert!(snapshot.document.by_type(ANALYSIS_MODEL).next().is_none());
     assert_eq!(mvd::reference_argument(&snapshot, 2, RELATING_GROUP_INDEX), Some(1), "the assignment's RelatingGroup is left dangling -- production's own no-cascade policy");
 }
@@ -50,12 +51,12 @@ fn removing_the_only_analysis_model_is_what_the_hard_rule_catches() {
 #[test]
 fn the_sav_guards_reject_rather_than_silently_edit() {
     let mut snapshot = base();
-    assert!(!apply_ifc2x3_sav_mutation(&mut snapshot, &Ifc2x3SavMutation::SetAnalysisModel(set_analysis_model::SetAnalysisModel { id: 3, model: None })).messages().is_empty(), "clearing an analysis model must not delete a real wall");
-    assert!(!apply_ifc2x3_sav_mutation(&mut snapshot, &Ifc2x3SavMutation::SetLoadGroup(set_load_group::SetLoadGroup { id: 1, group: None })).messages().is_empty(), "the analysis model is not a load group");
+    assert!(!apply_ifc2x3_sav_mutation(&mut snapshot, &Ifc2x3SavMutation::SetAnalysisModel(set_analysis_model::SetAnalysisModel { id: 3, model: None, index: None })).messages().is_empty(), "clearing an analysis model must not delete a real wall");
+    assert!(!apply_ifc2x3_sav_mutation(&mut snapshot, &Ifc2x3SavMutation::SetLoadGroup(set_load_group::SetLoadGroup { id: 1, group: None, index: None })).messages().is_empty(), "the analysis model is not a load group");
     assert!(
         !apply_ifc2x3_sav_mutation(
             &mut snapshot,
-            &Ifc2x3SavMutation::SetGroupAssignment(set_group_assignment::SetGroupAssignment { id: 9, assignment: Some(SavGroupAssignment { global_id: "x".into(), owner_history: None, related_objects: vec![3], relating_group: 3 }) })
+            &Ifc2x3SavMutation::SetGroupAssignment(set_group_assignment::SetGroupAssignment { id: 9, assignment: Some(SavGroupAssignment { global_id: "x".into(), owner_history: None, related_objects: vec![3], relating_group: 3 }), index: None })
         )
         .messages()
         .is_empty(),
@@ -64,15 +65,27 @@ fn the_sav_guards_reject_rather_than_silently_edit() {
     assert_eq!(snapshot, base(), "a rejected mutation leaves the snapshot untouched");
 }
 
+#[semio_framework_async_macros::async_test]
+async fn removing_a_middle_row_is_restored_at_its_original_index() {
+    let mut start = base();
+    let created = Ifc2x3SavMutation::SetLoadGroup(set_load_group::SetLoadGroup { id: 99, group: Some(SavLoadGroup { global_id: "loads".into(), owner_history: None, name: "Self weight".into(), predefined_type: None, action_type: None, action_source: None }), index: Some(1) });
+    let outcome = apply_ifc2x3_sav_mutation(&mut start, &created);
+    assert!(outcome.messages().is_empty(), "{created:?} was rejected: {:?}", outcome.messages());
+    assert_eq!(mvd::position(&start, 99), Some(1), "the creation honours its index");
+    let removal = Ifc2x3SavMutation::SetLoadGroup(set_load_group::SetLoadGroup { id: 99, group: None, index: None });
+    let inverse = Mutation::inverse(&removal, &start).expect("valid retained mutation inverse fixture");
+    assert_eq!(inverse, vec![Ifc2x3SavMutation::SetLoadGroup(set_load_group::SetLoadGroup { id: 99, group: Some(SavLoadGroup { global_id: "loads".into(), owner_history: None, name: "Self weight".into(), predefined_type: None, action_type: None, action_source: None }), index: Some(1) })], "the removal's inverse restores the row at its original index");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&removal, &start).await;
+}
+
 /// 🧪️ The declaration gate: `KINDS` must match the enum's own variants, in declaration order.
 #[test]
 fn kinds_const_matches_enum_variants_in_declaration_order() {
     let one_per_variant = vec![
-        Ifc2x3SavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Ifc2x3Snapshot::default() }),
         Ifc2x3SavMutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: String::new() }),
-        Ifc2x3SavMutation::SetAnalysisModel(set_analysis_model::SetAnalysisModel { id: 0, model: None }),
-        Ifc2x3SavMutation::SetLoadGroup(set_load_group::SetLoadGroup { id: 0, group: None }),
-        Ifc2x3SavMutation::SetGroupAssignment(set_group_assignment::SetGroupAssignment { id: 0, assignment: None }),
+        Ifc2x3SavMutation::SetAnalysisModel(set_analysis_model::SetAnalysisModel { id: 0, model: None, index: None }),
+        Ifc2x3SavMutation::SetLoadGroup(set_load_group::SetLoadGroup { id: 0, group: None, index: None }),
+        Ifc2x3SavMutation::SetGroupAssignment(set_group_assignment::SetGroupAssignment { id: 0, assignment: None, index: None }),
     ];
     assert_eq!(one_per_variant.len(), KINDS.len(), "one_per_variant must cover every KINDS entry exactly once");
     for (mutation, kind) in one_per_variant.iter().zip(KINDS.iter()) {

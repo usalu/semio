@@ -3,20 +3,33 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/jpg/jfif-1.01/document/snapshot.json",
   "title": "JpgSnapshot",
   "type": "object",
+  "additionalProperties": false,
   "$defs": {
     "JfifThumbnail": {
       "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "rgbData"
+      ],
       "properties": {
         "width": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
         },
         "height": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
         },
         "rgbData": {
           "type": "array",
           "items": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
           },
           "x-semio-ui": {
             "label": {
@@ -31,170 +44,13 @@
         }
       }
     },
-    "JpgFrameComponent": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "integer"
-        },
-        "hSampling": {
-          "type": "integer",
-          "x-semio-ui": {
-            "widget": "stepper",
-            "label": {
-              "en": "Horizontal sampling factor",
-              "de": "Horizontaler Abtastfaktor"
-            }
-          }
-        },
-        "vSampling": {
-          "type": "integer",
-          "x-semio-ui": {
-            "widget": "stepper",
-            "label": {
-              "en": "Vertical sampling factor",
-              "de": "Vertikaler Abtastfaktor"
-            }
-          }
-        },
-        "quantTableId": {
-          "type": "integer",
-          "x-semio-ui": {
-            "widget": "stepper",
-            "label": {
-              "en": "Quantization table",
-              "de": "Quantisierungstabelle"
-            },
-            "description": {
-              "en": "Tq: destination of the quantization table this component uses.",
-              "de": "Tq: Ziel der Quantisierungstabelle, die diese Komponente verwendet."
-            }
-          }
-        }
-      }
-    },
-    "JpgFrameHeader": {
-      "type": "object",
-      "properties": {
-        "precision": {
-          "type": "integer",
-          "x-semio-ui": {
-            "widget": "stepper",
-            "label": {
-              "en": "Sample precision",
-              "de": "Abtastgenauigkeit"
-            },
-            "unit": "bit"
-          }
-        },
-        "width": {
-          "type": "integer"
-        },
-        "height": {
-          "type": "integer"
-        },
-        "components": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/JpgFrameComponent"
-          },
-          "x-semio-ui": {
-            "label": {
-              "en": "Frame components",
-              "de": "Frame-Komponenten"
-            }
-          }
-        }
-      }
-    },
-    "JpgHuffmanTable": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "integer"
-        },
-        "class": {
-          "type": "string",
-          "enum": [
-            "dc",
-            "ac"
-          ],
-          "x-semio-ui": {
-            "widget": "segmented",
-            "label": {
-              "en": "Table class",
-              "de": "Tabellenklasse"
-            },
-            "options": {
-              "dc": {
-                "en": "DC coefficients",
-                "de": "DC-Koeffizienten"
-              },
-              "ac": {
-                "en": "AC coefficients",
-                "de": "AC-Koeffizienten"
-              }
-            }
-          }
-        },
-        "bits": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          },
-          "minItems": 16,
-          "maxItems": 16,
-          "x-semio-ui": {
-            "label": {
-              "en": "Codes per length",
-              "de": "Codes je Länge"
-            },
-            "description": {
-              "en": "BITS: number of Huffman codes of each length 1 to 16.",
-              "de": "BITS: Anzahl der Huffman-Codes je Länge 1 bis 16."
-            }
-          }
-        },
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          }
-        }
-      }
-    },
-    "JpgQuantTable": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "integer"
-        },
-        "precision": {
-          "type": "integer",
-          "x-semio-ui": {
-            "widget": "stepper",
-            "label": {
-              "en": "Table precision",
-              "de": "Tabellengenauigkeit"
-            },
-            "description": {
-              "en": "Pq: 0 = 8-bit, 1 = 16-bit quantization values.",
-              "de": "Pq: 0 = 8-Bit-, 1 = 16-Bit-Quantisierungswerte."
-            }
-          }
-        },
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "integer"
-          },
-          "minItems": 64,
-          "maxItems": 64
-        }
-      }
-    },
     "JpgSegment": {
       "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "marker",
+        "data"
+      ],
       "properties": {
         "marker": {
           "type": "integer",
@@ -208,12 +64,158 @@
               "en": "Marker code following the 0xFF prefix.",
               "de": "Markercode nach dem Präfix 0xFF."
             }
-          }
+          },
+          "minimum": 0,
+          "maximum": 255
         },
         "data": {
           "type": "array",
           "items": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    },
+    "JpgImage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "pixels",
+        "jfifVersion",
+        "jfifDensityUnits",
+        "jfifXDensity",
+        "jfifYDensity",
+        "otherSegments"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "x-semio-state": "artifact",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "height": {
+          "type": "integer",
+          "x-semio-state": "artifact",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "pixels": {
+          "type": "array",
+          "x-semio-state": "artifact",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "jfifVersion": {
+          "type": "array",
+          "x-semio-state": "artifact",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "x-semio-ui": {
+            "widget": "vector",
+            "label": {
+              "en": "JFIF version",
+              "de": "JFIF-Version"
+            },
+            "description": {
+              "en": "Major and minor version of the APP0 JFIF segment.",
+              "de": "Haupt- und Nebenversion des APP0-JFIF-Segments."
+            }
+          }
+        },
+        "jfifDensityUnits": {
+          "type": "string",
+          "enum": [
+            "aspect",
+            "pixelsPerInch",
+            "pixelsPerCm"
+          ],
+          "x-semio-state": "artifact",
+          "x-semio-ui": {
+            "widget": "segmented",
+            "label": {
+              "en": "Density unit",
+              "de": "Dichteeinheit"
+            },
+            "options": {
+              "aspect": {
+                "en": "Aspect ratio only",
+                "de": "Nur Seitenverhältnis"
+              },
+              "pixelsPerInch": {
+                "en": "Pixels per inch",
+                "de": "Pixel pro Zoll"
+              },
+              "pixelsPerCm": {
+                "en": "Pixels per centimeter",
+                "de": "Pixel pro Zentimeter"
+              }
+            }
+          }
+        },
+        "jfifXDensity": {
+          "type": "integer",
+          "x-semio-state": "artifact",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Horizontal pixel density",
+              "de": "Horizontale Pixeldichte"
+            }
+          },
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "jfifYDensity": {
+          "type": "integer",
+          "x-semio-state": "artifact",
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Vertical pixel density",
+              "de": "Vertikale Pixeldichte"
+            }
+          },
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "jfifThumbnail": {
+          "$ref": "#/$defs/JfifThumbnail",
+          "x-semio-state": "artifact",
+          "x-semio-ui": {
+            "label": {
+              "en": "JFIF thumbnail",
+              "de": "JFIF-Vorschaubild"
+            }
+          }
+        },
+        "otherSegments": {
+          "type": "array",
+          "x-semio-state": "artifact",
+          "items": {
+            "$ref": "#/$defs/JpgSegment"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Other segments",
+              "de": "Weitere Segmente"
+            },
+            "description": {
+              "en": "Marker segments without a dedicated field, kept verbatim.",
+              "de": "Markersegmente ohne eigenes Feld, unverändert erhalten."
+            }
           }
         }
       }
@@ -235,209 +237,12 @@
         }
       }
     },
-    "width": {
-      "type": "integer",
-      "x-semio-state": "artifact"
-    },
-    "height": {
-      "type": "integer",
-      "x-semio-state": "artifact"
-    },
-    "pixels": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "type": "integer"
-      }
-    },
-    "jfifVersion": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "type": "integer"
-      },
-      "minItems": 2,
-      "maxItems": 2,
-      "x-semio-ui": {
-        "widget": "vector",
-        "label": {
-          "en": "JFIF version",
-          "de": "JFIF-Version"
-        },
-        "description": {
-          "en": "Major and minor version of the APP0 JFIF segment.",
-          "de": "Haupt- und Nebenversion des APP0-JFIF-Segments."
-        }
-      }
-    },
-    "jfifDensityUnits": {
-      "type": "string",
-      "enum": [
-        "aspect",
-        "pixelsPerInch",
-        "pixelsPerCm"
-      ],
-      "x-semio-state": "artifact",
-      "x-semio-ui": {
-        "widget": "segmented",
-        "label": {
-          "en": "Density unit",
-          "de": "Dichteeinheit"
-        },
-        "options": {
-          "aspect": {
-            "en": "Aspect ratio only",
-            "de": "Nur Seitenverhältnis"
-          },
-          "pixelsPerInch": {
-            "en": "Pixels per inch",
-            "de": "Pixel pro Zoll"
-          },
-          "pixelsPerCm": {
-            "en": "Pixels per centimeter",
-            "de": "Pixel pro Zentimeter"
-          }
-        }
-      }
-    },
-    "jfifXDensity": {
-      "type": "integer",
-      "x-semio-state": "artifact",
-      "x-semio-ui": {
-        "widget": "stepper",
-        "label": {
-          "en": "Horizontal pixel density",
-          "de": "Horizontale Pixeldichte"
-        }
-      }
-    },
-    "jfifYDensity": {
-      "type": "integer",
-      "x-semio-state": "artifact",
-      "x-semio-ui": {
-        "widget": "stepper",
-        "label": {
-          "en": "Vertical pixel density",
-          "de": "Vertikale Pixeldichte"
-        }
-      }
-    },
-    "jfifThumbnail": {
-      "$ref": "#/$defs/JfifThumbnail",
-      "x-semio-state": "artifact",
-      "x-semio-ui": {
-        "label": {
-          "en": "JFIF thumbnail",
-          "de": "JFIF-Vorschaubild"
-        }
-      }
-    },
-    "frame": {
-      "$ref": "#/$defs/JpgFrameHeader",
-      "x-semio-state": "artifact"
-    },
-    "sofMarker": {
-      "type": "integer",
-      "x-semio-state": "artifact",
-      "x-semio-ui": {
-        "widget": "stepper",
-        "label": {
-          "en": "Start-of-frame marker",
-          "de": "SOF-Marker"
-        },
-        "description": {
-          "en": "SOFn marker code that selects the coding process, e.g. 0xC0 baseline.",
-          "de": "SOFn-Markercode, der das Kodierverfahren wählt, z. B. 0xC0 Baseline."
-        }
-      }
-    },
-    "arithmetic": {
-      "type": "boolean",
-      "x-semio-state": "artifact",
-      "x-semio-ui": {
-        "widget": "toggle",
-        "label": {
-          "en": "Arithmetic coding",
-          "de": "Arithmetische Kodierung"
-        },
-        "description": {
-          "en": "Uses arithmetic instead of Huffman entropy coding.",
-          "de": "Verwendet arithmetische statt Huffman-Entropiekodierung."
-        }
-      }
-    },
-    "quantTables": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "$ref": "#/$defs/JpgQuantTable"
-      },
-      "x-semio-ui": {
-        "label": {
-          "en": "Quantization tables",
-          "de": "Quantisierungstabellen"
-        }
-      }
-    },
-    "huffmanTables": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "$ref": "#/$defs/JpgHuffmanTable"
-      },
-      "x-semio-ui": {
-        "label": {
-          "en": "Huffman tables",
-          "de": "Huffman-Tabellen"
-        }
-      }
-    },
-    "restartInterval": {
-      "type": "integer",
-      "x-semio-state": "artifact",
-      "x-semio-ui": {
-        "widget": "stepper",
-        "label": {
-          "en": "Restart interval",
-          "de": "Restart-Intervall"
-        },
-        "description": {
-          "en": "MCUs between restart markers (DRI); 0 disables restarts.",
-          "de": "MCUs zwischen Restart-Markern (DRI); 0 deaktiviert sie."
-        }
-      }
-    },
-    "otherSegments": {
-      "type": "array",
-      "x-semio-state": "artifact",
-      "items": {
-        "$ref": "#/$defs/JpgSegment"
-      },
-      "x-semio-ui": {
-        "label": {
-          "en": "Other segments",
-          "de": "Weitere Segmente"
-        },
-        "description": {
-          "en": "Marker segments without a dedicated field, kept verbatim.",
-          "de": "Markersegmente ohne eigenes Feld, unverändert erhalten."
-        }
-      }
+    "image": {
+      "$ref": "#/$defs/JpgImage"
     }
   },
   "required": [
     "schema",
-    "width",
-    "height",
-    "pixels",
-    "jfifVersion",
-    "jfifDensityUnits",
-    "jfifXDensity",
-    "jfifYDensity",
-    "sofMarker",
-    "arithmetic",
-    "quantTables",
-    "huffmanTables",
-    "otherSegments"
+    "image"
   ]
 }

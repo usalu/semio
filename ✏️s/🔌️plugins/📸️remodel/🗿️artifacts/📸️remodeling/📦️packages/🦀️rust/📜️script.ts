@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import {completeCargoPreparationObservationV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts";
 /** 📦️ remodel remodeling Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import { runCmd, runCargo } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -11,6 +12,7 @@ class CompositionScript extends BundleScript {
   run(args: string[]): void {
     if (args.length !== 1 || args[0] !== "prepare") throw new Error("composition prepare");
     console.log(`remodeling capabilities: targets=${prepareCargoCapabilityLinksV1(this.repoRoot, resolve(this.root, "../.."), "📦️packages/🦀️rust/Cargo.toml", "🧩️composition/🔗️capabilities/🔣️.json")}`);
+    completeCargoPreparationObservationV1();
   }
 }
 

@@ -1,16 +1,62 @@
-//! 🧬️ EN 1996 diff schema — sparse field delta for masonry building subject.
+//! 🧬️ EN1996 diff schema — sparse scalar fields plus keyed row deltas for every list the document owns.
 
 use framework_schema::ArtifactSchema;
+use protocol::{DiffAlgebra, MutationDiff};
+use semio_s_artifact_norm_contract::{norm_list_delta, norm_row_patch};
+
+use crate::En1996Snapshot;
+
+//#region 🔖️Rows
+norm_row_patch! {
+    /// 🩹 Sparse field patch of one `WallOpening`.
+    pub En1996OpeningPatch of crate::WallOpening { set { width_m: f64, height_m: f64, sill_height_m: f64 } }
+}
+
+norm_list_delta! {
+    /// 📋️ Keyed row delta of one `WallOpening` list.
+    pub En1996OpeningDelta { addition: En1996OpeningAddition, modification: En1996OpeningModification, row: crate::WallOpening, patch: En1996OpeningPatch, key: id }
+}
+
+norm_row_patch! {
+    /// 🩹 Sparse field patch of one `ConcentratedLoad`.
+    pub En1996ConcentratedPatch of crate::ConcentratedLoad { set { force_n: f64, bearing_area_m2: f64, bearing_length_m: f64 } }
+}
+
+norm_list_delta! {
+    /// 📋️ Keyed row delta of one `ConcentratedLoad` list.
+    pub En1996ConcentratedDelta { addition: En1996ConcentratedAddition, modification: En1996ConcentratedModification, row: crate::ConcentratedLoad, patch: En1996ConcentratedPatch, key: id }
+}
+
+norm_row_patch! {
+    /// 🩹 Sparse field patch of one `WallLoadCase`.
+    pub En1996LoadCasePatch of crate::WallLoadCase { set { design_situation: String, imposed_category: String, g_k_slab_n: f64, q_k_imposed_pa: f64, tributary_area_m2: f64, slab_span_m: f64, q_k_snow_pa: f64, q_p_wind_pa: f64, c_pe: f64, h_k_earth_n: f64 } nest { concentrated: En1996ConcentratedDelta } }
+}
+
+norm_list_delta! {
+    /// 📋️ Keyed row delta of one `WallLoadCase` list.
+    pub En1996LoadCaseDelta { addition: En1996LoadCaseAddition, modification: En1996LoadCaseModification, row: crate::WallLoadCase, patch: En1996LoadCasePatch, key: id }
+}
+
+norm_row_patch! {
+    /// 🩹 Sparse field patch of one `MasonryWall`.
+    pub En1996WallPatch of crate::MasonryWall { set { label_en: String, label_de: String, wall_type: crate::WallType, thickness_m: f64, height_m: f64, length_m: f64, support_sides: u8, slab_bearing_depth_m: f64, eccentricity_top_m: f64, eccentricity_bottom_m: f64, unit_group: crate::UnitGroup, unit_material: crate::UnitMaterial, f_b_pa: f64, unit_length_m: f64, unit_width_m: f64, unit_height_m: f64, mortar_type: crate::MortarType, mortar_class: crate::MortarClass, mortar_strength_pa: f64, bed_joint_thickness_m: f64, reinforced: bool, as_vertical_m2: f64, as_horizontal_m2: f64, f_yd_pa: f64, fire_rei_min: u32, exposure: crate::ExposureClass, mu: f64, density_kg_m3: f64, phi_infinity: f64, is_basement: bool } nest { openings: En1996OpeningDelta, load_cases: En1996LoadCaseDelta } }
+}
+
+norm_list_delta! {
+    /// 📋️ Keyed row delta of one `MasonryWall` list.
+    pub En1996WallDelta { addition: En1996WallAddition, modification: En1996WallModification, row: crate::MasonryWall, patch: En1996WallPatch, key: id }
+}
+
+//#endregion 🔖️Rows
 
 //#region 🔖️Diff
+/// 🔺️ Sparse field delta for the En1996 artifact: the scalar fields a mutation sets and the keyed row deltas of its lists.
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.norm.en1996")]
 pub struct En1996Diff {
-    #[state(artifact)]
-    pub artifact: Option<Box<crate::artifact_schema::En1996Artifact>>,
     #[state(artifact)]
     pub annex: Option<crate::document::AnnexChoice>,
     #[state(artifact)]
@@ -20,66 +66,66 @@ pub struct En1996Diff {
     #[state(artifact)]
     pub storeys: Option<u32>,
     #[state(artifact)]
-    pub walls: Option<En1996WallList>,
+    pub walls: En1996WallDelta,
 }
 //#endregion 🔖️Diff
 
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct En1996WallList {
-    pub values: Vec<crate::MasonryWall>,
-}
-
-use crate::artifact_schema::diff::*;
-use crate::artifact_schema::En1996Artifact;
-use crate::En1996Snapshot;
-use protocol::MutationDiff;
-
-impl En1996Diff {
-    pub fn apply_to_artifact(&self, artifact: &En1996Artifact) -> protocol::MutationApplyResult<En1996Artifact> {
-        if let Some(replacement) = &self.artifact {
-            return Ok((**replacement).clone());
-        }
-        let mut next = artifact.clone();
-        if let Some(value) = &self.annex { next.annex = *value; }
-        if let Some(value) = &self.masonry_class { next.masonry_class = *value; }
-        if let Some(value) = &self.design_situation { next.design_situation = *value; }
-        if let Some(value) = &self.storeys { next.storeys = *value; }
-        if let Some(list) = &self.walls { next.walls = list.values.clone(); }
-        Ok(next)
-    }
-}
-
 impl MutationDiff<En1996Snapshot> for En1996Diff {
-    fn apply(&self, snapshot: &En1996Snapshot) -> protocol::MutationApplyResult<En1996Snapshot> {
-        if let Some(replacement) = &self.artifact {
-            return Ok(replacement.to_snapshot());
-        }
-        let mut next = snapshot.clone();
-        if let Some(value) = &self.annex { next.annex = *value; }
-        if let Some(value) = &self.masonry_class { next.masonry_class = *value; }
-        if let Some(value) = &self.design_situation { next.design_situation = *value; }
-        if let Some(value) = &self.storeys { next.storeys = *value; }
-        if let Some(list) = &self.walls { next.walls = list.values.clone(); }
-        Ok(next)
+    fn apply(&self, base: &En1996Snapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1996Snapshot> {
+        Ok(En1996Snapshot {
+            annex: self.annex.unwrap_or(base.annex),
+            masonry_class: self.masonry_class.unwrap_or(base.masonry_class),
+            design_situation: self.design_situation.unwrap_or(base.design_situation),
+            storeys: self.storeys.unwrap_or(base.storeys),
+            walls: self.walls.commit_onto(&base.walls).map_err(|error| error.under(["walls"]))?,
+        })
     }
+
     fn absorb(&mut self, other: Self) {
-        if other.artifact.is_some() {
-            *self = other;
-            return;
+        if other.annex.is_some() {
+            self.annex = other.annex;
         }
-        if other.annex.is_some() { self.annex = other.annex; }
-        if other.masonry_class.is_some() { self.masonry_class = other.masonry_class; }
-        if other.design_situation.is_some() { self.design_situation = other.design_situation; }
-        if other.storeys.is_some() { self.storeys = other.storeys; }
-        if other.walls.is_some() { self.walls = other.walls; }
+        if other.masonry_class.is_some() {
+            self.masonry_class = other.masonry_class;
+        }
+        if other.design_situation.is_some() {
+            self.design_situation = other.design_situation;
+        }
+        if other.storeys.is_some() {
+            self.storeys = other.storeys;
+        }
+        self.walls.absorb(other.walls);
     }
 }
 
-pub fn diff_set_snapshot(snapshot: &En1996Snapshot) -> En1996Diff {
-    En1996Diff { artifact: Some(Box::new(En1996Artifact::from_snapshot(snapshot.clone()))), ..Default::default() }
+impl DiffAlgebra<En1996Snapshot> for En1996Diff {
+    fn inverse(&self, base: &En1996Snapshot) -> Self {
+        Self {
+            annex: self.annex.as_ref().map(|_| base.annex),
+            masonry_class: self.masonry_class.as_ref().map(|_| base.masonry_class),
+            design_situation: self.design_situation.as_ref().map(|_| base.design_situation),
+            storeys: self.storeys.as_ref().map(|_| base.storeys),
+            walls: self.walls.inverse(&base.walls),
+        }
+    }
+
+    fn between(base: &En1996Snapshot, other: &En1996Snapshot) -> Self {
+        Self {
+            annex: (base.annex != other.annex).then(|| other.annex),
+            masonry_class: (base.masonry_class != other.masonry_class).then(|| other.masonry_class),
+            design_situation: (base.design_situation != other.design_situation).then(|| other.design_situation),
+            storeys: (base.storeys != other.storeys).then(|| other.storeys),
+            walls: En1996WallDelta::between(&base.walls, &other.walls),
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.annex.is_none()
+            && self.masonry_class.is_none()
+            && self.design_situation.is_none()
+            && self.storeys.is_none()
+            && self.walls.is_empty()
+    }
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 //! 📐️ Pixel/group placement, exact inverse and sequential transform coalescing.
 use super::*;
-use protocol::{Mutation,MutationDiff};
+use protocol::Mutation;
 #[semio_framework_async_macros::async_test]
 async fn layer_transforms_preserve_exact_inverse_and_sequential_moves(){
     use crate::standards::v1::subsets::any::schema::{create_layer_of_kind, layer_node_id, snapshot::retire_raster_snapshot};
@@ -11,14 +11,14 @@ async fn layer_transforms_preserve_exact_inverse_and_sequential_moves(){
         let transform:RasterTransform=semio_framework_pack_json::from_json_str(&row["transform"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let payload=ChangeLayerTransform {layer_id:id.clone(),expected:RasterTransform::default(),transform:transform.clone()};
         let mutation=RasterMutation::ChangeLayerTransform(payload.clone());
-        let (diff,messages)=mutation.diff(&base).into_parts();assert!(messages.is_empty());let after=diff.apply(&base).unwrap();assert_eq!(layer_transform(&after.layers[0]),&transform);
+        let (diff,messages)=mutation.diff(&base).into_parts();assert!(messages.is_empty());let after=protocol::apply_diff(&diff, &base).unwrap();assert_eq!(layer_transform(&after.layers[0]),&transform);
         for horizontal in [false,true] {
             let mut ambiguous=diff.clone();let patch=&mut ambiguous.layers.as_mut().unwrap().patched[0].patch;
             if horizontal {patch.transform_x=Some(0.0);}else{patch.transform_y=Some(0.0);}
-            assert!(ambiguous.apply(&base).is_err());ambiguous.retire_cold();
+            assert!(protocol::apply_diff(&ambiguous, &base).is_err());ambiguous.retire_cold();
         }
         assert_eq!(validate(&payload,&after),Err(protocol::OutcomeCode::TargetMismatch));
-        let inverse=mutation.inverse(&base).expect("valid retained mutation inverse fixture").remove(0);let (undo,_)=inverse.diff(&after).into_parts();let restored=undo.apply(&after).unwrap();assert_eq!(restored,base);
+        let inverse=mutation.inverse(&base).expect("valid retained mutation inverse fixture").remove(0);let (undo,_)=inverse.diff(&after).into_parts();let restored=protocol::apply_diff(&undo, &after).unwrap();assert_eq!(restored,base);
         let movement=RasterMutation::MoveLayer(crate::mutations::move_layer::MoveLayer {layer_id:id,new_x:9.0,new_y:10.0});
         for full_first in [false,true] {
             let full=mutation.diff(&base).diff().clone();let partial=movement.diff(&base).diff().clone();

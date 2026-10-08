@@ -47,16 +47,16 @@ impl store::ArtifactSqliteSnapshot for Snapshot {
         let count=i32::try_from(row.integer(1)?).map_err(|_|invalid("Count is outside the authored i32 domain"))?;
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?; Ok(Self{count})
     }
-    fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError> {
+    fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError> {
         control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,1)?; control.check_rows(1)?; control.check_value_bytes(8)?;
-        let length=match payload{store::os_io::IoPayload::Text(text)=>text.len(),store::os_io::IoPayload::Binary(bytes)=>bytes.len()};
+        let length=match payload{store::io::IoPayload::Text(text)=>text.len(),store::io::IoPayload::Binary(bytes)=>bytes.len()};
         if length>control.limits().max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Count native input exceeds the file ceiling"));}
         control.allocation_stage(SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
             let mut progress=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);
             let mut native=NativeDecodeControl::new(remaining,&mut progress);
             let result=(||{
                 match payload {
-                    store::os_io::IoPayload::Text(text)=>{
+                    store::io::IoPayload::Text(text)=>{
                         let empty=native.scoped_stage(|native|{
                             native.begin_stage(text.len())?;let mut empty=true;
                             for character in text.chars(){empty&=character.is_whitespace();native.advance(character.len_utf8())?;}
@@ -65,7 +65,7 @@ impl store::ArtifactSqliteSnapshot for Snapshot {
                         if empty { Ok(Self::default()) }
                         else { semio_framework_pack_json::from_json_str_controlled(text,semio_framework_pack_json::JsonMemberPolicy::Reject,&mut native) }
                     }
-                    store::os_io::IoPayload::Binary(bytes)=>{
+                    store::io::IoPayload::Binary(bytes)=>{
                         let spec=Self::__dsl_spec_producer().decode(&mut native)?;
                         let (record,_)=pack::decode_document_controlled(bytes,&spec,&store::PackDecodeOptions::default(),&mut native).map_err(store::PackRefusal::into_value_error)?;
                         Self::__dsl_from_record_controlled(&record,&mut native)
@@ -75,7 +75,7 @@ impl store::ArtifactSqliteSnapshot for Snapshot {
             (result,native.owned_bytes())
         })?
     }
-    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{
+    fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io::IoPayload,ValueError>{
         bound(self,encoding,control)?;
         control.allocation_stage(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint|{
             let mut progress=|event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total);
@@ -87,12 +87,12 @@ impl store::ArtifactSqliteSnapshot for Snapshot {
                         native.begin_stage(length)?;native.charge(length)?;let mut output=String::new();
                         output.try_reserve_exact(length).map_err(|_|ValueError::new(ValueRefusalKind::AllocationFailed,"Count JSON output allocation failed"))?;
                         for text in ["{\"count\":",digits,"}"]{output.push_str(text);native.advance(text.len())?;}
-                        Ok(store::os_io::IoPayload::Text(output))
+                        Ok(store::io::IoPayload::Text(output))
                     }
                     SnapshotEncoding::Binary=>{
                         let spec=Self::__dsl_spec_producer().encode(&mut native)?;
                         let record=semio_framework_dsl_record::native_encoding::EncodedRecord::from_record(self.__dsl_to_record_controlled(&mut native)?);
-                        pack::encode_document_controlled(&spec,record.as_record(),&store::PackEncodeOptions::default(),&mut native).map(store::os_io::IoPayload::Binary).map_err(store::PackRefusal::into_value_error)
+                        pack::encode_document_controlled(&spec,record.as_record(),&store::PackEncodeOptions::default(),&mut native).map(store::io::IoPayload::Binary).map_err(store::PackRefusal::into_value_error)
                     }
                 }
             })();

@@ -1,0 +1,1 @@
+{"name":"current-native-domain-pick-1","root":".","targets":{"verify":{"executor":"nx:run-commands","options":{"command":"bun ./📜️script.ts verify","cwd":"."}}}}

@@ -3,8 +3,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 
 /// 🧾️ Each record kind's text-grammar keyword, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
-pub(crate) const TEXT_KEYWORDS: [(&str, &str); 12] = [
-    ("set-snapshot", "setSnapshot"),
+pub(crate) const TEXT_KEYWORDS: [(&str, &str); 11] = [
     ("set-dimensions", "setDimensions"),
     ("set-colorspace", "setColorspace"),
     ("set-bit-depth", "setBitDepth"),
@@ -24,7 +23,7 @@ use super::*;
 use crate::standards::v1::subsets::image::schema::mutations::*;
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, NamedModified};
 use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::image::schema::diff::{diff_set_snapshot, SemioImageDiff, SemioImageFrameDiff, SemioImageFramesDiff, SemioImageMetadataDiff};
+use crate::standards::v1::subsets::image::schema::diff::{SemioImageDiff, SemioImageFrameDiff, SemioImageFramesDiff, SemioImageMetadataDiff};
 use crate::standards::v1::subsets::image::io::text::snapshot::{dec_metadata_entry};
 use crate::standards::v1::subsets::image::io::text::snapshot::{enc_metadata_entry};
 use crate::standards::v1::subsets::image::io::text::snapshot::{dec_frame};
@@ -110,7 +109,7 @@ pub(crate) fn print_image_mutation(m: &SemioImageMutation) -> String {
         SemioImageMutation::MoveFrame(move_frame::MoveFrame { from, to }) => format!("moveFrame:{from},{to}"),
         SemioImageMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index, delay_ms }) => format!("setFrameDelay:{index},{delay_ms}"),
         SemioImageMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index, rgba8 }) => format!("setFramePixels:{index},{}", enc_bytes(rgba8)),
-        SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key, value }) => format!("setMetadataEntry:{},{}", enc_str(key), enc_str(value)),
+        SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key, value, at }) => format!("setMetadataEntry:{},{}{}", enc_str(key), enc_str(value), at.map(|at| format!(",{at}")).unwrap_or_default()),
         SemioImageMutation::RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry { key }) => format!("removeMetadataEntry:{}", enc_str(key)),
     }
 }
@@ -148,8 +147,12 @@ pub(crate) fn parse_image_mutation(line: &str) -> Result<SemioImageMutation, Str
         }
         "setMetadataEntry" => {
             let parts = split_top_level(rest, ',');
-            let [key, value] = parts.as_slice() else { return Err(format!("setMetadataEntry: expected 2 fields, got {}", parts.len())) };
-            Ok(SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: dec_str(key)?, value: dec_str(value)? }))
+            let (key, value, at) = match parts.as_slice() {
+                [key, value] => (key, value, None),
+                [key, value, at] => (key, value, Some(at.parse::<usize>().map_err(|error| error.to_string())?)),
+                _ => return Err(format!("setMetadataEntry: expected 2 or 3 fields, got {}", parts.len())),
+            };
+            Ok(SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: dec_str(key)?, value: dec_str(value)?, at }))
         }
         "removeMetadataEntry" => Ok(SemioImageMutation::RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry { key: dec_str(rest)? })),
         other => Err(format!("mutation: unknown tag {other:?}")),

@@ -2,7 +2,7 @@
 //! collection.
 
 use crate::mutations::{delete_story, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::LayoutStoriesDelta;
+use crate::standards::v1::subsets::any::schema::diff::{insertion_order, LayoutStoriesDelta};
 use crate::{LayoutDiff, LayoutSnapshot, TextStory};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -43,7 +43,7 @@ pub fn diff_create_story(payload: &CreateStory, base: &LayoutSnapshot) -> protoc
     if base.stories.iter().any(|story| story.id == payload.story.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A story with id \"{}\" already exists.", payload.story.id), [payload.story.id.clone()]);
     }
-    protocol::MutationOutcome::new(LayoutDiff { stories: Some(LayoutStoriesDelta { added: vec![payload.story.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(LayoutDiff { stories: Some(LayoutStoriesDelta { added: vec![payload.story.clone()], reordered: insertion_order(base.stories.iter().map(|story| story.id.as_str()), &payload.story.id, payload.index), ..Default::default() }), ..Default::default() })
 }
 //#endregion 📖CreateStory
 

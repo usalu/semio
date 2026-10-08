@@ -54,13 +54,9 @@ const NATIVE_VERSION: &str = "AC1024";
 /// answers to the specification, so this table is the thing the handler is measured against.
 fn predicted(kind: &str, params: &Json, input: &[u8]) -> Result<Json, String> {
     let before = project_dwg(input)?;
-    let stated = if kind == "set-snapshot" { params.get("snapshot").cloned().unwrap_or(Json::Null) } else { params.clone() };
-    let field = |key: &str| stated.get(key).cloned().unwrap_or_else(|| before.get(key).cloned().unwrap_or(Json::Null));
+    let field = |key: &str| params.get(key).cloned().unwrap_or_else(|| before.get(key).cloned().unwrap_or(Json::Null));
     let triple = vec![("version".to_string(), field("version")), ("maintenanceVersion".to_string(), field("maintenanceVersion")), ("codepage".to_string(), field("codepage"))];
-    let length = match kind {
-        "set-snapshot" => Json::Number(22.0),
-        _ => before.get("byteLength").cloned().unwrap_or(Json::Null),
-    };
+    let length = before.get("byteLength").cloned().unwrap_or(Json::Null);
     Ok(Json::Object(triple.into_iter().chain(std::iter::once(("byteLength".to_string(), length))).collect()))
 }
 

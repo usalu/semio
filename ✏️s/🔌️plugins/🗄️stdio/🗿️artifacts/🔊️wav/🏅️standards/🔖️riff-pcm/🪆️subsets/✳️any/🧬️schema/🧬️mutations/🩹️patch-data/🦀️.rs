@@ -1,4 +1,4 @@
-//! 🩹️ Bounded WAV sample-range patch with exact inverse data.
+//! 🩹️ Bounded WAV sample-range patch: one splice of the sample lane (a take-out plus a put-back for a move), with the exact inverse patch built from the replaced elements.
 
 use super::*;
 
@@ -13,91 +13,60 @@ pub struct PatchData {
     pub move_to: Option<u64>,
 }
 
-fn len(data: &WavData) -> usize {
-    match data {
-        WavData::Pcm16(values) => values.len(),
-        WavData::Pcm8(values) | WavData::Raw(values) => values.len(),
-        WavData::Float32(values) => values.len(),
-    }
-}
-
-fn empty(data: &WavData) -> bool {
-    len(data) == 0
-}
-
-fn slice(data: &WavData, start: usize, end: usize) -> WavData {
-    match data {
-        WavData::Pcm16(values) => WavData::Pcm16(values[start..end].to_vec()),
-        WavData::Pcm8(values) => WavData::Pcm8(values[start..end].to_vec()),
-        WavData::Float32(values) => WavData::Float32(values[start..end].to_vec()),
-        WavData::Raw(values) => WavData::Raw(values[start..end].to_vec()),
-    }
-}
-
-fn apply(data: &WavData, patch: &PatchData) -> Result<WavData, String> {
-    let index = usize::try_from(patch.index).map_err(|_| "WAV sample index exceeds this platform".to_string())?;
-    if let Some(move_to) = patch.move_to {
-        let move_to = usize::try_from(move_to).map_err(|_| "WAV move destination exceeds this platform".to_string())?;
-        if patch.remove_count != 0 || !empty(&patch.data) || index >= len(data) || move_to >= len(data) {
-            return Err("WAV sample move is outside the data range or carries replacement data".into());
+impl PatchData {
+    /// ✂️ The splices this patch asks of `base`'s sample lane — none for a patch that changes nothing — or why the patch is outside the lane.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn splices(&self, base: &WavSnapshot) -> Result<Vec<WavSplice>, String> {
+        let lane = &base.data;
+        let len = data_len(lane);
+        let index = usize::try_from(self.index).map_err(|_| "WAV sample index exceeds this platform".to_string())?;
+        if let Some(move_to) = self.move_to {
+            let move_to = usize::try_from(move_to).map_err(|_| "WAV move destination exceeds this platform".to_string())?;
+            if self.remove_count != 0 || data_len(&self.data) != 0 || index >= len || move_to >= len {
+                return Err("WAV sample move is outside the data range or carries replacement data".into());
+            }
+            return Ok(match index == move_to {
+                true => Vec::new(),
+                false => vec![WavSplice { index: self.index, remove: 1, insert: data_slice(lane, 0, 0) }, WavSplice { index: move_to as u64, remove: 0, insert: data_slice(lane, index, index + 1) }],
+            });
         }
-        let mut next = data.clone();
-        match &mut next {
-            WavData::Pcm16(values) => { let value = values.remove(index); values.insert(move_to, value); }
-            WavData::Pcm8(values) | WavData::Raw(values) => { let value = values.remove(index); values.insert(move_to, value); }
-            WavData::Float32(values) => { let value = values.remove(index); values.insert(move_to, value); }
+        let remove = usize::try_from(self.remove_count).map_err(|_| "WAV removal count exceeds this platform".to_string())?;
+        let end = index.checked_add(remove).ok_or_else(|| "WAV sample range overflows".to_string())?;
+        if index > len || end > len {
+            return Err("WAV sample patch is outside the data range".into());
         }
-        return Ok(next);
+        if std::mem::discriminant(&self.data) != std::mem::discriminant(lane) {
+            return Err("WAV sample patch data kind differs from the snapshot data kind".into());
+        }
+        let unchanged = (remove == 0 && data_len(&self.data) == 0) || data_slice(lane, index, end) == self.data;
+        Ok(match unchanged {
+            true => Vec::new(),
+            false => vec![WavSplice { index: self.index, remove: self.remove_count, insert: self.data.clone() }],
+        })
     }
-    let remove_count = usize::try_from(patch.remove_count).map_err(|_| "WAV removal count exceeds this platform".to_string())?;
-    let end = index.checked_add(remove_count).ok_or_else(|| "WAV sample range overflows".to_string())?;
-    if index > len(data) || end > len(data) {
-        return Err("WAV sample patch is outside the data range".into());
-    }
-    let mut next = data.clone();
-    match (&mut next, &patch.data) {
-        (WavData::Pcm16(values), WavData::Pcm16(insert)) => { values.splice(index..end, insert.iter().copied()); }
-        (WavData::Pcm8(values), WavData::Pcm8(insert)) | (WavData::Raw(values), WavData::Raw(insert)) => { values.splice(index..end, insert.iter().copied()); }
-        (WavData::Float32(values), WavData::Float32(insert)) => { values.splice(index..end, insert.iter().copied()); }
-        _ => return Err("WAV sample patch data kind differs from the snapshot data kind".into()),
-    }
-    Ok(next)
-}
-
-pub(crate) fn diff(payload: &PatchData, base: &WavSnapshot) -> protocol::MutationOutcome<WavDiff> {
-    match apply(&base.data, payload) {
-        Ok(data) => protocol::MutationOutcome::new(diff_set_data(data)),
-        Err(message) => protocol::MutationOutcome::error("mutation.target-mismatch", message, ["data".into(), "value".into(), payload.index.to_string()]),
-    }
-}
-
-pub(crate) fn inverse(payload: &PatchData, base: &WavSnapshot) -> Result<Vec<WavMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    let Ok(index) = usize::try_from(payload.index) else { return Vec::new() };
-    if let Some(move_to) = payload.move_to {
-        if apply(&base.data, payload).is_err() { return Vec::new(); }
-        return vec![WavMutation::PatchData(PatchData { index: move_to, remove_count: 0, data: slice(&base.data, 0, 0), move_to: Some(payload.index) })];
-    }
-    let Ok(remove_count) = usize::try_from(payload.remove_count) else { return Vec::new() };
-    let Some(end) = index.checked_add(remove_count) else { return Vec::new() };
-    if end > len(&base.data) || apply(&base.data, payload).is_err() { return Vec::new(); }
-    vec![WavMutation::PatchData(PatchData { index: payload.index, remove_count: len(&payload.data) as u64, data: slice(&base.data, index, end), move_to: None })]
-
-    })())
 }
 
 impl protocol::MutationKind<WavSnapshot, WavMutation> for PatchData {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "data", kind: "patch-data", record: "PatchData" };
 
     fn diff(&self, base: &WavSnapshot) -> protocol::MutationOutcome<<WavMutation as Mutation<WavSnapshot>>::Diff> {
-        diff(self, base)
+        match self.splices(base) {
+            Ok(data_splices) => protocol::MutationOutcome::new(WavDiff { data_splices, ..WavDiff::default() }),
+            Err(message) => protocol::MutationOutcome::error("mutation.target-mismatch", message, ["data".into(), "value".into(), self.index.to_string()]),
+        }
     }
     fn inverse(&self, base: &WavSnapshot) -> Result<Vec<WavMutation>, semio_framework_value::ValueError> {
-    Ok({
-        inverse(self, base)?
-    
-    })
-}
+        let lane = &base.data;
+        let Ok(splices) = self.splices(base) else { return Ok(Vec::new()) };
+        Ok(match (splices.is_empty(), self.move_to) {
+            (true, _) => Vec::new(),
+            (false, Some(move_to)) => vec![WavMutation::PatchData(PatchData { index: move_to, remove_count: 0, data: data_slice(lane, 0, 0), move_to: Some(self.index) })],
+            (false, None) => {
+                let start = self.index as usize;
+                vec![WavMutation::PatchData(PatchData { index: self.index, remove_count: data_len(&self.data) as u64, data: data_slice(lane, start, start + self.remove_count as usize), move_to: None })]
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Patch samples", "Samples bearbeiten")
     }

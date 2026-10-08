@@ -32,9 +32,10 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
+    use semio_s_artifact_stdio_semio::apply_diff;
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::mutations::{apply_semio_audio_mutation, inverse_semio_audio_mutation, set_snapshot, SemioAudioMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::mutations::{diff_semio_audio_mutation, inverse_semio_audio_mutation, SemioAudioMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::audio::io::text::mutations::{decode_semio_audio_mutation_json};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::audio::io::text::snapshot::{print_semio_audio_dsl};
@@ -111,14 +112,7 @@ mod subject {
         })
     }
 
-    /// 🦠️ A committed wire value (`{"mutation": "<camelCaseVariant>", …}`) — the shape the feature writes and the shape
-    /// the committed specification vectors carry — decoded through this subset's own production JSON bridge.
-    /// `noMutation` is the `no-mutation` baselines' scenario sentinel — the dropped `NoMutation` verb's spelling, `no`
-    /// not being an approved verb — and maps to the identity `set-snapshot(base)`.
     fn mutation_of(wire: &Json, base: &SemioAudioSnapshot) -> Result<SemioAudioMutation, String> {
-        if matches!(wire.get("mutation"), Some(Json::String(tag)) if tag.as_str() == "noMutation") {
-            return Ok(SemioAudioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }));
-        }
         decode_semio_audio_mutation_json(&wire.to_string())
     }
     //#endregion 🔖️Decoding
@@ -172,16 +166,15 @@ mod subject {
         parse_semio_audio_dsl(&source)
     }
 
-    /// 🦠️ The verb the scenario declares, read from the feature's own doc string. `base` is only
-    /// consulted for the `no-mutation` scenario's identity mapping.
     fn declared(ctx: &Context, base: &SemioAudioSnapshot) -> Result<SemioAudioMutation, String> {
         mutation_of(&ctx.doc_json()?, base)
     }
 
     fn apply(current: &mut SemioAudioSnapshot, mutation: &SemioAudioMutation, what: &str) -> Result<(), String> {
-        let applied = apply_semio_audio_mutation(current, mutation);
+        let applied = diff_semio_audio_mutation(mutation, current);
         let refusals = semio_mutation_refusals(&applied);
         if refusals.is_empty() {
+            *current = apply_diff(applied.diff(), current).map_err(|error| format!("the diff could not be applied: {error:?}"))?;
             return Ok(());
         }
         Err(format!("{what}: mutation rejected: {refusals:?}"))
@@ -207,7 +200,7 @@ mod subject {
         let mut current = base.clone();
         apply(&mut current, &mutation, ctx.scenario.id.as_str())?;
         let mutated = snapshot_json(&current);
-        for step in &inverse_semio_audio_mutation(&mutation, &base).expect("valid retained mutation inverse fixture") {
+        for step in inverse_semio_audio_mutation(&mutation, &base).expect("valid retained mutation inverse fixture").iter().rev() {
             apply(&mut current, step, ctx.scenario.id.as_str())?;
         }
         if current != base {
@@ -263,7 +256,7 @@ mod subject {
 
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let (tone, tone_report) = carrier_once(ctx, TONE_DSL, "the committed tone")?;
-        let vector = ctx.input_json("shared://🔊️mutate-semio-audio/⏸️no-mutation/🦠️mutation/🔣️.json")?;
+        let vector = ctx.input_json("shared://🔊️mutate-semio-audio/✂️remove-tag/🦠️mutation/🔣️.json")?;
         let declared = snapshot_of(vector.get("before").ok_or_else(|| "specification vector is missing its \"before\" member".to_string())?)?;
         if tone != declared {
             return Err(disagreement("identity-round-trip: the real committed tone artifact does not decode to the before-snapshot every specification vector starts from", &tone, &declared));
@@ -295,8 +288,8 @@ pub fn adapter() -> Adapter {
     #[cfg(feature = "sut")]
     {
         built = built
-            .subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate)
-            .subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse)
+            .subject("mutate", subject::mutate)
+            .subject("inverse", subject::inverse)
             .subject("spec-vector", subject::spec_vector);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }

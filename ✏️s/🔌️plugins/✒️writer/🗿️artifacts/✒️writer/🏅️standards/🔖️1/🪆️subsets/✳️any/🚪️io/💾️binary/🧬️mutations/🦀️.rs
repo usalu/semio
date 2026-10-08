@@ -10,7 +10,7 @@
 use crate::op::WriterMutation;
 use crate::schema;
 use crate::WriterSnapshot;
-use protocol::{Mutation, MutationDiff, OpBinary};
+use protocol::{Mutation, OpBinary};
 use store::ArtifactEnvelopeMutationFieldTarget;
 
 //#region 📡️SemioProtocol

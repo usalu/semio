@@ -31,7 +31,7 @@ fn mutation() -> SemioDrawingMutation {
 #[semio_framework_async_macros::async_test]
 async fn moves_the_text_anchor_and_nothing_else() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("move-node applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("move-node applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "move-node/moves-the-text-node-to-a-new-origin: applied state differs from the committed after-snapshot");
     let DrawNode::Group { children, .. } = &produced.layers[0].root else { panic!("the layer root is a group") };
     let DrawNode::Text { at, value, .. } = &children[1] else { panic!("child #1 is the text node") };
@@ -46,13 +46,14 @@ async fn moves_the_text_anchor_and_nothing_else() {
 async fn the_undo_move_node_restores_the_captured_origin() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "move-node of a resolvable node undoes as exactly one move-node");
     let SemioDrawingMutation::MoveNode(restore) = &undo[0] else { panic!("move-node must undo as move-node") };
     assert_eq!((restore.new_origin.x, restore.new_origin.y), (5.0, 5.0), "the undo must recapture BASE's own anchor");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward move-node applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo move-node applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward move-node applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo move-node applies");
     }
     assert_eq!(current, base, "move-node/moves-the-text-node-to-a-new-origin: the undo did not restore the before-snapshot");
 }
@@ -118,6 +119,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed move-node diff decodes");
-    let produced = decoded.apply(&before()).expect("committed move-node diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed move-node diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "move-node/moves-the-text-node-to-a-new-origin: committed diff did not carry before to after");
 }

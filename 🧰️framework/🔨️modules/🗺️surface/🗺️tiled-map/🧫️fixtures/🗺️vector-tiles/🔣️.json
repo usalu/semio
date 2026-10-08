@@ -1,0 +1,240 @@
+{
+  "version": 1,
+  "tiles": [
+    {
+      "key": "0-0-0",
+      "file": "0-0-0/🛰️.pbf",
+      "sha256": "ea66b3cbc159e31458c2ef1d7def233b5d6368bb13d1c4ffa26d3fc7e36aefc1",
+      "bytes": 101760,
+      "layers": [
+        {
+          "name": "centroids",
+          "extent": 4096,
+          "features": 250,
+          "geometryTypes": [
+            0,
+            250,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "countries",
+          "extent": 4096,
+          "features": 239,
+          "geometryTypes": [
+            0,
+            0,
+            0,
+            239
+          ]
+        },
+        {
+          "name": "geolines",
+          "extent": 4096,
+          "features": 6,
+          "geometryTypes": [
+            0,
+            0,
+            6,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "key": "1-1-0",
+      "file": "1-1-0/🛰️.pbf",
+      "sha256": "c149422787969410cb13ab35380d2ff13a6f3748ca974c9918f494b8fd276573",
+      "bytes": 71284,
+      "layers": [
+        {
+          "name": "centroids",
+          "extent": 4096,
+          "features": 136,
+          "geometryTypes": [
+            0,
+            136,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "countries",
+          "extent": 4096,
+          "features": 143,
+          "geometryTypes": [
+            0,
+            0,
+            0,
+            143
+          ]
+        },
+        {
+          "name": "geolines",
+          "extent": 4096,
+          "features": 4,
+          "geometryTypes": [
+            0,
+            0,
+            4,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "key": "2-2-1",
+      "file": "2-2-1/🛰️.pbf",
+      "sha256": "3a3ef4f62a616ad4cba73d68c2e7dfb16e3f15bafee594a36e41862042359764",
+      "bytes": 69624,
+      "layers": [
+        {
+          "name": "centroids",
+          "extent": 4096,
+          "features": 104,
+          "geometryTypes": [
+            0,
+            104,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "countries",
+          "extent": 4096,
+          "features": 113,
+          "geometryTypes": [
+            0,
+            0,
+            0,
+            113
+          ]
+        },
+        {
+          "name": "geolines",
+          "extent": 4096,
+          "features": 4,
+          "geometryTypes": [
+            0,
+            0,
+            4,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "key": "3-4-2",
+      "file": "3-4-2/🛰️.pbf",
+      "sha256": "0f9b2ced5422b54d80007a624af47b1ce27025f5a5be528012aca4b9dd67e3b6",
+      "bytes": 52867,
+      "layers": [
+        {
+          "name": "centroids",
+          "extent": 4096,
+          "features": 39,
+          "geometryTypes": [
+            0,
+            39,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "countries",
+          "extent": 4096,
+          "features": 45,
+          "geometryTypes": [
+            0,
+            0,
+            0,
+            45
+          ]
+        },
+        {
+          "name": "geolines",
+          "extent": 4096,
+          "features": 2,
+          "geometryTypes": [
+            0,
+            0,
+            2,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "key": "4-8-5",
+      "file": "4-8-5/🛰️.pbf",
+      "sha256": "2be78476386db3dace1988ab1040b27e708d7c4e10e3cebfdc3dbb588ad14f2f",
+      "bytes": 39889,
+      "layers": [
+        {
+          "name": "centroids",
+          "extent": 4096,
+          "features": 26,
+          "geometryTypes": [
+            0,
+            26,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "countries",
+          "extent": 4096,
+          "features": 34,
+          "geometryTypes": [
+            0,
+            0,
+            0,
+            34
+          ]
+        },
+        {
+          "name": "geolines",
+          "extent": 4096,
+          "features": 1,
+          "geometryTypes": [
+            0,
+            0,
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "key": "5-17-11",
+      "file": "5-17-11/🛰️.pbf",
+      "sha256": "f9603e7e497947dd5261abca5de5debd2bdab4ec33b0deea6c66f2f62e07141b",
+      "bytes": 20209,
+      "layers": [
+        {
+          "name": "centroids",
+          "extent": 4096,
+          "features": 14,
+          "geometryTypes": [
+            0,
+            14,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "countries",
+          "extent": 4096,
+          "features": 20,
+          "geometryTypes": [
+            0,
+            0,
+            0,
+            20
+          ]
+        }
+      ]
+    }
+  ]
+}

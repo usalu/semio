@@ -139,26 +139,97 @@ impl Default for CadConfig {
     }
 }
 
-store::impl_whole_record_config!(CadConfig);
+impl store::ConfigRecord for CadConfig {}
+
+/// 🧭️ Explicit set-or-clear of an optional text field: an absent patch field leaves it untouched, `value: None` clears it — a bare
+/// `Option<Option<String>>` would collapse the two on the wire.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct CadTextSet {
+    pub value: Option<String>,
+}
+
+/// 🔺️ Sparse delta of the artifact-wide preferences: only the fields a mutation actually changes.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct CadConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub selected_node_ids: Option<Vec<String>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub hovered_reference_id: Option<CadTextSet>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub active_example_id: Option<CadTextSet>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub selected_reference_model_definition_id: Option<CadTextSet>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub selected_reference_id: Option<CadTextSet>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub contributions_json: Option<String>,
+}
+
+impl protocol::MutationDiff<CadConfig> for CadConfigDiff {
+    fn apply(&self, base: &CadConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<CadConfig> {
+        Ok(CadConfig {
+            selected_node_ids: self.selected_node_ids.clone().unwrap_or_else(|| base.selected_node_ids.clone()),
+            hovered_reference_id: self.hovered_reference_id.as_ref().map_or_else(|| base.hovered_reference_id.clone(), |set| set.value.clone()),
+            active_example_id: self.active_example_id.as_ref().map_or_else(|| base.active_example_id.clone(), |set| set.value.clone()),
+            selected_reference_model_definition_id: self.selected_reference_model_definition_id.as_ref().map_or_else(|| base.selected_reference_model_definition_id.clone(), |set| set.value.clone()),
+            selected_reference_id: self.selected_reference_id.as_ref().map_or_else(|| base.selected_reference_id.clone(), |set| set.value.clone()),
+            contributions_json: self.contributions_json.clone().unwrap_or_else(|| base.contributions_json.clone()),
+        })
+    }
+    fn absorb(&mut self, other: Self) {
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(selected_node_ids);
+        take!(hovered_reference_id);
+        take!(active_example_id);
+        take!(selected_reference_model_definition_id);
+        take!(selected_reference_id);
+        take!(contributions_json);
+    }
+}
+
+impl protocol::DiffAlgebra<CadConfig> for CadConfigDiff {
+    fn inverse(&self, base: &CadConfig) -> Self {
+        Self {
+            selected_node_ids: self.selected_node_ids.as_ref().map(|_| base.selected_node_ids.clone()),
+            hovered_reference_id: self.hovered_reference_id.as_ref().map(|_| CadTextSet { value: base.hovered_reference_id.clone() }),
+            active_example_id: self.active_example_id.as_ref().map(|_| CadTextSet { value: base.active_example_id.clone() }),
+            selected_reference_model_definition_id: self.selected_reference_model_definition_id.as_ref().map(|_| CadTextSet { value: base.selected_reference_model_definition_id.clone() }),
+            selected_reference_id: self.selected_reference_id.as_ref().map(|_| CadTextSet { value: base.selected_reference_id.clone() }),
+            contributions_json: self.contributions_json.as_ref().map(|_| base.contributions_json.clone()),
+        }
+    }
+    fn between(base: &CadConfig, other: &CadConfig) -> Self {
+        Self {
+            selected_node_ids: (base.selected_node_ids != other.selected_node_ids).then(|| other.selected_node_ids.clone()),
+            hovered_reference_id: (base.hovered_reference_id != other.hovered_reference_id).then(|| CadTextSet { value: other.hovered_reference_id.clone() }),
+            active_example_id: (base.active_example_id != other.active_example_id).then(|| CadTextSet { value: other.active_example_id.clone() }),
+            selected_reference_model_definition_id: (base.selected_reference_model_definition_id != other.selected_reference_model_definition_id).then(|| CadTextSet { value: other.selected_reference_model_definition_id.clone() }),
+            selected_reference_id: (base.selected_reference_id != other.selected_reference_id).then(|| CadTextSet { value: other.selected_reference_id.clone() }),
+            contributions_json: (base.contributions_json != other.contributions_json).then(|| other.contributions_json.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+}
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
-/// 🧮️ WORKFLOWS-END-TO-END-TYPED-PORTS config recipe: `CadConfig`'s
-/// operation enum. Unlike `CadMutation` (many narrow document-mutating variants), this is a single
-/// whole-record `Snapshot`: application commands convert their scratch state into the next
-/// `CadConfig` and diff it against the pre-command config, the same shape `reset_document_effect` uses for
-/// a whole-DOCUMENT replace (SEMANTIC-MUTATIONS-OVERHAUL retired `CadMutation::SetSnapshot`
-/// entirely; document-level whole-content replace is no longer an in-history mutation at all) —
-/// application state (selection/hover/engagement) mutates in tight clusters (e.g.
-/// `worldSelect` touches 5+ fields together), so per-field variants would just be wide-argument
-/// snapshots in miniature with none of a real granular diff's benefit. `backwards()` restores the
-/// exact pre-command `CadConfig`, giving real, exact undo without any per-field reverse-patch
-/// bookkeeping — the same justification `shooting_op::ShootingConfigOperation` documents for its own
-/// `Snapshot` fallback, generalized here to the sole variant.
+/// 🧮️ `CadConfig`'s operation enum: `Set` assigns the selection, hover, example and reference-selection fields of its payload
+/// (application state mutates in tight clusters, e.g. `worldSelect` touches 5+ fields together); its diff carries only the fields that
+/// differ from the base and its inverse is the absolute `Set` of the base values; `SetContributions` assigns the pushed contributions.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum CadConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
+    #[dsl(key = "set")]
+    Set {
         #[dsl(block)]
         config: Box<CadConfig>,
     },
@@ -222,16 +293,16 @@ impl protocol::OpBinary for CadConfigMutation {
 //#endregion 🔖️OpCodec
 
 impl Mutation<CadConfig> for CadConfigMutation {
-    type Diff = CadConfig;
+    type Diff = CadConfigDiff;
 
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor {
             schema_version: 1,
-            owner: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot",
-            semantic_kind: "snapshot",
-            display_name: "Snapshot",
-            emoji: "📄",
-            aggregate_variant: "Snapshot",
+            owner: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🎛️set",
+            semantic_kind: "set-config",
+            display_name: "Set Configuration",
+            emoji: "🎛️",
+            aggregate_variant: "Set",
             payload_schema: "🧬️schema/🔣️.json",
             text_opcode: None,
             binary_tag: None,
@@ -261,37 +332,44 @@ impl Mutation<CadConfig> for CadConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            CadConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            CadConfigMutation::Set { .. } => &Self::DESCRIPTORS[0],
             CadConfigMutation::SetContributions { .. } => &Self::DESCRIPTORS[1],
         }
     }
 
-    fn diff(&self, base: &CadConfig) -> protocol::MutationOutcome<CadConfig> {
+    fn diff(&self, base: &CadConfig) -> protocol::MutationOutcome<CadConfigDiff> {
         match self {
-            CadConfigMutation::Snapshot { config } => {
-                if config.as_ref() == base {
-                    return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "Config snapshot is already up to date.");
+            CadConfigMutation::Set { config } => {
+                let next = config.as_ref();
+                let diff = CadConfigDiff {
+                    selected_node_ids: (base.selected_node_ids != next.selected_node_ids).then(|| next.selected_node_ids.clone()),
+                    hovered_reference_id: (base.hovered_reference_id != next.hovered_reference_id).then(|| CadTextSet { value: next.hovered_reference_id.clone() }),
+                    active_example_id: (base.active_example_id != next.active_example_id).then(|| CadTextSet { value: next.active_example_id.clone() }),
+                    selected_reference_model_definition_id: (base.selected_reference_model_definition_id != next.selected_reference_model_definition_id).then(|| CadTextSet { value: next.selected_reference_model_definition_id.clone() }),
+                    selected_reference_id: (base.selected_reference_id != next.selected_reference_id).then(|| CadTextSet { value: next.selected_reference_id.clone() }),
+                    contributions_json: None,
+                };
+                if diff == CadConfigDiff::default() {
+                    return protocol::MutationOutcome::new(diff).warning("mutation.no-op", "Config is already up to date.");
                 }
-                protocol::MutationOutcome::new(config.as_ref().clone())
+                protocol::MutationOutcome::new(diff)
             }
             CadConfigMutation::SetContributions { json } => {
                 if &base.contributions_json == json {
-                    return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "Contributions are already up to date.");
+                    return protocol::MutationOutcome::new(CadConfigDiff::default()).warning("mutation.no-op", "Contributions are already up to date.");
                 }
-                let mut next = base.clone();
-                next.contributions_json = json.clone();
                 let _ = crate::standards::v1::subsets::any::schema::inferences::validate_cad_computer_contributions(json);
-                protocol::MutationOutcome::new(next)
+                protocol::MutationOutcome::new(CadConfigDiff { contributions_json: Some(json.clone()), ..Default::default() })
             }
         }
     }
 
     fn inverse(&self, base: &CadConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![CadConfigMutation::Snapshot { config: Box::new(base.clone()) }]
-    
-    })())
-}
+        Ok(vec![match self {
+            CadConfigMutation::Set { .. } => CadConfigMutation::Set { config: Box::new(base.clone()) },
+            CadConfigMutation::SetContributions { .. } => CadConfigMutation::SetContributions { json: base.contributions_json.clone() },
+        }])
+    }
 }
 //#endregion 🔖️ConfigOperations
 

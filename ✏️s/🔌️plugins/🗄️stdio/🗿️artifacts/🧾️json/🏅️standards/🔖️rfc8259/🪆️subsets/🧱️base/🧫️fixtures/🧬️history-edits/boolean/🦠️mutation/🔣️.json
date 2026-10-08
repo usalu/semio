@@ -2,18 +2,15 @@
   "mutation": {
     "mutation": "setScalar",
     "payload": {
-      "phase": "apply",
-      "value": {
-        "path": [
-          {
-            "kind": "key",
-            "value": "enabled"
-          }
-        ],
-        "value": {
-          "kind": "bool",
-          "value": true
+      "path": [
+        {
+          "kind": "key",
+          "value": "enabled"
         }
+      ],
+      "value": {
+        "kind": "bool",
+        "value": true
       }
     }
   },

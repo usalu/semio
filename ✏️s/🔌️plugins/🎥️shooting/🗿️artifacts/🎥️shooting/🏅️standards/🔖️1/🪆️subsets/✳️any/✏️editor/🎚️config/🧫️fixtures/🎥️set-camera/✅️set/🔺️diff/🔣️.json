@@ -1,10 +1,10 @@
 {
-  "defaultShotFormat": "png",
-  "defaultShotShape": "rectangle",
-  "defaultAssetFormat": "glb",
-  "selectedShotIds": [],
-  "centerModel": true,
-  "fitRevision": 0,
+  "defaultShotFormat": null,
+  "defaultShotShape": null,
+  "defaultAssetFormat": null,
+  "selectedShotIds": null,
+  "centerModel": null,
+  "fitRevision": null,
   "camera": {
     "position": [
       1.0,

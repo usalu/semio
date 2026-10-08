@@ -7,8 +7,8 @@ impl store::ArtifactPack for CollectionSnapshot {
         Some((SQLITE_SNAPSHOT_DIALECT, store::ArtifactCodec::bare::<Self, CollectionMutation>(S_COLLECTION_SCHEMA)))
     }
     /// 📣️ Publishes this artifact-owned native codec at its declared lifecycle boundary.
-    fn publish_native_snapshot() -> Result<(),store::os_io::ArtifactAssemblyRegistryError> {
-        store::os_io::register_native_snapshot_codec(SQLITE_SNAPSHOT_DIALECT, store::ArtifactCodec::bare::<Self, CollectionMutation>(S_COLLECTION_SCHEMA))
+    fn publish_native_snapshot() -> Result<(),store::io::ArtifactAssemblyRegistryError> {
+        store::io::register_native_snapshot_codec(SQLITE_SNAPSHOT_DIALECT, store::ArtifactCodec::bare::<Self, CollectionMutation>(S_COLLECTION_SCHEMA))
     }
     fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {

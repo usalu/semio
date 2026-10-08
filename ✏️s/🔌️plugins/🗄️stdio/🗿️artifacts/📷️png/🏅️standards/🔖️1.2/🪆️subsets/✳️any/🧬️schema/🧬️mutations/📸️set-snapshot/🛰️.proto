@@ -1,4 +1,0 @@
-syntax = "proto3";
-package stdio.png.mutation;
-import "../../📸️snapshot/🛰️.proto";
-message SetSnapshot { semio.s_stdio_png.snapshot.PngSnapshot snapshot = 1; }

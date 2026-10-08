@@ -32,8 +32,6 @@ fn sweep_b() -> TsvSnapshot {
 async fn mutation_diff_law() {
     let base = base_snapshot();
     let variants = vec![
-        TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
-        TsvMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: false }),
         TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending: LineEnding::Crlf }),
         TsvMutation::InsertRow(insert_row::InsertRow { index: 1, row: row(&["new", "row"]) }),
@@ -42,7 +40,7 @@ async fn mutation_diff_law() {
     ];
     for m in variants {
         let diff = m.diff(&base);
-        let expected = diff.diff().apply(&base).unwrap();
+        let expected = protocol::apply_diff(diff.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
         let returned_diff = apply_tsv_mutation(&mut via_apply, &m);
@@ -58,8 +56,6 @@ async fn mutation_diff_law() {
 async fn inverse_law() {
     let base = base_snapshot();
     let variants = vec![
-        TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
-        TsvMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: false }),
         TsvMutation::InsertRow(insert_row::InsertRow { index: 1, row: row(&["new", "row"]) }),
         TsvMutation::RemoveRow(remove_row::RemoveRow { index: 0 }),
@@ -74,8 +70,8 @@ async fn inverse_law() {
         assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
 
         let d = m.diff(&base);
-        let mid = d.diff().apply(&base).unwrap();
-        let back = d.diff().inverse(&base).apply(&mid).unwrap();
+        let mid = protocol::apply_diff(d.diff(), &base).unwrap();
+        let back = protocol::apply_diff(d.diff().inverse(&base), &mid).unwrap();
         assert_eq!(back, base, "diff-level inverse round trip failed for {m:?}");
     }
 }
@@ -87,46 +83,46 @@ async fn absorb_law() {
     let base = base_snapshot();
 
     let d1 = TsvMutation::InsertRow(insert_row::InsertRow { index: 2, row: row(&["ins", "x"]) }).diff(&base);
-    let mid = d1.diff().apply(&base).unwrap();
+    let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = TsvMutation::RemoveRow(remove_row::RemoveRow { index: 0 }).diff(&mid);
-    let after = d2.diff().apply(&mid).unwrap();
+    let after = protocol::apply_diff(d2.diff(), &mid).unwrap();
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Remove-before absorb mismatch");
+    assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Insert+Remove-before absorb mismatch");
 
     let d1 = TsvMutation::InsertRow(insert_row::InsertRow { index: 2, row: row(&["f", "x"]) }).diff(&base);
-    let mid = d1.diff().apply(&base).unwrap();
+    let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = TsvMutation::InsertRow(insert_row::InsertRow { index: 2, row: row(&["g", "y"]) }).diff(&mid);
-    let after = d2.diff().apply(&mid).unwrap();
+    let after = protocol::apply_diff(d2.diff(), &mid).unwrap();
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Insert-same-index absorb mismatch");
+    assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Insert+Insert-same-index absorb mismatch");
     assert_eq!(after.records.len(), base.records.len() + 2, "both inserts must survive");
 
     let d1 = TsvMutation::InsertRow(insert_row::InsertRow { index: 1, row: row(&["orig", "x"]) }).diff(&base);
-    let mid = d1.diff().apply(&base).unwrap();
+    let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = TsvMutation::SetCell(set_cell::SetCell { row_index: 1, field_index: 0, value: "patched".into() }).diff(&mid);
-    let after = d2.diff().apply(&mid).unwrap();
+    let after = protocol::apply_diff(d2.diff(), &mid).unwrap();
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(composed.apply(&base).unwrap(), after, "Add+SetCell absorb mismatch");
+    assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Add+SetCell absorb mismatch");
     assert_eq!(after.records[1][0], "patched");
 
     let d1 = TsvMutation::SetCell(set_cell::SetCell { row_index: 1, field_index: 0, value: "will-vanish".into() }).diff(&base);
-    let mid = d1.diff().apply(&base).unwrap();
+    let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = TsvMutation::RemoveRow(remove_row::RemoveRow { index: 1 }).diff(&mid);
-    let after = d2.diff().apply(&mid).unwrap();
+    let after = protocol::apply_diff(d2.diff(), &mid).unwrap();
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(composed.apply(&base).unwrap(), after, "Modify+Remove absorb mismatch");
+    assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Modify+Remove absorb mismatch");
 
     let base = base_snapshot();
     let d1 = TsvMutation::InsertRow(insert_row::InsertRow { index: 0, row: row(&["a", "x"]) }).diff(&base);
-    let s1 = d1.diff().apply(&base).unwrap();
+    let s1 = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = TsvMutation::SetCell(set_cell::SetCell { row_index: 0, field_index: 0, value: "a2".into() }).diff(&s1);
-    let s2 = d2.diff().apply(&s1).unwrap();
+    let s2 = protocol::apply_diff(d2.diff(), &s1).unwrap();
     let d3 = TsvMutation::RemoveRow(remove_row::RemoveRow { index: 2 }).diff(&s2);
-    let s3 = d3.diff().apply(&s2).unwrap();
+    let s3 = protocol::apply_diff(d3.diff(), &s2).unwrap();
 
     let mut left = d1.diff().clone();
     left.absorb(d2.diff().clone());
@@ -137,9 +133,9 @@ async fn absorb_law() {
     let mut right = d1.diff().clone();
     right.absorb(d23);
 
-    assert_eq!(left.apply(&base).unwrap(), s3);
-    assert_eq!(right.apply(&base).unwrap(), s3);
-    assert_eq!(left.apply(&base).unwrap(), right.apply(&base).unwrap(), "absorb must be associative");
+    assert_eq!(protocol::apply_diff(&left, &base).unwrap(), s3);
+    assert_eq!(protocol::apply_diff(&right, &base).unwrap(), s3);
+    assert_eq!(protocol::apply_diff(&left, &base).unwrap(), protocol::apply_diff(&right, &base).unwrap(), "absorb must be associative");
 }
 //#endregion 🔖️AbsorbLaw
 
@@ -148,13 +144,13 @@ async fn absorb_law() {
 async fn between_roundtrip_law() {
     let a = base_snapshot();
     let b = sweep_b();
-    assert_eq!(TsvDiff::between(&a, &b).apply(&a).unwrap(), b);
-    assert_eq!(TsvDiff::between(&b, &a).apply(&b).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&TsvDiff::between(&a, &b), &a).unwrap(), b);
+    assert_eq!(protocol::apply_diff(&TsvDiff::between(&b, &a), &b).unwrap(), a);
 
     let mut c = a.clone();
     c.records[0] = row(&["only-one-field"]);
-    assert_eq!(TsvDiff::between(&a, &c).apply(&a).unwrap(), c);
-    assert_eq!(TsvDiff::between(&c, &a).apply(&c).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&TsvDiff::between(&a, &c), &a).unwrap(), c);
+    assert_eq!(protocol::apply_diff(&TsvDiff::between(&c, &a), &c).unwrap(), a);
 
     assert!(TsvDiff::between(&a, &a).is_empty());
 }
@@ -167,10 +163,10 @@ async fn field_sweep_every_mutable_field_changes() {
     let b = sweep_b();
 
     let d_ab = TsvDiff::between(&a, &b);
-    assert_eq!(d_ab.apply(&a).unwrap(), b, "between(a,b).apply(a) == b");
+    assert_eq!(protocol::apply_diff(&d_ab, &a).unwrap(), b, "between(a,b).apply(a) == b");
 
     let d_ba = TsvDiff::between(&b, &a);
-    assert_eq!(d_ba.apply(&b).unwrap(), a, "between(b,a).apply(b) == a");
+    assert_eq!(protocol::apply_diff(&d_ba, &b).unwrap(), a, "between(b,a).apply(b) == a");
 
     assert!(d_ab.trailing_newline.is_some(), "trailing_newline must be populated");
     assert!(d_ab.line_ending.is_some(), "line_ending must be populated");
@@ -196,14 +192,14 @@ async fn field_sweep_every_mutable_field_changes() {
     let d_shrink = TsvDiff::between(&a, &shorter);
     let shrink_records = d_shrink.records.as_ref().expect("records diff must be populated");
     assert!(!shrink_records.removed.is_empty(), "a shorter row list must produce a removed entry");
-    assert_eq!(d_shrink.apply(&a).unwrap(), shorter);
+    assert_eq!(protocol::apply_diff(&d_shrink, &a).unwrap(), shorter);
 
     let mut longer = a.clone();
     longer.records.push(row(&["extra", "z"]));
     let d_grow = TsvDiff::between(&a, &longer);
     let grow_records = d_grow.records.as_ref().expect("records diff must be populated");
     assert!(!grow_records.added.is_empty(), "a longer row list must produce an added entry");
-    assert_eq!(d_grow.apply(&a).unwrap(), longer);
+    assert_eq!(protocol::apply_diff(&d_grow, &a).unwrap(), longer);
 
     assert!(TsvDiff::between(&a, &a).is_empty());
 }
@@ -213,9 +209,6 @@ async fn field_sweep_every_mutable_field_changes() {
 #[semio_framework_async_macros::async_test]
 async fn op_text_binary_roundtrip_law() {
     let mutations = vec![
-        TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
-        TsvMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
-        TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: TsvSnapshot { records: vec![row(&["a, tricky [value]", "plain"])], trailing_newline: false, line_ending: LineEnding::Crlf, ..TsvSnapshot::default() } }),
         TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: true }),
         TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: false }),
         TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending: LineEnding::Crlf }),
@@ -247,8 +240,6 @@ async fn op_text_binary_roundtrip_law() {
 async fn kinds_match_enum_and_catalog() {
     fn kind_of(mutation: &TsvMutation) -> &'static str {
         match mutation {
-            TsvMutation::SetSnapshot(_) => "set-snapshot",
-            TsvMutation::PatchSnapshot(_) => "patch-snapshot",
             TsvMutation::SetTrailingNewline(_) => "set-trailing-newline",
             TsvMutation::SetLineEnding(_) => "set-line-ending",
             TsvMutation::InsertRow(_) => "insert-row",
@@ -257,8 +248,6 @@ async fn kinds_match_enum_and_catalog() {
         }
     }
     let samples = [
-        TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: TsvSnapshot::default() }),
-        TsvMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: false }),
         TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending: LineEnding::Crlf }),
         TsvMutation::InsertRow(insert_row::InsertRow { index: 0, row: Vec::new() }),
@@ -269,3 +258,20 @@ async fn kinds_match_enum_and_catalog() {
     assert_eq!(from_enum, KINDS, "KINDS must list every TsvMutation variant, in declaration order");
 }
 //#endregion 🔖️KindsConformanceLaw
+
+/// ⚖️ `tsv_mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff, on a base whose rows have MIDDLE entries to cut and insert at.
+#[semio_framework_async_macros::async_test]
+async fn tsv_mutation_inverse_sum_law_holds_for_every_leaf() {
+    let base = TsvSnapshot { records: vec![row(&["id", "name"]), row(&["1", "Oak"]), row(&["2", "Steel"]), row(&["3", "Pine"])], trailing_newline: true, line_ending: LineEnding::Lf, ..TsvSnapshot::default() };
+    for mutation in [
+        TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: false }),
+        TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending: LineEnding::Crlf }),
+        TsvMutation::InsertRow(insert_row::InsertRow { index: 1, row: row(&["new", "row"]) }),
+        TsvMutation::InsertRow(insert_row::InsertRow { index: 4, row: row(&["tail", "row"]) }),
+        TsvMutation::RemoveRow(remove_row::RemoveRow { index: 0 }),
+        TsvMutation::RemoveRow(remove_row::RemoveRow { index: 2 }),
+        TsvMutation::SetCell(set_cell::SetCell { row_index: 2, field_index: 0, value: "changed".into() }),
+    ] {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+}

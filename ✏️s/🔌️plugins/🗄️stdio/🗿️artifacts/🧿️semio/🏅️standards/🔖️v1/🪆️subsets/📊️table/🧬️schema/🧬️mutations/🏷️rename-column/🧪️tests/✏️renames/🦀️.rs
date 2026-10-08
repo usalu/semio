@@ -31,7 +31,7 @@ fn rename_column() -> SemioTableMutation {
 #[semio_framework_async_macros::async_test]
 async fn renames_the_column_key_and_leaves_the_rows_alone() {
     let base = before();
-    let produced = rename_column().diff(&base).diff().apply(&base).expect("rename-column applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(rename_column().diff(&base).diff(), &base).expect("rename-column applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "rename-column/renames-city-to-town-without-touching-any-row: applied state differs from the committed after-snapshot");
     assert_eq!(produced.columns[0].name, "town", "the column's native key must become new_name");
     assert_eq!(produced.columns[0].kind, base.columns[0].kind, "a rename must never change the declared cell kind");
@@ -43,15 +43,16 @@ async fn renames_the_column_key_and_leaves_the_rows_alone() {
 async fn the_undo_rename_column_swaps_the_two_names_back() {
     let base = before();
     let mutation = rename_column();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(
         undo,
         vec![SemioTableMutation::RenameColumn(crate::standards::v1::subsets::table::schema::mutations::rename_column::RenameColumn { name: "town".to_string(), new_name: "city".to_string() })],
         "the undo must address the NEW name and rename it back to the old one"
     );
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward rename-column applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo rename-column applies to the renamed table");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward rename-column applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo rename-column applies to the renamed table");
     }
     assert_eq!(current, base, "rename-column/renames-city-to-town-without-touching-any-row: the undo did not restore the before-snapshot");
 }
@@ -107,6 +108,6 @@ async fn committed_diff_is_canonical_and_omits_rows_entirely() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rename-column diff decodes");
-    let produced = decoded.apply(&before()).expect("committed rename-column diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed rename-column diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-column/renames-city-to-town-without-touching-any-row: committed diff did not carry before to after");
 }

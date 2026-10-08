@@ -4,7 +4,7 @@
 //! bundle under `../../../../../🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses/`,
 //! whose `🔺️diff/🚫️.absent` records that no diff exists.
 
-use crate::standards::v1::subsets::base::schema::mutations::{apply_semio_mutation, semio_mutation_refusal_codes, SemioMutation};
+use crate::standards::v1::subsets::base::schema::mutations::{semio_mutation_refusal_codes, SemioMutation};
 use crate::standards::v1::subsets::base::io::text::mutations::{decode_semio_mutation_json};
 use crate::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot};
 use crate::standards::v1::subsets::base::io::text::snapshot::{decode_semio_snapshot_json};
@@ -27,7 +27,8 @@ async fn refuses_with_the_committed_code() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "semio-base/apply-image: this fixture declares a rejected outcome");
     let mut snapshot = before();
-    let produced = apply_semio_mutation(&mut snapshot, &mutation());
+    let (__next, produced) = crate::applied(&snapshot, &mutation());
+    snapshot = __next;
     assert_eq!(semio_mutation_refusal_codes(&produced), vec![outcome.get("code").and_then(serde_json::Value::as_str).expect("outcome carries a code").to_string()], "semio-base/apply-image: the refusal code differs from the committed outcome");
     assert_eq!(snapshot, decode_semio_snapshot_json(AFTER).expect("after envelope decodes"), "semio-base/apply-image: a refused mutation must leave the committed envelope as it stood");
     assert_eq!(snapshot, before(), "semio-base/apply-image: the committed after-envelope must equal the before-envelope");

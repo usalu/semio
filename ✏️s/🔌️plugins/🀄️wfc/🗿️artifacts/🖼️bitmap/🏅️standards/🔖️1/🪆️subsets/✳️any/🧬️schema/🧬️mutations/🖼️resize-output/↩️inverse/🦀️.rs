@@ -11,6 +11,7 @@ pub fn inverse(payload: &super::ResizeOutput, base: &BitmapSnapshot) -> Result<V
     }
     let mut steps = vec![resize_output(base.output.width, base.output.height, base.output.periodic)];
     steps.extend(base.pinned.iter().filter(|pin| pin.x >= payload.width || pin.y >= payload.height).map(|pin| pin_pixel(pin.x, pin.y, pin.color)));
+    steps.reverse();
     steps
 
     })())

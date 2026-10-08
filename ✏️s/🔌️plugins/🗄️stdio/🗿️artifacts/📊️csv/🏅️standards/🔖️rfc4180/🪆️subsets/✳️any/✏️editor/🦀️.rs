@@ -339,7 +339,13 @@ fn csv_emit_at_revision(command: &CsvEditorCommand, snapshot: &CsvSnapshot, cano
     if current_revision != *revision {
         return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.csv.table-conflict"), "The CSV document changed before this table draft was applied."));
     }
-    let mutation = match command {
+    let replace_row = |index: usize, record: CsvRecord| {
+        [
+            CsvMutation::RemoveRecord(crate::schema::mutations::remove_record::RemoveRecord { index }),
+            CsvMutation::InsertRecord(crate::schema::mutations::insert_record::InsertRecord { index, record }),
+        ]
+    };
+    let mutations: Vec<CsvMutation> = match command {
         CsvEditorCommand::SetCell { row, column, value, .. } => {
             let record_index = grid_row_to_record_index(snapshot.has_header, *row);
             let field = snapshot
@@ -350,18 +356,18 @@ fn csv_emit_at_revision(command: &CsvEditorCommand, snapshot: &CsvSnapshot, cano
             if field.value == *value {
                 return Ok(Emit::default());
             }
-            CsvMutation::SetField(crate::schema::mutations::set_field::SetField { record_index, field_index: *column as usize, value: value.clone(), quoted: field.quoted })
+            vec![CsvMutation::SetField(crate::schema::mutations::set_field::SetField { record_index, field_index: *column as usize, value: value.clone(), quoted: field.quoted })]
         }
         CsvEditorCommand::AddRow { .. } => {
             let width = snapshot.records.first().filter(|_| snapshot.has_header).map(|record| record.fields.len()).unwrap_or_else(|| snapshot.records.iter().map(|record| record.fields.len()).max().unwrap_or(0)).max(1);
             let row = CsvRecord { fields: vec![CsvField::default(); width] };
             if snapshot.has_header && snapshot.records.is_empty() {
-                let mut next = snapshot.clone();
-                next.records.push(CsvRecord { fields: vec![CsvField::default(); width] });
-                next.records.push(row);
-                CsvMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot: next })
+                vec![
+                    CsvMutation::InsertRecord(crate::schema::mutations::insert_record::InsertRecord { index: 0, record: CsvRecord { fields: vec![CsvField::default(); width] } }),
+                    CsvMutation::InsertRecord(crate::schema::mutations::insert_record::InsertRecord { index: 1, record: row }),
+                ]
             } else {
-                CsvMutation::InsertRecord(crate::schema::mutations::insert_record::InsertRecord { index: snapshot.records.len(), record: row })
+                vec![CsvMutation::InsertRecord(crate::schema::mutations::insert_record::InsertRecord { index: snapshot.records.len(), record: row })]
             }
         }
         CsvEditorCommand::RemoveRow { row, .. } => {
@@ -369,30 +375,37 @@ fn csv_emit_at_revision(command: &CsvEditorCommand, snapshot: &CsvSnapshot, cano
             if snapshot.records.get(index).is_none() {
                 return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.csv.row-stale"), format!("CSV row {row} no longer exists")));
             }
-            CsvMutation::RemoveRecord(crate::schema::mutations::remove_record::RemoveRecord { index })
+            vec![CsvMutation::RemoveRecord(crate::schema::mutations::remove_record::RemoveRecord { index })]
         }
-        CsvEditorCommand::AddColumn { .. } => {
-            let mut next = snapshot.clone();
-            if next.records.is_empty() {
-                next.records.push(CsvRecord::default());
-            }
-            for record in &mut next.records {
-                record.fields.push(CsvField::default());
-            }
-            CsvMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot: next })
-        }
+        CsvEditorCommand::AddColumn { .. } => match snapshot.records.is_empty() {
+            true => vec![CsvMutation::InsertRecord(crate::schema::mutations::insert_record::InsertRecord { index: 0, record: CsvRecord { fields: vec![CsvField::default()] } })],
+            false => snapshot
+                .records
+                .iter()
+                .enumerate()
+                .flat_map(|(index, record)| {
+                    let mut widened = record.clone();
+                    widened.fields.push(CsvField::default());
+                    replace_row(index, widened)
+                })
+                .collect(),
+        },
         CsvEditorCommand::RemoveColumn { column, .. } => {
             let column = *column as usize;
             if !snapshot.records.iter().any(|record| column < record.fields.len()) {
                 return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.csv.column-stale"), format!("CSV column {column} no longer exists")));
             }
-            let mut next = snapshot.clone();
-            for record in &mut next.records {
-                if column < record.fields.len() {
-                    record.fields.remove(column);
-                }
-            }
-            CsvMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot: next })
+            snapshot
+                .records
+                .iter()
+                .enumerate()
+                .filter(|(_, record)| column < record.fields.len())
+                .flat_map(|(index, record)| {
+                    let mut narrowed = record.clone();
+                    narrowed.fields.remove(column);
+                    replace_row(index, narrowed)
+                })
+                .collect()
         }
         CsvEditorCommand::SetHeader { column, value, .. } => {
             let column = *column as usize;
@@ -405,20 +418,20 @@ fn csv_emit_at_revision(command: &CsvEditorCommand, snapshot: &CsvSnapshot, cano
                 if field.value == *value {
                     return Ok(Emit::default());
                 }
-                CsvMutation::SetField(crate::schema::mutations::set_field::SetField { record_index: 0, field_index: column, value: value.clone(), quoted: field.quoted })
+                vec![CsvMutation::SetField(crate::schema::mutations::set_field::SetField { record_index: 0, field_index: column, value: value.clone(), quoted: field.quoted })]
             } else {
-                let mut next = snapshot.clone();
-                let width = next.records.iter().map(|record| record.fields.len()).max().unwrap_or(0).max(column + 1);
+                let width = snapshot.records.iter().map(|record| record.fields.len()).max().unwrap_or(0).max(column + 1);
                 let mut header = CsvRecord { fields: vec![CsvField::default(); width] };
                 header.fields[column].value = value.clone();
-                next.records.insert(0, header);
-                next.has_header = true;
-                CsvMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot: next })
+                vec![
+                    CsvMutation::InsertRecord(crate::schema::mutations::insert_record::InsertRecord { index: 0, record: header }),
+                    CsvMutation::SetHasHeader(crate::schema::mutations::set_has_header::SetHasHeader { has_header: true }),
+                ]
             }
         }
         CsvEditorCommand::EditSnapshot { .. } | CsvEditorCommand::SetActiveExample { .. } => unreachable!(),
     };
-    Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() })
+    Ok(Emit { artifact_mutations: mutations, ..Default::default() })
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
@@ -526,8 +539,8 @@ impl ArtifactEditor for CsvEditor {
         crate::standards::v_rfc4180::subsets::any::io::text::snapshot::decode_csv(text).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
     }
 
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(CsvMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot }))
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
@@ -708,12 +721,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for CsvEdit
     }
 
     fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(
-            event,
-            snapshot,
-            |patch| CsvMutation::PatchSnapshot(crate::schema::mutations::patch_snapshot::PatchSnapshot { patch }),
-            Some(|snapshot| CsvMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot })),
-        )
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::schema::mutations::net_mutations)
     }
 }
 //#endregion 🔖️Editor

@@ -1,6 +1,4 @@
-//! 🏷️ `set-group` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🏷️ `set-group` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 //! `#[derive(dsl::DslRecord)]` gives this leaf its own `DslField` impl with the SAME field spec
 //! `record_codegen` built when these fields lived inline in the enum variant — the aggregate's
 //! tuple variant is a single-field newtype, so `#[derive(dsl::DslOps)]`'s `DslVariants` derive
@@ -17,20 +15,32 @@ use super::*;
 pub struct SetGroup {
     pub name: String,
     pub faces: Vec<u64>,
+    pub index: Option<usize>,
 }
 
 impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetGroup {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "group", kind: "set-group", record: "SetGroup" };
 
     fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
-        agg_diff(&ObjMutation::SetGroup(self.clone()), base)
+        let Self { name, faces, index } = self;
+        protocol::MutationOutcome::new({
+            let current = base.groups.iter().find(|entry| &entry.name == name);
+            match current {
+                Some(entry) if entry.faces == *faces => ObjDiff::default(),
+                Some(_) => diff_set_group(0, name, faces.clone(), true),
+                None => diff_set_group(index.unwrap_or(base.groups.len()).min(base.groups.len()), name, faces.clone(), false),
+            }
+        })
     }
     fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&ObjMutation::SetGroup(self.clone()), base)?
-    
-    })
-}
+        let Self { name, .. } = self;
+        Ok({
+            match base.groups.iter().find(|g| &g.name == name) {
+                Some(g) => vec![ObjMutation::SetGroup(set_group::SetGroup { name: name.clone(), faces: g.faces.clone(), index: None })],
+                None => vec![ObjMutation::RemoveGroup(remove_group::RemoveGroup { name: name.clone() })],
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set group", "Gruppe setzen")
     }

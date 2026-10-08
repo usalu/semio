@@ -2,12 +2,9 @@
  * enum, one discriminated variant per Rust variant, camelCase field names. */
 
 import type { DxfBlock, DxfEntity, DxfHeaderVar, DxfLayer, DxfLinetype, DxfSnapshot, DxfStyle } from '../📸️snapshot/🟦️.ts';
-import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export type DxfMutation =
-  | { mutation: 'setSnapshot'; snapshot: DxfSnapshot }
-  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
-  | { mutation: 'setHeaderVar'; name: string; headerVar: DxfHeaderVar }
+  | { mutation: 'setHeaderVar'; name: string; headerVar: DxfHeaderVar; index?: number }
   | { mutation: 'removeHeaderVar'; name: string }
   | { mutation: 'insertLayer'; index: number; layer: DxfLayer }
   | { mutation: 'removeLayer'; name: string }

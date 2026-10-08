@@ -10,7 +10,6 @@ use super::*;
 fn kinds_match_enum_and_catalog() {
     fn kind_of(mutation: &DocxTransitionalMutation) -> &'static str {
         match mutation {
-            DocxTransitionalMutation::SetSnapshot(_) => "set-snapshot",
             DocxTransitionalMutation::SetMainNamespace(_) => "set-main-namespace",
             DocxTransitionalMutation::SetRelationshipBase(_) => "set-relationship-base",
             DocxTransitionalMutation::SetConformanceAttribute(_) => "set-conformance-attribute",
@@ -18,7 +17,6 @@ fn kinds_match_enum_and_catalog() {
         }
     }
     let samples = [
-        DocxTransitionalMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: DocxSnapshot::default() }),
         DocxTransitionalMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace: String::new() }),
         DocxTransitionalMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: String::new() }),
         DocxTransitionalMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value: String::new() }),
@@ -37,12 +35,19 @@ fn kinds_match_enum_and_catalog() {
 //#endregion 🔖️KindsConformanceLaw
 
 //#region 🔖️StampLaw
-/// 🏅️ The class stamp is bijective: stamping into one class and back out of it lands on the
-/// snapshot it started from. This is what makes `SetSnapshot` exactly invertible on this axis,
-/// and it is proven on a snapshot built by this repository's own code, not asserted.
+/// 🏅️ The class stamp is bijective: moving a package out of a class and back into it with the concrete stamp mutations lands on the
+/// snapshot it started from, which is what makes each stamp mutation exactly invertible on its axis.
 #[test]
-fn stamping_into_a_class_and_back_is_the_identity() {
-    let base = DocxSnapshot::default();
-    assert_eq!(stamp_conformance_class(stamp_conformance_class(base.clone(), true), false), stamp_conformance_class(base, false));
+fn stamping_out_of_a_class_and_back_is_the_identity() {
+    use semio_framework_plugin::ArtifactBuilder;
+    let started = crate::standards::v_ecma_376::subsets::transitional::io::DocxTransitionalBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
+    let mut state = started.clone();
+    for mutation in stamp_conformance_class_mutations(true) {
+        assert!(apply_docx_transitional_mutation(&mut state, &mutation).messages().is_empty());
+    }
+    for mutation in stamp_conformance_class_mutations(false) {
+        assert!(apply_docx_transitional_mutation(&mut state, &mutation).messages().is_empty());
+    }
+    assert_eq!(state, started);
 }
 //#endregion 🔖️StampLaw

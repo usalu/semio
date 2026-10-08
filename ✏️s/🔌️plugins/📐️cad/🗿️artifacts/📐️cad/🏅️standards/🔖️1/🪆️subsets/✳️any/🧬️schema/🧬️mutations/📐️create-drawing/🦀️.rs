@@ -15,6 +15,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct CreateDrawing {
     pub child_id: String,
     pub target: semio_framework_artifact_reference::ArtifactRef,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<u32>,
 }
 
 impl MutationKind<CadSnapshot, CadMutation> for CreateDrawing {
@@ -24,16 +26,13 @@ impl MutationKind<CadSnapshot, CadMutation> for CreateDrawing {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+        super::inverse::inverse(self, base)
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create drawing child {}", self.child_id), &format!("Zeichnungs-Kind {} erstellen", self.child_id))
     }
     fn target(&self) -> Vec<String> {
         vec![self.child_id.clone()]
     }
-}
+, index: None }
 //#endregion 🔖️Mutation

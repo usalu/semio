@@ -1,12 +1,21 @@
 {
   "artifact": null,
-  "schema": null,
   "camera": null,
-  "nodes": null,
   "edges": null,
-  "targetRegions": null,
   "meta": {
-    "manifestId": "manifest-alpha",
-    "kindCompatibility": []
-  }
+    "kindCompatibility": {
+      "added": [],
+      "patched": [],
+      "removed": [
+        {
+          "source": "handle-kind-a",
+          "target": "handle-kind-b"
+        }
+      ],
+      "reordered": null
+    }
+  },
+  "nodes": null,
+  "schema": null,
+  "targetRegions": null
 }

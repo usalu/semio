@@ -30,6 +30,6 @@ export async function testCredentialProtocolSourceV1(root: string): Promise<void
   assert.ok(owned.includes("/auth/agent-sessions"));
   const genericEntry = readFileSync(join(general, "../🏗️bootstrap/⌨️entrypoint/🦀️.rs"), "utf8");
   assert.ok(genericEntry.includes("Vec::new(), Vec::new()"));
-  const entry = readFileSync(join(root, "✏️s/🧑‍💻dev/💡️services/🌉️mcp/⌨️entrypoint/🦀️.rs"), "utf8");
+  const entry = readFileSync(join(root, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🌉️mcp/⌨️entrypoint/🦀️.rs"), "utf8");
   assert.ok(entry.includes("semio_hub_auth_client::hub_agent_credential_protocol_v1()"));
 }

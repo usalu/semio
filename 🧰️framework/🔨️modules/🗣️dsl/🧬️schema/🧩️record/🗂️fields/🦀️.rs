@@ -38,3 +38,9 @@ impl FromIterator<(u16,FieldValue)> for RecordFields{fn from_iter<T:IntoIterator
 impl IntoIterator for RecordFields{type Item=(u16,FieldValue);type IntoIter=std::vec::IntoIter<Self::Item>;fn into_iter(self)->Self::IntoIter{self.entries.into_iter()}}
 fn field_ref(pair:&(u16,FieldValue))->(&u16,&FieldValue){(&pair.0,&pair.1)}
 impl<'a> IntoIterator for &'a RecordFields{type Item=(&'a u16,&'a FieldValue);type IntoIter=std::iter::Map<std::slice::Iter<'a,(u16,FieldValue)>,fn(&'a(u16,FieldValue))->Self::Item>;fn into_iter(self)->Self::IntoIter{self.entries.iter().map(field_ref)}}
+
+impl semio_framework_value::retirement::RetireOwned for RecordFields{
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.entries)}
+    fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.entries)}
+    fn controlled_retirement_supported()->bool{true}
+}

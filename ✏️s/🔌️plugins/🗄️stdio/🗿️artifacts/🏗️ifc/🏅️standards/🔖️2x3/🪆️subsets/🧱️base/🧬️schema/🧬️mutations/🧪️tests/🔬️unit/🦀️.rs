@@ -36,24 +36,47 @@ async fn assert_exact(label: &str, actual: &[u8]) {
 #[semio_framework_async_macros::async_test]
 async fn upsert_then_inverse_restores_absent_id_via_remove() {
     let mut snap = Ifc2x3Snapshot::default();
-    let mutation = Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: inst(1, "IFCWALL").await });
+    let mutation = Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: inst(1, "IFCWALL").await, index: None });
     let base = snap.clone();
     apply_ifc2x3_mutation(&mut snap, &mutation);
     assert_eq!(snap.document.instances.len(), 1);
     let inv = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
-    assert_eq!(inv, vec![Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base) })]);
+    assert_eq!(inv, vec![Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id: 1 })]);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn remove_then_inverse_restores_prior_instance() {
     let mut snap = Ifc2x3Snapshot::default();
     snap.document.instances.push(inst(2, "IFCDOOR").await);
+    snap.document.instances.push(inst(3, "IFCWALL").await);
     let base = snap.clone();
     let mutation = Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id: 2 });
     apply_ifc2x3_mutation(&mut snap, &mutation);
-    assert!(snap.document.instances.is_empty());
+    assert_eq!(snap.document.instances.len(), 1);
     let inv = <Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
-    assert_eq!(inv, vec![Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base) })]);
+    assert_eq!(inv, vec![Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: inst(2, "IFCDOOR").await, index: Some(0) })]);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn every_leaf_satisfies_the_inverse_sum_law_on_the_real_fixture() {
+    let base = exact_fixture();
+    let existing = base.document.instances[1].clone();
+    let mut changed_header = base.document.header.clone();
+    changed_header.file_name[0] = Part21Value::Str("sum-law.ifc".into());
+    let mut replacement = existing.clone();
+    replacement.entities[0].0 = "IFCCHANGEDENTITY".into();
+    let mutations = [
+        Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: replacement, index: None }),
+        Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: inst(9_999_999, "IFCNEW").await, index: Some(3) }),
+        Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: inst(9_999_998, "IFCNEW").await, index: None }),
+        Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id: existing.id }),
+        Ifc2x3Mutation::SetHeader(set_header::SetHeader { header: changed_header }),
+    ];
+    for mutation in &mutations {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(mutation, &base).await;
+    }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -66,7 +89,7 @@ async fn op_text_round_trips() {
 
 //#region 🔖️op_text_binary_roundtrip_law
 /// 🧪️ `OpText`/`OpBinary` round-trip laws for the hand-rolled `Ifc2x3Mutation` grammar —
-/// exercises every variant incl. `SetSnapshot`'s whole-snapshot payload, `UpsertInstance`'s
+/// exercises every variant incl. `UpsertInstance`'s
 /// real COMPLEX (2-entity) instance, and every `Part21Value` tag (`Unset`/`Derived`/`Int`/
 /// `Real`/`Str`/`Enum`/`Ref`/`List`/`Typed`). Replaces the prior `serde_json` stub's implicit
 /// coverage — this is the real proof the JSON-transfer elimination didn't just move the bug.
@@ -111,7 +134,7 @@ async fn exact_native_between_noop_inverse_absorb_and_supported_rewrite() {
     let imported = exact_fixture();
     let self_diff = <Ifc2x3Diff as DiffAlgebra<Ifc2x3Snapshot>>::between(&imported, &imported);
     assert!(self_diff.is_empty());
-    assert_exact("self diff export", &crate::standards::v2x3::engine::encode_ifc2x3(&MutationDiff::apply(&self_diff, &imported).expect("valid self diff")).expect("self diff export")).await;
+    assert_exact("self diff export", &crate::standards::v2x3::engine::encode_ifc2x3(&protocol::apply_diff(&self_diff, &imported).expect("valid self diff")).expect("self diff export")).await;
 
     let mut changed_header = imported.document.header.clone();
     // 📜️ FILE_NAME's attribute 1 IS the name (ISO 10303-21 §8.2.3); replacing the whole record with
@@ -121,7 +144,7 @@ async fn exact_native_between_noop_inverse_absorb_and_supported_rewrite() {
     changed_header.file_name[0] = Part21Value::Str("semio-roundtrip-changed.ifc".into());
     let mutation = Ifc2x3Mutation::SetHeader(set_header::SetHeader { header: changed_header });
     let d1 = Mutation::diff(&mutation, &imported);
-    let changed = MutationDiff::apply(d1.diff(), &imported).expect("valid forward diff");
+    let changed = protocol::apply_diff(d1.diff(), &imported).expect("valid forward diff");
     let changed_bytes = crate::standards::v2x3::engine::encode_ifc2x3(&changed).expect("supported dirty export");
     assert!(changed_bytes != exact_fixture_bytes(), "effective IFC mutation must change deterministic output");
     let reparsed = crate::standards::v2x3::engine::decode_ifc2x3(&changed_bytes).expect("re-import supported dirty export");
@@ -129,19 +152,19 @@ async fn exact_native_between_noop_inverse_absorb_and_supported_rewrite() {
 
     let inverse_mutation = Mutation::inverse(&mutation, &imported).expect("valid retained mutation inverse fixture").into_iter().next().expect("inverse mutation");
     let d2 = Mutation::diff(&inverse_mutation, &changed);
-    let restored = MutationDiff::apply(d2.diff(), &changed).expect("valid inverse diff");
+    let restored = protocol::apply_diff(d2.diff(), &changed).expect("valid inverse diff");
     assert!(restored == imported, "inverse mutation must restore imported snapshot and provenance");
     assert_exact("inverse export", &crate::standards::v2x3::engine::encode_ifc2x3(&restored).expect("inverse export")).await;
 
     let mut absorbed = d1.diff().clone();
     MutationDiff::absorb(&mut absorbed, d2.diff().clone());
-    let absorbed_result = MutationDiff::apply(&absorbed, &imported).expect("valid absorbed diff");
+    let absorbed_result = protocol::apply_diff(&absorbed, &imported).expect("valid absorbed diff");
     assert!(absorbed_result == imported, "absorbed mutation pair must restore imported snapshot");
     assert_exact("absorbed export", &crate::standards::v2x3::engine::encode_ifc2x3(&absorbed_result).expect("absorbed export")).await;
 }
 
 #[semio_framework_async_macros::async_test]
-async fn exact_native_set_snapshot_codecs_retain_complete_logical_model() {
+async fn exact_native_diff_codecs_retain_complete_logical_model() {
     let imported = exact_fixture();
     let projection = Ifc2x3Snapshot::default();
     {
@@ -151,7 +174,7 @@ async fn exact_native_set_snapshot_codecs_retain_complete_logical_model() {
         drop(wire);
         assert_eq!(decoded, diff);
         drop(diff);
-        let applied = MutationDiff::apply(&decoded, &projection).expect("valid text diff");
+        let applied = protocol::apply_diff(&decoded, &projection).expect("valid text diff");
         drop(decoded);
         assert!(applied == imported, "text diff must restore imported snapshot");
         assert_exact("text diff export", &crate::standards::v2x3::engine::encode_ifc2x3(&applied).expect("text diff export")).await;
@@ -163,38 +186,10 @@ async fn exact_native_set_snapshot_codecs_retain_complete_logical_model() {
         drop(wire);
         assert_eq!(decoded, diff);
         drop(diff);
-        let applied = MutationDiff::apply(&decoded, &projection).expect("valid binary diff");
+        let applied = protocol::apply_diff(&decoded, &projection).expect("valid binary diff");
         drop(decoded);
         assert!(applied == imported, "binary diff must restore imported snapshot");
         assert_exact("binary diff export", &crate::standards::v2x3::engine::encode_ifc2x3(&applied).expect("binary diff export")).await;
-    }
-    {
-        let mutation = Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(imported.clone()) });
-        let wire = mutation.print_op();
-        drop(mutation);
-        let decoded = Ifc2x3Mutation::parse_op(&wire).expect("op text decode");
-        drop(wire);
-        assert!(matches!(&decoded, Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) if snapshot.as_ref() == &imported), "set-snapshot text codec must retain the logical IFC model");
-        let diff = Mutation::diff(&decoded, &projection);
-        drop(decoded);
-        let applied = MutationDiff::apply(diff.diff(), &projection).expect("valid text mutation diff");
-        drop(diff);
-        assert!(applied == imported, "set-snapshot text mutation must restore imported snapshot");
-        assert_exact("set-snapshot text export", &crate::standards::v2x3::engine::encode_ifc2x3(&applied).expect("set-snapshot text export")).await;
-    }
-    {
-        let mutation = Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(imported.clone()) });
-        let wire = mutation.encode_op().expect("op binary encode");
-        drop(mutation);
-        let decoded = Ifc2x3Mutation::decode_op(&wire).expect("op binary decode");
-        drop(wire);
-        assert!(matches!(&decoded, Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) if snapshot.as_ref() == &imported), "set-snapshot binary codec must retain the logical IFC model");
-        let diff = Mutation::diff(&decoded, &projection);
-        drop(decoded);
-        let applied = MutationDiff::apply(diff.diff(), &projection).expect("valid binary mutation diff");
-        drop(diff);
-        assert!(applied == imported, "set-snapshot binary mutation must restore imported snapshot");
-        assert_exact("set-snapshot binary export", &crate::standards::v2x3::engine::encode_ifc2x3(&applied).expect("set-snapshot binary export")).await;
     }
 }
 
@@ -210,13 +205,13 @@ async fn exact_native_materializes_logical_edits_and_restores_interior_order() {
     let target = imported.document.instances[1].clone();
     let mut replacement = target.clone();
     replacement.entities[0].0 = "IFCCHANGEDENTITY".into();
-    let mutation = Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: replacement });
+    let mutation = Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: replacement, index: None });
     let changed_outcome = Mutation::diff(&mutation, &imported);
-    let changed = MutationDiff::apply(changed_outcome.diff(), &imported).expect("valid upsert diff");
+    let changed = protocol::apply_diff(changed_outcome.diff(), &imported).expect("valid upsert diff");
     assert_eq!(changed.document.instances[1].id, target.id, "upsert moved an interior entity");
     let inverse = Mutation::inverse(&mutation, &imported).expect("valid retained mutation inverse fixture").into_iter().next().expect("inverse");
     let restored_outcome = Mutation::diff(&inverse, &changed);
-    let restored = MutationDiff::apply(restored_outcome.diff(), &changed).expect("valid inverse diff");
+    let restored = protocol::apply_diff(restored_outcome.diff(), &changed).expect("valid inverse diff");
     assert_eq!(restored, imported);
     assert_exact("interior upsert inverse", &crate::standards::v2x3::engine::encode_ifc2x3(&restored).expect("inverse export")).await;
 
@@ -234,9 +229,7 @@ async fn exact_native_materializes_logical_edits_and_restores_interior_order() {
 #[semio_framework_async_macros::async_test]
 async fn kinds_const_matches_enum_variants_in_declaration_order() {
     let one_per_variant = vec![
-        Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::default() }),
-        Ifc2x3Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
-        Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: inst(1, "IFCWALL").await }),
+        Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: inst(1, "IFCWALL").await, index: None }),
         Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id: 1 }),
         Ifc2x3Mutation::SetHeader(set_header::SetHeader { header: Part21Header::default() }),
     ];

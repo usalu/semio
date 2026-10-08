@@ -142,8 +142,8 @@
           "role": "expected-diff",
           "path": "../🧫️fixtures/⏱️change-simulation/✅️change/🔺️diff/🔣️.json",
           "mediaType": "application/json",
-          "sha256": "sha256:ba1a11fb3bf1b9d616ff00bab25829f95122ae8b2344b443502c593a44b4a02b",
-          "bytes": 116
+          "sha256": "sha256:fd959b85a1376516ab200bc5c8e07574c9acf097d744006d6dea50a63dccbf5e",
+          "bytes": 81
         },
         {
           "role": "declared-outcome",
@@ -206,8 +206,8 @@
           "role": "expected-diff",
           "path": "../🧫️fixtures/🎨️change-result/✅️change/🔺️diff/🔣️.json",
           "mediaType": "application/json",
-          "sha256": "sha256:5b4da6b8df3ace131e1d077e4d4d7b4af259930ee3c33e31e024387e4265e471",
-          "bytes": 118
+          "sha256": "sha256:5e183747ab9db534935f90546d4cee1dcbd05a49df155a96f5883bf34a3512cc",
+          "bytes": 40
         },
         {
           "role": "declared-outcome",

@@ -98,13 +98,13 @@ pub fn fem2d_mutation_report_json(base_json: &str, mutation_json: &str, after_js
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
     let mutation: Fem2dMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let mut applied = base.clone();
-    let forward = <Fem2dMutation as Mutation<Fem2dSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
+    let (applied, forward) = store::apply_outcome(&base, <Fem2dMutation as Mutation<Fem2dSnapshot>>::diff(&mutation, &base));
     let inverse = <Fem2dMutation as Mutation<Fem2dSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     for step in &inverse {
-        let outcome = <Fem2dMutation as Mutation<Fem2dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
+        let (next, outcome) = store::apply_outcome(&undone, <Fem2dMutation as Mutation<Fem2dSnapshot>>::diff(step, &undone));
+        undone = next;
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
     let report = semio_framework_value::DslValue::object([
@@ -262,8 +262,7 @@ pub fn fem2d_analysis_report_json(snapshot_json: &str) -> Result<String, String>
 pub fn fem2d_mutated_analysis_report_json(base_json: &str, mutation_json: &str) -> Result<String, String> {
     let base: Fem2dSnapshot = semio_framework_pack_json::from_json_str(base_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mutation: Fem2dMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let mut applied = base.clone();
-    let outcome = <Fem2dMutation as Mutation<Fem2dSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
+    let (applied, outcome) = store::apply_outcome(&base, <Fem2dMutation as Mutation<Fem2dSnapshot>>::diff(&mutation, &base));
     let faults: Vec<String> = outcome.messages().iter().filter(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)).map(|message| format!("{:?}", message.code)).collect();
     if !faults.is_empty() {
         return Err(format!("the mutation was rejected with {faults:?}"));

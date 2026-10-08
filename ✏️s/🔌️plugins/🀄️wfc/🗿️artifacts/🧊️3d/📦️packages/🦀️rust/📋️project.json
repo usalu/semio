@@ -63,6 +63,24 @@
         "command": "bun ./📜️script.ts test-snapshot-sqlite source",
         "forwardAllArgs": true
       }
+    },
+    "mutation-inventory": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏭️bridge",
+        "command": "bun ./📜️script.ts list-mutations",
+        "forwardAllArgs": true
+      }
+    },
+    "mutation-inventory-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏭️bridge",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": false
+      }
     }
   }
 }

@@ -67,24 +67,6 @@ mod tests {
         assert_eq!(verdicts(&doc).expect("verdicts").get("doctypeNameMatchesDocumentElement"), Some(&Json::Bool(true)), "the rename must never pass through an invalid state");
     }
 
-    /// 📸️ A `set-snapshot` wire payload replacing the document with `<plist/>` under an optional DOCTYPE Name.
-    fn snapshot_payload(doctype: Option<&str>) -> Json {
-        let root = obj(vec![("kind", Json::String("element".into())), ("name", Json::String("plist".into())), ("attrs", Json::Array(Vec::new())), ("children", Json::Array(Vec::new()))]);
-        let doc = match doctype {
-            Some(name) => obj(vec![("root", root), ("doctype", obj(vec![("name", Json::String(name.into()))]))]),
-            None => obj(vec![("root", root)]),
-        };
-        obj(vec![("snapshot", obj(vec![("schema", Json::String("stdio.xml".into())), ("doc", doc)]))])
-    }
-
-    #[test]
-    fn set_snapshot_refuses_a_replacement_that_is_not_valid() {
-        let mut doc = plist();
-        assert!(apply(&mut doc, "set-snapshot", &snapshot_payload(None)).is_err(), "a replacement with no DOCTYPE is not XML 1.0 valid");
-        assert!(apply(&mut doc, "set-snapshot", &snapshot_payload(Some("book"))).is_err(), "§2.8 requires the DOCTYPE Name to be the document element's name");
-        apply(&mut doc, "set-snapshot", &snapshot_payload(Some("plist"))).expect("a DOCTYPE naming the document element is valid");
-    }
-
     #[test]
     fn declare_entity_places_at_the_index_and_refuses_a_duplicate() {
         let mut doc = plist();

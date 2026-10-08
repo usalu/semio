@@ -581,7 +581,7 @@ impl PdfColorSpace {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", retire_with="retire_pdf_function")]
 pub enum PdfFunction {
-    Sampled { domain: Vec<f64>, range: Vec<f64>, size: Vec<u32>, bits_per_sample: u32, order: Option<u32>, encode: Option<Vec<f64>>, decode: Option<Vec<f64>>, #[value(with="pack::value::bytes", serialize_controlled_with="pack::value::bytes::to_value_controlled", deserialize_controlled_with="pack::value::bytes::from_value_controlled", retire_with="std::mem::drop")] samples: Vec<u8> },
+    Sampled { domain: Vec<f64>, range: Vec<f64>, size: Vec<u32>, bits_per_sample: u32, order: Option<u32>, encode: Option<Vec<f64>>, decode: Option<Vec<f64>>, samples: Vec<u32> },
     Exponential { domain: Vec<f64>, range: Option<Vec<f64>>, c0: Vec<f64>, c1: Vec<f64>, n: f64 },
     Stitching { domain: Vec<f64>, range: Option<Vec<f64>>, functions: Vec<PdfFunction>, bounds: Vec<f64>, encode: Vec<f64> },
     PostScript { domain: Vec<f64>, range: Vec<f64>, code: String },

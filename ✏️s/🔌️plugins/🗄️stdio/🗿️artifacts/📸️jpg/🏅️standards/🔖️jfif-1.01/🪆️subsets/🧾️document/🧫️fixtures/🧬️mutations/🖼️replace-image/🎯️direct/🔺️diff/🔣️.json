@@ -1,0 +1,65 @@
+{
+  "width": 2,
+  "pixels": [
+    10,
+    20,
+    30,
+    255,
+    40,
+    50,
+    60,
+    255
+  ],
+  "jfifVersion": [
+    1,
+    2
+  ],
+  "jfifDensityUnits": "pixelsPerCm",
+  "jfifXDensity": 118,
+  "jfifYDensity": 119,
+  "jfifThumbnail": {
+    "width": 1,
+    "height": 1,
+    "rgbData": [
+      11,
+      12,
+      13
+    ]
+  },
+  "otherSegments": {
+    "removed": [],
+    "modified": [],
+    "added": [
+      {
+        "index": 0,
+        "item": {
+          "marker": 225,
+          "data": [
+            0,
+            255,
+            2
+          ]
+        }
+      },
+      {
+        "index": 1,
+        "item": {
+          "marker": 254,
+          "data": [
+            3,
+            4
+          ]
+        }
+      },
+      {
+        "index": 2,
+        "item": {
+          "marker": 225,
+          "data": [
+            5
+          ]
+        }
+      }
+    ]
+  }
+}

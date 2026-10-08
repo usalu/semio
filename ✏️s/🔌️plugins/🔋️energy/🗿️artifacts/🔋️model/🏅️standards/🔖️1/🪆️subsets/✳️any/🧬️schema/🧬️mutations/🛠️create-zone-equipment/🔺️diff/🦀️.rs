@@ -21,7 +21,11 @@ pub fn diff(payload: &super::CreateZoneEquipment, base: &EnergyModelSnapshot) ->
     if !payload.cooling_capacity_w.is_finite() || payload.cooling_capacity_w < 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A cooling capacity must be a non-negative finite number, got {}.", payload.cooling_capacity_w), [payload.id.0.to_string()]);
     }
-    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { zone_equipment: Rows::inserting(base.model.zone_equipment.len(), crate::model::ZoneEquipmentAssignment {
+    let position = payload.index.map_or(base.model.zone_equipment.len(), |index| index as usize);
+    if position > base.model.zone_equipment.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} zone_equipment.", position, base.model.zone_equipment.len()), [payload.id.0.to_string()]);
+    }
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { zone_equipment: Rows::inserting(position, crate::model::ZoneEquipmentAssignment {
         id: payload.id,
         zone_id: payload.zone_id,
         equipment_type: payload.equipment_type.clone(),

@@ -1,16 +1,32 @@
 {
-  "artifact": null,
-  "hostSnapshot": null,
-  "generation": {
-    "generations": [
+  "schema": null,
+  "camera": null,
+  "widgets": null,
+  "synapses": null,
+  "layout": null,
+  "generations": {
+    "added": [],
+    "removed": [],
+    "patched": [
       {
         "id": "gen-1",
-        "name": "Baseline",
-        "values": {
-          "storeys": 4.5
+        "patch": {
+          "name": null,
+          "values": {
+            "added": [],
+            "removed": [],
+            "patched": [
+              {
+                "questionId": "storeys",
+                "value": 4.5
+              }
+            ]
+          }
         }
       }
     ],
-    "selectedGenerationId": "gen-1"
-  }
+    "reordered": null
+  },
+  "selectedGeneration": null,
+  "previewText": null
 }

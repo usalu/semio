@@ -28,12 +28,83 @@ impl Default for Puzzle3dPresence {
     }
 }
 
-impl protocol::MutationDiff<Puzzle3dPresence> for Puzzle3dPresence {
-    fn apply(&self, _base: &Puzzle3dPresence) -> protocol::MutationApplyResult<Puzzle3dPresence> {
-        Ok(self.clone())
+/// 🕳️ Tri-state decode of every `Option<Option<T>>` diff slot: a missing key is the unchanged slot (`None`) and a PRESENT
+/// `null` is the clear `Some(None)`, never the unchanged slot the blanket `Option<T>` decode would fold it into.
+fn deserialize_double_option<T: semio_framework_value::FromValue>(value: semio_framework_value::DslValue) -> Result<Option<Option<T>>, semio_framework_value::ValueError> {
+    <Option<T> as semio_framework_value::FromValue>::from_value(value).map(Some)
+}
+
+/// 🔺️ Sparse typed delta of the shareable live presence of a Puzzle 3D scene: names only the fields a mutation changes.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Puzzle3dPresenceDiff {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub camera_position: Option<[f64; 3]>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub camera_target: Option<[f64; 3]>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub camera_zoom: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
+    pub active_tool_id: Option<Option<String>>,
+}
+
+impl Puzzle3dPresenceDiff {
+    /// 🎯️ Every field set to `state`'s value.
+    pub fn of(state: &Puzzle3dPresence) -> Self {
+        Self { camera_position: Some(state.camera_position), camera_target: Some(state.camera_target), camera_zoom: Some(state.camera_zoom), active_tool_id: Some(state.active_tool_id.clone()) }
+    }
+    /// ✂️ The named fields that differ from `base`.
+    pub fn changed(&self, base: &Puzzle3dPresence) -> Self {
+        Self { camera_position: self.camera_position.as_ref().filter(|value| **value != base.camera_position).cloned(), camera_target: self.camera_target.as_ref().filter(|value| **value != base.camera_target).cloned(), camera_zoom: self.camera_zoom.as_ref().filter(|value| **value != base.camera_zoom).cloned(), active_tool_id: self.active_tool_id.as_ref().filter(|value| **value != base.active_tool_id).cloned() }
+    }
+    /// ↩️ The named fields at the values `base` holds.
+    pub fn restoring(&self, base: &Puzzle3dPresence) -> Self {
+        Self { camera_position: self.camera_position.as_ref().map(|_| base.camera_position), camera_target: self.camera_target.as_ref().map(|_| base.camera_target), camera_zoom: self.camera_zoom.as_ref().map(|_| base.camera_zoom), active_tool_id: self.active_tool_id.as_ref().map(|_| base.active_tool_id.clone()) }
+    }
+}
+
+impl protocol::MutationDiff<Puzzle3dPresence> for Puzzle3dPresenceDiff {
+    fn apply(&self, base: &Puzzle3dPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle3dPresence> {
+        let mut next = base.clone();
+        if let Some(value) = &self.camera_position {
+            next.camera_position = *value;
+        }
+        if let Some(value) = &self.camera_target {
+            next.camera_target = *value;
+        }
+        if let Some(value) = &self.camera_zoom {
+            next.camera_zoom = *value;
+        }
+        if let Some(value) = &self.active_tool_id {
+            next.active_tool_id = value.clone();
+        }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if other.camera_position.is_some() {
+            self.camera_position = other.camera_position;
+        }
+        if other.camera_target.is_some() {
+            self.camera_target = other.camera_target;
+        }
+        if other.camera_zoom.is_some() {
+            self.camera_zoom = other.camera_zoom;
+        }
+        if other.active_tool_id.is_some() {
+            self.active_tool_id = other.active_tool_id;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<Puzzle3dPresence> for Puzzle3dPresenceDiff {
+    fn inverse(&self, base: &Puzzle3dPresence) -> Self {
+        self.restoring(base)
+    }
+    fn between(base: &Puzzle3dPresence, other: &Puzzle3dPresence) -> Self {
+        Self { camera_position: (base.camera_position != other.camera_position).then(|| other.camera_position), camera_target: (base.camera_target != other.camera_target).then(|| other.camera_target), camera_zoom: (base.camera_zoom != other.camera_zoom).then(|| other.camera_zoom), active_tool_id: (base.active_tool_id != other.active_tool_id).then(|| other.active_tool_id.clone()) }
+    }
+    fn is_empty(&self) -> bool {
+        self.camera_position.is_none() && self.camera_target.is_none() && self.camera_zoom.is_none() && self.active_tool_id.is_none()
     }
 }
 
@@ -95,7 +166,7 @@ pub enum Puzzle3dPresenceMutation {
 }
 
 impl Mutation<Puzzle3dPresence> for Puzzle3dPresenceMutation {
-    type Diff = Puzzle3dPresence;
+    type Diff = Puzzle3dPresenceDiff;
 
     /// 🧷️ Hand-written (not `#[derive(dsl::Mutations)]`: this enum carries `dsl::DslOps`, not
     /// `dsl::Mutations` — the derive that would have generated this). One leaf, the whole-
@@ -124,10 +195,13 @@ impl Mutation<Puzzle3dPresence> for Puzzle3dPresenceMutation {
         }
     }
 
-    fn diff(&self, _base: &Puzzle3dPresence) -> protocol::MutationOutcome<Puzzle3dPresence> {
-        protocol::MutationOutcome::new(match self {
-            Self::Snapshot { presence } => presence.clone(),
-        })
+    fn diff(&self, base: &Puzzle3dPresence) -> protocol::MutationOutcome<Puzzle3dPresenceDiff> {
+        let Self::Snapshot { presence } = self;
+        let diff = Puzzle3dPresenceDiff::of(presence).changed(base);
+        if protocol::DiffAlgebra::<Puzzle3dPresence>::is_empty(&diff) {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The presence already holds this state.");
+        }
+        protocol::MutationOutcome::new(diff)
     }
 
     fn inverse(&self, base: &Puzzle3dPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {

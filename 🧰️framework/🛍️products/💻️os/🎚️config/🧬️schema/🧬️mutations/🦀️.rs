@@ -114,73 +114,10 @@ pub enum LocalFoldersConfigMutation {
 //#endregion 🔖️LocalFolders
 
 //#region 🌉️ApplyBridge
-/// 🧬️ Applies one identity mutation through the central applier.
-pub fn apply_identity_config_mutation(snapshot: &mut IdentitySetting, mutation: &IdentityConfigMutation) -> protocol::MutationApplyResult<()> {
-    use protocol::Mutation as _;
-    *snapshot = protocol::apply_diff(mutation.diff(snapshot).diff(), snapshot)?;
-    Ok(())
-}
-
-/// ▶️ Applies a identity mutation and returns its diagnostic `(code, severity)` pairs.
-pub fn apply_identity_config_mutation_reporting(snapshot: &mut IdentitySetting, mutation: &IdentityConfigMutation) -> Vec<(String, String)> {
-    use protocol::Mutation as _;
-    let outcome = mutation.diff(snapshot);
-    if let Ok(next) = protocol::apply_diff(outcome.diff(), snapshot) {
-        *snapshot = next;
-    }
-    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
-}
-
-/// 🧬️ Applies one merge-policy mutation through the central applier.
-pub fn apply_merge_policy_config_mutation(snapshot: &mut MergePolicySetting, mutation: &MergePolicyConfigMutation) -> protocol::MutationApplyResult<()> {
-    use protocol::Mutation as _;
-    *snapshot = protocol::apply_diff(mutation.diff(snapshot).diff(), snapshot)?;
-    Ok(())
-}
-
-/// ▶️ Applies a merge-policy mutation and returns its diagnostic `(code, severity)` pairs.
-pub fn apply_merge_policy_config_mutation_reporting(snapshot: &mut MergePolicySetting, mutation: &MergePolicyConfigMutation) -> Vec<(String, String)> {
-    use protocol::Mutation as _;
-    let outcome = mutation.diff(snapshot);
-    if let Ok(next) = protocol::apply_diff(outcome.diff(), snapshot) {
-        *snapshot = next;
-    }
-    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
-}
-
-/// 🧬️ Applies one local-catalog mutation through the central applier.
-pub fn apply_local_catalog_config_mutation(snapshot: &mut LocalCatalog, mutation: &LocalCatalogConfigMutation) -> protocol::MutationApplyResult<()> {
-    use protocol::Mutation as _;
-    *snapshot = protocol::apply_diff(mutation.diff(snapshot).diff(), snapshot)?;
-    Ok(())
-}
-
-/// ▶️ Applies a local-catalog mutation and returns its diagnostic `(code, severity)` pairs.
-pub fn apply_local_catalog_config_mutation_reporting(snapshot: &mut LocalCatalog, mutation: &LocalCatalogConfigMutation) -> Vec<(String, String)> {
-    use protocol::Mutation as _;
-    let outcome = mutation.diff(snapshot);
-    if let Ok(next) = protocol::apply_diff(outcome.diff(), snapshot) {
-        *snapshot = next;
-    }
-    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
-}
-
-/// 🧬️ Applies one local-folders mutation through the central applier.
-pub fn apply_local_folders_config_mutation(snapshot: &mut LocalFolderBindings, mutation: &LocalFoldersConfigMutation) -> protocol::MutationApplyResult<()> {
-    use protocol::Mutation as _;
-    *snapshot = protocol::apply_diff(mutation.diff(snapshot).diff(), snapshot)?;
-    Ok(())
-}
-
-/// ▶️ Applies a local-folders mutation and returns its diagnostic `(code, severity)` pairs.
-pub fn apply_local_folders_config_mutation_reporting(snapshot: &mut LocalFolderBindings, mutation: &LocalFoldersConfigMutation) -> Vec<(String, String)> {
-    use protocol::Mutation as _;
-    let outcome = mutation.diff(snapshot);
-    if let Ok(next) = protocol::apply_diff(outcome.diff(), snapshot) {
-        *snapshot = next;
-    }
-    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
-}
+pub use super::super::{
+    apply_identity_config_mutation, apply_identity_config_mutation_reporting, apply_local_catalog_config_mutation, apply_local_catalog_config_mutation_reporting, apply_local_folders_config_mutation, apply_local_folders_config_mutation_reporting,
+    apply_merge_policy_config_mutation, apply_merge_policy_config_mutation_reporting,
+};
 //#endregion 🌉️ApplyBridge
 
 //#region 🔖️Registry

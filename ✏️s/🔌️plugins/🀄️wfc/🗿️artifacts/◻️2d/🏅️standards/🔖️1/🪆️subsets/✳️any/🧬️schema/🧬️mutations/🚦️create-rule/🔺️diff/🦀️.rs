@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateRule` — a real id-keyed delta, never a whole-snapshot capture.
 
-use crate::diff::Wfc2dDiff;
+use crate::diff::{Wfc2dDiff, Wfc2dRows};
 use crate::schema::snapshot::Wfc2dSnapshot;
 
 pub fn diff(payload: &super::CreateRule, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
@@ -12,6 +12,5 @@ pub fn diff(payload: &super::CreateRule, base: &Wfc2dSnapshot) -> protocol::Muta
             return protocol::MutationOutcome::fatal("mutation.invariant", format!("Rule \"{}\" references unknown tile \"{}\".", payload.rule.id, tile_id), [tile_id.clone()]);
         }
     }
-    let at = crate::mutations::ordered_index(&base.rules, &payload.rule.id, |rule| rule.id.as_str());
-    protocol::MutationOutcome::new(Wfc2dDiff { rules_upserted: vec![(at, payload.rule.clone())], ..Default::default() })
+    protocol::MutationOutcome::new(Wfc2dDiff { rules: Wfc2dRows { added: vec![payload.rule.clone()], ..Default::default() }, ..Default::default() })
 }

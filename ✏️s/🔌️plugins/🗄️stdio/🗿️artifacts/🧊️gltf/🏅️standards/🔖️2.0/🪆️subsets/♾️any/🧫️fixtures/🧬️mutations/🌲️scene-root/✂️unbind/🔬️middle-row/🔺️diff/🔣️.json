@@ -1,0 +1,15 @@
+{
+  "scenes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "nodes": [
+            0,
+            2
+          ]
+        }
+      }
+    ]
+  }
+}

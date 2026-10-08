@@ -7,16 +7,9 @@
 use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
 use crate::standards::v1::subsets::image::schema::mutations::remove_metadata_entry;
 use crate::standards::v1::subsets::image::schema::mutations::set_metadata_entry;
-use crate::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
+use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
-
-/// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
-/// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.target-missing`
-/// decision for `remove-metadata-entry` lives in that file, so the fixture asserts against it rather than against
-/// the guardless enum arm.
-#[path = "../../🔺️diff/🦀️.rs"]
-mod leaf_diff;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-metadata-entry/💬️removes/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-metadata-entry/💬️removes/📸️snapshot/➡️after/🔣️.json");
@@ -34,10 +27,7 @@ fn mutation() -> SemioImageMutation {
     semio_framework_pack_json::from_json_str(MUTATION,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-metadata-entry mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry { key }) = mutation() else {
-        panic!("remove-metadata-entry/removes-the-comment-entry-and-keeps-the-author-entry: the committed mutation must be the remove-metadata-entry variant")
-    };
-    leaf_diff::diff(&before(), key)
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ Only the `Comment` entry goes; `Author` survives untouched.
@@ -45,13 +35,13 @@ fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
 async fn removes_only_the_comment_entry() {
     let base = before();
     assert_eq!(base.metadata.len(), 2, "the fixture needs a sibling entry for the claim to mean anything");
-    let produced = leaf_outcome().diff().apply(&base).expect("remove-metadata-entry applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(leaf_outcome().diff(), &base).expect("remove-metadata-entry applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "remove-metadata-entry/removes-the-comment-entry-and-keeps-the-author-entry: applied state differs from the committed after-snapshot");
     assert!(!produced.metadata.iter().any(|entry| entry.key == "Comment"), "the addressed entry must be gone");
     assert_eq!(produced.metadata, vec![base.metadata[0].clone()], "the sibling Author entry must survive byte-identical");
     assert_eq!(produced.frames, base.frames, "removing a metadata entry must not touch a frame");
     let mut in_place = before();
-    apply_semio_image_mutation(&mut in_place, &mutation());
+    in_place = crate::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -60,12 +50,13 @@ async fn removes_only_the_comment_entry() {
 async fn the_undo_set_metadata_entry_restores_the_captured_comment() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
-    assert_eq!(undo, vec![SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Comment".to_string(), value: "draft".to_string() })], "the undo must recapture the removed entry's value from base");
+    assert_eq!(undo, vec![SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Comment".to_string(), value: "draft".to_string(), at: Some(1) })], "the undo must recapture the removed entry's value from base");
     let mut current = before();
-    apply_semio_image_mutation(&mut current, &mutation);
-    for step in &undo {
-        apply_semio_image_mutation(&mut current, step);
+    current = crate::applied(&current, &mutation).0;
+    for step in undo.iter().rev() {
+        current = crate::applied(&current, step).0;
     }
     assert_eq!(current, base, "remove-metadata-entry/removes-the-comment-entry-and-keeps-the-author-entry: the undo did not restore the before-snapshot");
 }
@@ -119,6 +110,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-metadata-entry diff decodes");
-    let produced = decoded.apply(&before()).expect("committed remove-metadata-entry diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed remove-metadata-entry diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-metadata-entry/removes-the-comment-entry-and-keeps-the-author-entry: committed diff did not carry before to after");
 }

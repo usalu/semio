@@ -185,6 +185,13 @@ macro_rules! wfc_patch {
 }
 //#endregion 🔖️PatchMacro
 
+//#region 🔖️Keys
+/// 🔑️ The removal key of a grid cell — `"<x>,<y>"`, the same spelling both cell collections use.
+pub fn cell_id(x: u32, y: u32) -> String {
+    format!("{x},{y}")
+}
+//#endregion 🔖️Keys
+
 //#region 🔖️RowTypes
 impl Grid2dRow for WfcTile2d {
     fn row_key(&self) -> String {

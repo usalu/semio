@@ -8,7 +8,7 @@ import corpus from "../🧫️fixtures/🔣️.json";
 const base = resolve(import.meta.dir, "../../../..");
 const read = (path: string) => readFileSync(resolve(base, path), "utf8");
 const snapshot = JSON.parse(read("🧬️schema/📸️snapshot/🔣️.json"));
-const mutationSchemas = ["📐set-shape-position", "📸️set-snapshot", "➕insert-slide", "🔷insert-shape"].map(kind => JSON.parse(read("🧬️schema/🧬️mutations/" + kind + "/🧬️schema/🔣️.json")));
+const mutationSchemas = ["📐set-shape-position", "➕insert-slide", "🔷insert-shape"].map(kind => JSON.parse(read("🧬️schema/🧬️mutations/" + kind + "/🧬️schema/🔣️.json")));
 const ajv = new Ajv({ strict: true }).addKeyword({ keyword: "x-semio-ui", schemaType: "object", valid: true });
 const validateTransform = ajv.compile(snapshot.$defs.PptxTransform);
 const validateScalars = Object.fromEntries(corpus.keys.map(key => [key, ajv.compile(snapshot.$defs.PptxTransform.properties[key])]));
@@ -17,9 +17,8 @@ const validateScalars = Object.fromEntries(corpus.keys.map(key => [key, ajv.comp
 
 test("actual schema syntax and independent signed64 scalar reference preserve exact boundaries", () => {
   expect(mutationSchemas[0].properties.position.$ref).toBe(snapshot.$id + "#/$defs/PptxTransform");
-  expect(mutationSchemas[1].properties.snapshot.$ref).toBe(snapshot.$id);
-  expect(mutationSchemas[2].properties.entry.$ref).toBe("https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlNode");
-  expect(mutationSchemas[3].properties.shape.$ref).toBe(mutationSchemas[2].properties.entry.$ref);
+  expect(mutationSchemas[1].properties.entry.$ref).toBe("https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/snapshot.json#/$defs/XmlNode");
+  expect(mutationSchemas[2].properties.shape.$ref).toBe(mutationSchemas[1].properties.entry.$ref);
   const child = spawnSync(process.env.SEMIO_NODE_EXECUTABLE ?? "node", ["--input-type=module", "-e", `let input="";for await(const chunk of process.stdin)input+=chunk;console.log(JSON.stringify(JSON.parse(input).map(({wire})=>{if(typeof wire!=="string"||!/^(-?[1-9][0-9]*|0)$/.test(wire)||wire.length>20)return false;const n=BigInt(wire);return n>=-(1n<<63n)&&n<(1n<<63n)&&String(n)===wire;})));`], { input: JSON.stringify(corpus.vectors), encoding: "utf8", timeout: 4000 });
   expect(child.status).toBe(0);
   const reference: boolean[] = JSON.parse(child.stdout);
@@ -41,7 +40,7 @@ test("both current mutation Examples tables carry only canonical typed and XML t
     const match = line.match(/^\s*\|\s*([^|]+?)\s*\|\s*(\{.*\})\s*\|\s*$/);
     return match ? [{ id: match[1]!.trim(), params: JSON.parse(match[2]!) }] : [];
   });
-  const scenarios = [...corpus.scenarios, "patch-snapshot"];
+  const scenarios = corpus.scenarios;
   expect(rows.map(row => row.id)).toEqual([...scenarios, ...scenarios]);
   let positions = 0, scalars = 0;
   const inspect = (value: unknown): void => {
@@ -64,6 +63,6 @@ test("both current mutation Examples tables carry only canonical typed and XML t
   };
   for (const row of rows) inspect(row.params);
   expect(positions).toBe(2);
-  expect(scalars).toBe(24);
-  console.info("pptx-transform-wire: both original Examples tables, 18 scenarios and 24 exact typed/XML string scalars");
+  expect(scalars).toBe(16);
+  console.info("pptx-transform-wire: both original Examples tables, 14 scenario rows and 16 exact typed/XML string scalars");
 });

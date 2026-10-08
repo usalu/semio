@@ -23,6 +23,7 @@ pub struct CreateSurface {
     pub sun_exposed: bool,
     pub wind_exposed: bool,
     pub multiplier: u32,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
@@ -38,8 +39,9 @@ pub fn create_surface(
     sun_exposed: bool,
     wind_exposed: bool,
     multiplier: u32,
+    index: Option<u32>,
 ) -> EnergyModelMutation {
-    EnergyModelMutation::CreateSurface(CreateSurface { id, name, zone_id, class, vertices_m, construction_id, boundary, interzone_surface_id, sun_exposed, wind_exposed, multiplier })
+    EnergyModelMutation::CreateSurface(CreateSurface { id, name, zone_id, class, vertices_m, construction_id, boundary, interzone_surface_id, sun_exposed, wind_exposed, multiplier, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateSurface {

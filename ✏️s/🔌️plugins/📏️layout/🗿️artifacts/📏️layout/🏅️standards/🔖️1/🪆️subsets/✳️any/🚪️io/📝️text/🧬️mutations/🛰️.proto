@@ -156,6 +156,7 @@ message UpdateLayer {
 message CreateCharacterStyle {
   string id = 1;
   optional string name = 2;
+  optional uint32 index = 3;
 }
 message DeleteCharacterStyle {
   string id = 1;
@@ -208,6 +209,7 @@ message CreateLayer {
   string id = 2;
   string name = 3;
   bool remove = 4;
+  optional uint32 index = 5;
 }
 message SetFrameLayer {
   string page_id = 1;

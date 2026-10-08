@@ -1,5 +1,5 @@
 //! 🦀️ IFC2X3/🧱️base mutation case — Rust adapter. Exhaustive: every declared `Ifc2x3Mutation` kind
-//! (`ifc-2x3-base`, 4 kinds) gets a `mutate-<kind>` and an `inverse-<kind>` scenario, plus one
+//! (`ifc-2x3-base`, 3 kinds) gets a `mutate-<kind>` and an `inverse-<kind>` scenario, plus one
 //! identity round trip. Every row's `params` IS the leaf wire payload (`payload_value()`), so the
 //! subject decodes it through the derive-generated `from_payload_value` and the oracle reads the same
 //! wire through its own grammar — nothing maps parameters onto an operation by hand. `ruststep` 0.4 can
@@ -12,7 +12,7 @@
 //! ruststep is not a second PRODUCER, so nothing here is typed `@mode-differential`).
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
-use semio_s_artifact_stdio_ifc_test_oracle::standards::v2x3::subsets::base::{oracle_apply_mutation, oracle_round_trip, oracle_snapshot_payload, project_ifc_2x3_any};
+use semio_s_artifact_stdio_ifc_test_oracle::standards::v2x3::subsets::base::{oracle_apply_mutation, oracle_round_trip, project_ifc_2x3_any};
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc";
@@ -42,12 +42,9 @@ fn wire_spec(kind: &str, params: Json) -> Json {
 }
 
 /// ↩️ The inverse spec of one forward row against the pristine fixture, computed independently of
-/// `Ifc2x3Mutation::inverse()` (whose law degrades every kind to a whole-snapshot restore) and spoken in
-/// the same leaf wire the rows use: a real per-instance inverse, and for `set-snapshot` the untouched
-/// model itself, read by `ruststep`.
+/// `Ifc2x3Mutation::inverse()` and spoken in the same leaf wire the rows use: a real per-instance inverse.
 fn inverse_spec(kind: &str, input: &[u8]) -> Result<Json, String> {
     Ok(match kind {
-        "set-snapshot" | "patch-snapshot" => wire_spec("set-snapshot", oracle_snapshot_payload(input)?),
         "upsert-instance" => wire_spec("upsert-instance", parse_json(ORIGINAL_COLUMN)?),
         "remove-instance" => wire_spec("upsert-instance", parse_json(ORIGINAL_WALL)?),
         "set-header" => wire_spec("set-header", parse_json(ORIGINAL_HEADER)?),

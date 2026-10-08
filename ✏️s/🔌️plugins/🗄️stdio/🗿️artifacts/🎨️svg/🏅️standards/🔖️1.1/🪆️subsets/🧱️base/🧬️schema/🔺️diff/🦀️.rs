@@ -15,8 +15,8 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlQuote};
 
 //#region 🔖️Diff
-/// 🔺️ Diff for `stdio.svg`. No `snapshot: Option<SvgSnapshot>` full-replace slot -- even
-/// `SetSnapshot`'s diff is the sparse field-by-field `SvgDiff::between(base, next)`.
+/// 🔺️ Diff for `stdio.svg`. No `snapshot: Option<SvgSnapshot>` full-replace slot -- every mutation leaf
+/// names exactly the prolog, epilog, declaration, doctype and node rows it changes.
 /// 🧪️ F6-PILOT CONFIRMED: `#[derive(dsl::)]` on this struct fails to compile with TWO
 /// independent, simultaneous reasons (both captured verbatim, see `f6-recon-report.md`): (1)
 /// `root: Option<SvgNodeDiff>` — `SvgNodeDiff` is a genuine data-carrying enum (`Element`/`Text`/
@@ -735,14 +735,6 @@ fn absorb_children_diff(d1: SvgChildrenDiff, d2: &SvgChildrenDiff) -> SvgChildre
 }
 //#endregion 🔖️Absorb
 
-//#region 🔖️SetSnapshot
-/// 🧩️ Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
-/// Option<SvgSnapshot>` full-replace slot -- this IS `SvgDiff::between`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &SvgSnapshot, next: &SvgSnapshot) -> SvgDiff {
-    SvgDiff::between(base, next)
-}
-//#endregion 🔖️SetSnapshot
 
 //#region 🔖️HandcraftedDiffCodec
 /// 🧪️ F6-PILOT: **hand-rolled** `protocol::DiffCodec` for `SvgDiff` — the template every other

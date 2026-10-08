@@ -1,7 +1,7 @@
 //! 📎 `set-page-overrides` — replaces one page's overrides of its parent-page frames.
 
 use crate::mutations::LayoutMutation;
-use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta, PageOverridePatchEntry, PageOverridesDelta};
 use crate::{LayoutBounds, LayoutDiff, LayoutSnapshot, PageOverride, PagePatch};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -38,7 +38,7 @@ fn overrides_ok(page_id: &str, overrides: &[PageOverride], base: &LayoutSnapshot
     let Some(page) = base.pages.iter().find(|page| page.id == page_id) else { return false };
     let Some(parent_id) = &page.parent_page_id else { return overrides.is_empty() };
     let Some(parent) = base.parent_pages.iter().find(|parent| parent.id == *parent_id) else { return false };
-    overrides.iter().all(|item| parent.frames.iter().any(|frame| frame.id() == item.object_id) && item.bounds.as_ref().map(bounds_ok).unwrap_or(true))
+    overrides.iter().enumerate().all(|(at, item)| overrides[..at].iter().all(|earlier| earlier.object_id != item.object_id) && parent.frames.iter().any(|frame| frame.id() == item.object_id) && item.bounds.as_ref().map(bounds_ok).unwrap_or(true))
 }
 
 pub fn diff_set_page_overrides(payload: &SetPageOverrides, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
@@ -51,7 +51,15 @@ pub fn diff_set_page_overrides(payload: &SetPageOverrides, base: &LayoutSnapshot
     if page.overrides == payload.overrides {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Page overrides are already set to that value.");
     }
-    protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { overrides: Some(payload.overrides.clone()), ..Default::default() } }], ..Default::default() }), ..Default::default() })
+    let held = &page.overrides;
+    let removed: Vec<String> = held.iter().filter(|item| payload.overrides.iter().all(|next| next.object_id != item.object_id)).map(|item| item.object_id.clone()).collect();
+    let added: Vec<PageOverride> = payload.overrides.iter().filter(|next| held.iter().all(|item| item.object_id != next.object_id)).cloned().collect();
+    let patched: Vec<PageOverridePatchEntry> = payload.overrides.iter().filter(|next| held.iter().any(|item| item.object_id == next.object_id && item != *next)).map(|next| PageOverridePatchEntry { id: next.object_id.clone(), item: next.clone() }).collect();
+    let natural: Vec<&str> = held.iter().filter(|item| !removed.contains(&item.object_id)).map(|item| item.object_id.as_str()).chain(added.iter().map(|item| item.object_id.as_str())).collect();
+    let target: Vec<&str> = payload.overrides.iter().map(|item| item.object_id.as_str()).collect();
+    let reordered = (natural != target).then(|| target.into_iter().map(str::to_string).collect());
+    let delta = PageOverridesDelta { added, removed, patched, reordered };
+    protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.id.clone(), patch: PagePatch { overrides: Some(delta), ..Default::default() } }], ..Default::default() }), ..Default::default() })
 }
 
 pub fn inverse_set_page_overrides(payload: &SetPageOverrides, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {

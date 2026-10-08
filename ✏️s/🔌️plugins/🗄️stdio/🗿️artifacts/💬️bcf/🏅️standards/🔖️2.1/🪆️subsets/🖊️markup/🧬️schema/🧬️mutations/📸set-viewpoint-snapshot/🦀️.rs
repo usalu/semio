@@ -1,7 +1,4 @@
-//! 📸️ `set-viewpoint-snapshot` — authored as its own mutation leaf. The aggregate's original
-//! `diff`/`inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf
-//! reconstructs its aggregate value and delegates, so the semantics are preserved by construction
-//! rather than re-derived.
+//! 📸️ `set-viewpoint-snapshot` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -19,14 +16,18 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetViewpointSnapshot {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "viewpoint-snapshot", kind: "set-viewpoint-snapshot", record: "SetViewpointSnapshot" };
 
     fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
-        agg_diff(&BcfMutation::SetViewpointSnapshot(self.clone()), base)
+        let Self { topic_guid, guid, snapshot } = self;
+        protocol::MutationOutcome::new(wrap_viewpoint_diff(base, topic_guid, guid, BcfViewpointDiff { camera: None, components: None, snapshot: Some(snapshot.clone()) }))
     }
     fn inverse(&self, base: &BcfSnapshot) -> Result<Vec<BcfMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&BcfMutation::SetViewpointSnapshot(self.clone()), base)?
-    
-    })
-}
+        let Self { topic_guid, guid, .. } = self;
+        Ok({
+            match find_viewpoint(base, topic_guid, guid) {
+                Some(v) => vec![BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid: topic_guid.clone(), guid: guid.clone(), snapshot: v.snapshot.clone() })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set viewpoint snapshot", "Blickpunkt-Schnappschuss setzen")
     }

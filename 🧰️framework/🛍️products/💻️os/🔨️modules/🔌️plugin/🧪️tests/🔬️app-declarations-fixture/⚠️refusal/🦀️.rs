@@ -42,8 +42,8 @@ fn sqlite_guest_assert_refusal(rejection: &crate::sqlite_wire::SnapshotRejection
 async fn sqlite_snapshot_guest_refusal_runtime_export_import_preserves_all_eight_causes() {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
-    use semio_framework::io::io_mechanism::{attach_sqlite_snapshot_metadata, NativeSnapshotRegistration};
-    use semio_framework::io::{ArtifactAssemblyRegistryPlan, commit_artifact_assembly_registry_plan};
+    use semio_framework_os_kernel::io::io_mechanism::{attach_sqlite_snapshot_metadata, NativeSnapshotRegistration};
+    use semio_framework_os_kernel::io::{ArtifactAssemblyRegistryPlan, commit_artifact_assembly_registry_plan};
     use store::sqlite_snapshot::{SnapshotEncoding, SqliteDatabase, SqliteDatabaseLimits, SqliteSnapshotControl, export_sqlite_database};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️schema/🪶️sqlite/⚠️refusal/🧫️fixtures/🔣️.json")).unwrap();
     let mut registrations = Vec::new();

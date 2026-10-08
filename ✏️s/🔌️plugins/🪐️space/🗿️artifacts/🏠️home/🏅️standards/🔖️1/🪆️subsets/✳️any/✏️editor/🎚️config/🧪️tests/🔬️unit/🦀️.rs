@@ -9,7 +9,6 @@ async fn home_config_dsl_text_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn home_config_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::Snapshot { config: HomeConfig::default() });
     store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::RetireLocalStudio { space_id: "studio-a".into() });
     store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::RestoreLocalStudio { space_id: "studio-a".into() });
 }
@@ -20,7 +19,7 @@ async fn home_config_op_text_round_trips_every_variant() {
 fn home_config_holds_no_directory_projection() {
     assert_eq!(HomeConfig::default(), HomeConfig { retired_local_studio_ids: Vec::new() });
     let kinds: Vec<&str> = <HomeConfigMutation as Mutation<HomeConfig>>::DESCRIPTORS.iter().map(|descriptor| descriptor.semantic_kind).collect();
-    assert_eq!(kinds, ["set-snapshot", "retire-local-studio", "restore-local-studio"]);
+    assert_eq!(kinds, ["retire-local-studio", "restore-local-studio"]);
 }
 
 //#region 🧪️RetainedConfigPreparation
@@ -60,18 +59,19 @@ fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
 /// 🪦️ A tombstone is an exact, point-invertible event: retiring inserts the id in order, its inverse restores the
 /// config byte for byte, a repeated retirement is a named no-op whose inverse changes nothing, and the op binary round
 /// trips every variant.
-#[test]
-fn local_studio_tombstones_are_exact_point_invertible_events() {
+#[semio_framework_async_macros::async_test]
+async fn local_studio_tombstones_are_exact_point_invertible_events() {
     let base = HomeConfig { retired_local_studio_ids: vec!["studio-b".into()], ..HomeConfig::default() };
     let retire = HomeConfigMutation::RetireLocalStudio { space_id: "studio-a".into() };
-    let retired = retire.diff(&base).diff().clone();
+    let retired = protocol::apply_diff(retire.diff(&base).diff(), &base).expect("the retirement applies");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&retire, &base).await;
     assert_eq!(retired.retired_local_studio_ids, vec!["studio-a".to_string(), "studio-b".to_string()]);
     assert!(retired.is_local_studio_retired("studio-a") && !base.is_local_studio_retired("studio-a"));
     let inverse = retire.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![HomeConfigMutation::RestoreLocalStudio { space_id: "studio-a".into() }]);
-    assert_eq!(inverse[0].diff(&retired).diff(), &base);
+    assert_eq!(protocol::apply_diff(inverse[0].diff(&retired).diff(), &retired).expect("the restoration applies"), base);
     let again = retire.diff(&retired);
-    assert_eq!(again.diff(), &retired);
+    assert!(protocol::DiffAlgebra::<HomeConfig>::is_empty(again.diff()));
     assert!(again.messages().iter().any(|message| format!("{message:?}").contains("mutation.no-op")));
     assert_eq!(retire.inverse(&retired).expect("valid retained mutation inverse fixture"), vec![retire.clone()], "the inverse of a no-op retirement changes nothing");
     for mutation in [retire, HomeConfigMutation::RestoreLocalStudio { space_id: "studio-b".into() }] {
@@ -88,7 +88,7 @@ fn local_studio_tombstones_refuse_inadmissible_ids_and_the_ceiling() {
     let full = HomeConfig { retired_local_studio_ids: (0..HOME_RETIRED_LOCAL_STUDIOS_MAXIMUM).map(|index| format!("studio-{index:04}")).collect(), ..HomeConfig::default() };
     for (mutation, base, code) in [(HomeConfigMutation::RetireLocalStudio { space_id: "studio-over".into() }, &full, "mutation.target-mismatch"), (HomeConfigMutation::RetireLocalStudio { space_id: "bad\u{7}id".into() }, &HomeConfig::default(), "mutation.invariant")] {
         let outcome = mutation.diff(base);
-        assert_eq!(outcome.diff(), base);
+        assert!(protocol::DiffAlgebra::<HomeConfig>::is_empty(outcome.diff()));
         assert!(outcome.messages().iter().any(|message| message.code.0 == code), "{code}");
     }
     let factory = HomeConfigPreparationFactory;
@@ -96,6 +96,5 @@ fn local_studio_tombstones_refuse_inadmissible_ids_and_the_ceiling() {
     assert!(factory.preflight(&HomeConfigMutation::RestoreLocalStudio { space_id: "studio-a".into() }, store::HistoryLane::Document).is_ok());
     assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio { space_id: String::new() }, store::HistoryLane::Document).is_err());
     assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio { space_id: "x".repeat(HOME_RETIRED_LOCAL_STUDIO_ID_BYTES + 1) }, store::HistoryLane::Document).is_err());
-    assert!(factory.preflight(&HomeConfigMutation::Snapshot { config: HomeConfig::default() }, store::HistoryLane::Document).is_err());
 }
 //#endregion 🪦️LocalStudioTombstones

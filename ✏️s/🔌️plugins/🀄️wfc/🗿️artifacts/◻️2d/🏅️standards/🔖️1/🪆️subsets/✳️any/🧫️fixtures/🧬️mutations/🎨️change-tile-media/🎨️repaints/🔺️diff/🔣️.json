@@ -1,41 +1,53 @@
 {
   "schema": null,
   "seed": null,
-  "slotsRemoved": [],
-  "slotsUpserted": [],
-  "edgesRemoved": [],
-  "edgesUpserted": [],
-  "tilesRemoved": [],
-  "tilesUpserted": [
-    [
-      0,
+  "slots": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "edges": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "tiles": {
+    "removed": [],
+    "added": [],
+    "patched": [
       {
         "id": "tile-roof",
-        "weight": 1.0,
-        "media": {
-          "Bitmap": {
-            "width": 4,
-            "height": 4,
-            "palette": [
-              {
-                "r": 30,
-                "g": 64,
-                "b": 175,
-                "a": 255
-              },
-              {
-                "r": 96,
-                "g": 165,
-                "b": 250,
-                "a": 255
-              }
-            ],
-            "pixels": "AAAAAAAAAAABAQEBAQEBAQ=="
-          }
+        "patch": {
+          "weight": null,
+          "media": {
+            "Bitmap": {
+              "width": 4,
+              "height": 4,
+              "palette": [
+                {
+                  "r": 30,
+                  "g": 64,
+                  "b": 175,
+                  "a": 255
+                },
+                {
+                  "r": 96,
+                  "g": 165,
+                  "b": 250,
+                  "a": 255
+                }
+              ],
+              "pixels": "AAAAAAAAAAABAQEBAQEBAQ=="
+            }
+          },
+          "label": null
         }
       }
     ]
-  ],
-  "rulesRemoved": [],
-  "rulesUpserted": []
+  },
+  "rules": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  }
 }

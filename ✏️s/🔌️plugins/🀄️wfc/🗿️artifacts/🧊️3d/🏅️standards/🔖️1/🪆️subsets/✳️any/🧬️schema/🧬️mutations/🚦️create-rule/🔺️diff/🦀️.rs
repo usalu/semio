@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateRule` — a real id-keyed upsert into `rules`.
 
-use crate::diff::Wfc3dDiff;
+use crate::diff::{Wfc3dDiff, Wfc3dRows};
 use crate::schema::snapshot::Wfc3dSnapshot;
 
 pub fn diff(payload: &super::CreateRule, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
@@ -13,5 +13,9 @@ pub fn diff(payload: &super::CreateRule, base: &Wfc3dSnapshot) -> protocol::Muta
     if !base.tiles.iter().any(|tile| tile.id == payload.rule.tile_b_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Rule \"{}\" references unknown tile \"{}\".", payload.rule.id, payload.rule.tile_b_id), [payload.rule.tile_b_id.clone()]);
     }
-    protocol::MutationOutcome::new(Wfc3dDiff { rules_upserted: vec![(payload.index, payload.rule.clone())], ..Default::default() })
+    let canonical = crate::schema::snapshot::canonical_rule_index(base, &payload.rule.id);
+    if payload.index != canonical {
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Rule \"{}\" must be inserted at its canonical position {canonical}, not {}.", payload.rule.id, payload.index), [payload.rule.id.clone()]);
+    }
+    protocol::MutationOutcome::new(Wfc3dDiff { rules: Wfc3dRows { added: vec![payload.rule.clone()], ..Default::default() }, ..Default::default() })
 }

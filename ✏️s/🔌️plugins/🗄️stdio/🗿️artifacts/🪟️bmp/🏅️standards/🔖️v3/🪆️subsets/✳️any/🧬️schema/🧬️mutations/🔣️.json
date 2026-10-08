@@ -6,37 +6,49 @@
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation", "payload"],
+      "required": [
+        "mutation",
+        "payload"
+      ],
       "properties": {
-        "mutation": {"const": "set-snapshot"},
-        "payload": {"$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/set-snapshot/schema.json"}
+        "mutation": {
+          "const": "paint-indexed-region"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/paint-indexed-region/schema.json"
+        }
       }
     },
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation", "payload"],
+      "required": [
+        "mutation",
+        "payload"
+      ],
       "properties": {
-        "mutation": {"const": "patch-snapshot"},
-        "payload": {"$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/patch-snapshot/schema.json"}
+        "mutation": {
+          "const": "paint-direct-region"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/paint-direct-region/schema.json"
+        }
       }
     },
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["mutation", "payload"],
+      "required": [
+        "mutation",
+        "payload"
+      ],
       "properties": {
-        "mutation": {"const": "paint-indexed-region"},
-        "payload": {"$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/paint-indexed-region/schema.json"}
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["mutation", "payload"],
-      "properties": {
-        "mutation": {"const": "paint-direct-region"},
-        "payload": {"$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/paint-direct-region/schema.json"}
+        "mutation": {
+          "const": "replace-image"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/bmp/v3/any/mutation/replace-image/schema.json"
+        }
       }
     }
   ]

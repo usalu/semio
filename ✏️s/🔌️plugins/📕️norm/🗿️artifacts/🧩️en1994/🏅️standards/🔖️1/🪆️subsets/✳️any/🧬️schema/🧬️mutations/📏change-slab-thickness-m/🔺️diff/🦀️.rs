@@ -1,7 +1,8 @@
 //! Diff for `change-slab-thickness-m`.
 use super::ChangeSlabThicknessM;
-use crate::diff::En1994SlabList;
-use crate::{En1994Diff, En1994Snapshot};
+use crate::{En1994Snapshot};
+use crate::diff::{En1994Diff, En1994SlabsRows, En1994SlabsPatch};
+
 pub fn diff(payload: &ChangeSlabThicknessM, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if !payload.new_concrete_thickness_m.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "must be finite", [payload.index.to_string()]);
@@ -12,7 +13,8 @@ pub fn diff(payload: &ChangeSlabThicknessM, base: &En1994Snapshot) -> protocol::
     if slab.concrete_thickness_m == payload.new_concrete_thickness_m {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "unchanged");
     }
-    let mut slabs = base.slabs.clone();
-    slabs[payload.index].concrete_thickness_m = payload.new_concrete_thickness_m;
-    protocol::MutationOutcome::new(En1994Diff { slabs: Some(En1994SlabList { values: slabs }), ..Default::default() })
+    protocol::MutationOutcome::new(En1994Diff {
+        slabs: Some(En1994SlabsRows { modified: vec![En1994SlabsPatch { index: payload.index, concrete_thickness_m: Some(payload.new_concrete_thickness_m), ..Default::default() }], ..Default::default() }),
+        ..Default::default()
+    })
 }

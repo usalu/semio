@@ -1,6 +1,9 @@
 syntax = "proto3";
 package semio.s.trinity.rewriting.diff;
-import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️.proto";
+import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🛰️.proto";
 import "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 import "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🛰️.proto";
-message RewritingDiff { semio.s.trinity.jack.snapshot.JackSnapshot working_graph = 1; semio.s.trinity.rewriting.artifact.Lhs lhs = 2; semio.s.trinity.rewriting.artifact.Rhs rhs = 3; semio.framework.replication.mutation.map.MapDelta parameter_bindings = 4; semio.framework.replication.mutation.map.MapDelta rule_layout = 5; }
+message PatternPatch { optional string left_var = 1; optional string left_kind = 2; optional string edge_var = 3; optional string edge_kind = 4; optional string right_var = 5; optional string right_kind = 6; }
+message LhsPatch { optional PatternPatch pattern = 1; optional string where_clause = 2; }
+message RhsPatch { repeated semio.s.trinity.rewriting.artifact.Pattern create = 1; repeated string delete = 2; repeated semio.s.trinity.rewriting.artifact.Assignment set = 3; repeated semio.s.trinity.rewriting.artifact.Pattern merge = 4; repeated semio.s.trinity.rewriting.artifact.ParameterSpec parameters = 5; }
+message RewritingDiff { semio.s.trinity.jack.diff.JackDiff working_graph = 1; LhsPatch lhs = 2; RhsPatch rhs = 3; semio.framework.replication.mutation.map.MapDelta parameter_bindings = 4; semio.framework.replication.mutation.map.MapDelta rule_layout = 5; }

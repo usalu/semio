@@ -2,6 +2,18 @@
   "feature": "PDF function and color-space handwritten relational domains",
   "binary64": ["0000000000000000", "8000000000000000", "0000000000000001", "7ff0000000000000", "fff0000000000000", "7ff0000000000042", "fff8000000000055"],
   "sampleBytes": [0, 255, 128, 77],
+  "functionSampleWords": [0, 513, 65535, 4294967295],
+  "sampled12": {"bitsPerSample":12,"size":[2],"range":[0,1],"sampleWords":[513,4095],"nativeBytes":[32,31,255]},
+  "sampleWidths": [
+    {"bitsPerSample":1,"sampleWords":[0,1,1],"nativeBytes":[96]},
+    {"bitsPerSample":2,"sampleWords":[1,2,3],"nativeBytes":[108]},
+    {"bitsPerSample":4,"sampleWords":[0,1,15],"nativeBytes":[1,240]},
+    {"bitsPerSample":8,"sampleWords":[0,255],"nativeBytes":[0,255]},
+    {"bitsPerSample":12,"sampleWords":[513,4095],"nativeBytes":[32,31,255]},
+    {"bitsPerSample":16,"sampleWords":[513,65535],"nativeBytes":[2,1,255,255]},
+    {"bitsPerSample":24,"sampleWords":[513,16777215],"nativeBytes":[0,2,1,255,255,255]},
+    {"bitsPerSample":32,"sampleWords":[513,4294967295],"nativeBytes":[0,0,2,1,255,255,255,255]}
+  ],
   "profileBytes": [73, 67, 67, 0, 255],
   "names": ["Cyan Ω", "Spot / Name"],
   "postScript": "{ dup mul Ω }",

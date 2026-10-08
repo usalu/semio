@@ -562,7 +562,7 @@ mod tests {
     use protocol::{Mutation, MutationDiff};
 
     fn apply_all(base: &WavSnapshot, mutations: &[WavMutation]) -> WavSnapshot {
-        mutations.iter().fold(base.clone(), |snapshot, mutation| MutationDiff::apply(<WavMutation as Mutation<WavSnapshot>>::diff(mutation, &snapshot).diff(), &snapshot).expect("planned mutation applies"))
+        mutations.iter().fold(base.clone(), |snapshot, mutation| protocol::apply_diff(<WavMutation as Mutation<WavSnapshot>>::diff(mutation, &snapshot).diff(), &snapshot).expect("planned mutation applies"))
     }
 
     #[test]

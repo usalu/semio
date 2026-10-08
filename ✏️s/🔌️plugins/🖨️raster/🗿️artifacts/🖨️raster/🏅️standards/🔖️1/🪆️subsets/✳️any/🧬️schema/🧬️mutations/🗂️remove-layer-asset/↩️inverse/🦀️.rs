@@ -9,12 +9,9 @@ use crate::RasterSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::RemoveLayerAsset, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    match crate::raster_image(&base.assets, &payload.asset_id) {
+    Ok(match crate::raster_image(&base.assets, &payload.asset_id) {
         Some(asset) => vec![RasterMutation::AddLayerAsset(add_layer_asset::AddLayerAsset { asset_id: payload.asset_id.clone(), asset })],
         None => Vec::new(),
-    }
-
-    })())
+    })
 }
 //#endregion 🔖️Inverse

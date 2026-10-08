@@ -10,20 +10,17 @@ comment none
 
 # Every production body is kept on ONE physical line — this dialect's alternation/sequence
 # parsing stops at the first Newline token (no line-continuation syntax exists).
-op = patch-snapshot-op | set-snapshot-op | set-has-header-op | insert-record-op | remove-record-op | set-field-op
+op = set-has-header-op | insert-record-op | remove-record-op | set-field-op
 
-patch-snapshot-op = "patch-snapshot" "patch" "=" hex
-set-snapshot-op = "set-snapshot" "snapshot" "=" snapshot-value
 set-has-header-op = "set-has-header" "has-header" "=" bit
 insert-record-op = "insert-record" "index" "=" INT "record" "=" record-value
 remove-record-op = "remove-record" "index" "=" INT
 set-field-op = "set-field" "record-index" "=" INT "field-index" "=" INT "value" "=" hex "quoted" "=" bit
 
-# Positional-tuple value grammars — the SAME shape `enc_csv_snapshot`/`enc_record`/`enc_field`
+# Positional-tuple value grammars — the SAME shape `enc_record`/`enc_field`
 # (🔺️diff/🦀️.rs, reused by 🧬️mutations/🦀️.rs) print. Whitespace between
 # `keyword`/`key=value` tokens needs no terminal of its own — it is lexer trivia, exactly like
 # every other space-separated grammar already in this repo (e.g. note.document's `schema-line`).
-snapshot-value = "[" hex "," bit "," "[" record-list? "]" "]"
 record-list = record-value {"," record-value}*
 record-value = "[" field-list? "]"
 field-list = field-value {"," field-value}*

@@ -178,6 +178,7 @@ export interface ConnectKindCompatibility {
   bidirectional: boolean;
   important: boolean;
   specificity: Puzzle2dCompatSpecificity;
+  index?: number | null;
 }
 
 /** 💔 `disconnect-kind-compatibility` payload. */

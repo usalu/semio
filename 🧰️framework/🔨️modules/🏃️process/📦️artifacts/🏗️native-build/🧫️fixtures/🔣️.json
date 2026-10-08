@@ -42,6 +42,109 @@
   ],
   "cargo": {
     "name": "neutral-artifact-fixture",
-    "stdout": "Neutral artifact ready\\n"
-  }
+    "stdout": "Neutral artifact ready\\n",
+    "features": [
+      "component-guest",
+      "default"
+    ],
+    "featureDefinitions": "[features]\ndefault=[\"component-guest\"]\ncomponent-guest=[]\n",
+    "buildCfg": "fixture_provenance",
+    "buildEnv": [
+      "SEMIO_CARGO_PROVENANCE",
+      "actual-owned-build-script"
+    ],
+    "buildResource": "provenance.txt",
+    "buildScript": "fn main(){println!(\"cargo:rustc-check-cfg=cfg(fixture_provenance)\");println!(\"cargo:rustc-cfg=fixture_provenance\");println!(\"cargo:rustc-env=SEMIO_CARGO_PROVENANCE=actual-owned-build-script\");let out=std::path::PathBuf::from(std::env::var_os(\"OUT_DIR\").unwrap());std::fs::write(out.join(\"provenance.txt\"),b\"actual-owned-build-script\").unwrap();}\n",
+    "dependency": {
+      "name": "neutral-artifact-dependency",
+      "source": "pub fn marker() -> &'static str { \"actual-dependency-owner\" }\n",
+      "value": "actual-dependency-owner"
+    },
+    "resourceInput": "actual observed build resource\nGrüße / UTF-8 / \"quoted\" / \\backslash\n",
+    "compilerResourceEnv": "SEMIO_TEST_COMPILER_RESOURCE_ROOT"
+  },
+  "depInfoBases": [
+    {
+      "id": "known-leading-parent",
+      "manifest": "branch/rust/Cargo.toml",
+      "unitManifest": "branch/rust/Cargo.toml",
+      "source": "../../lib.rs",
+      "files": [
+        "lib.rs"
+      ],
+      "target": "lib.rs",
+      "base": "branch/rust"
+    },
+    {
+      "id": "ambiguous-leading-parent",
+      "manifest": "a/Cargo.toml",
+      "unitManifest": "b/Cargo.toml",
+      "source": "../lib.rs",
+      "files": [
+        "lib.rs"
+      ],
+      "target": "lib.rs",
+      "base": null
+    },
+    {
+      "id": "incomplete-roster",
+      "manifest": "Cargo.toml",
+      "unitManifest": "Cargo.toml",
+      "source": "lib.rs missing.rs",
+      "files": [
+        "lib.rs"
+      ],
+      "target": "lib.rs",
+      "base": null
+    },
+    {
+      "id": "typed-directory-roster",
+      "manifest": "Cargo.toml",
+      "unitManifest": "Cargo.toml",
+      "source": "lib.rs assets",
+      "anchor": "lib.rs",
+      "files": [
+        "lib.rs"
+      ],
+      "directories": [
+        {
+          "path": "assets",
+          "entries": [
+            [
+              "a",
+              "file",
+              null
+            ],
+            [
+              "nested",
+              "directory",
+              null
+            ]
+          ]
+        }
+      ],
+      "target": "lib.rs",
+      "base": ""
+    }
+  ],
+  "compilerResourceCaptures": [
+    {
+      "id": "tracked-completed",
+      "present": true,
+      "tracked": true,
+      "count": 1
+    },
+    {
+      "id": "tracked-missing",
+      "present": false,
+      "tracked": true,
+      "count": 1
+    },
+    {
+      "id": "unrelated-historical",
+      "present": true,
+      "tracked": false,
+      "count": 0
+    }
+  ]
 }

@@ -3,7 +3,7 @@
   "standard": "r12",
   "subsets": {
     "header": {
-      "name": "AutoCAD DXF R12 HEADER section (Autodesk DXF Reference, 1992) -- document-wide system variables ($ACADVER etc.), plus the whole-document set-snapshot/no-mutation surface. The shared reader/writer for the whole file lives here; the other sections reuse it (family-module pattern) rather than duplicating it."
+      "name": "AutoCAD DXF R12 HEADER section (Autodesk DXF Reference, 1992) -- document-wide system variables ($ACADVER etc.), plus the concrete header, table, block and entity mutation surface. The shared reader/writer for the whole file lives here; the other sections reuse it (family-module pattern) rather than duplicating it."
     },
     "tables": {
       "name": "AutoCAD DXF R12 TABLES section -- LAYER, STYLE and LTYPE (linetype) table records."

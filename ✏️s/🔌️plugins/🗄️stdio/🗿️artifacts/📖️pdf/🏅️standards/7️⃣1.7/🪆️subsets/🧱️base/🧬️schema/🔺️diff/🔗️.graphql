@@ -28,10 +28,30 @@ type PdfDiff {
   metadata: PdfSetString
   documentId: PdfSetArrVec_u8x2
   encryption: PdfSetPdfEncryption
-  info: PdfInfo
+  info: PdfInfoDiff
   catalogExtra: PdfDictDiff
   objects: PdfObjectsDiff
   trailer: PdfDictDiff
+  graphEdit: Boolean
+}
+
+type PdfInfoDiff {
+  title: PdfSetString
+  author: PdfSetString
+  subject: PdfSetString
+  keywords: PdfSetString
+  creator: PdfSetString
+  producer: PdfSetString
+  creationDate: PdfSetPdfDate
+  modificationDate: PdfSetPdfDate
+  trapped: PdfSetString
+  extra: [PdfDictEntry!]
+}
+
+"""Tagged union: exactly the fields of the variant `kind` names are populated."""
+type PdfSetPdfDate {
+  kind: String!
+  value: PdfDate
 }
 
 type PdfDictDiff {

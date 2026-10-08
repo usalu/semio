@@ -1,0 +1,22 @@
+{
+  "structureId": null,
+  "geotechnicalCategory": null,
+  "designSituation": null,
+  "designApproach": null,
+  "annex": null,
+  "groundwaterLevel": null,
+  "investigationDepth": null,
+  "layers": null,
+  "footings": {
+    "added": [],
+    "removed": [
+      "footing-F1-m1"
+    ],
+    "modified": [],
+    "order": null
+  },
+  "piles": null,
+  "retainingWalls": null,
+  "slopes": null,
+  "upliftCases": null
+}

@@ -1050,23 +1050,55 @@ fn insert_point_into(pts: &[(f64, f64)], tris: &mut Vec<Tri>, p_idx: usize) {
     if bad.is_empty() {
         return;
     }
+    let (bad, rejected) = connected_cavity(pts, bad, p);
+    good.extend(rejected);
     let mut directed: Vec<(usize, usize)> = Vec::new();
     for t in &bad {
         directed.push((t.a, t.b));
         directed.push((t.b, t.c));
         directed.push((t.c, t.a));
     }
-    let mut boundary = Vec::new();
-    for &(u, v) in &directed {
-        if !directed.iter().any(|&(x, y)| x == v && y == u) {
-            boundary.push((u, v));
-        }
-    }
+    let present: std::collections::HashSet<(usize, usize)> = directed.iter().copied().collect();
+    let boundary: Vec<(usize, usize)> = directed.iter().copied().filter(|&(u, v)| !present.contains(&(v, u))).collect();
     let mut new_tris = good;
     for (u, v) in boundary {
         new_tris.push(ensure_ccw(pts, Tri { a: u, b: v, c: p_idx }));
     }
     *tris = new_tris;
+}
+
+/// 📐 The part of `bad` that is the cavity of `p`: the triangles reachable from the one containing `p` through shared edges. On a
+/// trimmed (constrained) mesh a circumcircle can reach a triangle on the far side of a notch of the boundary; such a triangle is no
+/// part of `p`'s star-shaped cavity and re-fanning it overlaps the mesh, which doubled the triangle count on every insertion.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn connected_cavity(pts: &[(f64, f64)], bad: Vec<Tri>, p: (f64, f64)) -> (Vec<Tri>, Vec<Tri>) {
+    let contains = |t: &Tri| orient(pts[t.a], pts[t.b], p) >= -1e-12 && orient(pts[t.b], pts[t.c], p) >= -1e-12 && orient(pts[t.c], pts[t.a], p) >= -1e-12;
+    let Some(start) = bad.iter().position(contains) else { return (bad, Vec::new()) };
+    let mut edges: std::collections::HashMap<(usize, usize), Vec<usize>> = std::collections::HashMap::new();
+    for (i, t) in bad.iter().enumerate() {
+        for (u, v) in [(t.a, t.b), (t.b, t.c), (t.c, t.a)] {
+            edges.entry((u.min(v), u.max(v))).or_default().push(i);
+        }
+    }
+    let mut reached = vec![false; bad.len()];
+    let mut stack = vec![start];
+    reached[start] = true;
+    while let Some(i) = stack.pop() {
+        let t = bad[i];
+        for (u, v) in [(t.a, t.b), (t.b, t.c), (t.c, t.a)] {
+            for &j in &edges[&(u.min(v), u.max(v))] {
+                if !reached[j] {
+                    reached[j] = true;
+                    stack.push(j);
+                }
+            }
+        }
+    }
+    let (mut cavity, mut rejected) = (Vec::new(), Vec::new());
+    for (t, reached) in bad.into_iter().zip(reached) {
+        if reached { cavity.push(t) } else { rejected.push(t) }
+    }
+    (cavity, rejected)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

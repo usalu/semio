@@ -14,26 +14,7 @@
         "🧬️schema/🔣️.json",
         "🟦️.ts",
         "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs"
-      ]
-    },
-    {
-      "kind": "set-snapshot",
-      "variant": "SetSnapshot",
-      "directory": "📸️set-snapshot",
-      "textOpcode": "set-snapshot",
-      "binaryTag": 17,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs"
+        "🛰️.proto"
       ]
     },
     {
@@ -48,23 +29,7 @@
         "🧬️schema/🔣️.json",
         "🟦️.ts",
         "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs"
-      ]
-    },
-    {
-      "kind": "patch-snapshot",
-      "variant": "PatchSnapshot",
-      "directory": "🩹️patch-snapshot",
-      "textOpcode": "patch-snapshot",
-      "binaryTag": 19,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs"
+        "🛰️.proto"
       ]
     },
     {
@@ -79,9 +44,22 @@
         "🧬️schema/🔣️.json",
         "🟦️.ts",
         "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs"
+        "🛰️.proto"
+      ]
+    },
+    {
+      "kind": "replace-image",
+      "variant": "ReplaceImage",
+      "directory": "🔄️replace-image",
+      "textOpcode": "replace-image",
+      "binaryTag": 12,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🧬️schema/🔣️.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto"
       ]
     }
   ]

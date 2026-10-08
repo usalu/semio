@@ -1,0 +1,17 @@
+import Ajv from "ajv";
+import {test,expect} from "bun:test";
+import {readFileSync,mkdirSync,mkdtempSync} from "node:fs";
+import {resolve,join} from "node:path";
+import {spawnSync} from "node:child_process";
+import {captureOwnedProcess} from "../../🟦️.ts";
+interface Vector{id:string;bytes:string;repeat:number;view:boolean;program:string;budgetMs:number;outputBytes:number;abortAfterMs:number|null;oracle:boolean;expected:{reason:"exit"|"cancelled"|"timeout"|"output-limit";status:number|null;stdoutHex:string|null;inputState:string};}
+const owner=resolve(import.meta.dir,"../.."),fixture:{schemaVersion:1;cases:Vector[]}=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/📥️stdin/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(resolve(owner,"🧬️schema/📥️stdin/🔣️.json"),"utf8"));
+const admitInput=new Ajv({strict:true}).compile(schema);
+test("owned stdin has a closed variable production byte-source contract",()=>{const input={source:[0,255],maximumBytes:2};expect(admitInput(input)).toBe(true);expect(admitInput({...input,extra:true})).toBe(false);expect(new Set(fixture.cases.map(row=>row.id)).size).toBe(fixture.cases.length);});
+for(const vector of fixture.cases)test("owned async stdin: "+vector.id,async()=>{
+ const artifact=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifact)throw Error("Owned stdin evidence required");mkdirSync(artifact,{recursive:true});const directory=mkdtempSync(join(artifact,"owned-stdin-")),seed=Buffer.from(vector.bytes,"hex"),length=seed.byteLength*vector.repeat,storage=new Uint8Array(length+(vector.view?2:0)),source=vector.view?storage.subarray(1,storage.byteLength-1):storage;for(let index=0;index<vector.repeat;index++)source.set(seed,index*seed.byteLength);
+ if(!admitInput({source:Array.from(source),maximumBytes:length}))throw Error("Neutral bytes violate production input contract");
+ const controller=new AbortController();if(vector.abortAfterMs===0)controller.abort();const timer=vector.abortAfterMs!==null&&vector.abortAfterMs>0?setTimeout(()=>controller.abort(),vector.abortAfterMs):undefined;
+ const stdoutPath=join(directory,"stdout.log"),stderrPath=join(directory,"stderr.log");
+ try{const result=await captureOwnedProcess("node",["--eval",vector.program],{cwd:directory,env:process.env,budgetMs:vector.budgetMs,maxOutputBytes:vector.outputBytes,stdoutPath,stderrPath,cancelled:()=>controller.signal.aborted,input:{source,maximumBytes:length}});expect(result.reason,vector.id).toBe(vector.expected.reason);expect(result.status,vector.id).toBe(vector.expected.status);const bytes=readFileSync(stdoutPath);expect(bytes.byteLength).toBeLessThanOrEqual(vector.outputBytes);if(vector.expected.stdoutHex!==null)expect(bytes.toString("hex"),vector.id).toBe(vector.expected.stdoutHex);if(vector.expected.inputState==="complete"){expect(result.input?.state).toBe("complete");expect(result.input?.queuedBytes).toBe(length);}else if(vector.expected.inputState==="absent")expect(result.input).toBeUndefined();else if(vector.expected.inputState==="incomplete")expect(result.input?.state).not.toBe("complete");if(vector.oracle){const oracle=spawnSync("node",["--eval",vector.program],{input:source,timeout:vector.budgetMs,maxBuffer:vector.outputBytes});expect(oracle.status).toBe(result.status);expect(oracle.stdout.equals(bytes)).toBe(true);}console.log("[DEBUG] owned async stdin exact bytes closed: "+vector.id+" reason="+result.reason+" bytes="+bytes.byteLength);}finally{if(timer)clearTimeout(timer);}
+},60000);

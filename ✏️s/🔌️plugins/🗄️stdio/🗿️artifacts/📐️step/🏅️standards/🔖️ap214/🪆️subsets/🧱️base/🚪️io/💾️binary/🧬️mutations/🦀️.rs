@@ -7,11 +7,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod mutations_codec {
 use super::*;
 use crate::standards::v_ap214::subsets::base::schema::mutations::*;
-use crate::schema::diff::{diff_set_snapshot, StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified};
-use crate::standards::v_ap214::subsets::base::io::binary::snapshot::{dec_step_snapshot_bin};
-use crate::standards::v_ap214::subsets::base::io::binary::snapshot::{enc_step_snapshot_bin};
-use crate::standards::v_ap214::subsets::base::io::text::snapshot::{dec_step_snapshot};
-use crate::standards::v_ap214::subsets::base::io::text::snapshot::{enc_step_snapshot};
+use crate::schema::diff::{StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified};
 use crate::standards::v_ap214::subsets::base::io::text::diff::{dec_value};
 use crate::standards::v_ap214::subsets::base::io::text::diff::{enc_value};
 use crate::standards::v_ap214::subsets::base::io::binary::diff::{dec_value_bin};
@@ -50,13 +46,11 @@ use protocol::{Mutation, MutationDiff, OpText};
 /// (shifted down by one from the pre-migration 1-10 numbering: `NoMutation`'s tag `0` had no
 /// leaf and is gone with the variant).
 /// Reuses `StepDiff`'s `pub(crate)` recursive `enc_value_bin`/`enc_entity_bin`/
-/// `enc_step_snapshot_bin`/`write_str_bin` primitives (`../../🔺️diff/🦀️.rs`, imported
+/// `write_str_bin` primitives (`../../🔺️diff/🦀️.rs`, imported
 /// above) — same intra-artifact-reuse split the TEXT codec above already uses.
 impl OpBinary for StepMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            StepMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
-            StepMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
             StepMutation::SetFileDescription(_) => TAG_SET_FILE_DESCRIPTION,
             StepMutation::SetFileName(_) => TAG_SET_FILE_NAME,
             StepMutation::SetFileSchema(_) => TAG_SET_FILE_SCHEMA,
@@ -69,8 +63,6 @@ impl OpBinary for StepMutation {
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
-            StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_step_snapshot_bin(snapshot, &mut out),
-            StepMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => out.extend(protocol::OpBinary::encode_op(patch)?),
             StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description }) => enc_file_description_bin(file_description, &mut out),
             StepMutation::SetFileName(set_file_name::SetFileName { file_name }) => enc_file_name_bin(file_name, &mut out),
             StepMutation::SetFileSchema(set_file_schema::SetFileSchema { file_schema }) => enc_file_schema_bin(file_schema, &mut out),
@@ -107,11 +99,6 @@ impl OpBinary for StepMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            TAG_PATCH_SNAPSHOT => Ok(StepMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(reader.read_bytes(reader.remaining()).map_err(|e| protocol::ProtocolError::Malformed { what: "patch-snapshot payload", offset: reader.position() as u64, detail: e.to_string() })?)? })),
-            TAG_SET_SNAPSHOT => {
-                let snapshot = dec_step_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
-                Ok(StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
-            }
             TAG_SET_FILE_DESCRIPTION => {
                 let file_description = dec_file_description_bin(&mut reader).map_err(|e| malformed("op file_description", reader.position(), e))?;
                 Ok(StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description }))
@@ -165,8 +152,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `StepMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_SET_FILE_DESCRIPTION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-description");
 const TAG_SET_FILE_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-name");
 const TAG_SET_FILE_SCHEMA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-schema");

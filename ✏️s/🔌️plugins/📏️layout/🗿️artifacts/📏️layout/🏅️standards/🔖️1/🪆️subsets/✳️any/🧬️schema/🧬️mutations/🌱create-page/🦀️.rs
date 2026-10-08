@@ -1,14 +1,13 @@
 //! 🌱️ `create-page` — brings a new {@link Page} into existence in the id-keyed `pages` collection.
 
 use crate::mutations::{delete_page, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::LayoutPagesDelta;
+use crate::standards::v1::subsets::any::schema::diff::{insertion_order, LayoutPagesDelta};
 use crate::{LayoutDiff, LayoutSnapshot, Page};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🌱️CreatePage
-/// 🌱️ `index` is descriptive of authoring intent (the append-only `LayoutPagesDelta` apply always
-/// pushes at the end, matching the pre-migration generic append behavior).
+/// 🌱️ `index` is the zero-based insertion position among the pages; `None` or past the end appends.
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
@@ -44,7 +43,7 @@ pub fn diff_create_page(payload: &CreatePage, base: &LayoutSnapshot) -> protocol
     if base.pages.iter().any(|page| page.id == payload.page.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A page with id \"{}\" already exists.", payload.page.id), [payload.page.id.clone()]);
     }
-    protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { added: vec![payload.page.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { added: vec![payload.page.clone()], reordered: insertion_order(base.pages.iter().map(|page| page.id.as_str()), &payload.page.id, payload.index), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🌱️CreatePage
 

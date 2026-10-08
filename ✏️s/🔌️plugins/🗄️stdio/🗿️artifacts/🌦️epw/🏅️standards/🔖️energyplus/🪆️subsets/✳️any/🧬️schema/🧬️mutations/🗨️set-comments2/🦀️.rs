@@ -1,7 +1,4 @@
-//! 🗨️ `set-comments2` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 🗨️ `set-comments2` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -17,14 +14,12 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetComments2 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "comments2", kind: "set-comments2", record: "SetComments2" };
 
     fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
-        agg_diff(&EpwMutation::SetComments2(self.clone()), base)
+        let Self { value } = self;
+        protocol::MutationOutcome::new(EpwDiff { comments_2: Some(value.clone()), ..EpwDiff::default() })
     }
     fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&EpwMutation::SetComments2(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![EpwMutation::SetComments2(set_comments2::SetComments2 { value: base.comments_2.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set comments 2", "Kommentare 2 setzen")
     }

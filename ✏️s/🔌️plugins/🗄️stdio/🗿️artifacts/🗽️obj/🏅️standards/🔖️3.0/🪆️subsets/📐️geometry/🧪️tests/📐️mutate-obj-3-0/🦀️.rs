@@ -120,8 +120,7 @@ fn restore_named_entry(entries: &[(String, Vec<f64>, Json)], at: usize, remove_k
 /// lands the geometry in no band and `tobj` reads a fourth model — `$.vertexCount` 8577 against the
 /// mesh's own 8576) and `remove-group`/`remove-object` (a re-declared entry appends rather than
 /// returning to its own position). Whatever the inverse needs to know about the pre-mutation state
-/// it reads out of `base` with the oracle's own independent parser: `set-snapshot` inverts through a
-/// REAL `set-snapshot` carrying the original document's emitted payload — never a hand-back of the
+/// it reads out of `base` with the oracle's own independent parser: no inverse is a hand-back of the
 /// pristine input bytes, which would let the scenario pass without the reference re-serializing
 /// anything at all.
 fn inverse_specs(spec: &Json, base: &[u8]) -> Result<Vec<Json>, String> {
@@ -131,7 +130,6 @@ fn inverse_specs(spec: &Json, base: &[u8]) -> Result<Vec<Json>, String> {
     let named = |key: &str| -> Result<String, String> { params.get(key).and_then(|value| match value { Json::String(text) => Some(text.clone()), _ => None }).ok_or_else(|| format!("{kind} requires a string {key:?} parameter")) };
     let one = |value: Json| -> Result<Vec<Json>, String> { Ok(vec![value]) };
     match kind.as_str() {
-        "set-snapshot" | "patch-snapshot" => one(json_spec("set-snapshot", json_obj(vec![("snapshot", oracle_snapshot_json(base)?)]))),
         "insert-vertex" => one(json_spec("remove-vertex", json_obj(vec![("index", json_num(8449.0))]))),
         "remove-vertex" => one(json_spec("insert-vertex", json_obj(vec![("index", json_num(8448.0)), ("vertex", json_obj(vec![("x", json_num(0.0)), ("y", json_num(-1.0)), ("z", json_num(0.0))]))]))),
         "set-vertex" => one(json_spec("set-vertex", json_obj(vec![("index", json_num(0.0)), ("vertex", json_obj(vec![("x", json_num(0.0)), ("y", json_num(-1.0)), ("z", json_num(0.0))]))]))),
@@ -207,9 +205,8 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// ↩️ The inverse law, asserted HERE rather than deferred to the parity phase: every kind — INCLUDING
-/// `set-snapshot`, which now inverts through a real `set-snapshot` of the original document instead
-/// of returning the pristine bytes — is applied forward and then undone, and the restored mesh's
+/// ↩️ The inverse law, asserted HERE rather than deferred to the parity phase: every kind
+/// is applied forward and then undone, and the restored mesh's
 /// composed projection must equal the REAL original's own. `semantic-obj-3-0-v1`'s own tolerance
 /// (1e-5, byte length and decimal precision the only writer freedom) is what the comparison uses,
 /// never a stricter one.
@@ -282,7 +279,7 @@ mod subject {
         Ok(Outcome::with_raw(bytes, projection))
     }
 
-    /// ↩️ Every kind, INCLUDING `set-snapshot`, is applied forward and then undone by the production
+    /// ↩️ Every kind is applied forward and then undone by the production
     /// inverse sequence computed against the pre-mutation snapshot — `remove-face`'s membership repair and
     /// `remove-group`/`remove-object`'s re-ordering included.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {

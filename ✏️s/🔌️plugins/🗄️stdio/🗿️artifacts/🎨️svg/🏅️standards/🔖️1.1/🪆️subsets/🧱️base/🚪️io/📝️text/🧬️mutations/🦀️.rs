@@ -2,7 +2,7 @@
 use crate::schema::mutations::SvgMutation;
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
-pub const TEXT_OPCODES: &[&str] = &["set-declaration", "set-doctype", "insert-element", "remove-element", "set-element-name", "set-attribute", "set-text", "set-view-box", "set-transform", "set-snapshot", "patch-snapshot"];
+pub const TEXT_OPCODES: &[&str] = &["set-declaration", "set-doctype", "insert-element", "remove-element", "set-element-name", "set-attribute", "set-text", "set-view-box", "set-transform"];
 fn error(detail: impl Into<String>) -> semio_framework_diagnostic::TextError {
     semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail.into(), semio_framework_diagnostic::TextSpan::at(1, 1))
 }
@@ -41,9 +41,6 @@ impl protocol::OpText for SvgMutation {
 
 #[path = "📥️insert-element/🦀️.rs"]
 pub mod insert_element;
-
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 
 #[path = "🗑️remove-element/🦀️.rs"]
 pub mod remove_element;

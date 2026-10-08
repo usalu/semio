@@ -10,7 +10,7 @@ const SYMBOL_LIMIT: usize = isize::MAX as usize;
 struct Symbol { path: [usize; 64], depth: usize, occurrences: usize, selected: bool, forced: bool }
 impl Symbol {
     fn text<'a>(&self, source: &'a dyn FieldProjectionSource) -> Result<&'a str, ValueError> {
-        match source.projection_view(&self.path[..self.depth])? { V::Text(text) => Ok(text), _ => Err(invalid("Pack symbol source changed")) }
+        match source.projection_view(&self.path[..self.depth])? { V::Text(text) | V::IntrinsicText(text) => Ok(text), _ => Err(invalid("Pack symbol source changed")) }
     }
 }
 
@@ -26,7 +26,7 @@ pub struct BorrowedProjectedPackProgress { pub progress: RetainedCloneProgress, 
 
 /// 🧭️ Locators own no text; symbol pages remain retained until their whole physical close grant.
 pub struct BorrowedProjectedPackCursor {
-    identity: Option<usize>, root_spec: Option<BorrowedRecordSpec>, phase: Phase, symbols: PagedList<Symbol, SYMBOL_LIMIT>,
+    identity: Option<usize>, root_spec: Option<BorrowedRecordSpec>, intrinsic_field: Option<u16>, phase: Phase, symbols: PagedList<Symbol, SYMBOL_LIMIT>,
     frames: [Frame; 64], path: [usize; 64], depth: usize,
     note: Option<Symbol>, search: usize, compare_offset: usize, insertion: usize,
     selected: usize, symbol_index: usize, symbol_offset: usize,
@@ -34,10 +34,10 @@ pub struct BorrowedProjectedPackCursor {
 }
 
 impl Default for BorrowedProjectedPackCursor {
-    fn default() -> Self { Self { identity: None, root_spec: None, phase: Phase::Discover, symbols: PagedList::empty(), frames: [Frame::default(); 64], path: [0; 64], depth: 0, note: None, search: 0, compare_offset: 0, insertion: 0, selected: 0, symbol_index: 0, symbol_offset: 0, pending: [0; 24], pending_length: 0, pending_offset: 0 } }
+    fn default() -> Self { Self { identity: None, root_spec: None, intrinsic_field: None, phase: Phase::Discover, symbols: PagedList::empty(), frames: [Frame::default(); 64], path: [0; 64], depth: 0, note: None, search: 0, compare_offset: 0, insertion: 0, selected: 0, symbol_index: 0, symbol_offset: 0, pending: [0; 24], pending_length: 0, pending_offset: 0 } }
 }
 
-fn invalid(reason: &'static str) -> ValueError { ValueError::new(ValueRefusalKind::InvariantViolated, reason) }
+fn invalid(reason: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated, reason) }
 fn page_error(error: semio_framework_value::list::PagedListError) -> ValueError { ValueError::new(match error.kind { semio_framework_value::list::PagedListRefusalKind::AllocationFailed => ValueRefusalKind::AllocationFailed, semio_framework_value::list::PagedListRefusalKind::OwnershipLimit => ValueRefusalKind::OwnershipLimit, _ => ValueRefusalKind::InvariantViolated }, error.reason) }
 
 impl BorrowedProjectedPackCursor {
@@ -51,9 +51,12 @@ impl BorrowedProjectedPackCursor {
     pub fn next_close_byte_demand(&self) -> Result<usize, ValueError> { if !self.symbols.is_empty() { Ok(0) } else { self.symbols.next_release_allocation_bytes().map_err(page_error) } }
 
     fn queue(&mut self, bytes: &[u8]) { self.pending[..bytes.len()].copy_from_slice(bytes); self.pending_length = bytes.len(); self.pending_offset = 0; }
-    fn queue_number(&mut self, tag: Option<u8>, mut value: u64) {
+    fn queue_number(&mut self, tag: Option<u8>, value: u64) {
         self.pending_length = 0; self.pending_offset = 0;
         if let Some(tag) = tag { self.pending[0] = tag; self.pending_length = 1; }
+        self.append_number(value);
+    }
+    fn append_number(&mut self, mut value: u64) {
         loop { let byte = (value & 127) as u8; value >>= 7; self.pending[self.pending_length] = byte | if value == 0 { 0 } else { 128 }; self.pending_length += 1; if value == 0 { break; } }
     }
     fn queue_float(&mut self, value: f64, tag: bool) { let mut bytes = [0; 9]; let start = usize::from(tag); if tag { bytes[0] = TAG_F64; } bytes[start..start + 8].copy_from_slice(&value.to_le_bytes()); self.queue(&bytes[..start + 8]); }
@@ -92,6 +95,9 @@ impl BorrowedProjectedPackCursor {
     }
 
     fn declare(&mut self, view: &V<'_>) -> Result<(), ValueError> {
+        if self.intrinsic_field.is_some() {
+            return if matches!(view,V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicText(_)|V::IntrinsicBytes(_)|V::IntrinsicArray(_)|V::IntrinsicObject(_)) { Ok(()) } else { Err(invalid("intrinsic Pack source changed its declared value authority")) };
+        }
         let frame = self.frames[self.depth];
         if let V::Record(ids) = view {
             let record = if self.depth == 0 { self.root_spec } else { match frame.shape { Some(B::Record(make)) => Some(make()), _ => None } }.ok_or_else(|| invalid("Pack Record lacks declared Record authority"))?;
@@ -117,11 +123,11 @@ impl BorrowedProjectedPackCursor {
         if frame.phase == 0 {
             self.declare(&view)?;
             match view {
-                V::Text(_) => { self.note = Some(Symbol { path: self.path, depth: self.depth, occurrences: 1, selected: false, forced: frame.force_text }); self.pop(); self.phase = Phase::Find; self.search = 0; self.compare_offset = 0; }
+                V::Text(_) | V::IntrinsicText(_) => { self.note = Some(Symbol { path: self.path, depth: self.depth, occurrences: 1, selected: false, forced: frame.force_text }); self.frames[self.depth].phase=1; self.pop(); self.phase = Phase::Find; self.search = 0; self.compare_offset = 0; }
                 V::Block => { self.frames[self.depth].phase=1;self.frames[self.depth].length=1; }
                 V::Record(ids) => { self.frames[self.depth].phase = 1; self.frames[self.depth].length = ids.len(); }
-                V::List(length) | V::Tuple(length) => { self.frames[self.depth].phase = 1; self.frames[self.depth].length = length; }
-                V::Absent | V::Bool(_) | V::Int(_) | V::UInt(_) | V::Float(_) | V::Enum(_) | V::Bytes(_) => self.pop(),
+                V::List(length) | V::Tuple(length) | V::IntrinsicArray(length) | V::IntrinsicObject(length) => { self.frames[self.depth].phase = 1; self.frames[self.depth].length = length; }
+                V::Absent | V::Bool(_) | V::Int(_) | V::UInt(_) | V::Float(_) | V::Enum(_) | V::Bytes(_) | V::IntrinsicNull | V::IntrinsicBool(_) | V::IntrinsicNumber(_) | V::IntrinsicBytes(_) => self.pop(),
                 _ => return Err(invalid("borrowed Pack cursor has no declared projection authority for this shape")),
             }
         } else if frame.index < frame.length { self.frames[self.depth].index += 1; self.push(frame.index)?; }
@@ -131,14 +137,24 @@ impl BorrowedProjectedPackCursor {
 
     /// ✍️ Performs one structural event, one physical birth, or at most sixty-four source/output bytes.
     pub fn advance(&mut self, source: &dyn FieldProjectionSource, spec: BorrowedRecordSpec, output: &mut [u8], grant: RetainedCloneGrant) -> Result<BorrowedProjectedPackProgress, ValueError> {
+        self.advance_root(source,Some(spec),None,output,grant)
+    }
+
+    /// 🌱️ Emits one declared intrinsic Body field, preserving original member order and duplicates.
+    pub fn advance_intrinsic(&mut self, source: &dyn FieldProjectionSource, field_id: u16, output: &mut [u8], grant: RetainedCloneGrant) -> Result<BorrowedProjectedPackProgress, ValueError> {
+        self.advance_root(source,None,Some(field_id),output,grant)
+    }
+
+    fn advance_root(&mut self, source: &dyn FieldProjectionSource, spec: Option<BorrowedRecordSpec>, field_id: Option<u16>, output: &mut [u8], grant: RetainedCloneGrant) -> Result<BorrowedProjectedPackProgress, ValueError> {
         if matches!(self.phase, Phase::Closing | Phase::Closed) { return Err(invalid("borrowed Pack cursor is closing")); }
+        let identity = source as *const dyn FieldProjectionSource as *const () as usize;
+        if self.identity.is_some_and(|expected| expected != identity) { return Err(invalid("borrowed Pack original source identity changed")); }
+        if self.identity.is_some() && (self.intrinsic_field != field_id || self.root_spec.is_some() != spec.is_some()) { return Err(invalid("borrowed Pack root framing authority changed")); }
+        if self.root_spec.is_some_and(|original| spec.is_none_or(|spec|original.fields.as_ptr() != spec.fields.as_ptr() || original.fields.len() != spec.fields.len())) { return Err(invalid("borrowed Pack declared root fields changed")); }
         if self.is_complete() { return Ok(BorrowedProjectedPackProgress { complete: true, ..Default::default() }); }
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < self.next_minimum_copy_bytes() { return Ok(Default::default()); }
         if grant.maximum_depth < 64 { return Err(ValueError::new(ValueRefusalKind::DepthLimit, "borrowed Pack requires its declared inline depth")); }
-        let identity = source as *const dyn FieldProjectionSource as *const () as usize;
-        if self.identity.is_some_and(|expected| expected != identity) { return Err(invalid("borrowed Pack original source identity changed")); }
-        if self.root_spec.is_some_and(|original| original.fields.as_ptr() != spec.fields.as_ptr() || original.fields.len() != spec.fields.len()) { return Err(invalid("borrowed Pack declared root fields changed")); }
-        self.identity = Some(identity); self.root_spec = Some(spec);
+        self.identity = Some(identity); self.root_spec = spec; self.intrinsic_field = field_id;
         let mut progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         let maximum = grant.maximum_copy_bytes.min(64);
         if self.pending_offset < self.pending_length {
@@ -177,7 +193,10 @@ impl BorrowedProjectedPackCursor {
             }
             Phase::SymbolsCount => { self.queue_number(None, self.selected as u64); self.symbol_index = 0; self.phase = Phase::Symbols; }
             Phase::Symbols => {
-                if self.symbol_index == self.symbols.len() { self.frames = [Frame::default(); 64]; self.depth = 0; self.phase = Phase::Body; }
+                if self.symbol_index == self.symbols.len() {
+                    self.frames = [Frame::default(); 64]; self.depth = 0; self.phase = Phase::Body;
+                    if let Some(field)=self.intrinsic_field { self.queue_number(None,1);self.append_number(u64::from(field));self.pending[self.pending_length]=TAG_VALUE;self.pending_length+=1; }
+                }
                 else if self.symbols[self.symbol_index].selected { self.queue_number(None, self.symbols[self.symbol_index].text(source)?.len() as u64); self.symbol_offset = 0; self.phase = Phase::SymbolBytes; }
                 else { self.symbol_index += 1; }
             }
@@ -205,14 +224,18 @@ impl BorrowedProjectedPackCursor {
                 V::Record(_) => { if self.depth != 0 { self.queue(&[TAG_RECORD]); } self.frames[self.depth].phase = 1; }
                 V::List(length) if matches!(frame.shape, Some(B::Table(_))) => { self.queue_number(Some(TAG_TABLE_SOA),length as u64); self.frames[self.depth].phase=10; self.frames[self.depth].length=length; }
                 V::List(length) | V::Tuple(length) => { self.frames[self.depth].phase = 4; self.frames[self.depth].length = length; self.frames[self.depth].flags = if length == 0 { 0 } else { 3 }; }
-                V::Text(_) => { self.frames[self.depth].phase = 7; self.compare_offset = 0; }
-                V::Bytes(bytes) => { self.queue_number(Some(TAG_BYTES), bytes.len() as u64); self.frames[self.depth].phase = 8; }
-                V::Bool(value) => { self.queue(&[if value { TAG_TRUE } else { TAG_FALSE }]); self.pop(); }
+                V::IntrinsicArray(length) => { self.queue_number(Some(TAG_LIST),length as u64);self.frames[self.depth].phase=5;self.frames[self.depth].length=length; }
+                V::IntrinsicObject(length) => { self.queue_number(Some(TAG_MAP),length as u64);self.frames[self.depth].phase=21;self.frames[self.depth].length=length; }
+                V::Text(_) | V::IntrinsicText(_) => { self.frames[self.depth].phase = 7; self.compare_offset = 0; }
+                V::Bytes(bytes) | V::IntrinsicBytes(bytes) => { self.queue_number(Some(TAG_BYTES), bytes.len() as u64); self.frames[self.depth].phase = 8; }
+                V::Bool(value) | V::IntrinsicBool(value) => { self.queue(&[if value { TAG_TRUE } else { TAG_FALSE }]); self.pop(); }
+                V::IntrinsicNull => { self.queue(&[TAG_NULL]);self.pop(); }
                 V::Absent => { self.queue(&[TAG_ABSENT]); self.pop(); }
                 V::Float(value) => { self.queue_float(value, true); self.pop(); }
                 V::UInt(value) => { self.queue_number(Some(TAG_UINT), value); self.pop(); }
                 V::Int(value) => { self.queue_number(Some(TAG_INT), ((value as u64) << 1) ^ ((value >> 63) as u64)); self.pop(); }
                 V::Enum(value) => { self.queue_number(Some(TAG_ENUM), u64::from(value)); self.pop(); }
+                V::IntrinsicNumber(value) => { match value { Number::UInt(value)=>self.queue_number(Some(TAG_UINT),value),Number::Int(value)=>self.queue_number(Some(TAG_INT),((value as u64)<<1)^((value>>63)as u64)),Number::Float(value)=>self.queue_float(value,true) };self.pop(); }
                 _ => return Err(invalid("borrowed Pack body shape has no codec authority")),
             }
         } else { match frame.phase {
@@ -245,7 +268,7 @@ impl BorrowedProjectedPackCursor {
                 else { self.frames[self.depth].index += 1; if frame.packed == 0 { self.push(frame.index)?; } else { self.path[self.depth] = frame.index; match source.projection_view(&self.path[..self.depth + 1])? { V::Float(value) if frame.packed == 1 => self.queue_float(value, false), V::Int(value) => self.queue_number(None, ((value as u64) << 1) ^ ((value >> 63) as u64)), V::UInt(value) => self.queue_number(None, value << 1), V::Enum(value) => self.queue_number(None, u64::from(value) << 1), _ => return Err(invalid("Pack numeric list changed its original field kind")) } } }
             }
             7 => {
-                let V::Text(text) = view else { return Err(invalid("Pack text changed shape")); };
+                let text = match view {V::Text(text)|V::IntrinsicText(text)=>text,_=>return Err(invalid("Pack text changed shape"))};
                 if frame.index == self.symbols.len() { self.queue_number(Some(TAG_STR_INLINE), text.len() as u64); self.frames[self.depth].phase = 8; self.frames[self.depth].offset = 0; }
                 else {
                     let right = self.symbols[frame.index].text(source)?.as_bytes();
@@ -259,7 +282,7 @@ impl BorrowedProjectedPackCursor {
                 }
             }
             8 => {
-                let bytes = match view { V::Text(text) => text.as_bytes(), V::Bytes(bytes) => bytes, _ => return Err(invalid("Pack payload changed its original field kind")) };
+                let bytes = match view { V::Text(text) | V::IntrinsicText(text) => text.as_bytes(), V::Bytes(bytes) | V::IntrinsicBytes(bytes) => bytes, _ => return Err(invalid("Pack payload changed its original field kind")) };
                 let count = output.len().min(maximum).min(bytes.len() - frame.offset);
                 if count == 0 && frame.offset < bytes.len() { return Ok(Default::default()); }
                 output[..count].copy_from_slice(&bytes[frame.offset..frame.offset + count]); self.frames[self.depth].offset += count; progress.copied_bytes = count;
@@ -307,6 +330,18 @@ impl BorrowedProjectedPackCursor {
             }
             19 => self.pop(),
             20 => { self.frames[self.depth].phase=19;self.push(0)?; },
+            21 => {
+                if frame.index==frame.length {self.pop();}
+                else {let key=source.projection_key(&self.path[..self.depth],frame.index)?;self.queue_number(Some(TAG_STR_INLINE),key.len()as u64);self.frames[self.depth].phase=22;self.frames[self.depth].offset=0;}
+            }
+            22 => {
+                let bytes=source.projection_key(&self.path[..self.depth],frame.index)?.as_bytes();let count=output.len().min(maximum).min(bytes.len()-frame.offset);
+                if count==0&&frame.offset<bytes.len(){return Ok(Default::default());}
+                output[..count].copy_from_slice(&bytes[frame.offset..frame.offset+count]);self.frames[self.depth].offset+=count;progress.copied_bytes=count;
+                if self.frames[self.depth].offset==bytes.len(){self.frames[self.depth].phase=23;}
+                return Ok(BorrowedProjectedPackProgress{progress,written_bytes:count,complete:false});
+            }
+            23 => {self.frames[self.depth].phase=21;self.frames[self.depth].index+=1;self.push(frame.index)?;},
             _ => return Err(invalid("Pack cursor phase changed")),
         } }
         Ok(BorrowedProjectedPackProgress { progress, written_bytes: 0, complete: self.phase == Phase::Complete && self.pending_offset == self.pending_length })

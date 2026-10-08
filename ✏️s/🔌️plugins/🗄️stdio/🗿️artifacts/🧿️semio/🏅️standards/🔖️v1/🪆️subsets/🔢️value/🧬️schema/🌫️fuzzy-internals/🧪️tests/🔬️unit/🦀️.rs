@@ -92,7 +92,7 @@ fn sugeno_inference_weighted_average() {
 fn defuzzifier_centroid_on_triangle() {
     let univ = Universe::new(0.0, 10.0, 101).unwrap();
     let membership: Vec<f64> = univ.samples.iter().map(|x| MembershipFunction::triangular(0.0, 5.0, 10.0).eval(*x)).collect();
-    let c = Defuzzifier::Centroid.apply(&univ, &membership, None, None).unwrap();
+    let c = protocol::apply_diff(&Defuzzifier::Centroid, &univ, &membership, None, None).unwrap();
     assert!((c - 5.0).abs() < 0.2);
 }
 
@@ -438,8 +438,8 @@ fn defuzzifier_weighted_average_and_height_match() {
     let membership = vec![0.1, 0.1, 0.1];
     let heights = vec![0.5, 0.8];
     let values = vec![10.0, 20.0];
-    let wa = Defuzzifier::WeightedAverage.apply(&univ, &membership, Some(&heights), Some(&values)).unwrap();
-    let ht = Defuzzifier::Height.apply(&univ, &membership, Some(&heights), Some(&values)).unwrap();
+    let wa = protocol::apply_diff(&Defuzzifier::WeightedAverage, &univ, &membership, Some(&heights), Some(&values)).unwrap();
+    let ht = protocol::apply_diff(&Defuzzifier::Height, &univ, &membership, Some(&heights), Some(&values)).unwrap();
     assert!((wa - 16.153846153846153).abs() < 1e-9);
     assert_eq!(wa, ht);
 }
@@ -448,22 +448,22 @@ fn defuzzifier_weighted_average_and_height_match() {
 fn defuzzifier_weighted_average_requires_heights_and_values() {
     let univ = Universe::new(0.0, 1.0, 3).unwrap();
     let membership = vec![0.1, 0.1, 0.1];
-    assert!(Defuzzifier::WeightedAverage.apply(&univ, &membership, None, None).is_err());
-    assert!(Defuzzifier::Height.apply(&univ, &membership, None, None).is_err());
+    assert!(protocol::apply_diff(&Defuzzifier::WeightedAverage, &univ, &membership, None, None).is_err());
+    assert!(protocol::apply_diff(&Defuzzifier::Height, &univ, &membership, None, None).is_err());
 }
 
 #[test]
 fn defuzzifier_bisector_mom_som_lom() {
     let univ = Universe::new(0.0, 5.0, 6).unwrap();
     let membership = vec![0.0, 0.2, 0.9, 0.9, 0.9, 0.1];
-    let bisector = Defuzzifier::Bisector.apply(&univ, &membership, None, None).unwrap();
+    let bisector = protocol::apply_diff(&Defuzzifier::Bisector, &univ, &membership, None, None).unwrap();
     assert!((bisector - 3.0).abs() < 1e-9);
-    let mom = Defuzzifier::Mom.apply(&univ, &membership, None, None).unwrap();
+    let mom = protocol::apply_diff(&Defuzzifier::Mom, &univ, &membership, None, None).unwrap();
     assert!((mom - 3.0).abs() < 1e-9);
     // 🔍️ argmax breaks ties on the *last* max (std max_by semantics), so Som and Lom
     // coincide here even though "smallest of maximum" would conventionally pick x=2.
-    let som = Defuzzifier::Som.apply(&univ, &membership, None, None).unwrap();
-    let lom = Defuzzifier::Lom.apply(&univ, &membership, None, None).unwrap();
+    let som = protocol::apply_diff(&Defuzzifier::Som, &univ, &membership, None, None).unwrap();
+    let lom = protocol::apply_diff(&Defuzzifier::Lom, &univ, &membership, None, None).unwrap();
     assert!((som - 4.0).abs() < 1e-9);
     assert!((lom - 4.0).abs() < 1e-9);
 }

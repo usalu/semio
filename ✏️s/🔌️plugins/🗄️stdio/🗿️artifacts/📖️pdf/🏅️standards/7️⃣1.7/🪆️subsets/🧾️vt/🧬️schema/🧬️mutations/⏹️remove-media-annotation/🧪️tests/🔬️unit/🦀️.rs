@@ -13,6 +13,12 @@ fn removes_only_the_matching_media_annotation() {
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    let base = applied(&support::document(), &PdfVtMutation::InsertMediaAnnotation(InsertMediaAnnotation { subtype: "Sound".to_string(), title: "narration".to_string() }));
+    let base = applied(&support::document(), &PdfVtMutation::InsertMediaAnnotation(InsertMediaAnnotation { subtype: "Sound".to_string(), title: "narration".to_string(), placements: Vec::new() }));
+    assert_mutation_inverse_sum_law(&PdfVtMutation::RemoveMediaAnnotation(RemoveMediaAnnotation { subtype: "Sound".to_string(), title: "narration".to_string() }), &base).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_restores_a_middle_row() {
+    let base = support::with_tail(&applied(&support::document(), &PdfVtMutation::InsertMediaAnnotation(InsertMediaAnnotation { subtype: "Sound".to_string(), title: "narration".to_string(), placements: Vec::new() })));
     assert_mutation_inverse_sum_law(&PdfVtMutation::RemoveMediaAnnotation(RemoveMediaAnnotation { subtype: "Sound".to_string(), title: "narration".to_string() }), &base).await;
 }

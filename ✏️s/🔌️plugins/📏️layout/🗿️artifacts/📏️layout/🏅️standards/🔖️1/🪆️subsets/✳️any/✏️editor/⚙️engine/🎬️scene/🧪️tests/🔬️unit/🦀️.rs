@@ -336,8 +336,8 @@ async fn moving_a_frame_onto_a_hidden_layer_drops_only_that_frame() {
     use crate::mutations::LayoutMutation;
     use protocol::{Mutation, MutationDiff};
     let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    let created = LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-2".into(), name: "Notes".into(), remove: false }).diff(&base).diff().apply(&base).expect("layer");
-    let mut doc = LayoutMutation::SetFrameLayer(SetFrameLayer { page_id: "page-1".into(), frame_id: "frame-1".into(), layer_id: "layer-2".into() }).diff(&created).diff().apply(&created).expect("move");
+    let created = protocol::apply_diff(LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-2".into(), name: "Notes".into(), remove: false, index: None }).diff(&base).diff(), &base).expect("layer");
+    let mut doc = protocol::apply_diff(LayoutMutation::SetFrameLayer(SetFrameLayer { page_id: "page-1".into(), frame_id: "frame-1".into(), layer_id: "layer-2".into() }).diff(&created).diff(), &created).expect("move");
     doc.pages[0].layers.iter_mut().find(|layer| layer.id == "layer-2").unwrap().visible = false;
     let page = doc.pages[0].clone();
     let mut engine = LayoutEngine::new();

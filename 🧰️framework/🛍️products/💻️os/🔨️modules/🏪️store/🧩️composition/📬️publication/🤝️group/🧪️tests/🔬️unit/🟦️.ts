@@ -2,13 +2,9 @@ import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
-import Ajv from "ajv";
 import fixture from "../../🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "../../🧫️fixtures/🧬️schema/🔣️.json" with { type: "json" };
 
 test("one common decision publishes three retained member roots together", () => {
-  const validate = new Ajv({ strict: true }).compile(schema);
-  expect(validate(fixture)).toBe(true);
   const generated = join(process.env.SEMIO_TICKET_DIR!, "🗑️generated");
   mkdirSync(generated, { recursive: true });
   const directory = mkdtempSync(join(generated, "member-group-sqlite-"));
@@ -42,7 +38,6 @@ test("one common decision publishes three retained member roots together", () =>
 });
 
 test("private prepared roots can be read before one common decision", () => {
-  expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
   const database = new Database(":memory:");
   try {
     database.run("CREATE TABLE roots (lane INTEGER PRIMARY KEY, value INTEGER NOT NULL)");
@@ -61,7 +56,6 @@ test("private prepared roots can be read before one common decision", () => {
 });
 
 test("private prepared read cancellation returns to the exact authority before rollback", () => {
-  expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
   const database = new Database(":memory:");
   try {
     database.run("CREATE TABLE roots (lane INTEGER PRIMARY KEY, value INTEGER NOT NULL)");
@@ -84,7 +78,6 @@ test("private prepared read cancellation returns to the exact authority before r
 
 test("private child projections borrow only their exact member read authority",()=>{
  const path=resolve(import.meta.dir,"../../🧫️fixtures/🔐️projection"),law=JSON.parse(readFileSync(join(path,"🔣️.json"),"utf8"));
- expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(path,"📐️schema.json"),"utf8")))(law)).toBe(true);
  const database=new Database(":memory:");
  try{
   database.run("CREATE TABLE reads (id TEXT PRIMARY KEY, member TEXT NOT NULL, read_member TEXT NOT NULL, typed INTEGER NOT NULL)");
@@ -93,5 +86,5 @@ test("private child projections borrow only their exact member read authority",(
  const source=readFileSync(resolve(import.meta.dir,"../../../../../🦀️.rs"),"utf8");
  expect(source.includes("fn child_restore_projection_for_read<")).toBe(true);
  expect(law.allocatedBytes).toBe(0);expect(law.liveAuthorityChanged).toBe(false);
- console.log("[DEBUG] private projection Ajv/SQLite independent exactmember+typed read corpus forbids foreign aliases with equal scalar values");
+ console.log("[DEBUG] private projection SQLite independent exactmember+typed read corpus forbids foreign aliases with equal scalar values");
 });

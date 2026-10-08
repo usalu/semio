@@ -1,7 +1,7 @@
 //! 🖋 `create-character-style` — adds a character style.
 
 use crate::mutations::{delete_character_style, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::LayoutCharacterStylesDelta;
+use crate::standards::v1::subsets::any::schema::diff::{insertion_order, LayoutCharacterStylesDelta};
 use crate::{CharacterStyle, LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -14,6 +14,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct CreateCharacterStyle {
     pub id: String,
     pub name: Option<String>,
+    pub index: Option<usize>,
 }
 
 impl MutationKind<LayoutSnapshot, LayoutMutation> for CreateCharacterStyle {
@@ -35,7 +36,7 @@ pub fn diff_create_character_style(payload: &CreateCharacterStyle, base: &Layout
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Character style \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
     let style = CharacterStyle { id: payload.id.clone(), name: payload.name.clone(), font_family: None, font_size: None, font_weight: None, italic: None, color: None, tracking: None };
-    protocol::MutationOutcome::new(LayoutDiff { character_styles: Some(LayoutCharacterStylesDelta { added: vec![style], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(LayoutDiff { character_styles: Some(LayoutCharacterStylesDelta { added: vec![style], reordered: insertion_order(base.character_styles.iter().map(|style| style.id.as_str()), &payload.id, payload.index), ..Default::default() }), ..Default::default() })
 }
 
 pub fn inverse_create_character_style(payload: &CreateCharacterStyle, _base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {

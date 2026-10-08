@@ -4,7 +4,6 @@
  * NOT the kebab-case `semanticKind` slugs this previously used for the tag value (confirmed by each
  * leaf's own `🔣️.json` manifest, which separates `aggregateVariant: "SetDeclaration"`
  * from `semanticKind: "set-declaration"` / `textOpcode`). */
-import type { SetSnapshot } from './📸️set-snapshot/🟦️.ts';
 import type { SetDeclarationPayload } from './📣️set-declaration/🟦️.ts';
 import type { SetDoctypePayload } from './📜️set-doctype/🟦️.ts';
 import type { InsertElementPayload } from './📥️insert-element/🟦️.ts';
@@ -14,16 +13,13 @@ import type { SetAttributePayload } from './🏷️set-attribute/🟦️.ts';
 import type { SetTextPayload } from './✍️set-text/🟦️.ts';
 import type { SetViewBoxPayload } from './🖼️set-view-box/🟦️.ts';
 import type { SetTransformPayload } from './🔄️set-transform/🟦️.ts';
-import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 export type SvgMutation =
-  | { readonly mutation: 'setDeclaration'; readonly payload: { readonly phase: 'apply'; readonly value: SetDeclarationPayload } }
-  | { readonly mutation: 'setDoctype'; readonly payload: { readonly phase: 'apply'; readonly value: SetDoctypePayload } }
-  | { readonly mutation: 'insertElement'; readonly payload: { readonly phase: 'apply'; readonly value: InsertElementPayload } }
-  | { readonly mutation: 'removeElement'; readonly payload: { readonly phase: 'apply'; readonly value: RemoveElementPayload } }
-  | { readonly mutation: 'setElementName'; readonly payload: { readonly phase: 'apply'; readonly value: SetElementNamePayload } }
-  | { readonly mutation: 'setAttribute'; readonly payload: { readonly phase: 'apply'; readonly value: SetAttributePayload } }
-  | { readonly mutation: 'setText'; readonly payload: { readonly phase: 'apply'; readonly value: SetTextPayload } }
-  | { readonly mutation: 'setViewBox'; readonly payload: { readonly phase: 'apply'; readonly value: SetViewBoxPayload } }
-  | { readonly mutation: 'setTransform'; readonly payload: { readonly phase: 'apply'; readonly value: SetTransformPayload } }
-  | { readonly mutation: 'setSnapshot'; readonly payload: SetSnapshot }
-  | { readonly mutation: 'patchSnapshot'; readonly payload: { readonly patch: SnapshotPatch } }
+  | { readonly mutation: 'setDeclaration'; readonly payload: SetDeclarationPayload }
+  | { readonly mutation: 'setDoctype'; readonly payload: SetDoctypePayload }
+  | { readonly mutation: 'insertElement'; readonly payload: InsertElementPayload }
+  | { readonly mutation: 'removeElement'; readonly payload: RemoveElementPayload }
+  | { readonly mutation: 'setElementName'; readonly payload: SetElementNamePayload }
+  | { readonly mutation: 'setAttribute'; readonly payload: SetAttributePayload }
+  | { readonly mutation: 'setText'; readonly payload: SetTextPayload }
+  | { readonly mutation: 'setViewBox'; readonly payload: SetViewBoxPayload }
+  | { readonly mutation: 'setTransform'; readonly payload: SetTransformPayload }

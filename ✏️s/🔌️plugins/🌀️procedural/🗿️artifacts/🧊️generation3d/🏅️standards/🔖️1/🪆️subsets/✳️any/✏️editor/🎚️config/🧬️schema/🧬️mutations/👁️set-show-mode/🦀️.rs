@@ -1,6 +1,6 @@
 //! 👁️ Sets the preview shading mode (`shaded`/`shaded+edges`/`wireframe`/`points`).
 
-use super::{Generation3dConfig, Generation3dConfigMutation};
+use super::{Generation3dConfigPatch, Generation3dConfig, Generation3dConfigMutation};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "show-mode")]
@@ -13,10 +13,8 @@ pub struct SetShowMode {
 impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for SetShowMode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "show-mode", kind: "set-show-mode", record: "SetShowMode" };
 
-    fn diff(&self, base: &Generation3dConfig) -> protocol::MutationOutcome<Generation3dConfig> {
-        let mut next = base.clone();
-        next.show_mode.clone_from(&self.value);
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, base: &Generation3dConfig) -> protocol::MutationOutcome<Generation3dConfigPatch> {
+        protocol::MutationOutcome::new(Generation3dConfigPatch { show_mode: Some(self.value.clone()), ..Default::default() })
     }
 
     fn inverse(&self, base: &Generation3dConfig) -> Result<Vec<Generation3dConfigMutation>, semio_framework_value::ValueError> {

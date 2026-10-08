@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/replace-samples/schema.json",
+  "title": "ReplaceSamplesMutation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ifdIndex", "block", "offset", "samples"],
+  "properties": {
+    "ifdIndex": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "label": { "en": "Image page", "de": "Bildseite" }, "step": 1, "precision": 0, "group": "target", "order": 10 } },
+    "block": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "label": { "en": "Sample block", "de": "Abtastblock" }, "step": 1, "precision": 0, "group": "target", "order": 20 } },
+    "offset": { "type": "integer", "minimum": 0, "x-semio-ui": { "widget": "stepper", "label": { "en": "First word", "de": "Erstes Wort" }, "step": 1, "precision": 0, "group": "target", "order": 30 } },
+    "samples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["lo", "hi"],
+        "properties": { "lo": { "type": "integer", "minimum": 0, "maximum": 4294967295 }, "hi": { "type": "integer", "minimum": 0, "maximum": 4294967295 } }
+      },
+      "x-semio-ui": { "label": { "en": "Sample words", "de": "Abtastwörter" }, "group": "value", "order": 40 }
+    }
+  }
+}

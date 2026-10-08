@@ -1,7 +1,7 @@
 //! 🔺️ `delete-widget-position` sparse diff construction.
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::diff::{diff_snapshot_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{Generation3dLayoutDelta};
 use crate::standards::v1::subsets::any::schema::mutations::delete_widget_position::DeleteWidgetPosition;
 use crate::standards::v1::subsets::any::schema::mutations::widget_index;
 use crate::Generation3dSnapshot;
@@ -14,5 +14,5 @@ pub fn diff(payload: &DeleteWidgetPosition, base: &Generation3dSnapshot) -> prot
     if !base.host_snapshot.layout.contains_key(&payload.id) {
         return protocol::MutationOutcome::new(Generation3dDiff::default()).warning("mutation.no-op", format!("Widget \"{}\" already has no position override.", payload.id));
     }
-    protocol::MutationOutcome::new(diff_snapshot_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff { removed: vec![payload.id.clone()], set: vec![] }, None, None))
+    protocol::MutationOutcome::new(Generation3dDiff { layout: Some(Generation3dLayoutDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
 }

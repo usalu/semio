@@ -28,7 +28,7 @@ fn mutation() -> LayoutMutation {
 }
 fn applied() -> LayoutSnapshot {
     let base = before();
-    mutation().diff(&base).diff().apply(&base).expect("set-frame-flags applies to its committed before-snapshot")
+    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("set-frame-flags applies to its committed before-snapshot")
 }
 
 /// ▶️ `set-frame-flags` writes both flags of the addressed frame and leaves its siblings alone.
@@ -59,7 +59,7 @@ async fn inverse_unlocks_and_shows_the_rect_frame() {
     }
     let mut snapshot = applied();
     for step in &inverse {
-        snapshot = step.diff(&snapshot).diff().apply(&snapshot).expect("set-frame-flags/locks-frame-1: inverse step applies");
+        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("set-frame-flags/locks-frame-1: inverse step applies");
     }
     assert_eq!(snapshot, base, "set-frame-flags/locks-frame-1: inverse did not restore the before-snapshot (default flags are stored as null)");
 }

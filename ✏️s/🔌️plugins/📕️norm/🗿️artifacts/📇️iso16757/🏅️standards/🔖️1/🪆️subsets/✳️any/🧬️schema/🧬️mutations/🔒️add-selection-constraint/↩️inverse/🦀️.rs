@@ -1,5 +1,4 @@
-//! ↩️ `add-selection-constraint` — undo is `remove-selection-constraint` at the index the append
-//! landed on (BASE length, since the new constraint always lands at the end).
+//! ↩️ `add-selection-constraint` — undo is `remove-selection-constraint` at the position the constraint landed on.
 
 use crate::mutations::remove_selection_constraint;
 use crate::{Iso16757Mutation, Iso16757Snapshot};
@@ -7,9 +6,14 @@ use crate::{Iso16757Mutation, Iso16757Snapshot};
 use super::mutation::AddSelectionConstraint;
 
 //#region 🔖️Inverse
-pub fn inverse(_payload: &AddSelectionConstraint, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
+pub fn inverse(payload: &AddSelectionConstraint, base: &Iso16757Snapshot) -> Result<Vec<Iso16757Mutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    vec![Iso16757Mutation::RemoveSelectionConstraint(remove_selection_constraint::mutation::RemoveSelectionConstraint { index: base.selection.constraints.len() })]
+    if base.selection.constraints.contains(&payload.constraint) {
+        return Vec::new();
+    }
+    let len = base.selection.constraints.len();
+    let at = payload.index.filter(|index| *index <= len).unwrap_or(len);
+    vec![Iso16757Mutation::RemoveSelectionConstraint(remove_selection_constraint::mutation::RemoveSelectionConstraint { index: at })]
 
     })())
 }

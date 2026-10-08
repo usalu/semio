@@ -95,7 +95,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v_v3::subsets::any::io::io_registry as v_v3;
-    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
+    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -171,10 +171,8 @@ pub mod standards {
                         pub mod paint_indexed_region;
                         #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️paint-direct-region/🦀️.rs"]
                         pub mod paint_direct_region;
-                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
-                        pub mod patch_snapshot;
-                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
-                        pub mod set_snapshot;
+                        #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️replace-image/🦀️.rs"]
+                        pub mod replace_image;
                     }
                     #[cfg(test)]
                     #[path = "🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️tests/🧬️mutation-regressions/🦀️.rs"]

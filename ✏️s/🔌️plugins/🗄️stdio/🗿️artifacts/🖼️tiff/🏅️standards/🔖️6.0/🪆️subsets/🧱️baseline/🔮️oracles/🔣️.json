@@ -49,8 +49,6 @@
       "subsetDirectoryName": "🧱️baseline",
       "vectors": [],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "set-photometric-interpretation",
         "set-bits-per-sample"
       ]
@@ -189,47 +187,6 @@
           ]
         },
         {
-          "id": "set-snapshot",
-          "capability": "tiff-6-0-baseline-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "tiff-6-0-baseline-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "tiff-tiff-6-0-baseline-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "tiff-6-0-baseline-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "tiff-6-0-baseline-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "tiff-tiff-6-0-baseline-mutate-reader"
-            }
-          ]
-        },
-        {
           "id": "set-strip-offsets",
           "capability": "tiff-6-0-baseline-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
@@ -294,48 +251,6 @@
       "reproducible": true,
       "family": "tiff-baseline-carrier",
       "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). SetPhotometricInterpretation{photometric:2} switches PhotometricInterpretation (tag 262) from 1 (BlackIsZero) to 2 (RGB), TIFF6 §Baseline's own well-known values."
-    },
-    {
-      "id": "set-snapshot-applied",
-      "class": "handcrafted",
-      "target": {
-        "artifact": "s.stdio.tiff",
-        "standard": "6.0",
-        "subset": "baseline"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before",
-          "path": "../🧫️fixtures/📸️set-snapshot/⬅️before.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:ab83296e71281adfe8d1cccdc91c1c134059cf08fec3fe6e6e0773c909d725e6",
-          "bytes": 1936
-        },
-        {
-          "role": "expected-after",
-          "path": "../🧫️fixtures/📸️set-snapshot/➡️after.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:59a94a5443e6df436a83b4f8e86bc220c516403a8808321422fd0d061fbdc4a6",
-          "bytes": 1934
-        }
-      ],
-      "provenance": {
-        "source": "authored",
-        "license": "public-domain (handcrafted by this repository)",
-        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "ordered-json-v1",
-      "reproducible": true,
-      "family": "tiff-baseline-carrier",
-      "notes": "Handcrafted TiffSnapshot before/after pair, schema taken from this artifact's own document-subset TiffSnapshot/TiffTag/TiffValues Rust types (baseline reuses them directly). SetSnapshot replaces the whole document — byte order flips littleEndian to bigEndian, BitsPerSample (258) moves 8->16, and the raster payload is a different real byte sequence."
     },
     {
       "id": "set-bits-per-sample-applied",

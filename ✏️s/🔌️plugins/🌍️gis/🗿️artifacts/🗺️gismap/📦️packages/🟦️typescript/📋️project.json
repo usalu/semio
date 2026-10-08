@@ -53,7 +53,7 @@
       "dependsOn": [
         {
           "projects": [
-            "@semio-tech/s-services-native"
+            "@semio-tech/s-gis-services-native"
           ],
           "target": "mcp-build"
         }

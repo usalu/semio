@@ -11,7 +11,7 @@
 pub mod derived_composition {
     use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
     use crate::standards::v1::subsets::kit::io::SemioKitAnalyzer;
-    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::register_subset_validator,semio_framework_plugin::subset_validator_entry_of,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::ComposerEntry,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::SubsetValidator,semio_framework_plugin::SubsetValidatorEntry};
+    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::ComposerEntry,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("kit") };
 
@@ -221,7 +221,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, STDIO_SEMIOKIT_DOCUMENT_SCHEMA};
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct SemioKitParts {
@@ -234,21 +234,21 @@ pub mod derived_analysis {
         type Parts = SemioKitParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("kit") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     let marker = STDIO_SEMIOKIT_DOCUMENT_SCHEMA.as_bytes();
                     if bytes.windows(marker.len().max(1)).any(|w| w == marker) {
-                        IoConfidence::High
+                        semio_framework_plugin::io::Confidence::High
                     } else {
-                        IoConfidence::Low
+                        semio_framework_plugin::io::Confidence::Low
                     }
                 }
                 AnalyzeSource::Text(text) => {
                     if text.contains(STDIO_SEMIOKIT_DOCUMENT_SCHEMA) {
-                        IoConfidence::High
+                        semio_framework_plugin::io::Confidence::High
                     } else {
-                        IoConfidence::Low
+                        semio_framework_plugin::io::Confidence::Low
                     }
                 }
             }
@@ -257,20 +257,20 @@ pub mod derived_analysis {
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = SemioKitParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
+            let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.kit.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <SemioKitSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.kit.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },

@@ -743,7 +743,7 @@ pub mod types {
         }
 
         fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
-            infinite::canvas::theme::merge_color_field(next, v, key);
+            semio_framework_canvas::theme::merge_color_field(next, v, key);
         }
 
         /// 🎨️ Replaces this palette from the React host UI theme JSON payload.
@@ -920,9 +920,9 @@ pub mod types {
         cache: RefCell<ManuallyDrop<IconPaintRegistry>>,
         retirement_cursor: Cell<u16>,
         retirement_credited_bytes: Cell<usize>,
-        retirement_scene: Cell<Option<infinite::canvas::OpaqueSceneRetirementToken>>,
+        retirement_scene: Cell<Option<semio_framework_canvas::OpaqueSceneRetirementToken>>,
         closing: Cell<bool>,
-        pub themed_icon_lookup: infinite::canvas::icon_codec::ThemedSvgLookup,
+        pub themed_icon_lookup: semio_framework_canvas::icon_codec::ThemedSvgLookup,
     }
 
     /// 📸️ One icon-retirement turn with current credit and physical release split.
@@ -1008,14 +1008,14 @@ pub mod types {
                 return IconPaintRetirementStep::Blocked;
             }
             if let Some(token) = self.retirement_scene.get() {
-                return match infinite::canvas::advance_opaque_scene_retirement(token, maximum_items, maximum_bytes) {
-                    infinite::canvas::OpaqueSceneRetirementStep::Blocked => IconPaintRetirementStep::Blocked,
-                    infinite::canvas::OpaqueSceneRetirementStep::Pending { released_items, credited_bytes, released_bytes } => IconPaintRetirementStep::Pending { released_items, credited_bytes, released_bytes },
-                    infinite::canvas::OpaqueSceneRetirementStep::Complete { released_items, credited_bytes, released_bytes } => {
+                return match semio_framework_canvas::advance_opaque_scene_retirement(token, maximum_items, maximum_bytes) {
+                    semio_framework_canvas::OpaqueSceneRetirementStep::Blocked => IconPaintRetirementStep::Blocked,
+                    semio_framework_canvas::OpaqueSceneRetirementStep::Pending { released_items, credited_bytes, released_bytes } => IconPaintRetirementStep::Pending { released_items, credited_bytes, released_bytes },
+                    semio_framework_canvas::OpaqueSceneRetirementStep::Complete { released_items, credited_bytes, released_bytes } => {
                         self.retirement_scene.set(None);
                         IconPaintRetirementStep::Pending { released_items, credited_bytes, released_bytes }
                     }
-                    infinite::canvas::OpaqueSceneRetirementStep::Fault => {
+                    semio_framework_canvas::OpaqueSceneRetirementStep::Fault => {
                         self.cache.borrow_mut().faulted = true;
                         IconPaintRetirementStep::Blocked
                     }
@@ -1038,7 +1038,7 @@ pub mod types {
                 return IconPaintRetirementStep::Pending { released_items: 0, credited_bytes, released_bytes: 0 };
             }
             if let Some(CachedIconPaint { body: CachedIconBody::Vector(_), .. }) = slot.value.as_ref() {
-                let Some(token) = infinite::canvas::reserve_opaque_scene_retirement() else {
+                let Some(token) = semio_framework_canvas::reserve_opaque_scene_retirement() else {
                     cache.faulted = true;
                     return IconPaintRetirementStep::Blocked;
                 };
@@ -1046,7 +1046,7 @@ pub mod types {
                 let CachedIconBody::Vector(scene) = paint.body else {
                     unreachable!("vector icon retirement was witnessed before ownership transfer");
                 };
-                infinite::canvas::publish_opaque_scene_retirement(token, scene);
+                semio_framework_canvas::publish_opaque_scene_retirement(token, scene);
                 self.retirement_scene.set(Some(token));
             } else {
                 slot.value = None;
@@ -1117,11 +1117,11 @@ pub mod types {
                 self.cache.borrow_mut().faulted = true;
                 return None;
             }
-            let resolved = infinite::canvas::icon_codec::board_resolve_icon_kind(encoded, self.themed_icon_lookup);
+            let resolved = semio_framework_canvas::icon_codec::resolve_icon_kind(encoded, self.themed_icon_lookup);
             let key = match &resolved {
-                infinite::canvas::icon_codec::BoardResolvedIcon::None => return None,
-                infinite::canvas::icon_codec::BoardResolvedIcon::SvgThemed(s) | infinite::canvas::icon_codec::BoardResolvedIcon::SvgPlain(s) => Self::icon_vector_cache_key(if preserve_original_style { "p" } else { "t" }, s.as_str(), fg, bg),
-                infinite::canvas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => Self::icon_raster_cache_key(rgba, *w, *h),
+                semio_framework_canvas::icon_codec::ResolvedIcon::None => return None,
+                semio_framework_canvas::icon_codec::ResolvedIcon::SvgThemed(s) | semio_framework_canvas::icon_codec::ResolvedIcon::SvgPlain(s) => Self::icon_vector_cache_key(if preserve_original_style { "p" } else { "t" }, s.as_str(), fg, bg),
+                semio_framework_canvas::icon_codec::ResolvedIcon::RasterRgba8 { rgba, w, h } => Self::icon_raster_cache_key(rgba, *w, *h),
             };
             {
                 let g = self.cache.borrow();
@@ -1131,11 +1131,11 @@ pub mod types {
             }
             let token = self.cache.borrow_mut().reserve(&key)?;
             let (bx, by, bw, bh, body) = match resolved {
-                infinite::canvas::icon_codec::BoardResolvedIcon::None => {
+                semio_framework_canvas::icon_codec::ResolvedIcon::None => {
                     self.cache.borrow_mut().abort(token);
                     return None;
                 }
-                infinite::canvas::icon_codec::BoardResolvedIcon::SvgThemed(s) => {
+                semio_framework_canvas::icon_codec::ResolvedIcon::SvgThemed(s) => {
                     let Some(doc) = SvgDocument::parse_icons(s.trim()).ok() else {
                         self.cache.borrow_mut().abort(token);
                         return None;
@@ -1153,7 +1153,7 @@ pub mod types {
                     }
                     (bx, by, bw, bh, CachedIconBody::Vector(s))
                 }
-                infinite::canvas::icon_codec::BoardResolvedIcon::SvgPlain(s) => {
+                semio_framework_canvas::icon_codec::ResolvedIcon::SvgPlain(s) => {
                     let Some(doc) = SvgDocument::parse_icons(s.trim()).ok() else {
                         self.cache.borrow_mut().abort(token);
                         return None;
@@ -1171,7 +1171,7 @@ pub mod types {
                     }
                     (bx, by, bw, bh, CachedIconBody::Vector(s))
                 }
-                infinite::canvas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => {
+                semio_framework_canvas::icon_codec::ResolvedIcon::RasterRgba8 { rgba, w, h } => {
                     let bx = 0.0_f64;
                     let by = 0.0_f64;
                     let bw = f64::from(w);
@@ -1260,7 +1260,7 @@ pub use crate::infinite::board::{
     transform_pivot_of, transform_ring_angle_delta, transform_ring_hit, transform_ring_radius_world, RegionData, RegionGrip, TransformGumballFlags, REGION_GRIP_PX, REGION_LABEL_INSET_PX, REGION_MIN_EXTENT_WORLD,
     SELECTION_CLICK_MAX_DISTANCE_PX, SELECTION_DRAG_DIRECTION_THRESHOLD_PX, SELECTION_LASSO_MIN_POINT_DISTANCE_PX, SELECTION_MARQUEE_DRAG_THRESHOLD_PX, TRANSFORM_RING_HIT_TOLERANCE_PX, TRANSFORM_ROTATE_SNAP_RADIANS,
 };
-pub use crate::infinite::canvas;
+pub use semio_framework_canvas as canvas;
 pub use scene_json::{board_json_visible_option, board_json_visible_or_true, board_edge_handle_ids_from_object, normalize_board_descriptor_hidden_to_visible, EdgeDescJson, BoardSnapshotJson, RegionDescJson, SceneDescriptorJson, WireDescJson};
 pub use types::*;
 

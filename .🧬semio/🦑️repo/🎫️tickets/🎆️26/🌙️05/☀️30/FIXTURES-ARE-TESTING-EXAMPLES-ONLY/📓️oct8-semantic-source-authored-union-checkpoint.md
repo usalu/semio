@@ -1,0 +1,9 @@
+# Semantic Source Authored Union Checkpoint
+
+Current corrected intermediate union: 5976 unique endpoints, 4492 physically present and 1484 absent. The two historical compiler/runner dist output memberships have been removed; the original base remains preserved in the retained preimage. See 📓️oct8-authored-union-historical-output-reconciliation.md. Earlier counts below retain their original intermediate context. Final refresh and runtime/lifecycle completion remain pending.
+
+Current intermediate source checkpoint union: 5978 unique canonical file endpoints, 4494 physically present and 1484 absent. The exact prior curated base of 5776 endpoints is preserved. Current Plugin explicit action/input ledgers (1383 + 4) and Runtime exact created/updated/removed union (265) are joined with retained task inputs and reports. Private output/cache directories, generated data, dependency directories, AGENTS.md, invalid coordinates, actual directories and embedded virtual specimen paths are excluded. Separate Runtime peer-observer paths add no writer attribution.
+
+This is not the final ticket-close union. Production, mounted runtime, cleanup and lifecycle work remain active, and newly retained authored inputs/reports will be reconciled after they settle. The JSON is intentional lifecycle input; its previous bytes and the bounded role evidence are retained in 📥️oct8-semantic-source-authored-union-before.json and 📥️oct8-semantic-source-authored-union-role-input.json. The material below preserves earlier consolidation history.
+
+Canonical invalid endpoints: 0. This merge does not inspect Git status or recursively decode preimage source strings. Generated receipts and current physical hashes are observations; explicit prior/action records establish source membership. The union will be refreshed after actual production and lifecycle work.

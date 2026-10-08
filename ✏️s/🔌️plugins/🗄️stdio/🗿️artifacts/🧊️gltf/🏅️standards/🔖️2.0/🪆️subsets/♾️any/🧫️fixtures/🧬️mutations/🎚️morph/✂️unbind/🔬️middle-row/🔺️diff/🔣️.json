@@ -1,0 +1,26 @@
+{
+  "meshes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "primitives": {
+            "modified": [
+              {
+                "index": 0,
+                "diff": {
+                  "targets": [
+                    {
+                      "POSITION": 0,
+                      "TANGENT": 2
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

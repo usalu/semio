@@ -4,6 +4,9 @@ use crate::BmpSnapshot;
 use crate::standards::v_v3::subsets::any::schema::snapshot;
 use framework_schema::ArtifactSchema;
 
+#[path="🔏️canonical/🦀️.rs"]
+mod canonical;
+
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bmp")]

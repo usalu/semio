@@ -1,15 +1,11 @@
 {
-  "artifact": null,
-  "hostSnapshot": null,
-  "generation": {
-    "generations": [
-      {
-        "id": "gen-1",
-        "name": "Baseline",
-        "values": {
-          "height": 3
-        }
-      },
+  "schema": null,
+  "camera": null,
+  "widgets": null,
+  "synapses": null,
+  "layout": null,
+  "generations": {
+    "added": [
       {
         "id": "gen-2",
         "name": "Taller",
@@ -18,6 +14,12 @@
         }
       }
     ],
-    "selectedGenerationId": "gen-2"
-  }
+    "removed": [],
+    "patched": [],
+    "reordered": null
+  },
+  "selectedGeneration": {
+    "id": "gen-2"
+  },
+  "previewText": null
 }

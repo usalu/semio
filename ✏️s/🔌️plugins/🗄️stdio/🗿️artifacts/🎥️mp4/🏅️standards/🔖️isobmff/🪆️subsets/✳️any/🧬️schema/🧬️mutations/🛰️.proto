@@ -5,7 +5,6 @@ import "snapshot.proto";
 message Mp4Mutation {
   oneof mutation {
     bool no_mutation = 1;
-    semio.stdio_mp4.snapshot.Mp4Snapshot set_snapshot = 2;
     semio.stdio_mp4.snapshot.Mp4Ftyp set_ftyp = 3;
     InsertTrack insert_track = 4;
     uint32 remove_track = 5;

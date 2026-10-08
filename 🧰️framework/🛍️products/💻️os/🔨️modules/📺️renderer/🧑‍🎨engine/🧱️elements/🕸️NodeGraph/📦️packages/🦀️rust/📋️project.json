@@ -1,0 +1,29 @@
+{
+  "name": "@semio-tech/framework-os-node-graph-rs",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test"
+      }
+    },
+    "test-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-source"
+      }
+    },
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts wasm"
+      },
+      "outputs": [
+        "{projectRoot}/🕸️bindings"
+      ]
+    }
+  }
+}

@@ -1,5 +1,5 @@
 use super::*;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{Mutation, OpBinary, OpText};
 
 fn pose() -> EnergyModelCameraPose {
     EnergyModelCameraPose { position: [12.0, -9.0, 7.5], target: [4.0, 3.0, 1.35], zoom: 1.0 }
@@ -27,11 +27,11 @@ fn a_pose_prints_the_scene_camera_json_the_world3d_host_reads() {
 fn set_camera_replaces_the_pose_and_inverts_back_to_the_base() {
     let base = EnergyModelWindowConfig::default();
     let mutation = EnergyModelWindowConfigMutation::SetCamera(SetCamera { camera: pose() });
-    let next = mutation.diff(&base).diff().apply(&base).expect("the camera applies");
+    let next = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("the camera applies");
     assert_eq!(next.camera, pose());
     let mut restored = next;
     for inverse in mutation.inverse(&base).expect("valid retained mutation inverse fixture") {
-        restored = inverse.diff(&restored).diff().apply(&restored).expect("the inverse applies");
+        restored = protocol::apply_diff(inverse.diff(&restored).diff(), &restored).expect("the inverse applies");
     }
     assert_eq!(restored, base, "orbiting back is exactly the inverse");
 }

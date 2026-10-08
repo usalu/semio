@@ -22,3 +22,9 @@ async fn applies_change_zone_turbulence() {
 fn sample_mutation(base: &Din16798Snapshot) -> Din16798Mutation {
     Din16798Mutation::ChangeZoneTurbulence(change_zone_turbulence::ChangeZoneTurbulence { zone_id: base.zones[0].id.clone(), new_turbulence_intensity_percent: base.zones[0].turbulence_intensity_percent + 5.0 })
 }
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    let base = Din16798Snapshot::default();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&sample_mutation(&base), &base).await;
+}

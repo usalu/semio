@@ -130,8 +130,7 @@
           },
           "type": "shape",
           "shapeKinds": [
-            "solid",
-            "compound"
+            "solid"
           ]
         },
         {

@@ -115,3 +115,9 @@ fn semantics_bind_this_fixture_to_delete_tiles() {
         "delete-tiles addresses the collection then every id it was given"
     );
 }
+
+/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+}

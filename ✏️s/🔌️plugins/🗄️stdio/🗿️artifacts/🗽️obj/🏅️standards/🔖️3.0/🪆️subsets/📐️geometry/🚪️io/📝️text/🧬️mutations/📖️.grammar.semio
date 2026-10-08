@@ -3,8 +3,7 @@ grammar stdio.obj.mutations
 start op
 comment none
 
-op = set-snapshot | patch-snapshot | insert-vertex | remove-vertex | set-vertex | insert-texcoord | remove-texcoord | set-texcoord | insert-normal | remove-normal | set-normal | insert-face | remove-face | set-face | set-group | remove-group | set-object | remove-object | set-mtllib | set-usemtl | set-smoothing-groups | set-unknown-statements
-patch-snapshot = "patch-snapshot" "patch" "{" "{" patch-fields "}" "}"
+op = insert-vertex | remove-vertex | set-vertex | insert-texcoord | remove-texcoord | set-texcoord | insert-normal | remove-normal | set-normal | insert-face | remove-face | set-face | set-group | remove-group | set-object | remove-object | set-mtllib | set-usemtl | set-smoothing-groups | set-unknown-statements
 patch-fields = patch-set | patch-insert | patch-remove | patch-move | patch-rename | patch-splice
 patch-set = "operation" "=" "set" "path" "=" TEXT "value" "=" patch-value
 patch-insert = {"index" "=" U64}? "operation" "=" "insert" "path" "=" TEXT "value" "=" patch-value
@@ -19,7 +18,6 @@ patch-array = "[" {patch-value}* "]"
 patch-object = "{" {patch-member}* "}"
 patch-member = patch-key "=" patch-value
 patch-key = IDENT | TEXT
-set-snapshot = "set-snapshot" "snapshot" "{" snapshot "}"
 insert-vertex = "insert-vertex" "index" "=" INT "vertex" vertex
 remove-vertex = "remove-vertex" "index" "=" INT
 set-vertex = "set-vertex" "index" "=" INT "vertex" vertex
@@ -32,9 +30,9 @@ set-normal = "set-normal" "index" "=" INT "normal" normal
 insert-face = "insert-face" "index" "=" INT "face" face
 remove-face = "remove-face" "index" "=" INT
 set-face = "set-face" "index" "=" INT "face" face
-set-group = "set-group" "name" "=" text "faces" "=" "[" INT* "]"
+set-group = "set-group" "name" "=" text "faces" "=" "[" INT* "]" {"index" "=" INT}?
 remove-group = "remove-group" "name" "=" text
-set-object = "set-object" "name" "=" text "faces" "=" "[" INT* "]"
+set-object = "set-object" "name" "=" text "faces" "=" "[" INT* "]" {"index" "=" INT}?
 remove-object = "remove-object" "name" "=" text
 set-mtllib = "set-mtllib" {"mtllib" "=" text}?
 set-usemtl = "set-usemtl" "usemtl" "=" "[" material* "]"

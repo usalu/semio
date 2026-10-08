@@ -1,0 +1,9 @@
+# Actual Build Script Provenance
+
+Runtime guard requires actual build-script-executed producer metadata to bind generated OUT_DIR resources and cfg/env to checked or published compiler units. Existing realcompiler plain JSON input now declares actual build.rs emitting one cfg, one rustc-env and an actual OUT_DIR textresource. Actual main embeds that generated resource and compares it to rustc-env before existing stdout. Existing test asserts complete raw build-script record/package_id/cfg/env/ownedoutdir plus actual primary dep-info source list containing generatedresource; independent Cargo run/binary stdout remains.
+
+Registered RED61680Nx1:223Bun passed1failed; actual compiler succeeded, new assertion genuinely lacked retained build-script-executed message. Collector now emits original full build-script-executed line under the same existingcaller artifact opt-in as compiler-artifact. No rewriting, featureflags, buildselection, runtime/export API, staging, lease/cancellation change. Full immediatebefore preimages retained in extended-build-script-provenance inputs. Actual GREEN pending; actual fourguest/fleet proof stillpending ordered native gates.
+
+Actual GREEN64401Nx0:224Bun laws44files +2focusedcatalog +3mountedhelpers,0fail/11.7s. Actual compiler emitted originalcfg/env/OUT_DIR resource record; actual primary.dep-info named generatedresource, selectedbinary and independentCargo-run bothpassed. Current source integrity next.
+
+Fresh source integrity89137Nx0 validates53current authoredsources/58retireddocuments after realbuild-script fixture/owner changes. Existing four actualguest check args retainmessage-format=json, unchanged featureflags. Metadata alone/currenttestfixturecompile are not shippedgraph evidence. Actualguest/publication invocation follows new kernel mutation-testing source/devdependency settlement.

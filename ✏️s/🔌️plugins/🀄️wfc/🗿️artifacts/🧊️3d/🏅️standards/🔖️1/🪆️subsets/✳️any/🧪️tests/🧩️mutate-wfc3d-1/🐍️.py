@@ -38,25 +38,39 @@ import math
 import os
 import sys
 
-COLLECTIONS = (
-    ("slots", "slotsRemoved", "slotsUpserted"),
-    ("edges", "edgesRemoved", "edgesUpserted"),
-    ("tiles", "tilesRemoved", "tilesUpserted"),
-    ("rules", "rulesRemoved", "rulesUpserted"),
-)
+COLLECTIONS = ("slots", "edges", "tiles", "rules")
 
-EMPTY_DIFF = {
-    "schema": None,
-    "seed": None,
-    "slotsRemoved": [],
-    "slotsUpserted": [],
-    "edgesRemoved": [],
-    "edgesUpserted": [],
-    "tilesRemoved": [],
-    "tilesUpserted": [],
-    "rulesRemoved": [],
-    "rulesUpserted": [],
+PATCH_FIELDS = {
+    "slots": (("x", False), ("y", False), ("z", False), ("width", False), ("height", False), ("depth", False), ("pinnedTileId", True)),
+    "edges": (("fromSlotId", False), ("toSlotId", False), ("relation", False)),
+    "tiles": (("weight", False), ("media", False), ("label", True)),
+    "rules": (("tileAId", False), ("tileBId", False), ("allowed", False), ("relation", True)),
 }
+"""🩹 Per collection, the fields a row patch may set, in wire order; `True` marks an optional field wrapped as `{"value": …}`."""
+
+
+def rows(removed=None, added=None, patched=None):
+    """📂 One collection's delta: removed ids, added rows (landing at their canonical position) and per-row patches."""
+    return {"removed": removed or [], "added": added or [], "patched": patched or []}
+
+
+EMPTY_DIFF = {"schema": None, "seed": None, "slots": rows(), "edges": rows(), "tiles": rows(), "rules": rows()}
+
+
+def patch(collection, identifier, **fields):
+    """🩹 One row patch: every field present, the unset ones `None`, optional fields wrapped."""
+    body = {}
+    for name, optional in PATCH_FIELDS[collection]:
+        if name in fields:
+            body[name] = {"value": fields[name]} if optional else fields[name]
+        else:
+            body[name] = None
+    return {"id": identifier, "patch": body}
+
+
+def canonical_matches(collection, payload, identifier):
+    """📍 A `create-*` names the collection's canonical sorted insertion index — a diff row carries no index, the position is canonical."""
+    return payload["index"] == canonical_index(collection, identifier)
 
 
 def empty_diff():
@@ -95,8 +109,10 @@ def diff_create_slot(document, payload):
     pinned = slot.get("pinnedTileId")
     if pinned is not None and find(document["tiles"], pinned)[1] is None:
         return empty_diff(), [("error", "mutation.target-missing")]
+    if not canonical_matches(document["slots"], payload, slot["id"]):
+        return empty_diff(), [("fatal", "mutation.invariant")]
     delta = empty_diff()
-    delta["slotsUpserted"] = [[payload["index"], slot]]
+    delta["slots"]["added"] = [slot]
     return delta, []
 
 
@@ -106,8 +122,8 @@ def diff_delete_slot(document, payload):
         return empty_diff(), [("error", "mutation.target-missing")]
     incident = [edge["id"] for edge in document["edges"] if payload["id"] in (edge["fromSlotId"], edge["toSlotId"])]
     delta = empty_diff()
-    delta["slotsRemoved"] = [payload["id"]]
-    delta["edgesRemoved"] = incident
+    delta["slots"]["removed"] = [payload["id"]]
+    delta["edges"]["removed"] = incident
     return delta, ([("info", "mutation.cascade")] if incident else [])
 
 
@@ -117,10 +133,8 @@ def diff_move_slot(document, payload):
         return empty_diff(), [("error", "mutation.target-missing")]
     if (slot["x"], slot["y"], slot["z"]) == (payload["x"], payload["y"], payload["z"]):
         return empty_diff(), [("warning", "mutation.no-op")]
-    moved = dict(slot)
-    moved["x"], moved["y"], moved["z"] = payload["x"], payload["y"], payload["z"]
     delta = empty_diff()
-    delta["slotsUpserted"] = [[index, moved]]
+    delta["slots"]["patched"] = [patch("slots", slot["id"], x=payload["x"], y=payload["y"], z=payload["z"])]
     return delta, []
 
 
@@ -132,10 +146,8 @@ def diff_resize_slot(document, payload):
         return empty_diff(), [("fatal", "mutation.invariant")]
     if (slot["width"], slot["height"], slot["depth"]) == (payload["width"], payload["height"], payload["depth"]):
         return empty_diff(), [("warning", "mutation.no-op")]
-    resized = dict(slot)
-    resized["width"], resized["height"], resized["depth"] = payload["width"], payload["height"], payload["depth"]
     delta = empty_diff()
-    delta["slotsUpserted"] = [[index, resized]]
+    delta["slots"]["patched"] = [patch("slots", slot["id"], width=payload["width"], height=payload["height"], depth=payload["depth"])]
     return delta, []
 
 
@@ -150,8 +162,10 @@ def diff_connect_slots(document, payload):
     pair = {edge["fromSlotId"], edge["toSlotId"]}
     if any(existing["relation"] == edge["relation"] and {existing["fromSlotId"], existing["toSlotId"]} == pair for existing in document["edges"]):
         return empty_diff(), [("warning", "mutation.no-op")]
+    if not canonical_matches(document["edges"], payload, edge["id"]):
+        return empty_diff(), [("fatal", "mutation.invariant")]
     delta = empty_diff()
-    delta["edgesUpserted"] = [[payload["index"], edge]]
+    delta["edges"]["added"] = [edge]
     return delta, []
 
 
@@ -160,7 +174,7 @@ def diff_disconnect_slots(document, payload):
     if index is None:
         return empty_diff(), [("error", "mutation.target-missing")]
     delta = empty_diff()
-    delta["edgesRemoved"] = [payload["id"]]
+    delta["edges"]["removed"] = [payload["id"]]
     return delta, []
 
 
@@ -172,10 +186,8 @@ def diff_pin_slot(document, payload):
         return empty_diff(), [("error", "mutation.target-missing")]
     if slot.get("pinnedTileId") == payload["tileId"]:
         return empty_diff(), [("warning", "mutation.no-op")]
-    pinned = dict(slot)
-    pinned["pinnedTileId"] = payload["tileId"]
     delta = empty_diff()
-    delta["slotsUpserted"] = [[index, pinned]]
+    delta["slots"]["patched"] = [patch("slots", slot["id"], pinnedTileId=payload["tileId"])]
     return delta, []
 
 
@@ -185,9 +197,8 @@ def diff_unpin_slot(document, payload):
         return empty_diff(), [("error", "mutation.target-missing")]
     if slot.get("pinnedTileId") is None:
         return empty_diff(), [("warning", "mutation.no-op")]
-    released = {key: value for key, value in slot.items() if key != "pinnedTileId"}
     delta = empty_diff()
-    delta["slotsUpserted"] = [[index, released]]
+    delta["slots"]["patched"] = [patch("slots", slot["id"], pinnedTileId=None)]
     return delta, []
 
 
@@ -197,8 +208,10 @@ def diff_create_tile(document, payload):
         return empty_diff(), [("fatal", "mutation.duplicate-id")]
     if not tile["weight"] > 0:
         return empty_diff(), [("fatal", "mutation.invariant")]
+    if not canonical_matches(document["tiles"], payload, tile["id"]):
+        return empty_diff(), [("fatal", "mutation.invariant")]
     delta = empty_diff()
-    delta["tilesUpserted"] = [[payload["index"], tile]]
+    delta["tiles"]["added"] = [tile]
     return delta, []
 
 
@@ -207,14 +220,11 @@ def diff_delete_tile(document, payload):
     if index is None:
         return empty_diff(), [("error", "mutation.target-missing")]
     rules = [rule["id"] for rule in document["rules"] if payload["id"] in (rule["tileAId"], rule["tileBId"])]
-    released = []
-    for slot_index, slot in enumerate(document["slots"]):
-        if slot.get("pinnedTileId") == payload["id"]:
-            released.append([slot_index, {key: value for key, value in slot.items() if key != "pinnedTileId"}])
+    released = [patch("slots", slot["id"], pinnedTileId=None) for slot in document["slots"] if slot.get("pinnedTileId") == payload["id"]]
     delta = empty_diff()
-    delta["tilesRemoved"] = [payload["id"]]
-    delta["rulesRemoved"] = rules
-    delta["slotsUpserted"] = released
+    delta["tiles"]["removed"] = [payload["id"]]
+    delta["rules"]["removed"] = rules
+    delta["slots"]["patched"] = released
     return delta, ([("info", "mutation.cascade")] if rules or released else [])
 
 
@@ -226,10 +236,8 @@ def diff_change_tile_weight(document, payload):
         return empty_diff(), [("fatal", "mutation.invariant")]
     if tile["weight"] == payload["weight"]:
         return empty_diff(), [("warning", "mutation.no-op")]
-    reweighted = dict(tile)
-    reweighted["weight"] = payload["weight"]
     delta = empty_diff()
-    delta["tilesUpserted"] = [[index, reweighted]]
+    delta["tiles"]["patched"] = [patch("tiles", tile["id"], weight=payload["weight"])]
     return delta, []
 
 
@@ -239,10 +247,8 @@ def diff_change_tile_media(document, payload):
         return empty_diff(), [("error", "mutation.target-missing")]
     if tile["media"] == payload["media"]:
         return empty_diff(), [("warning", "mutation.no-op")]
-    redressed = dict(tile)
-    redressed["media"] = payload["media"]
     delta = empty_diff()
-    delta["tilesUpserted"] = [[index, redressed]]
+    delta["tiles"]["patched"] = [patch("tiles", tile["id"], media=payload["media"])]
     return delta, []
 
 
@@ -252,8 +258,10 @@ def diff_create_rule(document, payload):
         return empty_diff(), [("fatal", "mutation.duplicate-id")]
     if find(document["tiles"], rule["tileAId"])[1] is None or find(document["tiles"], rule["tileBId"])[1] is None:
         return empty_diff(), [("error", "mutation.target-missing")]
+    if not canonical_matches(document["rules"], payload, rule["id"]):
+        return empty_diff(), [("fatal", "mutation.invariant")]
     delta = empty_diff()
-    delta["rulesUpserted"] = [[payload["index"], rule]]
+    delta["rules"]["added"] = [rule]
     return delta, []
 
 
@@ -262,7 +270,7 @@ def diff_delete_rule(document, payload):
     if index is None:
         return empty_diff(), [("error", "mutation.target-missing")]
     delta = empty_diff()
-    delta["rulesRemoved"] = [payload["id"]]
+    delta["rules"]["removed"] = [payload["id"]]
     return delta, []
 
 
@@ -290,11 +298,9 @@ def diff_drag_slots(document, payload):
     if (payload["dx"], payload["dy"], payload["dz"]) == (0, 0, 0):
         return empty_diff(), partial(missing) + [("warning", "mutation.no-op")]
     delta = empty_diff()
-    for index, slot in enumerate(document["slots"]):
+    for slot in document["slots"]:
         if slot["id"] in targets:
-            moved = dict(slot)
-            moved["x"], moved["y"], moved["z"] = slot["x"] + payload["dx"], slot["y"] + payload["dy"], slot["z"] + payload["dz"]
-            delta["slotsUpserted"].append([index, moved])
+            delta["slots"]["patched"].append(patch("slots", slot["id"], x=slot["x"] + payload["dx"], y=slot["y"] + payload["dy"], z=slot["z"] + payload["dz"]))
     return delta, partial(missing)
 
 
@@ -307,13 +313,11 @@ def diff_set_slot_positions(document, payload):
     if len(missing) == len(identifiers):
         return empty_diff(), [("error", "mutation.target-missing")]
     delta = empty_diff()
-    for index, slot in enumerate(document["slots"]):
+    for slot in document["slots"]:
         position = next((row for row in positions if row["id"] == slot["id"]), None)
         if position is not None and (position["x"], position["y"], position["z"]) != (slot["x"], slot["y"], slot["z"]):
-            moved = dict(slot)
-            moved["x"], moved["y"], moved["z"] = position["x"], position["y"], position["z"]
-            delta["slotsUpserted"].append([index, moved])
-    if not delta["slotsUpserted"]:
+            delta["slots"]["patched"].append(patch("slots", slot["id"], x=position["x"], y=position["y"], z=position["z"]))
+    if not delta["slots"]["patched"]:
         return empty_diff(), partial(missing) + [("warning", "mutation.no-op")]
     return delta, partial(missing)
 
@@ -342,17 +346,35 @@ DIFF_BUILDERS = {
 # ---------------------------------------------------------------- apply
 
 
-def apply_collection(base, removed, upserted):
-    """🧬️ The same validated, index-checked apply the Rust diff type performs."""
-    items = [member for member in base if member["id"] not in removed]
-    for index, value in upserted:
-        existing, _ = find(items, value["id"])
-        if existing is not None:
-            items[existing] = value
-        else:
-            if index > len(items):
-                raise ValueError(f"insertion index {index} exceeds length {len(items)}")
-            items.insert(index, value)
+def apply_collection(base, delta, collection):
+    """🧬️ Removals first, then canonical-position insertions, then field patches; unknown targets are refused."""
+    items = list(base)
+    for identifier in delta["removed"]:
+        existing, _ = find(items, identifier)
+        if existing is None:
+            raise ValueError(f"removed {identifier!r} does not exist")
+        del items[existing]
+    for row in delta["added"]:
+        if find(items, row["id"])[0] is not None:
+            raise ValueError(f"added {row['id']!r} already exists")
+        items.insert(canonical_index(items, row["id"]), row)
+    optional = {name for name, wrapped in PATCH_FIELDS[collection] if wrapped}
+    for entry in delta["patched"]:
+        existing, current = find(items, entry["id"])
+        if existing is None:
+            raise ValueError(f"patched {entry['id']!r} does not exist")
+        row = dict(current)
+        for name, value in entry["patch"].items():
+            if value is None:
+                continue
+            if name in optional:
+                if value["value"] is None:
+                    row.pop(name, None)
+                else:
+                    row[name] = value["value"]
+            else:
+                row[name] = value
+        items[existing] = row
     return items
 
 
@@ -362,8 +384,8 @@ def apply_diff(document, delta):
         result["schema"] = delta["schema"]
     if delta.get("seed") is not None:
         result["seed"] = delta["seed"]
-    for field, removed_key, upserted_key in COLLECTIONS:
-        result[field] = apply_collection(result[field], delta[removed_key], delta[upserted_key])
+    for field in COLLECTIONS:
+        result[field] = apply_collection(result[field], delta[field], field)
     return result
 
 

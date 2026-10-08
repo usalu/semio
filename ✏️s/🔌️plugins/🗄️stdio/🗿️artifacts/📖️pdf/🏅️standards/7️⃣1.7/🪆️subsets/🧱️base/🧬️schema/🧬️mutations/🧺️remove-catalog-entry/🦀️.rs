@@ -26,7 +26,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveCatalogEntry {
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.catalog_extra.iter().find(|entry| entry.key == self.key).map(|entry| PdfMutation::SetCatalogEntry(super::set_catalog_entry::SetCatalogEntry { key: self.key.clone(), value: entry.value.clone() })).into_iter().collect()
+        base.catalog_extra.iter().position(|entry| entry.key == self.key).map(|position| PdfMutation::SetCatalogEntry(super::set_catalog_entry::SetCatalogEntry { key: self.key.clone(), value: base.catalog_extra[position].value.clone(), index: Some(position) })).into_iter().collect()
     
     })())
 }

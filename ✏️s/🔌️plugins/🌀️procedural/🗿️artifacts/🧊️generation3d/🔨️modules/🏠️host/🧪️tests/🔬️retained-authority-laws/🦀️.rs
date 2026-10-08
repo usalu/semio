@@ -405,12 +405,13 @@ fn semantic_wire_vectors_match_independent_json_oracle() {
         snapshot.host_snapshot.widgets.push(record("rotate", "brep.xform.rotate", vec![("axis", generation3d_vector_literal("vector", [0.0, 0.0, 1.0])), ("angle", generation3d_number_literal(0.0))]));
         snapshot.host_snapshot.widgets.push(record("scale", "brep.xform.scale", vec![("factor", generation3d_vector_literal("vector", [1.0; 3])), ("center", generation3d_vector_literal("point", [0.0; 3])), ("uniform", WidgetInputValue::Boolean(false).literal())]));
         snapshot.host_snapshot.widgets.push(record("shape", "semantic-wire-law.collections", vec![("items", semio_framework_value::DslValue::Object(vec![("$schema".into(), semio_framework_value::DslValue::String("list".into()))]))]));
+        snapshot.host_snapshot.widgets.push(record("section", "semantic-wire-law.sections", vec![("plane", WidgetInputValue::Plane { origin: [0.0; 3], normal: [0.0, 0.0, 1.0] }.literal())]));
         snapshot.host_snapshot.layout.insert("slider".into(), WidgetLayout { x: 0.0, y: 0.0 });
         let before_schema = snapshot.host_snapshot.schema.clone();
         if let Some(mut displaced) = generation3d_apply_initialization_mutation(&mut snapshot, &mutation).expect("direct semantic replay") {
             drive_under_the_frameworks_fixed_page_grant(displaced.as_mut(), "semantic replay displacement");
         }
-        assert_eq!(snapshot.host_snapshot.widgets.len(), 5);
+        assert_eq!(snapshot.host_snapshot.widgets.len(), 6);
         assert_eq!(snapshot.host_snapshot.schema, before_schema);
         let expected = &case["expected"];
         match &mutation {

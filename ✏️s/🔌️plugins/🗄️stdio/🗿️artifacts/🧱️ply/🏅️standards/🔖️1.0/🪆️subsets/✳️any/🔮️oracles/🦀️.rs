@@ -422,12 +422,6 @@ mod oracles {
         let mut ply = parser.read_ply(&mut cursor).map_err(|error| format!("ply-rs could not parse the input: {error}"))?;
         match kind {
             "" => return Err("mutation spec carries no `kind`".to_string()),
-            "set-snapshot" => {
-                ply = ply_from_json(params.get("snapshot").ok_or("set-snapshot requires a snapshot field")?)?;
-            }
-            "patch-snapshot" => {
-                ply = ply_from_json(&semio_repo_test_host::law::patched_snapshot(&snapshot_wire(input)?, params.get("patch").ok_or("patch-snapshot requires a patch field")?)?)?;
-            }
             "set-format" => {
                 ply.header.encoding = encoding_from_str(&params.str("format"))?;
             }
@@ -498,7 +492,7 @@ mod oracles {
         document(bytes, property_to_json, Vec::new())
     }
 
-    /// 📸️ The `PlySnapshot` wire of `bytes` — `set-snapshot`'s payload and its inverse: `schema` (`stdio.ply`), then the
+    /// 📸️ The `PlySnapshot` wire of `bytes`: `schema` (`stdio.ply`), then the
     /// same document [`project`] reads with every cell as [`property_to_wire`].
     pub fn snapshot_wire(bytes: &[u8]) -> Result<Json, String> {
         document(bytes, property_to_wire, vec![("schema".to_string(), Json::String("stdio.ply".to_string()))])

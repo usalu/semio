@@ -1,6 +1,6 @@
 use super::ChangeMemberActionFPoint;
-use crate::diff::En1995MemberList;
 use crate::{En1995Diff, En1995Snapshot};
+use crate::diff::{En1995MemberActionDelta, En1995MemberActionPatch, En1995MemberDelta, En1995MemberPatch};
 pub fn diff(payload: &ChangeMemberActionFPoint, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
     let Some(idx) = base.members.iter().position(|item| item.id == payload.member_id) else {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Unknown member id.", vec![payload.member_id.clone()]);
@@ -8,7 +8,7 @@ pub fn diff(payload: &ChangeMemberActionFPoint, base: &En1995Snapshot) -> protoc
     let Some(action_idx) = base.members[idx].actions.iter().position(|action| action.id == payload.action_id) else {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Unknown member action id.", vec![payload.member_id.clone(), payload.action_id.clone()]);
     };
-    let mut members = base.members.clone();
-    members[idx].actions[action_idx].f_point_n = payload.new_value;
-    protocol::MutationOutcome::new(En1995Diff { members: Some(En1995MemberList { values: members }), ..Default::default() })
+    let member = &base.members[idx];
+    let action = &member.actions[action_idx];
+    protocol::MutationOutcome::new(En1995Diff { members: En1995MemberDelta::modification(&member.id, En1995MemberPatch { actions: En1995MemberActionDelta::modification(&action.id, En1995MemberActionPatch { f_point_n: Some(payload.new_value), ..Default::default() }), ..Default::default() }), ..Default::default() })
 }

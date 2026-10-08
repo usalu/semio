@@ -3,8 +3,8 @@
 //! mutation's diff shape), built directly from `base` + payload, never a snapshot clone. Fatal
 //! `duplicate-id` on an existing machine id.
 
-use crate::diff::Process3dDiff;
-use crate::{Process3dSnapshot, Workshop};
+use crate::diff::{Process3dDiff, Process3dMachinePatch, Process3dMachinesDelta};
+use crate::Process3dSnapshot;
 
 //#region 🔖️Diff
 /// 🏗️ Builds the new workshop value with the machine appended.
@@ -12,8 +12,8 @@ pub fn diff(payload: &super::CreateMachine, base: &Process3dSnapshot) -> protoco
     if base.workshop.machines.iter().any(|machine| machine.id == payload.machine.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A machine with id \"{}\" already exists.", payload.machine.id), [payload.machine.id.clone()]);
     }
-    let mut machines = base.workshop.machines.clone();
-    machines.push(payload.machine.clone());
-    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Workshop { machines }), ..Default::default() })
+    let at = payload.index.min(base.workshop.machines.len());
+    let reordered = (at < base.workshop.machines.len()).then(|| base.workshop.machines[..at].iter().map(|machine| machine.id.clone()).chain([payload.machine.id.clone()]).chain(base.workshop.machines[at..].iter().map(|machine| machine.id.clone())).collect());
+    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Process3dMachinesDelta { added: vec![payload.machine.clone()], reordered, ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

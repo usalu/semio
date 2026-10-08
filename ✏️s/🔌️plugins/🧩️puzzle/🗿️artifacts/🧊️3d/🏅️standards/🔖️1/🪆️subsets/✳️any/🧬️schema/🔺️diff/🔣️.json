@@ -20,7 +20,7 @@
       "x-semio-state": "artifact"
     },
     "meta": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dMeta",
+      "$ref": "#/$defs/Puzzle3dMetaPatch",
       "x-semio-state": "artifact"
     },
     "objects": {
@@ -41,19 +41,130 @@
     }
   },
   "$defs": {
-    "Puzzle3dStringList": {
-      "title": "Puzzle3dStringList",
+    "Puzzle3dKindCompatibilityKey": {
+      "title": "Puzzle3dKindCompatibilityKey",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "values"
+        "source",
+        "target"
       ],
       "properties": {
-        "values": {
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle3dVorticesDelta": {
+      "title": "Puzzle3dVorticesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dVortex"
+          }
+        },
+        "removed": {
           "type": "array",
           "items": {
             "type": "string"
           }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dVortexPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Puzzle3dVortexPatchEntry": {
+      "title": "Puzzle3dVortexPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Puzzle3dVortexPatch"
+        }
+      }
+    },
+    "Puzzle3dVortexPatch": {
+      "title": "Puzzle3dVortexPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "vortexKind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "position": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Puzzle3dVector3"
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Puzzle3dVector3"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "radius": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Binary64Transport"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
         }
       }
     },
@@ -116,8 +227,73 @@
       "additionalProperties": false,
       "required": [],
       "properties": {
-        "replacement": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dObject"
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "objectKind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "anchor": {
+          "enum": [
+            "fixed",
+            "derived"
+          ]
+        },
+        "origin": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Puzzle3dVector3"
+        },
+        "orientation": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Puzzle3dVector4"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Puzzle3dScale"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "meshUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "vortices": {
+          "$ref": "#/$defs/Puzzle3dVorticesDelta"
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
         }
       }
     },
@@ -180,8 +356,35 @@
       "additionalProperties": false,
       "required": [],
       "properties": {
-        "replacement": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dAttraction"
+        "attracting": {
+          "type": "string"
+        },
+        "attracted": {
+          "type": "string"
+        },
+        "gap": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Binary64Transport"
+        },
+        "shift": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Binary64Transport"
+        },
+        "rise": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Binary64Transport"
+        },
+        "rotation": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Binary64Transport"
+        },
+        "turn": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Binary64Transport"
+        },
+        "tilt": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Binary64Transport"
+        },
+        "x": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Binary64Transport"
+        },
+        "y": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Binary64Transport"
         }
       }
     },
@@ -244,8 +447,34 @@
       "additionalProperties": false,
       "required": [],
       "properties": {
-        "replacement": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dTargetVolume"
+        "origin": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Puzzle3dVector3"
+        },
+        "orientation": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Puzzle3dVector4"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Puzzle3dScale"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
         }
       }
     },
@@ -308,8 +537,117 @@
       "additionalProperties": false,
       "required": [],
       "properties": {
-        "replacement": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dReference"
+        "source": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Puzzle3dReferenceSource"
+        },
+        "origin": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Puzzle3dVector3"
+        },
+        "widthWorld": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Binary64Transport"
+        },
+        "locked": {
+          "type": "boolean"
+        },
+        "hidden": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Puzzle3dKindCompatibilityDelta": {
+      "title": "Puzzle3dKindCompatibilityDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json#/$defs/Puzzle3dKindCompatibility"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dKindCompatibilityKey"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dKindCompatibilityPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle3dKindCompatibilityKey"
+          }
+        }
+      }
+    },
+    "Puzzle3dKindCompatibilityPatchEntry": {
+      "title": "Puzzle3dKindCompatibilityPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Puzzle3dKindCompatibilityKey"
+        },
+        "patch": {
+          "$ref": "#/$defs/Puzzle3dKindCompatibilityPatch"
+        }
+      }
+    },
+    "Puzzle3dKindCompatibilityPatch": {
+      "title": "Puzzle3dKindCompatibilityPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "bidirectional": {
+          "type": "boolean"
+        },
+        "important": {
+          "type": "boolean"
+        },
+        "specificity": {
+          "enum": [
+            "general",
+            "object",
+            "attraction",
+            "vortex",
+            "cable"
+          ]
+        }
+      }
+    },
+    "Puzzle3dMetaPatch": {
+      "title": "Puzzle3dMetaPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "kindCatalogs": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/artifact.json/$defs/Puzzle3dKindCatalogs"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kindCompatibility": {
+          "$ref": "#/$defs/Puzzle3dKindCompatibilityDelta"
         }
       }
     }

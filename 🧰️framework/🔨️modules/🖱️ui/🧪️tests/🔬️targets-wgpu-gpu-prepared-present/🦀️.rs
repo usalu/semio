@@ -355,6 +355,8 @@ fn every_world_color_cursor_uses_the_encoded_composite_attachment() {
     let encoded_world_pipelines = [
         "world3d_pipeline",
         "world3d_pipeline_translucent",
+        "world3d_section_stencil_pipeline",
+        "world3d_section_cap_pipeline",
         "world3d_line_pipeline",
         "world3d_standard_translucent_pipeline",
         "world3d_painted_pipeline",
@@ -374,6 +376,14 @@ fn every_world_color_cursor_uses_the_encoded_composite_attachment() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎨️encoded-world-pipelines/🔣️.json")).unwrap();
     let expected: Vec<&str> = fixture["pipelines"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect();
     assert_eq!(encoded_world_pipelines.as_slice(), expected.as_slice());
+    let declared: std::collections::HashSet<&str> = expected.iter().copied().collect();
+    for control in fixture["controls"].as_array().unwrap() {
+        let labels: Vec<&str> = control["labels"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect();
+        let targets = control["targets"].as_array().unwrap();
+        let actual: std::collections::HashSet<&str> = labels.iter().copied().collect();
+        let accepted = labels.len() == declared.len() && actual == declared && targets.len() == labels.len() && targets.iter().all(|value| value.as_u64() == Some(1));
+        assert_eq!(accepted, control["accepted"].as_bool().unwrap(), "{}", control["id"]);
+    }
     for label in encoded_world_pipelines {
         assert!(draw_source.contains(&format!("label: Some(\"{label}\")")), "the {label} encoded-color pipeline remains registered");
         let marker = format!("label: Some(\"{label}\")");
@@ -385,7 +395,7 @@ fn every_world_color_cursor_uses_the_encoded_composite_attachment() {
     assert_eq!(
         draw_source.matches("format: world_encoded_format, blend:").count(),
         encoded_world_pipelines.len(),
-        "standard, translucent, painted, authored (GLB), celebration, line, textured, procedural-grid and post-process pipelines all target the encoded UNORM view exactly once"
+        "standard, translucent, section stencil/cap, painted, authored (GLB), celebration, line, textured, procedural-grid and post-process pipelines all target the encoded UNORM view exactly once"
     );
     assert!(draw_source.contains("if pass.render_profile == SceneRenderProfile3d::SvgFlatLit { 1.0 } else { 0.0 }"), "the WGPU producer carries the explicit SVG face-lighting profile");
     assert!(draw_source.contains("if pass.shadow.enabled { 1.0 } else { 0.0 }") && draw_source.contains("0.0,\n                1.0,"), "the WGPU producer declares that its World attachment expects encoded output");

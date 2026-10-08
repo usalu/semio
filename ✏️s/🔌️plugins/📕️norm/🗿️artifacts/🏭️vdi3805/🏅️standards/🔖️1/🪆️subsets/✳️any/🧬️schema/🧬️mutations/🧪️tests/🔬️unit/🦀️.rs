@@ -126,7 +126,7 @@ async fn geometry_lifecycle_round_trips() {
     assert_eq!(after_resize.geometry.get("geom.new").unwrap().bbox.max_x, 2.0);
 
     let connection = crate::ConnectionPoint { id: "c1".into(), medium: "water".into(), position: [0.0, 0.0, 0.0], direction: [1.0, 0.0, 0.0], diameter_mm: None };
-    let add_conn = Vdi3805Mutation::AddGeometryConnection(add_geometry_connection::AddGeometryConnection { id: "geom.new".into(), connection: connection.clone() });
+    let add_conn = Vdi3805Mutation::AddGeometryConnection(add_geometry_connection::AddGeometryConnection { id: "geom.new".into(), connection: connection.clone(), index: None });
     let after_add = round_trip(&after_create, &add_conn);
     assert_eq!(after_add.geometry.get("geom.new").unwrap().connections.len(), 1);
 

@@ -1,0 +1,6 @@
+{
+ "absentPackagePrefixes":["semio-framework-os-","semio-s-","semio-hub"],
+ "specificExports":["io","compose_thunk","io_run_thunk","io_sniff_thunk"],
+ "neutralProviders":["semio-framework-value","semio-framework-artifact-reference","semio-framework-ui-contract","semio-framework-diagnostic"],
+ "workspace":{"manifest":"Cargo.toml","entrypoint":"📦️packages/🦀️rust","absentRoots":["🛍️products/","../"]}
+}

@@ -1,4 +1,4 @@
 syntax = "proto3";
 package stdio.gltf.mutation;
-message GltfCreateSkinPayloadV1 { uint32 position = 1; }
+message GltfCreateSkinPayloadV1 { uint32 position = 1; GltfSkinRecordV1 skin = 2; }
 message GltfCreateSkinMutationV1 { string id = 1; uint32 version = 2; repeated string touched_paths = 3; GltfCreateSkinPayloadV1 payload = 4; }

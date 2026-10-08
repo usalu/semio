@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ChangeTileWeight` — one id-keyed replacement at the tile's OWN index.
 
-use crate::diff::Wfc3dDiff;
+use crate::diff::{Wfc3dDiff, Wfc3dRowPatch, Wfc3dRows, Wfc3dTilePatch};
 use crate::schema::snapshot::Wfc3dSnapshot;
 
 pub fn diff(payload: &super::ChangeTileWeight, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
@@ -14,7 +14,5 @@ pub fn diff(payload: &super::ChangeTileWeight, base: &Wfc3dSnapshot) -> protocol
     if tile.weight == payload.weight {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Tile \"{}\" already weighs {}.", payload.id, payload.weight));
     }
-    let mut reweighted = tile.clone();
-    reweighted.weight = payload.weight;
-    protocol::MutationOutcome::new(Wfc3dDiff { tiles_upserted: vec![(index, reweighted)], ..Default::default() })
+    protocol::MutationOutcome::new(Wfc3dDiff { tiles: Wfc3dRows { patched: vec![Wfc3dRowPatch { id: tile.id.clone(), patch: Wfc3dTilePatch { weight: Some(payload.weight), ..Default::default() } }], ..Default::default() }, ..Default::default() })
 }

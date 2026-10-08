@@ -1,6 +1,4 @@
-//! 💬️ `insert-comment` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 💬️ `insert-comment` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,14 +14,18 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for InsertComment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "comment", kind: "insert-comment", record: "InsertComment" };
 
     fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
-        agg_diff(&PlyMutation::InsertComment(self.clone()), base)
+        let Self { index, comment } = self;
+        protocol::MutationOutcome::new(diff_insert_comment((*index).min(base.comments.len()), comment.clone()))
     }
     fn inverse(&self, base: &PlySnapshot) -> Result<Vec<PlyMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&PlyMutation::InsertComment(self.clone()), base)?
-    
-    })
-}
+        let Self { index, .. } = self;
+        Ok({
+            {
+                let at = (*index).min(base.comments.len());
+                vec![PlyMutation::RemoveComment(remove_comment::RemoveComment { index: at })]
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert comment", "Kommentar einfügen")
     }

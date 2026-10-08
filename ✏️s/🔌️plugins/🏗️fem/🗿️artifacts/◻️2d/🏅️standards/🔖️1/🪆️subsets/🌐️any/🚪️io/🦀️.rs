@@ -80,7 +80,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::{Fem2dMutation, Fem2dSnapshot, FEM2D_DIALECT, FEM_2D_SCHEMA};
-    use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+    use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
@@ -184,7 +184,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::Fem2dSnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Fem2dParts {
@@ -197,27 +197,27 @@ pub mod derived_analysis {
         type Parts = Fem2dParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.fem.fem2d", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
+        fn sniff(_source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+            semio_framework_plugin::io::Confidence::Medium
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = Fem2dParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
+            let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <Fem2dSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <Fem2dSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },

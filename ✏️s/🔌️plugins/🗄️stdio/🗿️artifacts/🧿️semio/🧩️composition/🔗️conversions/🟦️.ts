@@ -1,3 +1,5 @@
+import {fileURLToPath} from "node:url";
+import {observeCargoPreparationSourceV1,observeCargoPreparationInputV1,observeCargoPreparationOutputV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts";
 import { lstatSync, readFileSync, writeFileSync } from "node:fs";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { admitCargoCapabilityLinksV1, prepareCargoCapabilityLinksV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧩️capabilities/🟦️.ts";
@@ -22,21 +24,22 @@ function physical(root: string, path: string, optional = false): boolean {
     current = resolve(current, part);
     let entry;
     try { entry = lstatSync(current); }
-    catch (error) { if (optional && (error as NodeJS.ErrnoException).code === "ENOENT") return false; throw error; }
+    catch (error) { if (optional && (error as NodeJS.ErrnoException).code === "ENOENT") {observeCargoPreparationInputV1(path,"presence");return false;} throw error; }
     if (entry.isSymbolicLink()) throw new Error("Semio conversion authority follows a symlink");
   }
-  return true;
+  observeCargoPreparationInputV1(path,"presence");return true;
 }
 
 function read(root: string, path: string): string {
   physical(root, path);
   const entry = lstatSync(path);
   if (!entry.isFile() || entry.size > 1024 * 1024) throw new Error("Semio conversion authority is not a bounded regular file");
-  return readFileSync(path, "utf8");
+  const bytes=readFileSync(path);observeCargoPreparationInputV1(path,"file",bytes);return bytes.toString("utf8");
 }
 
 /** 📦️ Publishes definition dependencies and Cargo edges from the same lower source inventory. */
 export function prepareSemioConversionDefinitionV1(repoRoot: string, ownerRoot: string): number {
+  observeCargoPreparationSourceV1(fileURLToPath(import.meta.url));
   const authority = resolve(ownerRoot, "🧩️composition/🔗️conversions/🔣️.json"), definition = resolve(ownerRoot, "📜️artifact-definition.json");
   const source = read(repoRoot, authority), previous = read(repoRoot, definition), links = admitCargoCapabilityLinksV1(JSON.parse(source));
   const exports = new Map<string, ExportV1>(), observed = new Map<string, string>([[authority, source], [definition, previous]]), presence = new Map<string, boolean>();
@@ -60,5 +63,6 @@ export function prepareSemioConversionDefinitionV1(repoRoot: string, ownerRoot: 
   const count = prepareCargoCapabilityLinksV1(repoRoot, ownerRoot, "📦️packages/🦀️rust/Cargo.toml", "🧩️composition/🔗️conversions/🔣️.json");
   if ([...observed].some(([path, bytes]) => read(repoRoot, path) !== bytes) || [...presence].some(([path, available]) => physical(repoRoot, path, true) !== available)) throw new Error("Semio conversion authority changed during publication");
   if (next !== previous) writeFileSync(definition, next);
+  observeCargoPreparationOutputV1(definition,next);
   return count;
 }

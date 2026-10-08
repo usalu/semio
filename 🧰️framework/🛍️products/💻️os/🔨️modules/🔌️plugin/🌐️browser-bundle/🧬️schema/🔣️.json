@@ -3,6 +3,20 @@
   "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/browser-bundle/component.json",
   "title": "Semio OS Plugin Browser Bundle",
   "$defs": {
+    "GuestLogLine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "text", "level"],
+      "properties": {
+        "channel": { "enum": ["stdout", "stderr"] },
+        "text": { "type": "string" },
+        "level": { "enum": ["debug", "error", "log"] }
+      }
+    },
+    "GuestMaintenanceDiagnostic": {
+      "type": "string",
+      "pattern": "^cooperative-maintenance instance=[0-9]+ turn=[0-9]+ generation=[0-9]+$"
+    },
     "BrowserActorLifecycleState": {
       "type": "object",
       "additionalProperties": false,
@@ -530,6 +544,92 @@
     "WitInterfaceId": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*/[a-z][a-z0-9-]*@[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "BrowserActorPhysicalClaimV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "byteLength"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/BrowserSha256"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8589934592
+        }
+      }
+    },
+    "BrowserActorPhysicalInputV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "byteLength",
+        "logicalPath"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/BrowserSha256"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8589934592
+        },
+        "logicalPath": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "BrowserActorProducerInputsV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policyCanonical",
+        "policySha256",
+        "runtime",
+        "compiler",
+        "inputs"
+      ],
+      "properties": {
+        "policyCanonical": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 262144
+        },
+        "policySha256": {
+          "$ref": "#/$defs/BrowserSha256"
+        },
+        "runtime": {
+          "$ref": "#/$defs/BrowserActorPhysicalClaimV1"
+        },
+        "compiler": {
+          "$ref": "#/$defs/BrowserActorPhysicalClaimV1"
+        },
+        "inputs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/BrowserActorPhysicalInputV1"
+          }
+        }
+      }
     }
   },
   "$ref": "#/$defs/CodegenPolicyV1"

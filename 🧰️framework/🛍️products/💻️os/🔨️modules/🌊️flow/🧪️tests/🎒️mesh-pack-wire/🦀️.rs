@@ -94,7 +94,7 @@ fn an_oversized_body_is_split_into_several_chunks() {
 #[test]
 fn retained_mesh_pack_preserves_indexed_metadata_and_cancels_bounded_encoding() {
     let fixture=semio_framework_pack_json::parse(include_str!("../../../../🧫️fixtures/🧊️mesh/mesh-pack-attributes.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let mesh=semio_framework::MeshData::from(&fixture["mesh"]);
+    let mesh=<semio_framework::MeshData as semio_framework_value::FromValue>::from_value(semio_framework_pack_json::to_dsl_value(&fixture["mesh"])).expect("canonical retained mesh fixture");
     assert_eq!(mesh.attributes["normal"].values.len(),1);
     let mut job=MeshPackEncodingJob::new(mesh.clone(),64000000).unwrap();let mut steps=0;
     let body=loop {steps+=1;if let Some(body)=job.step(1).unwrap() {break body;}assert!(steps<100000);};

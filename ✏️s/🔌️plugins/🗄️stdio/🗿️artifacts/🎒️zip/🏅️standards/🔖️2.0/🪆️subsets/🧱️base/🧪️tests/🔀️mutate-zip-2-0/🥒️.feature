@@ -55,13 +55,11 @@ Feature: Apply every typed ZIP 2.0 mutation to a real-world multi-entry archive
 
     Examples:
       | id                  | params |
-      | set-snapshot        | {"snapshot":{"schema":"stdio.zip","entries":[{"name":"manifest/readme.txt","data":[69,114,115,97,116,122,97,114,99,104,105,118,32,102,117,101,114,32,100,101,110,32,77,117,116,97,116,105,111,110,115,116,101,115,116,46],"metadata":{"compressionMethod":8,"local":{"versionNeeded":20,"flags":2048,"modifiedTime":0,"modifiedDate":33,"extraFields":[]},"central":{"versionMadeBy":45,"versionNeeded":20,"flags":2048,"modifiedTime":0,"modifiedDate":33,"extraFields":[],"comment":"","internalAttributes":0,"externalAttributes":0},"dataDescriptorSignature":false}},{"name":"manifest/index.txt","data":[69,105,110,116,114,97,101,103,101,58,32,49],"metadata":{"compressionMethod":8,"local":{"versionNeeded":20,"flags":2048,"modifiedTime":0,"modifiedDate":33,"extraFields":[]},"central":{"versionMadeBy":45,"versionNeeded":20,"flags":2048,"modifiedTime":0,"modifiedDate":33,"extraFields":[],"comment":"","internalAttributes":0,"externalAttributes":0},"dataDescriptorSignature":false}}],"comment":"Ersatzarchiv","commentUtf8":true}} |
       | set-archive-comment | {"comment":"Zwischenbericht Projektfotos, Stand Mutation","commentUtf8":true} |
       | add-entry           | {"entry":{"name":"projekt/notiz.txt","data":[78,97,99,104,116,114,97,103,58,32,119,101,105,116,101,114,101,115,32,66,101,115,116,97,110,100,115,112,114,111,106,101,107,116,32,102,111,108,103,116,46],"metadata":{"compressionMethod":8,"local":{"versionNeeded":20,"flags":2048,"modifiedTime":0,"modifiedDate":33,"extraFields":[]},"central":{"versionMadeBy":45,"versionNeeded":20,"flags":2048,"modifiedTime":0,"modifiedDate":33,"extraFields":[],"comment":"","internalAttributes":0,"externalAttributes":0},"dataDescriptorSignature":false}}} |
       | remove-entry        | {"name":"projekt/P05_recypark_demets.jpg"} |
       | rename-entry        | {"name":"projekt/P10_haus_hos.jpg","newName":"projekt/P10_haus_hos_bestand.jpg"} |
       | set-entry-data      | {"name":"projekt/P08_holbein_gardens.jpg","data":[69,82,83,65,84,90,73,78,72,65,76,84,58,32,66,105,108,100,98,101,108,101,103,32,100,117,114,99,104,32,80,108,97,116,122,104,97,108,116,101,114,116,101,120,116,32,101,114,115,101,116,122,116,46]} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/comment", "value": "Projektfotos patched comment"}} |
 
   @id-inverse
   @level-exhaustive
@@ -76,13 +74,11 @@ Feature: Apply every typed ZIP 2.0 mutation to a real-world multi-entry archive
 
     Examples:
       | id                  | params |
-      | set-snapshot        | {"snapshot":{"schema":"stdio.zip","entries":[{"name":"manifest/readme.txt","data":[69,114,115,97,116,122,97,114,99,104,105,118,32,102,117,101,114,32,100,101,110,32,77,117,116,97,116,105,111,110,115,116,101,115,116,46],"metadata":{"compressionMethod":8,"local":{"versionNeeded":20,"flags":2048,"modifiedTime":0,"modifiedDate":33,"extraFields":[]},"central":{"versionMadeBy":45,"versionNeeded":20,"flags":2048,"modifiedTime":0,"modifiedDate":33,"extraFields":[],"comment":"","internalAttributes":0,"externalAttributes":0},"dataDescriptorSignature":false}},{"name":"manifest/index.txt","data":[69,105,110,116,114,97,101,103,101,58,32,49],"metadata":{"compressionMethod":8,"local":{"versionNeeded":20,"flags":2048,"modifiedTime":0,"modifiedDate":33,"extraFields":[]},"central":{"versionMadeBy":45,"versionNeeded":20,"flags":2048,"modifiedTime":0,"modifiedDate":33,"extraFields":[],"comment":"","internalAttributes":0,"externalAttributes":0},"dataDescriptorSignature":false}}],"comment":"Ersatzarchiv","commentUtf8":true}} |
       | set-archive-comment | {"comment":"Zwischenbericht Projektfotos, Stand Mutation","commentUtf8":true} |
       | add-entry           | {"entry":{"name":"projekt/notiz.txt","data":[78,97,99,104,116,114,97,103,58,32,119,101,105,116,101,114,101,115,32,66,101,115,116,97,110,100,115,112,114,111,106,101,107,116,32,102,111,108,103,116,46],"metadata":{"compressionMethod":8,"local":{"versionNeeded":20,"flags":2048,"modifiedTime":0,"modifiedDate":33,"extraFields":[]},"central":{"versionMadeBy":45,"versionNeeded":20,"flags":2048,"modifiedTime":0,"modifiedDate":33,"extraFields":[],"comment":"","internalAttributes":0,"externalAttributes":0},"dataDescriptorSignature":false}}} |
       | remove-entry        | {"name":"projekt/P05_recypark_demets.jpg"} |
       | rename-entry        | {"name":"projekt/P10_haus_hos.jpg","newName":"projekt/P10_haus_hos_bestand.jpg"} |
       | set-entry-data      | {"name":"projekt/P08_holbein_gardens.jpg","data":[69,82,83,65,84,90,73,78,72,65,76,84,58,32,66,105,108,100,98,101,108,101,103,32,100,117,114,99,104,32,80,108,97,116,122,104,97,108,116,101,114,116,101,120,116,32,101,114,115,101,116,122,116,46]} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/comment", "value": "Projektfotos patched comment"}} |
 
   @id-identity-round-trip
   @level-long

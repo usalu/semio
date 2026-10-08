@@ -66,21 +66,35 @@ KINDS = (
 """🏷️ Every kind the catalog declares, in its declared order — also the binary tag order."""
 
 COLLECTIONS = {"slots": "slots", "edges": "edges", "tiles": "tiles", "rules": "rules"}
-"""🗃️ The four ordered id-keyed collections, each with its own removed/upserted diff pair."""
+"""🗃️ The four ordered id-keyed collections, each with its own removed/added/patched diff rows."""
 
-EMPTY_DIFF = {
-    "schema": None,
-    "seed": None,
-    "slotsRemoved": [],
-    "slotsUpserted": [],
-    "edgesRemoved": [],
-    "edgesUpserted": [],
-    "tilesRemoved": [],
-    "tilesUpserted": [],
-    "rulesRemoved": [],
-    "rulesUpserted": [],
+PATCH_FIELDS = {
+    "slots": (("x", False), ("y", False), ("width", False), ("height", False), ("pinnedTileId", True)),
+    "edges": (("fromSlotId", False), ("toSlotId", False), ("relation", False)),
+    "tiles": (("weight", False), ("media", False), ("label", True)),
+    "rules": (("tileAId", False), ("tileBId", False), ("allowed", False), ("relation", True)),
 }
+"""🩹 Per collection, the fields a row patch may set, in wire order; `True` marks an optional field wrapped as `{"value": …}`."""
+
+
+def rows(removed=None, added=None, patched=None):
+    """📂 One collection's delta: removed ids, added rows (landing at their canonical position) and per-row patches."""
+    return {"removed": removed or [], "added": added or [], "patched": patched or []}
+
+
+EMPTY_DIFF = {"schema": None, "seed": None, "slots": rows(), "edges": rows(), "tiles": rows(), "rules": rows()}
 """🔺️ A diff is TOTAL: every lane is present, an untouched one empty."""
+
+
+def patch(collection, identifier, **fields):
+    """🩹 One row patch: every field present, the unset ones `None`, optional fields wrapped."""
+    body = {}
+    for name, optional in PATCH_FIELDS[collection]:
+        if name in fields:
+            body[name] = {"value": fields[name]} if optional else fields[name]
+        else:
+            body[name] = None
+    return {"id": identifier, "patch": body}
 # endregion 🔖️Vocabulary
 
 
@@ -95,7 +109,7 @@ def ordered_index(rows, identifier):
 
 def diff_of(**lanes):
     """🔺️ One total diff with the named lanes filled in."""
-    row = dict(EMPTY_DIFF)
+    row = copy.deepcopy(EMPTY_DIFF)
     row.update(lanes)
     return row
 
@@ -147,8 +161,8 @@ def mutate(document, mutation):
             return refuse("error", "mutation.target-missing")
         if payload["dx"] == 0 and payload["dy"] == 0:
             return diff_of(), partial(missing) + [{"level": "warning", "code": "mutation.no-op"}]
-        moved = [[index, {**slot, "x": slot["x"] + payload["dx"], "y": slot["y"] + payload["dy"]}] for index, slot in enumerate(document["slots"]) if slot["id"] in targets]
-        return diff_of(slotsUpserted=moved), partial(missing)
+        moved = [patch("slots", slot["id"], x=slot["x"] + payload["dx"], y=slot["y"] + payload["dy"]) for slot in document["slots"] if slot["id"] in targets]
+        return diff_of(slots=rows(patched=moved)), partial(missing)
     if variant == "SetSlotPositions":
         positions = payload["positions"]
         identifiers = [position["id"] for position in positions]
@@ -158,13 +172,13 @@ def mutate(document, mutation):
         if len(missing) == len(identifiers):
             return refuse("error", "mutation.target-missing")
         moved = []
-        for index, slot in enumerate(document["slots"]):
+        for slot in document["slots"]:
             position = next((row for row in positions if row["id"] == slot["id"]), None)
             if position is not None and (position["x"], position["y"]) != (slot["x"], slot["y"]):
-                moved.append([index, {**slot, "x": position["x"], "y": position["y"]}])
+                moved.append(patch("slots", slot["id"], x=position["x"], y=position["y"]))
         if not moved:
             return diff_of(), partial(missing) + [{"level": "warning", "code": "mutation.no-op"}]
-        return diff_of(slotsUpserted=moved), partial(missing)
+        return diff_of(slots=rows(patched=moved)), partial(missing)
     if variant == "ChangeSeed":
         return noop() if document["seed"] == payload["seed"] else (diff_of(seed=payload["seed"]), [])
     if variant == "CreateSlot":
@@ -175,21 +189,21 @@ def mutate(document, mutation):
             return refuse("fatal", "mutation.invariant")
         if "pinnedTileId" in slot and find(document["tiles"], slot["pinnedTileId"])[0] == -1:
             return refuse("fatal", "mutation.invariant")
-        return diff_of(slotsUpserted=[[ordered_index(document["slots"], slot["id"]), slot]]), []
+        return diff_of(slots=rows(added=[slot])), []
     if variant == "DeleteSlot":
         identifier = payload["id"]
         if find(document["slots"], identifier)[0] == -1:
             return refuse("error", "mutation.target-missing")
         incident = [edge["id"] for edge in document["edges"] if identifier in (edge["fromSlotId"], edge["toSlotId"])]
         messages = [] if not incident else [{"level": "info", "code": "mutation.cascade"}]
-        return diff_of(slotsRemoved=[identifier], edgesRemoved=incident), messages
+        return diff_of(slots=rows(removed=[identifier]), edges=rows(removed=incident)), messages
     if variant == "MoveSlot":
         index, slot = find(document["slots"], payload["id"])
         if index == -1:
             return refuse("error", "mutation.target-missing")
         if slot["x"] == payload["x"] and slot["y"] == payload["y"]:
             return noop()
-        return diff_of(slotsUpserted=[[index, {**slot, "x": payload["x"], "y": payload["y"]}]]), []
+        return diff_of(slots=rows(patched=[patch("slots", slot["id"], x=payload["x"], y=payload["y"])])), []
     if variant == "ResizeSlot":
         index, slot = find(document["slots"], payload["id"])
         if index == -1:
@@ -198,7 +212,7 @@ def mutate(document, mutation):
             return refuse("fatal", "mutation.invariant")
         if slot["width"] == payload["width"] and slot["height"] == payload["height"]:
             return noop()
-        return diff_of(slotsUpserted=[[index, {**slot, "width": payload["width"], "height": payload["height"]}]]), []
+        return diff_of(slots=rows(patched=[patch("slots", slot["id"], width=payload["width"], height=payload["height"])])), []
     if variant == "ConnectSlots":
         edge = payload["edge"]
         if find(document["edges"], edge["id"])[0] != -1:
@@ -208,11 +222,11 @@ def mutate(document, mutation):
                 return refuse("fatal", "mutation.invariant")
         if not edge["relation"]:
             return refuse("fatal", "mutation.invariant")
-        return diff_of(edgesUpserted=[[ordered_index(document["edges"], edge["id"]), edge]]), []
+        return diff_of(edges=rows(added=[edge])), []
     if variant == "DisconnectSlots":
         if find(document["edges"], payload["id"])[0] == -1:
             return refuse("error", "mutation.target-missing")
-        return diff_of(edgesRemoved=[payload["id"]]), []
+        return diff_of(edges=rows(removed=[payload["id"]])), []
     if variant == "PinSlot":
         index, slot = find(document["slots"], payload["id"])
         if index == -1:
@@ -221,29 +235,29 @@ def mutate(document, mutation):
             return refuse("fatal", "mutation.invariant")
         if slot.get("pinnedTileId") == payload["tileId"]:
             return noop()
-        return diff_of(slotsUpserted=[[index, {**slot, "pinnedTileId": payload["tileId"]}]]), []
+        return diff_of(slots=rows(patched=[patch("slots", slot["id"], pinnedTileId=payload["tileId"])])), []
     if variant == "UnpinSlot":
         index, slot = find(document["slots"], payload["id"])
         if index == -1:
             return refuse("error", "mutation.target-missing")
         if "pinnedTileId" not in slot:
             return noop()
-        return diff_of(slotsUpserted=[[index, strip_pin(slot)]]), []
+        return diff_of(slots=rows(patched=[patch("slots", slot["id"], pinnedTileId=None)])), []
     if variant == "CreateTile":
         tile = payload["tile"]
         if find(document["tiles"], tile["id"])[0] != -1:
             return refuse("fatal", "mutation.duplicate-id")
         if tile["weight"] < 0:
             return refuse("fatal", "mutation.invariant")
-        return diff_of(tilesUpserted=[[ordered_index(document["tiles"], tile["id"]), tile]]), []
+        return diff_of(tiles=rows(added=[tile])), []
     if variant == "DeleteTile":
         identifier = payload["id"]
         if find(document["tiles"], identifier)[0] == -1:
             return refuse("error", "mutation.target-missing")
         orphaned = [rule["id"] for rule in document["rules"] if identifier in (rule["tileAId"], rule["tileBId"])]
-        released = [[index, strip_pin(slot)] for index, slot in enumerate(document["slots"]) if slot.get("pinnedTileId") == identifier]
+        released = [patch("slots", slot["id"], pinnedTileId=None) for slot in document["slots"] if slot.get("pinnedTileId") == identifier]
         messages = [] if not orphaned and not released else [{"level": "info", "code": "mutation.cascade"}]
-        return diff_of(tilesRemoved=[identifier], rulesRemoved=orphaned, slotsUpserted=released), messages
+        return diff_of(tiles=rows(removed=[identifier]), rules=rows(removed=orphaned), slots=rows(patched=released)), messages
     if variant == "ChangeTileWeight":
         index, tile = find(document["tiles"], payload["tileId"])
         if index == -1:
@@ -252,14 +266,14 @@ def mutate(document, mutation):
             return refuse("fatal", "mutation.invariant")
         if tile["weight"] == payload["weight"]:
             return noop()
-        return diff_of(tilesUpserted=[[index, {**tile, "weight": payload["weight"]}]]), []
+        return diff_of(tiles=rows(patched=[patch("tiles", tile["id"], weight=payload["weight"])])), []
     if variant == "ChangeTileMedia":
         index, tile = find(document["tiles"], payload["tileId"])
         if index == -1:
             return refuse("error", "mutation.target-missing")
         if tile.get("media") == payload["media"]:
             return noop()
-        return diff_of(tilesUpserted=[[index, {**tile, "media": payload["media"]}]]), []
+        return diff_of(tiles=rows(patched=[patch("tiles", tile["id"], media=payload["media"])])), []
     if variant == "CreateRule":
         rule = payload["rule"]
         if find(document["rules"], rule["id"])[0] != -1:
@@ -267,23 +281,44 @@ def mutate(document, mutation):
         for tile_id in (rule["tileAId"], rule["tileBId"]):
             if find(document["tiles"], tile_id)[0] == -1:
                 return refuse("fatal", "mutation.invariant")
-        return diff_of(rulesUpserted=[[ordered_index(document["rules"], rule["id"]), rule]]), []
+        return diff_of(rules=rows(added=[rule])), []
     if variant == "DeleteRule":
         if find(document["rules"], payload["id"])[0] == -1:
             return refuse("error", "mutation.target-missing")
-        return diff_of(rulesRemoved=[payload["id"]]), []
+        return diff_of(rules=rows(removed=[payload["id"]])), []
     raise AssertionError(f"unknown wfc2d mutation variant {variant!r}")
 
 
-def apply_collection(base, removed, upserted):
-    rows = [row for row in base if row["id"] not in removed]
-    for index, value in upserted:
-        at = next((position for position, row in enumerate(rows) if row["id"] == value["id"]), -1)
+def apply_collection(base, delta, collection):
+    """📂 Removals first, then canonical-position insertions, then field patches; unknown targets are refused."""
+    result = list(base)
+    for identifier in delta["removed"]:
+        at = next((position for position, row in enumerate(result) if row["id"] == identifier), -1)
         if at == -1:
-            rows.insert(index, value)
-        else:
-            rows[at] = value
-    return rows
+            raise AssertionError(f"removed {identifier!r} does not exist")
+        del result[at]
+    for row in delta["added"]:
+        if any(existing["id"] == row["id"] for existing in result):
+            raise AssertionError(f"added {row['id']!r} already exists")
+        result.insert(ordered_index(result, row["id"]), row)
+    optional = {name for name, wrapped in PATCH_FIELDS[collection] if wrapped}
+    for entry in delta["patched"]:
+        at = next((position for position, row in enumerate(result) if row["id"] == entry["id"]), -1)
+        if at == -1:
+            raise AssertionError(f"patched {entry['id']!r} does not exist")
+        row = dict(result[at])
+        for name, value in entry["patch"].items():
+            if value is None:
+                continue
+            if name in optional:
+                if value["value"] is None:
+                    row.pop(name, None)
+                else:
+                    row[name] = value["value"]
+            else:
+                row[name] = value
+        result[at] = row
+    return result
 
 
 def apply_diff(document, diff):
@@ -294,9 +329,7 @@ def apply_diff(document, diff):
     if diff["seed"] is not None:
         result["seed"] = diff["seed"]
     for member in COLLECTIONS:
-        lane = member[:-1] if member.endswith("s") else member
-        result[member] = apply_collection(result[member], diff[f"{member}Removed"], diff[f"{member}Upserted"])
-        del lane
+        result[member] = apply_collection(result[member], diff[member], member)
     return result
 
 

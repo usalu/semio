@@ -134,7 +134,7 @@ fn sqlite_snapshot_stl_erased_binary_and_text_keep_owned_schema_exact_ieee_and_i
 #[test]
 fn sqlite_snapshot_stl_whole_native_controls_exact_ieee_admission_and_interior_cancellation(){
  let(_,mut value)=fixture();value.schema="logical schema 世界".repeat(10000);value.triangles[0].normal[0]=f64::from_bits(0xfff0000000001234);value.triangles=vec![value.triangles[0].clone();600];let limits=SqliteDatabaseLimits::default();
- for payload in[store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(&value)),store::os_io::IoPayload::Text(store::ArtifactDsl::print_dsl(&value))]{
+ for payload in[store::io::IoPayload::Binary(store::ArtifactPack::encode_pack(&value)),store::io::IoPayload::Text(store::ArtifactDsl::print_dsl(&value))]{
   let restored=StlSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(restored.schema,value.schema);assert_eq!(restored.triangles.len(),600);assert_eq!(restored.triangles[599].normal[0].to_bits(),0xfff0000000001234);
   for limits in[SqliteDatabaseLimits{max_rows:10,..limits},SqliteDatabaseLimits{max_value_bytes:4096,..limits}]{assert!(StlSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).is_err());}
   let mut interior=false;assert!(StlSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |p|{if p.phase==semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative&&p.completed>=256&&p.completed<p.total{interior=true;false}else{true}},limits)).is_err());assert!(interior);

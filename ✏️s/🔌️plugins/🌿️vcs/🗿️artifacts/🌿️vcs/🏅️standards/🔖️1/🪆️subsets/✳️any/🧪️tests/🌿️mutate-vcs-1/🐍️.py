@@ -57,7 +57,7 @@ WIRE_TAG_TO_KIND = {tag: kind for kind, (_root, tag) in VECTORS.items()}
 
 
 # region 🔖️Vocabulary
-NULL_DIFF = {"artifact": None, "schema": None, "title": None, "counter": None, "notes": None, "status": None, "tags": None}
+NULL_DIFF = {"schema": None, "title": None, "counter": None, "notes": None, "status": None, "tags": None}
 
 
 def apply_rename_vcs(snapshot, payload):
@@ -89,17 +89,20 @@ def apply_change_status(snapshot, payload):
 
 
 def apply_add_tag(snapshot, payload):
-    """🏷️ Appends — never re-sorts, never de-duplicates. `atIndex`, when present, is used ONLY to
-    reconstruct `remove-tag`'s inverse at its captured BASE position — the real `add-tag` wire never
-    carries it, and every genuine forward application always appends."""
+    """🏷️ Appends — never re-sorts, never de-duplicates. `index`, when present and inside the list, inserts at
+    that position (this is how `remove-tag`'s inverse restores the captured BASE position); absent or past the end appends."""
     after = copy.deepcopy(snapshot)
     tags = after.get("tags", [])
-    if "atIndex" in payload:
-        tags.insert(payload["atIndex"], payload["tag"])
+    inside = "index" in payload and payload["index"] < len(tags)
+    if inside:
+        tags.insert(payload["index"], payload["tag"])
     else:
         tags.append(payload["tag"])
     after["tags"] = tags
-    diff = dict(NULL_DIFF, tags={"added": [payload["tag"]], "removed": []})
+    delta = {"added": [payload["tag"]], "removed": []}
+    if inside:
+        delta["reordered"] = list(tags)
+    diff = dict(NULL_DIFF, tags=delta)
     return after, diff, {"status": "applied"}
 
 
@@ -137,7 +140,7 @@ def inverse_mutation(kind, before_snapshot, payload):
         # ↩️`remove`'s inverse is `insert`/`add` with the CAPTURED item AND its BASE-state index
         # (taxonomy.md's `remove` row) — an inverse that only appended would silently reorder the
         # list, which is exactly the failure this subset's own committed vector is built to expose.
-        return "addTag", {"tag": payload["tag"], "atIndex": before_snapshot.get("tags", []).index(payload["tag"])}
+        return "addTag", {"tag": payload["tag"], "index": before_snapshot.get("tags", []).index(payload["tag"])}
     raise AssertionError(f"no inverse rule for kind {kind!r}")
 # endregion 🔖️Vocabulary
 

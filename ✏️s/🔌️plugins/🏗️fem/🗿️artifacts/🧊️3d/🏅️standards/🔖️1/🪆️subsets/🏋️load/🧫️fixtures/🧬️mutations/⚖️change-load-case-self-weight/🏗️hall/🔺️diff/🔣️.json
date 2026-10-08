@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "nodes": null,
   "elements": null,
   "materials": null,
@@ -12,11 +11,10 @@
     "patched": [
       {
         "id": "crane_spare",
-        "item": {
-          "id": "crane_spare",
-          "name": "Crane Runway",
-          "loads": [],
-          "selfWeight": true
+        "patch": {
+          "name": null,
+          "selfWeight": true,
+          "loads": null
         }
       }
     ],

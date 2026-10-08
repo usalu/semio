@@ -1,24 +1,21 @@
 {
-  "graph": {
-    "directed": true,
-    "nodes": [],
-    "edges": [],
-    "algorithm": "",
-    "algorithmSeed": null
-  },
-  "geometry": {
-    "points": [
+  "points": {
+    "edits": [
       {
-        "x": 0.0,
-        "y": 0.0
+        "op": "set",
+        "at": 0,
+        "point": {
+          "x": 0.0,
+          "y": 0.0
+        }
       },
       {
-        "x": 10.0,
-        "y": 20.0
-      },
-      {
-        "x": 30.0,
-        "y": 40.0
+        "op": "set",
+        "at": 2,
+        "point": {
+          "x": 30.0,
+          "y": 40.0
+        }
       }
     ]
   },
@@ -54,6 +51,5 @@
         "subset": "value"
       }
     }
-  },
-  "equation": null
+  }
 }

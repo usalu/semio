@@ -338,6 +338,16 @@ macro_rules! block_patch {
     };
 }
 
+/// 📍️ The full row order after inserting `new_id` at `index` among `ids`, or `None` when the row is simply appended (no index, or past the end).
+pub fn block_insert_order<'a>(ids: impl IntoIterator<Item = &'a str>, new_id: &str, index: Option<u32>) -> Option<Vec<String>> {
+    let mut order: Vec<String> = ids.into_iter().map(str::to_string).collect();
+    let position = index? as usize;
+    (position < order.len()).then(|| {
+        order.insert(position, new_id.to_string());
+        order
+    })
+}
+
 /// 📂 Declares an id-keyed row delta `$delta` (with its patch entry `$entry`) for rows `$row` keyed by field `$id`, patched by `$patch`, and its [`BlockRows`] impl.
 #[macro_export]
 macro_rules! block_rows {

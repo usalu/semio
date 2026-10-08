@@ -2933,3 +2933,7 @@ pub const GENERATION2D_RETAINED_OWNER_CATALOG: &[&str] = &[
     "output.preview",
     "output.terminal",
 ];
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️retained-authority-laws/🦀️.rs"]
+mod retained_authority_laws;

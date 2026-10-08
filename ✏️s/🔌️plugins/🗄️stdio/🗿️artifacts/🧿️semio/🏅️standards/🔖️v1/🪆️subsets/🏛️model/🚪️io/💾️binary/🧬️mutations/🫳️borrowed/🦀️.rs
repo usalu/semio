@@ -14,7 +14,7 @@ impl<'a> View<'a> {
     fn child(self, index: usize) -> Option<Self> {
         use View as V;
         Some(match self {
-            V::Operation(SemioModelMutation::InsertElement(payload)) => match index { 0 => V::Bytes(b"element="), 1 => V::Element(&payload.element), _ => return None },
+            V::Operation(SemioModelMutation::InsertElement(payload)) => match (index, payload.at) { (0, _) => V::Bytes(b"element="), (1, _) => V::Element(&payload.element), (2, Some(_)) => V::Bytes(b" at="), (3, Some(at)) => V::Float(at as f64), _ => return None },
             V::Operation(SemioModelMutation::RemoveElement(payload)) => match index { 0 => V::Bytes(b"id="), 1 => V::Hex(&payload.id), _ => return None },
             V::Element(value) => match index { 0 => V::Hex(&value.id), 1 => V::Class(&value.class), 2 => V::Transform(&value.placement), 3 => V::Geometry(&value.geometry), 4 => V::Option(&value.spatial_id), 5 => V::Sets(&value.psets), _ => return None },
             V::Class(ElementClass::Other { name }) if index == 0 => V::Hex(name),
@@ -38,7 +38,8 @@ impl<'a> View<'a> {
         let sequence = |length: usize| Node::Sequence { length, open: b"[", separator: b",", close: b"]" };
         let tagged = |open: &'a [u8]| Node::Sequence { length: 1, open, separator: b"", close: b"]" };
         Ok(match self {
-            V::Operation(SemioModelMutation::InsertElement(_) | SemioModelMutation::RemoveElement(_)) => Node::Sequence { length: 2, open: b"", separator: b"", close: b"" },
+            V::Operation(SemioModelMutation::InsertElement(payload)) => Node::Sequence { length: if payload.at.is_some() { 4 } else { 2 }, open: b"", separator: b"", close: b"" },
+            V::Operation(SemioModelMutation::RemoveElement(_)) => Node::Sequence { length: 2, open: b"", separator: b"", close: b"" },
             V::Operation(_) => return Err("model.operation-text.unsupported".into()),
             V::Element(_) => sequence(6), V::Transform(_) | V::Point(_) => sequence(3), V::Quaternion(_) => sequence(4),
             V::Class(value) => match value {

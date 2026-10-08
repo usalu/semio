@@ -1,8 +1,7 @@
 //! 🧪️ `replace-object-vortex` scene_snapshot — `⏸️rekind`.
 //!
-//! The builder clones the owner object and compares the clone against the original BEFORE writing
-//! the new vortex, so its `next == *object` guard always fires: every `replace-object-vortex` is a
-//! warned no-op with an empty diff. This scene_snapshot pins that actual behaviour, not the intent.
+//! Re-kinds `vortex-1` of `object-a` to `vortex-kind-c`: the diff patches only that vortex's `vortexKind`
+//! slot, the one field the replacement changes.
 //!
 //! Source of truth is the committed JSON quartet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). The `.op.semio`/`.spr.semio`/`.dsl.semio`/
@@ -36,10 +35,9 @@ fn mutation() -> Puzzle3dMutation {
 fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_puzzle3d_mutation(&mut snapshot, &mutation()).expect("replace-object-vortex applies to its committed before-snapshot");
-    assert_eq!(snapshot, expected_after(), "replace-object-vortex/rekind-vortex-1-is-noop: applied state differs from committed after-snapshot");
-    assert_eq!(snapshot, before(), "replace-object-vortex/rekind-vortex-1-is-noop: the builder's clone-then-compare guard fires first, so nothing may change");
-    let object = snapshot.objects.iter().find(|object| object.id == "object-a").expect("object-a is untouched");
-    assert_eq!(object.vortices[0].vortex_kind.as_deref(), Some("vortex-kind-a"), "replace-object-vortex/rekind-vortex-1-is-noop: vortex-1 must keep its base kind");
+    assert_eq!(snapshot, expected_after(), "replace-object-vortex/rekinds-vortex-1: applied state differs from committed after-snapshot");
+    let object = snapshot.objects.iter().find(|object| object.id == "object-a").expect("object-a survives the re-kind");
+    assert_eq!(object.vortices[0].vortex_kind.as_deref(), Some("vortex-kind-c"), "replace-object-vortex/rekinds-vortex-1: vortex-1 must take the new kind");
 }
 
 /// ↩️ Applying `replace-object-vortex` then the inverse it derives from `before` restores `before` exactly.
@@ -53,7 +51,7 @@ fn inverse_restores_before() {
     for step in &inverse {
         apply_puzzle3d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
-    assert_eq!(snapshot, base, "replace-object-vortex/rekind-vortex-1-is-noop: inverse did not restore the before-snapshot");
+    assert_eq!(snapshot, base, "replace-object-vortex/rekinds-vortex-1: inverse did not restore the before-snapshot");
 }
 
 /// 🔣️ Both committed snapshots and the committed `replace-object-vortex` payload are already canonical:
@@ -64,12 +62,12 @@ fn committed_json_is_canonical() {
         let decoded: Puzzle3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
-        assert_eq!(reencoded, original, "replace-object-vortex/rekind-vortex-1-is-noop: committed {label} JSON is not canonical");
+        assert_eq!(reencoded, original, "replace-object-vortex/rekinds-vortex-1: committed {label} JSON is not canonical");
     }
     let decoded_mutation = mutation();
     let reencoded = serde_json::to_value(&decoded_mutation).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
-    assert_eq!(reencoded, original, "replace-object-vortex/rekind-vortex-1-is-noop: committed mutation JSON is not canonical");
+    assert_eq!(reencoded, original, "replace-object-vortex/rekinds-vortex-1: committed mutation JSON is not canonical");
 }
 
 /// 🎯️ The declared outcome matches what `replace-object-vortex` actually produces on this base.
@@ -80,19 +78,17 @@ fn declared_outcome_holds() {
     let mut snapshot = before();
     let applied = apply_puzzle3d_mutation(&mut snapshot, &mutation()).is_ok();
     match status {
-        "applied" => assert!(applied, "replace-object-vortex/rekind-vortex-1-is-noop: declared applied but the mutation was rejected"),
+        "applied" => assert!(applied, "replace-object-vortex/rekinds-vortex-1: declared applied but the mutation was rejected"),
         "no-op" => {
-            assert!(applied, "replace-object-vortex/rekind-vortex-1-is-noop: declared no-op but the mutation was rejected");
-            assert_eq!(snapshot, before(), "replace-object-vortex/rekind-vortex-1-is-noop: a no-op must leave the snapshot untouched");
+            assert!(applied, "replace-object-vortex/rekinds-vortex-1: declared no-op but the mutation was rejected");
+            assert_eq!(snapshot, before(), "replace-object-vortex/rekinds-vortex-1: a no-op must leave the snapshot untouched");
         }
         "rejected" => {
-            assert!(!applied, "replace-object-vortex/rekind-vortex-1-is-noop: declared rejected but the mutation applied");
-            assert_eq!(snapshot, before(), "replace-object-vortex/rekind-vortex-1-is-noop: rejected mutation must leave the snapshot untouched");
+            assert!(!applied, "replace-object-vortex/rekinds-vortex-1: declared rejected but the mutation applied");
+            assert_eq!(snapshot, before(), "replace-object-vortex/rekinds-vortex-1: rejected mutation must leave the snapshot untouched");
         }
-        other => panic!("replace-object-vortex/rekind-vortex-1-is-noop: unknown outcome status {other:?}"),
+        other => panic!("replace-object-vortex/rekinds-vortex-1: unknown outcome status {other:?}"),
     }
-    let messages = outcome.get("messages").and_then(serde_json::Value::as_array).expect("replace-object-vortex/rekind-vortex-1-is-noop: this case declares a warn no-op and must list it");
-    assert_eq!(messages[0]["code"].as_str(), Some("mutation.no-op"), "replace-object-vortex/rekind-vortex-1-is-noop: the declared message must be the no-op warning the builder raises");
 }
 
 /// 🔺️ The sparse delta `replace-object-vortex` produces is exactly the committed diff — the single most
@@ -104,9 +100,9 @@ fn produces_committed_diff() {
     let outcome = <Puzzle3dMutation as protocol::Mutation<Puzzle3dSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
-    assert_eq!(produced, committed, "replace-object-vortex/rekind-vortex-1-is-noop: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert!(committed["objects"].is_null(), "replace-object-vortex/rekind-vortex-1-is-noop: the no-op guard must leave the objects delta unset");
-    assert!(committed.as_object().expect("the committed diff is a JSON object").values().all(serde_json::Value::is_null), "replace-object-vortex/rekind-vortex-1-is-noop: a no-op diff must carry no populated field at all");
+    assert_eq!(produced, committed, "replace-object-vortex/rekinds-vortex-1: produced diff differs from the committed 🔺️diff/🔣️.json");
+    assert_eq!(committed["objects"]["patched"][0]["patch"]["vortices"]["patched"][0]["patch"]["vortexKind"].as_str(), Some("vortex-kind-c"), "replace-object-vortex/rekinds-vortex-1: the vortex patch must carry the new kind");
+    assert_eq!(committed["objects"]["patched"][0]["patch"].as_object().map(serde_json::Map::len), Some(1), "replace-object-vortex/rekinds-vortex-1: only the vortices slot of the object may be patched");
 }
 
 /// 🔣️ The committed `replace-object-vortex` diff is itself canonical and decodes to `Puzzle3dDiff`.
@@ -115,7 +111,7 @@ fn committed_diff_is_canonical() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
-    assert_eq!(reencoded, original, "replace-object-vortex/rekind-vortex-1-is-noop: committed diff JSON is not canonical");
+    assert_eq!(reencoded, original, "replace-object-vortex/rekinds-vortex-1: committed diff JSON is not canonical");
 }
 
 /// 🩹 Applying the committed `replace-object-vortex` diff directly to `before` yields the committed `after` —
@@ -123,6 +119,13 @@ fn committed_diff_is_canonical() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff as protocol::MutationDiff<Puzzle3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
-    assert_eq!(produced, expected_after(), "replace-object-vortex/rekind-vortex-1-is-noop: committed diff did not carry before to after");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "replace-object-vortex/rekinds-vortex-1: committed diff did not carry before to after");
+}
+
+/// ➕️ The concrete inverse rows' diffs sum to exactly the negative of the forward diff (law L3): replaying them restores `before`,
+/// the absorbed sum carries the applied state back, and it equals `diff.inverse(before)`.
+#[test]
+fn inverse_sums_to_the_negative_diff() {
+    ::semio_framework_async::poll::resolve_ready(protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()));
 }

@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ConnectSlots` — a real id-keyed upsert into `edges`. Two slots may
 //! carry several edges as long as each states a DIFFERENT relation; a duplicate relation is a no-op.
 
-use crate::diff::Wfc3dDiff;
+use crate::diff::{Wfc3dDiff, Wfc3dRows};
 use crate::schema::snapshot::Wfc3dSnapshot;
 
 pub fn diff(payload: &super::ConnectSlots, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
@@ -25,5 +25,9 @@ pub fn diff(payload: &super::ConnectSlots, base: &Wfc3dSnapshot) -> protocol::Mu
     {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("\"{}\" already relates to \"{}\" as \"{}\".", edge.from_slot_id, edge.to_slot_id, edge.relation));
     }
-    protocol::MutationOutcome::new(Wfc3dDiff { edges_upserted: vec![(payload.index, edge.clone())], ..Default::default() })
+    let canonical = crate::schema::snapshot::canonical_edge_index(base, &edge.id);
+    if payload.index != canonical {
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("Edge \"{}\" must be inserted at its canonical position {canonical}, not {}.", edge.id, payload.index), [edge.id.clone()]);
+    }
+    protocol::MutationOutcome::new(Wfc3dDiff { edges: Wfc3dRows { added: vec![edge.clone()], ..Default::default() }, ..Default::default() })
 }

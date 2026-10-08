@@ -603,7 +603,7 @@ mod extension_guest {
     // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires
     // a plain sync fn). `.mode`/`.contributes_topic`/`.handler` are still `async fn` in
     // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` (out of this packet's
-    // path_scope); bridged via `semio_framework::io::resolve_ready` — see this packet's lease-request.
+    // path_scope); bridged via `semio_framework_os_kernel::io::resolve_ready` — see this packet's lease-request.
     // See R9.
     fn bundle() -> ExtensionBundle {
         let manifest_json = build_manifest_json("bim", "Bim", env!("CARGO_PKG_VERSION"), &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![], vec![]);

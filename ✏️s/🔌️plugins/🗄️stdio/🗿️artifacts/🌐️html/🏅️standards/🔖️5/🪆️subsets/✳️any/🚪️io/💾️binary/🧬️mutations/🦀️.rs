@@ -15,7 +15,7 @@ use crate::standards::v5::subsets::any::io::text::diff::{decode_option};
 use crate::standards::v5::subsets::any::io::text::diff::{encode_option};
 use crate::standards::v5::subsets::any::io::text::diff::{dec_str};
 use crate::standards::v5::subsets::any::io::text::diff::{enc_str};
-use crate::standards::v5::subsets::any::schema::diff::{diff_at_path, diff_set_snapshot, HtmlAttrAdded, HtmlAttrModified, HtmlAttributesDiff, HtmlChildAdded, HtmlChildrenDiff, HtmlDiff, HtmlElementDiff, HtmlNodeDiff};
+use crate::standards::v5::subsets::any::schema::diff::{diff_at_path, HtmlAttrAdded, HtmlAttrModified, HtmlAttributesDiff, HtmlChildAdded, HtmlChildrenDiff, HtmlDiff, HtmlElementDiff, HtmlNodeDiff};
 use crate::standards::v5::subsets::any::schema::snapshot::{element_attr, node_at, HtmlNode, HtmlSnapshot, NodePath};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};

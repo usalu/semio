@@ -45,14 +45,14 @@ impl SemioFlowMutation{
         let output:&mut dyn OperationByteOutput=&mut limited;
         output.write_bytes(&[1,wire_tag(self)],control)?;
         match self{
-            Self::InsertNode(insert_node::InsertNode{node:value})=>{raw(output,"node=",control)?;node(options,output,control,value)?;},
+            Self::InsertNode(insert_node::InsertNode{node:value,at})=>{raw(output,"node=",control)?;node(options,output,control,value)?;if let Some(at)=at{raw(output,&format!(" at={at}"),control)?;}},
             Self::RemoveNode(remove_node::RemoveNode{id})|Self::RemoveEdge(remove_edge::RemoveEdge{id})=>{raw(output,"id=",control)?;hex(output,id,control)?;},
             Self::SetNodeKind(set_node_kind::SetNodeKind{id,kind})|Self::SetEdgeKind(set_edge_kind::SetEdgeKind{id,kind})=>{raw(output,"id=",control)?;hex(output,id,control)?;raw(output," kind=",control)?;hex(output,kind,control)?;},
             Self::SetNodeLabel(set_node_label::SetNodeLabel{id,label})=>{raw(output,"id=",control)?;hex(output,id,control)?;raw(output," label=",control)?;hex(output,label,control)?;},
             Self::SetNodePosition(set_node_position::SetNodePosition{id,position})=>{raw(output,"id=",control)?;hex(output,id,control)?;raw(output," position=",control)?;point(options,output,control,position)?;},
-            Self::SetNodeParam(set_node_param::SetNodeParam{id,key,value})=>{raw(output,"id=",control)?;hex(output,id,control)?;raw(output," key=",control)?;hex(output,key,control)?;raw(output," value=",control)?;hex(output,value,control)?;},
+            Self::SetNodeParam(set_node_param::SetNodeParam{id,key,value,at})=>{raw(output,"id=",control)?;hex(output,id,control)?;raw(output," key=",control)?;hex(output,key,control)?;raw(output," value=",control)?;hex(output,value,control)?;if let Some(at)=at{raw(output,&format!(" at={at}"),control)?;}},
             Self::RemoveNodeParam(remove_node_param::RemoveNodeParam{id,key})=>{raw(output,"id=",control)?;hex(output,id,control)?;raw(output," key=",control)?;hex(output,key,control)?;},
-            Self::InsertEdge(insert_edge::InsertEdge{edge:value})=>{raw(output,"edge=",control)?;edge(options,output,control,value)?;},
+            Self::InsertEdge(insert_edge::InsertEdge{edge:value,at})=>{raw(output,"edge=",control)?;edge(options,output,control,value)?;if let Some(at)=at{raw(output,&format!(" at={at}"),control)?;}},
             Self::SetEdgeEndpoints(set_edge_endpoints::SetEdgeEndpoints{id,from,to})=>{raw(output,"id=",control)?;hex(output,id,control)?;raw(output," from=",control)?;port(options,output,control,from)?;raw(output," to=",control)?;port(options,output,control,to)?;},
             Self::DragNodes(drag_nodes::DragNodes{targets,dx,dy})=>{raw(output,"targets=",control)?;tuple(options,output,control,targets.len(),|index,output,control|hex(output,&targets[index],control))?;raw(output," dx=",control)?;number(output,*dx,control)?;raw(output," dy=",control)?;number(output,*dy,control)?;},
         }

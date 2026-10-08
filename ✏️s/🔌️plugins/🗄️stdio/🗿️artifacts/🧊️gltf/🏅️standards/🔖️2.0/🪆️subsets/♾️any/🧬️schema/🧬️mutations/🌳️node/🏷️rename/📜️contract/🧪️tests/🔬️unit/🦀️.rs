@@ -12,11 +12,11 @@ fn canonical_vectors_execute_direct_mutation_and_codec_laws() {
         let payload: mutation::GltfChangeNodeNamePayload = decode(&vector["mutation"]);
         let base: GltfSnapshot = decode(&vector["base"]);
         let expected: GltfSnapshot = decode(&vector["after"]);
-        assert_eq!(mutation::apply(&payload, &base).unwrap(), expected);
+        assert_eq!(protocol::apply_diff(&mutation::plan(&payload, &base).unwrap(), &base).unwrap(), expected);
         assert_laws(&mutation::ChangeNodeNameMutation::Apply(payload.clone()), &base, &expected);
         let mut invalid = payload.clone();
         invalid.node = base.document.nodes.len().try_into().unwrap();
-        assert!(mutation::apply(&invalid, &base).is_err());
-        assert!(mutation::apply(&payload, &expected).is_err());
+        assert!(mutation::plan(&invalid, &base).is_err());
+        assert!(mutation::plan(&payload, &expected).is_err());
     }
 }

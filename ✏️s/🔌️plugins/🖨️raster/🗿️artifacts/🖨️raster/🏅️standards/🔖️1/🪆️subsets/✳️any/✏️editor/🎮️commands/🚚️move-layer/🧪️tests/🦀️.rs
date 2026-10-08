@@ -1,6 +1,6 @@
 //! 🧪️ Tree drops use sibling-relative final indices and reject cycles.
 use super::*;
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 #[test]
 fn layer_drop_shared_vectors_match_json_tree_oracle() {
@@ -14,7 +14,7 @@ fn layer_drop_shared_vectors_match_json_tree_oracle() {
         assert_eq!(serde_json::json!({"parentId": change.parent_id, "index": change.index}), serde_json::json!({"parentId": row["parentId"], "index": row["index"]}), "{row}");
         let mutation = RasterMutation::ReorderLayers(change);
         let (diff, _) = mutation.diff(&snapshot).into_parts();
-        let result = diff.apply(&snapshot).unwrap();
+        let result = protocol::apply_diff(&diff, &snapshot).unwrap();
         let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&result)))).unwrap();
         let container = match row["parentId"].as_str() { Some(id) => &json_layer(&encoded["layers"], id).unwrap()["children"], None => &encoded["layers"] };
         assert_eq!(container[row["index"].as_u64().unwrap() as usize]["id"], row["layerId"], "{row}");

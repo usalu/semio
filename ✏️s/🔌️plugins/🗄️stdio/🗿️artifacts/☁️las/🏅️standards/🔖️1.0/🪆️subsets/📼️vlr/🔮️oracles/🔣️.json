@@ -46,7 +46,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "structural",
-      "notes": "InsertVlr{index:1,vlr:<the real Puzzle5D snap-vlr>} appends a second variable-length record, matching the userId/recordId/description/data this subset's own differential feature uses for set-snapshot's VLR."
+      "notes": "InsertVlr{index:1,vlr:<the real Puzzle5D snap-vlr>} appends a second variable-length record, matching the userId/recordId/description/data this subset's own differential feature uses."
     },
     {
       "id": "remove-vlr-applied",

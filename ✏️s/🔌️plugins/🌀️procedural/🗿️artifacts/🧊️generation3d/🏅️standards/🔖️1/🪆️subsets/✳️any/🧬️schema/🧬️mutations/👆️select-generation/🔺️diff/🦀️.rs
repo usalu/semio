@@ -1,7 +1,7 @@
 //! 🔺️ `select-generation` sparse diff — only the play state's selection moves; naming a generation the document does not
 //! hold is `mutation.target-missing`, the selection it already holds is `mutation.no-op`.
 
-use crate::standards::v1::subsets::any::schema::diff::{diff_generation_with, Generation3dDiff};
+use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dSelectionChange};
 use crate::standards::v1::subsets::any::schema::mutations::select_generation::SelectGeneration;
 use crate::Generation3dSnapshot;
 
@@ -14,5 +14,5 @@ pub fn diff(payload: &SelectGeneration, base: &Generation3dSnapshot) -> protocol
     if base.generation.selected_generation_id == payload.generation_id {
         return protocol::MutationOutcome::new(Generation3dDiff::default()).warning("mutation.no-op", "The generation selection is already as requested.");
     }
-    protocol::MutationOutcome::new(diff_generation_with(base, |generation| generation.selected_generation_id.clone_from(&payload.generation_id)))
+    protocol::MutationOutcome::new(Generation3dDiff { selected_generation: Some(Generation3dSelectionChange { id: payload.generation_id.clone() }), ..Default::default() })
 }

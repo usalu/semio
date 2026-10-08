@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "streams": null,
@@ -10,169 +9,56 @@
   "gcps": null,
   "results": {
     "sparse": {
-      "points": {
-        "kind": "inline",
-        "values": [
-          {
-            "bits": "00000000"
-          },
-          {
-            "bits": "00000000"
-          },
-          {
-            "bits": "00000000"
-          },
-          {
-            "bits": "40000000"
-          },
-          {
-            "bits": "00000000"
-          },
-          {
-            "bits": "00000000"
-          },
-          {
-            "bits": "00000000"
-          },
-          {
-            "bits": "40000000"
-          },
-          {
-            "bits": "00000000"
-          },
-          {
-            "bits": "00000000"
-          },
-          {
-            "bits": "00000000"
-          },
-          {
-            "bits": "40000000"
-          }
-        ]
-      },
-      "colors": null
-    },
-    "dense": {
-      "positions": {
-        "kind": "inline",
-        "values": [
-          {
-            "bits": "00000000"
-          },
-          {
-            "bits": "00000000"
-          },
-          {
-            "bits": "00000000"
-          }
-        ]
-      },
-      "colors": [
-        0,
-        0,
-        255
-      ],
-      "confidence": {
-        "kind": "inline",
-        "values": [
-          {
-            "bits": "3f000000"
-          }
-        ]
-      },
-      "classification": [
-        2
-      ]
-    },
-    "mesh": {
-      "mesh": {
-        "childId": "remodeling-mesh-901ccade3f60f8f1",
-        "target": {
-          "artifactId": "remodeling-mesh",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "mesh"
-          }
-        }
-      },
-      "source": "reconstructed",
-      "textureAssetId": "asset-a",
-      "watertight": {
-        "vertexCount": 512,
-        "triangleCount": 1020,
-        "boundaryEdgeCount": 0,
-        "boundaryLoopCount": 0,
-        "nonManifoldEdgeCount": 0,
-        "nonManifoldVertexCount": 0,
-        "connectedComponents": 1,
-        "consistentlyOriented": true,
-        "eulerCharacteristic": 2,
-        "genus": 0,
-        "signedVolume": 12.5,
-        "selfIntersectionPairs": 0,
-        "closedFallbackUsed": false,
-        "isClosed": true,
-        "isTwoManifold": true,
-        "isWatertight": true
-      }
-    },
-    "trajectory": {
-      "poses": [
-        {
-          "cameraId": "cam-a",
-          "rotationWxyz": [
-            1.0,
-            0.0,
-            0.0,
-            0.0
-          ],
-          "translation": [
-            0.0,
-            0.0,
-            0.0
+      "value": {
+        "points": {
+          "kind": "inline",
+          "values": [
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "40000000"
+            },
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "40000000"
+            },
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "00000000"
+            },
+            {
+              "bits": "40000000"
+            }
           ]
         },
-        {
-          "cameraId": "cam-a",
-          "rotationWxyz": [
-            0.75,
-            0.25,
-            0.0,
-            0.0
-          ],
-          "translation": [
-            0.5,
-            0.0,
-            0.0
-          ]
-        }
-      ]
-    },
-    "tracks": [
-      {
-        "id": "track-a",
-        "length": 42,
-        "class": "moving",
-        "meanSpeedMS": 1.5
+        "colors": null
       }
-    ],
-    "geo": {
-      "dsmAssetId": "asset-dsm",
-      "dtmAssetId": null,
-      "orthoAssetId": null
     },
-    "qc": {
-      "reprojectionRmsPx": 0.5,
-      "gcpCheckpointRmse": 0.25,
-      "watertight": null,
-      "meanTrackLength": 6.0,
-      "registeredFrameRatio": 1.0,
-      "denseCoverageRatio": 0.75,
-      "warnings": [
-        "low overlap on frame 12"
-      ]
-    }
+    "dense": null,
+    "mesh": null,
+    "trajectory": null,
+    "tracks": null,
+    "geo": null,
+    "qc": null
   }
 }

@@ -145,7 +145,7 @@ pub(crate) fn dec_ifc_value_list_bin(reader: &mut store::ByteReader<'_>) -> Resu
 /// [`enc_entity`]/[`dec_entity`] above — `id | name | args | complex` field-by-field, `args`/
 /// `complex` each length-prefixed lists of the recursive `enc_ifc_value_bin`/`enc_complex_type_bin`
 /// shape. `pub(crate)` (entity + list variants) so the mutations sibling can reuse these for its
-/// own `InsertEntity`/`SetSnapshot` payloads, same intra-artifact-reuse split the TEXT codec uses.
+/// own `InsertEntity` payloads, same intra-artifact-reuse split the TEXT codec uses.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_complex_type_bin(c: &IfcComplexType, out: &mut Vec<u8>) {
     write_str_bin(out, &c.name);

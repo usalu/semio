@@ -1,67 +1,49 @@
 {
-  "artifact": null,
   "manufacturerFile": null,
-  "catalog": null,
+  "products": null,
+  "catalogExtensions": null,
   "editionProfile": null,
   "correctionAsOf": null,
   "strictMode": null,
-  "index": null,
+  "indexEntries": null,
   "geometry": null,
   "curves": {
-    "curve-kvs": {
-      "id": "curve-kvs",
-      "xUnit": {
-        "symbol": "%",
-        "kind": "dimensionless",
-        "delta": true,
-        "siFactor": 0.01
-      },
-      "yUnit": {
-        "symbol": "m3/h",
-        "kind": "volume",
-        "delta": false,
-        "siFactor": 1.0
-      },
-      "points": [
-        {
-          "x": 0.0,
-          "y": 0.0
-        },
-        {
-          "x": 100.0,
-          "y": 4.5
+    "added": [
+      {
+        "key": "curve.dp",
+        "value": {
+          "id": "curve.dp",
+          "xUnit": {
+            "symbol": "%",
+            "kind": "dimensionless",
+            "delta": true,
+            "siFactor": 0.01
+          },
+          "yUnit": {
+            "symbol": "kPa",
+            "kind": "pressure",
+            "delta": true,
+            "siFactor": 1000.0
+          },
+          "points": [
+            {
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "x": 50.0,
+              "y": 12.5
+            },
+            {
+              "x": 100.0,
+              "y": 25.0
+            }
+          ]
         }
-      ]
-    },
-    "curve.dp": {
-      "id": "curve.dp",
-      "xUnit": {
-        "symbol": "%",
-        "kind": "dimensionless",
-        "delta": true,
-        "siFactor": 0.01
-      },
-      "yUnit": {
-        "symbol": "kPa",
-        "kind": "pressure",
-        "delta": true,
-        "siFactor": 1000.0
-      },
-      "points": [
-        {
-          "x": 0.0,
-          "y": 0.0
-        },
-        {
-          "x": 50.0,
-          "y": 12.5
-        },
-        {
-          "x": 100.0,
-          "y": 25.0
-        }
-      ]
-    }
+      }
+    ],
+    "removed": [],
+    "modified": []
   },
   "limits": null
 }

@@ -21,7 +21,6 @@ Feature: Apply every config state-lane mutation of s.procedural.generation3d's â
     Then the applied snapshot, the produced diff and the diagnostics are exactly what the vector commits, and the snapshot moved
     Examples:
       | id |
-      | set-snapshot |
       | set-sun |
       | set-show-mode |
       | set-preview-camera |
@@ -38,7 +37,6 @@ Feature: Apply every config state-lane mutation of s.procedural.generation3d's â
     Then the mutation's own inverse steps apply without refusal and restore the before-snapshot exactly
     Examples:
       | id |
-      | set-snapshot |
       | set-sun |
       | set-show-mode |
       | set-preview-camera |

@@ -7,7 +7,7 @@ use super::super::*;
 pub fn inverse(payload: &super::RemoveMaster, base: &SemioPresentationSnapshot) -> Result<Vec<SemioPresentationMutation>, semio_framework_value::ValueError> {
     let super::RemoveMaster { id } = payload;
     Ok(match master_at(base, id) {
-        Some(m) => vec![SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: m.clone() })],
+        Some(m) => vec![SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: m.clone(), at: base.masters.iter().position(|master| master.id == *id) })],
         None => Vec::new(),
     })
 }

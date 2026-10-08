@@ -10,15 +10,12 @@ fn assert_mutation_diff_law(base: &LasSnapshot, mutation: LasMutation) {
     let mut applied_snapshot = base.clone();
     let returned_diff = apply_las_mutation(&mut applied_snapshot, &mutation);
     assert_eq!(returned_diff, expected_diff, "apply_las_mutation must return mutation.diff(base) for {mutation:?}");
-    assert_eq!(expected_diff.diff().apply(base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
+    assert_eq!(protocol::apply_diff(expected_diff.diff(), base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
 }
 
 #[test]
 fn mutation_diff_law() {
     let base = base_snapshot();
-    let mut alt = base.clone();
-    alt.header.creation_year = 2030;
-    assert_mutation_diff_law(&base, LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: alt }));
     assert_mutation_diff_law(&base, LasMutation::SetVersion(set_version::SetVersion { major: 1, minor: 4 }));
     assert_mutation_diff_law(&base, LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: "semio".into() }));
     assert_mutation_diff_law(&base, LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software: "semio-las-writer".into() }));
@@ -65,9 +62,9 @@ fn inverse_law() {
 
         // Diff-level round trip.
         let d = m.diff(&base);
-        let mutated = d.diff().apply(&base).expect("valid forward diff");
+        let mutated = protocol::apply_diff(d.diff(), &base).expect("valid forward diff");
         let inv_d = d.diff().inverse(&base);
-        assert_eq!(inv_d.apply(&mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
+        assert_eq!(protocol::apply_diff(&inv_d, &mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
     }
 }
 //#endregion 🔖️inverse_law
@@ -75,13 +72,13 @@ fn inverse_law() {
 //#region 🔖️absorb_law
 fn assert_absorb_law(base: &LasSnapshot, m1: LasMutation, m2: LasMutation) {
     let d1 = m1.diff(base);
-    let mid = d1.diff().apply(base).expect("valid first diff");
+    let mid = protocol::apply_diff(d1.diff(), base).expect("valid first diff");
     let d2 = m2.diff(&mid);
-    let sequential = d2.diff().apply(&mid).expect("valid second diff");
+    let sequential = protocol::apply_diff(d2.diff(), &mid).expect("valid second diff");
 
     let mut merged = d1.diff().clone();
     merged.absorb(d2.diff().clone());
-    assert_eq!(merged.apply(base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
+    assert_eq!(protocol::apply_diff(&merged, base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
 }
 
 #[test]
@@ -124,9 +121,9 @@ fn absorb_law() {
 fn absorb_law_associativity() {
     let base = base_snapshot();
     let d1 = LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: "one".into() }).diff(&base);
-    let mid1 = d1.diff().apply(&base).expect("valid first diff");
+    let mid1 = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
     let d2 = LasMutation::InsertPoint(insert_point::InsertPoint { index: 0, point: point(9) }).diff(&mid1);
-    let mid2 = d2.diff().apply(&mid1).expect("valid second diff");
+    let mid2 = protocol::apply_diff(d2.diff(), &mid1).expect("valid second diff");
     let d3 = LasMutation::SetPoint(set_point::SetPoint { index: 0, point: point(7) }).diff(&mid2);
 
     // (d1∘d2)∘d3
@@ -140,8 +137,8 @@ fn absorb_law_associativity() {
     let mut right = d1.diff().clone();
     right.absorb(d23);
 
-    assert_eq!(left.apply(&base).expect("valid left diff"), right.apply(&base).expect("valid right diff"), "absorb must associate");
-    assert_eq!(left.apply(&base).expect("valid associated diff"), d3.diff().apply(&mid2).expect("valid third diff"), "associated absorb must match full sequential application");
+    assert_eq!(protocol::apply_diff(&left, &base).expect("valid left diff"), protocol::apply_diff(&right, &base).expect("valid right diff"), "absorb must associate");
+    assert_eq!(protocol::apply_diff(&left, &base).expect("valid associated diff"), protocol::apply_diff(d3.diff(), &mid2).expect("valid third diff"), "associated absorb must match full sequential application");
 }
 //#endregion 🔖️absorb_law
 
@@ -159,9 +156,9 @@ fn between_roundtrip_law() {
     b.points.push(point(50));
 
     let d = LasDiff::between(&a, &b);
-    assert_eq!(d.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
+    assert_eq!(protocol::apply_diff(&d, &a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
     let d_rev = LasDiff::between(&b, &a);
-    assert_eq!(d_rev.apply(&b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
+    assert_eq!(protocol::apply_diff(&d_rev, &b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
     assert!(LasDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 }
 //#endregion 🔖️between_roundtrip_law
@@ -309,9 +306,9 @@ fn field_sweep_covers_every_mutable_field() {
     let b = sweep_b();
 
     let forward = LasDiff::between(&a, &b);
-    assert_eq!(forward.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
+    assert_eq!(protocol::apply_diff(&forward, &a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
     let backward = LasDiff::between(&b, &a);
-    assert_eq!(backward.apply(&b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
+    assert_eq!(protocol::apply_diff(&backward, &b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
     assert!(LasDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
     // Every header scalar must be diffed forward.
@@ -437,8 +434,6 @@ fn op_text_binary_roundtrip_law() {
 fn kinds_match_enum_and_catalog() {
     fn kind_of(mutation: &LasMutation) -> &'static str {
         match mutation {
-            LasMutation::SetSnapshot(_) => "set-snapshot",
-            LasMutation::PatchSnapshot(_) => "patch-snapshot",
             LasMutation::SetVersion(_) => "set-version",
             LasMutation::SetSystemIdentifier(_) => "set-system-identifier",
             LasMutation::SetSoftwareInfo(_) => "set-software-info",
@@ -455,8 +450,6 @@ fn kinds_match_enum_and_catalog() {
         }
     }
     let samples = [
-        LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base_snapshot() }),
-        LasMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         LasMutation::SetVersion(set_version::SetVersion { major: 1, minor: 0 }),
         LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: String::new() }),
         LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software: String::new() }),
@@ -545,3 +538,12 @@ fn set_scale_and_offset_keeps_every_point_record_where_it_is() {
     }
 }
 //#endregion 🔖️ScaleAndOffsetRecordLaw
+
+/// ⚖️ `mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff.
+#[semio_framework_async_macros::async_test]
+async fn mutation_inverse_sum_law_holds_for_every_leaf() {
+    let base = base_snapshot();
+    for mutation in demo_mutation_cases() {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+}

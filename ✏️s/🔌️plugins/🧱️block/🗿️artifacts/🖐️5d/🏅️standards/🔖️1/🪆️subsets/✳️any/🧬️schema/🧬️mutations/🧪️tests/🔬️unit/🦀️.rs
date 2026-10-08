@@ -5,15 +5,15 @@ use crate::{Block5dGripKind, Block5dGripTemplate};
 use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation};
 use protocol::MutationDiff;
 use protocol::SemanticMutation;
-use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_mutation_inverse_sum_law};
 
 fn round_trip(base: &Block5dSnapshot, mutation: &Block5dMutation) -> Block5dSnapshot {
-    let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
+    let forward = protocol::apply_diff(mutation.diff(base).diff(), base).expect("valid mutation diff");
     let mut restored = forward.clone();
     let mut backward = mutation.inverse(base).expect("valid retained mutation inverse fixture");
     backward.reverse();
     for undo in &backward {
-        restored = undo.diff(&restored).diff().apply(&restored).expect("valid mutation diff");
+        restored = protocol::apply_diff(undo.diff(&restored).diff(), &restored).expect("valid mutation diff");
     }
     assert_eq!(&restored, base, "inverse must restore the pre-mutation snapshot");
     forward
@@ -197,10 +197,57 @@ async fn every_mutation_kind_satisfies_the_inverse_law() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn every_mutation_kind_satisfies_the_inverse_sum_law() {
+    let base = seeded_snapshot();
+
+    assert_mutation_inverse_sum_law(&rename_part_kind("x".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_part_kind_label("x".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_part_kind_variant(Some("v2".into())), &base).await;
+    assert_mutation_inverse_sum_law(&change_part_kind_description("d".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_part_kind_icon(Some("i".into())), &base).await;
+    assert_mutation_inverse_sum_law(&change_part_kind_unit(Some("m".into())), &base).await;
+    assert_mutation_inverse_sum_law(&update_part_2d(Some("s".into()), Some(1.0), None, None, None, None), &base).await;
+    assert_mutation_inverse_sum_law(&update_part_3d(Some([0.0, 0.0, 0.0, 1.0]), Some([1.0, 1.0, 1.0])), &base).await;
+    assert_mutation_inverse_sum_law(&create_representation(BlockRepresentation { id: "r1".into(), name: "r1".into(), mesh_url: None, tags: Vec::new(), lod: None, description: String::new(), attributes: Vec::new() }), &base).await;
+    assert_mutation_inverse_sum_law(&delete_representation("r0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&rename_representation("r0".into(), "renamed".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_representation_mesh_url("r0".into(), Some("https://example/x".into())), &base).await;
+    assert_mutation_inverse_sum_law(&change_representation_lod("r0".into(), Some("lod1".into())), &base).await;
+    assert_mutation_inverse_sum_law(&change_representation_description("r0".into(), "d".into()), &base).await;
+    assert_mutation_inverse_sum_law(&add_representation_tag("r0".into(), "lod2".into()), &base).await;
+    assert_mutation_inverse_sum_law(&remove_representation_tag("r0".into(), "lod0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&add_representation_attribute("r0".into(), BlockAttribute { key: "color".into(), value: "red".into(), definition: None }), &base).await;
+    assert_mutation_inverse_sum_law(&remove_representation_attribute("r0".into(), "finish".into()), &base).await;
+    assert_mutation_inverse_sum_law(&create_grip_kind(Block5dGripKind { id: "gk1".into(), name: "gk1".into(), label: "GK1".into(), color: "#000".into(), default_rope_kind: "rope.link".into() }), &base).await;
+    assert_mutation_inverse_sum_law(&delete_grip_kind("gk0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&rename_grip_kind("gk0".into(), "renamed".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_grip_kind_label("gk0".into(), "Renamed".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_grip_kind_color("gk0".into(), "#fff".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_grip_kind_default_rope_kind("gk0".into(), "rope.heavy".into()), &base).await;
+    assert_mutation_inverse_sum_law(&create_grip(Block5dGripTemplate { id: "g1".into(), grip_kind: "gk0".into(), angle: 0.0, radius_2d: 0.2, position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius_3d: 0.2 }), &base).await;
+    assert_mutation_inverse_sum_law(&delete_grip("g0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&move_grip_2d("g0".into(), 1.5, 0.9), &base).await;
+    assert_mutation_inverse_sum_law(&move_grip_3d("g0".into(), [1.0, 1.0, 1.0], [0.0, 1.0, 0.0]), &base).await;
+    assert_mutation_inverse_sum_law(&resize_grip_3d("g0".into(), 0.9), &base).await;
+    assert_mutation_inverse_sum_law(&change_grip_grip_kind("g0".into(), "gk0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&add_compatibility_rule(BlockCompatibilityRule { id: "c1".into(), source: "a".into(), target: "c".into(), bidirectional: false }), &base).await;
+    assert_mutation_inverse_sum_law(&remove_compatibility_rule("c0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&add_attribute(BlockAttribute { key: "weight".into(), value: "10".into(), definition: None }), &base).await;
+    assert_mutation_inverse_sum_law(&remove_attribute("material".into()), &base).await;
+    assert_mutation_inverse_sum_law(&add_author(BlockAuthor { id: "a1".into(), name: "Bo".into(), email: None }), &base).await;
+    assert_mutation_inverse_sum_law(&remove_author("a0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&move_camera2d(3.0, 4.0), &base).await;
+    assert_mutation_inverse_sum_law(&scale_camera2d(1.5), &base).await;
+    assert_mutation_inverse_sum_law(&move_camera3d([3.0, 4.0, 5.0], [0.0, 0.0, 0.0]), &base).await;
+    assert_mutation_inverse_sum_law(&scale_camera3d(1.5), &base).await;
+    assert_mutation_inverse_sum_law(&change_meta_description("notes".into()), &base).await;
+}
+
+#[semio_framework_async_macros::async_test]
 async fn change_part_kind_label_diff_absorb_law() {
     let base = empty_block5d_snapshot();
     let d1 = change_part_kind_label("first".into()).diff(&base).into_parts().0;
-    let mid = d1.apply(&base).expect("valid mutation diff");
+    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
     let d2 = change_part_kind_label("second".into()).diff(&mid).into_parts().0;
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
@@ -209,7 +256,7 @@ async fn change_part_kind_label_diff_absorb_law() {
 async fn move_grip_2d_diff_absorb_law() {
     let base = seeded_snapshot();
     let d1 = move_grip_2d("g0".into(), 0.5, 0.3).diff(&base).into_parts().0;
-    let mid = d1.apply(&base).expect("valid mutation diff");
+    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
     let d2 = move_grip_2d("g0".into(), 1.1, 0.6).diff(&mid).into_parts().0;
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
@@ -269,3 +316,57 @@ fn kinds_match_the_enum_and_the_catalog() {
     }
 }
 //#endregion 🧪️KindsCatalog
+
+#[semio_framework_async_macros::async_test]
+async fn deleting_or_creating_a_middle_row_restores_its_original_index() {
+    let mut base = empty_block5d_snapshot();
+    for n in 0..3 {
+        base.grip_kinds.push(Block5dGripKind { id: format!("gk{n}"), name: format!("gk{n}"), label: format!("GK{n}"), color: "#888".into(), default_rope_kind: "rope.link".into() });
+        base.grips.push(Block5dGripTemplate { id: format!("g{n}"), grip_kind: "gk0".into(), angle: 0.0, radius_2d: 0.3, position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius_3d: 0.3 });
+        base.compatibility.push(BlockCompatibilityRule { id: format!("c{n}"), source: "a".into(), target: "b".into(), bidirectional: true });
+        base.attributes.push(BlockAttribute { key: format!("k{n}"), value: "v".into(), definition: None });
+        base.authors.push(BlockAuthor { id: format!("a{n}"), name: format!("A{n}"), email: None });
+        base.representations.push(BlockRepresentation {
+            id: format!("r{n}"),
+            name: format!("r{n}"),
+            mesh_url: None,
+            tags: vec!["t0".into(), "t1".into(), "t2".into()],
+            lod: None,
+            description: String::new(),
+            attributes: (0..3).map(|m| BlockAttribute { key: format!("ak{m}"), value: "v".into(), definition: None }).collect(),
+        });
+    }
+    for removal in [
+        delete_grip("g1".into()),
+        delete_grip_kind("gk1".into()),
+        remove_compatibility_rule("c1".into()),
+        remove_attribute("k1".into()),
+        remove_author("a1".into()),
+        delete_representation("r1".into()),
+        remove_representation_tag("r1".into(), "t1".into()),
+        remove_representation_attribute("r1".into(), "ak1".into()),
+    ] {
+        assert_mutation_inverse_sum_law(&removal, &base).await;
+        round_trip(&base, &removal);
+    }
+    let representation = BlockRepresentation { id: "rx".into(), name: "rx".into(), mesh_url: None, tags: Vec::new(), lod: None, description: String::new(), attributes: Vec::new() };
+    let created = round_trip(&base, &create_representation_at(representation.clone(), 1));
+    assert_eq!(created.representations.iter().map(|item| item.id.as_str()).collect::<Vec<_>>(), ["r0", "rx", "r1", "r2"]);
+    let tagged = round_trip(&base, &add_representation_tag_at("r1".into(), "tx".into(), 1));
+    assert_eq!(tagged.representations[1].tags, ["t0", "tx", "t1", "t2"]);
+    let attributed = round_trip(&base, &add_representation_attribute_at("r1".into(), BlockAttribute { key: "akx".into(), value: "v".into(), definition: None }, 1));
+    assert_eq!(attributed.representations[1].attributes.iter().map(|item| item.key.as_str()).collect::<Vec<_>>(), ["ak0", "akx", "ak1", "ak2"]);
+    for insertion in [
+        create_representation_at(representation, 1),
+        add_representation_tag_at("r1".into(), "tx".into(), 1),
+        add_representation_attribute_at("r1".into(), BlockAttribute { key: "akx".into(), value: "v".into(), definition: None }, 1),
+        create_grip_at(Block5dGripTemplate { id: "gx".into(), grip_kind: "gk0".into(), angle: 0.0, radius_2d: 0.3, position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius_3d: 0.3 }, 1),
+        create_grip_kind_at(Block5dGripKind { id: "gkx".into(), name: "gkx".into(), label: "GKX".into(), color: "#888".into(), default_rope_kind: "rope.link".into() }, 1),
+        add_compatibility_rule_at(BlockCompatibilityRule { id: "cx".into(), source: "a".into(), target: "b".into(), bidirectional: true }, 1),
+        add_attribute_at(BlockAttribute { key: "kx".into(), value: "v".into(), definition: None }, 1),
+        add_author_at(BlockAuthor { id: "ax".into(), name: "AX".into(), email: None }, 1),
+    ] {
+        assert_mutation_inverse_sum_law(&insertion, &base).await;
+        round_trip(&base, &insertion);
+    }
+}

@@ -318,46 +318,169 @@ impl store::ArtifactPack for Puzzle3dConfig {
     }
 }
 
-store::impl_whole_record_config!(Puzzle3dConfig);
+impl store::ConfigRecord for Puzzle3dConfig {}
+
+/// 🔺️ Sparse typed delta of the shared Puzzle 3D configuration: names only the fields a mutation changes.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Puzzle3dConfigDiff {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub fill_count: Option<u32>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub contact_tolerance: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub object_kind_weights: Option<HashMap<String, f64>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub vortex_kind_weights: Option<HashMap<String, f64>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub active_example_id: Option<String>,
+}
+
+impl Puzzle3dConfigDiff {
+    /// 🎯️ Every field set to `state`'s value.
+    pub fn of(state: &Puzzle3dConfig) -> Self {
+        Self { fill_count: Some(state.fill_count), contact_tolerance: Some(state.contact_tolerance), object_kind_weights: Some(state.object_kind_weights.clone()), vortex_kind_weights: Some(state.vortex_kind_weights.clone()), active_example_id: Some(state.active_example_id.clone()) }
+    }
+    /// ✂️ The named fields that differ from `base`.
+    pub fn changed(&self, base: &Puzzle3dConfig) -> Self {
+        Self { fill_count: self.fill_count.as_ref().filter(|value| **value != base.fill_count).cloned(), contact_tolerance: self.contact_tolerance.as_ref().filter(|value| **value != base.contact_tolerance).cloned(), object_kind_weights: self.object_kind_weights.as_ref().filter(|value| **value != base.object_kind_weights).cloned(), vortex_kind_weights: self.vortex_kind_weights.as_ref().filter(|value| **value != base.vortex_kind_weights).cloned(), active_example_id: self.active_example_id.as_ref().filter(|value| **value != base.active_example_id).cloned() }
+    }
+    /// ↩️ The named fields at the values `base` holds.
+    pub fn restoring(&self, base: &Puzzle3dConfig) -> Self {
+        Self { fill_count: self.fill_count.as_ref().map(|_| base.fill_count), contact_tolerance: self.contact_tolerance.as_ref().map(|_| base.contact_tolerance), object_kind_weights: self.object_kind_weights.as_ref().map(|_| base.object_kind_weights.clone()), vortex_kind_weights: self.vortex_kind_weights.as_ref().map(|_| base.vortex_kind_weights.clone()), active_example_id: self.active_example_id.as_ref().map(|_| base.active_example_id.clone()) }
+    }
+}
+
+impl protocol::MutationDiff<Puzzle3dConfig> for Puzzle3dConfigDiff {
+    fn apply(&self, base: &Puzzle3dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle3dConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.fill_count {
+            next.fill_count = *value;
+        }
+        if let Some(value) = &self.contact_tolerance {
+            next.contact_tolerance = *value;
+        }
+        if let Some(value) = &self.object_kind_weights {
+            next.object_kind_weights = value.clone();
+        }
+        if let Some(value) = &self.vortex_kind_weights {
+            next.vortex_kind_weights = value.clone();
+        }
+        if let Some(value) = &self.active_example_id {
+            next.active_example_id = value.clone();
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.fill_count.is_some() {
+            self.fill_count = other.fill_count;
+        }
+        if other.contact_tolerance.is_some() {
+            self.contact_tolerance = other.contact_tolerance;
+        }
+        if other.object_kind_weights.is_some() {
+            self.object_kind_weights = other.object_kind_weights;
+        }
+        if other.vortex_kind_weights.is_some() {
+            self.vortex_kind_weights = other.vortex_kind_weights;
+        }
+        if other.active_example_id.is_some() {
+            self.active_example_id = other.active_example_id;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<Puzzle3dConfig> for Puzzle3dConfigDiff {
+    fn inverse(&self, base: &Puzzle3dConfig) -> Self {
+        self.restoring(base)
+    }
+    fn between(base: &Puzzle3dConfig, other: &Puzzle3dConfig) -> Self {
+        Self { fill_count: (base.fill_count != other.fill_count).then(|| other.fill_count), contact_tolerance: (base.contact_tolerance != other.contact_tolerance).then(|| other.contact_tolerance), object_kind_weights: (base.object_kind_weights != other.object_kind_weights).then(|| other.object_kind_weights.clone()), vortex_kind_weights: (base.vortex_kind_weights != other.vortex_kind_weights).then(|| other.vortex_kind_weights.clone()), active_example_id: (base.active_example_id != other.active_example_id).then(|| other.active_example_id.clone()) }
+    }
+    fn is_empty(&self) -> bool {
+        self.fill_count.is_none() && self.contact_tolerance.is_none() && self.object_kind_weights.is_none() && self.vortex_kind_weights.is_none() && self.active_example_id.is_none()
+    }
+}
+
+impl Puzzle3dConfig {
+    /// 🔁️ One field mutation per field `next` changes — the config's event vocabulary, never a whole-config restore.
+    pub fn mutations_to(&self, next: &Puzzle3dConfig) -> Vec<Puzzle3dConfigMutation> {
+        let mut mutations = Vec::new();
+        if self.fill_count != next.fill_count {
+            mutations.push(Puzzle3dConfigMutation::SetFillCount { count: next.fill_count });
+        }
+        if self.contact_tolerance != next.contact_tolerance {
+            mutations.push(Puzzle3dConfigMutation::SetContactTolerance { value: next.contact_tolerance });
+        }
+        if self.object_kind_weights != next.object_kind_weights {
+            mutations.push(Puzzle3dConfigMutation::SetObjectKindWeights { value: next.object_kind_weights.clone() });
+        }
+        if self.vortex_kind_weights != next.vortex_kind_weights {
+            mutations.push(Puzzle3dConfigMutation::SetVortexKindWeights { value: next.vortex_kind_weights.clone() });
+        }
+        if self.active_example_id != next.active_example_id {
+            mutations.push(Puzzle3dConfigMutation::SetActiveExampleId { value: next.active_example_id.clone() });
+        }
+        mutations
+    }
+}
+
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Puzzle3dConfigMutation {
-    Snapshot { config: Puzzle3dConfig },
     SetFillCount { count: u32 },
     SetContactTolerance { value: f64 },
     SetObjectKindWeights { value: HashMap<String, f64> },
     SetVortexKindWeights { value: HashMap<String, f64> },
+    SetActiveExampleId { value: String },
 }
 
 impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
-    type Diff = Puzzle3dConfig;
+    type Diff = Puzzle3dConfigDiff;
+
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "snapshot", display_name: "Set Puzzle 3D Shared Configuration", emoji: "🎚️", aggregate_variant: "Snapshot", payload_schema: "puzzle.3dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-fill-count", display_name: "Set Puzzle 3D Fill Count", emoji: "🎚️", aggregate_variant: "SetFillCount", payload_schema: "puzzle.3dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-contact-tolerance", display_name: "Set Puzzle 3D Overlap Budget", emoji: "🎚️", aggregate_variant: "SetContactTolerance", payload_schema: "puzzle.3dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-object-kind-weights", display_name: "Set Puzzle 3D Object Kind Weights", emoji: "🎚️", aggregate_variant: "SetObjectKindWeights", payload_schema: "puzzle.3dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-vortex-kind-weights", display_name: "Set Puzzle 3D Vortex Kind Weights", emoji: "🎚️", aggregate_variant: "SetVortexKindWeights", payload_schema: "puzzle.3dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-active-example-id", display_name: "Set Puzzle 3D Active Example", emoji: "🎚️", aggregate_variant: "SetActiveExampleId", payload_schema: "puzzle.3dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
+
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
-        match self { Self::Snapshot { .. } => &Self::DESCRIPTORS[0], Self::SetFillCount { .. } => &Self::DESCRIPTORS[1], Self::SetContactTolerance { .. } => &Self::DESCRIPTORS[2], Self::SetObjectKindWeights { .. } => &Self::DESCRIPTORS[3], Self::SetVortexKindWeights { .. } => &Self::DESCRIPTORS[4] }
-    }
-    fn diff(&self, base: &Puzzle3dConfig) -> protocol::MutationOutcome<Self::Diff> {
-        let mut next = base.clone();
         match self {
-            Self::Snapshot { config } => next = config.clone(),
-            Self::SetFillCount { count } => next.fill_count = *count,
-            Self::SetContactTolerance { value } => next.contact_tolerance = *value,
-            Self::SetObjectKindWeights { value } => next.object_kind_weights = value.clone(),
-            Self::SetVortexKindWeights { value } => next.vortex_kind_weights = value.clone(),
+            Self::SetFillCount { .. } => &Self::DESCRIPTORS[0],
+            Self::SetContactTolerance { .. } => &Self::DESCRIPTORS[1],
+            Self::SetObjectKindWeights { .. } => &Self::DESCRIPTORS[2],
+            Self::SetVortexKindWeights { .. } => &Self::DESCRIPTORS[3],
+            Self::SetActiveExampleId { .. } => &Self::DESCRIPTORS[4],
         }
-        protocol::MutationOutcome::new(next)
     }
+
+    fn diff(&self, base: &Puzzle3dConfig) -> protocol::MutationOutcome<Puzzle3dConfigDiff> {
+        let diff = match self {
+            Self::SetFillCount { count } => Puzzle3dConfigDiff { fill_count: (count != &base.fill_count).then_some(*count), ..Default::default() },
+            Self::SetContactTolerance { value } => Puzzle3dConfigDiff { contact_tolerance: (value != &base.contact_tolerance).then_some(*value), ..Default::default() },
+            Self::SetObjectKindWeights { value } => Puzzle3dConfigDiff { object_kind_weights: (value != &base.object_kind_weights).then(|| value.clone()), ..Default::default() },
+            Self::SetVortexKindWeights { value } => Puzzle3dConfigDiff { vortex_kind_weights: (value != &base.vortex_kind_weights).then(|| value.clone()), ..Default::default() },
+            Self::SetActiveExampleId { value } => Puzzle3dConfigDiff { active_example_id: (value != &base.active_example_id).then(|| value.clone()), ..Default::default() },
+        };
+        if protocol::DiffAlgebra::<Puzzle3dConfig>::is_empty(&diff) {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The configuration already holds this value.");
+        }
+        protocol::MutationOutcome::new(diff)
+    }
+
     fn inverse(&self, base: &Puzzle3dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| { vec![Self::Snapshot { config: base.clone() }] 
-    })())
-}
+        Ok(vec![match self {
+            Self::SetFillCount { .. } => Self::SetFillCount { count: base.fill_count },
+            Self::SetContactTolerance { .. } => Self::SetContactTolerance { value: base.contact_tolerance },
+            Self::SetObjectKindWeights { .. } => Self::SetObjectKindWeights { value: base.object_kind_weights.clone() },
+            Self::SetVortexKindWeights { .. } => Self::SetVortexKindWeights { value: base.vortex_kind_weights.clone() },
+            Self::SetActiveExampleId { .. } => Self::SetActiveExampleId { value: base.active_example_id.clone() },
+        }])
+    }
 }
 
 impl protocol::OpBinary for Puzzle3dConfigMutation {

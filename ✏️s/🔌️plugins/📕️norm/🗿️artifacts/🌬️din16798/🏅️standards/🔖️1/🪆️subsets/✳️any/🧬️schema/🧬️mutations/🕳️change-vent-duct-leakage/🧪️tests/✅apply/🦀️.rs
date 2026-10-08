@@ -23,3 +23,9 @@ async fn applies_change_vent_duct_leakage() {
 fn sample_mutation(base: &Din16798Snapshot) -> Din16798Mutation {
     Din16798Mutation::ChangeVentDuctLeakage(change_vent_duct_leakage::ChangeVentDuctLeakage { vent_id: base.vent_systems[0].id.clone(), new_duct_leakage_m3_s_m2: base.vent_systems[0].duct_leakage_m3_s_m2 + 0.01 })
 }
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    let base = Din16798Snapshot::default();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&sample_mutation(&base), &base).await;
+}

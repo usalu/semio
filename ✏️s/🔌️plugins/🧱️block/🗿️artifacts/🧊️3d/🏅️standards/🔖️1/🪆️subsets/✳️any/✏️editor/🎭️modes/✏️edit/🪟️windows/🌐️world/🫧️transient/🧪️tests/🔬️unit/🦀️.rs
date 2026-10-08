@@ -45,7 +45,7 @@ fn preview_partition_matches_language_neutral_json_oracle() {
         let preview = serde_json::from_value::<Option<Block3dBrushPreview>>(step["preview"].clone()).expect("preview");
         let mutation = Block3dWorldWindowTransientMutation::from(SetBrushPreview { preview });
         let state = typed.entry(window_id.clone()).or_default();
-        Mutation::diff(&mutation, state).apply_to(state);
+        *state = protocol::apply_diff(Mutation::diff(&mutation, state).diff(), state).expect("valid transient diff");
         oracle.insert(window_id, step["preview"].clone());
         store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);
     }
@@ -63,7 +63,7 @@ fn block3d_world_preview_codecs_and_inverse_match_neutral_vectors() {
         let operation: Block3dWorldWindowTransientMutation = SetBrushPreview { preview: expected.brush_preview.clone() }.into();
         let outcome = operation.diff(&before);
         assert!(outcome.messages().is_empty());
-        let applied = outcome.diff().apply(&before).unwrap();
+        let applied = protocol::apply_diff(outcome.diff(), &before).unwrap();
         assert_eq!(applied, expected);
         let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&applied)).unwrap();
         assert_eq!(encoded, row["after"]);
@@ -77,7 +77,7 @@ fn block3d_world_preview_codecs_and_inverse_match_neutral_vectors() {
         assert_eq!(Block3dWorldWindowTransientMutation::decode_op(&operation.encode_op().unwrap()).unwrap(), operation);
         let mut restored = applied;
         for inverse in operation.inverse(&before).expect("valid retained mutation inverse fixture") {
-            restored = inverse.diff(&restored).diff().apply(&restored).unwrap();
+            restored = protocol::apply_diff(inverse.diff(&restored).diff(), &restored).unwrap();
         }
         assert_eq!(restored, before);
     }

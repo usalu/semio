@@ -4,7 +4,7 @@
 
 use crate::editor::las::modes::edit;
 use crate::editor::las::modes::edit::windows::main;
-use crate::standards::v1_0::subsets::any::schema::mutations::{patch_snapshot,set_snapshot as snapshot_edit_set_snapshot,LasMutation};
+use crate::standards::v1_0::subsets::any::schema::mutations::{net_mutations, LasMutation};
 
 use crate::standards::v1_0::subsets::any::schema::snapshot::LasSnapshot;
 use semio_framework_plugin::app::InteractionView;
@@ -289,7 +289,7 @@ impl editing::SnapshotEditingEditor for LasAnyEditor {
         match command { LasAnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_patch(event, snapshot, |patch| LasMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| LasMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot })))
+        editing::snapshot_edit_net_exact(event, snapshot, net_mutations)
     }
 }
 

@@ -2,8 +2,8 @@
 //! directly from `base` + payload, never a snapshot clone. Error `target-missing` when the machine
 //! is absent, Warning `no-op` when the icon is unchanged.
 
-use crate::diff::Process3dDiff;
-use crate::{Process3dSnapshot, Workshop};
+use crate::diff::{Process3dDiff, Process3dMachinePatch, Process3dMachinesDelta};
+use crate::Process3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeMachineIcon, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
@@ -13,10 +13,6 @@ pub fn diff(payload: &super::ChangeMachineIcon, base: &Process3dSnapshot) -> pro
     if existing.icon_id == payload.new_icon_id {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Machine \"{}\" icon is already \"{}\".", payload.id, payload.new_icon_id));
     }
-    let mut machines = base.workshop.machines.clone();
-    if let Some(machine) = machines.iter_mut().find(|machine| machine.id == payload.id) {
-        machine.icon_id = payload.new_icon_id.clone();
-    }
-    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Workshop { machines }), ..Default::default() })
+    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Process3dMachinesDelta { patched: vec![Process3dMachinePatch { id: payload.id.clone(), icon_id: Some(payload.new_icon_id.clone()), ..Default::default() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

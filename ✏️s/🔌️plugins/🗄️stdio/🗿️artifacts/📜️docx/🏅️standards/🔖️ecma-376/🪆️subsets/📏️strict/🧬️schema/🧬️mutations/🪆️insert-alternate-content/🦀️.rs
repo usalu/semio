@@ -1,6 +1,4 @@
-//! 📏️ `insert-alternate-content` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 📏️ `insert-alternate-content` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -14,15 +12,14 @@ pub struct InsertAlternateContent {
 impl protocol::MutationKind<DocxSnapshot, DocxStrictMutation> for InsertAlternateContent {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "alternate-content", kind: "insert-alternate-content", record: "InsertAlternateContent" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxStrictMutation as Mutation<DocxSnapshot>>::Diff> {
-        agg_diff(&DocxStrictMutation::InsertAlternateContent(self.clone()), base)
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
+        protocol::MutationOutcome::new(diff_append_alternate_content(base, &self.path))
     }
+
     fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxStrictMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&DocxStrictMutation::InsertAlternateContent(self.clone()), base)?
-    
-    })
-}
+        Ok(if base.xml_part(&self.path).is_some() { vec![DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: self.path.clone() })] } else { Vec::new() })
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert alternate content", "Alternativen Inhalt einfügen")
     }

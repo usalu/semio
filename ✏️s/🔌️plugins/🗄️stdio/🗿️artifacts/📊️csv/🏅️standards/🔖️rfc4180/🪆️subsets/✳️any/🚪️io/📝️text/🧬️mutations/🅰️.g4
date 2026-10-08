@@ -4,7 +4,7 @@
 grammar Stdio_csv_mutations;
 
 mutation  : '{' '"mutation"' ':' tag (',' member)* '}' ;
-tag       : '"setSnapshot"' | '"setHasHeader"'
+tag       : '"setHasHeader"'
           | '"insertRecord"' | '"removeRecord"' | '"setField"' ;
 member    : STRING ':' value ;
 STRING    : '"' .*? '"' ;

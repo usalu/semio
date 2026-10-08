@@ -297,9 +297,8 @@ impl semio_framework_value::FromValue for ProbeDiff {
     }
 }
 
-/// 🧪️ The only operation this probe document supports: whole-value replace — mirrors
-/// `crate::os_store::impl_whole_record_config!`'s "no field-level diff" shape, the simplest legal
-/// `Mutation` implementor.
+/// 🧪️ The only operation this probe document supports: whole-value replace over an opaque JSON
+/// value, the simplest legal `Mutation` implementor.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum ProbeMutation {
     SetValue(serde_json::Value),
@@ -3189,7 +3188,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 fn guest_sqlite_export(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, payload: &semio_framework::io_schema::IoPayload, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework::io_schema::IoResult<semio_framework::sqlite_snapshot::SqliteDatabase> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
-    use semio_framework::{io::{self}, io_schema::{IoError, IoOutcome, IoPayload}, sqlite_snapshot::{self, SnapshotEncoding, SqliteSnapshotPhase}};
+    use semio_framework::{ io_schema::{IoError, IoOutcome, IoPayload}, sqlite_snapshot::{self, SnapshotEncoding, SqliteSnapshotPhase}};
+    use semio_framework_os_kernel::io::{self};
     use semio_framework_plugin_host::{sqlite_wire, GuestCallCancellation};
     control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(IoError::from_value_error)?;
     let route = guest_sqlite_route(schema, dialect)?;
@@ -3210,7 +3210,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, mut database: semio_framework::sqlite_snapshot::SqliteDatabase, encoding: semio_framework::sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
-    use semio_framework::{io::{self}, io_schema::{IoError, IoOutcome, IoPayload}, sqlite_snapshot::{self, SqliteSnapshotPhase}};
+    use semio_framework::{ io_schema::{IoError, IoOutcome, IoPayload}, sqlite_snapshot::{self, SqliteSnapshotPhase}};
+    use semio_framework_os_kernel::io::{self};
     use semio_framework_plugin_host::{sqlite_wire, GuestCallCancellation};
     control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 0).map_err(IoError::from_value_error)?;
     let route = guest_sqlite_route(schema, dialect)?;
@@ -3275,7 +3276,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         replay_envelopes: guest_replay_envelopes,
     };
     let assembly = semio_framework_schema_registry::assembly::begin().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
-    semio_framework::io::commit_artifact_assembly_registry_plan(&assembly, semio_framework::io::ArtifactAssemblyRegistryPlan { document_codecs: vec![codec.clone()], native_snapshots: vec![semio_framework::io::io_mechanism::NativeSnapshotRegistration { dialect: dialect.clone(), codec }], ..Default::default() }).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("registering a guest-backed semantic codec for `{artifact_schema}`: {error}")))?;
+    semio_framework_os_kernel::io::commit_artifact_assembly_registry_plan(&assembly, semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan { document_codecs: vec![codec.clone()], native_snapshots: vec![semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration { dialect: dialect.clone(), codec }], ..Default::default() }).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("registering a guest-backed semantic codec for `{artifact_schema}`: {error}")))?;
     routes.push(Arc::new(GuestCodecRoute { dialect, artifact_schema: artifact_schema.to_string(), plugin_id: plugin_id.to_string(), runtime: Arc::clone(&runtime), compiled }));
     Ok(pack_schema_hash)
 }

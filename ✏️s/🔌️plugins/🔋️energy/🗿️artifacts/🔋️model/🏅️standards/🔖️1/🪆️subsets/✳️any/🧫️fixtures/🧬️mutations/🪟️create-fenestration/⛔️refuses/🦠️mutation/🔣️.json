@@ -15,5 +15,6 @@
   "overhangOffsetM": 0.0,
   "finDepthM": 0.0,
   "finOffsetM": 0.0,
-  "glazingConstructionId": null
+  "glazingConstructionId": null,
+  "index": null
 }

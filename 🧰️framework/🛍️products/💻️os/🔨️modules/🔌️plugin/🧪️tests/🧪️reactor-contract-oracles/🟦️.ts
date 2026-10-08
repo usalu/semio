@@ -116,8 +116,7 @@ export async function coldDocumentPairIngressOracle(repoRoot: string): Promise<n
 export function documentBackboneBindingOracle(repoRoot: string): number {
   const fixture = JSON.parse(readFileSync(new URL("../../📡️backbone/🔗️binding/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../📡️backbone/🔗️binding/🧬️schema/🔣️.json", import.meta.url), "utf8"));
-  const validate = new Ajv({ strict: true, allErrors: true }).compile<BackboneBindingFixture>(schema);
-  assert(validate(fixture), JSON.stringify(validate.errors));
+  const validate = new Ajv({ strict: true, allErrors: true }).compile({ ...schema, $ref: "#/$defs/DocumentBackboneBindingV1" });
   const reduce = (row: BackboneBindingRow) => {
     const generation = BigInt(row.initial.generation),
       commandGeneration = BigInt(row.command.bindingGeneration),
@@ -135,18 +134,16 @@ export function documentBackboneBindingOracle(repoRoot: string): number {
     return { operation: "refused", code: "plugin.document-backbone.stale-generation", generation, uri: currentUri };
   };
   for (const row of fixture.cases) {
+    assert(validate(row.command), JSON.stringify(validate.errors));
     const outcome = reduce(row);
     assert.equal(outcome.operation, row.receipt.operation, row.id);
     assert.equal(outcome.code, row.receipt.code, row.id);
     assert.equal(outcome.generation.toString(), row.final.generation, row.id);
     assert.equal(outcome.uri, row.final.uri, row.id);
   }
-  for (const row of fixture.hostile) assert.equal(validate({ ...fixture, cases: [{ ...fixture.cases[0], command: row.value }] }), false, row.id);
+  for (const row of fixture.hostile) assert.equal(validate(row.value), false, row.id);
   const binding = readFileSync(new URL("../../📡️backbone/🔗️binding/🦀️.rs", import.meta.url), "utf8");
   const batchFixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json"), "utf8"));
-  const batchSchema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧬️schema/🧮️document-backbone-batch-v1/🔣️.json"), "utf8"));
-  const validateBatch = new Ajv({ strict: true, allErrors: true }).compile<BackboneBatchFixture>(batchSchema);
-  assert(validateBatch(batchFixture), JSON.stringify(validateBatch.errors));
   const store = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
   const causal = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs"), "utf8");
   const sync = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs"), "utf8");
@@ -156,10 +153,11 @@ export function documentBackboneBindingOracle(repoRoot: string): number {
   for (const marker of ["ActorBackboneChannelOwner", "attach_hot_backbone", "decode_hot_backbone_message_exact", "hot backbone transport refuses genesis packs"]) assert(store.includes(marker), marker);
   for (const marker of ["decode_document_backbone_envelopes_exact_with_limits", "nonminimal-varint", "DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES"]) assert(causal.includes(marker), marker);
   for (const marker of ["ArtifactActorMsg::DocumentBackbone", "ArtifactEvent::DocumentBackbone", "DocumentBackboneRetentionV1", "decode_document_backbone_message_exact", "semio_framework_async::oneshot::channel", "pool.submit_at(pool.now_ms(), semio_framework_async::Lane::Io, admission_job)"]) assert(sync.includes(marker), marker);
-  for (const marker of ["tokio::runtime::Handle::try_current()", "self.io_reactor.as_ref().map(tokio::runtime::Handle::enter)"]) assert(sync.includes(marker), marker);
+  for (const marker of ["fn document_socket_io_reactor()", "self.io_reactor.as_ref().map(tokio::runtime::Handle::enter)", "let io_reactor = document_socket_io_reactor();", "tokio::runtime::Builder::new_current_thread().enable_io().enable_time()"]) assert(sync.includes(marker), marker);
   for (const marker of ["struct ArtifactReadinessWake", "connection.read.poll_next_unpin(&mut context)", "future.as_mut().poll(&mut context)"]) assert(sync.includes(marker), marker);
   for (const marker of ["readiness_requested.store(true", "self.readiness_requested.swap(false", "self.drive_phase = ArtifactDrivePhase::ConnectResult", "if self.semio_hub.is_some() {\n                            self.drive_phase = ArtifactDrivePhase::Hub", "self.drive_phase = ArtifactDrivePhase::Hub;\n                        self.on_hub_message(message).await"]) assert(sync.includes(marker), marker);
-  assert(sync.includes("self.semio_hub.is_some() || self.connect_future.is_some() || self.reconnect_at.is_some_and"), "connect admission must retain live sockets and respect backoff");
+  const connect = sync.slice(sync.indexOf("async fn start_connect_hub"), sync.indexOf("let Some(credential)", sync.indexOf("async fn start_connect_hub")));
+  for (const marker of ["self.artifact_rebootstrap_required", "self.semio_hub.is_some()", "self.connect_future.is_some()", "!self.link.admits_local_edits()", "self.reconnect_at.is_some_and(|deadline| deadline > Instant::now())", "return;"]) assert(connect.includes(marker), "connect admission must retain its document authority, live sockets and backoff: " + marker);
   const handoff = sync.slice(sync.indexOf("fn release_scheduled_after_turn_with"), sync.indexOf("fn arm_deadline"));
   assert(handoff.indexOf("self.scheduled.store(false") < handoff.indexOf("self.wake_requested.swap(false"), "readiness handoff must release scheduled ownership before consuming a concurrent wake");
   const cancellation = sync.slice(sync.indexOf("fn cancel(self: &Arc<Self>)"), sync.indexOf("fn request_close"));

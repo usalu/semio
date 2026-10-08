@@ -5,7 +5,7 @@ pub use semio_framework_os_kernel as store;
 #[path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧪️tests/🪆️binding/🦀️.rs"]
 mod native_binding;
 pub use semio_framework_os_kernel::{io_schema, os_dsl, sqlite_snapshot};
-pub use semio_framework_os_kernel::{os_io, os_pack};
+pub use semio_framework_os_kernel::{io, os_pack};
 pub use semio_framework_os_kernel::os_pack::codec;
 
 #[path = "../🦀️.rs"]
@@ -83,5 +83,5 @@ fn sqlite_snapshot_reference_controlled_value_preserves_derived_literal_fields()
 #[path = "../../../🧪️tests/💰️allocation/🦀️.rs"]
 mod native_allocation_bridge;
 
-#[path = "../../../../../../../../../🔨️modules/🚪️io/🧪️tests/🪶️transfer/🦀️.rs"]
+#[path = "../../../../../../🚪️io/🧪️tests/🪶️transfer/🦀️.rs"]
 mod transfer_allocation;

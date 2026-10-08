@@ -6,8 +6,8 @@
 //! declared") would not hold at the field level. The buffer is bounded by the same ceiling the
 //! document itself is, and a resize is not a per-frame gesture.
 
-use crate::diff::BitmapDiff;
-use crate::schema::snapshot::{resized_buffer, BitmapSnapshot, BITMAP_MAX_EDGE};
+use crate::diff::{BitmapDiff, BitmapInputOp};
+use crate::schema::snapshot::{BitmapSnapshot, BITMAP_MAX_EDGE};
 
 pub fn diff(payload: &super::ResizeInput, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
     if payload.width == 0 || payload.height == 0 {
@@ -19,9 +19,8 @@ pub fn diff(payload: &super::ResizeInput, base: &BitmapSnapshot) -> protocol::Mu
     if base.input.width == payload.width && base.input.height == payload.height {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The input is already {}×{}.", payload.width, payload.height));
     }
-    let Some(buffer) = base.input.indices() else {
+    if base.input.indices().is_none() {
         return protocol::MutationOutcome::fatal("mutation.apply.invalid-base", "The base input pixel buffer does not decode.".to_string(), ["input".to_string()]);
-    };
-    let resized = resized_buffer(&buffer, base.input.width, base.input.height, payload.width, payload.height);
-    protocol::MutationOutcome::new(BitmapDiff { input_width: Some(payload.width), input_height: Some(payload.height), input_pixels: Some(resized.to_vec()), ..Default::default() })
+    }
+    protocol::MutationOutcome::new(BitmapDiff { input_ops: vec![BitmapInputOp::Resize { width: payload.width, height: payload.height }], ..Default::default() })
 }

@@ -1,7 +1,7 @@
 //! 🔺️ Diff fragment yielded by `EditBlockText`. Error `target-missing` when the block is absent
 //! or not a text block.
 use super::EditBlockText;
-use crate::schema::diff::note_block_patch_diff;
+use crate::schema::diff::NoteBlockPatch;
 use crate::NoteDiff;
 use crate::NoteSnapshot;
 
@@ -13,10 +13,6 @@ pub fn diff(payload: &EditBlockText, base: &NoteSnapshot) -> protocol::MutationO
     if !matches!(block, crate::NoteBlockNode::Text { .. }) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Block \"{}\" is not a text block.", payload.id), [payload.id.clone()]);
     }
-    let mut updated = block.clone();
-    if let crate::NoteBlockNode::Text { content, .. } = &mut updated {
-        *content = crate::note_text_child_record(&payload.id, &payload.new_paragraphs);
-    }
-    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, &updated))
+    protocol::MutationOutcome::new(NoteDiff::block_patches([(payload.id.clone(), NoteBlockPatch { content: Some(crate::note_text_child_record(&payload.id, &payload.new_paragraphs)), ..Default::default() })]))
 }
 //#endregion 🔖️Diff

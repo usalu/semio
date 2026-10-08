@@ -18,7 +18,10 @@ pub fn diff(payload: &super::CreateSpace, base: &EnergyModelSnapshot) -> protoco
     if !payload.floor_area_m2.is_finite() || payload.floor_area_m2 < 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Space {} needs a non-negative finite floor area, got {}.", payload.id.0, payload.floor_area_m2), [payload.id.0.to_string()]);
     }
-    let position = base.model.spaces.iter().position(|item| item.id > payload.id).unwrap_or(base.model.spaces.len());
+    let position = payload.index.map_or_else(|| base.model.spaces.iter().position(|item| item.id > payload.id).unwrap_or(base.model.spaces.len()), |index| index as usize);
+    if position > base.model.spaces.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} spaces.", position, base.model.spaces.len()), [payload.id.0.to_string()]);
+    }
     protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { spaces: Rows::inserting(position, crate::model::Space { id: payload.id, name: payload.name.clone(), zone_id: payload.zone_id, floor_area_m2: payload.floor_area_m2 }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

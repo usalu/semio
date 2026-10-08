@@ -83,72 +83,142 @@
       "x-semio-state": "artifact"
     },
     "zones": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/Din4108ZoneEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Din4108ZoneDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "elements": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/Din4108ElementEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Din4108ElementDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "thermalBridges": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/Din4108ThermalBridgeEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Din4108ThermalBridgeDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     }
   },
   "$defs": {
-    "Din4108RowOp": {
-      "enum": [
-        "Insert",
-        "Remove",
-        "Replace",
-        "Patch"
-      ]
+    "Din4108WindowDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din4108WindowAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din4108WindowModification"
+          }
+        }
+      }
     },
-    "Din4108ZoneEdit": {
+    "Din4108WindowAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value",
-        "patch"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/Din4108RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/ThermalZone"
+              "type": "string"
             },
             {
               "type": "null"
             }
           ]
         },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/ZoneWindow"
+        }
+      }
+    },
+    "Din4108WindowModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
         "patch": {
+          "$ref": "#/$defs/Din4108WindowPatch"
+        }
+      }
+    },
+    "Din4108WindowPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "orientation": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Din4108ZonePatch"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inclinationDeg": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "areaM2": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "gValue": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shadingFc": {
+          "anyOf": [
+            {
+              "type": "number"
             },
             {
               "type": "null"
@@ -157,42 +227,180 @@
         }
       }
     },
-    "Din4108ElementEdit": {
+    "Din4108LayerDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din4108LayerAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din4108LayerModification"
+          }
+        }
+      }
+    },
+    "Din4108LayerAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value",
-        "patch"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/Din4108RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/EnvelopeElement"
+              "type": "string"
             },
             {
               "type": "null"
             }
           ]
         },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/LayerDocument"
+        }
+      }
+    },
+    "Din4108LayerModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
         "patch": {
+          "$ref": "#/$defs/Din4108LayerPatch"
+        }
+      }
+    },
+    "Din4108LayerPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "materialId": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Din4108ElementPatch"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "thicknessM": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lambda": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mu": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "density": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "applicationType": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "compressiveClass": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "waterClass": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tensileClass": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "acousticClass": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "segments": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/LayerSegment"
+              }
             },
             {
               "type": "null"
@@ -201,135 +409,66 @@
         }
       }
     },
-    "Din4108ThermalBridgeEdit": {
+    "Din4108ZoneDelta": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "op",
-        "index",
-        "id",
-        "value",
-        "patch"
-      ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/Din4108RowOp"
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din4108ZoneAddition"
+          }
         },
-        "id": {
-          "type": "string"
-        },
-        "value": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/ThermalBridge"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "patch": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Din4108ThermalBridgePatch"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din4108ZoneModification"
+          }
         }
       }
     },
-    "Din4108WindowEdit": {
+    "Din4108ZoneAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value",
-        "patch"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/Din4108RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/ZoneWindow"
+              "type": "string"
             },
             {
               "type": "null"
             }
           ]
         },
-        "patch": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Din4108WindowPatch"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/ThermalZone"
         }
       }
     },
-    "Din4108LayerEdit": {
+    "Din4108ZoneModification": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value",
+        "key",
         "patch"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/Din4108RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
+        "key": {
           "type": "string"
         },
-        "value": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/LayerDocument"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
         "patch": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Din4108LayerPatch"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/Din4108ZonePatch"
         }
       }
     },
@@ -368,10 +507,70 @@
           ]
         },
         "windows": {
+          "$ref": "#/$defs/Din4108WindowDelta"
+        }
+      }
+    },
+    "Din4108ElementDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Din4108WindowEdit"
+            "type": "string"
           }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din4108ElementAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din4108ElementModification"
+          }
+        }
+      }
+    },
+    "Din4108ElementAddition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after",
+        "row"
+      ],
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/EnvelopeElement"
+        }
+      }
+    },
+    "Din4108ElementModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Din4108ElementPatch"
         }
       }
     },
@@ -380,6 +579,16 @@
       "additionalProperties": false,
       "properties": {
         "kind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "zoneId": {
           "anyOf": [
             {
               "type": "string"
@@ -460,10 +669,70 @@
           ]
         },
         "layers": {
+          "$ref": "#/$defs/Din4108LayerDelta"
+        }
+      }
+    },
+    "Din4108ThermalBridgeDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Din4108LayerEdit"
+            "type": "string"
           }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din4108ThermalBridgeAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Din4108ThermalBridgeModification"
+          }
+        }
+      }
+    },
+    "Din4108ThermalBridgeAddition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after",
+        "row"
+      ],
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/din4108/snapshot.json#/$defs/ThermalBridge"
+        }
+      }
+    },
+    "Din4108ThermalBridgeModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Din4108ThermalBridgePatch"
         }
       }
     },
@@ -492,128 +761,6 @@
           ]
         },
         "bb2Type": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "Din4108WindowPatch": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "orientation": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "inclinationDeg": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "areaM2": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "gValue": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "shadingFc": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "Din4108LayerPatch": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "materialId": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "thicknessM": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "lambda": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "mu": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "applicationType": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "compressiveClass": {
           "anyOf": [
             {
               "type": "string"

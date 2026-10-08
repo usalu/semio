@@ -7,12 +7,9 @@ use crate::RasterSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::ChangeLayerVisible, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    match find_layer(&base.layers, &payload.layer_id) {
+    Ok(match find_layer(&base.layers, &payload.layer_id) {
         Some(layer) => vec![RasterMutation::ChangeLayerVisible(super::ChangeLayerVisible { layer_id: payload.layer_id.clone(), new_visible: layer_visible(layer) })],
         None => Vec::new(),
-    }
-
-    })())
+    })
 }
 //#endregion 🔖️Inverse

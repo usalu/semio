@@ -18,6 +18,18 @@ extern crate semio_framework_value_derive as value_derive;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
+/// 🎯️ The central applier, re-exported so owner-root test adapters (which cannot name the private `protocol` alias) turn a mutation's
+/// diff into the next snapshot through the one place that may apply a diff.
+pub use protocol::apply_diff;
+
+/// 🧪️ Diff then central apply: the next snapshot (the base when the diff is refused) and the mutation's own outcome.
+#[cfg(test)]
+pub(crate) fn applied<P: Clone, M: protocol::Mutation<P>>(base: &P, mutation: &M) -> (P, protocol::MutationOutcome<M::Diff>) {
+    let outcome = mutation.diff(base);
+    let next = protocol::apply_diff(outcome.diff(), base).unwrap_or_else(|_| base.clone());
+    (next, outcome)
+}
+
 #[path = "✏️editor/📬️preparation/🦀️.rs"]
 mod retained_native_preparation;
 
@@ -88,8 +100,8 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// dialect it writes and a dialect belongs to exactly one kind, so only these rows are this artifact's to declare; the bridge
 /// serializers that write another kind (semio → step, png, …) are that kind's, and stay reachable only through `register()`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn semio_written(table: &'static [semio_framework_plugin::ComposerEntry], cache: &'static std::sync::OnceLock<Vec<semio_framework_plugin::ComposerEntry>>) -> &'static [semio_framework_plugin::ComposerEntry] {
-    cache.get_or_init(|| table.iter().filter(|entry| entry.writes.artifact_kind == SEMIO_ARTIFACT_SCHEMA_ID).map(|entry| semio_framework_plugin::ComposerEntry { writes: entry.writes, reads: entry.reads, compose: entry.compose }).collect())
+pub(crate) fn semio_written(table: &'static [semio_framework_plugin::io::ComposerEntry], cache: &'static std::sync::OnceLock<Vec<semio_framework_plugin::io::ComposerEntry>>) -> &'static [semio_framework_plugin::io::ComposerEntry] {
+    cache.get_or_init(|| table.iter().filter(|entry| entry.writes.artifact_kind == SEMIO_ARTIFACT_SCHEMA_ID).map(|entry| semio_framework_plugin::io::ComposerEntry { writes: entry.writes, reads: entry.reads, compose: entry.compose }).collect())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1154,8 +1166,8 @@ macro_rules! member_owners {
                 }
             }
 
-            fn next_close_byte_demand(&self) -> usize {
-                self.active.as_ref().map_or(1, |active| if active.terminal_is_empty() { std::mem::size_of_val(active.as_ref()) } else { active.next_close_byte_demand() })
+            fn next_close_byte_demand(&self, store: &dsl::ArtifactStore<subsets::$module::schema::snapshot::$snapshot, subsets::$module::schema::mutations::$mutation>) -> usize {
+                self.active.as_ref().map_or_else(|| if matches!(self.phase, SemioStoreClosePhase::DisplacedOwners) { store.maintenance_retirements_next_close_byte_demand() } else { usize::from(!matches!(self.phase, SemioStoreClosePhase::Complete)) }, |active| if active.terminal_is_empty() { std::mem::size_of_val(active.as_ref()) } else { active.next_close_byte_demand() })
             }
 
             fn terminal_is_empty(
@@ -1251,7 +1263,7 @@ pub async fn open_semio_member(expected: &semio_framework_artifact_reference::Ar
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v1::subsets::base::io::io_registry as v1;
-    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
+    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();

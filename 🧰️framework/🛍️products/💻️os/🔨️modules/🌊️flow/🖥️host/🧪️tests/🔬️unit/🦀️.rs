@@ -121,9 +121,8 @@ fn test_kind_infos_json() -> String {
     ])
 }
 
-fn host_with_test_bridge() -> FlowHost {
+fn host_with_test_fixture() -> FlowHost {
     let mut host = FlowHost::default();
-    host.set_eval_bridge_fn(Box::new(test_math_bridge));
     host.set_neuron_kind_infos_json(&test_kind_infos_json());
     host.set_host_catalogue_json(
         &serde_json::to_string(&[CatalogueSection {
@@ -139,6 +138,13 @@ fn host_with_test_bridge() -> FlowHost {
         }])
         .unwrap(),
     );
+    host
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn host_with_test_bridge() -> FlowHost {
+    let mut host = host_with_test_fixture();
+    host.set_eval_bridge_fn(Box::new(test_math_bridge));
     host.evaluate_internal();
     host
 }
@@ -154,7 +160,7 @@ fn widget_slider_track_screen_point(host: &FlowHost, widget_id: &str) -> (f64, f
 
 #[test]
 fn default_fixture_maps_widgets_to_native_dag_kinds() {
-    let host = host_with_test_bridge();
+    let host = host_with_test_fixture();
     let slider = host.dag.host_snapshot.nodes.iter().find(|n| n.id == "slider").expect("slider");
     assert!(matches!(slider.kind, DagNodeKind::Slider { .. }));
     assert_eq!(slider.height, slider_widget_height());
@@ -168,6 +174,7 @@ fn default_fixture_maps_widgets_to_native_dag_kinds() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn default_fixture_evaluates_add_preview() {
     let host = host_with_test_bridge();
     assert_eq!(host.preview_text(), "3");
@@ -175,6 +182,7 @@ fn default_fixture_evaluates_add_preview() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn slider_updates_preview() {
     // 🧵️ Mutating a widget never auto-evaluates anymore (see `evaluate_step`'s doc comment) — an
     // off-main-thread ticker outside `flow` is responsible for that; this simulates one tick
@@ -187,6 +195,7 @@ fn slider_updates_preview() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn evaluate_skips_unchanged_tree_after_move_widget() {
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
@@ -207,6 +216,7 @@ fn evaluate_skips_unchanged_tree_after_move_widget() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn pending_eval_widget_ids_reports_without_computing() {
     let mut host = host_with_test_bridge();
     let before = host.preview_text();
@@ -219,6 +229,7 @@ fn pending_eval_widget_ids_reports_without_computing() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn set_slider_value_marks_downstream_computing_chrome() {
     let mut host = host_with_test_bridge();
     host.set_slider_value("slider", 7.0);
@@ -231,6 +242,7 @@ fn set_slider_value_marks_downstream_computing_chrome() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn apply_eval_outputs_json_establishes_baseline_for_dirty_probe() {
     let host = host_with_test_bridge();
     let eval_json = host.last_eval_json.clone();
@@ -247,6 +259,7 @@ fn apply_eval_outputs_json_establishes_baseline_for_dirty_probe() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn apply_eval_outputs_json_skips_baseline_when_outputs_stale_for_seeds() {
     let mut host = host_with_test_bridge();
     let stale_eval_json = host.last_eval_json.clone();
@@ -264,6 +277,7 @@ fn apply_eval_outputs_json_skips_baseline_when_outputs_stale_for_seeds() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn flow_eval_session_retains_baseline_across_ephemeral_hosts() {
     let mut session = FlowEvalSession::new();
     let mut host = host_with_test_bridge();
@@ -298,6 +312,7 @@ fn flow_eval_session_seeds_its_retained_neural_cache() {
 /// 🧵️ Builds a two-computable-node chain (`add` -> `pass`, replacing `add`'s direct link to
 /// `preview`) on top of the default fixture, for tests that need more than one node to step
 /// through with a budgeted `evaluate_step`.
+#[cfg(not(target_arch = "wasm32"))]
 fn host_with_two_node_chain() -> (FlowHost, String) {
     let mut host = host_with_test_bridge();
     let pass_id = host.add_widget(r#"{"kind":"neuron","id":"pass","neuronKind":"math.passThrough","params":{},"input_ports":[],"preview":false}"#, 240.0, 0.0).unwrap();
@@ -312,6 +327,7 @@ fn host_with_two_node_chain() -> (FlowHost, String) {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn evaluate_step_budget_one_converges_over_multiple_calls() {
     let (mut host, _pass_id) = host_with_two_node_chain();
     assert_eq!(host.preview_text(), "3", "chain settles to the same value as the direct add->preview link");
@@ -332,6 +348,7 @@ fn evaluate_step_budget_one_converges_over_multiple_calls() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn flow_eval_session_sync_and_tick_state_machine() {
     let (mut host, _pass_id) = host_with_two_node_chain();
     let mut session = FlowEvalSession::new();
@@ -369,6 +386,7 @@ fn flow_eval_session_sync_and_tick_state_machine() {
 /// Measured on 6118 as 54 byte-identical publications across one 23 s evaluation
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-progress-visibility-2026-09-14.md`).
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn the_chain_ledger_is_live_at_a_hop_boundary_and_its_census_only_grows() {
     let (mut host, _pass_id) = host_with_two_node_chain();
     let mut session = FlowEvalSession::new();
@@ -467,6 +485,7 @@ fn flow_eval_session_invalidates_only_when_the_flow_extension_registry_generatio
 //#region 🔢️RegistryGenerationBaseline
 /// 🧵️ Rebuilds the ephemeral host a durable driver would hand a session's baseline to — the same
 /// three lines `flow_host_with_session` runs in production, over the test bridge.
+#[cfg(not(target_arch = "wasm32"))]
 fn replay_host_of(host: &FlowHost) -> FlowHost {
     let mut replay = FlowHost::default();
     replay.set_eval_bridge_fn(Box::new(test_math_bridge));
@@ -486,6 +505,7 @@ fn replay_host_of(host: &FlowHost) -> FlowHost {
 /// action able to clear it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
 /// `📓️audit-unknown-kind-2026-09-12.md` §3).
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn an_invalidated_session_hands_an_ephemeral_host_a_re_dispatching_baseline() {
     let host = host_with_test_bridge();
     let mut session = FlowEvalSession::new();
@@ -512,6 +532,7 @@ fn an_invalidated_session_hands_an_ephemeral_host_a_re_dispatching_baseline() {
 
 /// 🧵️ One ephemeral host of the shared fixture, with its OWN neural cache and a bridge that
 /// counts every dispatch — the shape `flow_host_with_session` rebuilds per tick.
+#[cfg(not(target_arch = "wasm32"))]
 fn counting_replay_host_of(host: &FlowHost, dispatches: &std::sync::Arc<std::sync::atomic::AtomicUsize>) -> FlowHost {
     let counter = dispatches.clone();
     let mut replay = FlowHost::default();
@@ -540,6 +561,7 @@ fn counting_replay_host_of(host: &FlowHost, dispatches: &std::sync::Arc<std::syn
 /// (`invalidate_for_flow_extension_registry`), and a cache that still answers would mask the very
 /// dispatch this law counts.
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn a_superseded_registry_generation_re_dispatches_an_unchanged_tree() {
     let _serialized = crate::registry::lock_flow_extension_registry_for_test();
     crate::registry::drain_flow_extension_registry_retirements();
@@ -581,7 +603,7 @@ fn a_superseded_registry_generation_re_dispatches_an_unchanged_tree() {
 fn connect_ports_admits_only_declared_neutral_endpoints() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/declared-endpoints/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap() {
-        let mut host = host_with_test_bridge();
+        let mut host = host_with_test_fixture();
         let before = host.host_snapshot.synapses.len();
         let result = host.connect_ports(case["source"].as_str().unwrap(), case["sourcePort"].as_str().unwrap(), case["target"].as_str().unwrap(), case["targetPort"].as_str().unwrap());
         match case["expected"].as_str().unwrap() {
@@ -605,7 +627,7 @@ fn connect_ports_admits_only_declared_neutral_endpoints() {
 
 #[test]
 fn connect_ports_allows_fan_out_from_same_output() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let pass_id = host.add_widget(r#"{"kind":"neuron","id":"pass","neuronKind":"math.passThrough","params":{},"input_ports":[],"preview":false}"#, 120.0, 120.0).unwrap();
     host.connect_ports("add", "sum", &pass_id, "number").unwrap();
     let fan_out: Vec<_> = host.host_snapshot.synapses.iter().filter(|s| s.from == "add" && s.from_port == "sum").collect();
@@ -617,7 +639,7 @@ fn connect_ports_allows_fan_out_from_same_output() {
 
 #[test]
 fn connect_ports_replaces_existing_incoming_on_same_input() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     assert!(host.host_snapshot.synapses.iter().any(|s| s.from == "slider" && s.to == "add" && s.to_port == "a"));
     let replacement_id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":2.0}"#, -120.0, 0.0).unwrap();
     host.connect_ports(&replacement_id, "number", "add", "a").unwrap();
@@ -629,6 +651,7 @@ fn connect_ports_replaces_existing_incoming_on_same_input() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn evaluate_runs_after_tree_change() {
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
@@ -654,6 +677,7 @@ fn evaluate_runs_after_tree_change() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn dirty_propagation_only_dispatches_affected_branch() {
     use std::sync::Arc;
     use std::sync::Mutex as StdMutex;
@@ -683,6 +707,7 @@ fn dirty_propagation_only_dispatches_affected_branch() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn neural_cache_persists_across_evaluations() {
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::Arc;
@@ -719,6 +744,7 @@ fn collect_live_geometry_handles_includes_input_channels() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn apply_eval_outputs_json_preserves_state_on_global_error() {
     let mut host = host_with_test_bridge();
     let good = host.last_eval_json.clone();
@@ -761,6 +787,7 @@ fn collect_live_drawing_handles_traverses_list_values() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn evaluate_emits_channel_structured_json() {
     let host = host_with_test_bridge();
     let parsed: serde_json::Value = serde_json::from_str(&host.last_eval_json).expect("json");
@@ -792,7 +819,7 @@ fn preview_scalar_content_from_number_dict() {
 
 #[test]
 fn image_input_seed_and_preview_content() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
     host.host_snapshot.widgets.push(Widget::InputImage { id: "image".into(), src: png.into() });
     host.rebuild_dag();
@@ -805,6 +832,7 @@ fn image_input_seed_and_preview_content() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn slider_drag_does_not_evaluate_until_explicit_evaluate() {
     // 🧵️ A live drag firing many pointer-move ticks used to re-evaluate the whole graph on every
     // one of them (fine for cheap graphs, a repeated multi-second stall for a heavy one, e.g. a
@@ -826,7 +854,7 @@ fn slider_drag_does_not_evaluate_until_explicit_evaluate() {
 
 #[test]
 fn dag_slider_drag_syncs_fixture_value() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_viewport(800, 600, 1.0);
     let slider_node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == "slider").expect("slider").clone();
     let DagNodeKind::Slider { .. } = slider_node.kind else {
@@ -874,7 +902,7 @@ fn snapshot_io_prerequisite_flow_gesture_journal_admits_or_restores_all_moves() 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚦️journal-admission.json")).unwrap();
     assert_eq!(fixture["capacity"].as_u64().unwrap() as usize, dag::DAG_GRAPH_EDIT_CAPACITY);
     for case in fixture["cases"].as_array().unwrap() {
-        let mut host = host_with_test_bridge();
+        let mut host = host_with_test_fixture();
         host.begin_gesture();
         let before = host.host_snapshot.clone();
         let pending = case["pendingRows"].as_u64().unwrap() as usize;
@@ -911,9 +939,10 @@ fn snapshot_io_prerequisite_flow_gesture_journal_admits_or_restores_all_moves() 
     }
 }
 
-fn gesture_answer(host: &mut FlowHost) -> (usize, bool) {
+fn gesture_answer(host: &mut FlowHost) -> Vec<serde_json::Value> {
     let answer: serde_json::Value = serde_json::from_str(&host.take_graph_edits_json()).expect("gesture answer json");
-    (answer["operations"].as_array().expect("operations array").len(), answer["hostSnapshotChanged"].as_bool().expect("hostSnapshotChanged flag"))
+    assert_eq!(answer.as_object().expect("gesture object").len(), 1, "a gesture answers only its canonical operation journal");
+    answer["operations"].as_array().expect("operations array").clone()
 }
 
 /// 🪶 LAW: a pointer gesture that changed nothing answers with nothing — no narrow operation AND no
@@ -927,16 +956,15 @@ fn gesture_answer(host: &mut FlowHost) -> (usize, bool) {
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️generate-add-flow-wire-quiet-tick-2026-09-14.md`).
 #[test]
 fn a_gesture_that_changed_nothing_answers_no_operations_and_no_fixture_commit() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_viewport(800, 600, 1.0);
     let (wx, wy) = empty_canvas_world_point(&host);
     let (sx, sy) = world_screen_point(&host, wx, wy);
     let positions_before: Vec<(String, f64, f64)> = host.dag.host_snapshot.nodes.iter().map(|node| (node.id.clone(), node.x, node.y)).collect();
     host.pointer_down_screen(sx, sy, 0, false, false, false, false);
     host.pointer_up_screen(sx, sy, false, false, false);
-    let (operations, fixture_changed) = gesture_answer(&mut host);
-    assert_eq!(operations, 0, "a click that wired nothing journals no narrow operation");
-    assert!(!fixture_changed, "a click that moved no widget, no synapse and no layout owes no fixture commit");
+    let operations = gesture_answer(&mut host);
+    assert!(operations.is_empty(), "a click that wired nothing journals no operation: {operations:?}");
     let positions_after: Vec<(String, f64, f64)> = host.dag.host_snapshot.nodes.iter().map(|node| (node.id.clone(), node.x, node.y)).collect();
     assert_eq!(positions_after, positions_before, "the click must not have moved the graph either");
     host.retire_cold();
@@ -944,11 +972,11 @@ fn a_gesture_that_changed_nothing_answers_no_operations_and_no_fixture_commit() 
 
 /// 🫳️ LAW's partner: a node drag is narrated as ONE node-graph gesture record — the moved node and its relative offset,
 /// the record the wgpu bounded path writes — and owes NO fixture commit, so the guest commits it as relative leaves
-/// instead of adopting the whole fixture (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, design §12, §13.3). A slider
-/// drag changes a widget the narrow vocabulary does not carry, so it still owes the fixture commit.
+/// instead of adopting the whole fixture (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, design §12, §13.3).
+/// A slider drag journals its defining `setSlider` row with the landed widget value.
 #[test]
 fn a_drag_that_moved_a_node_answers_its_move_rows_and_no_fixture_commit() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_viewport(800, 600, 1.0);
     let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add node").clone();
     let before = host.host_snapshot.layout.get("add").expect("add layout").clone();
@@ -964,21 +992,24 @@ fn a_drag_that_moved_a_node_answers_its_move_rows_and_no_fixture_commit() {
     assert_eq!((record["operation"].as_str(), record["nodeIds"].clone()), (Some("move"), serde_json::json!(["add"])), "the record names the dragged node: {record}");
     assert!(record["gestureId"].as_str().is_some_and(|id| id.starts_with("node-drag:")), "the record names its press: {record}");
     assert_eq!((record["dx"].as_f64(), record["dy"].as_f64()), (Some(landed.x - before.x), Some(landed.y - before.y)), "the record carries the relative offset: {record}");
-    assert!(!answer["hostSnapshotChanged"].as_bool().expect("hostSnapshotChanged flag"), "a narrated drag owes no fixture commit");
+    assert_eq!(answer.as_object().expect("gesture object").len(), 1, "a narrated drag answers only its operation journal");
     assert!(landed.x > before.x && landed.y > before.y, "the node landed where the pointer took it: {landed:?} from {before:?}");
     let (sx, sy) = widget_slider_track_screen_point(&host, "slider");
     host.pointer_down_screen(sx, sy, 0, false, false, false, false);
     host.pointer_move_screen(sx + 80.0, sy, false, false, false);
     host.pointer_up_screen(sx + 80.0, sy, false, false, false);
-    let (operations, fixture_changed) = gesture_answer(&mut host);
-    assert_eq!(operations, 0, "a slider drag moves no node");
-    assert!(fixture_changed, "a slider drag changed a widget, which only the fixture commit carries");
+    let operations = gesture_answer(&mut host);
+    let value = host.host_snapshot.widgets.iter().find_map(|widget| match widget {
+        Widget::InputSlider { id, value, .. } if id.as_str() == "slider" => Some(*value),
+        _ => None,
+    }).expect("landed slider value");
+    assert_eq!(operations, vec![serde_json::json!({ "operation": "setSlider", "widgetId": "slider", "value": value })], "a slider drag journals exactly its landed value");
     host.retire_cold();
 }
 
 #[test]
 fn default_fixture_does_not_auto_layout() {
-    let host = host_with_test_bridge();
+    let host = host_with_test_fixture();
     let slider = host.host_snapshot.layout.get("slider").expect("slider");
     let add = host.host_snapshot.layout.get("add").expect("add");
     let preview = host.host_snapshot.layout.get("preview").expect("preview");
@@ -990,7 +1021,7 @@ fn default_fixture_does_not_auto_layout() {
 
 #[test]
 fn canvas_slider_hit_adjusts_value_playground_viewport() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_viewport(1259, 706, 1.0);
     let (sx, sy) = widget_slider_track_screen_point(&host, "slider");
     host.pointer_down_screen(sx, sy, 0, false, false, false, false);
@@ -1011,7 +1042,7 @@ fn canvas_slider_hit_adjusts_value_playground_viewport() {
 
 #[test]
 fn canvas_slider_hit_adjusts_value() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_viewport(800, 600, 1.0);
     let (sx, sy) = widget_slider_track_screen_point(&host, "slider");
     host.pointer_down_screen(sx, sy, 0, false, false, false, false);
@@ -1032,7 +1063,7 @@ fn canvas_slider_hit_adjusts_value() {
 
 #[test]
 fn reorganize_overwrites_saved_layout_left_to_right() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.host_snapshot.layout.insert("slider".into(), WidgetLayout { x: -900.0, y: -900.0 });
     host.host_snapshot.layout.insert("add".into(), WidgetLayout { x: -900.0, y: -900.0 });
     host.host_snapshot.layout.insert("preview".into(), WidgetLayout { x: -900.0, y: -900.0 });
@@ -1058,7 +1089,7 @@ fn fixture_json_round_trip() {
 
 #[test]
 fn flow_document_tree_is_shakable() {
-    let host = host_with_test_bridge();
+    let host = host_with_test_fixture();
     let document = host.document();
     assert_eq!(document.schema, "flow.artifact");
     assert!(!document.tree.neurons.is_empty());
@@ -1100,7 +1131,7 @@ fn set_canvas_theme_dark_applies_board_dark_strokes() {
 
 #[test]
 fn paint_scene_dark_theme_paints_edges_and_nodes() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_viewport(1280, 800, 1.0);
     host.set_canvas_theme_dark(true);
     let mut scene = canvas::Scene::new();
@@ -1111,7 +1142,7 @@ fn paint_scene_dark_theme_paints_edges_and_nodes() {
 
 #[test]
 fn flow_host_enables_minimap_widget_on_dag() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_viewport(1280, 800, 1.0);
     host.dag.set_camera(200.0, 120.0, 0.65);
     let raw: serde_json::Value = serde_json::from_str(&host.dag.label_overlay_paint_state_json().unwrap()).unwrap();
@@ -1121,20 +1152,20 @@ fn flow_host_enables_minimap_widget_on_dag() {
 
 //#region 📷️CameraAuthority
 /// 📷️ The SURFACE half of the node-graph camera-fit law. The geometry half
-/// (`♾️infinite/🖼️canvas/🧪️tests/📷️camera-fit/🦀️.rs` and the renderer's TypeScript twin) pins WHICH
+/// (`🧰️framework/🔨️modules/🖼️canvas/🧪️tests/📷️camera-fit/🦀️.rs` and the renderer's TypeScript twin) pins WHICH
 /// camera a fit computes; these rows pin that the surface actually publishes it. A flow surface
 /// carries two camera copies — `FlowHost::fixture.camera`, the authority every projection and every
 /// `nodeGraphViewport` publication reads, and `DagHost::fixture.camera`, the derived copy the paint
 /// reads — and the wgpu `Fit graph` control published the first while the fit had only landed on the
 /// second. Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
 ///
-/// @see `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json` — `surfaceRows`
-const CAMERA_FIT_FIXTURE_JSON: &str = include_str!("../../../../♾️infinite/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json");
+/// @see `🧰️framework/🔨️modules/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json` — `surfaceRows`
+const CAMERA_FIT_FIXTURE_JSON: &str = include_str!("../../../../../../../🔨️modules/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json");
 
 /// 🕸️ The hexagonal mushroom column's own graph, laid out the way the shipped example lays it out —
 /// the graph whose nodes sit at negative surface x, which is what made the stale publication visible.
 fn camera_law_column_host() -> FlowHost {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let mut layout = crate::OrderedMap::new();
     for (id, x, y) in [("height", -197.19, -102.70), ("radius", -156.03, -177.33), ("sides", -156.43, -155.28), ("profile", -64.49, -163.40), ("extrusion-axis", -65.26, -116.45), ("extrude", 34.84, -154.18)] {
         layout.insert(id.to_string(), WidgetLayout { x, y });
@@ -1214,7 +1245,7 @@ fn a_flow_surface_projects_screen_points_with_the_camera_it_published() {
 
 #[test]
 fn replace_fixture_preserves_kind_infos_and_named_input_ports() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.replace_host_snapshot(FlowHostSnapshot {
         schema: "flow.host_snapshot".into(),
         camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
@@ -1252,7 +1283,7 @@ fn catalogue_nested_groups_round_trip() {
 
 #[test]
 fn catalogue_has_module_sections() {
-    let host = host_with_test_bridge();
+    let host = host_with_test_fixture();
     let json = host.catalogue_json().unwrap();
     assert!(json.contains("math"));
     assert!(json.contains("math.add"));
@@ -1263,7 +1294,7 @@ fn catalogue_has_module_sections() {
 
 #[test]
 fn flow_backed_node_graph_extras_include_fixture_and_flow_engine() {
-    let host = host_with_test_bridge();
+    let host = host_with_test_fixture();
     let extras = flow_backed_node_graph_extras(&host.host_snapshot, FLOW_LOD_MODE_AUTOMATIC, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, None);
     assert!(extras.host_snapshot_json.as_ref().is_some_and(|json| json.contains("flow.host_snapshot")));
     assert!(extras.capabilities_json.as_ref().is_some_and(|json| json.contains(r#""engine":"flow""#)));
@@ -1332,7 +1363,7 @@ fn contributed_extension_manifest_installs_catalogue_operator() {
 
 #[test]
 fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_neuron_kind_infos_json(&test_kind_infos_json());
     host.replace_host_snapshot(<FlowHostSnapshot as crate::os_store::ArtifactDsl>::parse_dsl(include_str!("../../../📚️examples/🗣️.dsl.semio")).expect("fixture"));
     assert!(!host.dag.host_snapshot.edges.is_empty(), "synapses should become dag edges");
@@ -1378,7 +1409,7 @@ fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
 
 #[test]
 fn legacy_out_in_synapse_joins_canonical_ports_and_paints_an_engine_edge() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let mut snapshot = host.host_snapshot.clone();
     snapshot.synapses.clear();
     snapshot.synapses.push(SynapseSpec { id: "legacy-wire".into(), from: "slider".into(), to: "add".into(), from_port: "out".into(), to_port: "in".into() });
@@ -1392,7 +1423,7 @@ fn legacy_out_in_synapse_joins_canonical_ports_and_paints_an_engine_edge() {
 
 #[test]
 fn synapse_to_a_missing_port_does_not_create_an_engine_edge() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let mut snapshot = host.host_snapshot.clone();
     snapshot.synapses.clear();
     snapshot.synapses.push(SynapseSpec { id: "dangling".into(), from: "slider".into(), to: "add".into(), from_port: "out".into(), to_port: "missing".into() });
@@ -1415,6 +1446,7 @@ fn slider_ghost_descriptor_requires_authored_label() {
 
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn add_widget_and_connect() {
     let mut host = host_with_test_bridge();
     let id = host.add_widget(r#"{"kind":"neuron","neuronKind":"math.passThrough"}"#, 100.0, 50.0).unwrap();
@@ -1427,6 +1459,7 @@ fn add_widget_and_connect() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn output_export_widget_catalogue_descriptor_and_payload() {
     let mut host = host_with_test_bridge();
     let sections = merge_catalogue_sections("").unwrap();
@@ -1451,7 +1484,7 @@ fn output_export_widget_catalogue_descriptor_and_payload() {
 /// hand-rolled `Vec<FlowHostSnapshot>` snapshot stack.
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_add_widget() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let fixture_before = host.host_snapshot.clone();
     let count_before = fixture_before.widgets.len();
     let id = host.add_widget(r#"{"kind":"inputNote","text":"undo me"}"#, 42.0, 42.0).unwrap();
@@ -1490,7 +1523,7 @@ async fn undo_redo_add_widget() {
 
 #[test]
 fn camera_change_does_not_create_undo_step() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let camera_before = host.host_snapshot.camera.clone();
     host.set_camera(camera_before.x + 50.0, camera_before.y - 30.0, camera_before.zoom * 1.5);
     assert!(!host.can_undo());
@@ -1506,7 +1539,7 @@ fn camera_change_does_not_create_undo_step() {
 
 #[test]
 fn replace_fixture_preserves_live_camera() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_camera(120.0, -45.0, 1.75);
     host.replace_host_snapshot(FlowHostSnapshot {
         schema: "flow.host_snapshot".into(),
@@ -1546,6 +1579,7 @@ fn test_dictionary_merge_bridge(kind: &str, input: &Dictionary) -> Result<Dictio
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn variadic_merge_evaluates_port_routed_inputs() {
     let mut host = FlowHost::from_host_snapshot(FlowHostSnapshot {
         schema: "flow.host_snapshot".into(),
@@ -1594,7 +1628,7 @@ fn variadic_merge_evaluates_port_routed_inputs() {
 
 #[test]
 fn widget_to_dag_node_carries_display_meta() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let id = host.add_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 0.0, 0.0).unwrap();
     let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == id).expect("node");
     assert_eq!(node.name, "Add");
@@ -1605,7 +1639,7 @@ fn widget_to_dag_node_carries_display_meta() {
 
 #[test]
 fn add_slider_widget_with_explicit_range() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":10.2,"min":10.2,"max":15.0,"step":0.1}"#, 0.0, 0.0).unwrap();
     let widget = host.host_snapshot.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
     let Widget::InputSlider { value, min, max, step, .. } = widget else {
@@ -1628,7 +1662,7 @@ fn add_slider_widget_with_explicit_range() {
 
 #[test]
 fn add_note_widget_with_text() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let id = host.add_widget(r#"{"kind":"inputNote","text":"some text"}"#, 0.0, 0.0).unwrap();
     let widget = host.host_snapshot.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
     let Widget::InputNote { text, .. } = widget else {
@@ -1647,7 +1681,7 @@ fn add_note_widget_with_text() {
 
 #[test]
 fn begin_note_edit_groups_undo_into_single_gesture() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let id = host.add_widget(r#"{"kind":"inputNote","text":"hi"}"#, 0.0, 0.0).unwrap();
     let node = host.dag.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node");
     let origin_x = node.x - node.width * 0.5 + 4.0;
@@ -1669,7 +1703,7 @@ fn begin_note_edit_groups_undo_into_single_gesture() {
 
 #[test]
 fn wheel_screen_zoom_gesture_changes_zoom() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let z0 = host.host_snapshot.camera.zoom;
     host.wheel_screen(400.0, 300.0, 0.0, -10.0, true);
     assert_ne!(host.host_snapshot.camera.zoom, z0);
@@ -1678,8 +1712,8 @@ fn wheel_screen_zoom_gesture_changes_zoom() {
 
 #[test]
 fn wheel_plan_matches_direct_and_rejects_stale_revision() {
-    let mut direct = host_with_test_bridge();
-    let mut planned = host_with_test_bridge();
+    let mut direct = host_with_test_fixture();
+    let mut planned = host_with_test_fixture();
     direct.set_viewport(800, 600, 1.0);
     planned.set_viewport(800, 600, 1.0);
     direct.wheel_screen(320.0, 240.0, 0.0, -10.0, true);
@@ -1698,7 +1732,7 @@ fn wheel_plan_matches_direct_and_rejects_stale_revision() {
 
 #[test]
 fn set_note_text_keeps_uniform_component_width() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let id = host.add_widget(r#"{"kind":"inputNote","text":"hi"}"#, 0.0, 0.0).unwrap();
     let short_w = host.dag.host_snapshot.nodes.iter().find(|n| n.id == id).expect("node").width;
     host.set_note_text(&id, "a much longer note string");
@@ -1713,7 +1747,7 @@ fn set_note_text_keeps_uniform_component_width() {
 
 #[test]
 fn add_slider_widget_with_single_value_uses_sensible_range() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":5.0}"#, 0.0, 0.0).unwrap();
     let widget = host.host_snapshot.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
     let Widget::InputSlider { value, min, max, step, .. } = widget else {
@@ -1728,7 +1762,7 @@ fn add_slider_widget_with_single_value_uses_sensible_range() {
 
 #[test]
 fn add_slider_widget_with_decimal_value_uses_matching_step() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":1.3}"#, 0.0, 0.0).unwrap();
     let widget = host.host_snapshot.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
     let Widget::InputSlider { value, min, max, step, .. } = widget else {
@@ -1751,7 +1785,7 @@ fn add_slider_widget_with_decimal_value_uses_matching_step() {
 
 #[test]
 fn add_slider_widget_with_two_decimal_places_uses_finer_step() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":1.25}"#, 0.0, 0.0).unwrap();
     let widget = host.host_snapshot.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
     let Widget::InputSlider { step, .. } = widget else {
@@ -1763,7 +1797,7 @@ fn add_slider_widget_with_two_decimal_places_uses_finer_step() {
 
 #[test]
 fn set_slider_value_expands_bounds_when_out_of_range() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":3.0,"min":0.0,"max":10.0,"step":1.0}"#, 0.0, 0.0).unwrap();
     host.set_slider_value(&id, 12.0);
     let widget = host.host_snapshot.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
@@ -1778,7 +1812,7 @@ fn set_slider_value_expands_bounds_when_out_of_range() {
 
 #[test]
 fn ghost_widget_matches_placed_neuron_size() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_neuron_kind_infos_json(&kind_infos_json(vec![NeuronKindInfo {
         id: "brep.sketch2d.circle".into(),
         extension: "brep".into(),
@@ -1801,7 +1835,7 @@ fn ghost_widget_matches_placed_neuron_size() {
 
 #[test]
 fn ghost_widget_preview_and_clear() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_ghost_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 42.0, 24.0).unwrap();
     let ghost = host.ghost_node.as_ref().expect("ghost");
     assert!((ghost.x - 42.0).abs() < 1e-6);
@@ -1816,7 +1850,7 @@ fn ghost_widget_preview_and_clear() {
 
 #[test]
 fn ghost_widget_label_overlay_matches_placed_at_micro() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_viewport(1280, 800, 1.0);
     host.set_neuron_kind_infos_json(&kind_infos_json(vec![NeuronKindInfo {
         id: "brep.sketch2d.circle".into(),
@@ -1869,7 +1903,7 @@ fn ghost_widget_label_overlay_matches_placed_at_micro() {
 
 #[test]
 fn rebuild_dag_preserves_ghost_overlay_at_micro() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_viewport(1280, 800, 1.0);
     host.set_neuron_kind_infos_json(&kind_infos_json(vec![NeuronKindInfo {
         id: "brep.sketch2d.circle".into(),
@@ -1896,7 +1930,7 @@ fn rebuild_dag_preserves_ghost_overlay_at_micro() {
 
 #[test]
 fn ghost_widget_paint_scene_smoke() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_viewport(800, 600, 1.0);
     host.set_ghost_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 10.0, 20.0).unwrap();
     let mut scene = canvas::Scene::new();
@@ -1921,7 +1955,7 @@ fn selection_and_preview_state_round_trip() {
 
 #[test]
 fn channel_hover_and_selection_round_trip_at_detail_lod() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.dag.set_automatic_lod(false);
     host.dag.set_forced_draw_lod_label("detail");
     host.set_hover_channel(Some("add"), Some("a"));
@@ -1939,7 +1973,7 @@ fn channel_hover_and_selection_round_trip_at_detail_lod() {
 
 #[test]
 fn drag_merge_node_preserves_single_fixture_widget() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_neuron_kind_infos_json(&kind_infos_json(vec![NeuronKindInfo {
         id: "dictionary.merge".into(),
         extension: "dictionary".into(),
@@ -1971,7 +2005,7 @@ fn drag_merge_node_preserves_single_fixture_widget() {
 
 #[test]
 fn ghost_widget_cleared_on_pointer_down_and_add_widget() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_ghost_widget(r#"{"kind":"neuron","neuronKind":"dictionary.merge"}"#, 12.0, 18.0).unwrap();
     host.set_viewport(800, 600, 1.0);
     host.pointer_down_screen(120.0, 120.0, 0, false, false, false, false);
@@ -1986,7 +2020,7 @@ fn ghost_widget_cleared_on_pointer_down_and_add_widget() {
 
 #[test]
 fn delete_selection_removes_widget_from_host_snapshot() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.dag.set_selection(&["slider".into()]);
     host.delete_selection().unwrap();
     assert!(host.host_snapshot.widgets.iter().all(|w| widget_id_for(w) != "slider"));
@@ -2129,7 +2163,7 @@ fn dag_bridge_keeps_same_named_brep_input_and_output_distinct() {
 
 #[test]
 fn delete_selection_removes_selected_edge_from_host_snapshot() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let synapse_count_before = host.host_snapshot.synapses.len();
     assert!(synapse_count_before > 0);
     let edge_id = *host.dag.engine.edges.keys().next().expect("edge");
@@ -2143,7 +2177,7 @@ fn delete_selection_removes_selected_edge_from_host_snapshot() {
 
 #[test]
 fn delete_selection_removes_edge_selected_by_synapse_id_domain() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let before = host.host_snapshot.synapses.len();
     host.dag.set_selection_domains_json(r#"{"nodes":[],"edges":["s1"],"handles":[]}"#);
     assert!(host.has_selection(), "synapse id s1 must map into engine edge selection");
@@ -2155,7 +2189,7 @@ fn delete_selection_removes_edge_selected_by_synapse_id_domain() {
 
 #[test]
 fn align_selection_left_aligns_selected_widget_layout() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.move_widget("slider", -120.0, 20.0).unwrap();
     host.move_widget("add", 180.0, -40.0).unwrap();
     host.dag.set_selection(&["slider".into(), "add".into()]);
@@ -2172,7 +2206,7 @@ fn align_selection_left_aligns_selected_widget_layout() {
 
 #[test]
 fn add_input_port_inserts_variadic_slot() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_neuron_kind_infos_json(&kind_infos_json(vec![NeuronKindInfo {
         id: "dictionary.merge".into(),
         extension: "dictionary".into(),
@@ -2195,7 +2229,7 @@ fn add_input_port_inserts_variadic_slot() {
 
 #[test]
 fn add_output_port_inserts_variadic_get_slot() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.set_neuron_kind_infos_json(&kind_infos_json(vec![NeuronKindInfo {
         id: "list.get".into(),
         extension: "list".into(),
@@ -2224,7 +2258,7 @@ fn add_output_port_inserts_variadic_get_slot() {
 
 #[test]
 fn add_widget_with_explicit_id() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","id":"custom_slider","value":2.0}"#, 0.0, 0.0).unwrap();
     assert_eq!(id, "custom_slider");
     host.retire_cold();
@@ -2232,7 +2266,7 @@ fn add_widget_with_explicit_id() {
 
 #[test]
 fn insert_between_rewires_downstream_and_connects_anchor() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let mid = host.add_widget(r#"{"kind":"neuron","id":"mid","neuronKind":"math.passThrough"}"#, 120.0, 0.0).unwrap();
     host.insert_between("slider", "number", &mid, "number", "number").unwrap();
     assert!(host.host_snapshot.synapses.iter().any(|synapse| synapse.from == "slider" && synapse.to == "mid"));
@@ -2244,7 +2278,7 @@ fn insert_between_rewires_downstream_and_connects_anchor() {
 
 #[test]
 fn insert_between_allocates_unique_synapses_after_host_reconstruction() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.host_snapshot.synapses[0].id = "s101".into();
     host.host_snapshot.synapses[1].id = "s102".into();
     let mid = host.add_widget(r#"{"kind":"neuron","id":"mid","neuronKind":"math.passThrough"}"#, 120.0, 0.0).unwrap();
@@ -2258,7 +2292,7 @@ fn insert_between_allocates_unique_synapses_after_host_reconstruction() {
 
 #[test]
 fn insert_between_preserves_existing_mid_inputs() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let variable_id = host.add_widget(r#"{"kind":"variable","name":"width","schema":"number"}"#, 120.0, 0.0).unwrap();
     host.connect_ports("slider", "number", &variable_id, "width").unwrap();
     host.insert_between("slider", "number", &variable_id, "width", "width").unwrap();
@@ -2269,7 +2303,7 @@ fn insert_between_preserves_existing_mid_inputs() {
 
 #[test]
 fn make_space_shifts_widgets_right_of_anchor() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.host_snapshot.layout.insert("slider".into(), WidgetLayout { x: 0.0, y: 0.0 });
     host.host_snapshot.layout.insert("add".into(), WidgetLayout { x: 200.0, y: 0.0 });
     host.host_snapshot.layout.insert("preview".into(), WidgetLayout { x: 400.0, y: 0.0 });
@@ -2286,7 +2320,7 @@ fn make_space_shifts_widgets_right_of_anchor() {
 /// without a default (a data port) stays absent.
 #[test]
 fn an_inserted_operator_records_every_declared_default_input() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     let id = host.add_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 0.0, 0.0).unwrap();
     let recorded = |key: &str| {
         host.host_snapshot.widgets.iter().find_map(|widget| match widget {
@@ -2302,6 +2336,7 @@ fn an_inserted_operator_records_every_declared_default_input() {
 /// ⚖️ LAW (design §20.9): a wire into an input shadows the literal its operator records for that input — an operator
 /// inserted with its declared defaults and then wired evaluates the wire, never the recorded default.
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn an_inserted_operator_wired_into_a_defaulted_input_evaluates_its_wire() {
     let (host, pass_id) = host_with_two_node_chain();
     assert!(host.host_snapshot.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, params, .. } if *id == pass_id && params.get("number").is_some())), "the inserted operator recorded its declared default");
@@ -2310,6 +2345,7 @@ fn an_inserted_operator_wired_into_a_defaulted_input_evaluates_its_wire() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn set_neuron_params_merges_into_eval_input() {
     let mut host = host_with_test_bridge();
     let preview_synapse = host.host_snapshot.synapses.iter().find(|synapse| synapse.from == "add" && synapse.to == "preview").map(|synapse| synapse.id.clone()).expect("preview synapse");
@@ -2341,6 +2377,7 @@ fn cluster_ports_from_contract() {
 }
 
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn variable_relay_evaluates_through_flow_host() {
     let mut host = host_with_test_bridge();
     let variable_id = host.add_widget(r#"{"kind":"variable","name":"width","schema":"number"}"#, 0.0, 0.0).unwrap();
@@ -2355,7 +2392,7 @@ fn variable_relay_evaluates_through_flow_host() {
 
 #[test]
 fn collapse_uses_variable_name_as_cluster_input_port() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.host_snapshot.layout.insert("slider".into(), WidgetLayout { x: 0.0, y: 0.0 });
     let variable_id = host.add_widget(r#"{"kind":"variable","name":"width","schema":"number"}"#, 100.0, 0.0).unwrap();
     host.host_snapshot.layout.insert("add".into(), WidgetLayout { x: 200.0, y: 0.0 });
@@ -2383,7 +2420,7 @@ fn collapse_uses_variable_name_as_cluster_input_port() {
 
 #[test]
 fn collapse_then_explode_round_trips() {
-    let mut host = host_with_test_bridge();
+    let mut host = host_with_test_fixture();
     host.host_snapshot.layout.insert("slider".into(), WidgetLayout { x: 0.0, y: 0.0 });
     host.host_snapshot.layout.insert("add".into(), WidgetLayout { x: 200.0, y: 0.0 });
     host.rebuild_dag();
@@ -2400,7 +2437,7 @@ fn collapse_then_explode_round_trips() {
 
 #[test]
 fn compiled_wire_literal_includes_operator_kinds() {
-    let host = host_with_test_bridge();
+    let host = host_with_test_fixture();
     let text = host.compiled_wire_literal();
     assert!(text.contains("core.number"));
     assert!(text.contains("math.add"));
@@ -2483,6 +2520,7 @@ fn test_extension_kind_infos_json() -> String {
 
 /// 🌊️ The default fixture plus two INDEPENDENT contributed nodes hanging off `add` — the flow-host
 /// shape of one topological wave.
+#[cfg(not(target_arch = "wasm32"))]
 fn host_with_two_extension_siblings() -> FlowHost {
     let mut host = FlowHost::default();
     host.set_eval_bridge_fn(Box::new(test_extension_bridge));
@@ -2519,6 +2557,7 @@ fn census_nodes_done(status_json: &str) -> usize {
 /// `1.0`: a progress bar that only ever reads "nothing yet" and then "done"
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn the_node_census_advances_as_a_chain_walks_and_never_calls_a_recomputed_node_stale() {
     let (mut host, _pass_id) = host_with_two_node_chain();
     host.set_slider_value("slider", 12.0);
@@ -2540,6 +2579,7 @@ fn the_node_census_advances_as_a_chain_walks_and_never_calls_a_recomputed_node_s
 /// ⚖️ LAW: a coalesced tick parks a whole wave AND paints every member of it `computing` — the
 /// census names what is outstanding at a plugin right now, never just the head of the remaining list.
 #[test]
+#[cfg(not(target_arch = "wasm32"))]
 fn a_coalesced_tick_parks_a_whole_wave_and_paints_every_member_computing() {
     let mut host = host_with_two_extension_siblings();
     let remaining = host.evaluate_step(flow_eval_tick_budget(None),&|_|true);

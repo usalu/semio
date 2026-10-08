@@ -6,7 +6,7 @@ scalar Int64
 scalar UInt16
 "Unsigned octet value."
 scalar UInt8
-"Logical unsigned32 character code."
+"Unsigned 32-bit logical word."
 scalar UInt
 
 type PdfSnapshot {
@@ -404,7 +404,7 @@ type PdfFunction {
   order: Int
   encode: [Float!]
   decode: [Float!]
-  samples: [Int!]
+  samples: [UInt!]
   c0: [Float!]
   c1: [Float!]
   n: Float
@@ -1285,7 +1285,7 @@ input PdfFunctionInput {
   order: Int
   encode: [Float!]
   decode: [Float!]
-  samples: [Int!]
+  samples: [UInt!]
   c0: [Float!]
   c1: [Float!]
   n: Float

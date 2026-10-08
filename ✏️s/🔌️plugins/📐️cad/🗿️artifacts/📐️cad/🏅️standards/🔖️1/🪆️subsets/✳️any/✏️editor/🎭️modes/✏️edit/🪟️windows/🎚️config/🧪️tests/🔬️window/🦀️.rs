@@ -1,5 +1,5 @@
 use super::*;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{Mutation, OpBinary, OpText};
 
 fn block_on_cad_window_ownership<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);
@@ -20,10 +20,10 @@ fn cad_document_contract_world_window_config_matches_neutral_fixture_and_codecs(
     assert_eq!(base, CadWorldWindowConfig::default());
     let mut next = base.clone();
     next.camera.zoom = fixture["patchedZoom"].as_f64().expect("patched zoom");
-    let mutation = CadWorldWindowConfigMutation::Snapshot { config: Box::new(next.clone()) };
-    let after = mutation.diff(&base).diff().apply(&base).expect("window config diff");
+    let mutation = CadWorldWindowConfigMutation::Set { config: Box::new(next.clone()) };
+    let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("window config diff");
     assert_eq!(after, next);
-    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("window config inverse"));
+    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().fold(after, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).expect("window config inverse"));
     assert_eq!(restored, base);
     assert_eq!(CadWorldWindowConfigMutation::parse_op(&mutation.print_op()).expect("text mutation"), mutation);
     assert_eq!(CadWorldWindowConfigMutation::decode_op(&mutation.encode_op().expect("binary mutation")).expect("decoded mutation"), mutation);
@@ -358,4 +358,14 @@ fn cad_reloaded_window_config_app_reaches_its_exact_terminal_close_witness() {
         .expect("spawn CAD window config reload close law")
         .join()
         .expect("CAD window config reload close law thread");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn cad_world_window_config_inverse_sums_to_the_negative_diff() {
+    let base = CadWorldWindowConfig::default();
+    let mut next = base.clone();
+    next.camera.zoom = 2.5;
+    next.dislocate_options.move_enabled = false;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&CadWorldWindowConfigMutation::Set { config: Box::new(next.clone()) }, &base).await;
+    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<CadWorldWindowConfig, CadWorldWindowConfigDiff>(&base, &next).await;
 }

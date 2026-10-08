@@ -1,7 +1,8 @@
 //! Diff for `change-beam-stud-diameter-m`.
 use super::ChangeBeamStudDiameterM;
-use crate::diff::En1994BeamList;
-use crate::{En1994Diff, En1994Snapshot};
+use crate::{En1994Snapshot};
+use crate::diff::{En1994Diff, En1994BeamsRows, En1994BeamsPatch};
+
 pub fn diff(payload: &ChangeBeamStudDiameterM, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
     if !payload.new_diameter_m.is_finite() || payload.new_diameter_m <= 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", "must be positive finite", [payload.index.to_string()]);
@@ -12,7 +13,8 @@ pub fn diff(payload: &ChangeBeamStudDiameterM, base: &En1994Snapshot) -> protoco
     if beam.studs.diameter_m == payload.new_diameter_m {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "unchanged");
     }
-    let mut beams = base.beams.clone();
-    beams[payload.index].studs.diameter_m = payload.new_diameter_m;
-    protocol::MutationOutcome::new(En1994Diff { beams: Some(En1994BeamList { values: beams }), ..Default::default() })
+    protocol::MutationOutcome::new(En1994Diff {
+        beams: Some(En1994BeamsRows { modified: vec![En1994BeamsPatch { index: payload.index, studs_diameter_m: Some(payload.new_diameter_m), ..Default::default() }], ..Default::default() }),
+        ..Default::default()
+    })
 }

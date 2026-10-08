@@ -61,9 +61,9 @@ async fn field_sweep() {
     let b = sweep_b();
 
     let forward = SemioCadDiff::between(&a, &b);
-    assert_eq!(forward.apply(&a).expect("apply must succeed for a well-formed fixture"), b, "between(a,b).apply(a) must equal b");
+    assert_eq!(protocol::apply_diff(&forward, &a).expect("apply must succeed for a well-formed fixture"), b, "between(a,b).apply(a) must equal b");
     let backward = SemioCadDiff::between(&b, &a);
-    assert_eq!(backward.apply(&b).expect("apply must succeed for a well-formed fixture"), a, "between(b,a).apply(b) must equal a");
+    assert_eq!(protocol::apply_diff(&backward, &b).expect("apply must succeed for a well-formed fixture"), a, "between(b,a).apply(b) must equal a");
     assert!(SemioCadDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
     let layers_diff = forward.layers.as_ref().expect("layers diff present");
@@ -116,8 +116,8 @@ async fn absorb_law() {
     let absorbed = assert_absorb_matches_sequential(&base, d1, d2);
     let entities_diff = absorbed.entities.as_ref().expect("entities diff");
     assert!(entities_diff.modified.is_empty(), "edit-after-insert must patch into added, not appear as modified");
-    let added_entity = entities_diff.added.iter().find(|e| e.handle == "e-fresh").expect("e-fresh still in added");
-    assert_eq!(added_entity.layer, "layer-remove");
+    let added_entity = entities_diff.added.iter().find(|e| e.item.handle == "e-fresh").expect("e-fresh still in added");
+    assert_eq!(added_entity.item.layer, "layer-remove");
 
     // Modify+Remove: edit a block's base_point, then remove that same block -- must annihilate
     // to a plain removal, not a dangling modify+remove pair.
@@ -130,9 +130,9 @@ async fn absorb_law() {
 
     // Associativity: absorb(absorb(d1,d2),d3) == absorb(d1,absorb(d2,d3)).
     let d1 = wrap_layer_diff("keep", CadLayerDiff { color_index: Some(42), line_type: None, visible: None });
-    let mid1 = d1.apply(&base).expect("apply must succeed for a well-formed fixture");
+    let mid1 = protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture");
     let d2 = SemioCadDiff { layers: Some(CadLayersDiff { removed: Vec::new(), modified: Vec::new(), added: vec![CadLayer { name: "assoc".into(), color_index: 1, line_type: "CONTINUOUS".into(), visible: true }] }), blocks: None, entities: None };
-    let _mid2 = d2.apply(&mid1).expect("apply must succeed for a well-formed fixture");
+    let _mid2 = protocol::apply_diff(&d2, &mid1).expect("apply must succeed for a well-formed fixture");
     let d3 = wrap_layer_diff("assoc", CadLayerDiff { color_index: None, line_type: Some("DASHED".into()), visible: None });
 
     let mut left = d1.clone();
@@ -144,15 +144,15 @@ async fn absorb_law() {
     let mut right = d1;
     MutationDiff::absorb(&mut right, d2_d3);
 
-    assert_eq!(left.apply(&base).expect("apply must succeed for a well-formed fixture"), right.apply(&base).expect("apply must succeed for a well-formed fixture"), "absorb must be associative");
+    assert_eq!(protocol::apply_diff(&left, &base).expect("apply must succeed for a well-formed fixture"), protocol::apply_diff(&right, &base).expect("apply must succeed for a well-formed fixture"), "absorb must be associative");
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_absorb_matches_sequential(base: &SemioCadSnapshot, d1: SemioCadDiff, d2: SemioCadDiff) -> SemioCadDiff {
-    let sequential = d2.apply(&d1.apply(base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
     let mut absorbed = d1;
     MutationDiff::absorb(&mut absorbed, d2);
-    assert_eq!(absorbed.apply(base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb(d1,d2).apply(base) must equal sequential application");
+    assert_eq!(protocol::apply_diff(&absorbed, base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb(d1,d2).apply(base) must equal sequential application");
     absorbed
 }
 //#endregion
@@ -164,9 +164,9 @@ async fn between_roundtrip_law() {
     let a = sweep_a();
     let b = sweep_b();
     let d = SemioCadDiff::between(&a, &b);
-    assert_eq!(d.apply(&a).expect("apply must succeed for a well-formed fixture"), b);
+    assert_eq!(protocol::apply_diff(&d, &a).expect("apply must succeed for a well-formed fixture"), b);
     let d_back = SemioCadDiff::between(&b, &a);
-    assert_eq!(d_back.apply(&b).expect("apply must succeed for a well-formed fixture"), a);
+    assert_eq!(protocol::apply_diff(&d_back, &b).expect("apply must succeed for a well-formed fixture"), a);
     assert!(SemioCadDiff::between(&a, &a).is_empty());
 }
 //#endregion

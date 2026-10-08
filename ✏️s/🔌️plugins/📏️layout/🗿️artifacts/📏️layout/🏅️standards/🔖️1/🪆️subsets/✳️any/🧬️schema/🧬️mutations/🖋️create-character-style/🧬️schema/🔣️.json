@@ -44,6 +44,30 @@
         "group": "identity",
         "order": 20
       }
+    },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "format": "uint64",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based insertion position among the character styles; empty or past the end appends.",
+          "de": "Nullbasierte Einfügeposition unter den Zeichenformaten; leer oder dahinter hängt an."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "placement",
+        "order": 30
+      }
     }
   }
 }

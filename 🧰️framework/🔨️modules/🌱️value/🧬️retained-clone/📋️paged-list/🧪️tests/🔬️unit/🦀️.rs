@@ -24,7 +24,9 @@ struct DropProbeRetirement {
 }
 
 impl RetirementCursor for DropProbeRetirement {
-    fn close_step(&mut self, maximum_bytes: usize) -> RetirementStep {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
+        if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
+        let maximum_bytes = grant.maximum_release_bytes;
         if self.released {
             return RetirementStep::Complete;
         }

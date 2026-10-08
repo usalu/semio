@@ -15,6 +15,7 @@ pub struct CreateLayer {
     pub page_id: String,
     pub id: String,
     pub name: String,
+    pub index: Option<usize>,
     #[value(default)]
     pub remove: bool,
 }
@@ -53,17 +54,22 @@ pub fn diff_create_layer(payload: &CreateLayer, base: &LayoutSnapshot) -> protoc
         return protocol::MutationOutcome::fatal("mutation.invariant", "A page holds at most 16 layers, and each new layer needs a fresh id and a short name.", std::iter::empty::<String>());
     }
     let layer = Layer { id: payload.id.clone(), name: payload.name.clone(), visible: true, locked: false, object_ids: Vec::new() };
-    protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.page_id.clone(), patch: PagePatch { layer_added: Some(layer), ..Default::default() } }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { patched: vec![LayoutPagePatchEntry { id: payload.page_id.clone(), patch: PagePatch { layer_added: Some(crate::PageLayerAdded { layer, index: payload.index }), ..Default::default() } }], ..Default::default() }), ..Default::default() })
 }
 
 pub fn inverse_create_layer(payload: &CreateLayer, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
     Ok((|| {
     if payload.remove {
         let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else { return Vec::new() };
-        let Some(layer) = page.layers.iter().find(|layer| layer.id == payload.id) else { return Vec::new() };
-        return vec![LayoutMutation::CreateLayer(CreateLayer { page_id: payload.page_id.clone(), id: layer.id.clone(), name: layer.name.clone(), remove: false })];
+        let Some(at) = page.layers.iter().position(|layer| layer.id == payload.id) else { return Vec::new() };
+        let layer = &page.layers[at];
+        let mut steps = vec![LayoutMutation::CreateLayer(CreateLayer { page_id: payload.page_id.clone(), id: layer.id.clone(), name: layer.name.clone(), index: Some(at), remove: false })];
+        if !layer.visible || layer.locked {
+            steps.push(LayoutMutation::UpdateLayer(crate::mutations::update_layer::UpdateLayer { page_id: payload.page_id.clone(), layer_id: layer.id.clone(), name: layer.name.clone(), visible: layer.visible, locked: layer.locked }));
+        }
+        return steps;
     }
-    vec![LayoutMutation::CreateLayer(CreateLayer { page_id: payload.page_id.clone(), id: payload.id.clone(), name: payload.name.clone(), remove: true })]
+    vec![LayoutMutation::CreateLayer(CreateLayer { page_id: payload.page_id.clone(), id: payload.id.clone(), name: payload.name.clone(), index: None, remove: true })]
 
     })())
 }

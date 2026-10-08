@@ -62,3 +62,15 @@ impl protocol::MutationKind<RemodelingSnapshot, RemodelingMutation> for CommitRe
     }
 }
 //#endregion 🔖️Mutation
+
+/// 🔗️ The commit that rebinds asset `id` to durable content `content_id` (or unbinds it) and leaves every result lane exactly as `base` holds it — the absolute setter the asset kinds' inverses restore a handle with.
+pub fn rebind_asset(base: &RemodelingSnapshot, id: &str, content_id: Option<&str>) -> RemodelingMutation {
+    commit_reconstruction(CommitReconstruction {
+        sparse: base.results.sparse.clone(),
+        trajectory: base.results.trajectory.clone(),
+        mesh: Some(Box::new(base.results.mesh.clone())),
+        geo: base.results.geo.clone(),
+        qc: base.results.qc.clone(),
+        assets: vec![ReconstructionAssetCommit { id: id.to_string(), content_id: content_id.map(str::to_string) }],
+    })
+}

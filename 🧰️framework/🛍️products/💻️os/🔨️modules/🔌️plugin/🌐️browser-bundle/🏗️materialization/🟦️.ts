@@ -20,6 +20,7 @@ import { COMMAND_INGRESS_KINDS } from "../🧵️child/🧬️schema/🟦️.ts"
 import { preparedBinaryen } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
 import { resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
+import { classifyGuestLogLine } from "../🌐️wasi/🟦️.ts";
 import { actorCodecAnswer } from "../../../../../../🔨️modules/🎭️actor/📮️shard-client/🧬️component-codec/🟦️.ts";
 import { APP_CHANNEL_VERSION, admitGuestChannelVersion } from "../../../../🟦️.ts";
 export { PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
@@ -119,7 +120,7 @@ export function ensurePreview2ShimVendorAt(preview2VendorDir: string, repoRoot: 
 export function patchPreview2ShimGuestLogClassification(cliPath: string): void {
   const source = readFileSync(cliPath, "utf8");
   const original = "consoleStream((line) => console.error(line))";
-  const classified = 'consoleStream((line) => line.startsWith("[TRACE]") ? console.debug(line) : console.error(line))';
+  const classified = `consoleStream((line) => (${classifyGuestLogLine.toString()})("stderr", line) === "debug" ? console.debug(line) : console.error(line))`;
   const originalCount = source.split(original).length - 1, classifiedCount = source.split(classified).length - 1;
   if (originalCount === 0 && classifiedCount === 2) return;
   if (originalCount !== 2 || classifiedCount !== 0) throw new Error(`preview2 cli.js guest-log patch did not match: ${cliPath}`);

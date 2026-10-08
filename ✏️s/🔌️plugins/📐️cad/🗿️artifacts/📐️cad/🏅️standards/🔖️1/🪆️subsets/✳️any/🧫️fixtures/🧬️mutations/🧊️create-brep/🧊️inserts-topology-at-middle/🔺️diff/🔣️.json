@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "shapeModel": null,
@@ -8,18 +7,7 @@
   "structureClassicModel": null,
   "drawings": null,
   "breps": {
-    "values": [
-      {
-        "childId": "brep-first",
-        "target": {
-          "artifactId": "topology-first",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "brep"
-          }
-        }
-      },
+    "added": [
       {
         "childId": "brep-middle",
         "target": {
@@ -30,18 +18,13 @@
             "subset": "brep"
           }
         }
-      },
-      {
-        "childId": "brep-last",
-        "target": {
-          "artifactId": "topology-last",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "brep"
-          }
-        }
       }
+    ],
+    "removed": [],
+    "reordered": [
+      "brep-first",
+      "brep-middle",
+      "brep-last"
     ]
   },
   "referencesByModelDefinitionId": null,

@@ -31,9 +31,10 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
+    use semio_s_artifact_stdio_semio::apply_diff;
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::mutations::{apply_semio_animation_mutation, inverse_semio_animation_mutation, set_snapshot, SemioAnimationMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::mutations::{diff_semio_animation_mutation, inverse_semio_animation_mutation, SemioAnimationMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::io::text::mutations::{decode_semio_animation_mutation_json};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::io::text::snapshot::{print_semio_animation_dsl};
@@ -139,13 +140,7 @@ mod subject {
         Ok(SemioAnimationSnapshot { schema: text(value, "schema")?, timelines: list(value, "timelines")?.iter().map(timeline_of).collect::<Result<Vec<_>, String>>()? })
     }
 
-    /// 🦠️ A committed wire value (`{"mutation": "<camelCaseVariant>", …}`), decoded through this subset's own
-    /// production JSON bridge. `noMutation` is the `no-mutation` baselines' scenario sentinel — the dropped `NoMutation`
-    /// verb's spelling, `no` not being an approved verb — and maps to the identity `set-snapshot(base)`.
     fn mutation_of(wire: &Json, base: &SemioAnimationSnapshot) -> Result<SemioAnimationMutation, String> {
-        if matches!(wire.get("mutation"), Some(Json::String(tag)) if tag.as_str() == "noMutation") {
-            return Ok(SemioAnimationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }));
-        }
         decode_semio_animation_mutation_json(&wire.to_string())
     }
     //#endregion 🔖️FixtureDecoding
@@ -253,9 +248,10 @@ mod subject {
     }
 
     fn run(current: &mut SemioAnimationSnapshot, mutation: &SemioAnimationMutation, what: &str) -> Result<(), String> {
-        let applied = apply_semio_animation_mutation(current, mutation);
+        let applied = diff_semio_animation_mutation(mutation, current);
         let refusals = semio_mutation_refusals(&applied);
         if refusals.is_empty() {
+            *current = apply_diff(applied.diff(), current).map_err(|error| format!("the diff could not be applied: {error:?}"))?;
             return Ok(());
         }
         Err(format!("{what}: mutation rejected: {refusals:?}"))
@@ -281,7 +277,7 @@ mod subject {
         let mut current = base.clone();
         run(&mut current, &mutation, ctx.scenario.id.as_str())?;
         let mutated = snapshot_json(&current);
-        for step in &inverse_semio_animation_mutation(&mutation, &base).expect("valid retained mutation inverse fixture") {
+        for step in inverse_semio_animation_mutation(&mutation, &base).expect("valid retained mutation inverse fixture").iter().rev() {
             run(&mut current, step, ctx.scenario.id.as_str())?;
         }
         if current != base {
@@ -323,7 +319,7 @@ mod subject {
         if twice != once {
             return Err(disagreement("identity-round-trip: re-parsing the printed DSL did not reproduce the parsed snapshot", &twice, &once));
         }
-        let (declared, _mutation, _after) = vector_of(ctx, "no-mutation")?;
+        let (declared, _mutation, _after) = vector_of(ctx, "insert-timeline")?;
         if once != declared {
             return Err(disagreement("identity-round-trip: the real committed walk artifact does not decode to the before-snapshot every specification vector starts from", &once, &declared));
         }
@@ -347,8 +343,8 @@ pub fn adapter() -> Adapter {
     #[cfg(feature = "sut")]
     {
         built = built
-            .subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate)
-            .subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse)
+            .subject("mutate", subject::mutate)
+            .subject("inverse", subject::inverse)
             .subject("spec-vector", subject::spec_vector);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }

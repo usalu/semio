@@ -8,8 +8,8 @@ use crate::EnergyModelSnapshot;
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
 pub fn inverse(payload: &super::DeleteSizingObject, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    match base.model.sizing_objects.iter().find(|item| item.id == payload.id) {
-        Some(item) => vec![vocabulary::create_sizing_object(item.id, item.zone_id, item.sizing_type, item.design_day_type)],
+    match base.model.sizing_objects.iter().enumerate().find(|(_, item)| item.id == payload.id) {
+        Some((index, item)) => vec![vocabulary::create_sizing_object(item.id, item.zone_id, item.sizing_type, item.design_day_type, Some(index as u32))],
         _ => Vec::new(),
     }
 

@@ -348,22 +348,25 @@ def moved_lanes(before, after):
 
 
 def declared_lanes(diff):
+    """🧭️ The lanes a committed diff declares: ordered input ops (a resize moves the extent AND relays the pixels), ordered palette ops, scalar lanes and pin rows."""
     lanes = set()
     if diff.get("schema") is not None:
         lanes.add("schema")
     if diff.get("seed") is not None:
         lanes.add("seed")
-    if diff.get("inputWidth") is not None or diff.get("inputHeight") is not None:
-        lanes.add("inputExtent")
-    if diff.get("inputPixels") is not None or diff.get("inputRegions"):
-        lanes.add("inputPixels")
-    if diff.get("palette") is not None:
+    for operation in diff.get("inputOps", []):
+        if operation["op"] == "resize":
+            lanes.update(("inputExtent", "inputPixels"))
+        else:
+            lanes.add("inputPixels")
+    if diff.get("paletteOps"):
         lanes.add("palette")
     if diff.get("output") is not None:
         lanes.add("output")
     if diff.get("model") is not None:
         lanes.add("model")
-    if diff.get("pinnedRemoved") or diff.get("pinnedUpserted"):
+    pinned = diff.get("pinned", {})
+    if pinned.get("removed") or pinned.get("added") or pinned.get("patched"):
         lanes.add("pinned")
     return lanes
 

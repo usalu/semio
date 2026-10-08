@@ -8,8 +8,8 @@ use crate::ProgramSnapshot;
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::DeleteValidationRecord, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    match base.validations.iter().find(|row| row.header.id == payload.id) {
-        Some(existing) => vec![ProgramMutation::CreateValidationRecord(super::super::create_validation_record::CreateValidationRecord { validation_record: existing.clone() })],
+    match base.validations.iter().position(|row| row.header.id == payload.id) {
+        Some(position) => vec![ProgramMutation::CreateValidationRecord(super::super::create_validation_record::CreateValidationRecord { validation_record: base.validations[position].clone(), index: Some(position) })],
         None => Vec::new(),
     }
 

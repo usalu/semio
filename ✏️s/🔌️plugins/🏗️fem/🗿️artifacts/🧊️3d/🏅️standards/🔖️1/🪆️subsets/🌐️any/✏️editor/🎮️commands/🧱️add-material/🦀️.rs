@@ -20,6 +20,6 @@ pub fn handle(payload: &AddMaterial, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.materials.iter().map(|m| m.id.clone()), "m");
     Ok(Emit::mutations(vec![Fem3dMutation::CreateMaterial(crate::standards::v1::subsets::any::schema::mutations::create_material::CreateMaterial {
-        material: crate::FemMaterial { id, name: payload.name.clone(), e: payload.e, g: payload.g, nu: 0.3, rho: 7850.0 },
+        material: crate::FemMaterial { id, name: payload.name.clone(), e: payload.e, g: payload.g, nu: 0.3, rho: 7850.0 }, index: None,
     })]))
 }

@@ -15,7 +15,7 @@
 //! TEMPERATURES, HOLIDAYS/DAYLIGHT SAVINGS, COMMENTS 1, COMMENTS 2, DATA PERIODS) are
 //! EnergyPlus-specific grammar `csv` knows nothing about — it splits comma-separated cells, not
 //! EPW field MEANING, and no third-party crate validates that meaning here (`epw-rs` is alpha and
-//! read-only, rejected per the fleet brief's §6). `set-snapshot`/`set-location`/
+//! read-only, rejected per the fleet brief's §6). `set-location`/
 //! `set-design-conditions`/`set-typical-extreme-periods`/`set-ground-temperatures`/
 //! `set-holidays-dst`/`set-comments1`/`set-comments2`/`set-data-periods` are performed by this
 //! module writing the header bytes itself (hand-rolled, independent of the subject crate — this
@@ -253,7 +253,7 @@ fn record_wire(cells: &[String]) -> Json {
     json_object(EPW_RECORD_COLUMNS.iter().enumerate().map(|(index, column)| (*column, Json::String(cells.get(index).cloned().unwrap_or_default()))).collect())
 }
 
-/// 📸️ The `EpwSnapshot` wire (`set-snapshot`'s payload) of EPW bytes, read independently of the subject codec: `schema` is
+/// 📸️ The `EpwSnapshot` wire of EPW bytes, read independently of the subject codec: `schema` is
 /// the `stdio.epw` document schema id, the header lines as [`project_epw`] reads them, every record as [`record_wire`].
 #[cfg(feature = "oracles")]
 pub fn epw_snapshot_wire(bytes: &[u8]) -> Result<Json, String> {
@@ -287,21 +287,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
-        "set-snapshot" => {
-            let snapshot = params.get("snapshot").cloned().unwrap_or(Json::Null);
-            let header: [String; 8] = [
-                location_line(&snapshot.get("location").cloned().unwrap_or(Json::Null)),
-                snapshot.str("designConditions"),
-                snapshot.str("typicalExtremePeriods"),
-                snapshot.str("groundTemperatures"),
-                snapshot.str("holidaysDst"),
-                snapshot.str("comments1"),
-                snapshot.str("comments2"),
-                data_periods_line(&snapshot.get("dataPeriods").cloned().unwrap_or(Json::Null)),
-            ];
-            let records = snapshot.array("records").iter().map(record_cells).collect();
-            encode_doc(&EpwDoc { header, records })
-        }
         "set-location" => {
             let mut doc = parse_doc(input)?;
             doc.header[0] = location_line(&params.get("location").cloned().unwrap_or(Json::Null));
@@ -370,10 +355,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             }
             record[field_index] = value;
             encode_doc(&doc)
-        }
-        "patch-snapshot" => {
-            let patched = semio_repo_test_host::law::patched_snapshot(&epw_snapshot_wire(input)?, params.get("patch").ok_or("patch-snapshot: missing `patch`")?)?;
-            oracle_apply_mutation(input, &json_object(vec![("kind", Json::String("set-snapshot".to_string())), ("params", json_object(vec![("snapshot", patched)]))]))
         }
         kind => Err(format!("mutation kind {kind:?} has no oracle implementation ({} input byte(s))", input.len())),
     }

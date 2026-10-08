@@ -33,7 +33,7 @@ use crate::editor::model::panels::artifact as artifact_panel;
 use crate::editor::model::panels::inspection as inspection_panel;
 use crate::editor::model::modes::edit::windows::{model as model_window, simulation, structure, zones};
 use crate::energy_simulation_session::EnergySimulationRunJob;
-use crate::model::{EntityId, Material, OutsideBoundary, ScheduleId, Site, Surface, SurfaceClass, Thermostat, Zone};
+use crate::model::{EntityId, Material, OutsideBoundary, ScheduleId, SurfaceClass, Zone};
 use crate::mutations;
 use crate::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use semio_framework::kernel::UiDirtyScope;
@@ -461,99 +461,6 @@ impl protocol::OpBinary for EnergyModelEditorCommand {
 //#endregion 🔖️OpCodec
 //#endregion 🔖️Command
 
-//#region 🧬️MutationSeam
-/// 🧬️ THE single seam between an editor command and this artifact's semantic mutation vocabulary.
-/// `kind` is the ledger name from the ticket's `📓️mutation-tag-ledger.md`, kept for the fault a
-/// not-yet-landed group raises; every history row is labelled by its leaves (`SemanticMutation::label`). The seam translates the edited `Model` into the
-/// granular semantic steps that produced it — there is no whole-document replace to fall back on
-/// (`📓️derivation-rules.md` rule 6). Every field this vocabulary does not yet name is caught by the
-/// exhaustive `probe` comparison below and refused LOUDLY, so a group's missing kind can never be
-/// swallowed as a silent no-op.
-fn model_edit(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model) -> Result<Emit<EnergyModelMutation, EnergyModelConfigMutation>, Fault> {
-    let mut steps = Vec::new();
-    if base.name != model.name {
-        steps.push(mutations::rename_model(model.name.clone()));
-    }
-    if base.version != model.version {
-        steps.push(mutations::change_model_version(model.version.clone()));
-    }
-    let (was, now) = (&base.site, &model.site);
-    let site = [
-        (was.latitude_deg != now.latitude_deg).then(|| mutations::change_site_latitude(now.latitude_deg)),
-        (was.longitude_deg != now.longitude_deg).then(|| mutations::change_site_longitude(now.longitude_deg)),
-        (was.elevation_m != now.elevation_m).then(|| mutations::change_site_elevation(now.elevation_m)),
-        (was.time_zone_hours != now.time_zone_hours).then(|| mutations::change_site_time_zone(now.time_zone_hours)),
-        (was.north_axis_deg != now.north_axis_deg).then(|| mutations::change_site_north_axis(now.north_axis_deg)),
-    ];
-    steps.extend(site.into_iter().flatten());
-    steps.extend(run_period_steps(base.run_period, model.run_period));
-    let (was, now) = (&base.ground_temperature, &model.ground_temperature);
-    for (month, (before, after)) in (1u8..).zip(was.building_surface_c.iter().zip(&now.building_surface_c)) {
-        if before != after {
-            steps.push(mutations::change_ground_building(month, *after));
-        }
-    }
-    for (month, (before, after)) in (1u8..).zip(was.shallow_c.iter().zip(&now.shallow_c)) {
-        if before != after {
-            steps.push(mutations::change_ground_shallow(month, *after));
-        }
-    }
-    if was.deep_c != now.deep_c {
-        steps.push(mutations::change_ground_deep(now.deep_c));
-    }
-    if base.airflow_network != model.airflow_network {
-        steps.push(match &model.airflow_network {
-            Some(network) => mutations::replace_airflow_network(true, network.zone_node_ids.iter().map(|(zone, _)| zone.0).collect(), network.zone_node_ids.iter().map(|(_, node)| *node).collect(), network.outdoor_node_id, network.link_ids.clone()),
-            None => mutations::replace_airflow_network(false, Vec::new(), Vec::new(), 0, Vec::new()),
-        });
-    }
-    for was in &base.output_variables {
-        if !model.output_variables.iter().any(|now| now.name == was.name && now.key == was.key) {
-            steps.push(mutations::remove_output_variable(was.name.clone(), was.key.clone()));
-        }
-    }
-    for now in &model.output_variables {
-        if !base.output_variables.iter().any(|was| was.name == now.name && was.key == now.key) {
-            steps.push(mutations::add_output_variable(now.name.clone(), now.key.clone(), now.reporting_frequency));
-        }
-    }
-    let projected_zones = diff_zones(base, model, &mut steps);
-    let projected_surfaces = diff_surfaces(base, model, &mut steps);
-    let projected_fenestrations = diff_fenestrations(base, model, &mut steps);
-    let projected_materials = diff_materials(kind, base, model, &mut steps)?;
-    let projected_glazing = diff_glazing_materials(kind, base, model, &mut steps)?;
-    let projected_gases = diff_gas_materials(kind, base, model, &mut steps)?;
-    let projected_constructions = diff_constructions(kind, base, model, &mut steps)?;
-    let projected_thermostats = diff_thermostats(kind, base, model, &mut steps)?;
-    let mut probe = base.clone();
-    probe.name = model.name.clone();
-    probe.version = model.version.clone();
-    probe.site = model.site;
-    probe.run_period = model.run_period;
-    probe.ground_temperature = model.ground_temperature.clone();
-    probe.airflow_network = model.airflow_network.clone();
-    probe.output_variables = model.output_variables.clone();
-    // 🔬️ Projections, never clones: every collection below reports back exactly the fields its diff
-    // emitted a step for, so an undiffed field makes `probe != *model` and faults LOUDLY through
-    // `kind_unavailable` instead of being swallowed as a silent no-op.
-    probe.zones = projected_zones;
-    probe.surfaces = projected_surfaces;
-    // 🪟️ NOT `model.fenestrations.clone()`: the projection [`diff_fenestrations`] returns carries
-    // exactly the fields it emitted a mutation for, so a Fenestration field no diff step names makes
-    // `probe != *model` and faults LOUDLY through `kind_unavailable` instead of vanishing.
-    probe.fenestrations = projected_fenestrations;
-    probe.adjacency_pairs = model.adjacency_pairs.clone();
-    probe.materials = projected_materials;
-    probe.glazing_materials = projected_glazing;
-    probe.gas_materials = projected_gases;
-    probe.constructions = projected_constructions;
-    probe.thermostats = projected_thermostats;
-    if probe != *model {
-        return Err(kind_unavailable(kind, kind));
-    }
-    Ok(Emit { artifact_mutations: steps, ..Default::default() })
-}
-
 /// 📅️ The run-period field leaves that carry `was` to `now`, ordered so every intermediate period is a calendar interval
 /// whenever such an order exists — a field leaf refuses a period whose bounds disagree (`mutation.target-mismatch`), so
 /// moving a whole period later sets its end before its start.
@@ -605,47 +512,6 @@ fn orderings(items: &[usize]) -> Vec<Vec<usize>> {
         .collect()
 }
 
-/// 🏘️ Zones: a create/delete of the whole row plus the five per-field kinds. `create-zone`/
-/// `delete-zone` landed with the 100s group, so an identity change is no longer a refusal.
-fn diff_zones(base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Vec<Zone> {
-    for was in &base.zones {
-        if !model.zones.iter().any(|now| now.id == was.id) {
-            steps.push(mutations::delete_zone(was.id));
-        }
-    }
-    let mut projected = Vec::with_capacity(model.zones.len());
-    for now in &model.zones {
-        let Some(was) = base.zones.iter().find(|was| was.id == now.id) else {
-            steps.push(mutations::create_zone(now.id, now.name.clone(), now.volume_m3, now.multiplier, now.conditioned, now.part_of_total_floor_area));
-            projected.push(now.clone());
-            continue;
-        };
-        let mut carried = was.clone();
-        if was.name != now.name {
-            steps.push(mutations::rename_zone(now.id, now.name.clone()));
-            carried.name = now.name.clone();
-        }
-        if was.volume_m3 != now.volume_m3 {
-            steps.push(mutations::change_zone_volume(now.id, now.volume_m3));
-            carried.volume_m3 = now.volume_m3;
-        }
-        if was.multiplier != now.multiplier {
-            steps.push(mutations::change_zone_multiplier(now.id, now.multiplier));
-            carried.multiplier = now.multiplier;
-        }
-        if was.conditioned != now.conditioned {
-            steps.push(mutations::change_zone_conditioned(now.id, now.conditioned));
-            carried.conditioned = now.conditioned;
-        }
-        if was.part_of_total_floor_area != now.part_of_total_floor_area {
-            steps.push(mutations::change_zone_floor_area_participation(now.id, now.part_of_total_floor_area));
-            carried.part_of_total_floor_area = now.part_of_total_floor_area;
-        }
-        projected.push(carried);
-    }
-    projected
-}
-
 /// 🚧️ The interzone partner an `OutsideBoundary` carries — the boundary mutation names the tag
 /// through `OutsideBoundaryKind` and the partner through this separate optional id, because
 /// `dsl::DslScalar` binds unit variants only.
@@ -654,421 +520,6 @@ fn interzone_partner(boundary: OutsideBoundary) -> Option<EntityId> {
         OutsideBoundary::Interzone(partner) => Some(partner),
         _ => None,
     }
-}
-
-/// 🟫️ Surfaces and the two collections a surface delete cascades into. Order is load-bearing:
-/// every dependent (fenestration, adjacency pair) is disconnected BEFORE its surface disappears,
-/// and every create runs after every delete, so no intermediate document ever dangles a reference.
-fn diff_surfaces(base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Vec<Surface> {
-    for was in &base.fenestrations {
-        if !model.fenestrations.iter().any(|now| now.id == was.id) {
-            steps.push(mutations::delete_fenestration(was.id));
-        }
-    }
-    for was in &base.adjacency_pairs {
-        if !model.adjacency_pairs.iter().any(|now| now.surface_a_id == was.surface_a_id && now.surface_b_id == was.surface_b_id) {
-            steps.push(mutations::disconnect_surfaces(was.surface_a_id, was.surface_b_id));
-        }
-    }
-    for was in &base.surfaces {
-        if !model.surfaces.iter().any(|now| now.id == was.id) {
-            steps.push(mutations::delete_surface(was.id));
-        }
-    }
-    let mut projected = Vec::with_capacity(model.surfaces.len());
-    for now in &model.surfaces {
-        let Some(was) = base.surfaces.iter().find(|was| was.id == now.id) else {
-            steps.push(mutations::create_surface(
-                now.id,
-                now.name.clone(),
-                now.zone_id,
-                now.class,
-                now.vertices_m.clone(),
-                now.construction_id,
-                now.outside_boundary_condition.kind(),
-                interzone_partner(now.outside_boundary_condition),
-                now.sun_exposed,
-                now.wind_exposed,
-                now.multiplier,
-            ));
-            projected.push(now.clone());
-            continue;
-        };
-        let mut carried = was.clone();
-        if was.name != now.name {
-            steps.push(mutations::rename_surface(now.id, now.name.clone()));
-            carried.name = now.name.clone();
-        }
-        if was.zone_id != now.zone_id {
-            steps.push(mutations::change_surface_zone(now.id, now.zone_id));
-            carried.zone_id = now.zone_id;
-        }
-        if was.class != now.class {
-            steps.push(mutations::change_surface_class(now.id, now.class));
-            carried.class = now.class;
-        }
-        if was.vertices_m != now.vertices_m {
-            steps.push(mutations::replace_surface_vertices(now.id, now.vertices_m.clone()));
-            carried.vertices_m = now.vertices_m.clone();
-        }
-        if was.construction_id != now.construction_id {
-            steps.push(mutations::change_surface_construction(now.id, now.construction_id));
-            carried.construction_id = now.construction_id;
-        }
-        if was.outside_boundary_condition != now.outside_boundary_condition {
-            steps.push(mutations::change_surface_boundary_condition(now.id, now.outside_boundary_condition.kind(), interzone_partner(now.outside_boundary_condition)));
-            carried.outside_boundary_condition = now.outside_boundary_condition;
-        }
-        if was.sun_exposed != now.sun_exposed {
-            steps.push(mutations::change_surface_sun_exposed(now.id, now.sun_exposed));
-            carried.sun_exposed = now.sun_exposed;
-        }
-        if was.wind_exposed != now.wind_exposed {
-            steps.push(mutations::change_surface_wind_exposed(now.id, now.wind_exposed));
-            carried.wind_exposed = now.wind_exposed;
-        }
-        if was.multiplier != now.multiplier {
-            steps.push(mutations::change_surface_multiplier(now.id, now.multiplier));
-            carried.multiplier = now.multiplier;
-        }
-        projected.push(carried);
-    }
-    projected
-}
-
-/// 🪟️ Fenestrations: every scalar of the record, plus the optional glazing-construction binding.
-/// Deletion is already cascaded by [`diff_surfaces`] (a window is disconnected before its host
-/// surface disappears), so this function only creates and diffs.
-///
-/// 🔬️ It returns the PROJECTION of `base`'s fenestrations through exactly the steps it emitted —
-/// `model_edit`'s probe uses that instead of `model.fenestrations.clone()`, so a field this function
-/// forgets to name is caught by the probe comparison and refused loudly rather than silently
-/// dropped. That masking is the bug this ticket's exploration found: before this step a window
-/// u-value edit reduced cleanly and emitted NO mutation at all.
-fn diff_fenestrations(base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Vec<crate::model::Fenestration> {
-    let mut projected = Vec::with_capacity(model.fenestrations.len());
-    for now in &model.fenestrations {
-        let Some(was) = base.fenestrations.iter().find(|was| was.id == now.id) else {
-            steps.push(mutations::create_fenestration(
-                now.id,
-                now.name.clone(),
-                now.surface_id,
-                now.u_value_w_m2k,
-                now.shgc,
-                now.vlt,
-                now.area_m2,
-                now.height_m,
-                now.sill_height_m,
-                now.frame_conductance_w_k,
-                now.divider_conductance_w_k,
-                now.overhang_depth_m,
-                now.overhang_offset_m,
-                now.fin_depth_m,
-                now.fin_offset_m,
-                now.glazing_construction_id,
-            ));
-            // 🔶️ `create-fenestration` carries no polygon — a created window starts rectangular and
-            // its real corners, when it has any, follow as their own `replace-fenestration-vertices`.
-            let mut created = now.clone();
-            created.vertices_m = Vec::new();
-            if !now.vertices_m.is_empty() {
-                steps.push(mutations::replace_fenestration_vertices(now.id, now.vertices_m.clone()));
-                created.vertices_m = now.vertices_m.clone();
-            }
-            projected.push(created);
-            continue;
-        };
-        let mut carried = was.clone();
-        if was.name != now.name {
-            steps.push(mutations::rename_fenestration(now.id, now.name.clone()));
-            carried.name = now.name.clone();
-        }
-        if was.surface_id != now.surface_id {
-            steps.push(mutations::change_fenestration_surface(now.id, now.surface_id));
-            carried.surface_id = now.surface_id;
-        }
-        if was.u_value_w_m2k != now.u_value_w_m2k {
-            steps.push(mutations::change_fenestration_u_value(now.id, now.u_value_w_m2k));
-            carried.u_value_w_m2k = now.u_value_w_m2k;
-        }
-        if was.shgc != now.shgc {
-            steps.push(mutations::change_fenestration_shgc(now.id, now.shgc));
-            carried.shgc = now.shgc;
-        }
-        if was.vlt != now.vlt {
-            steps.push(mutations::change_fenestration_vlt(now.id, now.vlt));
-            carried.vlt = now.vlt;
-        }
-        if was.area_m2 != now.area_m2 {
-            steps.push(mutations::change_fenestration_area(now.id, now.area_m2));
-            carried.area_m2 = now.area_m2;
-        }
-        if was.height_m != now.height_m {
-            steps.push(mutations::change_fenestration_height(now.id, now.height_m));
-            carried.height_m = now.height_m;
-        }
-        if was.sill_height_m != now.sill_height_m {
-            steps.push(mutations::change_fenestration_sill_height(now.id, now.sill_height_m));
-            carried.sill_height_m = now.sill_height_m;
-        }
-        if was.frame_conductance_w_k != now.frame_conductance_w_k {
-            steps.push(mutations::change_fenestration_frame_conductance(now.id, now.frame_conductance_w_k));
-            carried.frame_conductance_w_k = now.frame_conductance_w_k;
-        }
-        if was.divider_conductance_w_k != now.divider_conductance_w_k {
-            steps.push(mutations::change_fenestration_divider_conductance(now.id, now.divider_conductance_w_k));
-            carried.divider_conductance_w_k = now.divider_conductance_w_k;
-        }
-        if was.overhang_depth_m != now.overhang_depth_m {
-            steps.push(mutations::change_fenestration_overhang_depth(now.id, now.overhang_depth_m));
-            carried.overhang_depth_m = now.overhang_depth_m;
-        }
-        if was.overhang_offset_m != now.overhang_offset_m {
-            steps.push(mutations::change_fenestration_overhang_offset(now.id, now.overhang_offset_m));
-            carried.overhang_offset_m = now.overhang_offset_m;
-        }
-        if was.fin_depth_m != now.fin_depth_m {
-            steps.push(mutations::change_fenestration_fin_depth(now.id, now.fin_depth_m));
-            carried.fin_depth_m = now.fin_depth_m;
-        }
-        if was.fin_offset_m != now.fin_offset_m {
-            steps.push(mutations::change_fenestration_fin_offset(now.id, now.fin_offset_m));
-            carried.fin_offset_m = now.fin_offset_m;
-        }
-        if was.vertices_m != now.vertices_m {
-            steps.push(mutations::replace_fenestration_vertices(now.id, now.vertices_m.clone()));
-            carried.vertices_m = now.vertices_m.clone();
-        }
-        if was.glazing_construction_id != now.glazing_construction_id {
-            steps.push(match now.glazing_construction_id {
-                Some(construction) => mutations::bind_fenestration_glazing_construction(now.id, construction),
-                None => mutations::clear_fenestration_glazing_construction(now.id),
-            });
-            carried.glazing_construction_id = now.glazing_construction_id;
-        }
-        projected.push(carried);
-    }
-    projected
-}
-
-/// 🧱️ The seven material scalars `set-material-property` addresses. No editor verb creates or
-/// deletes a material, so an identity change is still refused LOUDLY rather than masked by the
-/// probe below.
-fn diff_materials(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Result<Vec<Material>, Fault> {
-    if base.materials.iter().map(|material| material.id).ne(model.materials.iter().map(|material| material.id)) {
-        return Err(kind_unavailable(kind, "create-material / delete-material"));
-    }
-    let mut projected = Vec::with_capacity(model.materials.len());
-    for (was, now) in base.materials.iter().zip(&model.materials) {
-        let mut carried = was.clone();
-        if was.name != now.name {
-            steps.push(mutations::rename_material(now.id, now.name.clone()));
-            carried.name = now.name.clone();
-        }
-        if was.roughness != now.roughness {
-            steps.push(mutations::change_material_roughness(now.id, now.roughness));
-            carried.roughness = now.roughness;
-        }
-        if was.thickness_m != now.thickness_m {
-            steps.push(mutations::change_material_thickness(now.id, now.thickness_m));
-            carried.thickness_m = now.thickness_m;
-        }
-        if was.conductivity_w_m_k != now.conductivity_w_m_k {
-            steps.push(mutations::change_material_conductivity(now.id, now.conductivity_w_m_k));
-            carried.conductivity_w_m_k = now.conductivity_w_m_k;
-        }
-        if was.density_kg_m3 != now.density_kg_m3 {
-            steps.push(mutations::change_material_density(now.id, now.density_kg_m3));
-            carried.density_kg_m3 = now.density_kg_m3;
-        }
-        if was.specific_heat_j_kg_k != now.specific_heat_j_kg_k {
-            steps.push(mutations::change_material_specific_heat(now.id, now.specific_heat_j_kg_k));
-            carried.specific_heat_j_kg_k = now.specific_heat_j_kg_k;
-        }
-        if was.thermal_absorptance != now.thermal_absorptance {
-            steps.push(mutations::change_material_thermal_absorptance(now.id, now.thermal_absorptance));
-            carried.thermal_absorptance = now.thermal_absorptance;
-        }
-        if was.solar_absorptance != now.solar_absorptance {
-            steps.push(mutations::change_material_solar_absorptance(now.id, now.solar_absorptance));
-            carried.solar_absorptance = now.solar_absorptance;
-        }
-        if was.visible_absorptance != now.visible_absorptance {
-            steps.push(mutations::change_material_visible_absorptance(now.id, now.visible_absorptance));
-            carried.visible_absorptance = now.visible_absorptance;
-        }
-        projected.push(carried);
-    }
-    Ok(projected)
-}
-
-/// 🧊️ Glazing materials. `change-glazing-material-*` names only five of the record's twelve optical
-/// scalars, so — like [`diff_fenestrations`] — this returns the PROJECTION of `base` through the
-/// steps it emitted and `model_edit`'s probe compares against that: a reflectance edit nobody has a
-/// mutation for is refused LOUDLY instead of vanishing.
-fn diff_glazing_materials(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Result<Vec<crate::model::GlazingMaterial>, Fault> {
-    if base.glazing_materials.iter().map(|material| material.id).ne(model.glazing_materials.iter().map(|material| material.id)) {
-        return Err(kind_unavailable(kind, "create-glazing-material / delete-glazing-material"));
-    }
-    let mut projected = Vec::with_capacity(model.glazing_materials.len());
-    for (was, now) in base.glazing_materials.iter().zip(&model.glazing_materials) {
-        let mut carried = was.clone();
-        if was.name != now.name {
-            steps.push(mutations::rename_glazing_material(now.id, now.name.clone()));
-            carried.name = now.name.clone();
-        }
-        if was.thickness_m != now.thickness_m {
-            steps.push(mutations::change_glazing_material_thickness(now.id, now.thickness_m));
-            carried.thickness_m = now.thickness_m;
-        }
-        if was.conductivity_w_m_k != now.conductivity_w_m_k {
-            steps.push(mutations::change_glazing_material_conductivity(now.id, now.conductivity_w_m_k));
-            carried.conductivity_w_m_k = now.conductivity_w_m_k;
-        }
-        if was.solar_transmittance != now.solar_transmittance {
-            steps.push(mutations::change_glazing_material_solar_transmittance(now.id, now.solar_transmittance));
-            carried.solar_transmittance = now.solar_transmittance;
-        }
-        if was.visible_transmittance != now.visible_transmittance {
-            steps.push(mutations::change_glazing_material_visible_transmittance(now.id, now.visible_transmittance));
-            carried.visible_transmittance = now.visible_transmittance;
-        }
-        if was.infrared_emissivity_front != now.infrared_emissivity_front || was.infrared_emissivity_back != now.infrared_emissivity_back {
-            steps.push(mutations::change_glazing_material_infrared_emissivity(now.id, now.infrared_emissivity_front, now.infrared_emissivity_back));
-            carried.infrared_emissivity_front = now.infrared_emissivity_front;
-            carried.infrared_emissivity_back = now.infrared_emissivity_back;
-        }
-        projected.push(carried);
-    }
-    Ok(projected)
-}
-
-/// 💨️ Gas gaps: thickness, fill gas and name — the record's whole addressable surface.
-fn diff_gas_materials(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Result<Vec<crate::model::GasMaterial>, Fault> {
-    if base.gas_materials.iter().map(|material| material.id).ne(model.gas_materials.iter().map(|material| material.id)) {
-        return Err(kind_unavailable(kind, "create-gas-material / delete-gas-material"));
-    }
-    let mut projected = Vec::with_capacity(model.gas_materials.len());
-    for (was, now) in base.gas_materials.iter().zip(&model.gas_materials) {
-        let mut carried = was.clone();
-        if was.name != now.name {
-            steps.push(mutations::rename_gas_material(now.id, now.name.clone()));
-            carried.name = now.name.clone();
-        }
-        if was.thickness_m != now.thickness_m {
-            steps.push(mutations::change_gas_material_thickness(now.id, now.thickness_m));
-            carried.thickness_m = now.thickness_m;
-        }
-        if was.gas != now.gas {
-            steps.push(mutations::change_gas_material_gas(now.id, now.gas));
-            carried.gas = now.gas;
-        }
-        projected.push(carried);
-    }
-    Ok(projected)
-}
-
-/// 🧱️ Constructions: the name and the layer stack. The vocabulary names no whole-stack replace, so
-/// the stack's change is classified into the THREE list kinds it actually declares —
-/// `add-construction-layer` (one insert), `remove-construction-layer` (one delete),
-/// `reorder-construction-layers` (a permutation) — and a one-slot exchange is the remove+insert pair
-/// at the same index. Anything else (two independent edits in one revision, a create/delete of a
-/// construction) is refused LOUDLY rather than masked, exactly like the other catalogues.
-///
-/// 🔬️ Returns the projection of `base` through the steps it emitted, so an unnamed field faults.
-fn diff_constructions(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Result<Vec<crate::model::Construction>, Fault> {
-    if base.constructions.iter().map(|construction| construction.id).ne(model.constructions.iter().map(|construction| construction.id)) {
-        return Err(kind_unavailable(kind, "create-construction / delete-construction"));
-    }
-    let mut projected = Vec::with_capacity(model.constructions.len());
-    for (was, now) in base.constructions.iter().zip(&model.constructions) {
-        let mut carried = was.clone();
-        if was.name != now.name {
-            steps.push(mutations::rename_construction(now.id, now.name.clone()));
-            carried.name = now.name.clone();
-        }
-        if was.layer_material_ids != now.layer_material_ids {
-            for step in construction_layer_steps(kind, now.id, &was.layer_material_ids, &now.layer_material_ids)? {
-                steps.push(step);
-            }
-            carried.layer_material_ids = now.layer_material_ids.clone();
-        }
-        projected.push(carried);
-    }
-    Ok(projected)
-}
-
-/// 🧱️ The list kinds that carry one layer-stack edit. `was`/`now` differ by construction.
-fn construction_layer_steps(kind: &'static str, id: EntityId, was: &[EntityId], now: &[EntityId]) -> Result<Vec<EnergyModelMutation>, Fault> {
-    // ➕️ One insert: dropping the inserted slot from `now` restores `was`.
-    if now.len() == was.len() + 1 {
-        for index in 0..now.len() {
-            let without: Vec<EntityId> = now.iter().enumerate().filter(|(at, _)| *at != index).map(|(_, id)| *id).collect();
-            if without == was {
-                return Ok(vec![mutations::add_construction_layer(id, index as u32, now[index])]);
-            }
-        }
-    }
-    // ➖️ One delete: dropping the removed slot from `was` reaches `now`.
-    if was.len() == now.len() + 1 {
-        for index in 0..was.len() {
-            let without: Vec<EntityId> = was.iter().enumerate().filter(|(at, _)| *at != index).map(|(_, id)| *id).collect();
-            if without == now {
-                return Ok(vec![mutations::remove_construction_layer(id, index as u32)]);
-            }
-        }
-    }
-    if was.len() == now.len() {
-        let differing: Vec<usize> = (0..was.len()).filter(|index| was[*index] != now[*index]).collect();
-        // 🔁️ One slot exchanged: the vocabulary has no `replace-construction-layer`, so it travels as
-        // the remove/insert pair at that same index — order load-bearing, the delete first.
-        if differing.len() == 1 {
-            let index = differing[0] as u32;
-            return Ok(vec![mutations::remove_construction_layer(id, index), mutations::add_construction_layer(id, index, now[differing[0]])]);
-        }
-        // 🔀️ A permutation of the same multiset: one reorder.
-        let (mut sorted_was, mut sorted_now): (Vec<u32>, Vec<u32>) = (was.iter().map(|id| id.0).collect(), now.iter().map(|id| id.0).collect());
-        sorted_was.sort_unstable();
-        sorted_now.sort_unstable();
-        if sorted_was == sorted_now {
-            return Ok(vec![mutations::reorder_construction_layers(id, now.to_vec())]);
-        }
-    }
-    Err(kind_unavailable(kind, "replace-construction-layers"))
-}
-
-/// 🌡️ The four thermostat fields `set-thermostat-setpoints` addresses. Like materials, no editor
-/// verb adds or removes a thermostat, so an identity change is refused rather than masked.
-fn diff_thermostats(kind: &'static str, base: &crate::model::Model, model: &crate::model::Model, steps: &mut Vec<EnergyModelMutation>) -> Result<Vec<Thermostat>, Fault> {
-    if base.thermostats.iter().map(|thermostat| thermostat.id).ne(model.thermostats.iter().map(|thermostat| thermostat.id)) {
-        return Err(kind_unavailable(kind, "create-thermostat / delete-thermostat"));
-    }
-    let mut projected = Vec::with_capacity(model.thermostats.len());
-    for (was, now) in base.thermostats.iter().zip(&model.thermostats) {
-        let mut carried = was.clone();
-        if was.zone_id != now.zone_id {
-            steps.push(mutations::change_thermostat_zone(now.id, now.zone_id));
-            carried.zone_id = now.zone_id;
-        }
-        if was.heating_setpoint_schedule_id != now.heating_setpoint_schedule_id {
-            steps.push(mutations::change_thermostat_heating_setpoint_schedule(now.id, now.heating_setpoint_schedule_id));
-            carried.heating_setpoint_schedule_id = now.heating_setpoint_schedule_id;
-        }
-        if was.cooling_setpoint_schedule_id != now.cooling_setpoint_schedule_id {
-            steps.push(mutations::change_thermostat_cooling_setpoint_schedule(now.id, now.cooling_setpoint_schedule_id));
-            carried.cooling_setpoint_schedule_id = now.cooling_setpoint_schedule_id;
-        }
-        if was.heating_throttle_range_k != now.heating_throttle_range_k {
-            steps.push(mutations::change_thermostat_heating_throttle_range(now.id, now.heating_throttle_range_k));
-            carried.heating_throttle_range_k = now.heating_throttle_range_k;
-        }
-        if was.cooling_throttle_range_k != now.cooling_throttle_range_k {
-            steps.push(mutations::change_thermostat_cooling_throttle_range(now.id, now.cooling_throttle_range_k));
-            carried.cooling_throttle_range_k = now.cooling_throttle_range_k;
-        }
-        projected.push(carried);
-    }
-    Ok(projected)
 }
 
 /// 📂️ The sanctioned whole-document load: a `kernel::Effect::LoadDocument` carrying a genesis
@@ -1085,10 +536,14 @@ fn load_document_effect(model: &crate::model::Model) -> semio_framework_plugin::
     semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }
 }
 
-/// ⛔️ The refusal a not-yet-landed mutation group raises, naming itself instead of degrading to a
-/// silent no-op or a banned whole-document replace.
-fn kind_unavailable(kind: &'static str, missing: &str) -> Fault {
-    Fault::new(FaultOrigin::App, FaultCode::new("app.command.kind-unavailable"), format!("the editor command {kind:?} needs the semantic mutation {missing:?}, which this artifact's vocabulary does not declare yet"))
+/// 🪜️ The one mutation `step` when the edit `differs` from the stored value, none when it restates it — an inspector edit that
+/// repeats the current value is a quiet no-op, never a history row.
+fn step_if(differs: bool, step: impl FnOnce() -> EnergyModelMutation) -> Vec<EnergyModelMutation> {
+    if differs {
+        vec![step()]
+    } else {
+        Vec::new()
+    }
 }
 
 /// 🆔️ Mints the next free `EntityId` for a collection addressed by its own ids — `max + 1`, so an
@@ -1120,56 +575,51 @@ fn target_in_use(entity: &str, id: u32, blocker: &str) -> Fault {
 }
 //#endregion 🧬️MutationSeam
 
-//#region 🔖️Reduce
 /// 🧩️ The one pure reducer both `ArtifactEditor::handle` and the retained bounded work step run —
-/// identical semantics on the interactive path and on the retained path by construction.
+/// identical semantics on the interactive path and on the retained path by construction. Each command is read against the live
+/// snapshot and answers the concrete semantic mutations that carry it, one per field it changes; nothing is copied or differenced.
 fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModelSnapshot>) -> Result<Emit<EnergyModelMutation, EnergyModelConfigMutation>, Fault> {
-    let mut model = crate::energy_model(doc.snapshot);
-    let kind = match command {
-        EnergyModelEditorCommand::SetStructureField { field, value } => {
-            match field.as_str() {
-                "name" => model.name = value.clone(),
-                "version" => model.version = value.clone(),
-                _ => return Ok(Emit::default()),
-            }
-            "rename-model"
-        }
+    let model = &doc.snapshot.model;
+    let steps = match command {
+        EnergyModelEditorCommand::SetStructureField { field, value } => match field.as_str() {
+            "name" => step_if(model.name != *value, || mutations::rename_model(value.clone())),
+            "version" => step_if(model.version != *value, || mutations::change_model_version(value.clone())),
+            _ => return Ok(Emit::default()),
+        },
         EnergyModelEditorCommand::SetZoneCell { row, column, value } => {
-            let Some(zone) = model.zones.get_mut(*row as usize) else { return Ok(Emit::default()) };
+            let Some(zone) = model.zones.get(*row as usize) else { return Ok(Emit::default()) };
+            let id = zone.id;
             match column.as_str() {
-                "name" => zone.name = value.clone(),
+                "name" => step_if(zone.name != *value, || mutations::rename_zone(id, value.clone())),
                 "volumeM3" => match value.parse::<f64>() {
-                    Ok(parsed) => zone.volume_m3 = parsed,
+                    Ok(parsed) => step_if(zone.volume_m3 != parsed, || mutations::change_zone_volume(id, parsed)),
                     Err(_) => return Ok(Emit::default()),
                 },
                 "multiplier" => match value.parse::<u32>() {
-                    Ok(parsed) => zone.multiplier = parsed,
+                    Ok(parsed) => step_if(zone.multiplier != parsed, || mutations::change_zone_multiplier(id, parsed)),
                     Err(_) => return Ok(Emit::default()),
                 },
                 "conditioned" => match value.parse::<bool>() {
-                    Ok(parsed) => zone.conditioned = parsed,
+                    Ok(parsed) => step_if(zone.conditioned != parsed, || mutations::change_zone_conditioned(id, parsed)),
                     Err(_) => return Ok(Emit::default()),
                 },
                 "partOfTotalFloorArea" => match value.parse::<bool>() {
-                    Ok(parsed) => zone.part_of_total_floor_area = parsed,
+                    Ok(parsed) => step_if(zone.part_of_total_floor_area != parsed, || mutations::change_zone_floor_area_participation(id, parsed)),
                     Err(_) => return Ok(Emit::default()),
                 },
                 _ => return Ok(Emit::default()),
             }
-            "change-zone-volume"
         }
         EnergyModelEditorCommand::CreateZone { name, volume_m3, multiplier, conditioned } => {
             if *volume_m3 <= 0.0 {
                 return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "a zone volume must be strictly positive"));
             }
             let id = next_entity_id(model.zones.iter().map(|zone| zone.id));
-            model.zones.push(Zone { id, name: name.clone(), volume_m3: *volume_m3, multiplier: (*multiplier).max(1), conditioned: *conditioned, part_of_total_floor_area: true });
-            "create-zone"
+            vec![mutations::create_zone(id, name.clone(), *volume_m3, (*multiplier).max(1), *conditioned, true, None)]
         }
         EnergyModelEditorCommand::RenameZone { zone, new_name } => {
-            let target = model.zones.iter_mut().find(|entry| entry.id.0 == *zone).ok_or_else(|| target_missing("zone", *zone))?;
-            target.name = new_name.clone();
-            "rename-zone"
+            let target = model.zones.iter().find(|entry| entry.id.0 == *zone).ok_or_else(|| target_missing("zone", *zone))?;
+            step_if(target.name != *new_name, || mutations::rename_zone(target.id, new_name.clone()))
         }
         EnergyModelEditorCommand::DeleteZone { zone } => {
             let id = EntityId(*zone);
@@ -1185,8 +635,7 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
             if model.thermostats.iter().any(|thermostat| thermostat.zone_id == id) {
                 return Err(target_in_use("zone", *zone, "thermostat"));
             }
-            model.zones.retain(|entry| entry.id != id);
-            "delete-zone"
+            vec![mutations::delete_zone(id)]
         }
         EnergyModelEditorCommand::CreateSurface { name, zone, construction, class } => {
             let zone_id = EntityId(*zone);
@@ -1199,62 +648,41 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
             }
             let class = surface_class_from_id(class).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), format!("'{class}' is not a surface class")))?;
             let id = next_entity_id(model.surfaces.iter().map(|surface| surface.id));
-            model.surfaces.push(Surface {
-                id,
-                name: name.clone(),
-                zone_id,
-                class,
-                vertices_m: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 1.0], [0.0, 0.0, 1.0]],
-                construction_id,
-                outside_boundary_condition: OutsideBoundary::OutdoorAir,
-                sun_exposed: true,
-                wind_exposed: true,
-                multiplier: 1,
-            });
-            "create-surface"
+            let vertices = vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 1.0], [0.0, 0.0, 1.0]];
+            vec![mutations::create_surface(id, name.clone(), zone_id, class, vertices, construction_id, OutsideBoundary::OutdoorAir.kind(), None, true, true, 1, None)]
         }
         EnergyModelEditorCommand::DeleteSurface { surface } => {
             let id = EntityId(*surface);
             if !model.surfaces.iter().any(|entry| entry.id == id) {
                 return Err(target_missing("surface", *surface));
             }
-            model.fenestrations.retain(|fenestration| fenestration.surface_id != id);
-            model.adjacency_pairs.retain(|pair| pair.surface_a_id != id && pair.surface_b_id != id);
-            model.surfaces.retain(|entry| entry.id != id);
-            "delete-surface"
+            vec![mutations::delete_surface(id)]
         }
         EnergyModelEditorCommand::AssignSurfaceConstruction { surface, construction } => {
             let construction_id = EntityId(*construction);
             if !model.constructions.iter().any(|entry| entry.id == construction_id) {
                 return Err(target_missing("construction", *construction));
             }
-            let target = model.surfaces.iter_mut().find(|entry| entry.id.0 == *surface).ok_or_else(|| target_missing("surface", *surface))?;
-            target.construction_id = construction_id;
-            "change-surface-construction"
+            let target = model.surfaces.iter().find(|entry| entry.id.0 == *surface).ok_or_else(|| target_missing("surface", *surface))?;
+            step_if(target.construction_id != construction_id, || mutations::change_surface_construction(target.id, construction_id))
         }
         EnergyModelEditorCommand::SetMaterialProperty { material, property, value } => {
-            let target = model.materials.iter_mut().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("material", *material))?;
+            let target = model.materials.iter().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("material", *material))?;
             set_material_property(target, property, value)?
         }
-        EnergyModelEditorCommand::SetConstructionProperty { construction, property, value } => {
-            set_construction_property(&mut model, *construction, property, value)?
-        }
-        EnergyModelEditorCommand::SetSurfaceProperty { surface, property, value, partner_surface } => {
-            set_surface_property(&mut model, *surface, property, value, *partner_surface)?
-        }
-        EnergyModelEditorCommand::SetFenestrationProperty { fenestration, property, value } => {
-            set_fenestration_property(&mut model, *fenestration, property, value)?
-        }
+        EnergyModelEditorCommand::SetConstructionProperty { construction, property, value } => set_construction_property(model, *construction, property, value)?,
+        EnergyModelEditorCommand::SetSurfaceProperty { surface, property, value, partner_surface } => set_surface_property(model, *surface, property, value, *partner_surface)?,
+        EnergyModelEditorCommand::SetFenestrationProperty { fenestration, property, value } => set_fenestration_property(model, *fenestration, property, value)?,
         EnergyModelEditorCommand::SetGlazingMaterialProperty { material, property, value } => {
-            let target = model.glazing_materials.iter_mut().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("glazing material", *material))?;
+            let target = model.glazing_materials.iter().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("glazing material", *material))?;
             set_glazing_material_property(target, property, value)?
         }
         EnergyModelEditorCommand::SetGasMaterialProperty { material, property, value } => {
-            let target = model.gas_materials.iter_mut().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("gas material", *material))?;
+            let target = model.gas_materials.iter().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("gas material", *material))?;
             set_gas_material_property(target, property, value)?
         }
         EnergyModelEditorCommand::SetZoneProperty { zone, property, value } => {
-            let target = model.zones.iter_mut().find(|entry| entry.id.0 == *zone).ok_or_else(|| target_missing("zone", *zone))?;
+            let target = model.zones.iter().find(|entry| entry.id.0 == *zone).ok_or_else(|| target_missing("zone", *zone))?;
             set_zone_property(target, property, value)?
         }
         EnergyModelEditorCommand::SetThermostatSetpoints { thermostat, heating_schedule, cooling_schedule, heating_throttle_range_k, cooling_throttle_range_k } => {
@@ -1265,35 +693,39 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
             if !schedule_exists(schedules, *cooling_schedule) {
                 return Err(target_missing("schedule", *cooling_schedule));
             }
-            let target: &mut Thermostat = model.thermostats.iter_mut().find(|entry| entry.id.0 == *thermostat).ok_or_else(|| target_missing("thermostat", *thermostat))?;
-            target.heating_setpoint_schedule_id = ScheduleId(*heating_schedule);
-            target.cooling_setpoint_schedule_id = ScheduleId(*cooling_schedule);
-            target.heating_throttle_range_k = *heating_throttle_range_k;
-            target.cooling_throttle_range_k = *cooling_throttle_range_k;
-            "change-thermostat-heating-setpoint-schedule"
+            let target = model.thermostats.iter().find(|entry| entry.id.0 == *thermostat).ok_or_else(|| target_missing("thermostat", *thermostat))?;
+            let id = target.id;
+            [
+                step_if(target.heating_setpoint_schedule_id != ScheduleId(*heating_schedule), || mutations::change_thermostat_heating_setpoint_schedule(id, ScheduleId(*heating_schedule))),
+                step_if(target.cooling_setpoint_schedule_id != ScheduleId(*cooling_schedule), || mutations::change_thermostat_cooling_setpoint_schedule(id, ScheduleId(*cooling_schedule))),
+                step_if(target.heating_throttle_range_k != *heating_throttle_range_k, || mutations::change_thermostat_heating_throttle_range(id, *heating_throttle_range_k)),
+                step_if(target.cooling_throttle_range_k != *cooling_throttle_range_k, || mutations::change_thermostat_cooling_throttle_range(id, *cooling_throttle_range_k)),
+            ]
+            .concat()
         }
         EnergyModelEditorCommand::SetSite { latitude_deg, longitude_deg, elevation_m, time_zone_hours, north_axis_deg } => {
             if latitude_deg.is_some_and(|value| !(-90.0..=90.0).contains(&value)) || longitude_deg.is_some_and(|value| !(-180.0..=180.0).contains(&value)) {
                 return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "the site latitude/longitude are outside their SI ranges"));
             }
-            let site = &mut model.site;
-            for (field, value) in [(&mut site.latitude_deg, latitude_deg), (&mut site.longitude_deg, longitude_deg), (&mut site.elevation_m, elevation_m), (&mut site.time_zone_hours, time_zone_hours), (&mut site.north_axis_deg, north_axis_deg)] {
-                if let Some(value) = value {
-                    *field = *value;
-                }
-            }
-            "change-site"
+            let site = &model.site;
+            [
+                latitude_deg.filter(|value| *value != site.latitude_deg).map(mutations::change_site_latitude),
+                longitude_deg.filter(|value| *value != site.longitude_deg).map(mutations::change_site_longitude),
+                elevation_m.filter(|value| *value != site.elevation_m).map(mutations::change_site_elevation),
+                time_zone_hours.filter(|value| *value != site.time_zone_hours).map(mutations::change_site_time_zone),
+                north_axis_deg.filter(|value| *value != site.north_axis_deg).map(mutations::change_site_north_axis),
+            ]
+            .into_iter()
+            .flatten()
+            .collect()
         }
         EnergyModelEditorCommand::SetRunPeriod { start_month, start_day, end_month, end_day } => {
             let valid = (1..=12).contains(start_month) && (1..=12).contains(end_month) && (1..=31).contains(start_day) && (1..=31).contains(end_day);
             if !valid {
                 return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-payload"), "the run period must address real calendar months and days"));
             }
-            model.run_period.start_month = *start_month as u8;
-            model.run_period.start_day = *start_day as u8;
-            model.run_period.end_month = *end_month as u8;
-            model.run_period.end_day = *end_day as u8;
-            "change-run-period"
+            let now = crate::calendar::RunPeriod { start_month: *start_month as u8, start_day: *start_day as u8, end_month: *end_month as u8, end_day: *end_day as u8, year: model.run_period.year };
+            run_period_steps(model.run_period, now)
         }
         EnergyModelEditorCommand::SetActiveExample { example_id } => {
             let loaded = example_model(example_id).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("this artifact bundles no example {example_id:?}")))?;
@@ -1333,7 +765,7 @@ fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, EnergyModel
             return Err(Fault::new(FaultOrigin::App, FaultCode::new("energy.model.3d.window-required"), "a camera change requires a concrete 3d model window"));
         }
     };
-    model_edit(kind, &crate::energy_model(doc.snapshot), &model)
+    Ok(Emit { artifact_mutations: steps, ..Default::default() })
 }
 
 /// 🎥️ The window-addressed half of the command set: `setCamera` writes the addressed
@@ -1428,7 +860,7 @@ fn outside_boundary_kind_from_id(id: &str) -> Option<crate::model::OutsideBounda
 /// 🟫️ Every `Surface` field the inspector addresses. `construction`/`boundary` validate their
 /// references against the live model FIRST, so a dangling id is a refusal and never a document that
 /// points at nothing.
-fn set_surface_property(model: &mut crate::model::Model, surface: u32, property: &str, value: &str, partner_surface: u32) -> Result<&'static str, Fault> {
+fn set_surface_property(model: &crate::model::Model, surface: u32, property: &str, value: &str, partner_surface: u32) -> Result<Vec<EnergyModelMutation>, Fault> {
     let boundary = match property {
         "boundary" => {
             let kind = outside_boundary_kind_from_id(value.trim()).ok_or_else(|| invalid_value(property, value))?;
@@ -1470,35 +902,33 @@ fn set_surface_property(model: &mut crate::model::Model, surface: u32, property:
         }
         _ => None,
     };
-    let target = model.surfaces.iter_mut().find(|entry| entry.id.0 == surface).ok_or_else(|| target_missing("surface", surface))?;
+    let target = model.surfaces.iter().find(|entry| entry.id.0 == surface).ok_or_else(|| target_missing("surface", surface))?;
+    let id = target.id;
     Ok(match property {
-        "name" => {
-            target.name = value.to_string();
-            "rename-surface"
-        }
+        "name" => step_if(target.name != value, || mutations::rename_surface(id, value.to_string())),
         "class" => {
-            target.class = surface_class_from_id(value.trim()).ok_or_else(|| invalid_value(property, value))?;
-            "change-surface-class"
+            let class = surface_class_from_id(value.trim()).ok_or_else(|| invalid_value(property, value))?;
+            step_if(target.class != class, || mutations::change_surface_class(id, class))
         }
         "boundary" | "interzonePartner" => {
-            target.outside_boundary_condition = boundary.expect("the boundary arm parsed its payload above");
-            "change-surface-boundary-condition"
+            let boundary = boundary.expect("the boundary arm parsed its payload above");
+            step_if(target.outside_boundary_condition != boundary, || mutations::change_surface_boundary_condition(id, boundary.kind(), interzone_partner(boundary)))
         }
         "construction" => {
-            target.construction_id = construction.expect("the construction arm parsed its payload above");
-            "change-surface-construction"
+            let construction = construction.expect("the construction arm parsed its payload above");
+            step_if(target.construction_id != construction, || mutations::change_surface_construction(id, construction))
         }
         "sunExposed" => {
-            target.sun_exposed = as_bool(property, value)?;
-            "change-surface-sun-exposed"
+            let exposed = as_bool(property, value)?;
+            step_if(target.sun_exposed != exposed, || mutations::change_surface_sun_exposed(id, exposed))
         }
         "windExposed" => {
-            target.wind_exposed = as_bool(property, value)?;
-            "change-surface-wind-exposed"
+            let exposed = as_bool(property, value)?;
+            step_if(target.wind_exposed != exposed, || mutations::change_surface_wind_exposed(id, exposed))
         }
         "multiplier" => {
-            target.multiplier = as_u32(property, value, |parsed| parsed >= 1)?;
-            "change-surface-multiplier"
+            let multiplier = as_u32(property, value, |parsed| parsed >= 1)?;
+            step_if(target.multiplier != multiplier, || mutations::change_surface_multiplier(id, multiplier))
         }
         _ => return Err(unknown_property("surface", property)),
     })
@@ -1506,7 +936,7 @@ fn set_surface_property(model: &mut crate::model::Model, surface: u32, property:
 
 /// 🪟️ Every `Fenestration` field the inspector addresses — the fifteen scalars plus the optional
 /// glazing construction, whose EMPTY value clears the binding rather than naming a construction.
-fn set_fenestration_property(model: &mut crate::model::Model, fenestration: u32, property: &str, value: &str) -> Result<&'static str, Fault> {
+fn set_fenestration_property(model: &crate::model::Model, fenestration: u32, property: &str, value: &str) -> Result<Vec<EnergyModelMutation>, Fault> {
     let glazing = match property {
         "glazingConstruction" => {
             let trimmed = value.trim();
@@ -1522,66 +952,67 @@ fn set_fenestration_property(model: &mut crate::model::Model, fenestration: u32,
         }
         _ => None,
     };
-    let target = model.fenestrations.iter_mut().find(|entry| entry.id.0 == fenestration).ok_or_else(|| target_missing("fenestration", fenestration))?;
+    let target = model.fenestrations.iter().find(|entry| entry.id.0 == fenestration).ok_or_else(|| target_missing("fenestration", fenestration))?;
+    let id = target.id;
     let positive = |parsed: f64| parsed > 0.0;
     let non_negative = |parsed: f64| parsed >= 0.0;
     let fraction = |parsed: f64| (0.0..=1.0).contains(&parsed);
     Ok(match property {
-        "name" => {
-            target.name = value.to_string();
-            "rename-fenestration"
-        }
+        "name" => step_if(target.name != value, || mutations::rename_fenestration(id, value.to_string())),
         "uValueWM2K" => {
-            target.u_value_w_m2k = as_f64(property, value, positive)?;
-            "change-fenestration-u-value"
+            let parsed = as_f64(property, value, positive)?;
+            step_if(target.u_value_w_m2k != parsed, || mutations::change_fenestration_u_value(id, parsed))
         }
         "shgc" => {
-            target.shgc = as_f64(property, value, fraction)?;
-            "change-fenestration-shgc"
+            let parsed = as_f64(property, value, fraction)?;
+            step_if(target.shgc != parsed, || mutations::change_fenestration_shgc(id, parsed))
         }
         "vlt" => {
-            target.vlt = as_f64(property, value, fraction)?;
-            "change-fenestration-vlt"
+            let parsed = as_f64(property, value, fraction)?;
+            step_if(target.vlt != parsed, || mutations::change_fenestration_vlt(id, parsed))
         }
         "areaM2" => {
-            target.area_m2 = as_f64(property, value, positive)?;
-            "change-fenestration-area"
+            let parsed = as_f64(property, value, positive)?;
+            step_if(target.area_m2 != parsed, || mutations::change_fenestration_area(id, parsed))
         }
         "heightM" => {
-            target.height_m = as_f64(property, value, positive)?;
-            "change-fenestration-height"
+            let parsed = as_f64(property, value, positive)?;
+            step_if(target.height_m != parsed, || mutations::change_fenestration_height(id, parsed))
         }
         "sillHeightM" => {
-            target.sill_height_m = as_f64(property, value, non_negative)?;
-            "change-fenestration-sill-height"
+            let parsed = as_f64(property, value, non_negative)?;
+            step_if(target.sill_height_m != parsed, || mutations::change_fenestration_sill_height(id, parsed))
         }
         "frameConductanceWK" => {
-            target.frame_conductance_w_k = as_f64(property, value, non_negative)?;
-            "change-fenestration-frame-conductance"
+            let parsed = as_f64(property, value, non_negative)?;
+            step_if(target.frame_conductance_w_k != parsed, || mutations::change_fenestration_frame_conductance(id, parsed))
         }
         "dividerConductanceWK" => {
-            target.divider_conductance_w_k = as_f64(property, value, non_negative)?;
-            "change-fenestration-divider-conductance"
+            let parsed = as_f64(property, value, non_negative)?;
+            step_if(target.divider_conductance_w_k != parsed, || mutations::change_fenestration_divider_conductance(id, parsed))
         }
         "overhangDepthM" => {
-            target.overhang_depth_m = as_f64(property, value, non_negative)?;
-            "change-fenestration-overhang-depth"
+            let parsed = as_f64(property, value, non_negative)?;
+            step_if(target.overhang_depth_m != parsed, || mutations::change_fenestration_overhang_depth(id, parsed))
         }
         "overhangOffsetM" => {
-            target.overhang_offset_m = as_f64(property, value, non_negative)?;
-            "change-fenestration-overhang-offset"
+            let parsed = as_f64(property, value, non_negative)?;
+            step_if(target.overhang_offset_m != parsed, || mutations::change_fenestration_overhang_offset(id, parsed))
         }
         "finDepthM" => {
-            target.fin_depth_m = as_f64(property, value, non_negative)?;
-            "change-fenestration-fin-depth"
+            let parsed = as_f64(property, value, non_negative)?;
+            step_if(target.fin_depth_m != parsed, || mutations::change_fenestration_fin_depth(id, parsed))
         }
         "finOffsetM" => {
-            target.fin_offset_m = as_f64(property, value, non_negative)?;
-            "change-fenestration-fin-offset"
+            let parsed = as_f64(property, value, non_negative)?;
+            step_if(target.fin_offset_m != parsed, || mutations::change_fenestration_fin_offset(id, parsed))
         }
         "glazingConstruction" => {
-            target.glazing_construction_id = glazing.expect("the glazing arm parsed its payload above");
-            "bind-fenestration-glazing-construction"
+            let glazing = glazing.expect("the glazing arm parsed its payload above");
+            step_if(target.glazing_construction_id != glazing, || match glazing {
+                Some(construction) => mutations::bind_fenestration_glazing_construction(id, construction),
+                None => mutations::clear_fenestration_glazing_construction(id),
+            })
         }
         _ => return Err(unknown_property("fenestration", property)),
     })
@@ -1590,56 +1021,52 @@ fn set_fenestration_property(model: &mut crate::model::Model, fenestration: u32,
 /// 🧊️ The glazing-material fields this artifact's vocabulary can actually name. The seven other
 /// optical scalars (`solar_reflectance_*`, `visible_reflectance_*`, `infrared_transmittance`) have no
 /// mutation kind, so they are refused here rather than written and then faulted by the probe.
-fn set_glazing_material_property(material: &mut crate::model::GlazingMaterial, property: &str, value: &str) -> Result<&'static str, Fault> {
+fn set_glazing_material_property(material: &crate::model::GlazingMaterial, property: &str, value: &str) -> Result<Vec<EnergyModelMutation>, Fault> {
+    let id = material.id;
     let positive = |parsed: f64| parsed > 0.0;
     let fraction = |parsed: f64| (0.0..=1.0).contains(&parsed);
     Ok(match property {
-        "name" => {
-            material.name = value.to_string();
-            "rename-glazing-material"
-        }
+        "name" => step_if(material.name != value, || mutations::rename_glazing_material(id, value.to_string())),
         "thicknessM" => {
-            material.thickness_m = as_f64(property, value, positive)?;
-            "change-glazing-material-thickness"
+            let parsed = as_f64(property, value, positive)?;
+            step_if(material.thickness_m != parsed, || mutations::change_glazing_material_thickness(id, parsed))
         }
         "conductivityWMK" => {
-            material.conductivity_w_m_k = as_f64(property, value, positive)?;
-            "change-glazing-material-conductivity"
+            let parsed = as_f64(property, value, positive)?;
+            step_if(material.conductivity_w_m_k != parsed, || mutations::change_glazing_material_conductivity(id, parsed))
         }
         "solarTransmittance" => {
-            material.solar_transmittance = as_f64(property, value, fraction)?;
-            "change-glazing-material-solar-transmittance"
+            let parsed = as_f64(property, value, fraction)?;
+            step_if(material.solar_transmittance != parsed, || mutations::change_glazing_material_solar_transmittance(id, parsed))
         }
         "visibleTransmittance" => {
-            material.visible_transmittance = as_f64(property, value, fraction)?;
-            "change-glazing-material-visible-transmittance"
+            let parsed = as_f64(property, value, fraction)?;
+            step_if(material.visible_transmittance != parsed, || mutations::change_glazing_material_visible_transmittance(id, parsed))
         }
         "infraredEmissivityFront" => {
-            material.infrared_emissivity_front = as_f64(property, value, fraction)?;
-            "change-glazing-material-infrared-emissivity"
+            let front = as_f64(property, value, fraction)?;
+            step_if(material.infrared_emissivity_front != front, || mutations::change_glazing_material_infrared_emissivity(id, front, material.infrared_emissivity_back))
         }
         "infraredEmissivityBack" => {
-            material.infrared_emissivity_back = as_f64(property, value, fraction)?;
-            "change-glazing-material-infrared-emissivity"
+            let back = as_f64(property, value, fraction)?;
+            step_if(material.infrared_emissivity_back != back, || mutations::change_glazing_material_infrared_emissivity(id, material.infrared_emissivity_front, back))
         }
         _ => return Err(unknown_property("glazing material", property)),
     })
 }
 
 /// 💨️ The gas-gap fields: thickness, fill gas and name.
-fn set_gas_material_property(material: &mut crate::model::GasMaterial, property: &str, value: &str) -> Result<&'static str, Fault> {
+fn set_gas_material_property(material: &crate::model::GasMaterial, property: &str, value: &str) -> Result<Vec<EnergyModelMutation>, Fault> {
+    let id = material.id;
     Ok(match property {
-        "name" => {
-            material.name = value.to_string();
-            "rename-gas-material"
-        }
+        "name" => step_if(material.name != value, || mutations::rename_gas_material(id, value.to_string())),
         "thicknessM" => {
-            material.thickness_m = as_f64(property, value, |parsed| parsed > 0.0)?;
-            "change-gas-material-thickness"
+            let parsed = as_f64(property, value, |parsed| parsed > 0.0)?;
+            step_if(material.thickness_m != parsed, || mutations::change_gas_material_thickness(id, parsed))
         }
         "gas" => {
-            material.gas = gas_kind_from_id(value.trim()).ok_or_else(|| invalid_value(property, value))?;
-            "change-gas-material-gas"
+            let gas = gas_kind_from_id(value.trim()).ok_or_else(|| invalid_value(property, value))?;
+            step_if(material.gas != gas, || mutations::change_gas_material_gas(id, gas))
         }
         _ => return Err(unknown_property("gas material", property)),
     })
@@ -1672,27 +1099,25 @@ fn gas_kind_from_id(id: &str) -> Option<crate::model::GasKind> {
 pub const GAS_KIND_IDS: &[&str] = &["air", "argon", "krypton", "xenon"];
 
 /// 🏘️ Every `Zone` field, addressed by the zone's own `EntityId` rather than by its table row.
-fn set_zone_property(zone: &mut Zone, property: &str, value: &str) -> Result<&'static str, Fault> {
+fn set_zone_property(zone: &Zone, property: &str, value: &str) -> Result<Vec<EnergyModelMutation>, Fault> {
+    let id = zone.id;
     Ok(match property {
-        "name" => {
-            zone.name = value.to_string();
-            "rename-zone"
-        }
+        "name" => step_if(zone.name != value, || mutations::rename_zone(id, value.to_string())),
         "volumeM3" => {
-            zone.volume_m3 = as_f64(property, value, |parsed| parsed > 0.0)?;
-            "change-zone-volume"
+            let parsed = as_f64(property, value, |parsed| parsed > 0.0)?;
+            step_if(zone.volume_m3 != parsed, || mutations::change_zone_volume(id, parsed))
         }
         "multiplier" => {
-            zone.multiplier = as_u32(property, value, |parsed| parsed >= 1)?;
-            "change-zone-multiplier"
+            let parsed = as_u32(property, value, |parsed| parsed >= 1)?;
+            step_if(zone.multiplier != parsed, || mutations::change_zone_multiplier(id, parsed))
         }
         "conditioned" => {
-            zone.conditioned = as_bool(property, value)?;
-            "change-zone-conditioned"
+            let parsed = as_bool(property, value)?;
+            step_if(zone.conditioned != parsed, || mutations::change_zone_conditioned(id, parsed))
         }
         "partOfTotalFloorArea" => {
-            zone.part_of_total_floor_area = as_bool(property, value)?;
-            "change-zone-floor-area-participation"
+            let parsed = as_bool(property, value)?;
+            step_if(zone.part_of_total_floor_area != parsed, || mutations::change_zone_floor_area_participation(id, parsed))
         }
         _ => return Err(unknown_property("zone", property)),
     })
@@ -1703,45 +1128,43 @@ fn set_zone_property(zone: &mut Zone, property: &str, value: &str) -> Result<&'s
 /// SI scalars. `value` is text like every other inspector verb, so one control shape carries a name,
 /// an enum spelling and a number alike; the numeric properties parse it and refuse a non-finite or
 /// out-of-range reading rather than writing it.
-fn set_material_property(material: &mut Material, property: &str, value: &str) -> Result<&'static str, Fault> {
+fn set_material_property(material: &Material, property: &str, value: &str) -> Result<Vec<EnergyModelMutation>, Fault> {
+    let id = material.id;
     let positive = |parsed: f64| parsed > 0.0;
     let fraction = |parsed: f64| (0.0..=1.0).contains(&parsed);
     Ok(match property {
-        "name" => {
-            material.name = value.to_string();
-            "rename-material"
-        }
+        "name" => step_if(material.name != value, || mutations::rename_material(id, value.to_string())),
         "roughness" => {
-            material.roughness = surface_roughness_from_id(value.trim()).ok_or_else(|| invalid_value(property, value))?;
-            "change-material-roughness"
+            let roughness = surface_roughness_from_id(value.trim()).ok_or_else(|| invalid_value(property, value))?;
+            step_if(material.roughness != roughness, || mutations::change_material_roughness(id, roughness))
         }
         "thicknessM" => {
-            material.thickness_m = as_f64(property, value, positive)?;
-            "change-material-thickness"
+            let parsed = as_f64(property, value, positive)?;
+            step_if(material.thickness_m != parsed, || mutations::change_material_thickness(id, parsed))
         }
         "conductivityWMK" => {
-            material.conductivity_w_m_k = as_f64(property, value, positive)?;
-            "change-material-conductivity"
+            let parsed = as_f64(property, value, positive)?;
+            step_if(material.conductivity_w_m_k != parsed, || mutations::change_material_conductivity(id, parsed))
         }
         "densityKgM3" => {
-            material.density_kg_m3 = as_f64(property, value, positive)?;
-            "change-material-density"
+            let parsed = as_f64(property, value, positive)?;
+            step_if(material.density_kg_m3 != parsed, || mutations::change_material_density(id, parsed))
         }
         "specificHeatJKgK" => {
-            material.specific_heat_j_kg_k = as_f64(property, value, positive)?;
-            "change-material-specific-heat"
+            let parsed = as_f64(property, value, positive)?;
+            step_if(material.specific_heat_j_kg_k != parsed, || mutations::change_material_specific_heat(id, parsed))
         }
         "thermalAbsorptance" => {
-            material.thermal_absorptance = as_f64(property, value, fraction)?;
-            "change-material-thermal-absorptance"
+            let parsed = as_f64(property, value, fraction)?;
+            step_if(material.thermal_absorptance != parsed, || mutations::change_material_thermal_absorptance(id, parsed))
         }
         "solarAbsorptance" => {
-            material.solar_absorptance = as_f64(property, value, fraction)?;
-            "change-material-solar-absorptance"
+            let parsed = as_f64(property, value, fraction)?;
+            step_if(material.solar_absorptance != parsed, || mutations::change_material_solar_absorptance(id, parsed))
         }
         "visibleAbsorptance" => {
-            material.visible_absorptance = as_f64(property, value, fraction)?;
-            "change-material-visible-absorptance"
+            let parsed = as_f64(property, value, fraction)?;
+            step_if(material.visible_absorptance != parsed, || mutations::change_material_visible_absorptance(id, parsed))
         }
         _ => return Err(unknown_property("material", property)),
     })
@@ -1756,9 +1179,10 @@ fn set_material_property(material: &mut Material, property: &str, value: &str) -
 /// ⚠️ `add-construction-layer` admits an OPAQUE `Material` only — its own diff refuses a glazing or
 /// gas id with `mutation.target-missing`. So an add/replace naming one is refused HERE, loudly and
 /// early, instead of reducing cleanly and dying at the store.
-fn set_construction_property(model: &mut crate::model::Model, construction: u32, property: &str, value: &str) -> Result<&'static str, Fault> {
+fn set_construction_property(model: &crate::model::Model, construction: u32, property: &str, value: &str) -> Result<Vec<EnergyModelMutation>, Fault> {
     let opaque: Vec<EntityId> = model.materials.iter().map(|material| material.id).collect();
-    let index = model.constructions.iter().position(|entry| entry.id.0 == construction).ok_or_else(|| target_missing("construction", construction))?;
+    let target = model.constructions.iter().find(|entry| entry.id.0 == construction).ok_or_else(|| target_missing("construction", construction))?;
+    let (id, layers) = (target.id, target.layer_material_ids.as_slice());
     let layer_material = |raw: &str| -> Result<EntityId, Fault> {
         let id = EntityId(as_u32(property, raw, |_| true)?);
         if !opaque.contains(&id) {
@@ -1778,37 +1202,35 @@ fn set_construction_property(model: &mut crate::model::Model, construction: u32,
         Ok(at)
     };
     Ok(match property {
-        "name" => {
-            model.constructions[index].name = value.to_string();
-            "rename-construction"
-        }
+        "name" => step_if(target.name != value, || mutations::rename_construction(id, value.to_string())),
         "addLayer" => {
             let material = layer_material(value.trim())?;
-            model.constructions[index].layer_material_ids.push(material);
-            "add-construction-layer"
+            vec![mutations::add_construction_layer(id, layers.len() as u32, material)]
         }
         "removeLayer" => {
-            let at = slot(value.trim(), &model.constructions[index].layer_material_ids)?;
-            model.constructions[index].layer_material_ids.remove(at);
-            "remove-construction-layer"
+            let at = slot(value.trim(), layers)?;
+            vec![mutations::remove_construction_layer(id, at as u32)]
         }
         "moveLayerUp" | "moveLayerDown" => {
-            let at = slot(value.trim(), &model.constructions[index].layer_material_ids)?;
+            let at = slot(value.trim(), layers)?;
             let other = if property == "moveLayerUp" { at.checked_sub(1) } else { at.checked_add(1) };
-            let layers = &mut model.constructions[index].layer_material_ids;
             let Some(other) = other.filter(|other| *other < layers.len()) else { return Err(invalid_value(property, value)) };
-            layers.swap(at, other);
-            "reorder-construction-layers"
+            let mut swapped = layers.to_vec();
+            swapped.swap(at, other);
+            step_if(swapped != layers, || mutations::reorder_construction_layers(id, swapped.clone()))
         }
         _ if property == "replaceLayer" || property.starts_with("replaceLayer:") => {
             let (raw_index, raw_material) = match property.strip_prefix("replaceLayer:") {
                 Some(at) => (at, value.trim()),
                 None => value.trim().split_once(':').ok_or_else(|| invalid_value(property, value))?,
             };
-            let at = slot(raw_index.trim(), &model.constructions[index].layer_material_ids)?;
+            let at = slot(raw_index.trim(), layers)?;
             let material = layer_material(raw_material.trim())?;
-            model.constructions[index].layer_material_ids[at] = material;
-            "replace-construction-layer"
+            if layers[at] == material {
+                Vec::new()
+            } else {
+                vec![mutations::remove_construction_layer(id, at as u32), mutations::add_construction_layer(id, at as u32, material)]
+            }
         }
         _ => return Err(unknown_property("construction", property)),
     })

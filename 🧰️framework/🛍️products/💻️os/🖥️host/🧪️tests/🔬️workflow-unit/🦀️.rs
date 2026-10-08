@@ -16,7 +16,7 @@ mod tests {
     /// do NOT start with the pack magic header.
     #[test]
     fn export_via_io_mechanism_writes_raw_bytes_not_a_pack_container() {
-        use semio_framework::io::io_mechanism::{IoEntry, IoEntryDirection, io_register};
+        use semio_framework_os_kernel::io::io_mechanism::{IoEntry, IoEntryDirection, io_register};
         use semio_framework::io_schema::{CARRIER_BINARY, IoFidelity, IoOutcome, IoPayload as NewIoPayload};
 
         const TEST_KIND: &str = "3d.__w1b_export_bug_proof";
@@ -60,7 +60,7 @@ mod tests {
         });
         assert_eq!(crate::registry::os_artifact_dialect(TEST_KIND).to_coordinate(), "s.__w1b_export_bug_proof@1/*", "catalog-derived dialect must exactly match the dialect the test IoEntry was registered under");
 
-        crate::host::resolve_kernel_future(semio_framework::register_format_descriptors([semio_framework::FormatDescriptor {
+        crate::host::resolve_kernel_future(semio_framework_os_kernel::io::register_format_descriptors([semio_framework_os_kernel::io::FormatDescriptor {
             kind_id: "stdio.__w1b_export_bug_proof_fmt".to_string(),
             short_id: "w1bproof".to_string(),
             aliases: Vec::new(),

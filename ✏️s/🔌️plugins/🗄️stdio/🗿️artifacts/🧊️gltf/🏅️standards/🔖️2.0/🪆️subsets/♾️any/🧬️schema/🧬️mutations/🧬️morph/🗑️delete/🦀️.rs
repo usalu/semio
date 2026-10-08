@@ -1,4 +1,6 @@
 //! 🧬️ Direct delete-morph-target mutation owner: payload, validation, typed diff, inverse, and outcomes.
+use crate::schema::diff::*;
+use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::modules::mutation_support::structure_geometry::checked_index;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
@@ -22,11 +24,17 @@ pub fn validate(payload: &GltfDeleteMorphTargetPayload, base: &GltfSnapshot) -> 
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfDeleteMorphTargetPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
-    let mut next = base.clone();
-    next.document.meshes[payload.mesh].primitives[payload.primitive].targets.remove(payload.target);
-    Ok(next)
+pub fn plan(p: &GltfDeleteMorphTargetPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
+    validate(p, base)?;
+    let value = without(&base.document.meshes[p.mesh].primitives[p.primitive].targets, p.target);
+    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { targets: (value != base.document.meshes[p.mesh].primitives[p.primitive].targets).then(|| value), ..Default::default() }), ..Default::default() })
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(p: &GltfDeleteMorphTargetPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    if validate(p, base).is_err() {
+        return Vec::new();
+    }
+    vec![super::create_morph_target::mutation(super::create_morph_target::GltfCreateMorphTargetPayload { mesh: p.mesh, primitive: p.primitive, position: p.target, target: Some(Box::new(base.document.meshes[p.mesh].primitives[p.primitive].targets[p.target].clone())) })]
 }
 
 //#region 🧬️DirectMutation
@@ -35,7 +43,11 @@ pub fn apply(payload: &GltfDeleteMorphTargetPayload, base: &GltfSnapshot) -> Res
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum DeleteMorphTargetMutation {
     Apply(GltfDeleteMorphTargetPayload),
-    Restore(Box<crate::schema::diff::GltfDiff>),
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutation(payload: GltfDeleteMorphTargetPayload) -> super::GltfMutation {
+    super::GltfMutation::DeleteMorphTarget(DeleteMorphTargetMutation::Apply(payload))
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteMorphTargetMutation {
@@ -43,28 +55,18 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteMorphTa
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => match apply(payload, base) {
-                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Self::Apply(payload) => match plan(payload, base) {
+                Ok(diff) => protocol::MutationOutcome::new(diff),
                 Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
-            },
-            Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
-                Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-                Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
             },
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
-            return Vec::new();
+        match self {
+            Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::GltfMutation::DeleteMorphTarget(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Delete Morph Target", "Morphziel löschen")
@@ -80,4 +82,7 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteMorphTa
 #[cfg(test)]
 #[path = "🧪️tests/🚫️removes-the-db72f4/🦀️.rs"]
 mod case_removes_the_db72f4;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
+mod case_middle_row;
 //#endregion 🧪️Tests

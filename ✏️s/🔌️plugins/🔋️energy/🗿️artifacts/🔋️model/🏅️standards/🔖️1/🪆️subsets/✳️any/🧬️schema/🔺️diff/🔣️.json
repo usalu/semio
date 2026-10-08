@@ -6,24 +6,8 @@
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "artifact": {
-      "$ref": "#/$defs/EnergyModelArtifact",
-      "x-semio-state": "artifact"
-    },
-    "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
     "model": {
-      "type": "object",
-      "x-semio-state": "artifact"
-    },
-    "structure": {
-      "type": "object",
-      "x-semio-state": "artifact"
-    },
-    "zones": {
-      "type": "object",
+      "$ref": "#/$defs/ModelPatch",
       "x-semio-state": "artifact"
     },
     "referencedModel": {
@@ -32,10 +16,6 @@
     },
     "weatherLink": {
       "$ref": "#/$defs/EnergyLinkSlotDelta",
-      "x-semio-state": "artifact"
-    },
-    "resultsJson": {
-      "type": "string",
       "x-semio-state": "artifact"
     }
   },
@@ -73,34 +53,6293 @@
         }
       ]
     },
-    "EnergyModelArtifact": {
-      "title": "EnergyModelArtifact",
+    "ScheduleLimits": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "schema",
-        "model",
-        "structure",
-        "zones",
-        "resultsJson"
+        "min",
+        "max"
       ],
       "properties": {
-        "schema": {
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        }
+      }
+    },
+    "CompactScheduleRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start_month",
+        "start_day",
+        "end_month",
+        "end_day",
+        "daily_schedule_id"
+      ],
+      "properties": {
+        "start_month": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "start_day": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_month": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_day": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "daily_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "AirflowNetworkDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zone_node_ids",
+        "outdoor_node_id",
+        "link_ids"
+      ],
+      "properties": {
+        "zone_node_ids": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "outdoor_node_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "link_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "OutsideBoundary": {
+      "oneOf": [
+        {
+          "enum": [
+            "OutdoorAir",
+            "Ground",
+            "OtherSideTemperature",
+            "Adiabatic"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Interzone"
+          ],
+          "properties": {
+            "Interzone": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "SetpointManagerKind": {
+      "oneOf": [
+        {
+          "enum": [
+            "Scheduled",
+            "WarmestZone",
+            "ColdestZone"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "OutdoorAirReset"
+          ],
+          "properties": {
+            "OutdoorAirReset": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "low_outdoor_c",
+                "high_outdoor_c",
+                "low_setpoint_c",
+                "high_setpoint_c"
+              ],
+              "properties": {
+                "low_outdoor_c": {
+                  "type": "number"
+                },
+                "high_outdoor_c": {
+                  "type": "number"
+                },
+                "low_setpoint_c": {
+                  "type": "number"
+                },
+                "high_setpoint_c": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Zone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "volume_m3",
+        "multiplier",
+        "conditioned",
+        "part_of_total_floor_area"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
           "type": "string"
+        },
+        "volume_m3": {
+          "type": "number"
+        },
+        "multiplier": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "conditioned": {
+          "type": "boolean"
+        },
+        "part_of_total_floor_area": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Space": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "zone_id",
+        "floor_area_m2"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "floor_area_m2": {
+          "type": "number"
+        }
+      }
+    },
+    "Surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "zone_id",
+        "class",
+        "vertices_m",
+        "construction_id",
+        "outside_boundary_condition",
+        "sun_exposed",
+        "wind_exposed",
+        "multiplier"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "class": {
+          "enum": [
+            "ExteriorWall",
+            "InteriorWall",
+            "Roof",
+            "Ceiling",
+            "Floor",
+            "Interzone",
+            "Adiabatic",
+            "Ground"
+          ]
+        },
+        "vertices_m": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "construction_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "outside_boundary_condition": {},
+        "sun_exposed": {
+          "type": "boolean"
+        },
+        "wind_exposed": {
+          "type": "boolean"
+        },
+        "multiplier": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Fenestration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "surface_id",
+        "u_value_w_m2k",
+        "shgc",
+        "vlt",
+        "area_m2",
+        "height_m",
+        "sill_height_m",
+        "frame_conductance_w_k",
+        "divider_conductance_w_k",
+        "overhang_depth_m",
+        "overhang_offset_m",
+        "fin_depth_m",
+        "fin_offset_m",
+        "glazing_construction_id",
+        "vertices_m"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "surface_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "u_value_w_m2k": {
+          "type": "number"
+        },
+        "shgc": {
+          "type": "number"
+        },
+        "vlt": {
+          "type": "number"
+        },
+        "area_m2": {
+          "type": "number"
+        },
+        "height_m": {
+          "type": "number"
+        },
+        "sill_height_m": {
+          "type": "number"
+        },
+        "frame_conductance_w_k": {
+          "type": "number"
+        },
+        "divider_conductance_w_k": {
+          "type": "number"
+        },
+        "overhang_depth_m": {
+          "type": "number"
+        },
+        "overhang_offset_m": {
+          "type": "number"
+        },
+        "fin_depth_m": {
+          "type": "number"
+        },
+        "fin_offset_m": {
+          "type": "number"
+        },
+        "glazing_construction_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "vertices_m": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        }
+      }
+    },
+    "Material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "roughness",
+        "thickness_m",
+        "conductivity_w_m_k",
+        "density_kg_m3",
+        "specific_heat_j_kg_k",
+        "thermal_absorptance",
+        "solar_absorptance",
+        "visible_absorptance"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "roughness": {
+          "enum": [
+            "VeryRough",
+            "Rough",
+            "MediumRough",
+            "MediumSmooth",
+            "Smooth",
+            "VerySmooth"
+          ]
+        },
+        "thickness_m": {
+          "type": "number"
+        },
+        "conductivity_w_m_k": {
+          "type": "number"
+        },
+        "density_kg_m3": {
+          "type": "number"
+        },
+        "specific_heat_j_kg_k": {
+          "type": "number"
+        },
+        "thermal_absorptance": {
+          "type": "number"
+        },
+        "solar_absorptance": {
+          "type": "number"
+        },
+        "visible_absorptance": {
+          "type": "number"
+        }
+      }
+    },
+    "GlazingMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "thickness_m",
+        "conductivity_w_m_k",
+        "solar_transmittance",
+        "solar_reflectance_front",
+        "solar_reflectance_back",
+        "visible_transmittance",
+        "visible_reflectance_front",
+        "visible_reflectance_back",
+        "infrared_transmittance",
+        "infrared_emissivity_front",
+        "infrared_emissivity_back"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "thickness_m": {
+          "type": "number"
+        },
+        "conductivity_w_m_k": {
+          "type": "number"
+        },
+        "solar_transmittance": {
+          "type": "number"
+        },
+        "solar_reflectance_front": {
+          "type": "number"
+        },
+        "solar_reflectance_back": {
+          "type": "number"
+        },
+        "visible_transmittance": {
+          "type": "number"
+        },
+        "visible_reflectance_front": {
+          "type": "number"
+        },
+        "visible_reflectance_back": {
+          "type": "number"
+        },
+        "infrared_transmittance": {
+          "type": "number"
+        },
+        "infrared_emissivity_front": {
+          "type": "number"
+        },
+        "infrared_emissivity_back": {
+          "type": "number"
+        }
+      }
+    },
+    "GasMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "thickness_m",
+        "gas"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "thickness_m": {
+          "type": "number"
+        },
+        "gas": {
+          "enum": [
+            "Air",
+            "Argon",
+            "Krypton",
+            "Xenon"
+          ]
+        }
+      }
+    },
+    "Construction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "layer_material_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "layer_material_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "PeopleGain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "schedule_id",
+        "activity_schedule_id",
+        "people_per_area",
+        "sensible_fraction",
+        "latent_fraction",
+        "radiant_fraction"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "activity_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "people_per_area": {
+          "type": "number"
+        },
+        "sensible_fraction": {
+          "type": "number"
+        },
+        "latent_fraction": {
+          "type": "number"
+        },
+        "radiant_fraction": {
+          "type": "number"
+        }
+      }
+    },
+    "LightingGain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "schedule_id",
+        "watts_per_area",
+        "radiant_fraction",
+        "visible_fraction",
+        "return_air_fraction"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "watts_per_area": {
+          "type": "number"
+        },
+        "radiant_fraction": {
+          "type": "number"
+        },
+        "visible_fraction": {
+          "type": "number"
+        },
+        "return_air_fraction": {
+          "type": "number"
+        }
+      }
+    },
+    "EquipmentGain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "schedule_id",
+        "watts_per_area",
+        "radiant_fraction",
+        "latent_fraction"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "watts_per_area": {
+          "type": "number"
+        },
+        "radiant_fraction": {
+          "type": "number"
+        },
+        "latent_fraction": {
+          "type": "number"
+        }
+      }
+    },
+    "Thermostat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "heating_setpoint_schedule_id",
+        "cooling_setpoint_schedule_id",
+        "heating_throttle_range_k",
+        "cooling_throttle_range_k"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heating_setpoint_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cooling_setpoint_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heating_throttle_range_k": {
+          "type": "number"
+        },
+        "cooling_throttle_range_k": {
+          "type": "number"
+        }
+      }
+    },
+    "Humidistat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "humidifying_setpoint_schedule_id",
+        "dehumidifying_setpoint_schedule_id",
+        "humidifying_throttle_range",
+        "dehumidifying_throttle_range"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "humidifying_setpoint_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dehumidifying_setpoint_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "humidifying_throttle_range": {
+          "type": "number"
+        },
+        "dehumidifying_throttle_range": {
+          "type": "number"
+        }
+      }
+    },
+    "SetpointManager": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "schedule_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {},
+        "schedule_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "IdealLoadsSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "max_heating_supply_air_temp_c",
+        "min_cooling_supply_air_temp_c",
+        "max_heating_capacity_w",
+        "max_cooling_capacity_w",
+        "outdoor_air_per_person_m3_s",
+        "outdoor_air_per_area_m3_s_m2"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_heating_supply_air_temp_c": {
+          "type": "number"
+        },
+        "min_cooling_supply_air_temp_c": {
+          "type": "number"
+        },
+        "max_heating_capacity_w": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max_cooling_capacity_w": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outdoor_air_per_person_m3_s": {
+          "type": "number"
+        },
+        "outdoor_air_per_area_m3_s_m2": {
+          "type": "number"
+        }
+      }
+    },
+    "ZoneEquipmentAssignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "equipment_type",
+        "priority",
+        "heating_capacity_w",
+        "cooling_capacity_w"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "equipment_type": {
+          "enum": [
+            "Baseboard",
+            "Radiant",
+            "FanCoil",
+            "Ptac",
+            "VrfTerminal",
+            "Erv",
+            "UnitHeater",
+            "WaterToAirHp"
+          ]
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heating_capacity_w": {
+          "type": "number"
+        },
+        "cooling_capacity_w": {
+          "type": "number"
+        }
+      }
+    },
+    "ModelAirLoop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "supply_node_id",
+        "return_node_id",
+        "design_supply_air_flow_m3_s",
+        "terminal_zone_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "supply_node_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "return_node_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "design_supply_air_flow_m3_s": {
+          "type": "number"
+        },
+        "terminal_zone_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "PlantLoopConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "loop_type",
+        "supply_temperature_c",
+        "return_temperature_c",
+        "design_flow_kg_s",
+        "equipment_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "loop_type": {
+          "enum": [
+            "Heating",
+            "Cooling",
+            "Condenser"
+          ]
+        },
+        "supply_temperature_c": {
+          "type": "number"
+        },
+        "return_temperature_c": {
+          "type": "number"
+        },
+        "design_flow_kg_s": {
+          "type": "number"
+        },
+        "equipment_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "OutdoorAirSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "air_loop_id",
+        "min_oa_flow_m3_s",
+        "economizer_enabled"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "air_loop_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "min_oa_flow_m3_s": {
+          "type": "number"
+        },
+        "economizer_enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Infiltration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "schedule_id",
+        "method",
+        "design_flow_ach",
+        "flow_per_exterior_area_m3_s_m2",
+        "effective_leakage_area_m2",
+        "discharge_coefficient",
+        "stack_height_m",
+        "constant_term_coefficient",
+        "temperature_term_coefficient",
+        "velocity_term_coefficient",
+        "velocity_squared_term_coefficient"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "method": {
+          "enum": [
+            "ScheduledAch",
+            "PerExteriorArea",
+            "EffectiveLeakageArea",
+            "WindAndStack"
+          ]
+        },
+        "design_flow_ach": {
+          "type": "number"
+        },
+        "flow_per_exterior_area_m3_s_m2": {
+          "type": "number"
+        },
+        "effective_leakage_area_m2": {
+          "type": "number"
+        },
+        "discharge_coefficient": {
+          "type": "number"
+        },
+        "stack_height_m": {
+          "type": "number"
+        },
+        "constant_term_coefficient": {
+          "type": "number"
+        },
+        "temperature_term_coefficient": {
+          "type": "number"
+        },
+        "velocity_term_coefficient": {
+          "type": "number"
+        },
+        "velocity_squared_term_coefficient": {
+          "type": "number"
+        }
+      }
+    },
+    "MechanicalVentilation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "schedule_id",
+        "design_flow_m3_s",
+        "fan_total_efficiency",
+        "fan_delta_pressure_pa"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "design_flow_m3_s": {
+          "type": "number"
+        },
+        "fan_total_efficiency": {
+          "type": "number"
+        },
+        "fan_delta_pressure_pa": {
+          "type": "number"
+        }
+      }
+    },
+    "ShadingSurface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "vertices_m",
+        "transmittance_schedule_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "vertices_m": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "transmittance_schedule_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "SpaceList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "space_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "space_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "ThermalEnclosure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "zone_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "zone_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "AdjacencyPair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "surface_a_id",
+        "surface_b_id"
+      ],
+      "properties": {
+        "surface_a_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "surface_b_id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ElectricalLoadCenter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "generator_ids",
+        "pv_ids",
+        "battery_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "generator_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "pv_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "battery_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "PvSystemAssignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "dc_capacity_w",
+        "area_m2",
+        "tilt_deg",
+        "azimuth_deg",
+        "module_efficiency",
+        "inverter_efficiency"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dc_capacity_w": {
+          "type": "number"
+        },
+        "area_m2": {
+          "type": "number"
+        },
+        "tilt_deg": {
+          "type": "number"
+        },
+        "azimuth_deg": {
+          "type": "number"
+        },
+        "module_efficiency": {
+          "type": "number"
+        },
+        "inverter_efficiency": {
+          "type": "number"
+        }
+      }
+    },
+    "BatteryAssignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "capacity_kwh",
+        "max_charge_w",
+        "max_discharge_w",
+        "round_trip_efficiency"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacity_kwh": {
+          "type": "number"
+        },
+        "max_charge_w": {
+          "type": "number"
+        },
+        "max_discharge_w": {
+          "type": "number"
+        },
+        "round_trip_efficiency": {
+          "type": "number"
+        }
+      }
+    },
+    "ShwSystemConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "heater_capacity_w",
+        "storage_volume_m3",
+        "setpoint_c",
+        "schedule_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heater_capacity_w": {
+          "type": "number"
+        },
+        "storage_volume_m3": {
+          "type": "number"
+        },
+        "setpoint_c": {
+          "type": "number"
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "SolarThermalConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "collector_area_m2",
+        "efficiency",
+        "storage_volume_m3",
+        "tilt_deg",
+        "azimuth_deg"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "collector_area_m2": {
+          "type": "number"
+        },
+        "efficiency": {
+          "type": "number"
+        },
+        "storage_volume_m3": {
+          "type": "number"
+        },
+        "tilt_deg": {
+          "type": "number"
+        },
+        "azimuth_deg": {
+          "type": "number"
+        }
+      }
+    },
+    "RefrigerationConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "case_count",
+        "design_load_w",
+        "defrost_schedule_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "design_load_w": {
+          "type": "number"
+        },
+        "defrost_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "WaterSystemConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fixture_count",
+        "peak_flow_l_s",
+        "schedule_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fixture_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "peak_flow_l_s": {
+          "type": "number"
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "FaultDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "target_equipment_id",
+        "fault_type",
+        "severity",
+        "start_schedule_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "target_equipment_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fault_type": {
+          "enum": [
+            "SensorBias",
+            "CoilFouling",
+            "DamperStuck",
+            "ChillerFouling",
+            "BoilerEfficiencyDegradation"
+          ]
+        },
+        "severity": {
+          "type": "number"
+        },
+        "start_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "OutputVariableSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "key",
+        "reporting_frequency"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "reporting_frequency": {
+          "enum": [
+            "Timestep",
+            "Hourly",
+            "Daily",
+            "Monthly",
+            "RunPeriod"
+          ]
+        }
+      }
+    },
+    "SizingObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "sizing_type",
+        "design_day_type"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sizing_type": {
+          "enum": [
+            "Heating",
+            "Cooling",
+            "OutdoorAir"
+          ]
+        },
+        "design_day_type": {
+          "enum": [
+            "Heating",
+            "Cooling"
+          ]
+        }
+      }
+    },
+    "DaylightZoneConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "illuminance_target_lux",
+        "glare_limit",
+        "window_transmittance"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "illuminance_target_lux": {
+          "type": "number"
+        },
+        "glare_limit": {
+          "type": "number"
+        },
+        "window_transmittance": {
+          "type": "number"
+        }
+      }
+    },
+    "RoomAirModelAssignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "model"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
         },
         "model": {
-          "type": "object"
+          "enum": [
+            "WellMixed",
+            "OneNodeDisplacement",
+            "TwoNodeBuoyancy",
+            "UnderFloorAirDistribution"
+          ]
+        }
+      }
+    },
+    "ConstantSchedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
         },
-        "structure": {
-          "type": "object"
+        "value": {
+          "type": "number"
+        }
+      }
+    },
+    "DailySchedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "hourly_values",
+        "interpolation",
+        "limits"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hourly_values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 24,
+          "maxItems": 24
+        },
+        "interpolation": {
+          "enum": [
+            "Continuous",
+            "Discrete"
+          ]
+        },
+        "limits": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScheduleLimits"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "WeeklySchedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "daily_schedule_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "daily_schedule_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minItems": 7,
+          "maxItems": 7
+        }
+      }
+    },
+    "AnnualSchedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "rules",
+        "default_daily_schedule_id",
+        "holiday_daily_schedule_id",
+        "holiday_dates"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CompactScheduleRule"
+          }
+        },
+        "default_daily_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "holiday_daily_schedule_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "holiday_dates": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              }
+            ],
+            "minItems": 3,
+            "maxItems": 3
+          }
+        }
+      }
+    },
+    "TimeSeriesSchedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "values",
+        "timestep_seconds"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "timestep_seconds": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ZonePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "volume_m3": {
+          "type": "number"
+        },
+        "multiplier": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "conditioned": {
+          "type": "boolean"
+        },
+        "part_of_total_floor_area": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ZoneRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/Zone"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ZonePatch"
+          }
+        }
+      }
+    },
+    "SpacePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "floor_area_m2": {
+          "type": "number"
+        }
+      }
+    },
+    "SpaceRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/Space"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SpacePatch"
+          }
+        }
+      }
+    },
+    "SurfacePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "class": {
+          "enum": [
+            "ExteriorWall",
+            "InteriorWall",
+            "Roof",
+            "Ceiling",
+            "Floor",
+            "Interzone",
+            "Adiabatic",
+            "Ground"
+          ]
+        },
+        "vertices_m": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "construction_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "outside_boundary_condition": {},
+        "sun_exposed": {
+          "type": "boolean"
+        },
+        "wind_exposed": {
+          "type": "boolean"
+        },
+        "multiplier": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "SurfaceRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/Surface"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SurfacePatch"
+          }
+        }
+      }
+    },
+    "FenestrationPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "surface_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "u_value_w_m2k": {
+          "type": "number"
+        },
+        "shgc": {
+          "type": "number"
+        },
+        "vlt": {
+          "type": "number"
+        },
+        "area_m2": {
+          "type": "number"
+        },
+        "height_m": {
+          "type": "number"
+        },
+        "sill_height_m": {
+          "type": "number"
+        },
+        "frame_conductance_w_k": {
+          "type": "number"
+        },
+        "divider_conductance_w_k": {
+          "type": "number"
+        },
+        "overhang_depth_m": {
+          "type": "number"
+        },
+        "overhang_offset_m": {
+          "type": "number"
+        },
+        "fin_depth_m": {
+          "type": "number"
+        },
+        "fin_offset_m": {
+          "type": "number"
+        },
+        "glazing_construction_id": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "cleared"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "assigned"
+                },
+                "value": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          ]
+        },
+        "vertices_m": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        }
+      }
+    },
+    "FenestrationRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/Fenestration"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FenestrationPatch"
+          }
+        }
+      }
+    },
+    "MaterialPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "roughness": {
+          "enum": [
+            "VeryRough",
+            "Rough",
+            "MediumRough",
+            "MediumSmooth",
+            "Smooth",
+            "VerySmooth"
+          ]
+        },
+        "thickness_m": {
+          "type": "number"
+        },
+        "conductivity_w_m_k": {
+          "type": "number"
+        },
+        "density_kg_m3": {
+          "type": "number"
+        },
+        "specific_heat_j_kg_k": {
+          "type": "number"
+        },
+        "thermal_absorptance": {
+          "type": "number"
+        },
+        "solar_absorptance": {
+          "type": "number"
+        },
+        "visible_absorptance": {
+          "type": "number"
+        }
+      }
+    },
+    "MaterialRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/Material"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MaterialPatch"
+          }
+        }
+      }
+    },
+    "GlazingMaterialPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "thickness_m": {
+          "type": "number"
+        },
+        "conductivity_w_m_k": {
+          "type": "number"
+        },
+        "solar_transmittance": {
+          "type": "number"
+        },
+        "solar_reflectance_front": {
+          "type": "number"
+        },
+        "solar_reflectance_back": {
+          "type": "number"
+        },
+        "visible_transmittance": {
+          "type": "number"
+        },
+        "visible_reflectance_front": {
+          "type": "number"
+        },
+        "visible_reflectance_back": {
+          "type": "number"
+        },
+        "infrared_transmittance": {
+          "type": "number"
+        },
+        "infrared_emissivity_front": {
+          "type": "number"
+        },
+        "infrared_emissivity_back": {
+          "type": "number"
+        }
+      }
+    },
+    "GlazingMaterialRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/GlazingMaterial"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GlazingMaterialPatch"
+          }
+        }
+      }
+    },
+    "GasMaterialPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "thickness_m": {
+          "type": "number"
+        },
+        "gas": {
+          "enum": [
+            "Air",
+            "Argon",
+            "Krypton",
+            "Xenon"
+          ]
+        }
+      }
+    },
+    "GasMaterialRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/GasMaterial"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GasMaterialPatch"
+          }
+        }
+      }
+    },
+    "ConstructionPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "layer_material_ids": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "removed": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "key"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "key": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            },
+            "inserted": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "row"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "row": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ConstructionRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/Construction"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ConstructionPatch"
+          }
+        }
+      }
+    },
+    "PeopleGainPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "activity_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "people_per_area": {
+          "type": "number"
+        },
+        "sensible_fraction": {
+          "type": "number"
+        },
+        "latent_fraction": {
+          "type": "number"
+        },
+        "radiant_fraction": {
+          "type": "number"
+        }
+      }
+    },
+    "PeopleGainRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/PeopleGain"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PeopleGainPatch"
+          }
+        }
+      }
+    },
+    "LightingGainPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "watts_per_area": {
+          "type": "number"
+        },
+        "radiant_fraction": {
+          "type": "number"
+        },
+        "visible_fraction": {
+          "type": "number"
+        },
+        "return_air_fraction": {
+          "type": "number"
+        }
+      }
+    },
+    "LightingGainRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/LightingGain"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/LightingGainPatch"
+          }
+        }
+      }
+    },
+    "EquipmentGainPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "watts_per_area": {
+          "type": "number"
+        },
+        "radiant_fraction": {
+          "type": "number"
+        },
+        "latent_fraction": {
+          "type": "number"
+        }
+      }
+    },
+    "EquipmentGainRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/EquipmentGain"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EquipmentGainPatch"
+          }
+        }
+      }
+    },
+    "ThermostatPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heating_setpoint_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cooling_setpoint_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heating_throttle_range_k": {
+          "type": "number"
+        },
+        "cooling_throttle_range_k": {
+          "type": "number"
+        }
+      }
+    },
+    "ThermostatRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/Thermostat"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ThermostatPatch"
+          }
+        }
+      }
+    },
+    "HumidistatPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "humidifying_setpoint_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dehumidifying_setpoint_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "humidifying_throttle_range": {
+          "type": "number"
+        },
+        "dehumidifying_throttle_range": {
+          "type": "number"
+        }
+      }
+    },
+    "HumidistatRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/Humidistat"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HumidistatPatch"
+          }
+        }
+      }
+    },
+    "SetpointManagerPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {},
+        "schedule_id": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "cleared"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "assigned"
+                },
+                "value": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "SetpointManagerRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/SetpointManager"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SetpointManagerPatch"
+          }
+        }
+      }
+    },
+    "IdealLoadsSystemPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_heating_supply_air_temp_c": {
+          "type": "number"
+        },
+        "min_cooling_supply_air_temp_c": {
+          "type": "number"
+        },
+        "max_heating_capacity_w": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "cleared"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "assigned"
+                },
+                "value": {
+                  "type": "number"
+                }
+              }
+            }
+          ]
+        },
+        "max_cooling_capacity_w": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "cleared"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "assigned"
+                },
+                "value": {
+                  "type": "number"
+                }
+              }
+            }
+          ]
+        },
+        "outdoor_air_per_person_m3_s": {
+          "type": "number"
+        },
+        "outdoor_air_per_area_m3_s_m2": {
+          "type": "number"
+        }
+      }
+    },
+    "IdealLoadsSystemRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/IdealLoadsSystem"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IdealLoadsSystemPatch"
+          }
+        }
+      }
+    },
+    "ZoneEquipmentAssignmentPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "equipment_type": {
+          "enum": [
+            "Baseboard",
+            "Radiant",
+            "FanCoil",
+            "Ptac",
+            "VrfTerminal",
+            "Erv",
+            "UnitHeater",
+            "WaterToAirHp"
+          ]
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heating_capacity_w": {
+          "type": "number"
+        },
+        "cooling_capacity_w": {
+          "type": "number"
+        }
+      }
+    },
+    "ZoneEquipmentAssignmentRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/ZoneEquipmentAssignment"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ZoneEquipmentAssignmentPatch"
+          }
+        }
+      }
+    },
+    "ModelAirLoopPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "supply_node_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "return_node_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "design_supply_air_flow_m3_s": {
+          "type": "number"
+        },
+        "terminal_zone_ids": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "removed": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "key"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "key": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            },
+            "inserted": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "row"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "row": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ModelAirLoopRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/ModelAirLoop"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ModelAirLoopPatch"
+          }
+        }
+      }
+    },
+    "PlantLoopConfigPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "loop_type": {
+          "enum": [
+            "Heating",
+            "Cooling",
+            "Condenser"
+          ]
+        },
+        "supply_temperature_c": {
+          "type": "number"
+        },
+        "return_temperature_c": {
+          "type": "number"
+        },
+        "design_flow_kg_s": {
+          "type": "number"
+        },
+        "equipment_ids": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "removed": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "key"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "key": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            },
+            "inserted": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "row"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "row": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "PlantLoopConfigRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/PlantLoopConfig"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlantLoopConfigPatch"
+          }
+        }
+      }
+    },
+    "OutdoorAirSystemPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "air_loop_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "min_oa_flow_m3_s": {
+          "type": "number"
+        },
+        "economizer_enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "OutdoorAirSystemRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/OutdoorAirSystem"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OutdoorAirSystemPatch"
+          }
+        }
+      }
+    },
+    "InfiltrationPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "method": {
+          "enum": [
+            "ScheduledAch",
+            "PerExteriorArea",
+            "EffectiveLeakageArea",
+            "WindAndStack"
+          ]
+        },
+        "design_flow_ach": {
+          "type": "number"
+        },
+        "flow_per_exterior_area_m3_s_m2": {
+          "type": "number"
+        },
+        "effective_leakage_area_m2": {
+          "type": "number"
+        },
+        "discharge_coefficient": {
+          "type": "number"
+        },
+        "stack_height_m": {
+          "type": "number"
+        },
+        "constant_term_coefficient": {
+          "type": "number"
+        },
+        "temperature_term_coefficient": {
+          "type": "number"
+        },
+        "velocity_term_coefficient": {
+          "type": "number"
+        },
+        "velocity_squared_term_coefficient": {
+          "type": "number"
+        }
+      }
+    },
+    "InfiltrationRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/Infiltration"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/InfiltrationPatch"
+          }
+        }
+      }
+    },
+    "MechanicalVentilationPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "design_flow_m3_s": {
+          "type": "number"
+        },
+        "fan_total_efficiency": {
+          "type": "number"
+        },
+        "fan_delta_pressure_pa": {
+          "type": "number"
+        }
+      }
+    },
+    "MechanicalVentilationRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/MechanicalVentilation"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MechanicalVentilationPatch"
+          }
+        }
+      }
+    },
+    "ShadingSurfacePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "vertices_m": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "transmittance_schedule_id": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "cleared"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "assigned"
+                },
+                "value": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ShadingSurfaceRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/ShadingSurface"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ShadingSurfacePatch"
+          }
+        }
+      }
+    },
+    "SpaceListPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "space_ids": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "removed": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "key"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "key": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            },
+            "inserted": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "row"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "row": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "SpaceListRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/SpaceList"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SpaceListPatch"
+          }
+        }
+      }
+    },
+    "ThermalEnclosurePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "zone_ids": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "removed": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "key"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "key": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            },
+            "inserted": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "row"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "row": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ThermalEnclosureRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/ThermalEnclosure"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ThermalEnclosurePatch"
+          }
+        }
+      }
+    },
+    "AdjacencyPairPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "surface_a_id",
+        "surface_b_id"
+      ],
+      "properties": {
+        "surface_a_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "surface_b_id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "AdjacencyPairRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                ],
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/AdjacencyPair"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AdjacencyPairPatch"
+          }
+        }
+      }
+    },
+    "ElectricalLoadCenterPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "generator_ids": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "removed": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "key"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "key": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            },
+            "inserted": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "row"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "row": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "pv_ids": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "removed": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "key"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "key": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            },
+            "inserted": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "row"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "row": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "battery_ids": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "removed": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "key"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "key": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            },
+            "inserted": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "row"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "row": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ElectricalLoadCenterRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/ElectricalLoadCenter"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ElectricalLoadCenterPatch"
+          }
+        }
+      }
+    },
+    "PvSystemAssignmentPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dc_capacity_w": {
+          "type": "number"
+        },
+        "area_m2": {
+          "type": "number"
+        },
+        "tilt_deg": {
+          "type": "number"
+        },
+        "azimuth_deg": {
+          "type": "number"
+        },
+        "module_efficiency": {
+          "type": "number"
+        },
+        "inverter_efficiency": {
+          "type": "number"
+        }
+      }
+    },
+    "PvSystemAssignmentRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/PvSystemAssignment"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PvSystemAssignmentPatch"
+          }
+        }
+      }
+    },
+    "BatteryAssignmentPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacity_kwh": {
+          "type": "number"
+        },
+        "max_charge_w": {
+          "type": "number"
+        },
+        "max_discharge_w": {
+          "type": "number"
+        },
+        "round_trip_efficiency": {
+          "type": "number"
+        }
+      }
+    },
+    "BatteryAssignmentRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/BatteryAssignment"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BatteryAssignmentPatch"
+          }
+        }
+      }
+    },
+    "ShwSystemConfigPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heater_capacity_w": {
+          "type": "number"
+        },
+        "storage_volume_m3": {
+          "type": "number"
+        },
+        "setpoint_c": {
+          "type": "number"
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ShwSystemConfigRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/ShwSystemConfig"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ShwSystemConfigPatch"
+          }
+        }
+      }
+    },
+    "SolarThermalConfigPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "collector_area_m2": {
+          "type": "number"
+        },
+        "efficiency": {
+          "type": "number"
+        },
+        "storage_volume_m3": {
+          "type": "number"
+        },
+        "tilt_deg": {
+          "type": "number"
+        },
+        "azimuth_deg": {
+          "type": "number"
+        }
+      }
+    },
+    "SolarThermalConfigRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/SolarThermalConfig"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SolarThermalConfigPatch"
+          }
+        }
+      }
+    },
+    "RefrigerationConfigPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "design_load_w": {
+          "type": "number"
+        },
+        "defrost_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "RefrigerationConfigRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/RefrigerationConfig"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RefrigerationConfigPatch"
+          }
+        }
+      }
+    },
+    "WaterSystemConfigPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fixture_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "peak_flow_l_s": {
+          "type": "number"
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "WaterSystemConfigRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/WaterSystemConfig"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WaterSystemConfigPatch"
+          }
+        }
+      }
+    },
+    "FaultDefinitionPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "target_equipment_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fault_type": {
+          "enum": [
+            "SensorBias",
+            "CoilFouling",
+            "DamperStuck",
+            "ChillerFouling",
+            "BoilerEfficiencyDegradation"
+          ]
+        },
+        "severity": {
+          "type": "number"
+        },
+        "start_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "FaultDefinitionRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/FaultDefinition"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FaultDefinitionPatch"
+          }
+        }
+      }
+    },
+    "OutputVariableSpecPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "key"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "reporting_frequency": {
+          "enum": [
+            "Timestep",
+            "Hourly",
+            "Daily",
+            "Monthly",
+            "RunPeriod"
+          ]
+        }
+      }
+    },
+    "OutputVariableSpecRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/OutputVariableSpec"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OutputVariableSpecPatch"
+          }
+        }
+      }
+    },
+    "SizingObjectPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sizing_type": {
+          "enum": [
+            "Heating",
+            "Cooling",
+            "OutdoorAir"
+          ]
+        },
+        "design_day_type": {
+          "enum": [
+            "Heating",
+            "Cooling"
+          ]
+        }
+      }
+    },
+    "SizingObjectRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/SizingObject"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SizingObjectPatch"
+          }
+        }
+      }
+    },
+    "DaylightZoneConfigPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "illuminance_target_lux": {
+          "type": "number"
+        },
+        "glare_limit": {
+          "type": "number"
+        },
+        "window_transmittance": {
+          "type": "number"
+        }
+      }
+    },
+    "DaylightZoneConfigRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/DaylightZoneConfig"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DaylightZoneConfigPatch"
+          }
+        }
+      }
+    },
+    "RoomAirModelAssignmentPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zone_id"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "model": {
+          "enum": [
+            "WellMixed",
+            "OneNodeDisplacement",
+            "TwoNodeBuoyancy",
+            "UnderFloorAirDistribution"
+          ]
+        }
+      }
+    },
+    "RoomAirModelAssignmentRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/RoomAirModelAssignment"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RoomAirModelAssignmentPatch"
+          }
+        }
+      }
+    },
+    "ConstantSchedulePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "type": "number"
+        }
+      }
+    },
+    "ConstantScheduleRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/ConstantSchedule"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ConstantSchedulePatch"
+          }
+        }
+      }
+    },
+    "DailySchedulePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hourly_values": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "value"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "value": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "interpolation": {
+          "enum": [
+            "Continuous",
+            "Discrete"
+          ]
+        },
+        "limits": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "cleared"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "assigned"
+                },
+                "value": {
+                  "$ref": "#/$defs/ScheduleLimits"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "DailyScheduleRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/DailySchedule"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DailySchedulePatch"
+          }
+        }
+      }
+    },
+    "WeeklySchedulePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "daily_schedule_ids": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "value"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "value": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "WeeklyScheduleRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/WeeklySchedule"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WeeklySchedulePatch"
+          }
+        }
+      }
+    },
+    "AnnualSchedulePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rules": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "removed": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "key"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "key": {
+                    "$ref": "#/$defs/CompactScheduleRule"
+                  }
+                }
+              }
+            },
+            "inserted": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "row"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "row": {
+                    "$ref": "#/$defs/CompactScheduleRule"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "default_daily_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "holiday_daily_schedule_id": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "cleared"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "assigned"
+                },
+                "value": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          ]
+        },
+        "holiday_dates": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "removed": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "key"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "key": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    ],
+                    "minItems": 3,
+                    "maxItems": 3
+                  }
+                }
+              }
+            },
+            "inserted": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "index",
+                  "row"
+                ],
+                "properties": {
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "row": {
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    ],
+                    "minItems": 3,
+                    "maxItems": 3
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "AnnualScheduleRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/AnnualSchedule"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AnnualSchedulePatch"
+          }
+        }
+      }
+    },
+    "TimeSeriesSchedulePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "timestep_seconds": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "TimeSeriesScheduleRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "key"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "key": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "row"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "row": {
+                "$ref": "#/$defs/TimeSeriesSchedule"
+              }
+            }
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TimeSeriesSchedulePatch"
+          }
+        }
+      }
+    },
+    "SitePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "latitude_deg": {
+          "type": "number"
+        },
+        "longitude_deg": {
+          "type": "number"
+        },
+        "elevation_m": {
+          "type": "number"
+        },
+        "time_zone_hours": {
+          "type": "number"
+        },
+        "north_axis_deg": {
+          "type": "number"
+        }
+      }
+    },
+    "GroundTemperatureConfigPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "building_surface_c": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "value"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "value": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "shallow_c": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "value"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "value": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "deep_c": {
+          "type": "number"
+        }
+      }
+    },
+    "RunPeriodPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "start_month": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "start_day": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_month": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_day": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "year": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ScheduleSetPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "constants": {
+          "$ref": "#/$defs/ConstantScheduleRows"
+        },
+        "daily": {
+          "$ref": "#/$defs/DailyScheduleRows"
+        },
+        "weekly": {
+          "$ref": "#/$defs/WeeklyScheduleRows"
+        },
+        "annual": {
+          "$ref": "#/$defs/AnnualScheduleRows"
+        },
+        "time_series": {
+          "$ref": "#/$defs/TimeSeriesScheduleRows"
+        }
+      }
+    },
+    "ModelPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "site": {
+          "$ref": "#/$defs/SitePatch"
         },
         "zones": {
-          "type": "object"
+          "$ref": "#/$defs/ZoneRows"
         },
-        "referencedModel": {},
-        "weatherLink": {},
-        "resultsJson": {
-          "type": "string"
+        "spaces": {
+          "$ref": "#/$defs/SpaceRows"
+        },
+        "surfaces": {
+          "$ref": "#/$defs/SurfaceRows"
+        },
+        "fenestrations": {
+          "$ref": "#/$defs/FenestrationRows"
+        },
+        "materials": {
+          "$ref": "#/$defs/MaterialRows"
+        },
+        "glazing_materials": {
+          "$ref": "#/$defs/GlazingMaterialRows"
+        },
+        "gas_materials": {
+          "$ref": "#/$defs/GasMaterialRows"
+        },
+        "constructions": {
+          "$ref": "#/$defs/ConstructionRows"
+        },
+        "people": {
+          "$ref": "#/$defs/PeopleGainRows"
+        },
+        "lighting": {
+          "$ref": "#/$defs/LightingGainRows"
+        },
+        "equipment": {
+          "$ref": "#/$defs/EquipmentGainRows"
+        },
+        "thermostats": {
+          "$ref": "#/$defs/ThermostatRows"
+        },
+        "humidistats": {
+          "$ref": "#/$defs/HumidistatRows"
+        },
+        "setpoint_managers": {
+          "$ref": "#/$defs/SetpointManagerRows"
+        },
+        "ideal_loads": {
+          "$ref": "#/$defs/IdealLoadsSystemRows"
+        },
+        "zone_equipment": {
+          "$ref": "#/$defs/ZoneEquipmentAssignmentRows"
+        },
+        "air_loops": {
+          "$ref": "#/$defs/ModelAirLoopRows"
+        },
+        "plant_loops": {
+          "$ref": "#/$defs/PlantLoopConfigRows"
+        },
+        "outdoor_air_systems": {
+          "$ref": "#/$defs/OutdoorAirSystemRows"
+        },
+        "infiltrations": {
+          "$ref": "#/$defs/InfiltrationRows"
+        },
+        "mechanical_ventilations": {
+          "$ref": "#/$defs/MechanicalVentilationRows"
+        },
+        "shading_surfaces": {
+          "$ref": "#/$defs/ShadingSurfaceRows"
+        },
+        "space_lists": {
+          "$ref": "#/$defs/SpaceListRows"
+        },
+        "thermal_enclosures": {
+          "$ref": "#/$defs/ThermalEnclosureRows"
+        },
+        "adjacency_pairs": {
+          "$ref": "#/$defs/AdjacencyPairRows"
+        },
+        "airflow_network": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "cleared"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "assigned"
+                },
+                "value": {
+                  "$ref": "#/$defs/AirflowNetworkDefinition"
+                }
+              }
+            }
+          ]
+        },
+        "electrical_load_centers": {
+          "$ref": "#/$defs/ElectricalLoadCenterRows"
+        },
+        "pv_systems": {
+          "$ref": "#/$defs/PvSystemAssignmentRows"
+        },
+        "battery_storage": {
+          "$ref": "#/$defs/BatteryAssignmentRows"
+        },
+        "shw_systems": {
+          "$ref": "#/$defs/ShwSystemConfigRows"
+        },
+        "solar_thermal_systems": {
+          "$ref": "#/$defs/SolarThermalConfigRows"
+        },
+        "refrigeration_systems": {
+          "$ref": "#/$defs/RefrigerationConfigRows"
+        },
+        "water_systems": {
+          "$ref": "#/$defs/WaterSystemConfigRows"
+        },
+        "faults": {
+          "$ref": "#/$defs/FaultDefinitionRows"
+        },
+        "output_variables": {
+          "$ref": "#/$defs/OutputVariableSpecRows"
+        },
+        "sizing_objects": {
+          "$ref": "#/$defs/SizingObjectRows"
+        },
+        "daylight_zones": {
+          "$ref": "#/$defs/DaylightZoneConfigRows"
+        },
+        "room_air_models": {
+          "$ref": "#/$defs/RoomAirModelAssignmentRows"
+        },
+        "ground_temperature": {
+          "$ref": "#/$defs/GroundTemperatureConfigPatch"
+        },
+        "run_period": {
+          "$ref": "#/$defs/RunPeriodPatch"
+        },
+        "schedules": {
+          "$ref": "#/$defs/ScheduleSetPatch"
         }
       }
     }

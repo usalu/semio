@@ -10,7 +10,7 @@ const word=(v:unknown,out:boolean)=>out?nativeNumber(binary64Value(v as Binary64
 const float=(v:unknown,out:boolean)=>out?nativeNumber(binary32Value(v as Binary32)):binary32(nativeNumber(v));
 const wide=(v:unknown,out:boolean):number|bigint=>{if(out){if(typeof v!=="bigint"||v<0n||v>0xffffffffffffffffn)throw Error("Layout owned unsigned64 range");if(v>BigInt(Number.MAX_SAFE_INTEGER))throw Error("Layout native JSON unsigned64 exceeds JavaScript numeric boundary");return Number(v);}if(typeof v!=="number"||!Number.isSafeInteger(v)||v<0)throw Error("Layout native JSON unsigned64 number");return BigInt(v);};
 export function fields(value:unknown,keys:readonly string[],out:boolean):Record<string,unknown>{const r={...row(value)};for(const key of keys)if(r[key]!=null)r[key]=word(r[key],out);return r;}
-function rgba(v:unknown,out:boolean):unknown{return array(v).map(c=>float(c,out));}
+export function rgba(v:unknown,out:boolean):unknown{return array(v).map(c=>float(c,out));}
 export function paragraph(v:unknown,out:boolean):unknown{return fields(v,["fontSize","leading","tracking"],out);}
 export function character(v:unknown,out:boolean):unknown{const r=fields(v,["fontSize","tracking"],out);if(r.color!=null)r.color=rgba(r.color,out);return r;}
 export function run(v:unknown,out:boolean):unknown{const r={...row(v)};r.start=wide(r.start,out);r.end=wide(r.end,out);return r;}

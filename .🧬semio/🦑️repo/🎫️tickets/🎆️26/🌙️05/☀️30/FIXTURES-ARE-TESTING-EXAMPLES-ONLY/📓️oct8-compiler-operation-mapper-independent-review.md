@@ -1,0 +1,21 @@
+# Compiler Operation Mapper Independent Review
+
+Read-only current source checkpoint on 2026-10-08; no compiler/test dispatch.
+
+Source owners are native-build `📥️resources/🧮️compiler/🦀️.rs` and Runtime `🔎️verification/🟦️.ts`, `runtimeCompilerResourceInputsV1` and `runtimeCompilerResourceReadOwnersV1`.
+
+The actual helper now records internal operation source/line/name separately from the outer wrapper caller location. The original `fs::read` operation and snapshot-cache `fs::read` have separate operation identities; `read_dir` has its own operation. Consumer requires operation files among the actual proc-macro producer's typed compiled inputs. Current source bytes and actual consumed rustc checksums are verified before mapper admission. Captured caller crate now exactly matches the selected Cargo target name normalized with underscores, closing the prior independent-helper identity seam.
+
+Mapper admits only fully verified captures. It parses the current helper source, selects exactly one Rust filesystem operation matching operation name and line, and emits original-source SHA plus exact token offset and typed actual input SHA. Zero/multiple matching tokens emit no owner and remain unresolved in the graph. Outer caller locations are not substituted for internal read tokens. Explicit empty capture resource arrays produce no owner in this implementation; they do not waive all lexical operations. Missing captures similarly generate no mapper owners, so known reads remain unresolved. Incomplete captures produce findings and no mapped ownership.
+
+A concrete aggregation gap was sent to Runtime: CLI `Object.fromEntries(compilerResourceGroups.flatMap(group => Object.entries(group.owners)))` overwrites owners for the same helper source across multiple bound observations. Inside one observation the mapper correctly unions inputs at an exact operation offset; across groups it can discard an earlier capture's input edges. The fix should union owners by exact source SHA and offset and retain all actual inputs, or refuse incompatible overlaps. Independent verified witness findings are retained, so fixture inputs already detected by the witness remain forbidden, but loss of graph input edges is still a completeness defect. No test was run by this audit to quantify an actual affected package.
+
+Directory metadata is derived only from verified typed directory rows. The core stops at those directory nodes without inferring child-byte reads. Failed immediate original read/read_dir operations mark the helper capture incomplete. This checkpoint does not establish arbitrary filesystem coverage, current real Trunk output, publication, or a full runtime graph pass.
+
+## Exact Union Closure Checkpoint
+
+Fresh read confirms exported `runtimeMergeResourceReadOwnersV1` at verification lines 44–49 and CLI integration at line 482 replace the overwrite. Owners at the same source path and offset union distinct actual input paths. Different source SHA, or the same input path with a different kind/digest, emits mismatch and blocks that operation owner. Conflicting directory digests emit mismatch and remove terminal directory ownership. Findings enter the global runner findings; contradictory evidence is not silently promoted. The previous aggregation gap is closed in the reviewed source.
+
+Captures are still admitted only after exact producer/caller message, crate, manifest/source, tracked observation, original/snapshot/directory, and actual consumed-byte checks. The unit verification cache is created inside one observation's mapper invocation, not shared across observations or future runs. CLI ownership originates from observations bound to selected retained messages. Empty resource rosters emit no inferred lexical operation ownership. Runtime reports actual RED36320 (92 passing, one failure) then GREEN62696 (93 passing, zero failures, 1071 expectations, Nx 7.4s), including three genuine helper operation/token bindings and Ajv leaf admission. This audit inspected source; those execution counts are explicitly owner-reported pending a retained log supplied for independent parsing.
+
+No new concrete unsafe union or caller-scope promotion was found. This remains a bounded mapper review, not an actual production invocation or complete runtime pass.

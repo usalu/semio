@@ -20,6 +20,7 @@ pub fn inverse(payload: &super::DeleteTile, base: &Wfc3dSnapshot) -> Result<Vec<
             restore.push(pin_slot(slot.id.clone(), payload.id.clone()));
         }
     }
+    restore.reverse();
     restore
 
     })())

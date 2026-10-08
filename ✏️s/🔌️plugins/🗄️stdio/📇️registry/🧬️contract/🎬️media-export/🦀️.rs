@@ -235,7 +235,7 @@ impl<T: RetireOwned + Sync> Default for RetireOwnedSnapshotDisposer<T> {
 impl<T: RetireOwned + Sync> ArtifactSnapshotDisposer<T> for RetireOwnedSnapshotDisposer<T> {
     fn close_step(&mut self, snapshot: &mut Option<Arc<T>>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
         if let Some(retirement) = self.retirement.as_mut() {
-            let step = retirement.close_step(maximum_items, maximum_bytes).map_err(|error| Fault::from(error.message))?;
+            let step = retirement.close_step(maximum_items, maximum_bytes).map_err(|error| Fault::from(error.message.into_owned()))?;
             return match step {
                 SnapshotRetirementStep::Pending { released_items, released_bytes } => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
                 SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "media snapshot still has an external owner" }),

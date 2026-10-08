@@ -1,0 +1,710 @@
+{
+ "description": "Language-agnostic laws of the mesh.interchange widgets. Binary STL and GLB travel as base64 text; the TypeScript oracle decodes written files itself and measures them with three.js, and writes the imported files below with its own encoder. A text expectation may state lines, startsWith, contains, json (parsed equality) and binary (format, bytes, triangles, area, volume).",
+ "tolerance": 1e-05,
+ "cases": [
+  {
+   "name": "export the cube as obj",
+   "kind": "mesh.interchange.exportObj",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    }
+   },
+   "outputs": {
+    "text": {
+     "lines": 15,
+     "startsWith": "# kernel_3d_mesh OBJ export\nv 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\n",
+     "contains": [
+      "f 1 4 3 2\n",
+      "f 5 6 7 8\n"
+     ]
+    }
+   }
+  },
+  {
+   "name": "export the cube as json",
+   "kind": "mesh.interchange.exportJson",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    }
+   },
+   "outputs": {
+    "text": {
+     "lines": 1,
+     "contains": [
+      "vertices",
+      "faces"
+     ],
+     "json": {
+      "vertices": [
+       [
+        0,
+        0,
+        0
+       ],
+       [
+        1,
+        0,
+        0
+       ],
+       [
+        1,
+        1,
+        0
+       ],
+       [
+        0,
+        1,
+        0
+       ],
+       [
+        0,
+        0,
+        1
+       ],
+       [
+        1,
+        0,
+        1
+       ],
+       [
+        1,
+        1,
+        1
+       ],
+       [
+        0,
+        1,
+        1
+       ]
+      ],
+      "faces": [
+       [
+        0,
+        3,
+        2,
+        1
+       ],
+       [
+        4,
+        5,
+        6,
+        7
+       ],
+       [
+        0,
+        1,
+        5,
+        4
+       ],
+       [
+        2,
+        3,
+        7,
+        6
+       ],
+       [
+        0,
+        4,
+        7,
+        3
+       ],
+       [
+        1,
+        2,
+        6,
+        5
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "export the cube as binary stl",
+   "kind": "mesh.interchange.exportStl",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    }
+   },
+   "outputs": {
+    "stl": {
+     "binary": {
+      "format": "stl",
+      "bytes": 684,
+      "triangles": 12,
+      "area": 6,
+      "volume": 1
+     }
+    }
+   }
+  },
+  {
+   "name": "export the cube as binary glb",
+   "kind": "mesh.interchange.exportGlb",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    }
+   },
+   "outputs": {
+    "glb": {
+     "binary": {
+      "format": "glb",
+      "triangles": 12,
+      "area": 6,
+      "volume": 1
+     }
+    }
+   }
+  },
+  {
+   "name": "import the cube from obj text",
+   "kind": "mesh.interchange.importObj",
+   "inputs": {
+    "data": "# kernel_3d_mesh OBJ export\nv 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\nv 0 0 1\nv 1 0 1\nv 1 1 1\nv 0 1 1\nf 1 4 3 2\nf 5 6 7 8\nf 1 2 6 5\nf 3 4 8 7\nf 1 5 8 4\nf 2 3 7 6\n"
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 8,
+     "faces": 6,
+     "edges": 12,
+     "boundaryEdges": 0,
+     "euler": 2,
+     "area": 6.0,
+     "volume": 1.0,
+     "closed": true,
+     "oriented": true,
+     "bbox": [
+      [
+       0.0,
+       0.0,
+       0.0
+      ],
+      [
+       1,
+       1,
+       1
+      ]
+     ],
+     "positions": [
+      [
+       0.0,
+       0.0,
+       0.0
+      ],
+      [
+       1,
+       0.0,
+       0.0
+      ],
+      [
+       1,
+       1,
+       0.0
+      ],
+      [
+       0.0,
+       1,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       1
+      ],
+      [
+       1,
+       0.0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0.0,
+       1,
+       1
+      ]
+     ],
+     "polygons": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "import obj text with negative indices and extra records",
+   "kind": "mesh.interchange.importObj",
+   "inputs": {
+    "data": "# triangle\no t\nv 0 0 0\nv 1 0 0\nv 0 1 0\nvt 0 0\nvn 0 0 1\nf -3/1/1 -2//1 -1\n"
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 3,
+     "faces": 1,
+     "area": 0.5
+    }
+   }
+  },
+  {
+   "name": "obj text with a face index beyond the vertices",
+   "kind": "mesh.interchange.importObj",
+   "inputs": {
+    "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 4\n"
+   },
+   "fault": {
+    "code": "generation3d.geometry.mesh-import",
+    "port": "data"
+   }
+  },
+  {
+   "name": "obj text with a malformed vertex",
+   "kind": "mesh.interchange.importObj",
+   "inputs": {
+    "data": "v 0 0\n"
+   },
+   "fault": {
+    "code": "generation3d.geometry.mesh-import",
+    "port": "data"
+   }
+  },
+  {
+   "name": "import the cube from binary stl",
+   "kind": "mesh.interchange.importStl",
+   "inputs": {
+    "data": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAAAAIC/AAAAAAAAAAAAAAAAAAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAAAAAAAAAgL8AAAAAAAAAAAAAAAAAAIA/AACAPwAAAAAAAIA/AAAAAAAAAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAgD8AAAAAAACAPwAAgD8AAIA/AACAPwAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AACAPwAAgD8AAIA/AAAAAAAAgD8AAIA/AAAAAAAAAACAvwAAAAAAAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAgD8AAAAAAAAAAIC/AAAAAAAAAAAAAAAAAAAAAAAAgD8AAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAgD8AAAAAAACAPwAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAIA/AAAAAAAAAACAPwAAAAAAAIA/AACAPwAAAAAAAAAAAACAPwAAgD8AAIA/AACAPwAAgD8AAAAAgL8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAPwAAAAAAAIA/AACAPwAAAACAvwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgD8AAIA/AAAAAAAAgD8AAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AACAPwAAAAAAAIA/AACAPwAAgD8AAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAIA/AACAPwAAgD8AAAAAAACAPwAA"
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 8,
+     "faces": 12,
+     "edges": 18,
+     "euler": 2,
+     "closed": true,
+     "oriented": true,
+     "area": 6,
+     "volume": 1
+    }
+   }
+  },
+  {
+   "name": "import the cube from binary glb",
+   "kind": "mesh.interchange.importGlb",
+   "inputs": {
+    "data": "Z2xURgIAAAAAAwAA9AEAAEpTT057ImFzc2V0Ijp7InZlcnNpb24iOiIyLjAifSwic2NlbmUiOjAsInNjZW5lcyI6W3sibm9kZXMiOlswXX1dLCJub2RlcyI6W3sibWVzaCI6MH1dLCJtZXNoZXMiOlt7InByaW1pdGl2ZXMiOlt7ImF0dHJpYnV0ZXMiOnsiUE9TSVRJT04iOjB9LCJpbmRpY2VzIjoxLCJtb2RlIjo0fV19XSwiYnVmZmVycyI6W3siYnl0ZUxlbmd0aCI6MjQwfV0sImJ1ZmZlclZpZXdzIjpbeyJidWZmZXIiOjAsImJ5dGVPZmZzZXQiOjAsImJ5dGVMZW5ndGgiOjk2LCJ0YXJnZXQiOjM0OTYyfSx7ImJ1ZmZlciI6MCwiYnl0ZU9mZnNldCI6OTYsImJ5dGVMZW5ndGgiOjE0NCwidGFyZ2V0IjozNDk2M31dLCJhY2Nlc3NvcnMiOlt7ImJ1ZmZlclZpZXciOjAsImNvbXBvbmVudFR5cGUiOjUxMjYsImNvdW50Ijo4LCJ0eXBlIjoiVkVDMyIsIm1pbiI6WzAsMCwwXSwibWF4IjpbMSwxLDFdfSx7ImJ1ZmZlclZpZXciOjEsImNvbXBvbmVudFR5cGUiOjUxMjUsImNvdW50IjozNiwidHlwZSI6IlNDQUxBUiJ9XX0gIPAAAABCSU4AAAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAAAAAAIA/AACAPwAAAAAAAIA/AACAPwAAgD8AAIA/AAAAAAAAgD8AAIA/AAAAAAMAAAACAAAAAAAAAAIAAAABAAAABAAAAAUAAAAGAAAABAAAAAYAAAAHAAAAAAAAAAEAAAAFAAAAAAAAAAUAAAAEAAAAAgAAAAMAAAAHAAAAAgAAAAcAAAAGAAAAAAAAAAQAAAAHAAAAAAAAAAcAAAADAAAAAQAAAAIAAAAGAAAAAQAAAAYAAAAFAAAA"
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 8,
+     "faces": 12,
+     "edges": 18,
+     "euler": 2,
+     "closed": true,
+     "oriented": true,
+     "area": 6,
+     "volume": 1
+    }
+   }
+  },
+  {
+   "name": "stl text that is not base64",
+   "kind": "mesh.interchange.importStl",
+   "inputs": {
+    "data": "***"
+   },
+   "fault": {
+    "code": "generation3d.geometry.mesh-import",
+    "port": "data"
+   }
+  },
+  {
+   "name": "stl base64 that is not an stl file",
+   "kind": "mesh.interchange.importStl",
+   "inputs": {
+    "data": "AAAA"
+   },
+   "fault": {
+    "code": "generation3d.geometry.mesh-import",
+    "port": "data"
+   }
+  },
+  {
+   "name": "an empty glb text",
+   "kind": "mesh.interchange.importGlb",
+   "inputs": {
+    "data": ""
+   },
+   "fault": {
+    "code": "generation3d.geometry.mesh-import",
+    "port": "data"
+   }
+  },
+  {
+   "name": "glb base64 that is not a glb file",
+   "kind": "mesh.interchange.importGlb",
+   "inputs": {
+    "data": "AAAAAAAAAAAAAAAA"
+   },
+   "fault": {
+    "code": "generation3d.geometry.mesh-import",
+    "port": "data"
+   }
+  }
+ ]
+}

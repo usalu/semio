@@ -227,3 +227,7 @@ impl<T: Clone + PartialEq> Splice<T, T> {
     }
 }
 //#endregion 🔖️Replace
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

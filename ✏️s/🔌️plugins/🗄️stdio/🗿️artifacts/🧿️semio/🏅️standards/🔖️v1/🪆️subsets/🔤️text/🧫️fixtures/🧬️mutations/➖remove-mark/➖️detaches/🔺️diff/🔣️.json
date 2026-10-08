@@ -1,15 +1,15 @@
 {
   "runs": {
-    "values": [
+    "modified": [
       {
-        "language": "en",
-        "content": "emphasis",
-        "marks": [
-          {
-            "kind": "bold",
-            "href": ""
+        "index": 0,
+        "diff": {
+          "marks": {
+            "removed": [
+              1
+            ]
           }
-        ]
+        }
       }
     ]
   }

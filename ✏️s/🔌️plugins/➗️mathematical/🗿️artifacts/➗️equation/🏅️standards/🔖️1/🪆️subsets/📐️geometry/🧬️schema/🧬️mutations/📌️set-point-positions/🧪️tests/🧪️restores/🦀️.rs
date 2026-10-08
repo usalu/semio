@@ -32,7 +32,7 @@ async fn applies_the_committed_diff_to_the_committed_after() {
     assert!(outcome.messages().is_empty(), "an in-range placement raises no diagnostic, got {:?}", outcome.messages());
     let committed: EquationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(outcome.diff(), &committed, "set-point-positions/restores: produced diff differs from the committed 🔺️diff");
-    let applied = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(outcome.diff(), &snapshot(BEFORE)).expect("the placement applies");
+    let applied = protocol::apply_diff(outcome.diff(), &snapshot(BEFORE)).expect("the placement applies");
     assert_eq!(applied, snapshot(AFTER), "set-point-positions/restores: applied state differs from the committed after-snapshot");
 }
 
@@ -43,6 +43,7 @@ async fn it_mirrors_the_drag_and_is_point_invertible() {
     let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &snapshot(BEFORE)).expect("valid retained mutation inverse fixture");
     assert!(matches!(inverse.as_slice(), [EquationMutation::SetPointPositions(_)]), "the inverse is ONE absolute row, got {inverse:?}");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&snapshot(BEFORE), &mutation()).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &snapshot(BEFORE)).await;
 }
 
 /// 🔣️ Every committed document is canonical, and its handles are the content addresses of its own state.

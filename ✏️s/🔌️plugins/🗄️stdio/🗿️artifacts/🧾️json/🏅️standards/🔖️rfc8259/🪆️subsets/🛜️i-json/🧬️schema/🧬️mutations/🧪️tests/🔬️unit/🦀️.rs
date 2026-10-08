@@ -34,9 +34,8 @@ fn key(name: &str) -> JsonPath {
 #[test]
 fn kinds_match_the_enum() {
     let sample = vec![
-        JsonIJsonMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: JsonSnapshot::default() }),
         JsonIJsonMutation::SetTopLevel(set_top_level::SetTopLevel { root: JsonIJsonRoot::Array { items: Vec::new() } }),
-        JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path: Vec::new(), key: String::new(), value: JsonValue::Null }),
+        JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path: Vec::new(), key: String::new(), value: JsonValue::Null, index: None }),
         JsonIJsonMutation::RemoveMember(remove_member::RemoveMember { path: Vec::new(), key: String::new() }),
         JsonIJsonMutation::RenameMember(rename_member::RenameMember { path: Vec::new(), from: String::new(), to: String::new() }),
         JsonIJsonMutation::SetSafeNumber(set_safe_number::SetSafeNumber { path: Vec::new(), lexeme: "0".to_string() }),
@@ -114,10 +113,9 @@ fn rename_member_onto_an_existing_name_is_refused() {
 fn applying_a_mutation_and_then_its_inverse_restores_the_snapshot() {
     let original = base();
     let mutations = vec![
-        JsonIJsonMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: JsonSnapshot { value: JsonValue::Array { items: vec![number("1")] }, ..JsonSnapshot::default() } }),
         JsonIJsonMutation::SetTopLevel(set_top_level::SetTopLevel { root: JsonIJsonRoot::Array { items: vec![JsonValue::Null] } }),
-        JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path: Vec::new(), key: "revision".to_string(), value: number("9") }),
-        JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path: Vec::new(), key: "fresh".to_string(), value: JsonValue::Null }),
+        JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path: Vec::new(), key: "revision".to_string(), value: number("9"), index: None }),
+        JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path: Vec::new(), key: "fresh".to_string(), value: JsonValue::Null, index: None }),
         JsonIJsonMutation::RemoveMember(remove_member::RemoveMember { path: Vec::new(), key: "title".to_string() }),
         JsonIJsonMutation::RenameMember(rename_member::RenameMember { path: Vec::new(), from: "title".to_string(), to: "heading".to_string() }),
         JsonIJsonMutation::SetSafeNumber(set_safe_number::SetSafeNumber { path: key("revision"), lexeme: "9007199254740991".to_string() }),
@@ -139,23 +137,39 @@ fn applying_a_mutation_and_then_its_inverse_restores_the_snapshot() {
 /// 🧬️ Every inherited verb means exactly what the ✳️any sibling means by it — the claim this
 /// leaf's header makes, checked rather than asserted in prose.
 #[test]
-fn the_four_inherited_verbs_lower_onto_their_any_counterparts_unchanged() {
+fn the_four_inherited_verbs_mean_what_their_any_counterparts_mean() {
     let snapshot = base();
     let path = key("tags");
-    assert_eq!(
-        lower(&JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path: Vec::new(), key: "revision".to_string(), value: number("9") }), &snapshot),
-        Ok(JsonMutation::SetMember(SetMemberMutation::Apply(SetMemberPayload { path: Vec::new(), key: "revision".to_string(), value: number("9") })))
+    let lowered = |ijson: JsonIJsonMutation, any: JsonMutation| {
+        assert_eq!(<JsonIJsonMutation as Mutation<JsonSnapshot>>::diff(&ijson, &snapshot), <JsonMutation as Mutation<JsonSnapshot>>::diff(&any, &snapshot), "{ijson:?} must mean what {any:?} means");
+    };
+    lowered(
+        JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path: Vec::new(), key: "revision".to_string(), value: number("9"), index: None }),
+        JsonMutation::SetMember(SetMemberPayload { path: Vec::new(), key: "revision".to_string(), value: number("9"), index: None }),
     );
-    assert_eq!(
-        lower(&JsonIJsonMutation::RemoveMember(remove_member::RemoveMember { path: Vec::new(), key: "title".to_string() }), &snapshot),
-        Ok(JsonMutation::RemoveMember(RemoveMemberMutation::Apply(RemoveMemberPayload { path: Vec::new(), key: "title".to_string() })))
+    lowered(JsonIJsonMutation::RemoveMember(remove_member::RemoveMember { path: Vec::new(), key: "title".to_string() }), JsonMutation::RemoveMember(RemoveMemberPayload { path: Vec::new(), key: "title".to_string() }));
+    lowered(
+        JsonIJsonMutation::InsertArrayElement(insert_array_element::InsertArrayElement { path: path.clone(), index: 1, value: JsonValue::Null }),
+        JsonMutation::InsertArrayElement(InsertArrayElementPayload { path: path.clone(), index: 1, value: JsonValue::Null }),
     );
-    assert_eq!(
-        lower(&JsonIJsonMutation::InsertArrayElement(insert_array_element::InsertArrayElement { path: path.clone(), index: 1, value: JsonValue::Null }), &snapshot),
-        Ok(JsonMutation::InsertArrayElement(InsertArrayElementMutation::Apply(InsertArrayElementPayload { path: path.clone(), index: 1, value: JsonValue::Null })))
-    );
-    assert_eq!(
-        lower(&JsonIJsonMutation::RemoveArrayElement(remove_array_element::RemoveArrayElement { path: path.clone(), index: 0 }), &snapshot),
-        Ok(JsonMutation::RemoveArrayElement(RemoveArrayElementMutation::Apply(RemoveArrayElementPayload { path, index: 0 })))
-    );
+    lowered(JsonIJsonMutation::RemoveArrayElement(remove_array_element::RemoveArrayElement { path: path.clone(), index: 0 }), JsonMutation::RemoveArrayElement(RemoveArrayElementPayload { path, index: 0 }));
+}
+
+/// ⚖️ `i_json_mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff.
+#[semio_framework_async_macros::async_test]
+async fn i_json_mutation_inverse_sum_law_holds_for_every_leaf() {
+    let base = base();
+    for mutation in [
+        JsonIJsonMutation::SetTopLevel(set_top_level::SetTopLevel { root: JsonIJsonRoot::Array { items: vec![JsonValue::Null] } }),
+        JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path: Vec::new(), key: "revision".to_string(), value: number("9"), index: None }),
+        JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path: Vec::new(), key: "fresh".to_string(), value: JsonValue::Null, index: Some(1) }),
+        JsonIJsonMutation::RemoveMember(remove_member::RemoveMember { path: Vec::new(), key: "title".to_string() }),
+        JsonIJsonMutation::RenameMember(rename_member::RenameMember { path: Vec::new(), from: "title".to_string(), to: "heading".to_string() }),
+        JsonIJsonMutation::SetSafeNumber(set_safe_number::SetSafeNumber { path: key("revision"), lexeme: "9007199254740991".to_string() }),
+        JsonIJsonMutation::SetString(set_string::SetString { path: key("title"), value: "Ünïcödé".to_string() }),
+        JsonIJsonMutation::InsertArrayElement(insert_array_element::InsertArrayElement { path: key("tags"), index: 1, value: JsonValue::String { value: "inserted".to_string() } }),
+        JsonIJsonMutation::RemoveArrayElement(remove_array_element::RemoveArrayElement { path: key("tags"), index: 0 }),
+    ] {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
 }

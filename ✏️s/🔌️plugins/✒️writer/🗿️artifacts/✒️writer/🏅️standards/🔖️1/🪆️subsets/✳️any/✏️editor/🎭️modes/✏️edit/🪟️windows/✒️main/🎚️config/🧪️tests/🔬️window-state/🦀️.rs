@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::writer::modes::edit::windows::main::transient::{WriterMainWindowTransient, WriterMainWindowTransientMutation, WriterMainWindowTransientOwner};
 use dsl::os_pack as pack;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{Mutation, OpBinary, OpText};
 
 fn block_on_writer_window_state<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);
@@ -168,8 +168,8 @@ fn writer_window_state_mutations_are_exact_reversible_and_codec_stable() {
         if step["lane"] == "config" {
             let mutation: WriterMainWindowConfigMutation = semio_framework_pack_json::from_json_str(&step["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             let before = configs[id].clone();
-            let after = mutation.diff(&before).diff().apply(&before).unwrap();
-            let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+            let after = protocol::apply_diff(mutation.diff(&before).diff(), &before).unwrap();
+            let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
             assert_eq!(restored, before);
             assert_eq!(WriterMainWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
             assert_eq!(WriterMainWindowConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
@@ -177,8 +177,8 @@ fn writer_window_state_mutations_are_exact_reversible_and_codec_stable() {
         } else {
             let mutation: WriterMainWindowTransientMutation = semio_framework_pack_json::from_json_str(&step["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             let before = transients[id].clone();
-            let after = mutation.diff(&before).diff().apply(&before).unwrap();
-            let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+            let after = protocol::apply_diff(mutation.diff(&before).diff(), &before).unwrap();
+            let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
             assert_eq!(restored, before);
             assert_eq!(WriterMainWindowTransientMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
             assert_eq!(WriterMainWindowTransientMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);

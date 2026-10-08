@@ -83,7 +83,7 @@ fn a_world_drop_yields_its_drag_and_the_fastening_it_lands() {
     assert_eq!(record.motion, Puzzle5dSelectionMotion::World(Puzzle3dSelectionMotion::Drag { offset: [-7.5, 0.0, 0.0] }), "the drop is the offset from b's base origin");
     assert_eq!(record.fastenings, vec![("b:g".to_string(), "a:g".to_string())], "b's grip lands on a's: the moved grip is the source");
     let (_, mutations) = commit("worldRelocate", &base, vec![record]).expect("the drop commits");
-    assert_eq!(mutations, vec![drag_selection_3d(vec!["b".into()], [-7.5, 0.0, 0.0]), connect_grips("fastener-b:g-a:g".into(), "b:g".into(), "a:g".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)], "the id is minted from the pair, never a counter");
+    assert_eq!(mutations, vec![drag_selection_3d(vec!["b".into()], [-7.5, 0.0, 0.0]), connect_grips("fastener-b:g-a:g".into(), "b:g".into(), "a:g".into(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None)], "the id is minted from the pair, never a counter");
     let mut moved = base.clone();
     for mutation in &mutations {
         apply_puzzle5d_mutation(&mut moved, mutation).expect("the transaction applies");

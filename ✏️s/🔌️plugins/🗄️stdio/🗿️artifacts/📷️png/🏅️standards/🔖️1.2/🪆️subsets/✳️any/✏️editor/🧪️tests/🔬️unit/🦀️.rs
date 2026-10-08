@@ -154,7 +154,7 @@ fn retained_native_profile_work_publishes_one_revision_guarded_mutation() {
     let PngMutation::PaintNativeSamples(mutation) = &mutations[0] else { panic!("native PNG mutation") };
     assert_eq!(mutation.revision, crate::standards::v1_2::subsets::any::schema::operations::png_revision(&snapshot));
     use protocol::{Mutation, MutationDiff};
-    let edited = mutations[0].diff(&snapshot).diff().apply(&snapshot).unwrap();
+    let edited = protocol::apply_diff(&mutations[0].diff(&snapshot).diff(), &snapshot).unwrap();
     assert_eq!(crate::standards::v1_2::subsets::any::schema::operations::png_native_pixel(&edited, 1, 0).unwrap(), vec![0x1234]);
     work.begin_close();
     let probe = work.close_step(1, 1);
@@ -174,7 +174,7 @@ fn retained_pixel_region_publishes_one_revision_guarded_edit_and_native_png() {
     assert_eq!(mutations.len(), 1);
     let PngMutation::PatchPixels(patch) = &mutations[0] else { panic!("typed region mutation") };
     assert_eq!(patch.revision, crate::standards::v1_2::subsets::any::schema::operations::png_revision(&base));
-    let edited = mutations[0].diff(&base).diff().apply(&base).unwrap();
+    let edited = protocol::apply_diff(&mutations[0].diff(&base).diff(), &base).unwrap();
     let pixels = crate::standards::v1_2::subsets::any::io::project_png(&crate::standards::v1_2::subsets::any::io::encode_png(&edited).unwrap()).unwrap().pixels;
     assert_eq!(&pixels[20..28], &[10, 20, 30, 128, 10, 20, 30, 128]);
     assert_eq!(crate::standards::v1_2::subsets::any::io::decode_png(&crate::standards::v1_2::subsets::any::io::encode_png(&edited).unwrap()).unwrap(), edited);
@@ -191,8 +191,8 @@ fn natural_file_route_exports_edited_and_committed_native_profiles_exactly() {
     assert_eq!(&samples[..frame.buffer_size()], &[7, 8, 9, 255, 21, 22, 23, 128]);
     let reopened = <PngEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("PNG natural bytes reopen");
     assert_eq!(reopened, edited);
-    let Some(PngMutation::SetSnapshot(set)) = <PngEditor as ArtifactEditor>::whole_document_operation(reopened) else { panic!("natural PNG opens through one event-sourced snapshot mutation") };
-    assert_eq!(crate::standards::v1_2::subsets::any::io::project_png(&crate::standards::v1_2::subsets::any::io::encode_png(&set.snapshot).unwrap()).unwrap().pixels, vec![7, 8, 9, 255, 21, 22, 23, 128]);
+    let Some(PngMutation::ReplaceImage(set)) = <PngEditor as ArtifactEditor>::whole_document_operation(reopened) else { panic!("natural PNG opens through one event-sourced snapshot mutation") };
+    assert_eq!(crate::standards::v1_2::subsets::any::io::project_png(&crate::standards::v1_2::subsets::any::io::encode_png(&PngSnapshot{schema:crate::STDIO_PNG_DOCUMENT_SCHEMA.into(),image:set.image}).unwrap()).unwrap().pixels, vec![7, 8, 9, 255, 21, 22, 23, 128]);
 
     let fixtures: &[(&str, &[u8], png::ColorType, png::BitDepth, bool)] = &[
         ("16-bit grayscale", include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png"), png::ColorType::Grayscale, png::BitDepth::Sixteen, false),
@@ -210,8 +210,8 @@ fn natural_file_route_exports_edited_and_committed_native_profiles_exactly() {
         assert_eq!((independent.info().color_type, independent.info().bit_depth, independent.info().interlaced), (color_type, bit_depth, interlaced), "{name}: native profile changed");
         let mut decoded = vec![0; independent.output_buffer_size().expect("bounded PNG output")];
         independent.next_frame(&mut decoded).unwrap_or_else(|error| panic!("{name}: png crate sample decode failed: {error}"));
-        let Some(PngMutation::SetSnapshot(set)) = <PngEditor as ArtifactEditor>::whole_document_operation(snapshot.clone()) else { panic!("natural PNG opens through one event-sourced snapshot mutation") };
-        assert_eq!(set.snapshot, snapshot, "{name}: whole-document publication regenerated source");
+        let Some(PngMutation::ReplaceImage(set)) = <PngEditor as ArtifactEditor>::whole_document_operation(snapshot.clone()) else { panic!("natural PNG opens through one event-sourced snapshot mutation") };
+        assert_eq!(set.image, snapshot.image, "{name}: whole-document publication regenerated source");
     }
 }
 
@@ -303,7 +303,7 @@ async fn registered_pixel_region_refuses_an_equal_length_later_snapshot() {
     let arguments = semio_framework_value::DslValue::object([("x".into(), number(0)), ("y".into(), number(0)), ("width".into(), number(1_024)), ("height".into(), number(512)), ("red".into(), number(9)), ("green".into(), number(8)), ("blue".into(), number(7)), ("alpha".into(), number(6))]);
     let meta = artifact_app_laws::meta("local"); app.handle_action(patch_pixel_region::ACTION_ID, Some(&arguments), &meta).await.unwrap(); assert_eq!(app.test_document_revision(), revision);
     let concurrent = crate::standards::v1_2::subsets::any::schema::operations::paint_rgba8_region_controlled(&expected, &crate::standards::v1_2::subsets::any::schema::operations::png_revision(&expected), crate::standards::v1_2::subsets::any::schema::snapshot::PngRegion { x: 0, y: 0, width: 1, height: 1 }, [31, 32, 33, 34], &mut |_, _| true).unwrap();
-    let mutation = PngMutation::SetSnapshot(crate::schema::mutations::SetSnapshot { snapshot: concurrent.clone() });
+    let mutation = PngMutation::ReplaceImage(crate::schema::mutations::ReplaceImage { image: concurrent.image.clone() });
     app.ingest_operations_text(&mutation.print_op()).await.unwrap(); expected = concurrent;
     let fault = match artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await { Err(fault) => fault, Ok(_) => panic!("stale snapshot was accepted") };
     assert!(fault.message.contains("stale immutable document root")); assert_eq!(app.snapshot().unwrap(), expected);
@@ -317,8 +317,8 @@ fn metadata_edit_and_inverse_preserve_exact_source_authority() {
     let mutation = PngMutation::ChangeGamma(crate::schema::mutations::ChangeGammaMutation { revision: crate::standards::v1_2::subsets::any::schema::operations::png_revision(&base), gama: Some(50_000) });
     assert_eq!(PngMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
     assert_eq!(PngMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
-    let edited = mutation.diff(&base).diff().apply(&base).unwrap(); assert_eq!(crate::standards::v1_2::subsets::any::io::project_png(&crate::standards::v1_2::subsets::any::io::encode_png(&edited).unwrap()).unwrap().gama, Some(50_000));
-    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&edited).diff().apply(&edited).unwrap(); assert_eq!(restored, base);
+    let edited = protocol::apply_diff(&mutation.diff(&base).diff(), &base).unwrap(); assert_eq!(crate::standards::v1_2::subsets::any::io::project_png(&crate::standards::v1_2::subsets::any::io::encode_png(&edited).unwrap()).unwrap().gama, Some(50_000));
+    let restored = protocol::apply_diff(&mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&edited).diff(), &edited).unwrap(); assert_eq!(restored, base);
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", super::PngEditor, || semio_framework_plugin::App { definition: super::create_png_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.2/🪆️subsets/✳️any");

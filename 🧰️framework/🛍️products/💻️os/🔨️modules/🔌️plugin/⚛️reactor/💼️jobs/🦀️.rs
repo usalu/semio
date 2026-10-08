@@ -563,13 +563,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         semio_framework_pack_json::from_json_str::<IoRunInput>(input_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?;
     let source = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&source).map_err(|message| fault("job.io-run", message))?;
     let target = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&target).map_err(|message| fault("job.io-run", message))?;
-    let descriptor = match semio_framework::io::io_mechanism::io_entries().into_iter().find(|entry| entry.from == source && entry.into == target) {
+    let descriptor = match semio_framework_os_kernel::io::io_mechanism::io_entries().into_iter().find(|entry| entry.from == source && entry.into == target) {
         Some(descriptor) => descriptor,
         None => return Err(fault("job.io-run", format!("no local io entry for hop {} -> {}", source.to_coordinate(), target.to_coordinate()))),
     };
     let fidelity = descriptor.fidelity;
     let route = semio_framework::io_schema::IoRoute { hops: vec![descriptor], fidelity };
-    let outcome = semio_framework::io::io_mechanism::io_run(&route, payload).await.map_err(|error| fault("job.io-run", error.cause.into_message()))?;
+    let outcome = semio_framework_os_kernel::io::io_mechanism::io_run(&route, payload).await.map_err(|error| fault("job.io-run", error.cause.into_message()))?;
     Ok(semio_framework_pack_json::to_json_string(&outcome.value).into_bytes())
 }
 
@@ -590,7 +590,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     if source != carrier {
         return Ok(vec![semio_framework::io_schema::Confidence::None.rank()]);
     }
-    let confidence = semio_framework::io::io_mechanism::io_identify(&payload).await.into_iter().find(|(dialect, _)| *dialect == target).map_or(semio_framework::io_schema::Confidence::None, |(_, confidence)| confidence);
+    let confidence = semio_framework_os_kernel::io::io_mechanism::io_identify(&payload).await.into_iter().find(|(dialect, _)| *dialect == target).map_or(semio_framework::io_schema::Confidence::None, |(_, confidence)| confidence);
     Ok(vec![confidence.rank()])
 }
 

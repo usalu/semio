@@ -1,5 +1,4 @@
-op = set-snapshot | insert-vertex | remove-vertex | set-vertex | insert-texcoord | remove-texcoord | set-texcoord | insert-normal | remove-normal | set-normal | insert-face | remove-face | set-face | set-group | remove-group | set-object | remove-object | set-mtllib | set-usemtl | set-smoothing-groups | set-unknown-statements ;
-set-snapshot = "set-snapshot", "snapshot", "{", snapshot, "}" ;
+op = insert-vertex | remove-vertex | set-vertex | insert-texcoord | remove-texcoord | set-texcoord | insert-normal | remove-normal | set-normal | insert-face | remove-face | set-face | set-group | remove-group | set-object | remove-object | set-mtllib | set-usemtl | set-smoothing-groups | set-unknown-statements ;
 insert-vertex = "insert-vertex", "index", "=", unsigned64, "vertex", vertex ;
 remove-vertex = "remove-vertex", "index", "=", unsigned64 ;
 set-vertex = "set-vertex", "index", "=", unsigned64, "vertex", vertex ;
@@ -12,9 +11,9 @@ set-normal = "set-normal", "index", "=", unsigned64, "normal", normal ;
 insert-face = "insert-face", "index", "=", unsigned64, "face", face ;
 remove-face = "remove-face", "index", "=", unsigned64 ;
 set-face = "set-face", "index", "=", unsigned64, "face", face ;
-set-group = "set-group", "name", "=", text, "faces", "=", "[", { unsigned64 }, "]" ;
+set-group = "set-group", "name", "=", text, "faces", "=", "[", { unsigned64 }, "]", [ "index", "=", unsigned64 ] ;
 remove-group = "remove-group", "name", "=", text ;
-set-object = "set-object", "name", "=", text, "faces", "=", "[", { unsigned64 }, "]" ;
+set-object = "set-object", "name", "=", text, "faces", "=", "[", { unsigned64 }, "]", [ "index", "=", unsigned64 ] ;
 remove-object = "remove-object", "name", "=", text ;
 set-mtllib = "set-mtllib", [ "mtllib", "=", text ] ;
 set-usemtl = "set-usemtl", "usemtl", "=", "[", { material }, "]" ;

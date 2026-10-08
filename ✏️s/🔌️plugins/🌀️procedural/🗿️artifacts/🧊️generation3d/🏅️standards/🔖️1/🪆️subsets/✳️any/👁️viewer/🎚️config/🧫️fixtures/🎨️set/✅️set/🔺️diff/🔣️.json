@@ -1,19 +1,9 @@
 {
-  "lodMode": "",
-  "showMode": "shaded",
-  "previewCamera": {
-    "position": [
-      6.0,
-      6.0,
-      6.0
-    ],
-    "target": [
-      0.0,
-      0.0,
-      0.0
-    ],
-    "fov": 45.0
-  },
-  "sunJson": "{\"azimuth\":135,\"elevation\":45}",
-  "activeExampleId": "box-fillet-preview"
+  "lodMode": null,
+  "showMode": null,
+  "previewCamera": null,
+  "sunJson": null,
+  "activeExampleId": {
+    "id": "box-fillet-preview"
+  }
 }

@@ -1,37 +1,28 @@
 {
   "artifact": null,
-  "schema": null,
+  "attractions": null,
   "domain": null,
   "meta": {
-    "kindCompatibility": [
-      {
-        "source": "vortex-kind-a",
-        "target": "vortex-kind-b",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      }
-    ],
     "kindCatalogs": {
+      "attractions": [],
+      "cables": [],
       "objects": [],
       "vortices": [
         {
-          "id": "vortex-kind-a",
+          "color": "#3366ff",
           "compatibleWith": [
             "vortex-kind-b"
           ],
+          "defaultCableKind": "cable-kind-a",
           "description": "Alpha port",
           "icon": "circle",
-          "color": "#3366ff",
-          "defaultCableKind": "cable-kind-a"
+          "id": "vortex-kind-a"
         }
-      ],
-      "cables": [],
-      "attractions": []
+      ]
     }
   },
   "objects": null,
-  "attractions": null,
-  "targetVolumes": null,
-  "references": null
+  "references": null,
+  "schema": null,
+  "targetVolumes": null
 }

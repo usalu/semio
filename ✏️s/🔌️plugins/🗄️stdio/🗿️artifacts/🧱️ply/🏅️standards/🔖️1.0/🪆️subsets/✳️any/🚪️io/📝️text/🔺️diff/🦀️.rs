@@ -379,6 +379,30 @@ pub(crate) fn dec_elements_diff(body: &str) -> Result<PlyElementsDiff, String> {
     Ok(PlyElementsDiff { removed, modified, added })
 }
 
+/// 💬 `PlyCommentsDiff` — INDEX-keyed `[removed];[modified];[added]` (`index:text` pairs, text hex-encoded).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_comments_diff(d: &PlyCommentsDiff) -> String {
+    let removed = d.removed.iter().map(|index| index.to_string()).collect::<Vec<_>>().join(",");
+    let modified = d.modified.iter().map(|m| format!("{}:{}", m.index, enc_str(&m.diff))).collect::<Vec<_>>().join(",");
+    let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_str(&a.item))).collect::<Vec<_>>().join(",");
+    format!("{{[{removed}];[{modified}];[{added}]}}")
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_comments_diff(body: &str) -> Result<PlyCommentsDiff, String> {
+    let inner = body.strip_prefix('{').and_then(|s| s.strip_suffix('}')).ok_or_else(|| format!("comments triple: expected {{...}}, got {body:?}"))?;
+    let three = split_top_level(inner, ';');
+    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("comments triple: expected 3 sections, got {}", three.len())) };
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_usize).collect::<Result<Vec<_>, String>>()?;
+    let pair = |entry: &str| -> Result<(usize, String), String> {
+        let (index, text) = entry.split_once(':').ok_or_else(|| format!("comments triple: bad entry {entry:?}"))?;
+        Ok((parse_usize(index)?, dec_str(text)?))
+    };
+    let modified = split_top_level(strip_brackets(modified_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| pair(entry).map(|(index, diff)| IndexedModified { index, diff })).collect::<Result<Vec<_>, String>>()?;
+    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|entry| pair(entry).map(|(index, item)| IndexedAdded { index, item })).collect::<Result<Vec<_>, String>>()?;
+    Ok(PlyCommentsDiff { removed, modified, added })
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_ply_diff(d: &PlyDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
@@ -386,7 +410,7 @@ pub(crate) fn print_ply_diff(d: &PlyDiff) -> String {
         tokens.push(format!("format={}", enc_format(f)));
     }
     if let Some(c) = &d.comments {
-        tokens.push(format!("comments=[{}]", c.iter().map(|s| enc_str(s)).collect::<Vec<_>>().join(",")));
+        tokens.push(format!("comments={}", enc_comments_diff(c)));
     }
     if let Some(e) = &d.elements {
         tokens.push(format!("elements={}", enc_elements_diff(e)));
@@ -404,7 +428,7 @@ pub(crate) fn parse_ply_diff(line: &str) -> Result<PlyDiff, String> {
         if let Some(rest) = token.strip_prefix("format=") {
             d.format = Some(dec_format(rest)?);
         } else if let Some(rest) = token.strip_prefix("comments=") {
-            d.comments = Some(split_top_level(strip_brackets(rest)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?);
+            d.comments = Some(dec_comments_diff(rest)?);
         } else if let Some(rest) = token.strip_prefix("elements=") {
             d.elements = Some(dec_elements_diff(rest)?);
         } else {

@@ -1,6 +1,6 @@
 cargo-features = ["trim-paths"]
 [package]
-workspace = "../../../../.."
+workspace = "../../../.."
 name = "semio-framework-surface"
 version = "0.1.0"
 edition = "2021"
@@ -38,13 +38,16 @@ crate-type = ["rlib", "cdylib"]
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-pack = { path = "../../../🎒️pack/📦️packages/🦀️rust" }
+semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
-semio-framework-artifact-infinite-dag = { workspace = true }
+semio-framework-pack-error = { path = "../../../🎒️pack/⚠️error/📦️packages/🦀️rust" }
+semio-framework-replication = { path = "../../../📡️replication/📦️packages/🦀️rust" }
+semio-framework-ui-viewport = { path = "../../../🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true }
 ui_styling = { path = "../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
-infinite_canvas = { path = "../../../../🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
-semio-framework-os-kernel = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+canvas = { path = "../../../🖼️canvas/📦️packages/🦀️rust", package = "semio-framework-canvas" }
 semio-framework-job = { workspace = true }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
@@ -68,3 +71,6 @@ web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window"] }
 [[test]]
 name = "tiled_map_mercator_oracle"
 path = "../../🧪️tests/🗺️tiled-map-mercator-oracle/🦀️.rs"
+
+[dev-dependencies]
+semio-framework-trace = { path = "../../../⏱️trace/📦️packages/🦀️rust" }

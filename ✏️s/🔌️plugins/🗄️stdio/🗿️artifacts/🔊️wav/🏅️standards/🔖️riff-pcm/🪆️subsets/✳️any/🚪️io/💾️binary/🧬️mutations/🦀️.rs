@@ -6,7 +6,7 @@ pub const BINARY_MAGIC: &str = "stdio.wav.mutations";
 mod mutations_codec {
 use super::*;
 use crate::standards::riff_pcm::subsets::any::schema::mutations::*;
-use crate::standards::riff_pcm::subsets::any::schema::diff::{diff_set_data, diff_set_fmt, diff_set_other_chunks, diff_set_snapshot, WavDiff};
+use crate::standards::riff_pcm::subsets::any::schema::diff::{diff_set_data, diff_set_fmt, diff_set_other_chunks, WavDiff};
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::{validate_wav_serialization, RiffChunk, WavData, WavFmt, WavSnapshot};
 use protocol::Mutation;
 use protocol::{OpBinary, OpText};

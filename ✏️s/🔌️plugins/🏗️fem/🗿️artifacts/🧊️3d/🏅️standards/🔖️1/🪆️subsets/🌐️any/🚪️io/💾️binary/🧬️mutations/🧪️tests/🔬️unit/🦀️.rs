@@ -36,13 +36,13 @@ async fn fem3d_document_text_round_trips_through_the_store() {
     let mut store = ::semio_framework_async::poll::resolve_ready(schema::mutations::Fem3dStore::new(create_document_envelope(crate::FEM_3D_SCHEMA, "fem3d", schema::empty_fem3d_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid store");
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<crate::Fem3dSnapshot, Fem3dMutation>());
     let mutations = vec![
-        Fem3dMutation::CreateMaterial(schema::mutations::create_material::CreateMaterial { material: fixture.materials[0].clone() }),
-        Fem3dMutation::CreateSection(schema::mutations::create_section::CreateSection { section: fixture.sections[0].clone() }),
-        Fem3dMutation::CreateNode(schema::mutations::create_node::CreateNode { node: fixture.nodes[0].clone() }),
-        Fem3dMutation::CreateNode(schema::mutations::create_node::CreateNode { node: fixture.nodes[1].clone() }),
-        Fem3dMutation::CreateElement(schema::mutations::create_element::CreateElement { element: Box::new(fixture.elements[0].clone()) }),
-        Fem3dMutation::CreateSupport(schema::mutations::create_support::CreateSupport { support: fixture.supports[0].clone() }),
-        Fem3dMutation::CreateLoadCase(schema::mutations::create_load_case::CreateLoadCase { load_case: fixture.load_cases[0].clone() }),
+        Fem3dMutation::CreateMaterial(schema::mutations::create_material::CreateMaterial { material: fixture.materials[0].clone(), index: None }),
+        Fem3dMutation::CreateSection(schema::mutations::create_section::CreateSection { section: fixture.sections[0].clone(), index: None }),
+        Fem3dMutation::CreateNode(schema::mutations::create_node::CreateNode { node: fixture.nodes[0].clone(), index: None }),
+        Fem3dMutation::CreateNode(schema::mutations::create_node::CreateNode { node: fixture.nodes[1].clone(), index: None }),
+        Fem3dMutation::CreateElement(schema::mutations::create_element::CreateElement { element: Box::new(fixture.elements[0].clone()), index: None }),
+        Fem3dMutation::CreateSupport(schema::mutations::create_support::CreateSupport { support: fixture.supports[0].clone(), index: None }),
+        Fem3dMutation::CreateLoadCase(schema::mutations::create_load_case::CreateLoadCase { load_case: fixture.load_cases[0].clone(), index: None }),
     ];
     store.dispatch(ArtifactCommand::Apply { mutations, transaction: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot"), fixture);

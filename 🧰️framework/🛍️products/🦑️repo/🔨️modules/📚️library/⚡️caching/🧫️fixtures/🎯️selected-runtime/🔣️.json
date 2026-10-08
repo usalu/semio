@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "fontTool": {
-    "root": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/📦️packages/🦀️rust",
-    "project": "semio-framework-os-font-assets",
+    "root": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust",
+    "project": "semio-framework-canvas-font-assets",
     "crates": [
-      "semio-framework-os-font-assets",
+      "semio-framework-canvas-font-assets",
       "typst-assets"
     ],
     "commands": [
-      "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/📜️script.ts",
+      "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/📜️script.ts",
       "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/📜️script.ts"
     ],
     "forbiddenInputs": [

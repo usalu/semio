@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../.."
+workspace = "../../../.."
 name = "semio-framework-hash"
 version = "0.1.0"
 edition = "2021"

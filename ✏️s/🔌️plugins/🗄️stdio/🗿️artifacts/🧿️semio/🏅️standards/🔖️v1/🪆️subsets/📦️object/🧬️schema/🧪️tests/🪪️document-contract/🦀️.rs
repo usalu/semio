@@ -33,7 +33,7 @@ async fn stdio_document_contract_object_round_trips_exact_children() {
             let diff = diff.expect("valid diff");
             assert_eq!(SemioObjectDiff::parse_diff(&diff.print_diff()).expect("diff text"), diff);
             assert_eq!(SemioObjectDiff::decode_diff(&diff.encode_diff().expect("diff Pack")).expect("diff Pack decode"), diff);
-            let next = diff.apply(&rich).expect("valid diff applies");
+            let next = protocol::apply_diff(&diff, &rich).expect("valid diff applies");
             if diff.mesh.is_none() { assert_eq!(next.mesh, rich.mesh); }
             if diff.brep.is_none() { assert_eq!(next.brep, rich.brep); }
             if diff.properties.is_none() { assert_eq!(next.properties, rich.properties); }
@@ -43,7 +43,7 @@ async fn stdio_document_contract_object_round_trips_exact_children() {
         let before: SemioObjectSnapshot = semio_framework_pack_json::from_json_str(&case["before"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit before");
         let diff: SemioObjectDiff = semio_framework_pack_json::from_json_str(&case["diff"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("edit diff");
         let expected: SemioObjectSnapshot = semio_framework_pack_json::from_json_str(&case["after"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("independent expected edit");
-        assert_eq!(diff.apply(&before).expect("edit applies"), expected);
+        assert_eq!(protocol::apply_diff(&diff, &before).expect("edit applies"), expected);
     }
     let text = include_str!("../../../🖼️assets/📦️crate/🗣️.dsl.semio");
     let pack = include_bytes!("../../../🖼️assets/📦️crate/🎒️.pack.semio");
@@ -53,14 +53,15 @@ async fn stdio_document_contract_object_round_trips_exact_children() {
 #[semio_framework_async_macros::async_test]
 async fn stdio_document_contract_object_rejects_invalid_typed_mutations() {
     use protocol::Mutation;
-    use crate::standards::v1::subsets::object::schema::mutations::{SemioObjectMutation, apply_semio_object_mutation, create_mesh::CreateMesh};
+    use crate::standards::v1::subsets::object::schema::mutations::{SemioObjectMutation, create_mesh::CreateMesh};
     let mut snapshot = SemioObjectSnapshot::default();
     let before = snapshot.clone();
     let mutation = SemioObjectMutation::CreateMesh(CreateMesh {
         child_id: "wrong-owner-child".into(),
         target: semio_framework_artifact_reference::ArtifactRef { artifact_id: "mesh-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "foreign.artifact".into(), standard: "v1".into(), subset: "mesh".into() } },
     });
-    let outcome = apply_semio_object_mutation(&mut snapshot, &mutation);
+    let (__next, outcome) = crate::applied(&snapshot, &mutation);
+    snapshot = __next;
     assert_eq!(snapshot, before);
     assert!(mutation.inverse(&before).expect("valid retained mutation inverse fixture").is_empty(), "rejected creation has no inverse effect");
     assert_eq!(outcome.messages().len(), 1);

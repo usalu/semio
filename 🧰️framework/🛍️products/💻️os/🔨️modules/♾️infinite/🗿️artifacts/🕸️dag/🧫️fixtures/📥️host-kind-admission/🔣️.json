@@ -5,7 +5,7 @@
       "id": "computation",
       "accepted": true,
       "snapshot": {
-        "schema": "dag.host_snapshot",
+        "schema": "dag.hostDocument",
         "camera": {
           "x": 0,
           "y": 0,
@@ -27,7 +27,7 @@
       "id": "slider",
       "accepted": true,
       "snapshot": {
-        "schema": "dag.host_snapshot",
+        "schema": "dag.hostDocument",
         "camera": {
           "x": 0,
           "y": 0,
@@ -55,7 +55,7 @@
       "id": "select",
       "accepted": true,
       "snapshot": {
-        "schema": "dag.host_snapshot",
+        "schema": "dag.hostDocument",
         "camera": {
           "x": 0,
           "y": 0,
@@ -82,7 +82,7 @@
       "id": "screen",
       "accepted": true,
       "snapshot": {
-        "schema": "dag.host_snapshot",
+        "schema": "dag.hostDocument",
         "camera": {
           "x": 0,
           "y": 0,
@@ -106,7 +106,7 @@
       "id": "note",
       "accepted": true,
       "snapshot": {
-        "schema": "dag.host_snapshot",
+        "schema": "dag.hostDocument",
         "camera": {
           "x": 0,
           "y": 0,
@@ -131,7 +131,7 @@
       "id": "image",
       "accepted": true,
       "snapshot": {
-        "schema": "dag.host_snapshot",
+        "schema": "dag.hostDocument",
         "camera": {
           "x": 0,
           "y": 0,
@@ -155,7 +155,7 @@
       "id": "preview",
       "accepted": true,
       "snapshot": {
-        "schema": "dag.host_snapshot",
+        "schema": "dag.hostDocument",
         "camera": {
           "x": 0,
           "y": 0,
@@ -179,7 +179,7 @@
       "id": "action",
       "accepted": true,
       "snapshot": {
-        "schema": "dag.host_snapshot",
+        "schema": "dag.hostDocument",
         "camera": {
           "x": 0,
           "y": 0,
@@ -204,7 +204,7 @@
       "id": "export",
       "accepted": true,
       "snapshot": {
-        "schema": "dag.host_snapshot",
+        "schema": "dag.hostDocument",
         "camera": {
           "x": 0,
           "y": 0,
@@ -230,7 +230,7 @@
       "id": "cluster",
       "accepted": true,
       "snapshot": {
-        "schema": "dag.host_snapshot",
+        "schema": "dag.hostDocument",
         "camera": {
           "x": 0,
           "y": 0,
@@ -252,7 +252,7 @@
       "id": "appInstance",
       "accepted": true,
       "snapshot": {
-        "schema": "dag.host_snapshot",
+        "schema": "dag.hostDocument",
         "camera": {
           "x": 0,
           "y": 0,
@@ -277,7 +277,7 @@
       "id": "rejected-unknown",
       "accepted": false,
       "snapshot": {
-        "schema": "dag.host_snapshot",
+        "schema": "dag.hostDocument",
         "camera": {
           "x": 0,
           "y": 0,
@@ -299,7 +299,7 @@
       "id": "rejected-Computation",
       "accepted": false,
       "snapshot": {
-        "schema": "dag.host_snapshot",
+        "schema": "dag.hostDocument",
         "camera": {
           "x": 0,
           "y": 0,
@@ -321,7 +321,7 @@
       "id": "rejected-42",
       "accepted": false,
       "snapshot": {
-        "schema": "dag.host_snapshot",
+        "schema": "dag.hostDocument",
         "camera": {
           "x": 0,
           "y": 0,
@@ -343,7 +343,7 @@
       "id": "missing",
       "accepted": false,
       "snapshot": {
-        "schema": "dag.host_snapshot",
+        "schema": "dag.hostDocument",
         "camera": {
           "x": 0,
           "y": 0,

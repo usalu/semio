@@ -46,3 +46,37 @@ pub struct GisMapViewerWindowConfig {
     #[dsl(block)]
     pub camera: GisMapViewerCamera,
 }
+
+/// 🔺️ Sparse delta of the viewer window's retained state: the camera, only when a mutation changes it.
+#[derive(Clone, Copy, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+pub struct GisMapViewerWindowConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    pub camera: Option<GisMapViewerCamera>,
+}
+
+impl protocol::MutationDiff<GisMapViewerWindowConfig> for GisMapViewerWindowConfigDiff {
+    fn apply(&self, base: &GisMapViewerWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GisMapViewerWindowConfig> {
+        Ok(GisMapViewerWindowConfig { camera: self.camera.unwrap_or(base.camera) })
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.camera.is_some() {
+            self.camera = other.camera;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<GisMapViewerWindowConfig> for GisMapViewerWindowConfigDiff {
+    fn inverse(&self, base: &GisMapViewerWindowConfig) -> Self {
+        Self { camera: self.camera.map(|_| base.camera) }
+    }
+    fn between(base: &GisMapViewerWindowConfig, other: &GisMapViewerWindowConfig) -> Self {
+        Self { camera: (base.camera != other.camera).then_some(other.camera) }
+    }
+    fn is_empty(&self) -> bool {
+        self.camera.is_none()
+    }
+}

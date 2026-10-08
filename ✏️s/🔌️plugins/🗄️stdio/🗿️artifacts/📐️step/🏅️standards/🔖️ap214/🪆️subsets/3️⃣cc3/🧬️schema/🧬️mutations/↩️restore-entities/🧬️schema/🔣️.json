@@ -1,0 +1,288 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/step/ap214/cc3/mutation/restore-entities/schema.json",
+  "title": "RestoreEntities",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entities"
+  ],
+  "properties": {
+    "entities": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/EntityRestore"
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Entities",
+          "de": "Entitäten"
+        },
+        "description": {
+          "en": "Rows that write an exact entity (or remove it) at an exact position, applied as one atomic step.",
+          "de": "Zeilen, die eine genaue Entität (oder deren Entfernung) an einer genauen Position schreiben, als ein atomarer Schritt angewandt."
+        },
+        "group": "value",
+        "order": 10
+      }
+    }
+  },
+  "$defs": {
+    "StepEntity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StepValue"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Parameters",
+              "de": "Parameter"
+            },
+            "description": {
+              "en": "Attribute values of the entity instance in declaration order.",
+              "de": "Attributwerte der Entitätsinstanz in Deklarationsreihenfolge."
+            }
+          }
+        },
+        "complex": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StepComplexType"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Partial entity instances",
+              "de": "Teilentitätsinstanzen"
+            },
+            "description": {
+              "en": "Subtype records of a complex (multi-leaf) entity instance.",
+              "de": "Untertyp-Datensätze einer komplexen Entitätsinstanz."
+            }
+          }
+        }
+      }
+    },
+    "StepValue": {
+      "oneOf": [
+        {
+          "type": "string",
+          "const": "unset"
+        },
+        {
+          "type": "string",
+          "const": "derived"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "integer"
+          ],
+          "properties": {
+            "integer": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "real"
+          ],
+          "properties": {
+            "real": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "string"
+          ],
+          "properties": {
+            "string": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enum"
+          ],
+          "properties": {
+            "enum": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reference"
+          ],
+          "properties": {
+            "reference": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "aggregate"
+          ],
+          "properties": {
+            "aggregate": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/StepValue"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "typedValue"
+          ],
+          "properties": {
+            "typedValue": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "typeName": {
+                  "type": "string"
+                },
+                "value": {
+                  "$ref": "#/$defs/StepValue"
+                }
+              },
+              "required": [
+                "typeName",
+                "value"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "StepComplexType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/StepValue"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Parameters",
+              "de": "Parameter"
+            },
+            "description": {
+              "en": "Attribute values of the entity instance in declaration order.",
+              "de": "Attributwerte der Entitätsinstanz in Deklarationsreihenfolge."
+            }
+          }
+        }
+      }
+    },
+    "EntityRestore": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Entity",
+              "de": "Entität"
+            },
+            "description": {
+              "en": "Instance name (#id) of the entity that is written back.",
+              "de": "Instanzname (#id) der Entität, die zurückgeschrieben wird."
+            },
+            "ref": {
+              "kind": "entity"
+            }
+          }
+        },
+        "entity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StepEntity"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Entity",
+              "de": "Entität"
+            },
+            "description": {
+              "en": "The exact entity to write at this id; empty removes the entity.",
+              "de": "Die genaue Entität, die unter dieser ID geschrieben wird; leer entfernt die Entität."
+            }
+          }
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "label": {
+              "en": "Position",
+              "de": "Position"
+            },
+            "description": {
+              "en": "Position a new entity takes among the final entities; the last position when absent.",
+              "de": "Position, die eine neue Entität unter den endgültigen Entitäten einnimmt; ohne Angabe die letzte."
+            },
+            "step": 1,
+            "precision": 0
+          }
+        }
+      }
+    }
+  }
+}

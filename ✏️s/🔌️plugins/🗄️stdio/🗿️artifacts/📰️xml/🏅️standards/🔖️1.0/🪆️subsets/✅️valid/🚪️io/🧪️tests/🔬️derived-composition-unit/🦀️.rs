@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use semio_framework_plugin::AnalyzeSource;
+    use semio_framework_plugin::io::AnalyzeSource;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn conforming_xml_text() -> String {
@@ -92,7 +92,7 @@ mod tests {
         }
 
         async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
-            vec![crate::standards::v1_0::subsets::valid::schema::XmlValidMutation::SetSnapshot(crate::standards::v1_0::subsets::valid::schema::valid_mutations::set_snapshot::SetSnapshot { snapshot: snapshot.clone() })]
+            vec![crate::standards::v1_0::subsets::valid::schema::XmlValidMutation::SetExternalSubset(crate::standards::v1_0::subsets::valid::schema::valid_mutations::set_external_subset::SetExternalSubset { external_id: snapshot.doc.doctype.as_ref().and_then(|doctype| doctype.external_id.clone()) })]
         }
 
         async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {

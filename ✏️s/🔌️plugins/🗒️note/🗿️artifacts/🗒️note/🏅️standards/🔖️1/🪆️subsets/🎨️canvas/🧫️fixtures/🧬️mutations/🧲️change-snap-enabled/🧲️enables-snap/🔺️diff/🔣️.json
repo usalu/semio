@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "title": null,
@@ -8,7 +7,9 @@
   "gridSpacing": null,
   "gridSubdivisions": null,
   "gridOpacity": null,
-  "snapEnabled": true,
+  "snapEnabled": {
+    "value": true
+  },
   "snapGridSpacing": null,
   "pencilWidth": null,
   "eraserRadius": null,

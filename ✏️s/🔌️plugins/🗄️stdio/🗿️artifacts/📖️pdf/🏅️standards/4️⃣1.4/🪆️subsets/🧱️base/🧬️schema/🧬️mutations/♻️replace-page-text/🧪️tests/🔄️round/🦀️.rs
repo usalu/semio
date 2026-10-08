@@ -1,7 +1,7 @@
 //! 🧪️ `replace-page-text` fixture — `🔄️round`.
 //!
 //! Source of truth is the committed JSON quintet beside this file. Every value in it was produced
-//! by this repository's OWN dispatch — `Mutation::diff` followed by `MutationDiff::apply` — so the
+//! by this repository's OWN dispatch — `Mutation::diff` followed by `protocol::apply_diff` — so the
 //! fixture pins what the runtime does rather than what a second implementation believes it should.
 //!
 //! ⚖️ The six laws below are the closed set every mutation vector in this repository states, and the

@@ -19,6 +19,7 @@ pub struct CreatePlantLoop {
     pub return_temperature_c: f64,
     pub design_flow_kg_s: f64,
     pub equipment_ids: Vec<crate::model::EntityId>,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
@@ -30,8 +31,9 @@ pub fn create_plant_loop(
     return_temperature_c: f64,
     design_flow_kg_s: f64,
     equipment_ids: Vec<crate::model::EntityId>,
+    index: Option<u32>,
 ) -> EnergyModelMutation {
-    EnergyModelMutation::CreatePlantLoop(CreatePlantLoop { id, name, loop_type, supply_temperature_c, return_temperature_c, design_flow_kg_s, equipment_ids })
+    EnergyModelMutation::CreatePlantLoop(CreatePlantLoop { id, name, loop_type, supply_temperature_c, return_temperature_c, design_flow_kg_s, equipment_ids, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreatePlantLoop {

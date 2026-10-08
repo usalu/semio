@@ -34,7 +34,7 @@ fn mutation() -> SemioBrepMutation {
 #[semio_framework_async_macros::async_test]
 async fn deletes_the_vertex_and_both_incident_edges() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("delete-vertex applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-vertex applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-vertex/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges: applied state differs from the committed after-snapshot");
     assert!(!produced.vertices.iter().any(|vertex| vertex.id == "v2"), "the named vertex must be gone");
     assert!(!produced.edges.iter().any(|edge| edge.start_vertex == "v2" || edge.end_vertex == "v2"), "no edge may keep a dangling reference to the deleted vertex");
@@ -49,14 +49,15 @@ async fn deletes_the_vertex_and_both_incident_edges() {
 async fn the_undo_recreates_the_vertex_then_both_severed_edges() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     let deleted = &base.vertices[1];
     let recreated_vertex = undo.iter().position(|operation| matches!(operation, SemioBrepMutation::CreateVertex(vertex) if vertex.id == deleted.id)).expect("the undo re-creates the deleted vertex");
     for severed in base.edges.iter().filter(|edge| edge.start_vertex == deleted.id || edge.end_vertex == deleted.id) {
         let recreated_edge = undo.iter().position(|operation| matches!(operation, SemioBrepMutation::CreateEdge(edge) if edge.id == severed.id)).expect("the undo re-creates every severed edge");
-        assert!(recreated_vertex < recreated_edge, "the vertex must come back first — an edge without its endpoint would be dangling");
+        assert!(recreated_vertex > recreated_edge, "rows are stored reversed, so the vertex row comes last and is replayed first — an edge without its endpoint would be dangling");
     }
-    for operation in &undo {
+    for operation in undo.iter().rev() {
         match operation {
             SemioBrepMutation::CreateVertex(vertex) => assert_eq!(vertex.tol, base.vertices.iter().find(|candidate| candidate.id == vertex.id).expect("recreated vertex existed in base").tol, "the inverse must restore every re-created vertex tolerance"),
             SemioBrepMutation::CreateEdge(edge) => assert_eq!(edge.tol, base.edges.iter().find(|candidate| candidate.id == edge.id).expect("recreated edge existed in base").tol, "the inverse must restore every cascaded edge tolerance"),
@@ -64,9 +65,9 @@ async fn the_undo_recreates_the_vertex_then_both_severed_edges() {
             other => panic!("delete-vertex's undo only lifts and re-declares vertices and edges, found {other:?}"),
         }
     }
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-vertex applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("each undo step applies to the running state");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-vertex applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
     }
     assert_eq!(current, base, "delete-vertex/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges: the undo did not restore the before-snapshot");
 }
@@ -112,7 +113,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded = decode_semio_brep_diff_json(DIFF).expect("committed delete-vertex diff decodes");
-    let produced = decoded.apply(&before()).expect("committed delete-vertex diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-vertex diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-vertex/removes-a-corner-vertex-and-cascades-into-its-two-incident-edges: committed diff did not carry before to after");
 }
 

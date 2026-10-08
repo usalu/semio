@@ -100,7 +100,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "duplicate-block/copies-the-math-block-right-after-its-source: committed diff did not carry before to after");
 }
 
@@ -114,4 +114,10 @@ async fn copy_lands_immediately_after_its_source() {
     assert_eq!(find_block_location(&applied.blocks, "blk-math-copy"), Some((None, 4)), "the copy must land at source index + 1");
     assert_eq!(block_name(find_block(&applied.blocks, "blk-math-copy").expect("the copy exists")), "Formula copy", "the copy carries the identity the payload named");
     assert_eq!(applied.blocks.len(), base.blocks.len() + 1, "duplicate-block adds exactly one block");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

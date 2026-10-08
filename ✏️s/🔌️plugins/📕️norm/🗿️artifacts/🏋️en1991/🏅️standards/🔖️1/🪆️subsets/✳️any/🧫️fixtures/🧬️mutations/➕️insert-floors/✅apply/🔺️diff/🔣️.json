@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "annex": null,
   "snowZone": null,
   "altitude": null,
@@ -66,27 +65,40 @@
   "assumedSiloPatch": null,
   "assumedSiloWallFriction": null,
   "floors": {
-    "values": [
+    "removed": [],
+    "added": [
       {
-        "id": "office-l1",
-        "category": "B1",
-        "area": 240.0,
-        "assumedQk": 1000.0,
-        "assumedQkConcentrated": 5000.0,
-        "assumedPartitions": 200.0
-      },
-      {
-        "id": "archive-l2",
-        "category": "E1",
-        "area": 120.0,
-        "assumedQk": 6000.0,
-        "assumedQkConcentrated": 7000.0,
-        "assumedPartitions": 0.0
+        "after": "office-l1",
+        "row": {
+          "id": "archive-l2",
+          "category": "E1",
+          "area": 120.0,
+          "assumedQk": 6000.0,
+          "assumedQkConcentrated": 7000.0,
+          "assumedPartitions": 0.0
+        }
       }
-    ]
+    ],
+    "modified": []
   },
-  "selfWeightElements": null,
-  "roofs": null,
-  "windFaces": null,
-  "accidentalCases": null
+  "selfWeightElements": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "roofs": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "windFaces": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "accidentalCases": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

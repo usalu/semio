@@ -1,0 +1,70 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "sha256": "e9e032530bf7dc1a922555c72f5e667c81514d0c3e74928b0c27adaa96631208",
+      "byteLength": 1000855,
+      "role": "Explicit root canonical preview integration edit"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+      "sha256": "a8d36ebcbff730565b6c8b5e351b99740236f103f3b9742895bf945cab6517cb",
+      "byteLength": 570319,
+      "role": "Explicit root canonical preview integration edit"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🏭️owned-generator-preview-inventory/🔣️.json",
+      "sha256": "fc143d9217d641076d24048ffff894ad0b0b098ed3d58190f69b625a5a895c43",
+      "byteLength": 12642,
+      "role": "Explicit root canonical preview integration edit"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
+      "sha256": "9d74db4c5e4e47eca782e0ca2f5bb6523204f7355e5953f7354d623216312f9d",
+      "byteLength": 38238,
+      "role": "Explicit root canonical preview integration edit"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/project.json",
+      "sha256": "920de5dd500e3687a3cad95099d2e48a3912888933a22c75e7b747ce3433ab60",
+      "byteLength": 69021,
+      "role": "Explicit root canonical preview integration edit"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "sha256": "34b124ed6befde8ae27c34c7ae7968880430e96a2ab1d1f2219d760698bfe026",
+      "byteLength": 3872327,
+      "role": "Explicit root canonical preview integration edit"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "sha256": "11619ecdc67f04d8a56675f7d81dd8e5396959daf315103d694945afe9cb00db",
+      "byteLength": 3211809,
+      "role": "Explicit root canonical preview integration edit"
+    }
+  ],
+  "logs": {
+    "red": {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct8-root-canonical-process-preview-red.log",
+      "byteLength": 14713,
+      "sha256": "7bf0ff503bfa47c91596027b3b9a78f29391cebfcad44ff570a9f5d7b004f337"
+    },
+    "firstGreen": {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct8-root-canonical-process-preview-green.log",
+      "byteLength": 11062,
+      "sha256": "ae5d3f1cba17c39e0bbd27e223fef03f8d18234c62f72334670d7dc395d6633e"
+    },
+    "actualMetadata": {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct8-root-canonical-process-preview-current-metadata-green.log",
+      "byteLength": 12313,
+      "sha256": "bc4e694e95c0840c79050501ebc38cd511cccc41b10808efb4660b84ae6fe3ed"
+    },
+    "lockedOracle": {
+      "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/🗑️generated/oct8-root-canonical-process-preview-locked-oracle-green.log",
+      "byteLength": 12314,
+      "sha256": "ccf1a058fa8e293faeeeace3d2f4087f6d12727e810e1d3731d85e0196dd2d3a"
+    }
+  },
+  "schemaStatus": "Existing variable GeneratorContract protocol and signature unchanged; no fixture schema",
+  "status": "Current locked oracle and actual taxonomy metadata passed; native preparation/production remain pending"
+}

@@ -6,12 +6,79 @@
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "defaultShotFormat": { "type": "string" },
-    "defaultShotShape": { "type": "string" },
-    "defaultAssetFormat": { "type": "string" },
-    "selectedShotIds": { "type": "array", "items": { "type": "string" } },
-    "centerModel": { "type": "boolean" },
-    "fitRevision": { "type": "integer", "minimum": 0 },
-    "camera": { "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingCamera" }
+    "defaultShotFormat": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "defaultShotShape": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "defaultAssetFormat": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "selectedShotIds": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "centerModel": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "fitRevision": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "integer",
+          "minimum": 0
+        }
+      ]
+    },
+    "camera": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingCamera"
+        }
+      ]
+    }
   }
 }

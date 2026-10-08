@@ -88,7 +88,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** 🕸️ Default DAG engine — `WasmGraphSurface` against the real `framework_surface_node_graph` `GraphSession`. */
+/** 🕸️ Default DAG engine composes the OS NodeGraph `GraphSession` through `WasmGraphSurface`. */
 export const Workflow: Story = {
   args: { scene: WORKFLOW_SCENE, controllerId: "s-play", surfaceId: "s.play.workflow" },
   parameters: { wasm: ["node-graph"] },

@@ -28,6 +28,10 @@ pub struct NoteCompositeWindowTransient {
     pub ink_tool: Option<crate::editor::note::commands::ink_apply_events::NoteInkToolState>,
 }
 
+#[path = "🔺️diff/🦀️.rs"]
+mod diff;
+pub use diff::{NoteCompositeWindowConfigDiff, NoteCompositeWindowTransientDiff};
+
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 pub enum NoteCompositeWindowConfigMutation {
     Snapshot { config: NoteCompositeWindowConfig },
@@ -39,7 +43,7 @@ pub enum NoteCompositeWindowTransientMutation {
 }
 
 impl protocol::Mutation<NoteCompositeWindowConfig> for NoteCompositeWindowConfigMutation {
-    type Diff = NoteCompositeWindowConfig;
+    type Diff = NoteCompositeWindowConfigDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window",
@@ -57,17 +61,21 @@ impl protocol::Mutation<NoteCompositeWindowConfig> for NoteCompositeWindowConfig
         required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
     }];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, _base: &NoteCompositeWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
-        match self { Self::Snapshot { config } => protocol::MutationOutcome::new(config.clone()) }
+    fn diff(&self, base: &NoteCompositeWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+        match self {
+            Self::Snapshot { config } => match base.camera == config.camera {
+                true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Window configuration is unchanged."),
+                false => protocol::MutationOutcome::new(NoteCompositeWindowConfigDiff { camera: Some(config.camera.clone()) }),
+            },
+        }
     }
     fn inverse(&self, base: &NoteCompositeWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| { vec![Self::Snapshot { config: base.clone() }] 
-    })())
+    Ok(vec![Self::Snapshot { config: base.clone() }])
 }
 }
 
 impl protocol::Mutation<NoteCompositeWindowTransient> for NoteCompositeWindowTransientMutation {
-    type Diff = NoteCompositeWindowTransient;
+    type Diff = NoteCompositeWindowTransientDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window",
@@ -85,12 +93,22 @@ impl protocol::Mutation<NoteCompositeWindowTransient> for NoteCompositeWindowTra
         required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
     }];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, _base: &NoteCompositeWindowTransient) -> protocol::MutationOutcome<Self::Diff> {
-        match self { Self::Snapshot { transient } => protocol::MutationOutcome::new(transient.clone()) }
+    fn diff(&self, base: &NoteCompositeWindowTransient) -> protocol::MutationOutcome<Self::Diff> {
+        match self {
+            Self::Snapshot { transient } => {
+                let diff = NoteCompositeWindowTransientDiff {
+                    engagement_input: (base.engagement_input != transient.engagement_input).then(|| transient.engagement_input.clone()),
+                    ink_tool: (base.ink_tool != transient.ink_tool).then(|| crate::schema::diff::NoteAssigned::new(transient.ink_tool.clone())),
+                };
+                match protocol::DiffAlgebra::<NoteCompositeWindowTransient>::is_empty(&diff) {
+                    true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Window transient is unchanged."),
+                    false => protocol::MutationOutcome::new(diff),
+                }
+            }
+        }
     }
     fn inverse(&self, base: &NoteCompositeWindowTransient) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| { vec![Self::Snapshot { transient: base.clone() }] 
-    })())
+    Ok(vec![Self::Snapshot { transient: base.clone() }])
 }
 }
 
@@ -149,7 +167,7 @@ impl store::ArtifactPack for NoteCompositeWindowConfig {
         Some(Self::__dsl_spec())
     }
 }
-store::impl_whole_record_config!(NoteCompositeWindowConfig);
+impl store::ConfigRecord for NoteCompositeWindowConfig {}
 json_store!(NoteCompositeWindowTransient, "notecompositewindowtransient", "s.note.note.compositewindowtransient");
 
 macro_rules! mutation_wire {
@@ -170,11 +188,6 @@ macro_rules! mutation_wire {
 
 mutation_wire!(NoteCompositeWindowConfigMutation);
 mutation_wire!(NoteCompositeWindowTransientMutation);
-
-impl protocol::MutationDiff<NoteCompositeWindowTransient> for NoteCompositeWindowTransient {
-    fn apply(&self, _base: &NoteCompositeWindowTransient) -> protocol::MutationApplyResult<NoteCompositeWindowTransient> { Ok(self.clone()) }
-    fn absorb(&mut self, other: Self) { *self = other; }
-}
 
 semio_framework_value::artifact_retire_struct!(NoteCompositeWindowTransient { engagement_input, ink_tool });
 

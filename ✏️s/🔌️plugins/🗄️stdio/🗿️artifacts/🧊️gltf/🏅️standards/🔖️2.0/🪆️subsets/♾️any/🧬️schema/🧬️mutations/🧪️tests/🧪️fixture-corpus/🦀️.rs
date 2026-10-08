@@ -3,13 +3,13 @@
 //! case, `<entity>/<verb>/🧪️tests/<case>/🦀️.rs`, mounted by its leaf and calling [`assert_case`]: its `🦠️mutation` is a
 //! `GltfMutation` wire fixed point that the aggregate schema admits and whose editable `payload_value()` (the `Apply` content of
 //! a `#[mutation_leaf(payload = Apply)]` leaf) validates against its own leaf `input_schema()`; `📸️snapshot/⬅️before` lands on
-//! `➡️after` through the committed `🔺️diff` exactly as its `🎯️outcome` declares; the inert `restore` of every computed inverse is
-//! admitted by the aggregate through the shared `diff.json` and restores `before`. This module keeps the corpus-wide laws. The
+//! `➡️after` through the committed `🔺️diff` exactly as its `🎯️outcome` declares; every row of the computed inverse is a concrete kind the aggregate admits, and the inverse diffs
+//! sum to the negative of the forward diff. This module keeps the corpus-wide laws. The
 //! same corpus is judged by the third-party validators of `test schema mutation-payloads` (npm `jsonschema`) and by the
 //! TypeScript twins beside this file (`./🟦️.ts`, Ajv).
 
 use super::*;
-use protocol::{MutationDiff, SemanticMutation};
+use protocol::SemanticMutation;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
@@ -127,20 +127,14 @@ pub(crate) fn assert_case(name: &str) {
 fn assert_committed_wire(name: &str, text: &str, mutation: &GltfMutation) {
     assert!(same(&wire(mutation), &json(text)), "{name}: decode→encode is not a fixed point");
     assert_aggregate_admits(text, name);
-    let schema = <GltfMutation as protocol::Mutation<GltfSnapshot>>::input_schema(mutation);
-    let is_editable = schema.is_some();
-    let schema = schema.unwrap_or_else(|| {
-        assert!(matches!(mutation, GltfMutation::SetSnapshot(_)), "{name}: only the declared whole-snapshot leaf is withdraw-only");
-        <super::super::set_snapshot::SetSnapshot as protocol::MutationLeaf>::PAYLOAD_SCHEMA
-    });
+    let schema = <GltfMutation as protocol::Mutation<GltfSnapshot>>::input_schema(mutation).unwrap_or_else(|| panic!("{name}: every glTF leaf is editable"));
     let payload = <GltfMutation as protocol::Mutation<GltfSnapshot>>::payload_value(mutation);
     let content = &json(text)["payload"];
     let editable = if content.get("phase").is_some() { &content["value"] } else { content };
     assert!(same(&wire(&payload), editable), "{name}: payload_value is the editable content of the aggregate member");
     assert_valid(schema, &semio_framework_pack_json::to_json_string(&payload), name);
     let rebuilt = <GltfMutation as protocol::Mutation<GltfSnapshot>>::with_payload_value(mutation, payload);
-    if is_editable { assert_eq!(&rebuilt.expect("the payload rebuilds its own kind"), mutation, "{name}"); }
-    else { assert!(rebuilt.is_err(), "{name}: the declared withdraw-only leaf refuses payload editing"); }
+    assert_eq!(&rebuilt.expect("the payload rebuilds its own kind"), mutation, "{name}");
 }
 
 /// 🎯️ The case lands `before` on `after` through the committed diff, or refuses with its committed code and no change; an
@@ -164,7 +158,7 @@ fn assert_committed_outcome(name: &str, case: &Path, mutation: &GltfMutation) ->
             assert_valid(DIFF_SCHEMA, &committed, &format!("{name} diff"));
             assert!(same(&wire(outcome.diff()), &json(&committed)), "{name}: the produced diff differs from the committed one:\n{}", semio_framework_pack_json::to_json_string(outcome.diff()));
             let decoded: GltfDiff = semio_framework_pack_json::from_json_str(&committed, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-            assert_eq!(decoded.apply(&before).expect("committed diff applies"), after, "{name}: the committed diff does not carry before to after");
+            assert_eq!(protocol::apply_diff(&decoded, &before).expect("committed diff applies"), after, "{name}: the committed diff does not carry before to after");
             Some(before)
         }
         Some("rejected") => {
@@ -182,22 +176,19 @@ fn assert_committed_outcome(name: &str, case: &Path, mutation: &GltfMutation) ->
     }
 }
 
-/// ↩️ The computed inverse restores `before`; a `restore` is inert (not editable) and the aggregate admits its wire.
+/// ↩️ The computed inverse is a row list of concrete, editable kinds the aggregate admits on the wire, and its diffs sum to the
+/// negative of the forward diff ([`protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law`]).
 fn assert_inverse_restores(name: &str, mutation: &GltfMutation, before: &GltfSnapshot) {
-    let mut restored = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(mutation, before).diff().apply(before).expect("forward applies");
     let inverse = <GltfMutation as protocol::Mutation<GltfSnapshot>>::inverse(mutation, before).expect("valid retained mutation inverse fixture");
     assert!(!inverse.is_empty(), "{name}: an applied change has an inverse");
-    for step in inverse {
-        let text = semio_framework_pack_json::to_json_string(&step);
+    for step in &inverse {
+        let text = semio_framework_pack_json::to_json_string(step);
         assert_aggregate_admits(&text, &format!("{name} inverse"));
-        let restore = json(&text)["payload"].get("phase").is_some();
-        assert_eq!(<GltfMutation as protocol::Mutation<GltfSnapshot>>::input_schema(&step).is_none(), restore || matches!(step, GltfMutation::SetSnapshot(_)), "{name}: wrapped restores and the declared whole-snapshot leaf are inert");
         let decoded: GltfMutation = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("inverse wire decodes");
-        let outcome = <GltfMutation as protocol::Mutation<GltfSnapshot>>::diff(&decoded, &restored);
-        assert!(outcome.messages().is_empty(), "{name}: {:?}", outcome.messages());
-        restored = outcome.diff().apply(&restored).expect("restore applies");
+        assert_eq!(&decoded, step, "{name}: the inverse wire is a fixed point");
+        assert!(<GltfMutation as protocol::Mutation<GltfSnapshot>>::input_schema(step).is_some(), "{name}: every inverse step is an editable concrete kind");
     }
-    assert_eq!(&restored, before, "{name}: the inverse does not restore before");
+    semio_framework_async::block_on(protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(mutation, before));
 }
 
 /// 🗂️ Every leaf owns a committed case, and every case names a leaf of the aggregate.

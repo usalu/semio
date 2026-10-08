@@ -249,7 +249,7 @@
           "edit": 0,
           "op": 0,
           "replacement": {
-            "operation": "assignN",
+            "operation": "restoreN",
             "n": 7
           }
         }
@@ -518,7 +518,7 @@
       "edits": [
         [
           {
-            "operation": "assignN",
+            "operation": "restoreN",
             "n": 4
           }
         ],
@@ -534,7 +534,7 @@
           "edit": 0,
           "op": 0,
           "replacement": {
-            "operation": "assignN",
+            "operation": "restoreN",
             "n": 40
           }
         }

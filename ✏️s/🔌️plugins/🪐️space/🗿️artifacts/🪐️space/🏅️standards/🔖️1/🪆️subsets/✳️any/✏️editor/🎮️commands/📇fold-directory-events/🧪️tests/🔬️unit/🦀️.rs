@@ -1,5 +1,6 @@
 
 use super::*;
+use protocol::Mutation as _;
 use semio_framework_os_kernel::os_directory::{ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryEventBody, DirectorySpaceKind, DocumentDescriptor, DocumentFrontier, DocumentIndexEntryV1, DocumentOwner, DocumentScope, Hlc};
 use {semio_framework_artifact_reference::ArtifactDialect};
 use semio_framework_plugin::{ArtifactView, HistoryView};
@@ -36,7 +37,7 @@ async fn folds_visibility_and_members_for_this_space_into_config() {
     let events_json = semio_framework_pack_json::to_json_string(&events);
     let result = handle(&FoldDirectoryEvents { events_json }, &doc, &cfg).expect("fold");
     assert_eq!(result.config_mutations.len(), 1);
-    let SpaceIndexConfigMutation::Snapshot { config } = &result.config_mutations[0];
+    let config = protocol::apply_diff(result.config_mutations[0].diff(&config_snapshot).diff(), &config_snapshot).expect("the fold applies");
     assert_eq!(config.visibility, "public");
     assert_eq!(config.members.len(), 1);
     assert_eq!(config.members[0].email, "a@example.com");
@@ -77,7 +78,7 @@ async fn folds_directory_indexed_documents_into_read_only_space_rows() {
         indexed,
     ];
     let result = handle(&FoldDirectoryEvents { events_json: semio_framework_pack_json::to_json_string(&events) }, &doc, &cfg).expect("fold indexed document");
-    let SpaceIndexConfigMutation::Snapshot { config } = &result.config_mutations[0];
+    let config = protocol::apply_diff(result.config_mutations[0].diff(&config_snapshot).diff(), &config_snapshot).expect("the fold applies");
     assert_eq!(config.indexed_artifacts.len(), 1);
     assert_eq!(config.indexed_artifacts[0].id, descriptor.document_id);
     assert_eq!(config.indexed_artifacts[0].name, "Shared Map");
@@ -116,7 +117,8 @@ async fn an_index_without_a_space_id_folds_the_one_space_its_history_names() {
         event(3, DirectoryEventBody::MemberUpserted { space_id: "space-1".into(), user_id: "u-1".into(), role: DirectorySpaceRole::Author }, Some("space-1")),
     ];
     let result = handle(&FoldDirectoryEvents { events_json: semio_framework_pack_json::to_json_string(&events) }, &doc, &cfg).expect("fold");
-    let [SpaceIndexConfigMutation::Snapshot { config }] = result.config_mutations.as_slice() else { panic!("one config snapshot, got {:?}", result.config_mutations) };
+    let [mutation] = result.config_mutations.as_slice() else { panic!("one config mutation, got {:?}", result.config_mutations) };
+    let config = protocol::apply_diff(mutation.diff(&config_snapshot).diff(), &config_snapshot).expect("the fold applies");
     assert_eq!(config.visibility, "private");
     assert_eq!(config.members.iter().map(|member| member.email.as_str()).collect::<Vec<_>>(), ["a@example.com"]);
 }

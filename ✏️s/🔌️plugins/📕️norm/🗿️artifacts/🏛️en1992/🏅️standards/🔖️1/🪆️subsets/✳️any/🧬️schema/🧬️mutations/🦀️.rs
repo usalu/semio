@@ -3,6 +3,10 @@
 use crate::diff::En1992Diff;
 use crate::En1992Snapshot;
 
+#[path = "🧭️edit-rules/🦀️.rs"]
+mod edit_rules;
+pub use edit_rules::{resolve_edit, EDIT_RULES};
+
 use super::change_annex;
 use super::change_title;
 use super::change_design_working_life;
@@ -145,7 +149,7 @@ impl En1992Mutation {
 pub fn apply_en1992_mutation(base: &En1992Snapshot, mutation: &En1992Mutation) -> Result<(En1992Snapshot, Vec<String>), String> {
     let raised = <En1992Mutation as protocol::Mutation<En1992Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = <En1992Diff as protocol::MutationDiff<En1992Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
 pub fn inverse_en1992_mutation(mutation: &En1992Mutation, base: &En1992Snapshot) -> Result<Vec<En1992Mutation>, semio_framework_value::ValueError> {
@@ -174,3 +178,7 @@ mod kinds_catalog;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧫️Vectors
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row;

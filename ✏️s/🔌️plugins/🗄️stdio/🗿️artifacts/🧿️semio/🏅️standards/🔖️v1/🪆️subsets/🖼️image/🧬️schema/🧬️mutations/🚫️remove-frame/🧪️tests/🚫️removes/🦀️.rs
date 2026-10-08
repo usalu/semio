@@ -7,16 +7,9 @@
 use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
 use crate::standards::v1::subsets::image::schema::mutations::insert_frame;
 use crate::standards::v1::subsets::image::schema::mutations::remove_frame;
-use crate::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
+use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
-
-/// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
-/// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/
-/// `mutation.target-missing`/`mutation.invariant` decision for `remove-frame` lives in that file, so the
-/// fixture asserts against it rather than against the guardless enum arm.
-#[path = "../../🔺️diff/🦀️.rs"]
-mod leaf_diff;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚫️remove-frame/🚫️removes/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚫️remove-frame/🚫️removes/📸️snapshot/➡️after/🔣️.json");
@@ -34,21 +27,20 @@ fn mutation() -> SemioImageMutation {
     semio_framework_pack_json::from_json_str(MUTATION,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-frame mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::RemoveFrame(remove_frame::RemoveFrame { index }) = mutation() else { panic!("remove-frame/removes-the-leading-frame: the committed mutation must be the remove-frame variant") };
-    leaf_diff::diff(&before(), index)
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ The leading frame goes and the second frame becomes index 0.
 #[semio_framework_async_macros::async_test]
 async fn removes_the_frame_at_index_zero() {
     let base = before();
-    let produced = leaf_outcome().diff().apply(&base).expect("remove-frame applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(leaf_outcome().diff(), &base).expect("remove-frame applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "remove-frame/removes-the-leading-frame: applied state differs from the committed after-snapshot");
     assert_eq!(produced.frames.len(), base.frames.len() - 1, "remove-frame shortens the frame sequence by exactly one");
     assert_eq!(produced.frames[0], base.frames[1], "the frame that followed the removed head must take index 0");
     assert_eq!(produced.metadata, base.metadata, "removing a frame must not touch the metadata");
     let mut in_place = before();
-    apply_semio_image_mutation(&mut in_place, &mutation());
+    in_place = crate::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -57,12 +49,13 @@ async fn removes_the_frame_at_index_zero() {
 async fn the_undo_insert_frame_restores_the_head_frame_from_base() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index: 0, frame: base.frames[0].clone() })], "the undo must recapture the removed frame's full content from base");
     let mut current = before();
-    apply_semio_image_mutation(&mut current, &mutation);
-    for step in &undo {
-        apply_semio_image_mutation(&mut current, step);
+    current = crate::applied(&current, &mutation).0;
+    for step in undo.iter().rev() {
+        current = crate::applied(&current, step).0;
     }
     assert_eq!(current, base, "remove-frame/removes-the-leading-frame: the undo did not restore the before-snapshot");
 }
@@ -113,6 +106,6 @@ async fn committed_diff_is_canonical_and_touches_only_frames() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-frame diff decodes");
-    let produced = decoded.apply(&before()).expect("committed remove-frame diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed remove-frame diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-frame/removes-the-leading-frame: committed diff did not carry before to after");
 }

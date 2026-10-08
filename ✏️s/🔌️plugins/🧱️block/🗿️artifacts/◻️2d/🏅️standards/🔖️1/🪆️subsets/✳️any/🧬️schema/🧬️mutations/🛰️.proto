@@ -69,6 +69,7 @@ message UpdatePresentation { // kind "update-presentation"
 
 message CreateHandleKind { // kind "create-handle-kind"
   Block2dHandleKind handle_kind = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteHandleKind { // kind "delete-handle-kind"
@@ -97,6 +98,7 @@ message ChangeHandleKindDefaultWireKind { // kind "change-handle-kind-default-wi
 
 message CreateHandle { // kind "create-handle"
   Block2dHandleTemplate handle = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteHandle { // kind "delete-handle"
@@ -116,6 +118,7 @@ message ChangeHandleHandleKind { // kind "change-handle-handle-kind"
 
 message AddCompatibilityRule { // kind "add-compatibility-rule"
   BlockCompatibilityRule rule = 1;
+  optional uint32 index = 2;
 }
 
 message RemoveCompatibilityRule { // kind "remove-compatibility-rule"
@@ -124,6 +127,7 @@ message RemoveCompatibilityRule { // kind "remove-compatibility-rule"
 
 message AddAttribute { // kind "add-attribute"
   BlockAttribute attribute = 1;
+  optional uint32 index = 2;
 }
 
 message RemoveAttribute { // kind "remove-attribute"
@@ -132,6 +136,7 @@ message RemoveAttribute { // kind "remove-attribute"
 
 message AddAuthor { // kind "add-author"
   BlockAuthor author = 1;
+  optional uint32 index = 2;
 }
 
 message RemoveAuthor { // kind "remove-author"

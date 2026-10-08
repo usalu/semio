@@ -1,10 +1,7 @@
-#[test]
-fn upgrades_mortar_to_m20() {
-    use crate::mutations::change_mortar_class::ChangeMortarClass;
-    use crate::{En1996Snapshot, MortarClass};
-    use protocol::MutationKind;
-    let base = En1996Snapshot::compliant_clay_wall();
-    let m = ChangeMortarClass { index: 0, new_mortar_class: MortarClass::M20 };
-    let outcome = <ChangeMortarClass as MutationKind<En1996Snapshot, crate::En1996Mutation>>::diff(&m, &base);
-    assert_eq!(outcome.diff().walls.as_ref().unwrap().values[0].mortar_class, MortarClass::M20);
+//! 🧪️ `change-mortar-class` — the committed applied vector's inverse diffs sum to the negative of its forward diff.
+
+#[semio_framework_async_macros::async_test]
+async fn change_mortar_class_inverse_diffs_sum_to_the_negative_diff() {
+    let (mutation, before) = crate::mutations::fixture_tests::applied_vector("change-mortar-class");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
 }

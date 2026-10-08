@@ -37,14 +37,10 @@ Feature: Apply every typed DWG AC1024 mutation to the container that is actually
   Fatal `mutation.invariant` (`written-as-ac1024`, declared in the leaf schema's
   `x-semio-invariant`), and leaves the drawing exactly as it was; the oracle derives the same refusal
   from that writer contract, independently of dispatch. Only the 22-byte preamble-only document has
-  no object stream a stamp could contradict, so it may carry any `AC` + four-digit stamp. `byteLength` is what keeps
-  `set-snapshot` (a whole-document replacement, which collapses the container to the 22-byte
-  preamble-only shape this artifact's own demo example already has) observably different from
-  `set-version-info` (a field set that leaves every other byte where it was), rather than the two
-  verbs collapsing into one indistinguishable edit. Every row below is chosen to move that
+  no object stream a stamp could contradict, so it may carry any `AC` + four-digit stamp. `byteLength` stays normative:
+  `set-version-info` is a field set that leaves every other byte where it was. Every row below is chosen to move that
   projection: the adapter fails any row whose projection did not change. Every row's `params` is
-  the leaf wire payload (`set-snapshot` carries the `DwgSnapshot` wire), decoded by `DwgMutation`'s
-  own payload constructor.
+  the leaf wire payload decoded by `DwgMutation`'s own payload constructor.
 
   🔒️ The identity round trip asserts the EXACT-BYTES law, not the no-byte-pass-through law, and that
   is the correct law here rather than a missing one. The preamble is fixed-width with no writer
@@ -88,9 +84,7 @@ Feature: Apply every typed DWG AC1024 mutation to the container that is actually
     And a mutating row moved that projection, asserted in role
     Examples:
       | id               | params |
-      | set-snapshot     | {"snapshot": {"schema": "stdio.dwg", "version": "AC1024", "maintenanceVersion": 0, "codepage": 0}} |
       | set-version-info | {"version": "AC1024", "maintenanceVersion": 7, "codepage": 29} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/maintenanceVersion", "value": 7}} |
 
   @id-inverse
   @level-exhaustive
@@ -105,9 +99,7 @@ Feature: Apply every typed DWG AC1024 mutation to the container that is actually
     Then the restored drawing's preamble projection equals the original's, asserted in role
     Examples:
       | id               | params |
-      | set-snapshot     | {"snapshot": {"schema": "stdio.dwg", "version": "AC1024", "maintenanceVersion": 0, "codepage": 0}} |
       | set-version-info | {"version": "AC1024", "maintenanceVersion": 7, "codepage": 29} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/maintenanceVersion", "value": 7}} |
 
   @id-refuse
   @level-exhaustive

@@ -2,7 +2,7 @@
 
 use super::remove_output_intent::RemoveOutputIntent;
 use super::PdfAMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 pub const OUTPUT_INTENT_SUBTYPE: &str = "GTS_PDFA1";
@@ -14,24 +14,27 @@ pub const OUTPUT_INTENT_DEST_PROFILE: bool = true;
 #[value(rename_all = "camelCase")]
 pub struct SetOutputIntent {
     pub identifier: String,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub placements: Vec<support::ObjectPlacement>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub entry_index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfAMutation> for SetOutputIntent {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "output-intent", kind: "set-output-intent", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::graph_edit(support::output_intent_rows(base, OUTPUT_INTENT_SUBTYPE, &self.identifier, OUTPUT_INTENT_DEST_PROFILE)))
+        MutationOutcome::new(diff::graph_edit(support::output_intent_rows(base, OUTPUT_INTENT_SUBTYPE, &self.identifier, OUTPUT_INTENT_DEST_PROFILE, &self.placements, self.entry_index)))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        match support::output_intent_identifier(base) {
-            Some(identifier) => vec![PdfAMutation::SetOutputIntent(SetOutputIntent { identifier })],
-            None => vec![PdfAMutation::RemoveOutputIntent(RemoveOutputIntent {})],
-        }
-    
-    })())
-}
+        Ok({
+            match support::output_intent_identifier(base) {
+                Some(identifier) => vec![PdfAMutation::SetOutputIntent(SetOutputIntent { identifier, placements: Vec::new(), entry_index: None })],
+                None => vec![PdfAMutation::RemoveOutputIntent(RemoveOutputIntent {})],
+            }
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/A output intent \"{}\"", self.identifier), &format!("PDF/A-Ausgabebedingung \"{}\" setzen", self.identifier))

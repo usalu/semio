@@ -170,21 +170,6 @@
         "$ref": "#/$defs/CadReference"
       }
     },
-    "CadDrawingChildList": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "values"
-      ],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/CadDrawingChild"
-          }
-        }
-      }
-    },
     "CadNodePatch": {
       "type": "object",
       "additionalProperties": false,
@@ -349,18 +334,288 @@
         }
       ]
     },
-    "CadBrepChildList": {
+    "CadDrawingsDelta": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "values"
+        "added",
+        "removed",
+        "reordered"
       ],
       "properties": {
-        "values": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadDrawingChild"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reordered": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CadBrepsDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "reordered"
+      ],
+      "properties": {
+        "added": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/CadBrepChild"
           }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reordered": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CadModelSlot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "child"
+      ],
+      "properties": {
+        "child": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/CadModelChild"
+            }
+          ]
+        }
+      }
+    },
+    "CadOrientationSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "number"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CadScaleSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "CadOpacitySet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "CadReferencePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sourceUrl": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mediaKind": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "origin": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          ]
+        },
+        "orientation": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/CadOrientationSet"
+            }
+          ]
+        },
+        "scale": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/CadScaleSet"
+            }
+          ]
+        },
+        "widthWorld": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "hidden": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "locked": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "opacity": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/CadOpacitySet"
+            }
+          ]
+        }
+      }
+    },
+    "CadReferencePatchEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/CadReferencePatch"
+        }
+      }
+    },
+    "CadReferencesDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched",
+        "reordered"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadReference"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CadReferencePatchEntry"
+          }
+        },
+        "reordered": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
         }
       }
     }

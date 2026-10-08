@@ -13,6 +13,8 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[value(rename_all = "camelCase")]
 pub struct SetPattern {
     pub pattern: PdfPattern,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfMutation> for SetPattern {
@@ -21,14 +23,14 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetPattern {
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         match unresolved_reference(&self.pattern, base) {
             Some((resource, id)) => MutationOutcome::error("mutation.target-missing", format!("Pattern \"{}\" names the {resource} \"{id}\", which the document does not hold.", self.pattern.id), [self.pattern.id.clone()]),
-            None => MutationOutcome::new(diff::diff_set_pattern(base, self.pattern.clone())),
+            None => MutationOutcome::new(diff::diff_set_pattern(base, self.pattern.clone(), self.index)),
         }
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        match base.patterns.iter().find(|item| item.id == self.pattern.id) { Some(previous) => vec![PdfMutation::SetPattern(SetPattern { pattern: previous.clone() })], None => vec![PdfMutation::RemovePattern(super::remove_pattern::RemovePattern { id: self.pattern.id.clone() })] }
+        match base.patterns.iter().find(|item| item.id == self.pattern.id) { Some(previous) => vec![PdfMutation::SetPattern(SetPattern { pattern: previous.clone(), index: None })], None => vec![PdfMutation::RemovePattern(super::remove_pattern::RemovePattern { id: self.pattern.id.clone() })] }
     
     })())
 }

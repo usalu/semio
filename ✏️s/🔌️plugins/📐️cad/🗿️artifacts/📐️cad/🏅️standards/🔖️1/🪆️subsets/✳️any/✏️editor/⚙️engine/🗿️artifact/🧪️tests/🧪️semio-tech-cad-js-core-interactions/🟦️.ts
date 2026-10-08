@@ -6,7 +6,7 @@ import type { ArtifactTestDependencies, InteractionResponse, InteractionRuntime,
 import type { InteractionEvent, InteractionSpec, Model, ModelEntityKind, SelectionTarget, SolidRef } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
 import type { ModelDiff, SpatialKernel, SpatialPreviewKernel } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import type { SelectionOperationInteractionDef } from "../../../🎬️actions/🟦️.ts";
-import type { MeshTransfer, Vec3 } from "@semio-tech/s-3d-js";
+import type { MeshTransfer, Vec3 } from "@semio-tech/framework-3d-js";
 
 type TestSource = { readonly url: string };
 

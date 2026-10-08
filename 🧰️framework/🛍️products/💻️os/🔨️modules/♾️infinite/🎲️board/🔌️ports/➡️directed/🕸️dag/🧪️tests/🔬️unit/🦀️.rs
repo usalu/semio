@@ -7,28 +7,33 @@ fn cursor_grant() -> DagCursorGrant {
 
 #[test]
 fn selected_nodes_cursor_censuses_and_emits_one_byte_per_grant() {
-    let fixture =
-        DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![DagNodeSpec { id: "a\"\\\n".into(), ..Default::default() }, DagNodeSpec { id: "β".into(), ..Default::default() }], edges: vec![] };
-    let mut host = DagHost::from_host_snapshot_without_layout(fixture);
-    host.set_selection(&["a\"\\\n".into(), "β".into()]);
-    let expected = semio_framework_pack_json::to_json_string(&host.selected_node_ids()).into_bytes();
-    let mut cursor = DagSelectedNodesJsonCursor::default();
-    let mut rejected = cursor_grant();
-    rejected.fuel = 0;
-    assert_eq!(cursor.step(&host, rejected), Err(DagCursorFault::NoFuel));
-    let mut output = Vec::new();
-    let mut census = None;
-    loop {
-        match cursor.step(&host, cursor_grant()).unwrap() {
-            DagCursorStep::Census { bytes } => census = Some(bytes),
-            DagCursorStep::Byte(byte) => output.push(byte),
-            DagCursorStep::Complete => break,
-            DagCursorStep::Progress { .. } => {}
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎯️selected-json.json")).unwrap();
+    for case in vectors["cases"].as_array().unwrap() {
+        let ids: Vec<String> = case["ids"].as_array().unwrap().iter().map(|id|id.as_str().unwrap().into()).collect();
+        let fixture = DagHostSnapshot { schema: "dag.hostDocument".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: ids.iter().map(|id|DagNodeSpec { id: id.clone(), ..Default::default() }).collect(), edges: vec![] };
+        let mut host = DagHost::from_host_snapshot_without_layout(fixture);
+        host.set_selection(&ids);
+        assert_eq!(host.selected_node_ids(), ids);
+        let expected = semio_framework_pack_json::to_json_string(&host.selected_node_ids()).into_bytes();
+        assert_eq!(expected, serde_json::to_vec(&host.selected_node_ids()).unwrap());
+        let mut cursor = DagSelectedNodesJsonCursor::default();
+        let mut rejected = cursor_grant();
+        rejected.fuel = 0;
+        assert_eq!(cursor.step(&host, rejected), Err(DagCursorFault::NoFuel));
+        let mut output = Vec::new();
+        let mut census = None;
+        loop {
+            match cursor.step(&host, cursor_grant()).unwrap() {
+                DagCursorStep::Census { bytes } => census = Some(bytes),
+                DagCursorStep::Byte(byte) => output.push(byte),
+                DagCursorStep::Complete => break,
+                DagCursorStep::Progress { .. } => {}
+            }
         }
+        assert_eq!(census, Some(expected.len()));
+        assert_eq!(output, expected);
+        assert_eq!(cursor.step(&host, cursor_grant()), Ok(DagCursorStep::Complete));
     }
-    assert_eq!(census, Some(expected.len()));
-    assert_eq!(output, expected);
-    assert_eq!(cursor.step(&host, cursor_grant()), Ok(DagCursorStep::Complete));
 }
 
 #[test]
@@ -107,7 +112,7 @@ fn app_instance_node_serializes_and_sizes_n_ports() {
 #[test]
 fn dag_selection_hover_and_dimmed_map_widget_ids() {
     let fixture = DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![
             DagNodeSpec::computation("a".into(), "A", "A", "emoji:🔷️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 0.0, 0.0, 160.0, 24.0),
@@ -144,11 +149,11 @@ fn cycle_detection_blocks_back_edge() {
     assert!(!would_create_cycle(&edges, "a", "c"));
 }
 
-/// 🧪️ Two-node/one-edge `dag.host_snapshot` literal shared by the layout tests below.
+/// 🧪️ Two-node/one-edge `dag.hostDocument` literal shared by the layout tests below.
 fn ab_edge_layout_fixture() -> Value {
     let node = |id: &str| semio_framework_pack_json::object([("id".to_string(), Value::from(id)), ("x".to_string(), Value::from(0)), ("y".to_string(), Value::from(0)), ("handles".to_string(), Value::Array(vec![]))]);
     semio_framework_pack_json::object([
-        ("schema".to_string(), Value::from("dag.host_snapshot")),
+        ("schema".to_string(), Value::from("dag.hostDocument")),
         ("nodes".to_string(), Value::Array(vec![node("a"), node("b")])),
         ("edges".to_string(), Value::Array(vec![semio_framework_pack_json::object([("id".to_string(), Value::from("e1")), ("source".to_string(), Value::from("a")), ("target".to_string(), Value::from("b"))])])),
     ])
@@ -248,7 +253,7 @@ fn dag_node_spec_serde_round_trip_kinds() {
 #[test]
 fn handle_hover_does_not_hover_parent_node() {
     let fixture = DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec::computation(
             "merge".into(),
@@ -335,7 +340,7 @@ fn dag_node_spec_port_accessors_per_kind() {
 #[test]
 fn dag_host_delete_selected_preserves_remaining_positions() {
     let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![
             DagNodeSpec::computation("a".into(), "A", "A", "emoji:🔷️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 100.0, 200.0, 160.0, 56.0),
@@ -371,7 +376,7 @@ fn dag_host_delete_selected_preserves_remaining_positions() {
 #[test]
 fn dag_host_delete_selected_removes_edge_only_selection() {
     let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![
             DagNodeSpec::computation("a".into(), "A", "A", "emoji:🔷️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 100.0, 200.0, 160.0, 56.0),
@@ -406,7 +411,7 @@ fn dag_host_delete_selected_removes_edge_only_selection() {
 #[test]
 fn dag_host_reorganize_updates_engine_positions() {
     let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![
             DagNodeSpec::computation("a".into(), "A", "A", "emoji:🔷️".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 500.0, 500.0, 160.0, 56.0),
@@ -423,7 +428,7 @@ fn dag_host_reorganize_updates_engine_positions() {
 #[test]
 fn dag_host_loads_demo_fixture() {
     let host = DagHost::default_demo();
-    assert_eq!(host.host_snapshot.schema, "dag.host_snapshot");
+    assert_eq!(host.host_snapshot.schema, "dag.hostDocument");
     assert_eq!(host.host_snapshot.nodes.len(), 5);
     assert_eq!(host.host_snapshot.edges.len(), 4);
     assert!(!host.engine.render_snapshot().edges.is_empty());
@@ -458,7 +463,7 @@ fn slider_track_bounds_stay_inside_node_rect() {
 fn dag_host_slider_drag_mutates_value() {
     let output = IoPortSpec { id: "out".into(), label: "value".into(), ..Default::default() };
     let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec {
             id: "slider".into(),
@@ -490,7 +495,7 @@ fn dag_host_slider_drag_mutates_value() {
 fn dag_host_slider_drag_ignored_when_controls_hidden() {
     let output = IoPortSpec { id: "out".into(), label: "value".into(), ..Default::default() };
     let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec {
             id: "slider".into(),
@@ -523,7 +528,7 @@ fn dag_host_slider_drag_ignored_when_controls_hidden() {
 #[test]
 fn dag_host_select_click_advances_option() {
     let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec {
             id: "mode".into(),
@@ -565,7 +570,7 @@ fn dag_host_label_overlay_paint_state_json_includes_compact_labels() {
 #[test]
 fn dag_host_label_overlay_paint_state_json_includes_slider_name() {
     let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 },
         nodes: vec![DagNodeSpec {
             id: "slider".into(),
@@ -595,7 +600,7 @@ fn dag_host_slider_overlay_preserves_language_neutral_field_labels() {
     for case in fixture["cases"].as_array().unwrap() {
         let row = &case["row"];
         let host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
-            schema: "dag.host_snapshot".into(),
+            schema: "dag.hostDocument".into(),
             camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![DagNodeSpec {
                 id: row["widgetId"].as_str().unwrap().into(),
@@ -614,9 +619,16 @@ fn dag_host_slider_overlay_preserves_language_neutral_field_labels() {
             }],
             edges: vec![],
         });
-        let actual: Value = semio_framework_pack_json::parse(&host.slider_overlay_state_json().unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        for key in ["widgetId", "label", "value", "min", "max", "step"] {
-            assert_eq!(actual["sliders"][0][key], row[key], "{key}");
+        let json = host.slider_overlay_state_json().unwrap();
+        let actual: Value = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let independent: serde_json::Value = serde_json::from_str(&json).unwrap();
+        for key in ["widgetId", "label"] {
+            assert_eq!(actual["sliders"][0][key].as_str(), row[key].as_str(), "{key}");
+            assert_eq!(independent["sliders"][0][key].as_str(), row[key].as_str(), "independent {key}");
+        }
+        for key in ["value", "min", "max", "step"] {
+            assert_eq!(actual["sliders"][0][key].as_f64(), row[key].as_f64(), "{key}");
+            assert_eq!(independent["sliders"][0][key].as_f64(), row[key].as_f64(), "independent {key}");
         }
     }
 }
@@ -624,7 +636,7 @@ fn dag_host_slider_overlay_preserves_language_neutral_field_labels() {
 #[test]
 fn dag_host_slider_overlay_state_json_includes_slider_track() {
     let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 },
         nodes: vec![DagNodeSpec {
             id: "slider".into(),
@@ -654,7 +666,7 @@ fn dag_host_slider_overlay_state_json_includes_slider_track() {
 #[test]
 fn label_overlay_port_rows_are_not_duplicated_in_json() {
     let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 },
         nodes: vec![DagNodeSpec {
             id: "combine".into(),
@@ -725,7 +737,7 @@ fn dag_host_label_overlay_port_text_follows_draw_lod() {
         ..Default::default()
     };
     let port_texts = |lod: &str| -> Vec<String> {
-        let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 }, nodes: vec![node.clone()], edges: vec![] });
+        let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot { schema: "dag.hostDocument".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 }, nodes: vec![node.clone()], edges: vec![] });
         host.set_viewport(1280, 800, 1.0);
         host.set_automatic_lod(false);
         host.set_forced_draw_lod_label(lod);
@@ -743,7 +755,7 @@ fn dag_host_label_overlay_port_text_follows_draw_lod() {
 #[test]
 fn dag_host_exports_screen_overlay_rect() {
     let host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec {
             id: "screen".into(),
@@ -889,7 +901,7 @@ fn dag_host_entity_screen_json_unresolved_domain_or_id_never_panics() {
         }
         assert_eq!(json["visible"], false, "domain={domain} id={id}");
     }
-    let empty_fixture = DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] };
+    let empty_fixture = DagHostSnapshot { schema: "dag.hostDocument".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] };
     let empty: Value = semio_framework_pack_json::parse(&DagHost::from_host_snapshot(empty_fixture).entity_screen_json("node", "*"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert_eq!(empty["visible"], false);
 }
@@ -1018,7 +1030,7 @@ fn dag_host_node_drag_proximity_preview_and_connects() {
     let src_h = computation_node_height(0, 1, false, false);
     let tgt_h = computation_node_height(1, 1, false, false);
     let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![
             DagNodeSpec::computation("src".into(), "Src", "Src", "emoji:🔢️".into(), vec![], outputs.clone(), false, false, 0.0, 0.0, src_w, src_h),
@@ -1048,7 +1060,7 @@ fn dag_host_node_drag_skips_wired_cut_inputs() {
     let src_h = computation_node_height(0, 1, false, false);
     let cut_h = computation_node_height(2, 1, false, false);
     let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![
             DagNodeSpec::computation("sphere".into(), "Sphere", "Sphere", "emoji:🔵️".into(), vec![], outputs.clone(), false, false, 0.0, -60.0, src_w, src_h),
@@ -1078,7 +1090,7 @@ fn dag_host_keeps_same_named_input_and_output_handles_distinct() {
     let brep = vec![IoPortSpec { id: "brep".into(), label: "brep".into(), ..Default::default() }];
     let list = vec![IoPortSpec { id: "list".into(), label: "list".into(), ..Default::default() }];
     let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![
             DagNodeSpec::computation("extrude".into(), "Extrude", "Extrude", "emoji:⬆️".into(), vec![], solid.clone(), false, false, 0.0, 0.0, computation_node_width("Extrude", &[], &solid), computation_node_height(0, 1, false, false)),
@@ -1123,7 +1135,7 @@ fn dag_host_proximity_zero_disables_node_drag_connect() {
     let src_h = computation_node_height(0, 1, false, false);
     let tgt_h = computation_node_height(1, 1, false, false);
     let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![
             DagNodeSpec::computation("src".into(), "Src", "Src", "emoji:🔢️".into(), vec![], outputs.clone(), false, false, 0.0, 0.0, src_w, src_h),
@@ -1364,7 +1376,7 @@ fn variadic_plus_hit_maps_insert_index() {
     let width = computation_node_width("dictionary.merge", &inputs, &outputs);
     let height = computation_node_height(2, 1, true, false);
     let host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 },
         nodes: vec![DagNodeSpec::computation("merge".into(), "Merge", "Merge", "emoji:🔀️".into(), inputs, outputs, true, false, 0.0, 0.0, width, height)],
         edges: vec![],
@@ -1386,7 +1398,7 @@ fn variadic_output_plus_hit_maps_insert_index() {
     let width = computation_node_width("list.get", &inputs, &outputs);
     let height = computation_node_height(2, 1, false, true);
     let host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 },
         nodes: vec![DagNodeSpec::computation("get".into(), "Get", "Get", "emoji:📋️".into(), inputs, outputs, false, true, 0.0, 0.0, width, height)],
         edges: vec![],
@@ -1744,7 +1756,8 @@ fn minimap_widget_panel_uses_square_corners() {
     let mut host = DagHost::default_demo();
     host.set_minimap_widget_visible(true);
     host.set_viewport(1280, 800, 1.0);
-    host.set_camera(120.0, 80.0, 0.75);
+    host.set_camera(-5000.0, -5000.0, 0.75);
+    assert!(!host.minimap_camera_fully_shows_content(&host.minimap_widget_content_bounds().unwrap(), 1280, 800));
     let layout = host.minimap_widget_layout(1280, 800).expect("minimap layout");
     let (px0, py0, px1, py1) = layout.panel;
     let mut scene = canvas::Scene::new();
@@ -1905,7 +1918,7 @@ fn note_widget_size_uses_uniform_component_width() {
 #[test]
 fn fit_note_sizes_keeps_slider_height() {
     let mut host = DagHost::from_host_snapshot(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec {
             id: "note".into(),
@@ -1944,7 +1957,7 @@ fn truncate_label_to_fit_width_adds_ellipsis() {
 #[test]
 fn begin_note_edit_inserts_and_backspaces_text() {
     let mut host = DagHost::from_host_snapshot(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec {
             id: "note".into(),
@@ -1984,7 +1997,7 @@ fn begin_note_edit_inserts_and_backspaces_text() {
 #[test]
 fn note_label_overlay_skips_title_and_ports() {
     let mut host = DagHost::from_host_snapshot(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec {
             id: "note".into(),
@@ -2105,7 +2118,7 @@ fn dag_node_spec_round_trips_display_fields() {
 fn preview_tree_toggle_expands_and_resizes() {
     let json = semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::object([("alpha".to_string(), semio_framework_pack_json::object([("beta".to_string(), Value::from(1))])), ("gamma".to_string(), Value::from("x"))]));
     let mut host = DagHost::from_host_snapshot(DagHostSnapshot {
-        schema: "dag.host_snapshot".into(),
+        schema: "dag.hostDocument".into(),
         camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         nodes: vec![DagNodeSpec {
             id: "preview".into(),

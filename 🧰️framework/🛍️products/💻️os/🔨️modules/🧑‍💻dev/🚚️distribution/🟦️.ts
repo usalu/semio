@@ -1,3 +1,4 @@
+import { runtimeFixturePathV1 } from "../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts";
 import catalog from "./📇️layout.json";
 import { installationDirectoryEmoji } from "../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
 
@@ -10,6 +11,7 @@ export type DistributionAssetFacts = { readonly originalFileNames: readonly stri
 /** 🧾️ Validates literal source coordinates without deriving output identities from them. */
 function sourceCoordinate(value: unknown): string {
   if (typeof value !== "string" || !value || value !== value.normalize("NFC") || /[\\\u0000-\u001F\u007F:]/u.test(value) || value.split("/").some((part) => !part || part === "." || part === "..")) throw new Error("Distribution source must be one literal relative coordinate");
+  if (runtimeFixturePathV1(value)) throw new Error("Distribution coordinate belongs to a testing fixture collection");
   return value;
 }
 

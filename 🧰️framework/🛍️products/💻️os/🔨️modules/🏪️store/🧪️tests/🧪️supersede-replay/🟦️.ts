@@ -12,7 +12,7 @@ import { applyPatch, type Operation } from "fast-json-patch";
 
 //#region 🧮️DemoOracle
 type Snapshot = { n: number | null };
-type DemoOperation = { operation: "setN"; n: number } | { operation: "addN"; delta: number } | { operation: "deleteN" } | { operation: "assignN"; n?: number | null };
+type DemoOperation = { operation: "setN"; n: number } | { operation: "addN"; delta: number } | { operation: "deleteN" } | { operation: "restoreN"; n?: number | null };
 type Level = "info" | "warning" | "error" | "fatal";
 type Message = { level: Level; code: string };
 type Outcome = { edit: number; op: number; worst: Level | null; codes: string[]; superseded: boolean; withdrawn: boolean };
@@ -46,7 +46,7 @@ function diff(operation: DemoOperation, state: Snapshot): { patch: Operation[]; 
       return state.n === null ? { patch: [], messages: [missing] } : { patch: [{ op: "replace", path: "/n", value: saturate(state.n + operation.delta) }], messages: [{ level: "info", code: "mutation.cascade" }] };
     case "deleteN":
       return { patch: state.n === null ? [] : [{ op: "replace", path: "/n", value: null }], messages: [] };
-    case "assignN":
+    case "restoreN":
       return { patch: [{ op: "replace", path: "/n", value: operation.n ?? null }], messages: [] };
   }
 }

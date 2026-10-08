@@ -42,9 +42,9 @@ mod law_tests {
     use super::*;
 
     /// ⚖️ The inverse diffs sum to the negative of the forward diff (L3).
-    #[test]
-    fn inverse_diffs_sum_to_the_negative_diff() {
+    #[semio_framework_async_macros::async_test]
+    async fn inverse_diffs_sum_to_the_negative_diff() {
         let base = DagConfig { camera_x: 1.0, camera_y: 2.0, camera_zoom: 1.5 };
-        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&DagConfigMutation::ChangeCamera(ChangeCamera { x: -3.0, y: 2.0, zoom: 2.0 }), &base);
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&DagConfigMutation::ChangeCamera(ChangeCamera { x: -3.0, y: 2.0, zoom: 2.0 }), &base).await;
     }
 }

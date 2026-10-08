@@ -45,7 +45,7 @@ fn every_mutation() -> Vec<Generation3dMutation> {
         Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "extrude".into() }),
         Generation3dMutation::UpdateCamera(UpdateCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } }),
         Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.host_snapshot.v2".into() }),
-        Generation3dMutation::CreateGeneration(CreateGeneration { generation: FormGeneration { id: "generation-fresh".into(), name: "Generation".into(), values: Default::default() } }),
+        Generation3dMutation::CreateGeneration(CreateGeneration { generation: FormGeneration { id: "generation-fresh".into(), name: "Generation".into(), values: Default::default() }, index: None }),
         Generation3dMutation::DeleteGeneration(DeleteGeneration { id: "generation-1".into() }),
         Generation3dMutation::RenameGeneration(RenameGeneration { id: "generation-1".into(), new_name: "Renamed".into() }),
         Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id: "generation-1".into(), question_id: "q1".into(), new_value: serde_json::json!(42).into() }),
@@ -88,14 +88,14 @@ fn create_widget_round_trips() {
 fn generation_op_round_trips() {
     let before = default_generation3d_snapshot();
     let generation = FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: Default::default() };
-    let after = round_trip(&before, &Generation3dMutation::CreateGeneration(CreateGeneration { generation }));
+    let after = round_trip(&before, &Generation3dMutation::CreateGeneration(CreateGeneration { generation, index: None }));
     assert_eq!(after.generation.generations.len(), 1);
 }
 
 #[test]
 fn generation_mutation_bridge_covers_every_variant() {
     let generation = FormGeneration { id: "g1".into(), name: "G1".into(), values: Default::default() };
-    assert_eq!(generation_mutation_to_generation3d(GenerationMutation::Add { generation: generation.clone() }), Generation3dMutation::CreateGeneration(CreateGeneration { generation }));
+    assert_eq!(generation_mutation_to_generation3d(GenerationMutation::Add { generation: generation.clone() }), Generation3dMutation::CreateGeneration(CreateGeneration { generation, index: None }));
     assert_eq!(generation_mutation_to_generation3d(GenerationMutation::Remove { id: "g1".into() }), Generation3dMutation::DeleteGeneration(DeleteGeneration { id: "g1".into() }));
     assert_eq!(generation_mutation_to_generation3d(GenerationMutation::Rename { id: "g1".into(), name: "New".into() }), Generation3dMutation::RenameGeneration(RenameGeneration { id: "g1".into(), new_name: "New".into() }));
     assert_eq!(

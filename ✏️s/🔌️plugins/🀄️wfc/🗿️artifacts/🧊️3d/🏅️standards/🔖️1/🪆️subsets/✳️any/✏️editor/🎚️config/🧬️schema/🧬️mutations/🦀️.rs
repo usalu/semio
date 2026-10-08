@@ -14,7 +14,7 @@ pub use change_active_tile::ChangeActiveTile;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
-#[mutations(snapshot = Wfc3dConfig, diff = Wfc3dConfig, schema = "wfc.wfc3d.config")]
+#[mutations(snapshot = Wfc3dConfig, diff = Wfc3dConfigDiff, schema = "wfc.wfc3d.config")]
 pub enum Wfc3dConfigMutation {
     ReplaceConfig(ReplaceConfig),
     ChangeCamera(ChangeCamera),

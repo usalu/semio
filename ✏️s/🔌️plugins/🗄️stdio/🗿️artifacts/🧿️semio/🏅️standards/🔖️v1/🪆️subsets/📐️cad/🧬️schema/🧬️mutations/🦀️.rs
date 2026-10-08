@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::base::schema::triples::{NamedTripleDiff};
 
 
-use crate::standards::v1::subsets::cad::schema::diff::{diff_set_snapshot, wrap_block_diff, wrap_block_entity_diff, wrap_entity_diff, wrap_layer_diff, CadBlockDiff, CadEntityRecordDiff, CadLayerDiff, SemioCadDiff};
+use crate::standards::v1::subsets::cad::schema::diff::{wrap_block_diff, wrap_block_entity_diff, wrap_entity_diff, wrap_layer_diff, CadBlockDiff, CadEntityRecordDiff, CadLayerDiff, SemioCadDiff};
 
 
 
@@ -195,13 +195,13 @@ fn fixture() -> SemioCadSnapshot {
 pub(crate) fn demo_mutation_cases() -> Vec<SemioCadMutation> {
     let base = fixture();
     vec![
-        SemioCadMutation::AddLayer(add_layer::AddLayer { layer: CadLayer { name: "fresh".into(), color_index: 3, line_type: "CONTINUOUS".into(), visible: true } }),
+        SemioCadMutation::AddLayer(add_layer::AddLayer { layer: CadLayer { name: "fresh".into(), color_index: 3, line_type: "CONTINUOUS".into(), visible: true }, at: None }),
         SemioCadMutation::RemoveLayer(remove_layer::RemoveLayer { name: "dim".into() }),
         SemioCadMutation::SetLayer(set_layer::SetLayer { name: "0".into(), color_index: Some(3), line_type: None, visible: Some(false) }),
-        SemioCadMutation::AddBlock(add_block::AddBlock { block: CadBlock { name: "window".into(), base_point: SemioPoint2 { x: 2.0, y: 2.0 }, entities: Vec::new() } }),
+        SemioCadMutation::AddBlock(add_block::AddBlock { block: CadBlock { name: "window".into(), base_point: SemioPoint2 { x: 2.0, y: 2.0 }, entities: Vec::new() }, at: None }),
         SemioCadMutation::RemoveBlock(remove_block::RemoveBlock { name: "door".into() }),
         SemioCadMutation::SetBlockBasePoint(set_block_base_point::SetBlockBasePoint { name: "door".into(), base_point: SemioPoint2 { x: 5.0, y: 5.0 } }),
-        SemioCadMutation::AddEntity(add_entity::AddEntity { entity: CadEntityRecord { handle: "h2".into(), layer: "0".into(), entity: CadEntity::Circle { center: SemioPoint2 { x: 1.0, y: 1.0 }, radius: 2.0 } } }),
+        SemioCadMutation::AddEntity(add_entity::AddEntity { entity: CadEntityRecord { handle: "h2".into(), layer: "0".into(), entity: CadEntity::Circle { center: SemioPoint2 { x: 1.0, y: 1.0 }, radius: 2.0 } }, at: None }),
         SemioCadMutation::RemoveEntity(remove_entity::RemoveEntity { handle: "h1".into() }),
         SemioCadMutation::SetEntityLayer(set_entity_layer::SetEntityLayer { handle: "h1".into(), layer: "dim".into() }),
         SemioCadMutation::SetEntityGeometry(set_entity_geometry::SetEntityGeometry {
@@ -210,7 +210,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioCadMutation> {
         }),
         SemioCadMutation::AddBlockEntity(add_block_entity::AddBlockEntity {
             block_name: "door".into(),
-            entity: CadEntityRecord { handle: "be2".into(), layer: "0".into(), entity: CadEntity::Text { position: SemioPoint2 { x: 0.0, y: 0.0 }, height: 2.5, rotation: 0.0, content: "label".into() } },
+            entity: CadEntityRecord { handle: "be2".into(), layer: "0".into(), entity: CadEntity::Text { position: SemioPoint2 { x: 0.0, y: 0.0 }, height: 2.5, rotation: 0.0, content: "label".into() } }, at: None,
         }),
         SemioCadMutation::RemoveBlockEntity(remove_block_entity::RemoveBlockEntity { block_name: "door".into(), handle: "be1".into() }),
         SemioCadMutation::SetBlockEntityLayer(set_block_entity_layer::SetBlockEntityLayer { block_name: "door".into(), handle: "be1".into(), layer: "dim".into() }),

@@ -1,6 +1,4 @@
-//! 🗃️ `remove-object` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🗃️ `remove-object` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 //! `#[derive(dsl::DslRecord)]` gives this leaf its own `DslField` impl with the SAME field spec
 //! `record_codegen` built when these fields lived inline in the enum variant — the aggregate's
 //! tuple variant is a single-field newtype, so `#[derive(dsl::DslOps)]`'s `DslVariants` derive
@@ -22,14 +20,18 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for RemoveObject {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "object", kind: "remove-object", record: "RemoveObject" };
 
     fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
-        agg_diff(&ObjMutation::RemoveObject(self.clone()), base)
+        let Self { name } = self;
+        protocol::MutationOutcome::new(diff_remove_object(name))
     }
     fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&ObjMutation::RemoveObject(self.clone()), base)?
-    
-    })
-}
+        let Self { name } = self;
+        Ok({
+            match base.objects.iter().position(|o| &o.name == name) {
+                Some(at) => vec![ObjMutation::SetObject(set_object::SetObject { name: name.clone(), faces: base.objects[at].faces.clone(), index: Some(at) })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove object", "Objekt entfernen")
     }

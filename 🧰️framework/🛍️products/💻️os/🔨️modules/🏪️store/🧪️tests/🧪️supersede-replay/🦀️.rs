@@ -186,7 +186,7 @@ async fn interior_supersede_equals_a_fresh_replay_of_the_edited_log() {
 #[semio_framework_async_macros::async_test]
 async fn check_in_refuses_a_supersession_whose_replay_blocks_under_normal() {
     let mut store = demo_store("check-in", None).await;
-    apply(&mut store, vec![DemoMutation::AssignN(AssignN { n: Some(5) })]).await;
+    apply(&mut store, vec![DemoMutation::RestoreN(RestoreN { n: Some(5) })]).await;
     apply(&mut store, vec![add(1)]).await;
     let ids = operation_ids(&store);
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
@@ -203,7 +203,7 @@ async fn check_in_refuses_a_supersession_whose_replay_blocks_under_normal() {
     let refused = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &supersede(None, 0), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>).await;
     assert!(matches!(&refused, Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages }) if messages.iter().any(|message| message.code.0 == "mutation.target-missing")), "{refused:?}");
     assert!(refused.unwrap_err().to_string().contains("rejected by merge policy Normal"));
-    let accepted = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &supersede(Some(DemoMutation::AssignN(AssignN { n: Some(40) })), 1), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>)
+    let accepted = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &supersede(Some(DemoMutation::RestoreN(RestoreN { n: Some(40) })), 1), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>)
         .await
         .expect("a clean supersession checks in");
     let parsed = parse_document_pack::<DemoSnapshot, DemoMutation>(&accepted.pack, &accepted.spr).await.expect("checked-in pair parses");
@@ -758,17 +758,17 @@ async fn oversize_replay_messages_are_bounded_deterministically_everywhere() {
         summary.message.strip_suffix(" more messages").expect("the summary counts what it drops").parse().expect("a count")
     };
     let mut store = demo_store("bounded", None).await;
-    apply(&mut store, vec![DemoMutation::AssignN(AssignN { n: Some(5) })]).await;
+    apply(&mut store, vec![DemoMutation::RestoreN(RestoreN { n: Some(5) })]).await;
     apply(&mut store, (0..OPERATIONS).map(|_| add(1)).collect()).await;
     let ids = operation_ids(&store);
     let bulk = store.applied_edit_ids()[1].clone();
     let applied = store.messages_for_edit(&bulk).to_vec();
     assert!(bytes(&applied, &bulk) <= ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES);
     assert_eq!(applied.len() - 1 + dropped(&applied), OPERATIONS, "kept and summarized messages account for every operation");
-    store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![input(&ids[0], Some(DemoMutation::AssignN(AssignN { n: Some(7) })))] }).await.expect("an oversize but clean replay installs");
+    store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![input(&ids[0], Some(DemoMutation::RestoreN(RestoreN { n: Some(7) })))] }).await.expect("an oversize but clean replay installs");
     assert_eq!(store.snapshot_ref().n, Some(207));
     assert_eq!(store.messages_for_edit(&bulk), applied.as_slice(), "the replayed entry bounds exactly like the applied one");
-    store.dispatch(ArtifactCommand::CreateAlternativeWithSupersede { name: "bounded-variant".into(), inputs: vec![input(&ids[0], Some(DemoMutation::AssignN(AssignN { n: Some(9) })))] }).await.expect("an oversize replay branches");
+    store.dispatch(ArtifactCommand::CreateAlternativeWithSupersede { name: "bounded-variant".into(), inputs: vec![input(&ids[0], Some(DemoMutation::RestoreN(RestoreN { n: Some(9) })))] }).await.expect("an oversize replay branches");
     assert_eq!(store.envelope().vcs.alternatives.iter().filter(|alternative| alternative.name == "bounded-variant").count(), 1);
     assert_eq!(store.snapshot_ref().n, Some(209));
     let withdraw = remote_supersession("bounded", &ids[0], protocol::InputReplacement::Withdrawn, 0);
@@ -792,12 +792,12 @@ async fn oversize_replay_messages_are_bounded_deterministically_everywhere() {
 #[semio_framework_async_macros::async_test]
 async fn check_in_judges_the_folded_ledger_not_its_intermediate_states() {
     let mut store = demo_store("intermediate", None).await;
-    apply(&mut store, vec![DemoMutation::AssignN(AssignN { n: Some(5) })]).await;
+    apply(&mut store, vec![DemoMutation::RestoreN(RestoreN { n: Some(5) })]).await;
     apply(&mut store, vec![add(1)]).await;
     let ids = operation_ids(&store);
     let files = print_document_pack(store.envelope()).await.expect("pair prints");
     let breaking = remote_supersession("intermediate", &ids[0], protocol::InputReplacement::Withdrawn, 0);
-    let healing = remote_supersession("intermediate", &ids[0], draft(Some(DemoMutation::AssignN(AssignN { n: Some(7) }))), 1);
+    let healing = remote_supersession("intermediate", &ids[0], draft(Some(DemoMutation::RestoreN(RestoreN { n: Some(7) }))), 1);
     let refused = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &crate::os_spr::encode_envelopes(std::slice::from_ref(&breaking)), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>).await;
     assert!(matches!(&refused, Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages }) if messages.iter().any(|message| message.code.0 == "mutation.target-missing")), "{refused:?}");
     let healed = replay_envelopes_onto_pair::<DemoSnapshot, DemoMutation>(&files.pack, &files.spr, &crate::os_spr::encode_envelopes(&[breaking, healing]), test_support::plain_document_store_owners::<DemoSnapshot, DemoMutation>)
@@ -816,7 +816,7 @@ async fn interior_revert_store(early_exit: bool) -> ArtifactStore<DemoSnapshot, 
     if early_exit {
         store.enable_convergence_early_exit();
     }
-    apply(&mut store, vec![DemoMutation::AssignN(AssignN { n: Some(5) })]).await;
+    apply(&mut store, vec![DemoMutation::RestoreN(RestoreN { n: Some(5) })]).await;
     apply(&mut store, vec![DemoMutation::DeleteN(DeleteN {})]).await;
     let peer = crate::os_spr::MutationEnvelope {
         mutation_id: MutationId("peer-add".into()),
@@ -851,7 +851,7 @@ async fn an_interior_revert_keeps_the_early_exit_equal_to_the_full_replay() {
         let ids = operation_ids(store);
         assert_eq!(outcomes_by_mutation(&store.mutation_outcomes().unwrap())[&ids[1]].1, vec!["mutation.cascade".to_string()], "the reverted interior refreshed the downstream outcome");
     }
-    let restate = |store: &ArtifactStore<DemoSnapshot, DemoMutation>| drafts(&[(&operation_ids(store)[0], Some(DemoMutation::AssignN(AssignN { n: Some(5) })))]);
+    let restate = |store: &ArtifactStore<DemoSnapshot, DemoMutation>| drafts(&[(&operation_ids(store)[0], Some(DemoMutation::RestoreN(RestoreN { n: Some(5) })))]);
     let converged = finish(&early, early.begin_report_replay(&restate(&early), None).expect("early replay"));
     assert!(converged.converged_at().is_some(), "an equal prefix state converges");
     let replayed = finish(&full, full.begin_report_replay(&restate(&full), None).expect("full replay"));

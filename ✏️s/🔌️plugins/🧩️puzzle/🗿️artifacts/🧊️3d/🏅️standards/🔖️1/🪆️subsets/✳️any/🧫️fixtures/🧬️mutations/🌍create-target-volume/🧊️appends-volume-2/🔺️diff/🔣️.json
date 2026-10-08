@@ -1,26 +1,26 @@
 {
   "artifact": null,
-  "schema": null,
+  "attractions": null,
   "domain": null,
   "meta": null,
   "objects": null,
-  "attractions": null,
+  "references": null,
+  "schema": null,
   "targetVolumes": {
     "added": [
       {
+        "hidden": false,
         "id": "volume-2",
+        "locked": false,
         "origin": [
           10.0,
           0.0,
           0.0
-        ],
-        "hidden": false,
-        "locked": false
+        ]
       }
     ],
-    "removed": [],
     "patched": [],
+    "removed": [],
     "reordered": null
-  },
-  "references": null
+  }
 }

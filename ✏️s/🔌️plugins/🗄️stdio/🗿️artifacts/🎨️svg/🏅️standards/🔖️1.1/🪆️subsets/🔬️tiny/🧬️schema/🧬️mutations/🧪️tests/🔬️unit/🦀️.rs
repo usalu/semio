@@ -16,16 +16,15 @@ fn document(root: SvgNode) -> SvgSnapshot {
 #[test]
 fn kinds_matches_enum_variants_and_manifest() {
     let every = vec![
-        SvgTinyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: SvgSnapshot::default() }),
-        SvgTinyMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
-        SvgTinyMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: None, version: None }),
+        SvgTinyMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: None, version: None, base_profile_index: None, version_index: None }),
         SvgTinyMutation::InsertTinyElement(insert_tiny_element::InsertTinyElement { parent: Vec::new(), index: 0, node: elem("rect", vec![], vec![]) }),
         SvgTinyMutation::RemoveElement(remove_element::RemoveElement { parent: Vec::new(), index: 0 }),
-        SvgTinyMutation::SetTinyAttribute(set_tiny_attribute::SetTinyAttribute { path: Vec::new(), name: "fill".into(), value: None }),
+        SvgTinyMutation::SetTinyAttribute(set_tiny_attribute::SetTinyAttribute { path: Vec::new(), name: "fill".into(), value: None, index: None }),
         SvgTinyMutation::SetText(set_text::SetText { path: Vec::new(), text: String::new() }),
-        SvgTinyMutation::SetViewBox(set_view_box::SetViewBox { path: Vec::new(), view_box: None }),
-        SvgTinyMutation::SetTransform(set_transform::SetTransform { path: Vec::new(), transform: None }),
+        SvgTinyMutation::SetViewBox(set_view_box::SetViewBox { path: Vec::new(), view_box: None, index: None }),
+        SvgTinyMutation::SetTransform(set_transform::SetTransform { path: Vec::new(), transform: None, index: None }),
         SvgTinyMutation::StripNonTiny(strip_non_tiny::StripNonTiny {}),
+        SvgTinyMutation::RestoreNonTiny(restore_non_tiny::RestoreNonTiny { elements: Vec::new(), attributes: Vec::new() }),
     ];
     let spelled: Vec<&'static str> = every.iter().map(kind_of).collect();
     assert_eq!(spelled, KINDS.to_vec(), "KINDS must spell every variant, in declaration order");
@@ -69,7 +68,7 @@ fn insert_tiny_element_rejects_an_excluded_subtree() {
 #[test]
 fn set_tiny_attribute_rejects_a_forbidden_presentation_attribute() {
     let mut snapshot = document(elem("svg", vec![], vec![]));
-    let outcome = apply_svg_tiny_mutation(&mut snapshot, &SvgTinyMutation::SetTinyAttribute(set_tiny_attribute::SetTinyAttribute { path: Vec::new(), name: "opacity".into(), value: Some(SvgAttributeValue::Text("0.5".into())) }));
+    let outcome = apply_svg_tiny_mutation(&mut snapshot, &SvgTinyMutation::SetTinyAttribute(set_tiny_attribute::SetTinyAttribute { path: Vec::new(), name: "opacity".into(), value: Some(SvgAttributeValue::Text("0.5".into())), index: None }));
     assert!(!outcome.messages().is_empty(), "opacity is forbidden anywhere in SVG Tiny 1.1");
     assert!(matches!(&snapshot.doc.root, Some(SvgNode::Element { attrs, .. }) if attrs.is_empty()), "the document must be untouched");
 }
@@ -104,7 +103,7 @@ fn strip_non_tiny_is_invertible_through_its_own_inverse() {
 fn stamp_base_profile_is_invertible_when_the_root_declared_neither_attribute() {
     let base = document(elem("svg", vec![("id", crate::schema::snapshot::SvgAttributeValue::Text("Layer_1".into()))], vec![]));
     let mut snapshot = base.clone();
-    let mutation = SvgTinyMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: Some("tiny".into()), version: Some("1.1".into()) });
+    let mutation = SvgTinyMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: Some("tiny".into()), version: Some("1.1".into()), base_profile_index: None, version_index: None });
     let undo = Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     apply_svg_tiny_mutation(&mut snapshot, &mutation);
     assert_eq!(element_attr(snapshot.doc.root.as_ref().unwrap(), "baseProfile"), Some(&SvgAttributeValue::Text("tiny".into())));
@@ -112,4 +111,35 @@ fn stamp_base_profile_is_invertible_when_the_root_declared_neither_attribute() {
         apply_svg_tiny_mutation(&mut snapshot, step);
     }
     assert_eq!(snapshot, base, "stamping and unstamping the profile must restore the document");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn strip_and_restore_non_tiny_satisfy_the_inverse_sum_law() {
+    let base = document(elem("svg", vec![("style", SvgAttributeValue::Text("x".into())), ("id", SvgAttributeValue::Text("a".into()))], vec![elem("g", vec![("opacity", SvgAttributeValue::Text("0.5".into()))], vec![elem("linearGradient", vec![], vec![]), elem("rect", vec![], vec![])]), elem("filter", vec![], vec![])]));
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SvgTinyMutation::StripNonTiny(strip_non_tiny::StripNonTiny {}), &base).await;
+    let stripped = document(elem("svg", vec![("id", SvgAttributeValue::Text("a".into()))], vec![elem("g", vec![], vec![elem("rect", vec![], vec![])])]));
+    let restore = SvgTinyMutation::RestoreNonTiny(restore_non_tiny::RestoreNonTiny {
+        elements: vec![restore_non_tiny::RestoredElement { parent: vec![0], index: 0, node: elem("linearGradient", vec![], vec![]) }, restore_non_tiny::RestoredElement { parent: Vec::new(), index: 1, node: elem("filter", vec![], vec![]) }],
+        attributes: vec![restore_non_tiny::RestoredAttribute { path: Vec::new(), index: 0, name: "style".into(), value: SvgAttributeValue::Text("x".into()) }, restore_non_tiny::RestoredAttribute { path: vec![0], index: 0, name: "opacity".into(), value: SvgAttributeValue::Text("0.5".into()) }],
+    });
+    let mut restored = stripped.clone();
+    apply_svg_tiny_mutation(&mut restored, &restore);
+    assert_eq!(restored, base, "restore-non-tiny must put every row back at its position");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&restore, &stripped).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn every_authoring_leaf_satisfies_the_inverse_sum_law() {
+    let base = document(elem("svg", vec![("id", SvgAttributeValue::Text("a".into())), ("viewBox", SvgAttributeValue::ViewBox(crate::schema::snapshot::ViewBox { min_x: 0.0, min_y: 0.0, width: 5.0, height: 5.0 })), ("class", SvgAttributeValue::Text("c".into()))], vec![elem("g", vec![], vec![]), SvgNode::Text { text: "t".into() }]));
+    for mutation in [
+        SvgTinyMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: Some("tiny".into()), version: Some("1.1".into()), base_profile_index: None, version_index: None }),
+        SvgTinyMutation::InsertTinyElement(insert_tiny_element::InsertTinyElement { parent: Vec::new(), index: 1, node: elem("rect", vec![], vec![]) }),
+        SvgTinyMutation::RemoveElement(remove_element::RemoveElement { parent: Vec::new(), index: 0 }),
+        SvgTinyMutation::SetTinyAttribute(set_tiny_attribute::SetTinyAttribute { path: Vec::new(), name: "viewBox".into(), value: None, index: None }),
+        SvgTinyMutation::SetText(set_text::SetText { path: vec![1], text: "u".into() }),
+        SvgTinyMutation::SetViewBox(set_view_box::SetViewBox { path: Vec::new(), view_box: None, index: None }),
+        SvgTinyMutation::SetTransform(set_transform::SetTransform { path: vec![0], transform: Some(vec![crate::schema::snapshot::TransformOp::Scale { x: 2.0, y: None }]), index: None }),
+    ] {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
 }

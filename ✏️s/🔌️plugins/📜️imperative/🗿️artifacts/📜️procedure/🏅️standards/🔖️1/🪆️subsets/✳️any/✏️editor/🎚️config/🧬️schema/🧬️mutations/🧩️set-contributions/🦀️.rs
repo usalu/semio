@@ -38,9 +38,9 @@ mod law_tests {
     use super::*;
 
     /// ⚖️ The inverse diffs sum to the negative of the forward diff (L3).
-    #[test]
-    fn inverse_diffs_sum_to_the_negative_diff() {
+    #[semio_framework_async_macros::async_test]
+    async fn inverse_diffs_sum_to_the_negative_diff() {
         let base = ImperativeConfig::default();
-        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&ImperativeConfigMutation::SetContributions(SetContributions { json: "[1]".into() }), &base);
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&ImperativeConfigMutation::SetContributions(SetContributions { json: "[1]".into() }), &base).await;
     }
 }

@@ -150,12 +150,6 @@ fn print_graph_mutation(m: &SemioGraphMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_graph_mutation(line: &str) -> Result<SemioGraphMutation, String> {
-    if let Some(payload) = line.strip_prefix("setSnapshot:") {
-        let bytes = hex_decode(payload)?;
-        let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
-        let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-        let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
-    }
     let (tag, rest) = line.split_once(':').ok_or_else(|| format!("graph mutation: missing ':' in {line:?}"))?;
     match tag {
         "createNode" => {

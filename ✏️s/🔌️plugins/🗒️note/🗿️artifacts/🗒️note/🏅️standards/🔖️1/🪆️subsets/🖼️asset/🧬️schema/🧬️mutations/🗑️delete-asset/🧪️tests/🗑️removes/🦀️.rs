@@ -99,7 +99,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-asset/removes-the-logo-asset: committed diff did not carry before to after");
 }
 
@@ -112,4 +112,10 @@ async fn asset_map_empties_and_referencing_blocks_are_left_dangling() {
     assert!(applied.assets.is_empty(), "delete-asset/removes-the-logo-asset: the asset map must end up empty");
     assert_eq!(applied.blocks, base.blocks, "delete-asset has NO block cascade — the image blocks keep their now-dangling imageKey");
     assert!(!AFTER.contains("assets"), "an empty asset map is skipped by serde, so the committed after-snapshot must carry no \"assets\" key");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

@@ -16,12 +16,6 @@ record snapshot {
   jfifXDensity u16
   jfifYDensity u16
   jfifThumbnail Ref(OptionalThumbnail)
-  frame Ref(OptionalFrame)
-  sofMarker u8
-  arithmetic u8
-  quantTables array Ref(JpgQuantTable)
-  huffmanTables array Ref(JpgHuffmanTable)
-  restartInterval Ref(OptionalShort)
   otherSegments array Ref(JpgSegment)
 }
 enum JfifDensityUnits {
@@ -34,33 +28,11 @@ record JfifThumbnail {
   height u8
   rgbData array u8
 }
-record JpgFrameHeader {
-  precision u8
-  width u16
-  height u16
-  components array Ref(JpgFrameComponent)
-}
-record JpgFrameComponent {
-  id u8
-  hSampling u8
-  vSampling u8
-  quantTableId u8
-}
-record JpgQuantTable {
-  id u8
-  precision u8
-  values array u16
-}
-enum JpgHuffmanClass {
-  dc=0
-  ac=1
-}
-record JpgHuffmanTable {
-  id u8
-  class Ref(JpgHuffmanClass)
-  bits array u8
-  values array u8
-}
+
+
+
+
+
 record JpgSegment {
   marker u8
   data array u8
@@ -70,15 +42,9 @@ record OptionalOctet {
   present u8
   value u8 if present eq 1
 }
-record OptionalShort {
-  present u8
-  value u16 if present eq 1
-}
+
 record OptionalThumbnail {
   present u8
   value Ref(JfifThumbnail) if present eq 1
 }
-record OptionalFrame {
-  present u8
-  value Ref(JpgFrameHeader) if present eq 1
-}
+

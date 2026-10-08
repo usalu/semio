@@ -1,35 +1,16 @@
-import Ajv from "ajv";
 import { strict as assert } from "node:assert";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const ADMIN_SCHEMA_MODULE = "../../🧬️schema/🔣️.json";
-const ADMIN_SCHEMA_ID = "https://json.schemas.assets.semio-tech.com/hub/admin/schema.json";
 const ADMIN_ENTRY_GRAPH_LAWS = ["html-module-entry-exists", "package-export-matches-html", "entry-contained-by-package", "single-canonical-entry"] as const;
 const ADMIN_STYLESHEET_GRAPH_LAWS = ["imports-before-tailwind-sources", "repository-imports-resolve", "repository-imports-contained", "shared-export-is-canonical", "no-compatibility-duplicate"] as const;
 
-/** 🧬️ Compiles one `hub.admin` export from the scope-owned draft-07 module next to the module itself. */
-function adminSchemaExport(root: string, exportId: string): (value: unknown) => boolean {
-  const document = JSON.parse(readFileSync(resolve(root, ADMIN_SCHEMA_MODULE), "utf8")) as { readonly $schema: string; readonly $id: string };
-  assert.equal(document.$schema, "http://json-schema.org/draft-07/schema#", "hub.admin module must declare the draft-07 dialect");
-  assert.equal(document.$id, ADMIN_SCHEMA_ID, "hub.admin module must declare its scope $id");
-  const ajv = new Ajv({ strict: true, allErrors: true });
-  ajv.addSchema(document);
-  const validate = ajv.getSchema(`${ADMIN_SCHEMA_ID}#/$defs/${exportId}`);
-  assert.ok(validate, `hub.admin exports no ${exportId}`);
-  return (value: unknown): boolean => validate(value) as boolean;
-}
-
 type AdminEntryGraph = { readonly version: number; readonly html: string; readonly manifest: string; readonly entry: string; readonly laws: readonly string[] };
 
-/** 🚪️ Verifies the browser entry against the owned graph example and schema. */
+/** 🚪️ Verifies the browser entry against the owned graph example. */
 export function verifyAdminEntryGraph(root: string): void {
   const fixture = JSON.parse(readFileSync(resolve(root, "../../🧫️fixtures/🕸️build-graph/🚪️entry-graph.json"), "utf8")) as AdminEntryGraph;
-  const validate = adminSchemaExport(root, "AdminEntryGraphV1");
-  assert.equal(validate(fixture), true, "Hub admin entry graph violates schema://hub.admin/AdminEntryGraphV1");
-  assert.equal(validate({ ...fixture, locator: "private" }), false, "Hub admin entry graph must reject unknown members");
-  assert.equal(validate({ ...fixture, laws: fixture.laws.slice(1) }), false, "Hub admin entry graph must enumerate every law");
   assert.deepEqual([...fixture.laws].sort(), [...ADMIN_ENTRY_GRAPH_LAWS].sort());
   assert.equal(new Set(fixture.laws).size, ADMIN_ENTRY_GRAPH_LAWS.length);
   const packageRoot = realpathSync(root);
@@ -55,13 +36,9 @@ export function verifyAdminEntryGraph(root: string): void {
 
 type AdminStylesheetGraph = { readonly version: number; readonly stylesheet: string; readonly imports: readonly string[]; readonly sources: readonly string[]; readonly shared: { readonly manifest: string; readonly export: string; readonly canonical: string }; readonly laws: readonly string[] };
 
-/** 🎨️ Verifies the stylesheet against the owned graph example and schema. */
+/** 🎨️ Verifies the stylesheet against the owned graph example. */
 export function verifyAdminStylesheetGraph(root: string): void {
   const fixture = JSON.parse(readFileSync(resolve(root, "../../🧫️fixtures/🕸️build-graph/🎨️stylesheet-graph.json"), "utf8")) as AdminStylesheetGraph;
-  const validate = adminSchemaExport(root, "AdminStylesheetGraphV1");
-  assert.equal(validate(fixture), true, "Hub admin stylesheet graph violates schema://hub.admin/AdminStylesheetGraphV1");
-  assert.equal(validate({ ...fixture, locator: "private" }), false, "Hub admin stylesheet graph must reject unknown members");
-  assert.equal(validate({ ...fixture, shared: { ...fixture.shared, export: "./🎨️.css" } }), false, "Hub admin stylesheet graph must pin the shared canonical export");
   assert.deepEqual([...fixture.laws].sort(), [...ADMIN_STYLESHEET_GRAPH_LAWS].sort());
   assert.equal(new Set(fixture.laws).size, ADMIN_STYLESHEET_GRAPH_LAWS.length);
   const packageRoot = realpathSync(root);

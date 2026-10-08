@@ -2,11 +2,12 @@ import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator
 import { stageArtifacts } from "../📤️publication/🟦️.ts";
 import { terminateOwnedChildTree } from "../../🪓️termination/🟦️.ts";
 import { startNativeProgress } from "../../🎛️owned-execution/🟦️.ts";
-import { chmodSync, copyFileSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve, sep, isAbsolute } from "node:path";
+import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, rmSync, writeFileSync } from "node:fs";
+import { basename, dirname, join, relative, resolve, sep, isAbsolute, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { homedir } from "node:os";
 import { createInterface } from "node:readline";
 
 import { acquireCargoBuildLeaseV1 } from "./🔒️lease/🟦️.ts";
@@ -191,6 +192,97 @@ export async function buildCargoArtifacts(manifest: string, args: string[], poli
   }
 }
 
+/** 🧮️ Finds the checksum-bearing internal dep-info only when its compiled artifact equals the actual selected uplift. */
+function cargoInternalDepInfoV1(message:any,buildDirectory:string|null,args:readonly string[]):readonly string[]{
+  if(!buildDirectory)return[];
+  const option=(name:string):string|undefined=>args.flatMap((value,index)=>value===name?[args[index+1]!]:value.startsWith(name+"=")?[value.slice(name.length+1)]:[])[0],packageName=/#([^@]+)@/u.exec(message.package_id??"")?.[1];
+  if(!packageName)return[];
+  const profile=option("--profile")??(args.includes("--release")?"release":"debug"),target=option("--target"),owner=join(buildDirectory,...(target?[target]:[]),profile,"build",packageName);
+  if(!existsSync(owner)||!lstatSync(owner).isDirectory())return[];
+  const selected=(message.filenames??[]).filter((file:string)=>existsSync(file)&&lstatSync(file).isFile()).map((file:string)=>({name:basename(file),sha256:createHash("sha256").update(readFileSync(file)).digest("hex")})),matches:string[]=[];
+  for(const unit of readdirSync(owner)){
+    const output=join(owner,unit,"out");if(!existsSync(output)||!lstatSync(output).isDirectory())continue;
+    for(const artifact of selected){const original=join(output,artifact.name),dep=original.replace(/\.(?:rlib|rmeta|so|dylib|dll|lib|wasm|exe)$/u,"")+".d";
+      if(!existsSync(original)||!lstatSync(original).isFile()||!existsSync(dep)||!lstatSync(dep).isFile()||createHash("sha256").update(readFileSync(original)).digest("hex")!==artifact.sha256)continue;
+      const text=readFileSync(dep,"utf8");if(text.includes("# checksum:"))matches.push(dep);
+    }
+  }
+  return [...new Set(matches)];
+}
+
+/** 🗂️ Observes actual directory names, entry kinds and raw link targets in portable UTF-8 order. */
+export function cargoDirectoryEntriesV1(path: string): Array<[string, string, string | null]> | null {
+  try { return readdirSync(path).sort((a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b))).map(name => { const child = join(path, name), entry = lstatSync(child); return [name, entry.isSymbolicLink() ? "symlink" : entry.isDirectory() ? "directory" : entry.isFile() ? "file" : "other", entry.isSymbolicLink() ? readlinkSync(child) : null]; }); } catch { return null; }
+}
+
+/** 🧮️ Distinguishes compiler file bytes from canonical directory input rosters without guessing absent inputs. */
+export function cargoInputDigestV1(path: string): { path: string; kind: "file" | "directory" | null; sha256: string | null } {
+  try {
+    const entry = lstatSync(path), kind = entry.isFile() ? "file" : entry.isDirectory() ? "directory" : null, entries = kind === "directory" ? cargoDirectoryEntriesV1(path) : null;
+    return { path, kind, sha256: kind === "file" ? createHash("sha256").update(readFileSync(path)).digest("hex") : entries ? createHash("sha256").update(JSON.stringify(entries)).digest("hex") : null };
+  } catch { return { path, kind: null, sha256: null }; }
+}
+
+/** 📋️ Retains actual completed Cargo compiler, dep-info and resource observations without changing build or staging selection. */
+export function writeCompletedCargoInvocationProvenanceV1(receiptPath: string, invocation: { manifest: string; cwd: string; command: string; args: string[]; buildDirectory: string | null; builtAtMs: number; status: number; cancelled: boolean; units: any[]; buildScripts: any[] }, stagedPaths: ReadonlyMap<string, string> = new Map(), cargoHome: string = join(homedir(), ".cargo")): void {
+  const sha256 = (file: string): string | null => existsSync(file) && lstatSync(file).isFile() ? createHash("sha256").update(readFileSync(file)).digest("hex") : null;
+        for (const unit of invocation.units) {
+          const candidates = [...new Set((unit.message.filenames ?? []).flatMap((file: string) => [file.replace(/\.(?:rlib|rmeta|so|dylib|dll|lib|wasm|exe)$/u, "") + ".d", join(dirname(file), basename(file).replace(/^lib/u, "").replace(/\.(?:rlib|rmeta|so|dylib|dll|lib|wasm|exe)$/u, "") + ".d")]))] as string[];
+          candidates.push(...cargoInternalDepInfoV1(unit.message,invocation.buildDirectory,invocation.args));
+          unit.depInfo = [...new Set(candidates)].filter(file => existsSync(file) && lstatSync(file).isFile()).map(path => {
+            const text = readFileSync(path, "utf8"), sources = cargoDepInfoSourcesV1(text), relativeSources = sources.filter(source => !isAbsolute(source)).map(source => normalize(source)), targetSource = resolve(unit.message.target.src_path);
+            const owners = new Set<string>();
+            for (const manifest of [invocation.manifest, unit.message.manifest_path].filter((path): path is string => typeof path === "string")) for (let owner = dirname(resolve(manifest));;) {
+              if (existsSync(join(owner, "Cargo.toml"))) owners.add(owner);
+              const parent = dirname(owner); if (parent === owner) break; owner = parent;
+            }
+            const bases = [...owners].filter(base => relativeSources.some(source => resolve(base, source) === targetSource) && sources.every(source => { const path = resolve(base, source); return existsSync(path) && (lstatSync(path).isFile() || lstatSync(path).isDirectory()); }));
+            return { path, text, baseDirectory: relativeSources.length === 0 ? invocation.cwd : bases.length === 1 ? bases[0] : null };
+          });
+          unit.inputs = [...new Set(unit.depInfo.flatMap((row: { text: string; baseDirectory: string | null }) => cargoDepInfoSourcesV1(row.text).filter(path => isAbsolute(path) || row.baseDirectory !== null).map(path => resolve(row.baseDirectory ?? invocation.cwd, path))))].map(path => cargoInputDigestV1(path as string));
+          unit.observedAtMs = Date.now();
+          unit.artifacts = (unit.message.filenames ?? []).map((path: string) => {
+            const stagedPath = stagedPaths.get(path);
+            return { path, sha256: sha256(path), ...(stagedPath ? { stagedPath, stagedSha256: sha256(stagedPath) } : {}) };
+          });
+        }
+        const buildResources = invocation.buildScripts.flatMap(build => {
+          const path = join(build.out_dir, "semio-runtime-resource-inputs.jsonl");
+          if (!existsSync(path)) return [];
+          const text = readFileSync(path, "utf8"), resources = text.split(/\r?\n/u).filter(Boolean).map(line => {
+            const input = JSON.parse(line);
+            const entries = input.kind === "directory" ? cargoDirectoryEntriesV1(input.path) : null;
+            return { input, sha256: cargoInputDigestV1(input.path).sha256, outputSha256: typeof input.output === "string" ? sha256(input.output) : null, ...(entries ? { observedEntries: entries.map(([name, kind, symlinkTarget]) => ({ path: join(input.path, name), kind, symlinkTarget })) } : {}) };
+          });
+          return [{ package_id: build.package_id, out_dir: build.out_dir, path, text, sha256: sha256(path), observedAtMs: Date.now(), resources }];
+        });
+  const compilerResourceRoot = invocation.buildDirectory ? join(invocation.buildDirectory, "semio-compiler-resources") : null;
+  const compilerResourcePaths = compilerResourceRoot ? [...new Set(invocation.units.filter(unit => !unit.message.target.kind?.includes("proc-macro") && !unit.message.target.kind?.includes("custom-build")).flatMap(unit => unit.inputs.map((input: any) => input.path as string)))].filter(path => basename(path) === "observation.json" && relative(compilerResourceRoot, path).split(sep)[0] !== ".." && !isAbsolute(relative(compilerResourceRoot, path))) : [];
+  const compilerResources = compilerResourcePaths.map(path => {
+    const text = existsSync(path) && lstatSync(path).isFile() ? readFileSync(path, "utf8") : null; let observation: any; try { observation = text === null ? null : JSON.parse(text); } catch { observation = null; }
+    const bind = (identity: any, producer: boolean): any => {
+      if (!identity || ![identity.manifest, identity.source].every(path => typeof path === "string" && isAbsolute(path))) return null;
+      const matches = invocation.units.filter(unit => typeof unit.message.manifest_path === "string" && resolve(unit.message.manifest_path) === resolve(identity.manifest) && unit.inputs.some((input: any) => input.kind === "file" && resolve(input.path) === resolve(identity.source)) && (producer ? unit.message.target.kind.includes("proc-macro") : typeof identity.crate === "string" && unit.message.target.name.replaceAll("-", "_") === identity.crate && !unit.message.target.kind.includes("custom-build") && !unit.message.target.kind.includes("proc-macro")));
+      return matches.length === 1 ? matches[0].message : null;
+    };
+    const resources = Array.isArray(observation?.resources) ? observation.resources.map((input: any) => {
+      const entries = input.kind === "directory" && typeof input.path === "string" ? cargoDirectoryEntriesV1(input.path) : null;
+      return { input, sha256: typeof input.path === "string" ? cargoInputDigestV1(input.path).sha256 : null, outputSha256: typeof input.output === "string" ? sha256(input.output) : null, ...(entries ? { observedEntries: entries.map(([name, kind, symlinkTarget]) => ({ path: join(input.path, name), kind, symlinkTarget })) } : {}) };
+    }) : [];
+    return { path, text, sha256: sha256(path), observedAtMs: Date.now(), producer: observation?.producer ?? null, caller: observation?.caller ?? null, producerUnit: bind(observation?.producer, true), callerUnit: bind(observation?.caller, false), resources };
+  });
+  const manifests = new Set<string>([invocation.manifest, ...invocation.units.map(unit => unit.message.manifest_path).filter((path): path is string => typeof path === "string")]), inputPaths = new Set<string>(manifests), visited = new Set<string>();
+  for (let path of [invocation.cwd, ...[...manifests].map(path => dirname(path))]) for (;;) {
+    if (visited.has(path)) break;
+    visited.add(path);
+    for (const name of ["Cargo.toml", "Cargo.lock", ".cargo/config.toml", ".cargo/config", "rust-toolchain.toml", "rust-toolchain"]) inputPaths.add(join(path, name));
+    const parent = dirname(path); if (parent === path) break; path = parent;
+  }
+  for (const name of ["config.toml", "config"]) inputPaths.add(join(cargoHome, name));
+  const invocationInputs = [...inputPaths].sort().map(path => ({ path, sha256: sha256(path) })), text = JSON.stringify({ version: 1, ...invocation, observedAtMs: Date.now(), invocationInputs, buildResources, compilerResourceRoot, compilerResources }) + "\n";
+  for (const path of new Set([receiptPath, ...(invocation.buildDirectory ? [join(invocation.buildDirectory, "semio-cargo-provenance", basename(receiptPath))] : [])])) { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, text); }
+}
+
 async function captureCargoArtifacts(manifest: string, args: string[], policy: CargoArtifactBuildPolicyV1, options: CargoArtifactBuildOptionsV1): Promise<void> {
   options.signal?.throwIfAborted();
   const path = resolve(manifest);
@@ -203,6 +295,8 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
   const owner = relative(policy.cwd, path).split(sep).join("/");
   const files = new Map<string, string>();
   const dependencies = new Map<string, string>();
+  const provenanceRoot = (options.environment ?? process.env).SEMIO_TEST_ARTIFACT_DIR;
+  const units: any[] = [], buildScripts: any[] = [], stagedNames = new Map<string, string>();
   let hasLibrary = false;
   let primaryExecutable: string | undefined;
   let cancelled = false;
@@ -214,7 +308,7 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
   const commandPort = options.commandPort ?? { command: "cargo", args: [] };
   const child = spawn(commandPort.command, [...commandPort.args, options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, "--message-format=json-render-diagnostics", ...compilerArgs], {
     cwd: policy.cwd,
-    env: { ...(options.environment ?? process.env), CARGO_TARGET_DIR: join(capture, "target"), CARGO_BUILD_BUILD_DIR: policy.buildDirectory },
+    env: { ...(options.environment ?? process.env), SEMIO_COMPILER_RESOURCE_ROOT: join(policy.buildDirectory, "semio-compiler-resources"), CARGO_TARGET_DIR: join(capture, "target"), CARGO_BUILD_BUILD_DIR: policy.buildDirectory },
     detached: process.platform !== "win32",
     stdio: ["inherit", "pipe", "pipe"],
   });
@@ -246,6 +340,9 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
             process.stdout.write(line + "\n");
             continue;
           }
+          if ((message.reason === "compiler-artifact" || message.reason === "build-script-executed") && (options.environment ?? process.env).SEMIO_TEST_ARTIFACT_DIR) process.stdout.write(line + "\n");
+          if (message.reason === "build-script-executed") buildScripts.push(message);
+          if (message.reason === "compiler-artifact") units.push({ message });
           if (message.reason !== "compiler-artifact" || message.target?.kind?.includes("custom-build")) continue;
           const packageUrl = message.package_id?.split("#")[0]?.replace(/^path\+/, "");
           const bin = args.indexOf("--bin"),
@@ -266,6 +363,7 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
             const name = (library ? library.replace(/\.rlib$/, ".rmeta") : file).split(/[\\/]/).at(-1)!;
             const key = primary ? name : /\.(rlib|rmeta|so|dylib|dll|lib)$/.test(file) ? `deps/${name}` : undefined;
             if (!key) continue;
+            stagedNames.set(file, key);
             if (!primary) {
               dependencies.set(key, file);
               continue;
@@ -312,6 +410,12 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
     await stageArtifacts(staging, owner, files, { signal: options.signal, leaseDirectory: policy.leaseDirectory });
     console.log(`[nx-native] staged ${files.size} deliverables in ${relative(policy.cwd, staging).split(sep).join("/")}`);
   } finally {
-    rmSync(capture, { recursive: true, force: true });
+    try {
+      {
+        writeCompletedCargoInvocationProvenanceV1(join(provenanceRoot ?? join(policy.buildDirectory, "semio-cargo-provenance"), `cargo-unit-provenance-${basename(capture)}.json`), { manifest: path, cwd: policy.cwd, command: commandPort.command, args: [...commandPort.args, options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, "--message-format=json-render-diagnostics", ...compilerArgs], buildDirectory: policy.buildDirectory, builtAtMs, status: await status, cancelled, units, buildScripts }, new Map([...stagedNames].filter(([, key]) => files.has(key)).map(([path, key]) => [path, join(staging, key)])), (options.environment ?? process.env).CARGO_HOME);
+      }
+    } finally {
+      rmSync(capture, { recursive: true, force: true });
+    }
   }
 }

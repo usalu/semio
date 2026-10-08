@@ -20,11 +20,11 @@ set-list-ordered = "set-list-ordered" "path" "=" block-path "ordered" "=" bool
 set-run-text = "set-run-text" "path" "=" block-path "run-index" "=" INT "text" "=" hex
 set-run-style = "set-run-style" "path" "=" block-path "run-index" "=" INT "style" "=" run-style
 set-image-block = "set-image-block" "path" "=" block-path "image-id" "=" hex "alt" "=" hex "width" "=" option-num "height" "=" option-num
-insert-style = "insert-style" "style" "=" style
+insert-style = "insert-style" "style" "=" style ("at" "=" INT)?
 remove-style = "remove-style" "id" "=" hex
 set-style-name = "set-style-name" "id" "=" hex "name" "=" hex
 set-style-based-on = "set-style-based-on" "id" "=" hex "based-on" "=" option-hex
-insert-image = "insert-image" "image" "=" image
+insert-image = "insert-image" "image" "=" image ("at" "=" INT)?
 remove-image = "remove-image" "id" "=" hex
 set-image-bytes = "set-image-bytes" "id" "=" hex "mime" "=" hex "bytes" "=" hex
 
@@ -34,10 +34,6 @@ block-path = "[" "[" segment-items? "]" "," INT "]"
 segment-items = segment {"," segment}*
 segment = "Q" "[" INT "]" | "L" "[" INT "," INT "]" | "T" "[" INT "," INT "," INT "]"
 
-# `enc_snapshot` — `[[styles],[images],[blocks]]`.
-snapshot-lit = "[" "[" style-items? "]" "," "[" image-items? "]" "," "[" block-items? "]" "]"
-style-items = style {"," style}*
-image-items = image {"," image}*
 block-items = block {"," block}*
 
 # `enc_style`/`enc_image`/`enc_block`/`enc_run`/`enc_run_style` — the same full-VALUE codecs

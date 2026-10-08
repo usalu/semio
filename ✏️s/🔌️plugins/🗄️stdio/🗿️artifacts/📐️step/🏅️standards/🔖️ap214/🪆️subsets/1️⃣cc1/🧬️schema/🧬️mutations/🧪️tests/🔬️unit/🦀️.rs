@@ -15,7 +15,7 @@ fn base() -> StepSnapshot {
     })
 }
 
-fn round_trip(mutation: StepCc1Mutation) {
+async fn round_trip(mutation: StepCc1Mutation) {
     let start = base();
     let mut mutated = start.clone();
     let outcome = apply_step_cc1_mutation(&mut mutated, &mutation);
@@ -25,13 +25,14 @@ fn round_trip(mutation: StepCc1Mutation) {
         apply_step_cc1_mutation(&mut mutated, &step);
     }
     assert_eq!(mutated, start, "{mutation:?} then its inverse must restore the base");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &start).await;
 }
 
-#[test]
-fn every_conformance_axis_round_trips_through_its_own_inverse() {
-    round_trip(StepCc1Mutation::SetFileSchema(set_file_schema::SetFileSchema { schemas: vec!["CONFIG_CONTROL_DESIGN".into()] }));
-    round_trip(StepCc1Mutation::SetProductIdentity(set_product_identity::SetProductIdentity { identity: None }));
-    round_trip(StepCc1Mutation::RemoveShapeRepresentation(remove_shape_representation::RemoveShapeRepresentation { id: 13 }));
+#[semio_framework_async_macros::async_test]
+async fn every_conformance_axis_round_trips_through_its_own_inverse() {
+    round_trip(StepCc1Mutation::SetFileSchema(set_file_schema::SetFileSchema { schemas: vec!["CONFIG_CONTROL_DESIGN".into()] })).await;
+    round_trip(StepCc1Mutation::SetProductIdentity(set_product_identity::SetProductIdentity { identity: None })).await;
+    round_trip(StepCc1Mutation::RemoveShapeRepresentation(remove_shape_representation::RemoveShapeRepresentation { id: 13 })).await;
 }
 
 /// 🎯️ Each verb must move the diagnostic it was derived from, or it is not that rule's verb.
@@ -54,9 +55,8 @@ fn each_verb_moves_the_diagnostic_it_was_derived_from() {
 /// if a caller reaches it directly — the class ceiling of 1 is below every real rung.
 #[test]
 fn no_representation_is_admissible_at_all() {
-    let mut doc = base().to_part21_document();
     let row = ShapeRepresentationRow { type_name: "GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION".into(), name: "w".into(), items: vec![], context: None };
-    let refusal = ladder::apply_class_edit(&mut doc, CLASS, MAX_RUNG, &ClassEdit::Representation { id: 99, row: Some(row) }).expect_err("CC1 admits no representation");
+    let refusal = ladder::representation_diff(&base(), CLASS, MAX_RUNG, 99, &row, None).expect_err("CC1 admits no representation");
     assert!(refusal.contains("rung 2") && refusal.contains("ceiling of 1"), "the refusal must name the class ceiling: {refusal}");
     assert!(ladder::ceiling_type_of(MAX_RUNG).is_none(), "and CC1 therefore has no ceiling type to demote onto either");
 }
@@ -69,14 +69,24 @@ fn a_rejected_mutation_leaves_the_snapshot_untouched() {
     assert_eq!(snapshot, base());
 }
 
+#[semio_framework_async_macros::async_test]
+async fn removing_a_middle_row_is_restored_at_its_original_index() {
+    let start = base();
+    let removal = StepCc1Mutation::SetProductIdentity(set_product_identity::SetProductIdentity { identity: None });
+    let inverse = Mutation::inverse(&removal, &start).expect("valid retained mutation inverse fixture");
+    let [StepCc1Mutation::RestoreEntities(restore)] = inverse.as_slice() else { panic!("one atomic restore row expected: {inverse:?}") };
+    assert_eq!(restore.entities.iter().filter_map(|row| row.index).collect::<Vec<_>>(), vec![0, 1, 2], "every chain rung comes back at its exact base position");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&removal, &start).await;
+}
+
 /// 🧪️ The declaration gate: `KINDS` must match the enum's own variants, in declaration order.
 #[test]
 fn kinds_const_matches_enum_variants_in_declaration_order() {
     let one_per_variant = vec![
-        StepCc1Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: StepSnapshot::default() }),
         StepCc1Mutation::SetFileSchema(set_file_schema::SetFileSchema { schemas: Vec::new() }),
         StepCc1Mutation::SetProductIdentity(set_product_identity::SetProductIdentity { identity: None }),
         StepCc1Mutation::RemoveShapeRepresentation(remove_shape_representation::RemoveShapeRepresentation { id: 0 }),
+        StepCc1Mutation::RestoreEntities(restore_entities::RestoreEntities { entities: Vec::new() }),
     ];
     assert_eq!(one_per_variant.len(), KINDS.len());
     for (mutation, kind) in one_per_variant.iter().zip(KINDS.iter()) {

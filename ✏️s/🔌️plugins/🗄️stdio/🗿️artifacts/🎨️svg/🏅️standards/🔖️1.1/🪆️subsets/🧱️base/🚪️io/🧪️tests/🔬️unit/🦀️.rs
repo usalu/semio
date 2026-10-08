@@ -1,7 +1,7 @@
 use super::*;
 use crate::schema::{demo_svg_snapshot, empty_svg_snapshot};
 use crate::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
-use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeSource,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeSource,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
 const SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
 

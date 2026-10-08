@@ -4,7 +4,7 @@ use crate::schema::mutations::JpgMutation;
 use crate::schema::snapshot::*;
 
 //#region Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RemoveOtherSegmentMutation {
@@ -23,19 +23,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for RemoveOtherSegmentMuta
         protocol::MutationOutcome::new(contribute(base, *index))
     }
     fn inverse(&self, base: &JpgSnapshot) -> Result<Vec<JpgMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let Self { index } = self;
-        let outcome = <Self as protocol::MutationKind<JpgSnapshot, JpgMutation>>::diff(self, base);
-        if <JpgDiff as protocol::DiffAlgebra<JpgSnapshot>>::is_empty(outcome.diff()) {
-            return Vec::new();
-        }
-        match base.other_segments.get(*index) {
-            Some(segment) => vec![JpgMutation::InsertOtherSegment(crate::schema::mutations::InsertOtherSegmentMutation { index: *index, segment: segment.clone() })],
-            None => Vec::new(),
-        }
-    
-    })())
-}
+        Ok(base.image.other_segments.get(self.index).map(|segment| JpgMutation::InsertOtherSegment(crate::schema::mutations::InsertOtherSegmentMutation { index: self.index, segment: segment.clone() })).into_iter().collect())
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove other segment", "Sonstiges Segment entfernen")
     }
@@ -44,11 +33,9 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for RemoveOtherSegmentMuta
     }
 }
 pub fn contribute(base: &JpgSnapshot, index: usize) -> JpgDiff {
-    if index >= base.other_segments.len() {
+    if index >= base.image.other_segments.len() {
         return JpgDiff::default();
     }
     JpgDiff { other_segments: Some(JpgOtherSegmentsDiff { removed: vec![index], modified: vec![], added: vec![] }), ..Default::default() }
 }
 //#endregion Semantics
-
-

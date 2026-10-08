@@ -1,4 +1,6 @@
 //! 🧬️ Direct change-asset-version mutation owner: payload, validation, typed diff, inverse, and outcomes.
+use crate::schema::diff::*;
+use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
@@ -20,11 +22,19 @@ pub fn validate(payload: &GltfChangeAssetVersionPayload, base: &GltfSnapshot) ->
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfChangeAssetVersionPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
-    let mut next = base.clone();
-    next.document.asset.version = payload.version.clone();
-    Ok(next)
+pub fn plan(p: &GltfChangeAssetVersionPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
+    validate(p, base)?;
+    Ok(GltfDiff { asset: changed(GltfAssetDiff { version: (base.document.asset.version != p.version).then(|| p.version.clone()), ..Default::default() }), ..Default::default() })
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(p: &GltfChangeAssetVersionPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    if validate(p, base).is_err() {
+        return Vec::new();
+    }
+    if base.document.asset.version == p.version {
+        return Vec::new();
+    }
+    vec![super::change_asset_version::mutation(super::change_asset_version::GltfChangeAssetVersionPayload { version: base.document.asset.version.clone() })]
 }
 
 //#region 🧬️DirectMutation
@@ -33,7 +43,11 @@ pub fn apply(payload: &GltfChangeAssetVersionPayload, base: &GltfSnapshot) -> Re
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeAssetVersionMutation {
     Apply(GltfChangeAssetVersionPayload),
-    Restore(Box<crate::schema::diff::GltfDiff>),
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutation(payload: GltfChangeAssetVersionPayload) -> super::GltfMutation {
+    super::GltfMutation::ChangeAssetVersion(ChangeAssetVersionMutation::Apply(payload))
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetVersionMutation {
@@ -41,28 +55,18 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetVe
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => match apply(payload, base) {
-                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Self::Apply(payload) => match plan(payload, base) {
+                Ok(diff) => protocol::MutationOutcome::new(diff),
                 Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
-            },
-            Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
-                Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-                Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
             },
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
-            return Vec::new();
+        match self {
+            Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::GltfMutation::ChangeAssetVersion(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change Asset Version", "Asset-Version ändern")

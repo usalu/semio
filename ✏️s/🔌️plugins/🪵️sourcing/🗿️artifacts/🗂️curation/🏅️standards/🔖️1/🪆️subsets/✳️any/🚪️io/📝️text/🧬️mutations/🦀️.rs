@@ -21,6 +21,7 @@ pub(crate) enum SourcingMutationDsl {
     CreateCuratedItem {
         #[dsl(block)]
         item: CuratedItem,
+        index: Option<u32>,
     },
     DeleteCuratedItem {
         object_id: String,
@@ -47,7 +48,7 @@ impl OpText for SourcingMutationDsl {
 
 pub(crate) fn sourcing_mutation_to_dsl(mutation: &SourcingMutation) -> SourcingMutationDsl {
     match mutation {
-        SourcingMutation::CreateCuratedItem(payload) => SourcingMutationDsl::CreateCuratedItem { item: payload.item.clone() },
+        SourcingMutation::CreateCuratedItem(payload) => SourcingMutationDsl::CreateCuratedItem { item: payload.item.clone(), index: payload.index },
         SourcingMutation::DeleteCuratedItem(payload) => SourcingMutationDsl::DeleteCuratedItem { object_id: payload.object_id.clone() },
         SourcingMutation::ChangeCuratedItemCount(payload) => SourcingMutationDsl::ChangeCuratedItemCount { object_id: payload.object_id.clone(), new_count: payload.new_count },
     }
@@ -55,7 +56,7 @@ pub(crate) fn sourcing_mutation_to_dsl(mutation: &SourcingMutation) -> SourcingM
 
 pub(crate) fn sourcing_mutation_from_dsl(mutation: SourcingMutationDsl) -> SourcingMutation {
     match mutation {
-        SourcingMutationDsl::CreateCuratedItem { item } => SourcingMutation::CreateCuratedItem(CreateCuratedItem { item }),
+        SourcingMutationDsl::CreateCuratedItem { item, index } => SourcingMutation::CreateCuratedItem(CreateCuratedItem { item, index }),
         SourcingMutationDsl::DeleteCuratedItem { object_id } => SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id }),
         SourcingMutationDsl::ChangeCuratedItemCount { object_id, new_count } => SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id, new_count }),
     }

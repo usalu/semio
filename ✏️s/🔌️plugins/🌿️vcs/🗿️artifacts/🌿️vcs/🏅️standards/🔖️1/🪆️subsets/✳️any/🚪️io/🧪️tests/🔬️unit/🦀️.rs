@@ -1,7 +1,7 @@
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::{csv::v_rfc4180::any::VcsIntoCsv, xlsx::v_ecma_376::any::VcsIntoXlsx, zip::v2_0::any::VcsIntoZip};
 use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::{csv::v_rfc4180::any::CsvIntoVcs, xlsx::v_ecma_376::any::XlsxIntoVcs, zip::v2_0::any::ZipIntoVcs};
 use crate::VcsSnapshot;
-use semio_framework::io::io_mechanism::{Deserializer, Serializer};
+use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
 use semio_framework::io_schema::IoPayload;
 use std::io::Read;
 
@@ -19,7 +19,7 @@ fn binary(payload: &IoPayload) -> &[u8] {
 /// 🔮️ The third-party `csv` reader (test-only) parses the one-record table.
 #[semio_framework_async_macros::async_test]
 async fn csv_round_trips_and_a_third_party_reader_agrees() {
-    let payload = VcsIntoCsv::serialize(&sample(), &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("csv").value;
+    let payload = VcsIntoCsv::serialize(&sample(), &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("csv").value;
     let text = semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::io::text::snapshot::encode_csv(&<semio_s_artifact_stdio_csv::CsvSnapshot as store::ArtifactPack>::decode_pack(binary(&payload)).expect("pack"));
     let mut reader = csv::Reader::from_reader(text.as_bytes());
     let row = reader.records().next().expect("a value row").expect("row");
@@ -32,7 +32,7 @@ async fn csv_round_trips_and_a_third_party_reader_agrees() {
 #[semio_framework_async_macros::async_test]
 async fn xlsx_round_trips_and_a_third_party_reader_agrees() {
     use calamine::Reader;
-    let payload = VcsIntoXlsx::serialize(&sample(), &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("xlsx").value;
+    let payload = VcsIntoXlsx::serialize(&sample(), &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("xlsx").value;
     let snapshot = <semio_s_artifact_stdio_xlsx::XlsxSnapshot as store::ArtifactPack>::decode_pack(binary(&payload)).expect("pack");
     let bytes = semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx(&snapshot).expect("xlsx bytes");
     let mut reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(bytes)).expect("calamine opens the workbook");
@@ -47,7 +47,7 @@ async fn xlsx_round_trips_and_a_third_party_reader_agrees() {
 /// 🔮️ The third-party `zip` reader (test-only) opens the document archive.
 #[semio_framework_async_macros::async_test]
 async fn zip_is_a_real_archive_of_the_exact_document() {
-    let payload = VcsIntoZip::serialize(&sample(), &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("zip").value;
+    let payload = VcsIntoZip::serialize(&sample(), &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("zip").value;
     let bytes = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::encode_zip(&<semio_s_artifact_stdio_zip::ZipSnapshot as store::ArtifactPack>::decode_pack(binary(&payload)).expect("pack")).expect("zip bytes");
     let mut archive = zip::ZipArchive::new(std::io::Cursor::new(bytes)).expect("the zip crate opens the archive");
     let mut member = String::new();

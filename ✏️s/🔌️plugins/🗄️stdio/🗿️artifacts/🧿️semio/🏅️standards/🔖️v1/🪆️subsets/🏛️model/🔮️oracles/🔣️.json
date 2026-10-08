@@ -55,22 +55,8 @@
       "capability": "semio-v1-model-mutate",
       "standardDirectoryName": "🔖️v1",
       "subsetDirectoryName": "🏛️model",
-      "vectors": [
-        {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
-          "scenarios": [
-            {
-              "id": "slides-the-wall-and-attaches-a-fire-rating-pset",
-              "directoryName": "🔥️slides"
-            }
-          ]
-        }
-      ],
+      "vectors": [],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "insert-spatial-node",
         "remove-spatial-node",
         "set-spatial-node",
@@ -255,47 +241,6 @@
             "operation": "set-relation",
             "bridgeVersion": 1,
             "variant": "SetRelation"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-model-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "semio-v1-model-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-model-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "semio-v1-model-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

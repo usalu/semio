@@ -95,7 +95,8 @@
     "test-rust-family-ownership": "bun nx run @semio-tech/repo-lib:test-rust-family-ownership",
     "test-rust-family-ownership-native": "bun nx run @semio-tech/repo-lib:test-rust-family-ownership-native",
     "test-fixture-ownership": "nx run @semio-tech/repo-lib:test-fixture-ownership",
-    "test-general-execution-ownership": "nx run @semio-tech/repo-lib:test-general-execution-ownership"
+    "test-general-execution-ownership": "nx run @semio-tech/repo-lib:test-general-execution-ownership",
+    "test-runtime-fixture-graph": "nx run @semio-tech/repo-lib:test-runtime-fixture-graph"
   },
   "nx": {
     "includedScripts": []

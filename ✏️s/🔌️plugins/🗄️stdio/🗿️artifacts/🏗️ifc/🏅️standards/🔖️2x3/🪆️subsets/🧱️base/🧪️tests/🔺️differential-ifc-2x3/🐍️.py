@@ -3,7 +3,7 @@
 Ticket 26/08/23/END-TO-END-TESTING-REFACTOR. The sibling case `../🧱️mutate-ifc-2x3` registers
 `ruststep` 0.4, which parses the ISO 10303-21 grammar and has no writer at all, so every scenario
 there is honestly typed `@mode-property`/`@mode-round-trip` — a second READER, never a second
-producer. This case closes that gap for the three mutation kinds a schema-bound implementation can
+producer. This case closes that gap for the mutation kinds a schema-bound implementation can
 genuinely perform: **IfcOpenShell 0.8.4.post1 applies each mutation to the real 193 915-byte,
 3 464-entity IFC2X3 building model and re-serializes the whole exchange structure itself**
 (`ifcopenshell.file.to_string`, its own C++ Part-21 writer), and the result is read back by the
@@ -63,13 +63,10 @@ from semio_repo_test import Adapter, Context, Outcome
 # region 🔖️Input
 INPUT = "shared://🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc"
 
-#: 🧬️ The three kinds IfcOpenShell can genuinely PRODUCE, in this subset's own catalog order.
-KINDS = ["set-snapshot", "upsert-instance", "set-header"]
+#: 🧬️ The kinds IfcOpenShell can genuinely PRODUCE, in this subset's own catalog order.
+KINDS = ["upsert-instance", "set-header"]
 
-#: ↩️ The kinds whose INVERSE IfcOpenShell can also produce. `set-snapshot` is absent: its inverse restores
-#: the whole 3 464-instance model, which IfcOpenShell can only rebuild through `add`, and `add` deep-copies
-#: every instance an argument references, so it cannot re-create the graph instance for instance.
-#: `inverse-set-snapshot` keeps its ruststep-backed scenario in `../🧱️mutate-ifc-2x3`; nothing is lost.
+#: ↩️ The kinds whose INVERSE IfcOpenShell can also produce.
 INVERSE_KINDS = ["upsert-instance", "set-header"]
 
 #: 📇️ This fixture's own committed header records in the `Part21Header` leaf wire, read from the file
@@ -541,18 +538,6 @@ def add_instance(model, instance: dict) -> None:
     model.add(created, int(instance["id"]))
 
 
-def snapshot_model(snapshot: dict):
-    """📸️ A whole new IfcOpenShell model from an `Ifc2x3Snapshot` wire record: its declared schema, its header, and
-    every instance at its own id."""
-    document = snapshot["document"]
-    schemas = [item["value"] for outer in document["header"]["fileSchema"] if outer["kind"] == "list" for item in outer["values"]]
-    model = ifcopenshell.file(schema=schemas[0])
-    set_header_records(model, document["header"])
-    for instance in document["instances"]:
-        add_instance(model, instance)
-    return model
-
-
 def rewrite(path: str) -> bytes:
     """🔁️ IfcOpenShell's identity cycle: read the whole model, write it back from the model alone."""
     return open_model(path).to_string().encode("utf-8")
@@ -565,8 +550,6 @@ def apply_mutation(path: str, spec: dict) -> bytes:
     as a passing test."""
     kind = spec["kind"]
     params = spec["params"]
-    if kind == "set-snapshot":
-        return snapshot_model(params["snapshot"]).to_string().encode("utf-8")
     model = open_model(path)
     if kind == "set-header":
         set_header_records(model, params["header"])

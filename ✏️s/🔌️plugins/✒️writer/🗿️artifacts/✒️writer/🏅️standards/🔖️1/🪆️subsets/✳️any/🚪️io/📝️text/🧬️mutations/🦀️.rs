@@ -76,7 +76,7 @@ use crate::schema::mutations::WriterMutation;
 use crate::schema::mutations::{ChangeLanguage, ChangeUri, EditText, RenameWriter};
 use crate::WriterDiff;
 use crate::WriterSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 /// 📥️ Decodes the internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) projection the
 /// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors carry.

@@ -3,5 +3,6 @@
   "id": 19,
   "airLoopId": 99,
   "minOaFlowM3S": 0.2,
-  "economizerEnabled": false
+  "economizerEnabled": false,
+  "index": null
 }

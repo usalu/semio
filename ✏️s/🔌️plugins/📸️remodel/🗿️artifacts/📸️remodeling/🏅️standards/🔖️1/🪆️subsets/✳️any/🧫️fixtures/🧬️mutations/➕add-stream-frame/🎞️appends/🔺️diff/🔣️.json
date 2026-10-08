@@ -1,58 +1,27 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "streams": {
-    "values": [
+    "rows": [
       {
-        "id": "stream-a",
-        "name": "Front",
-        "kind": "video",
-        "cameraId": "cam-a",
-        "syncOffsetMs": 12.5,
-        "fpsHint": 30.0,
-        "frames": [
-          {
-            "index": 0,
-            "timestampMs": 0.0,
-            "assetId": "asset-a"
-          },
-          {
-            "index": 1,
-            "timestampMs": 40.0,
-            "assetId": "asset-a"
-          },
-          {
-            "index": 2,
-            "timestampMs": 80.0,
-            "assetId": "asset-a"
+        "row": "patch",
+        "key": "stream-a",
+        "patch": {
+          "syncOffsetMs": null,
+          "source": null,
+          "frames": {
+            "removed": [],
+            "added": [
+              {
+                "index": 2,
+                "timestampMs": {
+                  "bits": "4054000000000000"
+                },
+                "assetId": "asset-a"
+              }
+            ]
           }
-        ],
-        "source": {
-          "name": "front.mp4",
-          "container": "mp4",
-          "codec": "avc",
-          "durationMs": 6400.0,
-          "frameCount": 160,
-          "width": 1024,
-          "height": 768
         }
-      },
-      {
-        "id": "stream-b",
-        "name": "Side",
-        "kind": "image-sequence",
-        "cameraId": null,
-        "syncOffsetMs": 0.0,
-        "fpsHint": 24.0,
-        "frames": [
-          {
-            "index": 0,
-            "timestampMs": 0.0,
-            "assetId": "asset-a"
-          }
-        ],
-        "source": null
       }
     ]
   },

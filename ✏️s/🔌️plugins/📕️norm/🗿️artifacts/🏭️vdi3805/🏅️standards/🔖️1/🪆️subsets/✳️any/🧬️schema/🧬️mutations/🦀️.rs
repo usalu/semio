@@ -38,6 +38,10 @@ pub fn extract_dn(attributes: &SheetAttributes) -> Option<u16> {
 }
 //#endregion 🔖️IndexSync
 
+#[path = "🧭️edit-rules/🦀️.rs"]
+mod edit_rules;
+pub use edit_rules::{resolve_edit, EDIT_RULES};
+
 //#region 🔖️Mutations
 use super::add_geometry_connection;
 use super::change_correction_as_of;
@@ -188,13 +192,13 @@ mod tests;
 
 /// ▶️ Applies one mutation to `base`, returning the resulting document together with every
 /// diagnostic its own diff builder raised, rendered as `<severity>:<code>` so no framework type
-/// crosses this boundary. Built on the SYNC `Mutation::diff`/`MutationDiff::apply` pair this
+/// crosses this boundary. Built on the SYNC `Mutation::diff`/`protocol::apply_diff` pair this
 /// facet's own committed fixture tests already call, not on the async `vcs::apply_mutation` wrapper.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_vdi3805_mutation(base: &Vdi3805Snapshot, mutation: &Vdi3805Mutation) -> Result<(Vdi3805Snapshot, Vec<String>), String> {
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = <Vdi3805Diff as protocol::MutationDiff<Vdi3805Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
 
@@ -222,3 +226,7 @@ mod kinds_catalog;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧫️Vectors
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row;

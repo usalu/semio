@@ -12,7 +12,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v_ecma_376::subsets::base::io::text::diff::{dec_block, dec_bool, dec_str, dec_style, dec_xml_node, decode_option, enc_block, enc_bool, enc_list, enc_str, enc_style, enc_xml_node, encode_option, hex_decode, hex_encode, split_top_level, strip_brackets};
 use crate::standards::v_ecma_376::subsets::base::io::binary::diff::{dec_xml_node_bin, enc_xml_node_bin};
 use crate::standards::v_ecma_376::subsets::base::io::text::diff::{parse_usize};
-use crate::schema::diff::{diff_set_snapshot, DocxBlockPath, DocxDiff, DocxPathSegment, DocxXmlPartDiff, NamedModified, NamedTripleDiff};
+use crate::schema::diff::{DocxBlockPath, DocxDiff, DocxPathSegment, DocxXmlPartDiff, NamedModified, NamedTripleDiff};
 #[cfg(test)]
 use crate::schema::snapshot::DocxDocument;
 use crate::schema::snapshot::{docx_part_is_xml, DocxBlock, DocxStyle, DocxXmlPart};
@@ -74,18 +74,6 @@ pub(crate) fn dec_list_segments(s: &str) -> Result<Vec<DocxPathSegment>, String>
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_path_segment).collect()
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_docx_snapshot(snapshot: &DocxSnapshot) -> String {
-    hex_encode(semio_framework_pack_json::to_json_string(snapshot).as_bytes())
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_docx_snapshot(value: &str) -> Result<DocxSnapshot, String> {
-    let bytes = hex_decode(value)?;
-    let text = std::str::from_utf8(&bytes).map_err(|error| error.to_string())?;
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
-
 pub(crate) fn enc_xml_address(address: &DocxXmlAddress) -> String {
     hex_encode(semio_framework_pack_json::to_json_string(address).as_bytes())
 }
@@ -103,8 +91,6 @@ pub(crate) fn dec_string_list(value: &str) -> Result<Vec<String>, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_docx_mutation(m: &DocxMutation) -> String {
     match m {
-        DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_docx_snapshot(snapshot)),
-        DocxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         DocxMutation::InsertBlock(insert_block::InsertBlock { path, block }) => format!("insert-block path={} block={}", enc_block_path(path), enc_block(block)),
         DocxMutation::RemoveBlock(remove_block::RemoveBlock { path }) => format!("remove-block path={}", enc_block_path(path)),
         DocxMutation::SetBlockContent(set_block_content::SetBlockContent { path, block }) => format!("set-block-content path={} block={}", enc_block_path(path), enc_block(block)),
@@ -130,7 +116,9 @@ pub(crate) fn print_docx_mutation(m: &DocxMutation) -> String {
         DocxMutation::RemoveStyle(remove_style::RemoveStyle { id }) => format!("remove-style id={}", enc_str(id)),
         DocxMutation::SetStyleName(set_style_name::SetStyleName { id, name }) => format!("set-style-name id={} name={}", enc_str(id), enc_str(name)),
         DocxMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id, based_on }) => format!("set-style-based-on id={} based-on={}", enc_str(id), encode_option(based_on, |v| enc_str(v))),
-        DocxMutation::SetPart(set_part::SetPart { path, content_type, payload }) => format!("set-part path={} content-type={} payload={}", enc_str(path), enc_str(content_type), hex_encode(semio_framework_pack_json::to_json_string(payload).as_bytes())),
+        DocxMutation::SetPart(set_part::SetPart { path, content_type, payload, index }) => {
+            format!("set-part path={} content-type={} payload={}{}", enc_str(path), enc_str(content_type), hex_encode(semio_framework_pack_json::to_json_string(payload).as_bytes()), index.map_or(String::new(), |index| format!(" index={index}")))
+        }
         DocxMutation::RemovePart(remove_part::RemovePart { path }) => format!("remove-part path={}", enc_str(path)),
     }
 }
@@ -142,8 +130,6 @@ pub(crate) fn parse_docx_mutation(line: &str) -> Result<DocxMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("docx mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| DocxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
-        "set-snapshot" => Ok(DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_docx_snapshot(arg("snapshot")?)? })),
         "insert-block" => Ok(DocxMutation::InsertBlock(insert_block::InsertBlock { path: dec_block_path(arg("path")?)?, block: dec_block(arg("block")?)? })),
         "remove-block" => Ok(DocxMutation::RemoveBlock(remove_block::RemoveBlock { path: dec_block_path(arg("path")?)? })),
         "set-block-content" => Ok(DocxMutation::SetBlockContent(set_block_content::SetBlockContent { path: dec_block_path(arg("path")?)?, block: dec_block(arg("block")?)? })),
@@ -163,7 +149,7 @@ pub(crate) fn parse_docx_mutation(line: &str) -> Result<DocxMutation, String> {
         "remove-style" => Ok(DocxMutation::RemoveStyle(remove_style::RemoveStyle { id: dec_str(arg("id")?)? })),
         "set-style-name" => Ok(DocxMutation::SetStyleName(set_style_name::SetStyleName { id: dec_str(arg("id")?)?, name: dec_str(arg("name")?)? })),
         "set-style-based-on" => Ok(DocxMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id: dec_str(arg("id")?)?, based_on: decode_option(arg("based-on")?, dec_str)? })),
-        "set-part" => Ok(DocxMutation::SetPart(set_part::SetPart { path: dec_str(arg("path")?)?, content_type: dec_str(arg("content-type")?)?, payload: { let bytes = hex_decode(arg("payload")?)?; let text = std::str::from_utf8(&bytes).map_err(|error| error.to_string())?; semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())? } })),
+        "set-part" => Ok(DocxMutation::SetPart(set_part::SetPart { path: dec_str(arg("path")?)?, content_type: dec_str(arg("content-type")?)?, payload: { let bytes = hex_decode(arg("payload")?)?; let text = std::str::from_utf8(&bytes).map_err(|error| error.to_string())?; semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())? }, index: args.get("index").map(|value| value.parse::<usize>().map_err(|error| error.to_string())).transpose()? })),
         "remove-part" => Ok(DocxMutation::RemovePart(remove_part::RemovePart { path: dec_str(arg("path")?)? })),
         other => Err(format!("docx mutation: unknown keyword {other:?}")),
     }

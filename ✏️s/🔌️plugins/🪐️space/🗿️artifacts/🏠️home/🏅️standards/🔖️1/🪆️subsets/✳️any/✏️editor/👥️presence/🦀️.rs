@@ -12,11 +12,28 @@ use store::ArtifactPack;
 #[value(rename_all = "camelCase")]
 pub struct HomePresence {}
 
-impl protocol::MutationDiff<HomePresence> for HomePresence {
-    fn apply(&self, base: &HomePresence) -> protocol::MutationApplyResult<HomePresence> {
+/// 🔺️ Sparse delta over [`HomePresence`]: the presence record carries no field, so its delta names nothing.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct HomePresenceDiff {}
+
+impl protocol::MutationDiff<HomePresence> for HomePresenceDiff {
+    fn apply(&self, base: &HomePresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<HomePresence> {
         Ok(base.clone())
     }
     fn absorb(&mut self, _other: Self) {}
+}
+
+impl protocol::DiffAlgebra<HomePresence> for HomePresenceDiff {
+    fn inverse(&self, _base: &HomePresence) -> Self {
+        Self {}
+    }
+    fn between(_base: &HomePresence, _other: &HomePresence) -> Self {
+        Self {}
+    }
+    fn is_empty(&self) -> bool {
+        true
+    }
 }
 
 impl store::ArtifactDsl for HomePresence {
@@ -77,10 +94,10 @@ impl Mutation<HomePresence> for HomePresenceMutation {
         }
     }
 
-    type Diff = HomePresence;
+    type Diff = HomePresenceDiff;
 
-    fn diff(&self, _base: &HomePresence) -> protocol::MutationOutcome<HomePresence> {
-        protocol::MutationOutcome::new(HomePresence::default())
+    fn diff(&self, _base: &HomePresence) -> protocol::MutationOutcome<HomePresenceDiff> {
+        protocol::MutationOutcome::new(HomePresenceDiff {})
     }
 
     fn inverse(&self, _base: &HomePresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {

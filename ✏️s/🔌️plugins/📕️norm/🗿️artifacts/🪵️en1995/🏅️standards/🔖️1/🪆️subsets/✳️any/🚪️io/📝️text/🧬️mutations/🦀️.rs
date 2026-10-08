@@ -33,7 +33,7 @@ mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::{En1995Diff, En1995Snapshot};
-use crate::standards::v1::subsets::any::schema::mutations::set_snapshot;
+use crate::standards::v1::subsets::any::schema::mutations::change_annex;
 use crate::standards::v1::subsets::any::schema::mutations::insert_member;
 use crate::standards::v1::subsets::any::schema::mutations::remove_member;
 use crate::standards::v1::subsets::any::schema::mutations::change_member_label_en;

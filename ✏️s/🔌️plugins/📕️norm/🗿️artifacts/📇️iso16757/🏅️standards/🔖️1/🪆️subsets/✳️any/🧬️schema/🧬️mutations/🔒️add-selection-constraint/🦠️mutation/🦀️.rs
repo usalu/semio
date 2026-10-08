@@ -1,4 +1,4 @@
-//! ➕️ `add-selection-constraint` — appends one property constraint to the active selection.
+//! ➕️ `add-selection-constraint` — inserts one property constraint into the active selection at `index` (absent appends).
 
 use crate::{part_1::SelectionConstraint, Iso16757Mutation, Iso16757Snapshot};
 
@@ -10,6 +10,7 @@ use crate::{part_1::SelectionConstraint, Iso16757Mutation, Iso16757Snapshot};
 #[value(rename_all = "camelCase")]
 pub struct AddSelectionConstraint {
     pub constraint: SelectionConstraint,
+    pub index: Option<usize>,
 }
 
 impl protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation> for AddSelectionConstraint { const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "selection-constraint", kind: "add-selection-constraint", record: "AddedSelectionConstraint" };

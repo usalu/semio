@@ -1,19 +1,30 @@
 {
-  "artifact": null,
-  "catalogue": null,
-  "dictionary": null,
-  "geometry": null,
-  "selection": null,
+  "catalogueName": null,
+  "manufacturerName": null,
+  "productGroups": null,
+  "productClasses": null,
+  "productSeries": null,
+  "products": null,
+  "productIndexes": null,
+  "propertyDefinitions": null,
+  "subjects": null,
+  "geometryObjects": null,
+  "selectionClassId": null,
+  "selectionSeriesId": null,
+  "selectionConstraints": null,
   "partNumberRule": null,
   "partNumberInputs": {
-    "height": {
-      "kind": "decimal",
-      "value": 750.0
-    },
-    "length": {
-      "kind": "decimal",
-      "value": 1200.0
-    }
+    "added": [],
+    "removed": [],
+    "modified": [
+      {
+        "key": "height",
+        "value": {
+          "kind": "decimal",
+          "value": 750.0
+        }
+      }
+    ]
   },
   "scriptLimits": null,
   "exchangeProcess": null

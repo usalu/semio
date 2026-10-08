@@ -1,8 +1,7 @@
 //! ➕️ `insert-load-case` diff — inserts the row at its position, clamped to the end of the collection.
 
 use super::InsertLoadCase;
-use crate::diff::En1993RowEdit as _;
-use crate::diff::{En1993Diff, En1993LoadCaseEdit};
+use crate::diff::{En1993Diff, En1993LoadCaseDelta};
 use crate::En1993Snapshot;
 
 pub fn diff(payload: &InsertLoadCase, base: &En1993Snapshot) -> protocol::MutationOutcome<En1993Diff> {
@@ -10,5 +9,5 @@ pub fn diff(payload: &InsertLoadCase, base: &En1993Snapshot) -> protocol::Mutati
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Load case id {} already exists.", payload.load_case.id), [payload.load_case.id.clone()]);
     }
     let index = payload.index.min(base.load_cases.len());
-    protocol::MutationOutcome::new(En1993Diff { load_cases: vec![En1993LoadCaseEdit::insert(index, payload.load_case.clone())], ..Default::default() })
+    protocol::MutationOutcome::new(En1993Diff { load_cases: En1993LoadCaseDelta::insertion(&base.load_cases, index, payload.load_case.clone()), ..Default::default() })
 }

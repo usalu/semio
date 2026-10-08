@@ -37,11 +37,12 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
+    use semio_s_artifact_stdio_semio::apply_diff;
     use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonMember, JsonValue};
     use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::{parse_json_text};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::{
-        apply_semio_value_mutation, insert_list_item, inverse_semio_value_mutation, remove_list_item, remove_map_entry, remove_node, set_map_entry, set_node, set_snapshot, set_value, SemioValueMutation, SemioValuePath, SemioValuePathSegment,
+        diff_semio_value_mutation, insert_list_item, inverse_semio_value_mutation, remove_list_item, remove_map_entry, remove_node, set_map_entry, set_node, set_value, SemioValueMutation, SemioValuePath, SemioValuePathSegment,
     };
     use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::value::io::binary::snapshot::{decode_semio_value_pack};
@@ -114,19 +115,14 @@ mod subject {
     fn payload_value(json: &Json, key: &str) -> SemioValue {
         decode_value(json.get(key).unwrap_or_else(|| panic!("mutate-semio-value: mutation fixture must carry a {key:?} value")))
     }
-    /// 🦠️ Decodes every REAL mutation variant. `"noMutation"` is handled by the two call sites
-    /// below instead of here: the retained `no-mutation` scenario id maps to the identity mutation
-    /// `SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })`, and this decoder has no
-    /// access to `base` — only the two callers do.
     fn decode_mutation(json: &Json) -> SemioValueMutation {
         match json.str("mutation").as_str() {
-            "setSnapshot" => SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: decode_snapshot(json.get("snapshot").expect("mutate-semio-value: setSnapshot fixture must carry a snapshot")) }),
             "setValue" => SemioValueMutation::SetValue(set_value::SetValue { path: decode_path(json, "path"), value: payload_value(json, "value") }),
-            "setMapEntry" => SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: decode_path(json, "path"), key: json.str("key"), value: payload_value(json, "value") }),
+            "setMapEntry" => SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: decode_path(json, "path"), key: json.str("key"), value: payload_value(json, "value"), at: None }),
             "removeMapEntry" => SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path: decode_path(json, "path"), key: json.str("key") }),
             "insertListItem" => SemioValueMutation::InsertListItem(insert_list_item::InsertListItem { path: decode_path(json, "path"), index: usize_field(json, "index"), value: payload_value(json, "value") }),
             "removeListItem" => SemioValueMutation::RemoveListItem(remove_list_item::RemoveListItem { path: decode_path(json, "path"), index: usize_field(json, "index") }),
-            "setNode" => SemioValueMutation::SetNode(set_node::SetNode { id: decode_id(json.get("id").expect("mutate-semio-value: setNode fixture must carry an id")), value: payload_value(json, "value") }),
+            "setNode" => SemioValueMutation::SetNode(set_node::SetNode { id: decode_id(json.get("id").expect("mutate-semio-value: setNode fixture must carry an id")), value: payload_value(json, "value"), at: None }),
             "removeNode" => SemioValueMutation::RemoveNode(remove_node::RemoveNode { id: decode_id(json.get("id").expect("mutate-semio-value: removeNode fixture must carry an id")) }),
             other => panic!("mutate-semio-value: no decoder for mutation variant {other:?}"),
         }
@@ -289,15 +285,8 @@ mod subject {
         parse_semio_value_dsl(&utf8(ctx.input_bytes(FOREST_DSL)?, "the committed building model")?)
     }
 
-    /// 📜️ The scenario's own committed mutation parameters — the feature owns the vector.
-    /// `"noMutation"` maps to the identity mutation `SetSnapshot(set_snapshot::SetSnapshot { snapshot:
-    /// base.clone() })` — the retained `no-mutation` scenario id's convention — since `decode_mutation`
-    /// itself has no access to the real building model this call site does.
     fn mutation(ctx: &Context) -> Result<SemioValueMutation, String> {
         let json = parse_json(ctx.doc_string()?).map_err(|error| format!("{}: the scenario's mutation payload must decode: {error}", ctx.scenario.id))?;
-        if json.str("mutation") == "noMutation" {
-            return Ok(SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: forest(ctx)? }));
-        }
         Ok(decode_mutation(&json))
     }
 
@@ -325,22 +314,17 @@ mod subject {
         decode_semio_value_snapshot_json(&utf8(ctx.input_bytes(&uri)?, &uri)?)
     }
 
-    /// `"noMutation"` maps to the identity mutation `SetSnapshot(set_snapshot::SetSnapshot { snapshot:
-    /// base.clone() })`, `base` being the vector's own before-snapshot (step position 0) — same
-    /// convention `mutation` above applies for the non-vector scenarios.
     fn vector_mutation(ctx: &Context, position: usize) -> Result<SemioValueMutation, String> {
         let uri = step_fixtures(ctx).into_iter().nth(position).ok_or_else(|| format!("{}: the scenario names no mutation fixture", ctx.scenario.id))?;
         let json = ctx.input_json(&uri)?;
-        if json.str("mutation") == "noMutation" {
-            return Ok(SemioValueMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: vector(ctx, 0, "before-snapshot")? }));
-        }
         Ok(decode_mutation(&json))
     }
 
     fn apply(current: &mut SemioValueSnapshot, step: &SemioValueMutation, what: &str) -> Result<(), String> {
-        let outcome = apply_semio_value_mutation(current, step);
+        let outcome = diff_semio_value_mutation(step, current);
         let refusals = semio_mutation_refusals(&outcome);
         if refusals.is_empty() {
+            *current = apply_diff(outcome.diff(), current).map_err(|error| format!("the diff could not be applied: {error:?}"))?;
             return Ok(());
         }
         Err(format!("{what}: the mutation was rejected: {refusals:?}"))
@@ -372,7 +356,7 @@ mod subject {
         let mut current = base.clone();
         apply(&mut current, &step, &ctx.scenario.id)?;
         let mutated = snapshot_json(&current);
-        for undo in inverse_semio_value_mutation(&step, &base).expect("valid retained mutation inverse fixture") {
+        for undo in inverse_semio_value_mutation(&step, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             apply(&mut current, &undo, &ctx.scenario.id)?;
         }
         if current != base {
@@ -393,7 +377,7 @@ mod subject {
             return Err(disagreement(&format!("{}: the applied document does not match the committed after-snapshot", ctx.scenario.id), &current, &expected));
         }
         let applied = snapshot_json(&current);
-        for undo in inverse_semio_value_mutation(&step, &base).expect("valid retained mutation inverse fixture") {
+        for undo in inverse_semio_value_mutation(&step, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             apply(&mut current, &undo, &ctx.scenario.id)?;
         }
         if current != base {
@@ -486,8 +470,8 @@ pub fn adapter() -> Adapter {
     #[cfg(feature = "sut")]
     {
         built = built
-            .subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate)
-            .subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse)
+            .subject("mutate", subject::mutate)
+            .subject("inverse", subject::inverse)
             .subject("spec-vector", subject::spec_vector);
         built = built.subject("payload-fidelity", subject::payload_fidelity).subject("identity-round-trip", subject::identity_round_trip);
     }

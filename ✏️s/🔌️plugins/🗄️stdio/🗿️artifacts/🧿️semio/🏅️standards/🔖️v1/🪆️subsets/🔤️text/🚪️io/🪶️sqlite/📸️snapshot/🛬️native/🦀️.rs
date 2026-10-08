@@ -5,14 +5,14 @@ use semio_framework_value::{native_decoding::NativeDecodeControl,ValueError,Valu
 use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits};
 
 /// 🛬️ Separates complete SQL cells from the same caller's actual native allocation backing.
-pub(crate)fn decode(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<SemioTextSnapshot,ValueError>{
+pub(crate)fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<SemioTextSnapshot,ValueError>{
  let limits=control.limits();crate::standards::v1::subsets::text::io::sqlite::snapshot::admit_layout(limits)?;
- let size=match payload{store::os_io::IoPayload::Binary(value)=>value.len(),store::os_io::IoPayload::Text(value)=>value.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio text native input exceeds file limit"))}
+ let size=match payload{store::io::IoPayload::Binary(value)=>value.len(),store::io::IoPayload::Text(value)=>value.len()};if size>limits.max_file_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio text native input exceeds file limit"))}
  control.allocation_stage(store::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative,|remaining,checkpoint|{
   let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|checkpoint(event.completed,event.total);let mut native_control=NativeDecodeControl::new(remaining,&mut callback);
   let result=(||->Result<SemioTextSnapshot,ValueError>{let result=match payload{
-   store::os_io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOTEXT_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,&mut native_control).map_err(store::semio_format::SemioError::into_value_error)?;binary(body,&mut native_control,limits)?},
-   store::os_io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,STDIO_SEMIOTEXT_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1,&mut native_control).map_err(store::semio_format::SemioError::into_value_error)?;document(body,&mut native_control,limits)?}
+   store::io::IoPayload::Binary(value)=>{let body=store::semio_format::unwrap_binary_controlled(value,STDIO_SEMIOTEXT_DOCUMENT_SCHEMA,store::semio_format::Component::Pack,1,&mut native_control).map_err(store::semio_format::SemioError::into_value_error)?;binary(body,&mut native_control,limits)?},
+   store::io::IoPayload::Text(value)=>{let body=store::semio_format::split_text_preamble_controlled(value,STDIO_SEMIOTEXT_DOCUMENT_SCHEMA,store::semio_format::Component::Dsl,1,&mut native_control).map_err(store::semio_format::SemioError::into_value_error)?;document(body,&mut native_control,limits)?}
   };let result=native::Owned::new(result);native_control.checkpoint()?;Ok(result.take())})();(result,native_control.owned_bytes())
  })?
 }

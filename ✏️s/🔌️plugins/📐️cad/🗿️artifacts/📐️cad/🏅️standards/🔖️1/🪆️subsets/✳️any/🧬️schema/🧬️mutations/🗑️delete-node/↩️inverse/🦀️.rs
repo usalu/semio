@@ -6,9 +6,6 @@ use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteNode, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    base.nodes.iter().find(|node| node.id == payload.node_id).map(|node| vec![CadMutation::CreateNode(create_node::CreateNode { node: node.clone() })]).unwrap_or_default()
-
-    })())
+    Ok(base.nodes.iter().enumerate().find(|(_, node)| node.id == payload.node_id).map(|(index, node)| vec![CadMutation::CreateNode(create_node::CreateNode { node: node.clone(), index: u32::try_from(index).ok() })]).unwrap_or_default())
 }
 //#endregion 🔖️Inverse

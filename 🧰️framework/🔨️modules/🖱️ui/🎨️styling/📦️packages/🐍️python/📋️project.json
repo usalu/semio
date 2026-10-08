@@ -122,7 +122,8 @@
       "cache": false,
       "outputs": [],
       "options": {
-        "command": "bun ../../🏗️builder/🐍️python/📜️script.ts deps"
+        "command": "bun ../../🏗️builder/🐍️python/📜️script.ts deps",
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python"
       }
     }
   }

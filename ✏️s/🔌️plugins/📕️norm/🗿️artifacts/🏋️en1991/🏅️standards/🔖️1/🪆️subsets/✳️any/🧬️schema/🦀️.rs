@@ -307,10 +307,6 @@ impl En1991Artifact {
             accidental_cases: snapshot.accidental_cases.clone(),
         }
     }
-    /// 🔄 Overwrite persistent fields from a snapshot.
-    pub fn set_snapshot(&mut self, snapshot: crate::En1991Snapshot) {
-        *self = Self::from_snapshot(snapshot);
-    }
 }
 //#endregion 🔖️Conversions
 

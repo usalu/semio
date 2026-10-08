@@ -9,7 +9,7 @@
 
 
 
-use crate::standards::v1::subsets::video::schema::diff::{diff_insert_sample, diff_insert_stream, diff_remove_sample, diff_remove_stream, diff_set_sample_data, diff_set_sample_flags, diff_set_snapshot, diff_set_stream_meta, SemioVideoDiff};
+use crate::standards::v1::subsets::video::schema::diff::{diff_insert_sample, diff_insert_stream, diff_remove_sample, diff_remove_stream, diff_set_sample_data, diff_set_sample_flags, diff_set_stream_meta, SemioVideoDiff};
 
 
 
@@ -80,7 +80,7 @@ pub enum SemioVideoMutation {
 /// order — what the `🎥️mutate-semio-video` case's completeness gate counts against and what
 /// `../../🔣️oracle.json`'s catalog repeats. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this declaration honest.
-pub const KINDS: &[&str] = &["insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags", "patch-snapshot"];
+pub const KINDS: &[&str] = &["insert-stream", "remove-stream", "set-stream-meta", "insert-sample", "remove-sample", "set-sample-data", "set-sample-flags"];
 //#endregion 🔖️Mutations
 
 /// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private

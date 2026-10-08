@@ -8,8 +8,8 @@ use crate::ProgramSnapshot;
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::DeleteSiteContext, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    match base.site_context.iter().find(|row| row.header.id == payload.id) {
-        Some(existing) => vec![ProgramMutation::CreateSiteContext(super::super::create_site_context::CreateSiteContext { site_context: existing.clone() })],
+    match base.site_context.iter().position(|row| row.header.id == payload.id) {
+        Some(position) => vec![ProgramMutation::CreateSiteContext(super::super::create_site_context::CreateSiteContext { site_context: base.site_context[position].clone(), index: Some(position) })],
         None => Vec::new(),
     }
 

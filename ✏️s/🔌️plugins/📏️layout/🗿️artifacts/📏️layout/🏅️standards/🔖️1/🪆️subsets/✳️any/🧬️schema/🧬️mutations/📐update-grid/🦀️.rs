@@ -1,6 +1,7 @@
 //! 📐 `update-grid` — replaces the document baseline grid.
 
 use crate::mutations::LayoutMutation;
+use crate::standards::v1::subsets::any::schema::diff::GridPatch;
 use crate::{GridSettings, LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -40,7 +41,12 @@ pub fn diff_update_grid(payload: &UpdateGrid, base: &LayoutSnapshot) -> protocol
     if base.grid == next {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Baseline grid is already set to that value.");
     }
-    protocol::MutationOutcome::new(LayoutDiff { grid: Some(next), ..Default::default() })
+    let patch = GridPatch {
+        baseline_grid: (next.baseline_grid != base.grid.baseline_grid).then_some(next.baseline_grid),
+        baseline_offset: (next.baseline_offset != base.grid.baseline_offset).then_some(next.baseline_offset),
+        snap_to_baseline: (next.snap_to_baseline != base.grid.snap_to_baseline).then_some(next.snap_to_baseline),
+    };
+    protocol::MutationOutcome::new(LayoutDiff { grid: Some(patch), ..Default::default() })
 }
 
 pub fn inverse_update_grid(_payload: &UpdateGrid, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {

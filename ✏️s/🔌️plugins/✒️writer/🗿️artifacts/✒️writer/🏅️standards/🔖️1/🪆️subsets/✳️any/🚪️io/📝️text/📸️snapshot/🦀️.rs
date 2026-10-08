@@ -116,7 +116,7 @@ use crate::schema::mutations::WriterMutation;
 use crate::schema::mutations::{ChangeLanguage, ChangeUri, EditText, RenameWriter};
 use crate::WriterDiff;
 use crate::WriterSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 /// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️.json` vector.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9

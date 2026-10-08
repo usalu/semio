@@ -11,8 +11,6 @@ pub struct Entry {
 }
 
 pub const REGISTRY: &[Entry] = &[
-    crate::standards::v1_2::subsets::any::io::text::mutations::set_snapshot::CODEC,
-    crate::standards::v1_2::subsets::any::io::text::mutations::patch_snapshot::CODEC,
     crate::standards::v1_2::subsets::any::io::text::mutations::change_gamma::CODEC,
     crate::standards::v1_2::subsets::any::io::text::mutations::patch_pixels::CODEC,
     crate::standards::v1_2::subsets::any::io::text::mutations::paint_native_samples::CODEC,
@@ -35,12 +33,6 @@ pub mod patch_pixels;
 
 #[path = "🌗️change-gamma/🦀️.rs"]
 pub mod change_gamma;
-
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 
 #[path = "🎨️paint-native-samples/🦀️.rs"]
 pub mod paint_native_samples;

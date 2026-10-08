@@ -220,6 +220,18 @@ use crate::load_id;
 use crate::Fem3dSnapshot;
 use protocol::{DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
 
+//#region 🔖️Insertion
+/// 📍 Complete id order that places `id` at `index` among `ids`; `None` when it lands last, because appending is already the natural order of an added row.
+pub fn insertion_order<'a>(ids: impl IntoIterator<Item = &'a str>, id: &str, index: Option<usize>) -> Option<Vec<String>> {
+    let at = index?;
+    let mut order: Vec<String> = ids.into_iter().map(str::to_owned).collect();
+    (at < order.len()).then(|| {
+        order.insert(at, id.to_owned());
+        order
+    })
+}
+//#endregion 🔖️Insertion
+
 //#region 🔖️RowAlgebra
 pub(crate) trait HasId {
     fn id(&self) -> &str;

@@ -1,4 +1,5 @@
 use super::*;
+use crate::io::{IoPayload, SubsetValidator};
 use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;

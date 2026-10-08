@@ -17,15 +17,15 @@ fn fixture() -> SemioTableSnapshot {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(base: &SemioTableSnapshot, operation: &SemioTableMutation) -> SemioTableSnapshot {
-    let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
+    let forward = protocol::apply_diff(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
     let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     // 🔧️ Each inverse's diff must be computed against the CURRENT (`restored`) state, not the
     // stale pre-operation `base` — a whole-list-replace diff shape reconstructs the entire
     // collection from whatever base it is given, so diffing against the wrong base silently
     // discards the forward mutation's effect instead of undoing it (see `🔤️text`'s own fix).
-    for back in &backwards {
-        restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
+    for back in backwards.iter().rev() {
+        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
     }
     assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture");
     forward
@@ -75,7 +75,7 @@ async fn delete_column_of_an_absent_name_has_an_empty_inverse() {
     let base = fixture();
     let delete = SemioTableMutation::DeleteColumn(delete_column::DeleteColumn { name: "missing".into() });
     assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an absent-name delete is a no-op");
+    assert_eq!(protocol::apply_diff(delete.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "an absent-name delete is a no-op");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -126,7 +126,7 @@ async fn remove_row_of_an_out_of_range_index_has_an_empty_inverse() {
     let base = fixture();
     let remove = SemioTableMutation::RemoveRow(remove_row::RemoveRow { index: 99 });
     assert!(remove.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "removing an absent index has nothing to undo");
-    assert_eq!(remove.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "an out-of-range remove is a no-op");
+    assert_eq!(protocol::apply_diff(remove.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "an out-of-range remove is a no-op");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -172,5 +172,26 @@ async fn kinds_match_the_enum_and_the_catalog() {
     let manifest = include_str!("../../../../🔮️oracles/🔣️.json");
     for kind in KINDS {
         assert!(manifest.contains(&format!("\"{kind}\"")), "KINDS entry {kind:?} must also appear in the committed oracle manifest's catalog");
+    }
+}
+
+/// 🎯️ Position law: removing ANY row (first, middle, last) is undone at its original index, and the inverse sums to the negative diff.
+#[semio_framework_async_macros::async_test]
+async fn remove_row_inverts_at_every_position() {
+    let base = crate::standards::v1::subsets::table::schema::snapshot::demo_table_snapshot();
+    assert!(base.rows.len() >= 3, "the law needs a middle row");
+    for index in 0..base.rows.len() {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioTableMutation::RemoveRow(remove_row::RemoveRow { index }), &base).await;
+    }
+}
+
+/// 🎯️ Position law: moving a row between ANY two positions is undone exactly.
+#[semio_framework_async_macros::async_test]
+async fn reorder_rows_inverts_between_every_pair_of_positions() {
+    let base = crate::standards::v1::subsets::table::schema::snapshot::demo_table_snapshot();
+    for from in 0..base.rows.len() {
+        for to in 0..base.rows.len() {
+            protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioTableMutation::ReorderRows(reorder_rows::ReorderRows { from, to }), &base).await;
+        }
     }
 }

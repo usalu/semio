@@ -19,8 +19,13 @@ pub fn decode_trinity_graph_mutation_json(text: &str) -> Result<TrinityGraphMuta
 
 /// ▶️ Applies one mutation and returns its diagnostic code/severity pairs.
 pub fn apply_trinity_graph_mutation_reporting(snapshot: &mut JackSnapshot, mutation: &TrinityGraphMutation) -> Vec<(String, String)> {
-    let outcome = <TrinityGraphMutation as protocol::Mutation<JackSnapshot>>::diff(mutation, snapshot).apply_to(snapshot);
-    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
+    let outcome = <TrinityGraphMutation as protocol::Mutation<JackSnapshot>>::diff(mutation, snapshot);
+    let mut reported: Vec<(String, String)> = outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect();
+    match protocol::apply_diff(outcome.diff(), snapshot) {
+        Ok(next) => *snapshot = next,
+        Err(error) => reported.push((error.code, format!("{:?}", semio_framework_diagnostic::Severity::Fatal))),
+    }
+    reported
 }
 
 /// ↩️ Computes the mutation's own undo steps.

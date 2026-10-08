@@ -257,32 +257,6 @@ pub fn empty_collection_snapshot(name: &str) -> CollectionSnapshot {
 
 
 //#region 🔖️CollectionMutation
-/// 🔗️ Sparse per-field delta shared by folder re-parenting and entry re-filing — the item's id plus
-/// its new container link. Named for derivation rule 5 (`move-to-<container>{id, new_parent}`), which
-/// is why `MoveToCollection`/`MoveToFolder` below both carry this same shape despite addressing
-/// different collections (`CollectionFolder.parent_id` vs `CollectionEntry.folder_id`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-pub struct MovedToContainer {
-    pub id: String,
-    pub new_parent: Option<String>,
-}
-
-/// ✏️ Sparse per-field delta for a rename — the item's id plus its new name.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-pub struct RenamedItem {
-    pub id: String,
-    pub new_name: String,
-}
-
-/// 📦️ Sparse per-field delta for `ReplaceEntryBody` — the entry id plus its new body. Mirrors
-/// `CollectionEntry.body`'s own `#[dsl(statements)]` handling of the foreign-shaped `ArtifactBody`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-pub struct ReplacedEntryBody {
-    pub entry_id: String,
-    #[dsl(statements)]
-    pub new_body: Box<ArtifactBody>,
-}
-
 /// ⚡️ One settled collection-tree mutation. Folders/entries are id-keyed entities (`create`/`delete`),
 /// re-parenting is derivation rule 5's hierarchy verb (`move-to-<container>`, not `change-*` — SMO
 /// corrected DKM's first `ChangeFolderParent`/`ChangeEntryFolder` proposal on exactly this point), and
@@ -354,212 +328,347 @@ fn folder_subtree_ids(folders: &[CollectionFolder], folder_id: &str) -> Vec<Stri
     ids
 }
 
-/// 📏️ Root-to-`folder_id` chain length (root folders are depth 0) — used to order a cascade
-/// delete's inverse leaves-first (deepest folders recreated before their ancestors).
-fn folder_depth(folders: &[CollectionFolder], folder_id: &str) -> usize {
-    let by_id: HashMap<&str, &CollectionFolder> = folders.iter().map(|folder| (folder.id.as_str(), folder)).collect();
-    let mut depth = 0usize;
-    let mut current = folder_id.to_string();
-    let mut guard = 0usize;
-    while let Some(folder) = by_id.get(current.as_str()) {
-        match &folder.parent_id {
-            Some(parent) => {
-                current = parent.clone();
-                depth += 1;
-            }
-            None => break,
-        }
-        guard += 1;
-        if guard > folders.len() {
-            break;
-        }
-    }
-    depth
-}
-
-/// 🧬️ Sparse per-field collection delta — every field records WHAT CHANGED (an id, a new value), never
-/// a whole post-mutation record. Handcrafted rather than relying on `#[derive(dsl::)]`'s field
-/// lowering alone for `MovedToContainer`/`RenamedItem`/`ReplacedEntryBody`: SMO's ruling on this file's
-/// design doc adopted verbatim — *"replayability isn't the property the rule protects; mergeability
-/// is. A whole-record diff asserts every field, so two users renaming a folder and moving it cannot
-/// merge."* `deleted_folder_ids`/`deleted_entry_ids` are id lists (never full records) so a cascade
-/// delete's diff stays a set of removed ids — the removed folders'/entries' full payload lives only in
-/// `CollectionMutation::inverse`'s own reconstruction from `base`, never duplicated into the diff.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+/// 🧬️ Sparse collection delta: the collection name is a present slot and folders and entries are id-keyed row deltas
+/// (`added`/`removed`/`patched`/`reordered`), so a cascading folder delete lists every removed subtree folder and entry
+/// and its negative delta restores all of them at their original positions.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
 pub struct CollectionDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
     pub renamed_collection: Option<String>,
-
-    #[dsl(block)]
-    pub created_folder: Option<CollectionFolder>,
-    /// 🔢️ Companion to `created_folder` — the insertion index. Always `Some` exactly when
-    /// `created_folder` is, kept as a sibling field rather than nested inside it since the derive
-    /// engine has no first-class "record + position" shape (see `📓️wave3c-reports/flow-space-report.md`'s
-    /// derive-engine-gap finding).
-    pub created_folder_at: Option<u32>,
-    /// 🗑️ Every folder id removed by a `DeleteFolder` — the target plus its full cascade subtree.
-    pub deleted_folder_ids: Option<Vec<String>>,
-    #[dsl(block)]
-    pub moved_folder: Option<MovedToContainer>,
-    #[dsl(block)]
-    pub renamed_folder: Option<RenamedItem>,
-
-    #[dsl(block)]
-    pub created_entry: Option<CollectionEntry>,
-    /// 🔢️ Companion to `created_entry`, same convention as `created_folder_at`.
-    pub created_entry_at: Option<u32>,
-    /// 🗑️ Every entry id removed — either one `DeleteEntry` target, or every entry filed under a
-    /// `DeleteFolder`'s cascade subtree.
-    pub deleted_entry_ids: Option<Vec<String>>,
-    #[dsl(block)]
-    pub moved_entry: Option<MovedToContainer>,
-    #[dsl(block)]
-    pub renamed_entry: Option<RenamedItem>,
-    #[dsl(block)]
-    pub replaced_entry_body: Option<ReplacedEntryBody>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub folders: Option<CollectionFoldersDelta>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub entries: Option<CollectionEntriesDelta>,
 }
 
-impl protocol::DiffAlgebra<CollectionSnapshot> for CollectionDiff {
-    fn inverse(&self, base: &CollectionSnapshot) -> Self {
-        let mut inverse = Self::default();
-        inverse.renamed_collection = self.renamed_collection.as_ref().map(|_| base.name.clone());
-        if let Some(folder) = &self.created_folder {
-            inverse.deleted_folder_ids = Some(vec![folder.id.clone()]);
+/// 🧱️ Carries an optional container link (`parent_id`/`folder_id`) as a present slot, so moving to root stays distinct from leaving the link untouched on every wire.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct CollectionOptionalLink {
+    pub value: Option<String>,
+}
+
+/// 🩹 Field patch of one folder; every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct CollectionFolderPatch {
+    pub id: String,
+    pub parent_id: Option<CollectionOptionalLink>,
+    pub name: Option<String>,
+}
+
+/// 🩹 Field patch of one entry; every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct CollectionEntryPatch {
+    pub id: String,
+    pub folder_id: Option<CollectionOptionalLink>,
+    pub name: Option<String>,
+    pub kind_id: Option<String>,
+    pub body: Option<Box<ArtifactBody>>,
+}
+
+/// 🧩️ Id-keyed row delta of the folders.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct CollectionFoldersDelta {
+    pub added: Vec<CollectionFolder>,
+    pub removed: Vec<String>,
+    pub patched: Vec<CollectionFolderPatch>,
+    pub reordered: Option<Vec<String>>,
+}
+
+/// 🧩️ Id-keyed row delta of the entries.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct CollectionEntriesDelta {
+    pub added: Vec<CollectionEntry>,
+    pub removed: Vec<String>,
+    pub patched: Vec<CollectionEntryPatch>,
+    pub reordered: Option<Vec<String>>,
+}
+
+//#region 🧺️KeyedDelta
+/// 🧺️ Id-keyed ordered-collection delta (`added`/`removed`/`patched`/`reordered`) and its algebra: apply, composition (create∘delete
+/// cancels, delete∘create replaces, patch∘patch composes, patch∘create folds), negative delta and state delta.
+pub trait KeyedDelta: Sized {
+    type Row: Clone;
+    type Patch: Clone;
+    fn added(&self) -> &[Self::Row];
+    fn removed(&self) -> &[String];
+    fn patched(&self) -> &[Self::Patch];
+    fn reordered(&self) -> Option<&[String]>;
+    fn assemble(added: Vec<Self::Row>, removed: Vec<String>, patched: Vec<Self::Patch>, reordered: Option<Vec<String>>) -> Self;
+    fn row_key(row: &Self::Row) -> &str;
+    fn patch_key(patch: &Self::Patch) -> &str;
+    fn patch_fold(patch: &Self::Patch, row: &mut Self::Row) -> Result<(), protocol::MutationApplyError>;
+    fn patch_compose(first: &Self::Patch, later: &Self::Patch) -> Self::Patch;
+    fn patch_inverse(patch: &Self::Patch, base: &Self::Row) -> Self::Patch;
+    fn patch_between(base: &Self::Row, other: &Self::Row) -> Option<Self::Patch>;
+    fn patch_is_empty(patch: &Self::Patch) -> bool;
+}
+
+fn keyed_error(code: &str, message: &str, at: [&str; 2]) -> protocol::MutationApplyError {
+    protocol::MutationApplyError::new(code, message).at(at)
+}
+
+pub fn keyed_apply<D: KeyedDelta>(rows: &[D::Row], delta: &D) -> Result<Vec<D::Row>, protocol::MutationApplyError> {
+    let key = D::row_key;
+    for (index, id) in delta.removed().iter().enumerate() {
+        if delta.removed()[..index].contains(id) {
+            return Err(keyed_error("mutation.apply.duplicate-target", "row is removed more than once", ["removed", &index.to_string()]));
         }
-        if let Some(ids) = &self.deleted_folder_ids {
-            if let Some((index, folder)) = base.folders.iter().enumerate().find(|(_, folder)| ids.contains(&folder.id)) {
-                inverse.created_folder = Some(folder.clone());
-                inverse.created_folder_at = Some(index as u32);
+        if !rows.iter().any(|row| key(row) == id) {
+            return Err(keyed_error("mutation.apply.missing-target", "removed row does not exist", ["removed", &index.to_string()]));
+        }
+    }
+    let mut next: Vec<D::Row> = rows.iter().filter(|row| !delta.removed().iter().any(|id| id == key(row))).cloned().collect();
+    for (index, row) in delta.added().iter().enumerate() {
+        if next.iter().any(|existing| key(existing) == key(row)) {
+            return Err(keyed_error("mutation.apply.duplicate-target", "added row identity already exists", ["added", &index.to_string()]));
+        }
+        next.push(row.clone());
+    }
+    for (index, patch) in delta.patched().iter().enumerate() {
+        if delta.patched()[..index].iter().any(|earlier| D::patch_key(earlier) == D::patch_key(patch)) {
+            return Err(keyed_error("mutation.apply.duplicate-target", "row is patched more than once", ["patched", &index.to_string()]));
+        }
+        let row = next.iter_mut().find(|row| key(row) == D::patch_key(patch)).ok_or_else(|| keyed_error("mutation.apply.missing-target", "patched row does not exist", ["patched", &index.to_string()]))?;
+        D::patch_fold(patch, row).map_err(|error| error.under(["patched".to_string(), index.to_string()]))?;
+    }
+    let Some(order) = delta.reordered() else { return Ok(next) };
+    if order.len() != next.len() || order.iter().enumerate().any(|(index, id)| order[..index].contains(id) || !next.iter().any(|row| key(row) == id)) {
+        return Err(protocol::MutationApplyError::new("mutation.apply.invalid-order", "reorder must be a complete unique permutation").at(["reordered".to_string()]));
+    }
+    Ok(order.iter().filter_map(|id| next.iter().find(|row| key(row) == id).cloned()).collect())
+}
+
+fn canonical<D: KeyedDelta>(mut added: Vec<D::Row>, mut removed: Vec<String>, mut patched: Vec<D::Patch>, reordered: Option<Vec<String>>) -> D {
+    if let Some(order) = &reordered {
+        added.sort_by_key(|row| order.iter().position(|id| id == D::row_key(row)).unwrap_or(usize::MAX));
+    }
+    let reordered = reordered.filter(|order| {
+        let tail = added.len();
+        !(order.len() <= tail + 1 && order.len() >= tail && order[order.len() - tail..].iter().map(String::as_str).eq(added.iter().map(D::row_key)))
+    });
+    removed.sort();
+    removed.dedup();
+    patched.retain(|patch| !D::patch_is_empty(patch));
+    patched.sort_by(|left, right| D::patch_key(left).cmp(D::patch_key(right)));
+    D::assemble(added, removed, patched, reordered)
+}
+
+/// ➕️ Normal form of `first` then `later`: create∘delete cancels, delete∘create replaces, patch∘patch composes, patch∘create folds.
+pub fn keyed_absorb<D: KeyedDelta>(first: &D, later: &D) -> D {
+    let mut added: Vec<D::Row> = first.added().to_vec();
+    let mut removed: Vec<String> = first.removed().to_vec();
+    let mut patched: Vec<D::Patch> = Vec::new();
+    for patch in first.patched() {
+        match added.iter_mut().find(|row| D::row_key(row) == D::patch_key(patch)) {
+            Some(row) => {
+                let _ = D::patch_fold(patch, row);
+            }
+            None => patched.push(patch.clone()),
+        }
+    }
+    for id in later.removed() {
+        if let Some(position) = added.iter().position(|row| D::row_key(row) == id) {
+            added.remove(position);
+        } else {
+            patched.retain(|patch| D::patch_key(patch) != id);
+            if !removed.contains(id) {
+                removed.push(id.clone());
             }
         }
-        inverse.moved_folder = self.moved_folder.as_ref().and_then(|moved| base.folders.iter().find(|folder| folder.id == moved.id).map(|folder| MovedToContainer { id: moved.id.clone(), new_parent: folder.parent_id.clone() }));
-        inverse.renamed_folder = self.renamed_folder.as_ref().and_then(|renamed| base.folders.iter().find(|folder| folder.id == renamed.id).map(|folder| RenamedItem { id: renamed.id.clone(), new_name: folder.name.clone() }));
-        if let Some(entry) = &self.created_entry {
-            inverse.deleted_entry_ids = Some(vec![entry.id.clone()]);
-        }
-        if let Some(ids) = &self.deleted_entry_ids {
-            if let Some((index, entry)) = base.entries.iter().enumerate().find(|(_, entry)| ids.contains(&entry.id)) {
-                inverse.created_entry = Some(entry.clone());
-                inverse.created_entry_at = Some(index as u32);
-            }
-        }
-        inverse.moved_entry = self.moved_entry.as_ref().and_then(|moved| base.entries.iter().find(|entry| entry.id == moved.id).map(|entry| MovedToContainer { id: moved.id.clone(), new_parent: entry.folder_id.clone() }));
-        inverse.renamed_entry = self.renamed_entry.as_ref().and_then(|renamed| base.entries.iter().find(|entry| entry.id == renamed.id).map(|entry| RenamedItem { id: renamed.id.clone(), new_name: entry.name.clone() }));
-        inverse.replaced_entry_body = self.replaced_entry_body.as_ref().and_then(|replaced| base.entries.iter().find(|entry| entry.id == replaced.entry_id).map(|entry| ReplacedEntryBody { entry_id: replaced.entry_id.clone(), new_body: entry.body.clone() }));
-        inverse
     }
-
-    fn between(base: &CollectionSnapshot, other: &CollectionSnapshot) -> Self {
-        let mut diff = Self::default();
-        diff.renamed_collection = (base.name != other.name).then(|| other.name.clone());
-        if let Some((index, folder)) = other.folders.iter().enumerate().find(|(_, folder)| !base.folders.iter().any(|existing| existing.id == folder.id)) {
-            diff.created_folder = Some(folder.clone());
-            diff.created_folder_at = Some(index as u32);
+    added.extend(later.added().iter().cloned());
+    for patch in later.patched() {
+        let key = D::patch_key(patch);
+        if let Some(row) = added.iter_mut().find(|row| D::row_key(row) == key) {
+            let _ = D::patch_fold(patch, row);
+        } else if let Some(existing) = patched.iter_mut().find(|existing| D::patch_key(existing) == key) {
+            *existing = D::patch_compose(existing, patch);
+        } else {
+            patched.push(patch.clone());
         }
-        let deleted_folders: Vec<String> = base.folders.iter().filter(|folder| !other.folders.iter().any(|existing| existing.id == folder.id)).map(|folder| folder.id.clone()).collect();
-        diff.deleted_folder_ids = (!deleted_folders.is_empty()).then_some(deleted_folders);
-        diff.moved_folder = other.folders.iter().find(|folder| base.folders.iter().any(|existing| existing.id == folder.id && existing.parent_id != folder.parent_id)).map(|folder| MovedToContainer { id: folder.id.clone(), new_parent: folder.parent_id.clone() });
-        diff.renamed_folder = other.folders.iter().find(|folder| base.folders.iter().any(|existing| existing.id == folder.id && existing.name != folder.name)).map(|folder| RenamedItem { id: folder.id.clone(), new_name: folder.name.clone() });
-        if let Some((index, entry)) = other.entries.iter().enumerate().find(|(_, entry)| !base.entries.iter().any(|existing| existing.id == entry.id)) {
-            diff.created_entry = Some(entry.clone());
-            diff.created_entry_at = Some(index as u32);
-        }
-        let deleted_entries: Vec<String> = base.entries.iter().filter(|entry| !other.entries.iter().any(|existing| existing.id == entry.id)).map(|entry| entry.id.clone()).collect();
-        diff.deleted_entry_ids = (!deleted_entries.is_empty()).then_some(deleted_entries);
-        diff.moved_entry = other.entries.iter().find(|entry| base.entries.iter().any(|existing| existing.id == entry.id && existing.folder_id != entry.folder_id)).map(|entry| MovedToContainer { id: entry.id.clone(), new_parent: entry.folder_id.clone() });
-        diff.renamed_entry = other.entries.iter().find(|entry| base.entries.iter().any(|existing| existing.id == entry.id && existing.name != entry.name)).map(|entry| RenamedItem { id: entry.id.clone(), new_name: entry.name.clone() });
-        diff.replaced_entry_body = other.entries.iter().find(|entry| base.entries.iter().any(|existing| existing.id == entry.id && existing.body != entry.body)).map(|entry| ReplacedEntryBody { entry_id: entry.id.clone(), new_body: entry.body.clone() });
-        diff
     }
+    let reordered = match (later.reordered(), first.reordered()) {
+        (Some(order), _) => Some(order.to_vec()),
+        (None, Some(order)) => Some(order.iter().filter(|id| !later.removed().contains(id)).cloned().chain(later.added().iter().map(|row| D::row_key(row).to_string())).collect()),
+        (None, None) => None,
+    };
+    canonical::<D>(added, removed, patched, reordered)
+}
 
-    fn is_empty(&self) -> bool {
-        *self == Self::default()
+fn ids_after<D: KeyedDelta>(base: &[String], delta: &D) -> Vec<String> {
+    match delta.reordered() {
+        Some(order) => order.to_vec(),
+        None => base.iter().filter(|id| !delta.removed().contains(id)).cloned().chain(delta.added().iter().map(|row| D::row_key(row).to_string())).collect(),
     }
 }
+
+/// 🔁️ The negative delta: removes what `delta` added, restores what it removed, undoes its patches, restores the base order.
+pub fn keyed_inverse<D: KeyedDelta>(delta: &D, base: &[D::Row]) -> D {
+    let base_ids: Vec<String> = base.iter().map(|row| D::row_key(row).to_string()).collect();
+    let removed: Vec<String> = delta.added().iter().map(|row| D::row_key(row).to_string()).collect();
+    let added: Vec<D::Row> = delta.removed().iter().filter_map(|id| base.iter().find(|row| D::row_key(row) == id).cloned()).collect();
+    let patched: Vec<D::Patch> = delta
+        .patched()
+        .iter()
+        .filter(|patch| !removed.iter().any(|id| id == D::patch_key(patch)))
+        .filter_map(|patch| base.iter().find(|row| D::row_key(row) == D::patch_key(patch)).map(|row| D::patch_inverse(patch, row)))
+        .collect();
+    let after = ids_after(&base_ids, delta);
+    let natural: Vec<String> = after.iter().filter(|id| !removed.contains(id)).cloned().chain(added.iter().map(|row| D::row_key(row).to_string())).collect();
+    let reordered = (natural != base_ids).then_some(base_ids);
+    canonical::<D>(added, removed, patched, reordered)
+}
+
+/// 🧭️ The delta turning `base` into `other` (sync/import only).
+pub fn keyed_between<D: KeyedDelta>(base: &[D::Row], other: &[D::Row]) -> D {
+    let base_ids: Vec<String> = base.iter().map(|row| D::row_key(row).to_string()).collect();
+    let other_ids: Vec<String> = other.iter().map(|row| D::row_key(row).to_string()).collect();
+    let removed: Vec<String> = base_ids.iter().filter(|id| !other_ids.contains(id)).cloned().collect();
+    let added: Vec<D::Row> = other.iter().filter(|row| !base_ids.iter().any(|id| id == D::row_key(row))).cloned().collect();
+    let patched: Vec<D::Patch> = other.iter().filter_map(|row| base.iter().find(|candidate| D::row_key(candidate) == D::row_key(row)).and_then(|candidate| D::patch_between(candidate, row))).collect();
+    let natural: Vec<String> = base_ids.iter().filter(|id| !removed.contains(id)).cloned().chain(added.iter().map(|row| D::row_key(row).to_string())).collect();
+    let reordered = (natural != other_ids).then_some(other_ids);
+    canonical::<D>(added, removed, patched, reordered)
+}
+
+pub fn keyed_is_empty<D: KeyedDelta>(delta: &D) -> bool {
+    delta.added().is_empty() && delta.removed().is_empty() && delta.patched().iter().all(D::patch_is_empty) && delta.reordered().is_none()
+}
+//#endregion 🧺️KeyedDelta
+
+macro_rules! keyed_delta_impl {
+    ($delta:ident, $row:ty, $patch:ty, $row_key:ident, $patch_key:ident, $fold:expr, $compose:expr, $inverse:expr, $patch_between:expr, $is_empty:expr) => {
+        impl KeyedDelta for $delta {
+            type Row = $row;
+            type Patch = $patch;
+            fn added(&self) -> &[$row] {
+                &self.added
+            }
+            fn removed(&self) -> &[String] {
+                &self.removed
+            }
+            fn patched(&self) -> &[$patch] {
+                &self.patched
+            }
+            fn reordered(&self) -> Option<&[String]> {
+                self.reordered.as_deref()
+            }
+            fn assemble(added: Vec<$row>, removed: Vec<String>, patched: Vec<$patch>, reordered: Option<Vec<String>>) -> Self {
+                Self { added, removed, patched, reordered }
+            }
+            fn row_key(row: &$row) -> &str {
+                row.$row_key.as_str()
+            }
+            fn patch_key(patch: &$patch) -> &str {
+                patch.$patch_key.as_str()
+            }
+            fn patch_fold(patch: &$patch, row: &mut $row) -> Result<(), protocol::MutationApplyError> {
+                ($fold)(patch, row);
+                Ok(())
+            }
+            fn patch_compose(first: &$patch, later: &$patch) -> $patch {
+                ($compose)(first, later)
+            }
+            fn patch_inverse(patch: &$patch, base: &$row) -> $patch {
+                ($inverse)(patch, base)
+            }
+            fn patch_between(base: &$row, other: &$row) -> Option<$patch> {
+                ($patch_between)(base, other)
+            }
+            fn patch_is_empty(patch: &$patch) -> bool {
+                ($is_empty)(patch)
+            }
+        }
+    };
+}
+
+keyed_delta_impl!(
+    CollectionFoldersDelta,
+    CollectionFolder,
+    CollectionFolderPatch,
+    id,
+    id,
+    |patch: &CollectionFolderPatch, row: &mut CollectionFolder| {
+        if let Some(parent_id) = &patch.parent_id {
+            row.parent_id = parent_id.value.clone();
+        }
+        if let Some(name) = &patch.name {
+            row.name = name.clone();
+        }
+    },
+    |first: &CollectionFolderPatch, later: &CollectionFolderPatch| CollectionFolderPatch { id: first.id.clone(), parent_id: later.parent_id.clone().or_else(|| first.parent_id.clone()), name: later.name.clone().or_else(|| first.name.clone()) },
+    |patch: &CollectionFolderPatch, base: &CollectionFolder| CollectionFolderPatch { id: patch.id.clone(), parent_id: patch.parent_id.as_ref().map(|_| CollectionOptionalLink { value: base.parent_id.clone() }), name: patch.name.as_ref().map(|_| base.name.clone()) },
+    |base: &CollectionFolder, other: &CollectionFolder| {
+        let patch = CollectionFolderPatch { id: other.id.clone(), parent_id: (base.parent_id != other.parent_id).then(|| CollectionOptionalLink { value: other.parent_id.clone() }), name: (base.name != other.name).then(|| other.name.clone()) };
+        (patch.parent_id.is_some() || patch.name.is_some()).then_some(patch)
+    },
+    |patch: &CollectionFolderPatch| patch.parent_id.is_none() && patch.name.is_none()
+);
+
+keyed_delta_impl!(
+    CollectionEntriesDelta,
+    CollectionEntry,
+    CollectionEntryPatch,
+    id,
+    id,
+    |patch: &CollectionEntryPatch, row: &mut CollectionEntry| {
+        if let Some(folder_id) = &patch.folder_id {
+            row.folder_id = folder_id.value.clone();
+        }
+        if let Some(name) = &patch.name {
+            row.name = name.clone();
+        }
+        if let Some(kind_id) = &patch.kind_id {
+            row.kind_id = kind_id.clone();
+        }
+        if let Some(body) = &patch.body {
+            row.body = body.clone();
+        }
+    },
+    |first: &CollectionEntryPatch, later: &CollectionEntryPatch| CollectionEntryPatch {
+        id: first.id.clone(),
+        folder_id: later.folder_id.clone().or_else(|| first.folder_id.clone()),
+        name: later.name.clone().or_else(|| first.name.clone()),
+        kind_id: later.kind_id.clone().or_else(|| first.kind_id.clone()),
+        body: later.body.clone().or_else(|| first.body.clone()),
+    },
+    |patch: &CollectionEntryPatch, base: &CollectionEntry| CollectionEntryPatch {
+        id: patch.id.clone(),
+        folder_id: patch.folder_id.as_ref().map(|_| CollectionOptionalLink { value: base.folder_id.clone() }),
+        name: patch.name.as_ref().map(|_| base.name.clone()),
+        kind_id: patch.kind_id.as_ref().map(|_| base.kind_id.clone()),
+        body: patch.body.as_ref().map(|_| base.body.clone()),
+    },
+    |base: &CollectionEntry, other: &CollectionEntry| {
+        let patch = CollectionEntryPatch {
+            id: other.id.clone(),
+            folder_id: (base.folder_id != other.folder_id).then(|| CollectionOptionalLink { value: other.folder_id.clone() }),
+            name: (base.name != other.name).then(|| other.name.clone()),
+            kind_id: (base.kind_id != other.kind_id).then(|| other.kind_id.clone()),
+            body: (base.body != other.body).then(|| other.body.clone()),
+        };
+        (patch.folder_id.is_some() || patch.name.is_some() || patch.kind_id.is_some() || patch.body.is_some()).then_some(patch)
+    },
+    |patch: &CollectionEntryPatch| patch.folder_id.is_none() && patch.name.is_none() && patch.kind_id.is_none() && patch.body.is_none()
+);
 
 impl protocol::MutationDiff<CollectionSnapshot> for CollectionDiff {
     fn apply(&self, base: &CollectionSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<CollectionSnapshot> {
         let mut next = base.clone();
-        if self.created_folder.is_some() != self.created_folder_at.is_some() {
-            return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "created folder requires an exact final index").at(["folders"]));
+        if let Some(name) = &self.renamed_collection {
+            next.name = name.clone();
         }
-        if self.created_entry.is_some() != self.created_entry_at.is_some() {
-            return Err(protocol::MutationApplyError::new("mutation.apply.incomplete-diff", "created entry requires an exact final index").at(["entries"]));
+        if let Some(delta) = &self.folders {
+            next.folders = keyed_apply(&next.folders, delta).map_err(|error| error.under(["folders"]))?;
         }
-        if let Some(new_name) = &self.renamed_collection {
-            next.name = new_name.clone();
-        }
-        if let Some(folder) = &self.created_folder {
-            if next.folders.iter().any(|existing| existing.id == folder.id) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", format!("folder {} already exists", folder.id)).at(["folders", folder.id.as_str()]));
-            }
-            let at = self.created_folder_at.unwrap_or_default() as usize;
-            if at > next.folders.len() {
-                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", format!("folder index {at} is out of range for length {}", next.folders.len())).at(["folders".to_string(), at.to_string()]));
-            }
-            next.folders.insert(at, folder.clone());
-        }
-        if let Some(ids) = &self.deleted_folder_ids {
-            // 🧮️ Mechanical replay only removes the folders themselves — a dangling `parent_id`/
-            // `folder_id` left pointing at one is `reconcile_collection_integrity`'s job (rules
-            // `collection/folder-orphaned`/`collection/entry-folder-missing`), run separately after
-            // `apply`, never inline here.
-            for (index, id) in ids.iter().enumerate() {
-                if ids[..index].contains(id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", format!("folder {id} is deleted more than once")).at(["folders", id.as_str()]));
-                }
-                if !next.folders.iter().any(|folder| folder.id == *id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", format!("folder {id} does not exist")).at(["folders", id.as_str()]));
-                }
-            }
-            next.folders.retain(|folder| !ids.contains(&folder.id));
-        }
-        if let Some(moved) = &self.moved_folder {
-            let folder =
-                next.folders.iter_mut().find(|folder| folder.id == moved.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("folder {} does not exist", moved.id)).at(["folders", moved.id.as_str()]))?;
-            folder.parent_id = moved.new_parent.clone();
-        }
-        if let Some(renamed) = &self.renamed_folder {
-            let folder =
-                next.folders.iter_mut().find(|folder| folder.id == renamed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("folder {} does not exist", renamed.id)).at(["folders", renamed.id.as_str()]))?;
-            folder.name = renamed.new_name.clone();
-        }
-        if let Some(entry) = &self.created_entry {
-            if next.entries.iter().any(|existing| existing.id == entry.id) {
-                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", format!("entry {} already exists", entry.id)).at(["entries", entry.id.as_str()]));
-            }
-            let at = self.created_entry_at.unwrap_or_default() as usize;
-            if at > next.entries.len() {
-                return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", format!("entry index {at} is out of range for length {}", next.entries.len())).at(["entries".to_string(), at.to_string()]));
-            }
-            next.entries.insert(at, entry.clone());
-        }
-        if let Some(ids) = &self.deleted_entry_ids {
-            for (index, id) in ids.iter().enumerate() {
-                if ids[..index].contains(id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", format!("entry {id} is deleted more than once")).at(["entries", id.as_str()]));
-                }
-                if !next.entries.iter().any(|entry| entry.id == *id) {
-                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", format!("entry {id} does not exist")).at(["entries", id.as_str()]));
-                }
-            }
-            next.entries.retain(|entry| !ids.contains(&entry.id));
-        }
-        if let Some(moved) = &self.moved_entry {
-            let entry = next.entries.iter_mut().find(|entry| entry.id == moved.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("entry {} does not exist", moved.id)).at(["entries", moved.id.as_str()]))?;
-            entry.folder_id = moved.new_parent.clone();
-        }
-        if let Some(renamed) = &self.renamed_entry {
-            let entry =
-                next.entries.iter_mut().find(|entry| entry.id == renamed.id).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("entry {} does not exist", renamed.id)).at(["entries", renamed.id.as_str()]))?;
-            entry.name = renamed.new_name.clone();
-        }
-        if let Some(replaced) = &self.replaced_entry_body {
-            let entry = next
-                .entries
-                .iter_mut()
-                .find(|entry| entry.id == replaced.entry_id)
-                .ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", format!("entry {} does not exist", replaced.entry_id)).at(["entries", replaced.entry_id.as_str()]))?;
-            entry.body = replaced.new_body.clone();
+        if let Some(delta) = &self.entries {
+            next.entries = keyed_apply(&next.entries, delta).map_err(|error| error.under(["entries"]))?;
         }
         Ok(next)
     }
@@ -568,35 +677,34 @@ impl protocol::MutationDiff<CollectionSnapshot> for CollectionDiff {
         if other.renamed_collection.is_some() {
             self.renamed_collection = other.renamed_collection;
         }
-        if other.created_folder.is_some() {
-            self.created_folder = other.created_folder;
-            self.created_folder_at = other.created_folder_at;
+        self.folders = match (self.folders.take(), other.folders) {
+            (Some(first), Some(later)) => Some(keyed_absorb(&first, &later)),
+            (first, later) => later.or(first),
+        };
+        self.entries = match (self.entries.take(), other.entries) {
+            (Some(first), Some(later)) => Some(keyed_absorb(&first, &later)),
+            (first, later) => later.or(first),
+        };
+    }
+}
+
+impl protocol::DiffAlgebra<CollectionSnapshot> for CollectionDiff {
+    fn inverse(&self, base: &CollectionSnapshot) -> Self {
+        Self {
+            renamed_collection: self.renamed_collection.as_ref().map(|_| base.name.clone()),
+            folders: self.folders.as_ref().map(|delta| keyed_inverse(delta, &base.folders)),
+            entries: self.entries.as_ref().map(|delta| keyed_inverse(delta, &base.entries)),
         }
-        if let Some(ids) = other.deleted_folder_ids {
-            self.deleted_folder_ids.get_or_insert_with(Vec::new).extend(ids);
-        }
-        if other.moved_folder.is_some() {
-            self.moved_folder = other.moved_folder;
-        }
-        if other.renamed_folder.is_some() {
-            self.renamed_folder = other.renamed_folder;
-        }
-        if other.created_entry.is_some() {
-            self.created_entry = other.created_entry;
-            self.created_entry_at = other.created_entry_at;
-        }
-        if let Some(ids) = other.deleted_entry_ids {
-            self.deleted_entry_ids.get_or_insert_with(Vec::new).extend(ids);
-        }
-        if other.moved_entry.is_some() {
-            self.moved_entry = other.moved_entry;
-        }
-        if other.renamed_entry.is_some() {
-            self.renamed_entry = other.renamed_entry;
-        }
-        if other.replaced_entry_body.is_some() {
-            self.replaced_entry_body = other.replaced_entry_body;
-        }
+    }
+
+    fn between(base: &CollectionSnapshot, other: &CollectionSnapshot) -> Self {
+        let folders = keyed_between::<CollectionFoldersDelta>(&base.folders, &other.folders);
+        let entries = keyed_between::<CollectionEntriesDelta>(&base.entries, &other.entries);
+        Self { renamed_collection: (base.name != other.name).then(|| other.name.clone()), folders: (!keyed_is_empty(&folders)).then_some(folders), entries: (!keyed_is_empty(&entries)).then_some(entries) }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.renamed_collection.is_none() && self.folders.as_ref().is_none_or(keyed_is_empty) && self.entries.as_ref().is_none_or(keyed_is_empty)
     }
 }
 
@@ -790,55 +898,67 @@ impl protocol::Mutation<CollectionSnapshot> for CollectionMutation {
     /// CONFLICTS W0): no `Error`/`Warning`/`Fatal` messages added here yet — that is the W3
     /// fan-out's job per verb family.
     fn diff(&self, base: &CollectionSnapshot) -> protocol::MutationOutcome<CollectionDiff> {
-        let mut diff = CollectionDiff::default();
+        let missing = |what: &str, id: &str| protocol::MutationOutcome::error("mutation.target-missing", format!("{what} {id} does not exist."), [id.to_string()]);
+        let folder_exists = |id: &String| base.folders.iter().any(|folder| &folder.id == id);
+        let entry_exists = |id: &String| base.entries.iter().any(|entry| &entry.id == id);
+        let folders = |delta: CollectionFoldersDelta| protocol::MutationOutcome::new(CollectionDiff { folders: Some(delta), ..Default::default() });
+        let entries = |delta: CollectionEntriesDelta| protocol::MutationOutcome::new(CollectionDiff { entries: Some(delta), ..Default::default() });
+        let order = |ids: Vec<String>, id: &str, index: u32| {
+            let mut order: Vec<String> = ids.into_iter().filter(|existing| existing != id).collect();
+            order.insert((index as usize).min(order.len()), id.to_string());
+            order
+        };
         match self {
-            CollectionMutation::RenameCollection { new_name } => diff.renamed_collection = Some(new_name.clone()),
+            CollectionMutation::RenameCollection { new_name } => protocol::MutationOutcome::new(CollectionDiff { renamed_collection: Some(new_name.clone()), ..Default::default() }),
             CollectionMutation::CreateFolder { folder, index } => {
-                diff.created_folder = Some(folder.clone());
-                diff.created_folder_at = Some(*index);
+                let natural = *index as usize >= base.folders.len();
+                folders(CollectionFoldersDelta {
+                    added: vec![folder.clone()],
+                    reordered: (!natural).then(|| order(base.folders.iter().map(|existing| existing.id.clone()).collect(), &folder.id, *index)),
+                    ..Default::default()
+                })
             }
-            CollectionMutation::DeleteFolder { folder_id } => {
-                if base.folders.iter().any(|folder| &folder.id == folder_id) {
-                    let cascade_folder_ids = folder_subtree_ids(&base.folders, folder_id);
-                    let cascade_entry_ids: Vec<String> = base.entries.iter().filter(|entry| entry.folder_id.as_deref().is_some_and(|folder_id| cascade_folder_ids.iter().any(|id| id == folder_id))).map(|entry| entry.id.clone()).collect();
-                    diff.deleted_folder_ids = Some(cascade_folder_ids);
-                    if !cascade_entry_ids.is_empty() {
-                        diff.deleted_entry_ids = Some(cascade_entry_ids);
-                    }
-                }
+            CollectionMutation::DeleteFolder { folder_id } if folder_exists(folder_id) => {
+                let cascade_folder_ids = folder_subtree_ids(&base.folders, folder_id);
+                let cascade_entry_ids: Vec<String> = base.entries.iter().filter(|entry| entry.folder_id.as_deref().is_some_and(|folder_id| cascade_folder_ids.iter().any(|id| id == folder_id))).map(|entry| entry.id.clone()).collect();
+                protocol::MutationOutcome::new(CollectionDiff {
+                    folders: Some(CollectionFoldersDelta { removed: cascade_folder_ids, ..Default::default() }),
+                    entries: (!cascade_entry_ids.is_empty()).then(|| CollectionEntriesDelta { removed: cascade_entry_ids, ..Default::default() }),
+                    ..Default::default()
+                })
             }
-            CollectionMutation::MoveToCollection { folder_id, new_parent } => {
-                if base.folders.iter().any(|folder| &folder.id == folder_id) {
-                    diff.moved_folder = Some(MovedToContainer { id: folder_id.clone(), new_parent: new_parent.clone() });
-                }
+            CollectionMutation::DeleteFolder { folder_id } => missing("Folder", folder_id),
+            CollectionMutation::MoveToCollection { folder_id, new_parent } if folder_exists(folder_id) => {
+                folders(CollectionFoldersDelta { patched: vec![CollectionFolderPatch { id: folder_id.clone(), parent_id: Some(CollectionOptionalLink { value: new_parent.clone() }), name: None }], ..Default::default() })
             }
-            CollectionMutation::RenameFolder { folder_id, new_name } => {
-                if base.folders.iter().any(|folder| &folder.id == folder_id) {
-                    diff.renamed_folder = Some(RenamedItem { id: folder_id.clone(), new_name: new_name.clone() });
-                }
+            CollectionMutation::MoveToCollection { folder_id, .. } => missing("Folder", folder_id),
+            CollectionMutation::RenameFolder { folder_id, new_name } if folder_exists(folder_id) => {
+                folders(CollectionFoldersDelta { patched: vec![CollectionFolderPatch { id: folder_id.clone(), parent_id: None, name: Some(new_name.clone()) }], ..Default::default() })
             }
+            CollectionMutation::RenameFolder { folder_id, .. } => missing("Folder", folder_id),
             CollectionMutation::CreateEntry { entry, index } => {
-                diff.created_entry = Some(entry.clone());
-                diff.created_entry_at = Some(*index);
+                let natural = *index as usize >= base.entries.len();
+                entries(CollectionEntriesDelta {
+                    added: vec![entry.clone()],
+                    reordered: (!natural).then(|| order(base.entries.iter().map(|existing| existing.id.clone()).collect(), &entry.id, *index)),
+                    ..Default::default()
+                })
             }
-            CollectionMutation::DeleteEntry { entry_id } => diff.deleted_entry_ids = Some(vec![entry_id.clone()]),
-            CollectionMutation::MoveToFolder { entry_id, new_folder } => {
-                if base.entries.iter().any(|entry| &entry.id == entry_id) {
-                    diff.moved_entry = Some(MovedToContainer { id: entry_id.clone(), new_parent: new_folder.clone() });
-                }
+            CollectionMutation::DeleteEntry { entry_id } if entry_exists(entry_id) => entries(CollectionEntriesDelta { removed: vec![entry_id.clone()], ..Default::default() }),
+            CollectionMutation::DeleteEntry { entry_id } => missing("Entry", entry_id),
+            CollectionMutation::MoveToFolder { entry_id, new_folder } if entry_exists(entry_id) => {
+                entries(CollectionEntriesDelta { patched: vec![CollectionEntryPatch { id: entry_id.clone(), folder_id: Some(CollectionOptionalLink { value: new_folder.clone() }), ..Default::default() }], ..Default::default() })
             }
-            CollectionMutation::RenameEntry { entry_id, new_name } => {
-                if base.entries.iter().any(|entry| &entry.id == entry_id) {
-                    diff.renamed_entry = Some(RenamedItem { id: entry_id.clone(), new_name: new_name.clone() });
-                }
+            CollectionMutation::MoveToFolder { entry_id, .. } => missing("Entry", entry_id),
+            CollectionMutation::RenameEntry { entry_id, new_name } if entry_exists(entry_id) => {
+                entries(CollectionEntriesDelta { patched: vec![CollectionEntryPatch { id: entry_id.clone(), name: Some(new_name.clone()), ..Default::default() }], ..Default::default() })
             }
-            CollectionMutation::ReplaceEntryBody { entry_id, new_body } => {
-                if base.entries.iter().any(|entry| &entry.id == entry_id) {
-                    diff.replaced_entry_body = Some(ReplacedEntryBody { entry_id: entry_id.clone(), new_body: new_body.clone() });
-                }
+            CollectionMutation::RenameEntry { entry_id, .. } => missing("Entry", entry_id),
+            CollectionMutation::ReplaceEntryBody { entry_id, new_body } if entry_exists(entry_id) => {
+                entries(CollectionEntriesDelta { patched: vec![CollectionEntryPatch { id: entry_id.clone(), body: Some(new_body.clone()), ..Default::default() }], ..Default::default() })
             }
+            CollectionMutation::ReplaceEntryBody { entry_id, .. } => missing("Entry", entry_id),
         }
-        protocol::MutationOutcome::new(diff)
     }
 
     fn inverse(&self, base: &CollectionSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
@@ -852,24 +972,17 @@ impl protocol::Mutation<CollectionSnapshot> for CollectionMutation {
                 }
                 let cascade_folder_ids = folder_subtree_ids(&base.folders, folder_id);
                 let mut mutations = Vec::new();
-                // 🍃️ Entries are always leaves (no descendants) — recreate every cascaded entry
-                // before any cascaded folder.
-                for entry in &base.entries {
+                for (at, folder) in base.folders.iter().enumerate() {
+                    if cascade_folder_ids.contains(&folder.id) {
+                        mutations.push(CollectionMutation::CreateFolder { folder: folder.clone(), index: at as u32 });
+                    }
+                }
+                for (at, entry) in base.entries.iter().enumerate() {
                     if entry.folder_id.as_deref().is_some_and(|folder_id| cascade_folder_ids.iter().any(|id| id == folder_id)) {
-                        if let Some(at) = base.entries.iter().position(|candidate| candidate.id == entry.id) {
-                            mutations.push(CollectionMutation::CreateEntry { entry: entry.clone(), index: at as u32 });
-                        }
+                        mutations.push(CollectionMutation::CreateEntry { entry: entry.clone(), index: at as u32 });
                     }
                 }
-                // 🌳️ Deepest folders first, the originally-deleted folder (shallowest in the
-                // cascade) last — leaves-first, mirroring the entries above.
-                let mut ordered_folder_ids = cascade_folder_ids;
-                ordered_folder_ids.sort_by_key(|id| std::cmp::Reverse(folder_depth(&base.folders, id)));
-                for id in ordered_folder_ids {
-                    if let Some(at) = base.folders.iter().position(|folder| folder.id == id) {
-                        mutations.push(CollectionMutation::CreateFolder { folder: base.folders[at].clone(), index: at as u32 });
-                    }
-                }
+                mutations.reverse();
                 mutations
             }
             CollectionMutation::MoveToCollection { folder_id, .. } => {

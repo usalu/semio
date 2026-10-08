@@ -87,8 +87,6 @@
       "subsetDirectoryName": "🧱️baseline",
       "vectors": [],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "set-sof-marker",
         "set-sample-precision",
         "set-arithmetic",
@@ -245,47 +243,6 @@
             "operation": "set-sample-precision",
             "bridgeVersion": 1,
             "variant": "SetSamplePrecision"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "jpg-jfif-1-01-baseline-mutate",
-              "qualifyingKind": "third-party-cli",
-              "oracle": "libjpeg-jpg-jfif-1-01-baseline-marker-cli"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "jpg-jfif-1-01-baseline-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "jpg-jfif-1-01-baseline-mutate",
-              "qualifyingKind": "third-party-cli",
-              "oracle": "libjpeg-jpg-jfif-1-01-baseline-marker-cli"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "jpg-jfif-1-01-baseline-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {
@@ -510,56 +467,6 @@
       "reproducible": true,
       "family": "structural",
       "notes": "Start-Of-Frame marker code changed via Pillow's own progressive= save parameter, SOF0 0xC0 (baseline DCT) -> SOF2 0xC2 (progressive DCT).",
-      "generator": {
-        "oracle": "pillow-jpg-jfif-1-01-baseline-fixture-generator",
-        "packageVersion": "12.2.0",
-        "engineFamily": "pillow",
-        "engineVersion": "12.2.0",
-        "command": "uv run python3 🔨️f2-gen-jpg-fixtures.py (PIL.Image.save(format='JPEG'))",
-        "platform": "darwin-arm64"
-      }
-    },
-    {
-      "id": "set-snapshot-applied",
-      "class": "third-party-generated",
-      "target": {
-        "artifact": "s.stdio.jpg",
-        "standard": "jfif-1.01",
-        "subset": "baseline"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before-jpg",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.jpg",
-          "mediaType": "image/jpeg",
-          "sha256": "sha256:c17e2c7b69c4ca2720e6dc841276ccd414880f36ffc35deb4b075dc2e1df41da",
-          "bytes": 645
-        },
-        {
-          "role": "expected-after-jpg",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.jpg",
-          "mediaType": "image/jpeg",
-          "sha256": "sha256:7803b2239e29cbdd46444570625eea8a1102b381042e9e5cf38e2ed514a4d5a4",
-          "bytes": 769
-        }
-      ],
-      "provenance": {
-        "source": "generated",
-        "license": "MIT-CMU (Pillow)",
-        "attribution": "Written by Pillow 12.2.0's own JpegImagePlugin encoder",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "exact-bytes-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": "Whole-image snapshot replace: an unrelated valid JPEG (different dimensions and pixel content) substituted wholesale.",
       "generator": {
         "oracle": "pillow-jpg-jfif-1-01-baseline-fixture-generator",
         "packageVersion": "12.2.0",

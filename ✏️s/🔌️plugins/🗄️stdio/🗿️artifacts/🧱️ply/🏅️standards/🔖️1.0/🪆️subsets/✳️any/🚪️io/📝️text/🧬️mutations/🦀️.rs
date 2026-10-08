@@ -8,9 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod mutations_codec {
 use super::*;
 use crate::standards::v1_0::subsets::any::schema::mutations::*;
-use crate::schema::diff::{diff_add_element, diff_insert_row, diff_remove_element, diff_remove_row, diff_set_comments, diff_set_format, diff_set_row_property, diff_set_snapshot, PlyDiff};
-use crate::standards::v1_0::subsets::any::io::binary::snapshot::{write_bin_snapshot};
-use crate::standards::v1_0::subsets::any::io::binary::snapshot::{read_bin_snapshot};
+
 use crate::standards::v1_0::subsets::any::io::text::diff::{dec_value};
 use crate::standards::v1_0::subsets::any::io::text::diff::{enc_value};
 use crate::standards::v1_0::subsets::any::io::binary::diff::{read_bin_value};
@@ -45,28 +43,10 @@ use protocol::OpText;
 /// same shape svg's hand-rolled `OpText` uses), one match arm per variant (no `DslVariants`
 /// scaffolding available since nothing here derives it).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_snapshot(s: &PlySnapshot) -> String {
-    format!("[{},{},[{}],[{}]]", enc_str(&s.schema), enc_format(s.format), s.comments.iter().map(|c| enc_str(c)).collect::<Vec<_>>().join(","), s.elements.iter().map(enc_element).collect::<Vec<_>>().join(","),)
-}
-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_snapshot(s: &str) -> Result<PlySnapshot, String> {
-    let inner = strip_brackets(s)?;
-    let parts = split_top_level(inner, ',');
-    let [schema, format, comments, elements] = parts.as_slice() else { return Err(format!("ply snapshot: expected 4 fields, got {}", parts.len())) };
-    Ok(PlySnapshot {
-        schema: dec_str(schema)?,
-        format: dec_format(format)?,
-        comments: split_top_level(strip_brackets(comments)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?,
-        elements: split_top_level(strip_brackets(elements)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_element).collect::<Result<Vec<_>, String>>()?,
-    })
-}
-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_ply_mutation(m: &PlyMutation) -> String {
     match m {
-        PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
-        PlyMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         PlyMutation::SetFormat(set_format::SetFormat { format }) => format!("set-format format={}", enc_format(*format)),
         PlyMutation::InsertComment(insert_comment::InsertComment { index, comment }) => format!("insert-comment index={index} comment={}", enc_str(comment)),
         PlyMutation::RemoveComment(remove_comment::RemoveComment { index }) => format!("remove-comment index={index}"),
@@ -87,8 +67,6 @@ pub(crate) fn parse_ply_mutation(line: &str) -> Result<PlyMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("ply mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| PlyMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
-        "set-snapshot" => Ok(PlyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_snapshot(arg("snapshot")?)? })),
         "set-format" => Ok(PlyMutation::SetFormat(set_format::SetFormat { format: dec_format(arg("format")?)? })),
         "insert-comment" => Ok(PlyMutation::InsertComment(insert_comment::InsertComment { index: usize_arg("index")?, comment: dec_str(arg("comment")?)? })),
         "remove-comment" => Ok(PlyMutation::RemoveComment(remove_comment::RemoveComment { index: usize_arg("index")? })),

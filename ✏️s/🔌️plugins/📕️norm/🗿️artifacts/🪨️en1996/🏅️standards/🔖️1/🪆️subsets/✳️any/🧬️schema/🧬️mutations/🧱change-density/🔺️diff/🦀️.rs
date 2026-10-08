@@ -1,11 +1,10 @@
 use super::ChangeDensity;
-use crate::diff::En1996WallList;
 use crate::{En1996Diff, En1996Snapshot};
+use crate::diff::{En1996WallDelta, En1996WallPatch};
 pub fn diff(payload: &ChangeDensity, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
     if payload.index >= base.walls.len() {
         return protocol::MutationOutcome::fatal("mutation.invariant", String::from("Invalid wall index."), Vec::<String>::new());
     }
-    let mut walls = base.walls.clone();
-    walls[payload.index].density_kg_m3 = payload.new_density_kg_m3;
-    protocol::MutationOutcome::new(En1996Diff { walls: Some(En1996WallList { values: walls }), ..Default::default() })
+    let wall = &base.walls[payload.index];
+    protocol::MutationOutcome::new(En1996Diff { walls: En1996WallDelta::modification(&wall.id, En1996WallPatch { density_kg_m3: Some(payload.new_density_kg_m3), ..Default::default() }), ..Default::default() })
 }

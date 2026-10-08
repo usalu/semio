@@ -83,9 +83,7 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
   scenario in role when it does not: a row whose parameters make the mutation a no-op passes whenever
   the reference library merely declined to error, which is not a test. The baseline it is measured
   against runs one `dxf` load/save round trip first, so the comparison isolates the mutation rather
-  than the writer's own normal form. Every row's `params` is the leaf wire payload — `set-snapshot`
-  carries a whole `DxfSnapshot` (an R12 `$ACADVER`, `$INSBASE`, one layer, one circle) that replaces
-  the drawing outright, which is why its inverse is the original drawing itself.
+  than the writer's own normal form. Every row's `params` is the leaf wire payload.
   @id-mutate
   @level-exhaustive
   @mode-differential
@@ -98,10 +96,8 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
     Then the dxf reader reads the oracle's and the subject's drawings as the same DXF
     Examples:
       | id                 | params                                                                                                                                          |
-      | set-snapshot       | {"snapshot": {"schema": "stdio.dxf", "headerVars": [{"name": "$ACADVER", "groupCode": 1, "value": {"kind": "str", "value": "AC1009"}}, {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [5, 5, 0]}}], "tables": {"layers": [{"name": "0", "color": 7, "linetype": "CONTINUOUS", "flags": 0}]}, "otherTables": [], "blocks": [], "entities": [{"circle": {"center": [0, 0, 0], "radius": 42, "layer": "0"}}]}} |
       | set-header-var     | {"name": "$INSBASE", "headerVar": {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [15, 25, 0]}}} |
       | remove-header-var  | {"name": "$INSBASE"}                                                                                                                             |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/headerVars/1", "value": {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [15, 25, 0]}}}} |
 
   @id-inverse
   @level-exhaustive
@@ -115,10 +111,8 @@ Feature: Apply every typed DXF R12 mutation to a real-world drawing
     Then the dxf reader reads the oracle's and the subject's drawings as the same DXF
     Examples:
       | id                 | params                                                                                                                                          |
-      | set-snapshot       | {"snapshot": {"schema": "stdio.dxf", "headerVars": [{"name": "$ACADVER", "groupCode": 1, "value": {"kind": "str", "value": "AC1009"}}, {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [5, 5, 0]}}], "tables": {"layers": [{"name": "0", "color": 7, "linetype": "CONTINUOUS", "flags": 0}]}, "otherTables": [], "blocks": [], "entities": [{"circle": {"center": [0, 0, 0], "radius": 42, "layer": "0"}}]}} |
       | set-header-var     | {"name": "$INSBASE", "headerVar": {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [15, 25, 0]}}} |
       | remove-header-var  | {"name": "$INSBASE"}                                                                                                                             |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/headerVars/1", "value": {"name": "$INSBASE", "groupCode": 10, "value": {"kind": "point", "value": [15, 25, 0]}}}} |
 
   @id-identity-round-trip
   @level-long

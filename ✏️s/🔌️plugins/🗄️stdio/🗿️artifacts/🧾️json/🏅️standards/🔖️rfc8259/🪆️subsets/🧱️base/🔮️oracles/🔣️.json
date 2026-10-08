@@ -41,8 +41,7 @@
         "remove-member",
         "insert-array-element",
         "remove-array-element",
-        "set-scalar",
-        "patch-snapshot"
+        "set-scalar"
       ]
     }
   ],
@@ -67,26 +66,6 @@
             "operation": "insert-array-element",
             "bridgeVersion": 1,
             "variant": "InsertArrayElement"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "json-rfc8259-mutate",
-              "qualifyingKind": "third-party-library"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "json-rfc8259-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

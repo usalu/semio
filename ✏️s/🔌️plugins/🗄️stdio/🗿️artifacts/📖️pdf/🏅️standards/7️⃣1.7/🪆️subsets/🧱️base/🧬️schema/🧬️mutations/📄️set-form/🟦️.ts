@@ -3,4 +3,5 @@ import type { ObjRef, PdfCcittParameters, PdfColorSpace, PdfDecimal, PdfDictEntr
 export interface SetFormMutation {
   mutation: 'setForm';
   form: PdfFormXObject;
+  index?: number | null;
 }

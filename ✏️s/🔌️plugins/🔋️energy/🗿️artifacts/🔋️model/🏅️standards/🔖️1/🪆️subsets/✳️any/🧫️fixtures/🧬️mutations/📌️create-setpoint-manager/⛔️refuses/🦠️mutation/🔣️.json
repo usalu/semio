@@ -8,5 +8,6 @@
   "lowSetpointC": 0.0,
   "highSetpointC": 0.0,
   "schedulePresent": false,
-  "scheduleId": 0
+  "scheduleId": 0,
+  "index": null
 }

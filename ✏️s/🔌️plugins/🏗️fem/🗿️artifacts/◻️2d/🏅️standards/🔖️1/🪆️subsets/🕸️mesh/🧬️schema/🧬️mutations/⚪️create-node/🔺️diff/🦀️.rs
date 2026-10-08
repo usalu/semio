@@ -3,7 +3,7 @@
 //! Guards, in the order they run: `mutation.duplicate-id` (Fatal), then the shared
 //! `guards::node_geometry` finiteness bound (`mutation.invariant`, Fatal).
 use super::CreateNode;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dNodesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dNodesDelta, insertion_order};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
@@ -15,6 +15,6 @@ pub fn diff(payload: &CreateNode, base: &Fem2dSnapshot) -> protocol::MutationOut
     if let Some(rejection) = guards::node_geometry(&payload.node) {
         return rejection;
     }
-    protocol::MutationOutcome::new(Fem2dDiff { nodes: Some(Fem2dNodesDelta { added: vec![payload.node.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { nodes: Some(Fem2dNodesDelta { added: vec![payload.node.clone()], reordered: insertion_order(base.nodes.iter().map(|item| item.id.as_str()), &payload.node.id, payload.index), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -56,7 +56,7 @@ fn node(id: &str, x: f64, y: f64) -> DagNodeSpec {
 }
 
 fn host(nodes: Vec<DagNodeSpec>) -> DagHost {
-    DagHost::from_host_snapshot_without_layout(DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges: vec![] })
+    DagHost::from_host_snapshot_without_layout(DagHostSnapshot { schema: "dag.hostDocument".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges: vec![] })
 }
 
 /// ⚖️ LAW: what moved since a press is one `move` record per distinct offset, the nodes of each in node order; a node that

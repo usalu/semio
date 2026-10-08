@@ -1,5 +1,44 @@
 module Stdio_jpg_diff;
-# UTF-8 JSON encoding of JpgDiff -- see the sibling ../🔣️.json shape.
-type Document = unit {
-    json_payload: bytes &eod;
+type Varint = unit {
+    var value: uint64 = 0;
+    var shift: uint64 = 0;
+    groups: uint8[] &until=($$ & 128) == 0 {
+        assert(self.shift < 64 && (self.shift != 63 || $$ <= 1));
+        self.value |= uint64($$ & 127) << self.shift;
+        self.shift += 7;
+    }
+};
+type Blob = unit { length: Varint; data: bytes &size=self.length.value; };
+type Version = unit { major: uint8; minor: uint8; };
+type Thumbnail = unit { width: uint8; height: uint8; rgb_data: Blob; };
+type ThumbnailChange = unit { presence: uint8 { assert($$ <= 1); } thumbnail: Thumbnail if (self.presence == 1); };
+type Segment = unit { marker: uint8; data: Blob; };
+type SegmentDiff = unit {
+    marker_present: uint8 { assert($$ <= 1); }
+    marker: uint8 if (self.marker_present == 1);
+    data_present: uint8 { assert($$ <= 1); }
+    data: Blob if (self.data_present == 1);
+};
+type ModifiedSegment = unit { index: Varint; diff: SegmentDiff; };
+type AddedSegment = unit { index: Varint; item: Segment; };
+type SegmentCollectionDiff = unit {
+    removed_count: Varint;
+    removed: Varint[self.removed_count.value];
+    modified_count: Varint;
+    modified: ModifiedSegment[self.modified_count.value];
+    added_count: Varint;
+    added: AddedSegment[self.added_count.value];
+};
+public type Document = unit {
+    format: uint8 { assert($$ == 1); }
+    flags: uint16 &byte-order=spicy::ByteOrder::Little { assert($$ <= 511); }
+    width: Varint if ((self.flags & 1) != 0);
+    height: Varint if ((self.flags & 2) != 0);
+    pixels: Blob if ((self.flags & 4) != 0);
+    jfif_version: Version if ((self.flags & 8) != 0);
+    jfif_density_units: uint8 if ((self.flags & 16) != 0) { assert($$ <= 2); }
+    jfif_x_density: Varint if ((self.flags & 32) != 0);
+    jfif_y_density: Varint if ((self.flags & 64) != 0);
+    jfif_thumbnail: ThumbnailChange if ((self.flags & 128) != 0);
+    other_segments: SegmentCollectionDiff if ((self.flags & 256) != 0);
 };

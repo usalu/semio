@@ -2,8 +2,7 @@
 //! `mutation.clamped` warning, and an id the document already holds is a `mutation.duplicate-id`.
 
 use super::InsertThermalBridge;
-use crate::diff::Din4108RowEdit as _;
-use crate::diff::{Din4108Diff, Din4108ThermalBridgeEdit};
+use crate::diff::{Din4108Diff, Din4108ThermalBridgeDelta};
 use crate::Din4108Snapshot;
 
 pub fn diff(payload: &InsertThermalBridge, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
@@ -11,7 +10,7 @@ pub fn diff(payload: &InsertThermalBridge, base: &Din4108Snapshot) -> protocol::
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A thermal bridge with id '{}' already exists.", payload.bridge.id), [payload.bridge.id.clone()]);
     }
     let index = payload.index.min(base.thermal_bridges.len());
-    let outcome = protocol::MutationOutcome::new(Din4108Diff { thermal_bridges: vec![Din4108ThermalBridgeEdit::insert(index, payload.bridge.clone())], ..Default::default() });
+    let outcome = protocol::MutationOutcome::new(Din4108Diff { thermal_bridges: Din4108ThermalBridgeDelta::insertion(&base.thermal_bridges, index, payload.bridge.clone()), ..Default::default() });
     if index == payload.index {
         return outcome;
     }

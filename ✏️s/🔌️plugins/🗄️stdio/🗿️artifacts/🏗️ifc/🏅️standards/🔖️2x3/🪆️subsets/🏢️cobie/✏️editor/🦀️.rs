@@ -43,8 +43,7 @@ use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::InteractiveJobClassification;
 use semio_framework_2d::compute::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
-use crate::standards::v2x3::subsets::base::schema::mutations::set_snapshot as snapshot_edit_set_snapshot;
-use crate::standards::v2x3::subsets::base::schema::mutations::patch_snapshot;
+use crate::standards::v2x3::subsets::base::schema::mutations::net_mutations;
 
 //#region 🔖️Dialect
 pub const IFC2X3_COBIE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("cobie") };
@@ -290,7 +289,9 @@ impl editing::SnapshotEditingEditor for Ifc2x3CobieEditor {
         match command { Ifc2x3CobieEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_patch(event, snapshot, |patch| Ifc2x3Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| Ifc2x3Mutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: Box::new(snapshot) })))
+        let next = editing::apply_snapshot_edit(snapshot, event).map_err(|error| Fault::from(error.to_string()))?;
+        let leaves = net_mutations(snapshot, &next).ok_or_else(|| Fault::from("ifc2x3: the edit changes the document schema or the EDM preamble, which no mutation leaf addresses"))?;
+        Ok(Emit { artifact_mutations: leaves, ..Default::default() })
     }
 }
 

@@ -96,8 +96,6 @@ fn kinds_match_the_enum_and_the_catalog() {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub(crate) fn sample_mutations() -> Vec<SemioVideoMutation> {
     vec![
-        SemioVideoMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
-        SemioVideoMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
         SemioVideoMutation::InsertStream(insert_stream::InsertStream {
             index: 1,
             stream: SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "srt".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: Vec::new() },
@@ -113,7 +111,7 @@ pub(crate) fn sample_mutations() -> Vec<SemioVideoMutation> {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn apply_valid(diff: &SemioVideoDiff, base: &SemioVideoSnapshot) -> SemioVideoSnapshot {
-    MutationDiff::apply(diff, base).expect("valid Semio video diff fixture")
+    protocol::apply_diff(diff, base).expect("valid Semio video diff fixture")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -124,7 +122,8 @@ async fn mutation_diff_law() {
         let applied_via_diff = apply_valid(diff_direct.diff(), &base);
 
         let mut via_apply = base.clone();
-        let diff_from_apply = apply_semio_video_mutation(&mut via_apply, &mutation);
+        let (__next, diff_from_apply) = crate::applied(&via_apply, &mutation);
+        via_apply = __next;
 
         assert_eq!(applied_via_diff, via_apply, "mutation_diff_law: apply mismatch for {mutation:?}");
         assert_eq!(diff_direct, diff_from_apply, "mutation_diff_law: diff mismatch for {mutation:?}");
@@ -139,9 +138,9 @@ async fn inverse_law() {
         let base = fixture();
 
         let mut round_tripped = base.clone();
-        apply_semio_video_mutation(&mut round_tripped, &mutation);
-        for inverse_mutation in <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
-            apply_semio_video_mutation(&mut round_tripped, &inverse_mutation);
+        round_tripped = crate::applied(&round_tripped, &mutation).0;
+        for inverse_mutation in <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            round_tripped = crate::applied(&round_tripped, &inverse_mutation).0;
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
@@ -269,7 +268,7 @@ async fn between_roundtrip_law() {
     // "Real" fixture leg: a realistic 2-stream snapshot diffed against a mutated variant.
     let real = fixture();
     let mut mutated = real.clone();
-    apply_semio_video_mutation(&mut mutated, &SemioVideoMutation::SetSampleFlags(set_sample_flags::SetSampleFlags { stream_index: 0, index: 0, pts: 1_000, key: true }));
+    mutated = crate::applied(&mutated, &SemioVideoMutation::SetSampleFlags(set_sample_flags::SetSampleFlags { stream_index: 0, index: 0, pts: 1_000, key: true })).0;
     assert_ne!(real, mutated);
     assert_eq!(apply_valid(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&real, &mutated), &real), mutated);
     assert_eq!(apply_valid(&<SemioVideoDiff as DiffAlgebra<SemioVideoSnapshot>>::between(&mutated, &real), &mutated), real);
@@ -338,7 +337,6 @@ async fn field_sweep() {
 async fn op_text_binary_roundtrip_law() {
     let stream = SemioVideoStream { kind: SemioVideoStreamKind::Subtitle, codec: "srt".into(), width: 0, height: 0, rate: SemioRational { num: 1, den: 1 }, samples: vec![SemioVideoSample { pts: 5, key: true, data: vec![1, 2] }] };
     let mutations = vec![
-        SemioVideoMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
         SemioVideoMutation::InsertStream(insert_stream::InsertStream { index: 1, stream: stream.clone() }),
         SemioVideoMutation::RemoveStream(remove_stream::RemoveStream { index: 0 }),
         SemioVideoMutation::SetStreamMeta(set_stream_meta::SetStreamMeta { index: 0, kind: SemioVideoStreamKind::Audio, codec: "hello world".into(), width: 7, height: 9, rate: SemioRational { num: 25, den: 1 } }),

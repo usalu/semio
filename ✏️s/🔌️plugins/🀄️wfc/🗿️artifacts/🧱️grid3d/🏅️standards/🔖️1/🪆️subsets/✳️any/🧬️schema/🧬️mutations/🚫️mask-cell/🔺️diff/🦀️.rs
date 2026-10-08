@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `MaskCell` — an id-keyed delta over `Grid3dSnapshot`, never a
 //! whole-snapshot capture.
 
-use crate::diff::Grid3dDiff;
+use crate::diff::{Grid3dDiff, Grid3dRows};
 use crate::schema::snapshot::*;
 
 pub fn diff(payload: &super::MaskCell, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
@@ -15,6 +15,5 @@ pub fn diff(payload: &super::MaskCell, base: &Grid3dSnapshot) -> protocol::Mutat
     if masked_index(base, payload.cell.x, payload.cell.y, payload.cell.z).is_some() {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Cell {key} is already masked."));
     }
-    let at = crate::mutations::ordered_index(&base.masked, &key, |cell| cell_key(cell.x, cell.y, cell.z));
-    protocol::MutationOutcome::new(Grid3dDiff { masked_upserted: vec![(at, payload.cell)], ..Default::default() })
+    protocol::MutationOutcome::new(Grid3dDiff { masked: Grid3dRows { added: vec![payload.cell], ..Default::default() }, ..Default::default() })
 }

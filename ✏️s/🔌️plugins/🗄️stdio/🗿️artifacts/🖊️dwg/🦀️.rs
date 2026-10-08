@@ -121,8 +121,8 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// [ComposerEntry]` — see `declaration()`'s own doc for why this exists instead of a bare
 /// `.composers()` call.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dwg_combined_composer_entries() -> &'static [semio_framework_plugin::ComposerEntry] {
-    use semio_framework_plugin::ComposerEntry;
+fn dwg_combined_composer_entries() -> &'static [semio_framework_plugin::io::ComposerEntry] {
+    use semio_framework_plugin::io::ComposerEntry;
     static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
     ENTRIES
         .get_or_init(|| standards::v_ac1018::engine::io_registry::entries().iter().chain(standards::v_ac1024::engine::io_registry::entries().iter()).map(|e| ComposerEntry { writes: e.writes, reads: e.reads, compose: e.compose }).collect())
@@ -217,7 +217,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub mod io_registry {
     use crate::standards::v_ac1018::engine::io_registry as v_ac1018;
     use crate::standards::v_ac1024::engine::io_registry as v_ac1024;
-    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
+    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();

@@ -1,6 +1,6 @@
 use crate::standards::v1::subsets::any::io as io_root;
 use crate::RemodelingSnapshot;
-use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use semio_framework_plugin::{ ArtifactSerializer};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};

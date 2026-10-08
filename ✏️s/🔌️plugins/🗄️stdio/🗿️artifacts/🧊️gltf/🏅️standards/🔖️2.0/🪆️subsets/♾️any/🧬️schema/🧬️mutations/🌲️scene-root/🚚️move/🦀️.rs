@@ -1,4 +1,6 @@
 //! 🧬️ Direct move-scene-root-node mutation owner: payload, validation, typed diff, inverse, and outcomes.
+use crate::schema::diff::*;
+use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::modules::mutation_support::structure_geometry::checked_index;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
@@ -23,14 +25,22 @@ pub fn validate(payload: &GltfMoveSceneRootNodePayload, base: &GltfSnapshot) -> 
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfMoveSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
-    let mut next = base.clone();
-    let roots = &mut next.document.scenes[payload.scene].nodes;
-    let index = roots.iter().position(|node| *node == payload.node).expect("validated root");
-    let node = roots.remove(index);
-    roots.insert(payload.position, node);
-    Ok(next)
+pub fn plan(p: &GltfMoveSceneRootNodePayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
+    validate(p, base)?;
+    let Some(index) = base.document.scenes[p.scene].nodes.iter().position(|node| *node == p.node) else {
+        return Err(reject("gltf.mutation.relation-absent", format!("document/scenes/{}/nodes", p.scene), "node is not a root of this scene"));
+    };
+    Ok(GltfDiff { scenes: patch(p.scene, GltfSceneDiff { nodes: Some(with_moved(&base.document.scenes[p.scene].nodes, index, p.position)), ..Default::default() }), ..Default::default() })
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(p: &GltfMoveSceneRootNodePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    if validate(p, base).is_err() {
+        return Vec::new();
+    }
+    let Some(index) = base.document.scenes[p.scene].nodes.iter().position(|node| *node == p.node) else {
+        return Vec::new();
+    };
+    vec![super::move_scene_root_node::mutation(super::move_scene_root_node::GltfMoveSceneRootNodePayload { scene: p.scene, node: p.node, position: index })]
 }
 
 //#region 🧬️DirectMutation
@@ -39,7 +49,11 @@ pub fn apply(payload: &GltfMoveSceneRootNodePayload, base: &GltfSnapshot) -> Res
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum MoveSceneRootNodeMutation {
     Apply(GltfMoveSceneRootNodePayload),
-    Restore(Box<crate::schema::diff::GltfDiff>),
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutation(payload: GltfMoveSceneRootNodePayload) -> super::GltfMutation {
+    super::GltfMutation::MoveSceneRootNode(MoveSceneRootNodeMutation::Apply(payload))
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveSceneRootNodeMutation {
@@ -47,28 +61,18 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveSceneRoot
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => match apply(payload, base) {
-                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Self::Apply(payload) => match plan(payload, base) {
+                Ok(diff) => protocol::MutationOutcome::new(diff),
                 Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
-            },
-            Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
-                Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-                Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
             },
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
-            return Vec::new();
+        match self {
+            Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::GltfMutation::MoveSceneRootNode(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Move Scene Root Node", "Szenenwurzelknoten verschieben")

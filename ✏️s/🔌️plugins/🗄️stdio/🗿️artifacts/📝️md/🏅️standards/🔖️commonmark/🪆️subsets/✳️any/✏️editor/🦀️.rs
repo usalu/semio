@@ -7,7 +7,6 @@
 
 use crate::editor::md::modes::edit;
 use crate::editor::md::modes::edit::windows::main;
-use crate::standards::v_commonmark::subsets::any::schema::mutations::set_snapshot::SetSnapshot;
 use crate::standards::v_commonmark::subsets::any::schema::mutations::{insert_block,remove_block,replace_block,set_inlines,MdMutation,MdPathStep};
 
 use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdBlock;
@@ -166,7 +165,7 @@ fn md_retained_extent(_command: &MdEditCommand, _snapshot: &MdSnapshot, _interac
 fn md_emit(command: &MdEditCommand, snapshot: &MdSnapshot) -> Result<Emit<MdMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
         MdEditCommand::ReplaceText { text } => match md_applied_text(text) {
-            Ok(next) => Ok(Emit::mutations(md_net_mutations(snapshot, &next))),
+            Ok(next) => Ok(Emit::mutations(semio_s_artifact_stdio_contract::editing::net_leaves_exact(snapshot, &next, md_net_mutations)?)),
             Err(error) => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.md.invalid-text"), error.to_string())),
         },
         MdEditCommand::EditSnapshot { .. } => Err(Fault::from("stdio-md-snapshot-edit-routed-to-native-reducer")),
@@ -255,12 +254,11 @@ fn md_applied_text(text: &str) -> Result<MdSnapshot, semio_framework_diagnostic:
 /// unchanged at either end of a container stay untouched; a changed paragraph, or a heading that keeps its level, re-sets its
 /// inlines; a block quote, and a list that keeps its shape and item count, recurse into their own blocks; any other changed
 /// block is replaced; surplus blocks are removed (last first) or inserted. History therefore edits the block an author
-/// changed, never the whole document. The one genuine whole-document replacement is an applied DSL envelope that names
-/// another document schema: it is `set-snapshot`. The main window's Apply and the document-details editor both commit
-/// through here.
+/// changed, never the whole document. An applied DSL envelope that names another document schema answers no leaves and is
+/// refused by the exact replay. The main window's Apply and the document-details editor both commit through here.
 fn md_net_mutations(base: &MdSnapshot, next: &MdSnapshot) -> Vec<MdMutation> {
     if base.schema != next.schema {
-        return vec![MdMutation::SetSnapshot(SetSnapshot { snapshot: next.clone() })];
+        return Vec::new();
     }
     let mut leaves = Vec::new();
     md_net_blocks(&[], &base.blocks, &next.blocks, &mut leaves);
@@ -339,8 +337,8 @@ impl ArtifactEditor for MdEditor {
         Ok(MdSnapshot::from_text(text))
     }
 
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(MdMutation::SetSnapshot(SetSnapshot { snapshot }))
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
@@ -513,7 +511,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for MdEdito
     }
 
     fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_net(event, snapshot, md_net_mutations)
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, md_net_mutations)
     }
 }
 //#endregion 🔖️Editor

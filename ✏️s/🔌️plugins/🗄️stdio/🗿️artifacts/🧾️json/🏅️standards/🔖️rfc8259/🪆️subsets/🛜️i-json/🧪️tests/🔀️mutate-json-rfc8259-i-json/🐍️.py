@@ -42,7 +42,6 @@ MAX_SAFE_INTEGER_MAGNITUDE = 9007199254740991
 #: a Rust crate this Python host never links. The contract phase fails with
 #: `mutation-kind-uncovered`/`mutation-kind-undeclared` if this list drifts from either.
 KINDS = [
-    "set-snapshot",
     "set-top-level",
     "upsert-member",
     "remove-member",
@@ -216,9 +215,6 @@ def apply_mutation(root, mutation):
     kind = mutation["kind"]
     params = mutation.get("params") or {}
 
-    if kind == "set-snapshot":
-        return plain_value(params["snapshot"]["value"])
-
     if kind == "set-top-level":
         if params["root"]["kind"] not in ("object", "array"):
             raise AssertionError("RFC 7493 §2.1: set-top-level's root is neither an object nor an array — a scalar document root is unrepresentable")
@@ -229,7 +225,14 @@ def apply_mutation(root, mutation):
     if kind == "upsert-member":
         if not isinstance(target, dict):
             raise AssertionError("upsert-member: the addressed path is not an object")
-        target[params["key"]] = plain_value(params["value"])
+        key, value = params["key"], plain_value(params["value"])
+        if key in target or params.get("index") is None:
+            target[key] = value
+        else:
+            members = list(target.items())
+            members.insert(min(int(params["index"]), len(members)), (key, value))
+            target.clear()
+            target.update(members)
         return root
 
     if kind == "remove-member":
@@ -302,10 +305,7 @@ def inverse_spec(original, mutation):
     kind = mutation["kind"]
     params = mutation.get("params") or {}
     path = path_of(params)
-    snapshot = {"kind": "set-snapshot", "params": {"snapshot": {"schema": "stdio.json", "value": wire_value(original)}}}
 
-    if kind == "set-snapshot":
-        return snapshot
     if kind == "set-top-level":
         return {"kind": "set-top-level", "params": {"root": wire_root(original)}}
     if kind == "upsert-member":
@@ -315,15 +315,10 @@ def inverse_spec(original, mutation):
             return {"kind": "upsert-member", "params": {"path": wire_path(path), "key": key, "value": wire_value(parent[key])}}
         return {"kind": "remove-member", "params": {"path": wire_path(path), "key": key}}
     if kind == "remove-member":
-        # ⚠️ Member order is state in this profile and `upsert-member` APPENDS an absent key, so it
-        # only undoes the removal of the LAST member; anything else degrades to the whole-snapshot
-        # restore. Same rule as the subject's `agg_inverse` — see its ⚠️ note.
+        # ⚠️ Member order is state in this profile, so the undo re-inserts the member at its original position.
         parent = resolve(original, path)
         key = params["key"]
-        keys = list(parent.keys())
-        if keys and keys[-1] == key:
-            return {"kind": "upsert-member", "params": {"path": wire_path(path), "key": key, "value": wire_value(parent[key])}}
-        return snapshot
+        return {"kind": "upsert-member", "params": {"path": wire_path(path), "key": key, "value": wire_value(parent[key]), "index": list(parent.keys()).index(key)}}
     if kind == "rename-member":
         return {"kind": "rename-member", "params": {"path": wire_path(path), "from": params["to"], "to": params["from"]}}
     if kind == "set-safe-number":

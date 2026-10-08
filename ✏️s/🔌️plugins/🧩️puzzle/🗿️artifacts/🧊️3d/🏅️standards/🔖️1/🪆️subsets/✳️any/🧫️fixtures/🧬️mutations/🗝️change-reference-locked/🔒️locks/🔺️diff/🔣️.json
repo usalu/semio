@@ -1,36 +1,22 @@
 {
   "artifact": null,
-  "schema": null,
+  "attractions": null,
   "domain": null,
   "meta": null,
   "objects": null,
-  "attractions": null,
-  "targetVolumes": null,
   "references": {
     "added": [],
-    "removed": [],
     "patched": [
       {
         "id": "reference-1",
         "patch": {
-          "replacement": {
-            "id": "reference-1",
-            "source": {
-              "url": "asset://plan.png",
-              "mediaKind": "image"
-            },
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "widthWorld": 10.0,
-            "locked": true,
-            "hidden": false
-          }
+          "locked": true
         }
       }
     ],
+    "removed": [],
     "reordered": null
-  }
+  },
+  "schema": null,
+  "targetVolumes": null
 }

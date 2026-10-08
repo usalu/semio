@@ -196,7 +196,9 @@ impl Default for LowpolySelection {
 pub struct LowpolyObjectPatch {
     pub name: Option<String>,
     pub smooth_shading: Option<bool>,
-    pub transform: Option<LowpolyTransform>,
+    pub position: Option<[f32; 3]>,
+    pub rotation: Option<[f32; 3]>,
+    pub scale: Option<[f32; 3]>,
     /// 🕸️ Double-`Option`: outer = "this patch touches the `mesh` slot", inner = the new handle,
     /// `None` to clear it — matches `✳️object`'s own `mesh: Option<Option<ArtifactChild<…>>>` diff
     /// convention (`w2c-object-kit-report.md`). Never carries content, only `child_id`/`target`.
@@ -219,8 +221,14 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
         if let Some(value) = patch.smooth_shading {
             self.smooth_shading = value;
         }
-        if let Some(value) = &patch.transform {
-            self.transform = value.clone();
+        if let Some(value) = patch.position {
+            self.transform.position = value;
+        }
+        if let Some(value) = patch.rotation {
+            self.transform.rotation = value;
+        }
+        if let Some(value) = patch.scale {
+            self.transform.scale = value;
         }
         if let Some(value) = &patch.mesh {
             self.mesh = value.clone();
@@ -236,7 +244,9 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
         let patch = LowpolyObjectPatch {
             name: (self.name != other.name).then(|| other.name.clone()),
             smooth_shading: (self.smooth_shading != other.smooth_shading).then_some(other.smooth_shading),
-            transform: (self.transform != other.transform).then(|| other.transform.clone()),
+            position: (self.transform.position != other.transform.position).then_some(other.transform.position),
+            rotation: (self.transform.rotation != other.transform.rotation).then_some(other.transform.rotation),
+            scale: (self.transform.scale != other.transform.scale).then_some(other.transform.scale),
             mesh: (self.mesh != other.mesh).then(|| other.mesh.clone()),
             mesh_content: (self.mesh_content != other.mesh_content).then(|| other.mesh_content.clone()),
             mesh_state: (self.mesh_state != other.mesh_state).then(|| other.mesh_state.clone()),
@@ -245,65 +255,6 @@ impl Patchable<LowpolyObjectPatch> for LowpolyObject {
     }
 }
 
-/// 🖌️ Applies a paint-layers sub-delta onto one object.
-pub fn apply_paint_layers_delta(object: &mut LowpolyObject, delta: &diff::schema::LowpolyPaintLayersDelta) -> protocol::MutationApplyResult<()> {
-    let mut layers = object.paint_layers.clone();
-    let mut removed = std::collections::BTreeSet::new();
-    for (position, index) in delta.removed.iter().copied().enumerate() {
-        if !removed.insert(index) {
-            return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "paint layer is removed more than once").at(["removed".to_string(), position.to_string()]));
-        }
-        if index as usize >= layers.len() {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", "removed paint layer index is out of range").at(["removed".to_string(), position.to_string()]));
-        }
-    }
-    let mut removed_indices: Vec<_> = delta.removed.iter().map(|index| *index as usize).collect();
-    removed_indices.sort_unstable_by(|left, right| right.cmp(left));
-    for i in removed_indices {
-        layers.remove(i);
-    }
-    for (position, entry) in delta.added.iter().enumerate() {
-        let i = entry.index as usize;
-        if i > layers.len() {
-            return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", "added paint layer index is out of range").at(["added".to_string(), position.to_string()]));
-        }
-        layers.insert(i, entry.layer.clone());
-    }
-    for (position, entry) in delta.patched.iter().enumerate() {
-        let i = entry.index as usize;
-        let layer = layers.get_mut(i).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.invalid-index", "patched paint layer index is out of range").at(["patched".to_string(), position.to_string()]))?;
-        let p = &entry.patch;
-        if let Some(value) = &p.name {
-            layer.name = value.clone();
-        }
-        if let Some(value) = p.visible {
-            layer.visible = value;
-        }
-        if let Some(value) = p.opacity {
-            layer.opacity = value;
-        }
-        if let Some(value) = &p.blend_mode {
-            layer.blend_mode = value.clone();
-        }
-    }
-    for (position, stroke) in delta.strokes.iter().enumerate() {
-        let i = stroke.layer_index as usize;
-        let layer = layers.get_mut(i).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.invalid-index", "paint stroke layer index is out of range").at(["strokes".to_string(), position.to_string(), "layerIndex".to_string()]))?;
-        if layer.pixels.is_empty() {
-            layer.pixels = empty_paint_pixels();
-        }
-        for (run_index, run) in stroke.runs.iter().enumerate() {
-            let start = run.offset as usize;
-            let end = start
-                .checked_add(run.bytes.len())
-                .filter(|end| *end <= layer.pixels.len())
-                .ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.invalid-index", "paint stroke byte range is out of bounds").at(["strokes".to_string(), position.to_string(), "runs".to_string(), run_index.to_string()]))?;
-            layer.pixels[start..end].copy_from_slice(&run.bytes);
-        }
-    }
-    object.paint_layers = layers;
-    Ok(())
-}
 //#endregion 🔖️Patches
 
 //#region 🔖️Dialect

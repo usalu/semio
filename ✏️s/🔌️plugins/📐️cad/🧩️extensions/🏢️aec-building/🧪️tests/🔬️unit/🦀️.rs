@@ -1,5 +1,5 @@
 use super::*;
-use protocol::{Mutation, MutationDiff, SemanticMutation};
+use protocol::{Mutation, SemanticMutation};
 use semio_framework_plugin::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 use semio_s_artifact_cad_cad::mutations::create_node::CreateNode;
 use semio_s_artifact_cad_cad::CadNode;
@@ -90,10 +90,10 @@ async fn plan_folds_to_the_same_snapshot_as_applying_cads_leaf_mutations_by_hand
     let base = semio_s_artifact_cad_cad::empty_cad_snapshot();
     let kind = CreateBuildingStorey { storey_id: "storey-1".into(), level_index: 2, storey_name: "Level Two".into() };
 
-    let folded = MutationDiff::apply(protocol::fold_plan_diff(&kind, &base).diff(), &base).expect("valid folded plan diff");
+    let folded = protocol::apply_diff(protocol::fold_plan_diff(&kind, &base).diff(), &base).expect("valid folded plan diff");
 
-    let create = CadMutation::CreateNode(CreateNode { node: CadNode { id: "storey-1".into(), label: kind.storey_label(), kind: "building-storey".into() } });
-    let after_create = MutationDiff::apply(create.diff(&base).diff(), &base).expect("valid create mutation diff");
+    let create = CadMutation::CreateNode(CreateNode { node: CadNode { id: "storey-1".into(), label: kind.storey_label(), kind: "building-storey".into() } , index: None });
+    let after_create = protocol::apply_diff(create.diff(&base).diff(), &base).expect("valid create mutation diff");
 
     assert_eq!(folded, after_create);
     assert!(after_create.nodes.iter().any(|node| node.id == "storey-1" && node.kind == "building-storey"));

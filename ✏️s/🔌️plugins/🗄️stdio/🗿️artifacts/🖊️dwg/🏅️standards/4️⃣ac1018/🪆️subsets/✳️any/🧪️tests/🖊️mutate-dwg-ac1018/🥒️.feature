@@ -13,8 +13,7 @@ Feature: Stamp the empty DWG document R2004, refuse the R2004 stamp on a real R2
 
   What it therefore demonstrates is not "an R2004 container was parsed" but "the R2004 stamp is
   producible and readable at the published offsets — exactly where this writer can produce it":
-  `set-snapshot` drives the empty preamble-only document TO `AC1018`, and the adapter fails the
-  scenario unless an independent preamble reader then reads `AC1018` back. Asking the R2010
+  the only row that names `AC1018` is the refused request. Asking the R2010
   CONTAINER for `AC1018` is refused: this artifact's writer lays a drawing with content out as R2010
   (AC1024) object streams only — R2004 frames objects without the handle-stream size R2010 adds — so
   an R2004 stamp over them would name a file nobody wrote. Dispatch refuses it up front, Fatal
@@ -48,12 +47,11 @@ Feature: Stamp the empty DWG document R2004, refuse the R2004 stamp on a real R2
   The narrowness is real and is stated rather than hidden. Everything after the preamble is the
   R2004+ section map — compressed, checksummed, section-encrypted — which the ORACLE cannot
   regenerate, so it carries it through unchanged and the projection is the preamble triple plus the
-  document's byte length; the SUBJECT re-materializes it from the logical drawing as R2010. `byteLength` is what keeps
-  `set-snapshot` (a whole-document replacement, collapsing the container to the 22-byte
-  preamble-only shape) observably different from `set-version-info` (a field set in place). Every
+  document's byte length; the SUBJECT re-materializes it from the logical drawing as R2010. `byteLength` stays normative: `set-version-info` is a field set in place and must leave the
+  container exactly as long as it was. Every
   row below moves that projection: the adapter fails any row whose projection did not change. Every
   row's `params` is the leaf wire payload of AC1024's `DwgMutation`, which this standard re-exports
-  (`set-snapshot` carries the `DwgSnapshot` wire), decoded by its own payload constructor.
+  decoded by its own payload constructor.
 
   🔒️ The identity round trip asserts the EXACT-BYTES law, not the no-byte-pass-through law, and that
   is the correct law here rather than a missing one. The preamble is fixed-width with no writer
@@ -95,7 +93,6 @@ Feature: Stamp the empty DWG document R2004, refuse the R2004 stamp on a real R2
     And the whole-document replacement left the empty document stamped AC1018, asserted in role
     Examples:
       | id               | params |
-      | set-snapshot     | {"snapshot": {"schema": "stdio.dwg", "version": "AC1018", "maintenanceVersion": 0, "codepage": 30}} |
       | set-version-info | {"version": "AC1024", "maintenanceVersion": 0, "codepage": 30} |
 
   @id-inverse
@@ -111,7 +108,6 @@ Feature: Stamp the empty DWG document R2004, refuse the R2004 stamp on a real R2
     Then the restored drawing's preamble projection equals the original's, asserted in role
     Examples:
       | id               | params |
-      | set-snapshot     | {"snapshot": {"schema": "stdio.dwg", "version": "AC1018", "maintenanceVersion": 0, "codepage": 30}} |
       | set-version-info | {"version": "AC1024", "maintenanceVersion": 0, "codepage": 30} |
 
   @id-refuse

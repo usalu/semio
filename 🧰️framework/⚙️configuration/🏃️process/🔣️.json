@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "workspace": "../..",
+  "workspaceManifest": "../../Cargo.toml",
+  "store": "../../🤖️generated/process",
+  "vitest": "../../../node_modules/vitest/vitest.mjs",
+  "runtime": "node",
+  "coverageRuntime": "node",
+  "python": "python",
+  "nextest": true,
+  "nextestConfig": "../../.config/nextest.toml",
+  "buildBudgetMs": 0,
+  "commandBudgetMs": 0,
+  "maximumOutputBytes": 536870912,
+  "assertionBudgets": {
+    "fundamental": 15000,
+    "quick": 300000,
+    "long": 900000,
+    "exhaustive": 1800000
+  },
+  "assertionThreads": "available-minus-quarter",
+  "rustMinStack": "134217728"
+}

@@ -190,7 +190,7 @@ async fn complete_chunk_sequence_preserves_order_and_duplicate_canonical_chunks(
 
 #[semio_framework_async_macros::async_test]
 async fn exact_serialization_boundaries_survive_typed_edit_save_and_reopen() {
-    use crate::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation,set_snapshot,WavMutation};
+    use crate::standards::riff_pcm::subsets::any::schema::mutations::{apply_wav_mutation,WavMutation};
 
     use std::io::Cursor;
 
@@ -208,9 +208,7 @@ async fn exact_serialization_boundaries_survive_typed_edit_save_and_reopen() {
         chunk_order: vec![WavChunkRef::Format, WavChunkRef::Samples, WavChunkRef::Other(0)],
         ..WavSnapshot::default()
     };
-    let mut edited = WavSnapshot::default();
-    let outcome = apply_wav_mutation(&mut edited, &WavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: expected.clone() }));
-    assert!(outcome.messages().is_empty(), "the exact boundary edit must be admitted: {:?}", outcome.messages());
+    let mut edited = protocol::apply_diff(&WavDiff::between(&WavSnapshot::default(), &expected), &WavSnapshot::default()).expect("the exact boundary state is a representable diff");
     assert_eq!(edited, expected);
 
     let encoded = try_encode_wav(&edited).expect("exact boundary snapshot encodes");
@@ -237,7 +235,7 @@ async fn exact_serialization_boundaries_survive_typed_edit_save_and_reopen() {
 
     expected.fmt.sample_rate = 16_000;
     expected.fmt.byte_rate = 16_000;
-    let outcome = apply_wav_mutation(&mut edited, &WavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: expected.clone() }));
+    let outcome = apply_wav_mutation(&mut edited, &WavMutation::SetFmt(set_fmt::SetFmt { fmt: expected.fmt.clone() }));
     assert!(outcome.messages().is_empty(), "second typed edit must remain exactly serializable");
     assert_eq!(decode_wav(&try_encode_wav(&edited).expect("edited boundary snapshot saves")).expect("edited boundary snapshot reopens"), expected);
 }

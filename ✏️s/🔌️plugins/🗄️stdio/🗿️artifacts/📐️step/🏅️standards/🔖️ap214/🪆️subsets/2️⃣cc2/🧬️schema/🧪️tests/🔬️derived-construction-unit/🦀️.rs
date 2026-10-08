@@ -27,7 +27,7 @@ mod tests {
         let mut doc = snapshot.to_part21_document();
         doc.instances.push(Part21Instance { id: 99, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
         snapshot = StepSnapshot::from_part21_document(&doc);
-        let (mutated, _diff) = StepCc2BuilderConstruction::from_snapshot(StepSnapshot::default()).mutate(StepCc2Mutation::SetSnapshot(crate::standards::v_ap214::subsets::cc2::schema::mutations::set_snapshot::SetSnapshot { snapshot }));
+        let mutated = StepCc2BuilderConstruction::from_snapshot(snapshot);
         let err = mutated.build().expect_err("an ADVANCED_BREP_SHAPE_REPRESENTATION instance above rung 2 must fail build()");
         assert!(err.iter().any(|d| d.code.0 == CODE_LADDER));
     }

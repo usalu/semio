@@ -27,8 +27,8 @@ fn field_sweep_covers_every_mutable_field() {
     let d = <Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&a, &b);
     assert!(d.ftyp.is_some(), "ftyp field must be covered by the sweep");
     assert!(d.tracks.is_some(), "tracks field must be covered by the sweep");
-    assert_eq!(d.apply(&a).unwrap(), b);
-    assert_eq!(<Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&b, &a).apply(&b).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&d, &a).unwrap(), b);
+    assert_eq!(<Mp4Diff as DiffAlgebra<Mp4Snapshot>>protocol::apply_diff(&::between(&b, &a), &b).unwrap(), a);
     assert!(<Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&a, &a).is_empty());
 }
 
@@ -39,10 +39,10 @@ fn inverse_law_round_trips_through_apply() {
     b.tracks[0].samples[0].duration = 999;
     b.tracks[0].samples[0].sync = !b.tracks[0].samples[0].sync;
     let d = <Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(&a, &b);
-    let after = d.apply(&a).unwrap();
+    let after = protocol::apply_diff(&d, &a).unwrap();
     assert_eq!(after, b);
     let inv = d.inverse(&a);
-    assert_eq!(inv.apply(&after).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&inv, &after).unwrap(), a);
 }
 //#endregion
 
@@ -140,9 +140,9 @@ fn absorb_associativity_over_three_diffs() {
     let mut right = d1.clone();
     right.absorb(d23);
 
-    assert_eq!(left.apply(&a).unwrap(), after);
-    assert_eq!(right.apply(&a).unwrap(), after);
-    assert_eq!(left.apply(&a).unwrap(), right.apply(&a).unwrap(), "absorb must be associative");
+    assert_eq!(protocol::apply_diff(&left, &a).unwrap(), after);
+    assert_eq!(protocol::apply_diff(&right, &a).unwrap(), after);
+    assert_eq!(protocol::apply_diff(&left, &a).unwrap(), protocol::apply_diff(&right, &a).unwrap(), "absorb must be associative");
 }
 
 #[test]
@@ -152,17 +152,17 @@ fn exact_fixture_empty_inverse_absorb_and_source_removal_laws() {
 
     let empty = Mp4Diff::default();
     assert!(empty.is_empty());
-    assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&empty.apply(&base).unwrap()), bytes);
+    assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&protocol::apply_diff(&empty, &base).unwrap()), bytes);
 
     let mut changed = base.clone();
     changed.tracks[0].width += 1;
     let diff = Mp4Diff::between(&base, &changed);
-    let after = diff.apply(&base).unwrap();
+    let after = protocol::apply_diff(&diff, &base).unwrap();
     let inverse = diff.inverse(&base);
-    assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&inverse.apply(&after).unwrap()), bytes);
+    assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&protocol::apply_diff(&inverse, &after).unwrap()), bytes);
 
     let mut absorbed = diff;
     absorbed.absorb(inverse);
-    assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&absorbed.apply(&base).unwrap()), bytes);
+    assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&protocol::apply_diff(&absorbed, &base).unwrap()), bytes);
 }
 //#endregion

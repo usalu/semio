@@ -53,7 +53,7 @@ pub struct BinaryDiff {
 }
 
 impl MutationDiff<BinarySnapshot> for BinaryDiff {
-    fn apply(&self, base: &BinarySnapshot) -> protocol::MutationApplyResult<BinarySnapshot> {
+    fn apply(&self, base: &BinarySnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<BinarySnapshot> {
         validate_binary_diff(self, base)?;
         Ok(apply_binary_diff_unchecked(self, base))
     }
@@ -96,9 +96,22 @@ fn apply_binary_diff_unchecked(diff: &BinaryDiff, base: &BinarySnapshot) -> Bina
 }
 
 impl DiffAlgebra<BinarySnapshot> for BinaryDiff {
+    /// 🔁️ The negative diff: every splice becomes the splice at its shifted position in the after-buffer that removes the inserted
+    /// bytes and puts the base bytes back.
     fn inverse(&self, base: &BinarySnapshot) -> Self {
-        let next = apply_binary_diff_unchecked(self, base);
-        Self::between(&next, base)
+        let mut ordered: Vec<&ByteSplice> = self.splices.iter().collect();
+        ordered.sort_by_key(|splice| splice.offset);
+        let mut shift = 0_i64;
+        let splices = ordered
+            .into_iter()
+            .map(|splice| {
+                let offset = (splice.offset as i64 + shift).max(0) as usize;
+                shift += splice.insert.len() as i64 - splice.remove_len as i64;
+                let (start, end) = (splice.offset.min(base.bytes.len()), (splice.offset + splice.remove_len).min(base.bytes.len()));
+                ByteSplice { offset, remove_len: splice.insert.len(), insert: base.bytes[start..end].to_vec() }
+            })
+            .collect();
+        Self { splices }
     }
 
     /// 🧭️ Minimal common-prefix/common-suffix splice: a single `ByteSplice` covering exactly
@@ -238,12 +251,6 @@ fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice> {
 }
 //#endregion 🔖️AbsorbLabels
 //#endregion 🔖️Diff
-
-/// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &BinarySnapshot, snapshot: &BinarySnapshot) -> BinaryDiff {
-    BinaryDiff::between(base, snapshot)
-}
 
 /// 🧪️ P2-P3: representative `BinaryDiff` cases (empty, single-splice, multi-splice incl. a
 /// zero-length no-op splice) -- single source of truth shared by `diff_codec_text_binary_

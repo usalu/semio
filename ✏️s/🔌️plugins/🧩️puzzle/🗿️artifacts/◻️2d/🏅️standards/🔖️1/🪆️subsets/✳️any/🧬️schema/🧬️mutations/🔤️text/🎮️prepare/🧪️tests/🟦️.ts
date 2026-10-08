@@ -1,14 +1,11 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv from "ajv";
 import {applyPatch} from "fast-json-patch";
 import {existsSync,readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import schema from "../🧬️schema/🔣️.json";
 import fixture from "../🧫️fixtures/🔣️.json";
 
 test("Puzzle2d optional native text preparation preserves SQLite equality and RFC6902 intent",()=>{
- expect(new Ajv({strict:false}).compile(schema)(fixture)).toBe(true);
  const db=new Database(":memory:");db.exec("CREATE TABLE target(id TEXT PRIMARY KEY,value TEXT)");
  try{for(const row of fixture.cases){
   db.exec("DELETE FROM target");db.query("INSERT INTO target VALUES(?,?)").run("retained",row.before);

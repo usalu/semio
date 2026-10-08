@@ -115,3 +115,9 @@ fn committed_diff_applies_to_after() {
     let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-preferences");
     assert_eq!(produced, expected_after(), "set-default-app/repins-the-cad-editor-to-the-drafting-app: committed diff did not carry before to after");
 }
+
+/// ➕️ The concrete inverse's diffs sum to the negative of the forward diff (L3).
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+}

@@ -39,21 +39,21 @@ fn combined_patches_keep_the_last_protection_change() {
     let mut base=empty_raster_snapshot();base.layers.push(create_layer_of_kind("pixel"));let id=layer_node_id(&base.layers[0]).to_owned();
     let mut patch=diff_patch_layer(&id,RasterLayerPatch {name:Some("Renamed".into()),..Default::default()});
     patch.absorb(diff_patch_layer(&id,RasterLayerPatch {locked:Some(true),..Default::default()}));
-    let next=patch.apply(&base).unwrap();assert!(layer_locked(&next.layers[0]));assert_eq!(layer_name(&next.layers[0]),"Renamed");
+    let next=protocol::apply_diff(&patch, &base).unwrap();assert!(layer_locked(&next.layers[0]));assert_eq!(layer_name(&next.layers[0]),"Renamed");
     patch.absorb(diff_patch_layer(&id,RasterLayerPatch {locked:Some(false),..Default::default()}));
-    let unlocked=patch.apply(&base).unwrap();assert!(!layer_locked(&unlocked.layers[0]));assert_eq!(layer_name(&unlocked.layers[0]),"Renamed");
+    let unlocked=protocol::apply_diff(&patch, &base).unwrap();assert!(!layer_locked(&unlocked.layers[0]));assert_eq!(layer_name(&unlocked.layers[0]),"Renamed");
     patch.retire_cold();snapshot::retire_raster_snapshot(unlocked);snapshot::retire_raster_snapshot(next);snapshot::retire_raster_snapshot(base);
 }
 
 #[test]
 fn lock_mutation_matches_the_committed_snapshot_and_canonical_diff() {
-    use protocol::{Mutation,MutationDiff};
+    use protocol::Mutation;
     let before:RasterSnapshot=semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🔒️change-layer-locked/🔒️protects/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let expected:RasterSnapshot=semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🔒️change-layer-locked/🔒️protects/📸️snapshot/➡️after/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let operation:crate::RasterMutation=semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🔒️change-layer-locked/🔒️protects/🦠️mutation/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let diff_json=include_str!("../../../🧫️fixtures/🧬️mutations/🔒️change-layer-locked/🔒️protects/🔺️diff/🔣️.json");
     let (diff,messages)=operation.diff(&before).into_parts();assert!(messages.is_empty());
     let encoded=semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&diff));let committed=semio_framework_pack_json::parse(diff_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert!(semio_framework_pack_json::value_eq_ignoring_object_order(&encoded,&committed));
-    let after=diff.apply(&before).unwrap();assert_eq!(after,expected);
+    let after=protocol::apply_diff(&diff, &before).unwrap();assert_eq!(after,expected);
     diff.retire_cold();operation.retire_cold();for document in [before,after,expected] {snapshot::retire_raster_snapshot(document);}
 }

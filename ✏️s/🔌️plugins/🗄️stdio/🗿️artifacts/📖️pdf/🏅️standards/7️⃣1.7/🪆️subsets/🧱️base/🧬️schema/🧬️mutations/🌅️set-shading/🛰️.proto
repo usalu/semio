@@ -7,4 +7,5 @@ import "../../🔺️diff/🛰️.proto";
 // 🌅️ Direct set-shading protobuf payload.
 message SetShadingMutation {
   PdfShading shading = 1;
+  optional uint64 index = 2;
 }

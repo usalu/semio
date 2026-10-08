@@ -9,5 +9,6 @@
   "maxCoolingCapacityPresent": false,
   "maxCoolingCapacityW": 0.0,
   "outdoorAirPerPersonM3S": 0.0,
-  "outdoorAirPerAreaM3SM2": 0.0
+  "outdoorAirPerAreaM3SM2": 0.0,
+  "index": null
 }

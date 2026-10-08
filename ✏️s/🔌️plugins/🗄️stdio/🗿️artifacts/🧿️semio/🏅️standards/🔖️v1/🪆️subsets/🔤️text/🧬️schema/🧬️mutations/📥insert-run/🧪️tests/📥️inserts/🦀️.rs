@@ -33,7 +33,7 @@ fn insert_run() -> SemioTextMutation {
 #[semio_framework_async_macros::async_test]
 async fn inserts_the_german_run_at_final_index_one() {
     let base = before();
-    let produced = insert_run().diff(&base).diff().apply(&base).expect("insert-run applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(insert_run().diff(&base).diff(), &base).expect("insert-run applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "insert-run/inserts-a-german-run-between-two-english-runs: applied state differs from the committed after-snapshot");
     assert_eq!(produced.runs.len(), base.runs.len() + 1, "insert-run must lengthen the run sequence by exactly one");
     assert_eq!(produced.runs[1].language, "de", "the inserted run keeps its own BCP-47 tag at the FINAL-state index it was addressed with");
@@ -45,11 +45,12 @@ async fn inserts_the_german_run_at_final_index_one() {
 async fn the_undo_remove_run_takes_the_german_run_back_out() {
     let base = before();
     let mutation = insert_run();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioTextMutation::RemoveRun(crate::standards::v1::subsets::text::schema::mutations::remove_run::RemoveRun { index: 1 })], "insert-run at #1 must undo as remove-run at #1");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward insert-run applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo remove-run applies to the post-insert state");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward insert-run applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo remove-run applies to the post-insert state");
     }
     assert_eq!(current, base, "insert-run/inserts-a-german-run-between-two-english-runs: the undo did not restore the before-snapshot");
 }
@@ -108,6 +109,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-run diff decodes");
-    let produced = decoded.apply(&before()).expect("committed insert-run diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed insert-run diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "insert-run/inserts-a-german-run-between-two-english-runs: committed diff did not carry before to after");
 }

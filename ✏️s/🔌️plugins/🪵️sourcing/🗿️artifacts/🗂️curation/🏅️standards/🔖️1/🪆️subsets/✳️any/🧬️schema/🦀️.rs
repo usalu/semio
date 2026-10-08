@@ -2,7 +2,6 @@
 
 use crate::{CurationSnapshot, SourcingMutation};
 use framework_schema::ArtifactSchema;
-use semio_framework::parse_contributions;
 use semio_framework_plugin::world3d_mesh_id_from_url;
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
@@ -775,9 +774,14 @@ pub const SOURCING_MAXIMUM_MODULES: usize = 8;
 
 
 
+/// 🏗️ The authored sourcing modules in their semantic registration order.
+pub fn authored_modules() -> Vec<SourcingModules> {
+    vec![beams::BeamsModule.into(), windows::WindowsModule.into(), slabs::SlabsModule.into(), reuse::ReuseModule.into()]
+}
+
 /// 🔎️ Looks up a single module by id.
-pub fn module_for(contributions_json: &str, module_id: &str) -> Option<SourcingModules> {
-    crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules(contributions_json).into_iter().find(|module| module.module_id() == module_id)
+pub fn module_for(modules: Vec<SourcingModules>, module_id: &str) -> Option<SourcingModules> {
+    modules.into_iter().find(|module| module.module_id() == module_id)
 }
 //#endregion 🔖️Modules
 
@@ -791,8 +795,8 @@ pub struct ModuleCatalogue {
     pub kinds: Vec<ObjectKind>,
 }
 
-pub fn available_modules(contributions_json: &str) -> Vec<ModuleCatalogue> {
-    crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules(contributions_json).into_iter().map(|module| ModuleCatalogue { module_id: module.module_id().to_string(), label: module.label().to_string(), typology: module.typology(), kinds: module.demo_kinds() }).collect()
+pub fn available_modules(modules: Vec<SourcingModules>) -> Vec<ModuleCatalogue> {
+    modules.into_iter().map(|module| ModuleCatalogue { module_id: module.module_id().to_string(), label: module.label().to_string(), typology: module.typology(), kinds: module.demo_kinds() }).collect()
 }
 //#endregion 🔖️ModuleCatalogue
 
@@ -828,7 +832,7 @@ pub fn grid_scale(recipe: &GeometryRecipe, cell: f64) -> f64 {
 /// order. Single source of truth for `default_document`'s catalog content and every test fixture that
 /// used to independently duplicate `sourcing_modules("[]").iter().flat_map(...)`.
 pub fn demo_stock() -> Vec<ObjectKind> {
-    crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules("[]").iter().flat_map(|module| module.demo_kinds()).collect()
+    authored_modules().iter().flat_map(|module| module.demo_kinds()).collect()
 }
 
 

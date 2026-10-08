@@ -1892,7 +1892,7 @@ import graphParameterFixture from "../../../../🌊️flow/🗿️artifacts/🌊
 import graphPickFixture from "../../🧱️elements/🕸️NodeGraph/🧫️fixtures/🔣️pick-target.json";
 import flowParameterSchema from "../../../../🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/🧬️schema/🔣️.json" with { type: "json" };
 import * as flowSessionLoader from "../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
-import * as infiniteCanvasRenderer from "@semio-tech/infinite-canvas-react-renderer";
+import * as infiniteCanvasRenderer from "@semio-tech/canvas-react-renderer";
 import { createFlowBrowserRuntime } from "@semio-tech/flow-core/🌐️flow-browser.js";
 import { MockFlowBridge } from "../../../../🌊️flow/🕸️wasm/🧪️tests/🎭️mock-flow-bridge/🟦️.ts";
 import flowAbi from "../../../../🌊️flow/🕸️wasm/🧬️schema/📡️abi/🔣️.json" with { type: "json" };
@@ -13459,13 +13459,13 @@ describe("example switch — the completion's scope is what re-takes the flow wi
 //#endregion 🎨️ExampleSwitchHostCaching
 
 //#region 📷️CameraAndLabelFitTwins
-import cameraFitFixture from "../../../../♾️infinite/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json" with { type: "json" };
+import cameraFitFixture from "../../../../../../../🔨️modules/🖼️canvas/🧫️fixtures/📷️camera-fit/🔣️.json" with { type: "json" };
 import portTypesFixture from "../../../../🌊️flow/🧫️fixtures/🔌️port-types/🔣️.json" with { type: "json" };
-import labelFitFixture from "../../../../♾️infinite/🖼️canvas/🧫️fixtures/🏷️label-fit/🔣️.json" with { type: "json" };
+import labelFitFixture from "../../../../../../../🔨️modules/🖼️canvas/🧫️fixtures/🏷️label-fit/🔣️.json" with { type: "json" };
 
 /** 📏️ The fixture's own synthetic advance — the ONE measure both implementations are driven with, so
  * a row pins the clipping algorithm rather than a font file. Mirror of `synthetic_measure` in
- * `♾️infinite/🖼️canvas/🧪️tests/🏷️label-fit/🦀️.rs`. */
+ * `🧰️framework/🔨️modules/🖼️canvas/🧪️tests/🏷️label-fit/🦀️.rs`. */
 function syntheticLabelMeasure(text: string, charWidth: number): number {
   return [...text].length * charWidth;
 }

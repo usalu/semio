@@ -1,0 +1,6 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+    "content": "[package]\nworkspace = \"../../../../../..\"\nname = \"semio-framework-dsl-record\"\nversion = \"0.1.0\"\nedition = \"2021\"\nrust-version.workspace = true\n\n[package.metadata.semio]\nrole = \"framework\"\nid = \"dsl-record\"\n\n[lints]\nworkspace = true\n\n[lib]\nname = \"semio_framework_dsl_record\"\npath = \"../../🦀️.rs\"\n\n[dependencies]\nsemio-framework-dsl = { path = \"../../../📦️packages/🦀️rust\" }\nsemio-framework-value = { path = \"../../../../🌱️value/📦️packages/🦀️rust\" }\nsemio-framework-diagnostic = { path = \"../../../../⚠️diagnostic/📦️packages/🦀️rust\" }\nsemio-framework-pack-json = { path = \"../../../../🎒️pack/🔤️json/📦️packages/🦀️rust\" }\n\n[dev-dependencies]\nsemio-framework-pack = { path = \"../../../../🎒️pack/📦️packages/🦀️rust\" }\nsemio-framework-async-macros = { path = \"../../../../⏳️async/✨️macros/📦️packages/🦀️rust\" }\nsemio-framework-dsl-record-derive = { path = \"../../✨️derive/📦️packages/🦀️rust\" }\nserde_json = { version = \"1.0\", features = [\"float_roundtrip\"] }\n\n[[test]]\nname = \"field_refusal_public\"\npath = \"../../🧪️tests/🪆️refusal/🚪️public/🦀️.rs\"\n\n[[test]]\nname = \"native_decoding\"\npath = \"../../🧪️tests/🛬️decoding/🦀️.rs\"\n"
+  }
+]

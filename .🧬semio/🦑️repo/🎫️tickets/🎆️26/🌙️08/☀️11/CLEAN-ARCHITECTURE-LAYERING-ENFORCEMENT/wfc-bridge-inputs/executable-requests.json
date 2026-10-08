@@ -1,0 +1,132 @@
+[
+  {
+    "project": "@semio-tech/wfc-2d-rs",
+    "targets": {
+      "mutation-inventory": [
+        {
+          "artifact": "s.wfc.wfc2d",
+          "standard": "1",
+          "subset": "any",
+          "surface": "",
+          "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any"
+        },
+        {
+          "artifact": "s.wfc.wfc2d",
+          "standard": "1",
+          "subset": "any",
+          "surface": "✏️editor/🎚️config",
+          "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config"
+        },
+        {
+          "artifact": "s.wfc.wfc2d",
+          "standard": "1",
+          "subset": "any",
+          "surface": "✏️editor/🫧️transient",
+          "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient"
+        }
+      ],
+      "mutation-inventory-check": []
+    },
+    "manifestPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+    "cwd": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d",
+    "binary": "semio-wfc-2d-mutation-bridge",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/🏭️bridge/📜️script.ts"
+  },
+  {
+    "project": "@semio-tech/wfc-3d-rs",
+    "targets": {
+      "mutation-inventory": [
+        {
+          "artifact": "s.wfc.wfc3d",
+          "standard": "1",
+          "subset": "any",
+          "surface": "",
+          "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any"
+        },
+        {
+          "artifact": "s.wfc.wfc3d",
+          "standard": "1",
+          "subset": "any",
+          "surface": "✏️editor/🎚️config",
+          "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config"
+        },
+        {
+          "artifact": "s.wfc.wfc3d",
+          "standard": "1",
+          "subset": "any",
+          "surface": "✏️editor/🫧️transient",
+          "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient"
+        }
+      ],
+      "mutation-inventory-check": []
+    },
+    "manifestPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+    "cwd": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d",
+    "binary": "semio-wfc-3d-mutation-bridge",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏭️bridge/📜️script.ts"
+  },
+  {
+    "project": "@semio-tech/wfc-bitmap-rs",
+    "targets": {
+      "mutation-inventory": [
+        {
+          "artifact": "s.wfc.bitmap",
+          "standard": "1",
+          "subset": "any",
+          "surface": "",
+          "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any"
+        },
+        {
+          "artifact": "s.wfc.bitmap",
+          "standard": "1",
+          "subset": "any",
+          "surface": "✏️editor/🫧️transient",
+          "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient"
+        }
+      ],
+      "mutation-inventory-check": []
+    },
+    "manifestPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust/Cargo.toml",
+    "cwd": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap",
+    "binary": "semio-wfc-bitmap-mutation-bridge",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏭️bridge/📜️script.ts"
+  },
+  {
+    "project": "@semio-tech/wfc-grid2d-rs",
+    "targets": {
+      "mutation-inventory": [
+        {
+          "artifact": "s.wfc.grid2d",
+          "standard": "1",
+          "subset": "any",
+          "surface": "",
+          "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any"
+        }
+      ],
+      "mutation-inventory-check": []
+    },
+    "manifestPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust/Cargo.toml",
+    "cwd": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d",
+    "binary": "semio-wfc-grid2d-mutation-bridge",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏭️bridge/📜️script.ts"
+  },
+  {
+    "project": "@semio-tech/wfc-grid3d-rs",
+    "targets": {
+      "mutation-inventory": [
+        {
+          "artifact": "s.wfc.grid3d",
+          "standard": "1",
+          "subset": "any",
+          "surface": "",
+          "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any"
+        }
+      ],
+      "mutation-inventory-check": []
+    },
+    "manifestPath": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust/Cargo.toml",
+    "cwd": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d",
+    "binary": "semio-wfc-grid3d-mutation-bridge",
+    "script": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏭️bridge/📜️script.ts"
+  }
+]

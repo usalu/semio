@@ -482,10 +482,10 @@ pub fn puzzle2d_snapshot_mutations(before: &Puzzle2dSnapshot, after: &Puzzle2dSn
     }
     for row in &after.meta.kind_compatibility {
         match before.meta.kind_compatibility.iter().find(|entry| entry.source == row.source && entry.target == row.target) {
-            None => mutations.push(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity)),
+            None => mutations.push(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, None)),
             Some(prior) if prior != row => {
                 mutations.push(disconnect_kind_compatibility(row.source.clone(), row.target.clone()));
-                mutations.push(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity));
+                mutations.push(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, None));
             }
             Some(_) => {}
         }

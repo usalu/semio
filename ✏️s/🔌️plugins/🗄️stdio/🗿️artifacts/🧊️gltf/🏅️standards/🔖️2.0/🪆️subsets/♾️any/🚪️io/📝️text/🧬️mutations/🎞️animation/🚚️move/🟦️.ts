@@ -4,7 +4,7 @@ export type * from "../../../../../🧬️schema/🧬️mutations/🎞️animati
 /** 🚚️ `move-animation` wire twin: the flat `Apply` payload `GltfMoveAnimationPayload` and the phase wire `MoveAnimationMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
 export const parseGltfMoveAnimationPayload = gltfWireObject<GltfMoveAnimationPayload>({ index: gltfWireRequired(gltfWireIndex), position: gltfWireRequired(gltfWireIndex) });
-export const parseMoveAnimationMutation = gltfWirePhase(parseGltfMoveAnimationPayload, parseGltfDiff);
+export const parseMoveAnimationMutation = gltfWireApplyPhase(parseGltfMoveAnimationPayload);

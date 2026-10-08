@@ -6,7 +6,7 @@
 pub mod derived_composition {
     use crate::standards::v_raw::subsets::any::io::BinaryAnalyzer;
     use crate::BinarySnapshot;
-    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
 
@@ -51,7 +51,8 @@ pub use derived_composition::*;
 /// `&'static [ComposerEntry]`); a bare `io_registry::entries()` silently rebinds to the wrong one.
 pub mod io_registry {
     use crate::standards::v_raw::subsets::any::io::BinaryComposer as BinaryRawAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use semio_framework_plugin::composer_entry_of;
+    use semio_framework_plugin::io::ComposerEntry;
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -69,7 +70,7 @@ pub mod io_registry {
 /// the twin of [`crate::declaration`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
-    semio_framework_plugin::register_composer_entries(io_registry::entries()).expect("static Stdio registration must be available and conflict-free");
+    semio_framework_plugin::io::register_composer_entries(io_registry::entries()).expect("static Stdio registration must be available and conflict-free");
     register_artifact_schema();
     register_artifact_inferences();
     register_pilot_languages();
@@ -253,7 +254,7 @@ pub mod derived_construction {
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <BinaryDiff as protocol::MutationDiff<BinarySnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
@@ -270,7 +271,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::BinarySnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.binary` parts.
@@ -288,28 +289,28 @@ pub mod derived_analysis {
         type Parts = BinaryParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(_source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             // 👃️ Any byte sequence is a valid stdio.binary payload -- terminal format, always High.
-            IoConfidence::High
+            semio_framework_plugin::io::Confidence::High
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = BinaryParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
+            let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <BinarySnapshot as store::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <BinarySnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },

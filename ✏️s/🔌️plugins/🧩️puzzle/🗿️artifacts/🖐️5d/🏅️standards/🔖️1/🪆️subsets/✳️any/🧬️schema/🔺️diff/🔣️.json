@@ -31,7 +31,7 @@
       "x-semio-state": "artifact"
     },
     "meta": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dMeta",
+      "$ref": "#/$defs/Puzzle5dMetaPatch",
       "x-semio-state": "artifact"
     },
     "kindCatalogs": {
@@ -57,7 +57,7 @@
       "x-semio-state": "artifact"
     },
     "kindCompatibility": {
-      "$ref": "#/$defs/Puzzle5dKindCompatibilityList",
+      "$ref": "#/$defs/Puzzle5dKindCompatibilityDelta",
       "x-semio-state": "artifact"
     },
     "parts": {
@@ -74,19 +74,97 @@
     }
   },
   "$defs": {
-    "Puzzle5dStringList": {
-      "title": "Puzzle5dStringList",
+    "Puzzle5dKindCompatibilityKey": {
+      "title": "Puzzle5dKindCompatibilityKey",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "values"
+        "source",
+        "target"
       ],
       "properties": {
-        "values": {
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle5dGripsDelta": {
+      "title": "Puzzle5dGripsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dGrip"
+          }
+        },
+        "removed": {
           "type": "array",
           "items": {
             "type": "string"
           }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dGripPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Puzzle5dGripPatchEntry": {
+      "title": "Puzzle5dGripPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/Puzzle5dGripPatch"
+        }
+      }
+    },
+    "Puzzle5dGripPatch": {
+      "title": "Puzzle5dGripPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "gripKind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "2d": {
+          "$ref": "#/$defs/Puzzle5dGrip2dPatch"
+        },
+        "3d": {
+          "$ref": "#/$defs/Puzzle5dGrip3dPatch"
         }
       }
     },
@@ -149,8 +227,27 @@
       "additionalProperties": false,
       "required": [],
       "properties": {
-        "replacement": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dPart"
+        "partKind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "anchor": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Puzzle5dPartAnchor"
+        },
+        "2d": {
+          "$ref": "#/$defs/Puzzle5dPart2dPatch"
+        },
+        "3d": {
+          "$ref": "#/$defs/Puzzle5dPart3dPatch"
+        },
+        "grips": {
+          "$ref": "#/$defs/Puzzle5dGripsDelta"
         }
       }
     },
@@ -213,24 +310,45 @@
       "additionalProperties": false,
       "required": [],
       "properties": {
-        "replacement": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dFastener"
-        }
-      }
-    },
-    "Puzzle5dKindCompatibilityList": {
-      "title": "Puzzle5dKindCompatibilityList",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "values"
-      ],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dKindCompatibility"
-          }
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "fastenerKind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "gap": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+        },
+        "shift": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+        },
+        "rise": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+        },
+        "rotation": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+        },
+        "turn": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+        },
+        "tilt": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+        },
+        "x": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+        },
+        "y": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
         }
       }
     },
@@ -293,8 +411,332 @@
       "additionalProperties": false,
       "required": [],
       "properties": {
-        "replacement": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dTargetVolume"
+        "origin": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Vector3"
+        },
+        "orientation": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Vector4"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Puzzle5dScale"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "locked": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Puzzle5dKindCompatibilityDelta": {
+      "title": "Puzzle5dKindCompatibilityDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json#/$defs/Puzzle5dKindCompatibility"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dKindCompatibilityKey"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dKindCompatibilityPatchEntry"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Puzzle5dKindCompatibilityKey"
+          }
+        }
+      }
+    },
+    "Puzzle5dKindCompatibilityPatchEntry": {
+      "title": "Puzzle5dKindCompatibilityPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Puzzle5dKindCompatibilityKey"
+        },
+        "patch": {
+          "$ref": "#/$defs/Puzzle5dKindCompatibilityPatch"
+        }
+      }
+    },
+    "Puzzle5dKindCompatibilityPatch": {
+      "title": "Puzzle5dKindCompatibilityPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "bidirectional": {
+          "type": "boolean"
+        },
+        "important": {
+          "type": "boolean"
+        },
+        "specificity": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Puzzle5dCompatSpecificity"
+        }
+      }
+    },
+    "Puzzle5dPart2dPatch": {
+      "title": "Puzzle5dPart2dPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "x": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+        },
+        "y": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+        },
+        "shape": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "radius": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "width": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "height": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "iconKind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hidden": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "locked": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Puzzle5dPart3dPatch": {
+      "title": "Puzzle5dPart3dPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "origin": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Vector3"
+        },
+        "meshUrl": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "orientation": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Vector4"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scale": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Puzzle5dScale"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Puzzle5dGrip2dPatch": {
+      "title": "Puzzle5dGrip2dPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "angle": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+        },
+        "gripKind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "radius": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Puzzle5dGrip3dPatch": {
+      "title": "Puzzle5dGrip3dPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "position": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Vector3"
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Vector3"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "radius": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle5d/artifact.json/$defs/Binary64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Puzzle5dMetaPatch": {
+      "title": "Puzzle5dMetaPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "description": {
+          "type": "string"
         }
       }
     }

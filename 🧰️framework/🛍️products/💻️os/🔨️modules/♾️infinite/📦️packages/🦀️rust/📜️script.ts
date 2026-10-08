@@ -6,15 +6,15 @@ import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/�
 import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { runRepositoryCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { stageRepositoryArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
-import { FONT_ASSET, validateFontAsset } from "../../🖼️canvas/🔤️fonts/🟦️.ts";
+import { FONT_ASSET, validateFontAsset } from "../../../../../../🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts";
 
 const ROOT = import.meta.dir;
-const FONT_TOOL = "dump-guestslim-typst-fonts";
+const FONT_TOOL = "pack-typst-font-assets";
 
 class FontsScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("fonts takes no arguments");
-    const binary = join(ROOT, "../../🖼️canvas/🔤️fonts/📦️packages/🦀️rust/dist/build", FONT_TOOL + (process.platform === "win32" ? ".exe" : ""));
+    const binary = join(ROOT, "../../../../../../🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/dist/build", FONT_TOOL + (process.platform === "win32" ? ".exe" : ""));
     if (!existsSync(binary)) throw new Error("Missing font tool prerequisite; run fonts through Nx");
     mkdirSync(join(ROOT, "dist"), { recursive: true });
     const temporary = mkdtempSync(join(ROOT, "dist/.fonts-")), asset = join(temporary, FONT_ASSET);

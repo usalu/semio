@@ -191,8 +191,8 @@
         "de": "Verrundung mit variablem Radius"
       },
       "description": {
-        "en": "Rounds the edges with a radius that changes from a start to an end value.",
-        "de": "Rundet die Kanten mit einem Radius ab, der sich von einem Start- zu einem Endwert ändert."
+        "en": "Rounds the first edge of the solid with a radius that changes from a start to an end value.",
+        "de": "Rundet die erste Kante des Körpers mit einem Radius, der von einem Anfangs- zu einem Endwert wechselt."
       },
       "inputs": [
         {

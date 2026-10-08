@@ -4,7 +4,7 @@
 
 use super::ScaleObject;
 use crate::diff::diff_objects_patch;
-use crate::{LowpolyDiff, LowpolyObjectPatch, LowpolySnapshot, LowpolyTransform};
+use crate::{LowpolyDiff, LowpolyObjectPatch, LowpolySnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &ScaleObject, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {
@@ -17,7 +17,6 @@ pub fn diff(payload: &ScaleObject, base: &LowpolySnapshot) -> protocol::Mutation
     if existing.transform.scale == payload.new_scale {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Object \"{}\" is already at scale {:?}.", payload.id, payload.new_scale));
     }
-    let transform = LowpolyTransform { scale: payload.new_scale, ..existing.transform.clone() };
-    protocol::MutationOutcome::new(diff_objects_patch(payload.id.clone(), LowpolyObjectPatch { transform: Some(transform), ..LowpolyObjectPatch::default() }))
+    protocol::MutationOutcome::new(diff_objects_patch(payload.id.clone(), LowpolyObjectPatch { scale: Some(payload.new_scale), ..LowpolyObjectPatch::default() }))
 }
 //#endregion 🔖️Diff

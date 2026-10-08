@@ -251,7 +251,7 @@ fn introduction_seen_key_format_matches_react() {
 #[test]
 fn the_host_language_is_the_fallback_after_a_lock_and_the_stored_preference() {
     let before = crate::host_locale();
-    for (tag, expected) in [("de-DE", Some("de")), ("de", Some("de")), ("DE-at", Some("de")), ("en-US", Some("en")), ("fr-CH", Some("en")), ("", None)] {
+    for (tag, expected) in [("de-DE", Some("de")), ("de", Some("de")), ("DE-at", Some("de")), ("en-US", Some("en")), ("fr-CH", None), ("", None)] {
         crate::set_host_locale(tag);
         assert_eq!(crate::host_locale(), expected, "🗣️ `normalizeUiLocale` folds {tag:?}");
     }
@@ -267,7 +267,9 @@ fn the_host_language_is_the_fallback_after_a_lock_and_the_stored_preference() {
     let read = |relative: &str| std::fs::read_to_string(engine.join(relative)).unwrap_or_else(|error| panic!("read {relative}: {error}"));
     assert!(read("🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs").contains("js_name = semioWgpuSetHostLocale"), "the renderer exports the locale door");
     assert!(read("🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts").contains("semioWgpuSetHostLocale?.(message.locale)"), "the frame Worker forwards the page's read before the shell boots");
-    assert!(read("🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts").contains("semioWgpuSetHostLocale?.(window.navigator?.language"), "the embeddable door reads the page's own navigator");
+    let embed = read("🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts");
+    assert!(embed.contains("Locale.fromLanguageTag(descriptor.locks.locale || navigator.language)"), "the embeddable door reads the page's language under the declared lock");
+    assert!(embed.contains("return mountWgpuBrowserHost(root, { descriptor, locale,"), "the embeddable door passes the admitted language to its browser host");
 }
 
 /// 🌱️ LAW (live fault F10, the first wgpu probe run): a first visit — an empty profile, no lock — boots: the locale is

@@ -4,5 +4,6 @@
   "target": "grip-kind-c",
   "bidirectional": false,
   "important": true,
-  "specificity": "grip"
+  "specificity": "grip",
+  "index": null
 }

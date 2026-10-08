@@ -21,7 +21,7 @@ use crate::editor::lowpoly::terminology::LowpolyLabels;
 use crate::editor::lowpoly::view::{resolve_active_object_id, selection_from_interaction, selection_from_state, utility_param_f64, LowpolyView, MESH_GRANULARITY_OBJECT, MESH_INTERACTION_DOMAIN};
 use crate::standards::v1::subsets::any::schema::mutations::LowpolyMutation;
 use crate::{artifact_kind, LowpolyObject, LowpolySnapshot, LOWPOLY_DOCUMENT_SCHEMA};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, InteractionView};
@@ -1257,7 +1257,7 @@ fn prepare_lowpoly_artifact(base: &LowpolySnapshot, mutation: LowpolyMutation) -
     }
     let inverse = mutation.inverse(base).map_err(semio_framework_value::ValueError::into_message)?;
     let diff = mutation.diff(base).into_parts().0;
-    let post = diff.apply(base).map_err(|_| "Lowpoly Artifact preparation could not apply its exact sparse diff".to_string())?;
+    let post = protocol::apply_diff(&diff, base).map_err(|_| "Lowpoly Artifact preparation could not apply its exact sparse diff".to_string())?;
     if !lowpoly_snapshot_admitted(&post) || lowpoly_snapshot_retained_bytes(&post) > LOWPOLY_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("Lowpoly Artifact result exceeds its fixed retained preparation envelope".into());
     }
@@ -1270,7 +1270,6 @@ fn lowpoly_config_retained_bytes(config: &LowpolyConfig) -> usize {
 
 fn lowpoly_config_mutation_retained_bytes(mutation: &LowpolyConfigMutation) -> usize {
     match mutation {
-        LowpolyConfigMutation::Snapshot { config } => lowpoly_config_retained_bytes(config),
         LowpolyConfigMutation::SetActiveObject { object_id } => object_id.len(),
         LowpolyConfigMutation::SetPaintUtility { value } | LowpolyConfigMutation::SetEngagementInput { value } => value.len(),
         LowpolyConfigMutation::SetUtilityParams { json } => json.len(),

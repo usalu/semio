@@ -10,17 +10,11 @@ pub struct Entry {
     pub parse: fn(&str) -> Result<JpgMutation, semio_framework_diagnostic::TextError>,
 }
 pub const REGISTRY: &[Entry] = &[
-    crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::patch_snapshot::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::set_snapshot::CODEC,
     crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::change_jfif_header::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::replace_quant_table::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::remove_quant_table::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::replace_huffman_table::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::remove_huffman_table::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::change_restart_interval::CODEC,
     crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::insert_other_segment::CODEC,
     crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::remove_other_segment::CODEC,
     crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::replace_pixels::CODEC,
+    crate::standards::v_jfif_1_01::subsets::document::io::text::mutations::replace_image::CODEC,
 ];
 //#endregion Registry
 
@@ -37,23 +31,11 @@ impl protocol::OpText for JpgMutation {
 }
 //#endregion Framing
 
-#[path = "📊️replace-quant/🦀️.rs"]
-pub mod replace_quant_table;
 
 #[path = "🪪️change-jfif/🦀️.rs"]
 pub mod change_jfif_header;
 
-#[path = "🧹️remove-quant/🦀️.rs"]
-pub mod remove_quant_table;
 
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-
-#[path = "🌳️replace-huffman/🦀️.rs"]
-pub mod replace_huffman_table;
 
 #[path = "🗑️remove-other/🦀️.rs"]
 pub mod remove_other_segment;
@@ -65,9 +47,10 @@ pub mod insert_other_segment;
 #[path = "🔲️replace-pixels/🦀️.rs"]
 pub mod replace_pixels;
 
-#[path = "🔁️change-restart/🦀️.rs"]
-pub mod change_restart_interval;
 
-#[path = "🪓️remove-huffman/🦀️.rs"]
-pub mod remove_huffman_table;
+
+
+#[path = "🖼️replace-image/🦀️.rs"]
+pub mod replace_image;
+
 

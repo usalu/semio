@@ -29,7 +29,7 @@ impl NormRetainedDispositionOracle for SerdeJsonNormRetainedDispositionOracle {
                 return Err(format!("invalid route disposition for {expected_id}"));
             }
         }
-        let expected_lanes: &[&[&str]] = &[&["artifact"], &[], &["window-config"], &["artifact"], &["artifact"], &["artifact"], &["artifact"], &["artifact"]];
+        let expected_lanes: &[&[&str]] = &[&[], &["window-config"], &["artifact"], &["artifact"], &["artifact"], &["artifact"]];
         for (route, lanes) in routes.iter().zip(expected_lanes) {
             if route["emittedLanes"] != serde_json::json!(lanes) {
                 return Err(format!("route lane audit does not match the command bodies for {}", route["id"]));
@@ -56,7 +56,7 @@ impl NormRetainedDispositionOracle for SerdeJsonNormRetainedDispositionOracle {
             batch_only_count: value["expected"]["batchOnlyPendingRewrite"].as_u64().ok_or("batchOnlyPendingRewrite must be an integer")?,
             publication_contract_count: publication_contracts.len(),
         };
-        if summary.app_count != 15 || summary.retained_count != 120 || summary.batch_only_count != 0 || summary.publication_contract_count != 8 {
+        if summary.app_count != 15 || summary.retained_count != 90 || summary.batch_only_count != 0 || summary.publication_contract_count != 6 {
             return Err("cohort totals or publication contracts are not fully migrated".into());
         }
         Ok(summary)
@@ -68,7 +68,7 @@ pub fn assert_fixture(variant: &str) {
     let source = include_str!("../../../🧫️fixtures/🧫️retained-command-dispositions/🔣️.json");
     let oracle = SerdeJsonNormRetainedDispositionOracle;
     let summary = oracle.summarize(source).expect("canonical Norm retained disposition fixture");
-    assert_eq!(summary, NormRetainedDispositionSummary { app_count: 15, route_count: 8, retained_count: 120, batch_only_count: 0, publication_contract_count: 8 });
+    assert_eq!(summary, NormRetainedDispositionSummary { app_count: 15, route_count: 6, retained_count: 90, batch_only_count: 0, publication_contract_count: 6 });
     let canonical: serde_json::Value = serde_json::from_str(source).expect("canonical fixture JSON");
     assert!(canonical["apps"].as_array().expect("apps").iter().any(|app| app["variant"] == variant), "missing Norm app fixture row for {variant}");
 

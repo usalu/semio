@@ -29,6 +29,15 @@ class GraphqlInt64SourceTestScript extends BundleScript {
   await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",tests],this.repoRoot,"value:graphql:int64:types",30000);
  }
 }
+/** 🗂️ Checks full retirement categories and the independent ordered payload oracle. */
+class OrderedRetirementSourceTestScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length)throw Error("Expected test-ordered-retirement-source");
+  const tests=resolve(this.root,"../../🗂️ordered/♻️retirement/🧪️tests/🟦️.ts");
+  await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",tests],this.repoRoot,"value:ordered:retirement:types",30000);
+  await runOwnedCommand(process.execPath,["test",tests],this.repoRoot,"value:ordered:retirement:source",30000);
+ }
+}
 class ControlledValueTestScript extends BundleScript {
   async run(args:string[]):Promise<void>{
     const {rest}=resolveTestLevel(args);
@@ -79,4 +88,4 @@ class DecodeOwnershipTestScript extends BundleScript {
  }
 }
 
-await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-decode-ownership", DecodeOwnershipTestScript).register("test-graphql-int64-source",GraphqlInt64SourceTestScript).register("test-type-ownership", TypeOwnershipTestScript).register("test-controlled-construction", ControlledValueTestScript).register("test-controlled-encoding",ControlledEncodingTestScript).register("test-refusal-portable", RefusalPortableTestScript).register("test-refusal-codec",RefusalCodecTestScript), { defaultCommand: "test" });
+await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-decode-ownership", DecodeOwnershipTestScript).register("test-graphql-int64-source",GraphqlInt64SourceTestScript).register("test-type-ownership", TypeOwnershipTestScript).register("test-controlled-construction", ControlledValueTestScript).register("test-controlled-encoding",ControlledEncodingTestScript).register("test-refusal-portable", RefusalPortableTestScript).register("test-refusal-codec",RefusalCodecTestScript).register("test-ordered-retirement-source",OrderedRetirementSourceTestScript), { defaultCommand: "test" });

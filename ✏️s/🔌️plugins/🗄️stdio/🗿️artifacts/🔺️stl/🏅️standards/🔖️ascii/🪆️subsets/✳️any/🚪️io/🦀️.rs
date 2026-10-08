@@ -172,7 +172,7 @@ pub fn decode_stl_auto(bytes: &[u8]) -> Result<StlSnapshot, String> {
 pub mod derived_composition {
     use crate::standards::v_ascii::subsets::any::io::StlAnalyzer;
     use crate::StlSnapshot;
-    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
@@ -223,7 +223,7 @@ mod tests;
 /// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 pub mod io_registry {
     use crate::standards::v_ascii::subsets::any::io::StlComposer as StlRawAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -277,7 +277,7 @@ pub mod derived_construction {
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <StlDiff as protocol::MutationDiff<StlSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
@@ -294,7 +294,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::StlSnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.stl` parts.
@@ -312,29 +312,29 @@ pub mod derived_analysis {
     /// structure; binary STL has no fixed magic, so a plausible triangle-count framing
     /// (`84 + count*50 == len`) is the best available signal.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn looks_like_stl(bytes: &[u8]) -> IoConfidence {
+    fn looks_like_stl(bytes: &[u8]) -> semio_framework_plugin::io::Confidence {
         if bytes.starts_with(b"solid") {
             if let Ok(text) = std::str::from_utf8(bytes) {
                 if text.contains("facet") && text.contains("vertex") && text.contains("endsolid") {
-                    return IoConfidence::High;
+                    return semio_framework_plugin::io::Confidence::High;
                 }
             }
-            return IoConfidence::Medium;
+            return semio_framework_plugin::io::Confidence::Medium;
         }
         if bytes.len() >= 84 {
             let count = u32::from_le_bytes(bytes[80..84].try_into().unwrap()) as usize;
             if 84 + count * 50 == bytes.len() {
-                return IoConfidence::High;
+                return semio_framework_plugin::io::Confidence::High;
             }
         }
-        IoConfidence::Low
+        semio_framework_plugin::io::Confidence::Low
     }
 
     impl ArtifactAnalysis for StlAnalyzerAnalysis {
         type Parts = StlParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             match source {
                 AnalyzeSource::Text(text) => {
                     let body = match store::semio_format::split_text_preamble(text) {
@@ -353,20 +353,20 @@ pub mod derived_analysis {
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = StlParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
+            let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <StlSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <StlSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },

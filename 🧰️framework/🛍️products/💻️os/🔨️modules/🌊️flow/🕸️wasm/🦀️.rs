@@ -7,7 +7,7 @@ use crate::artifact::Widget;
 use crate::drawing::*;
 use crate::host::*;
 use crate::infinite::board::ports::directed_dag as dag;
-use crate::infinite::canvas;
+use semio_framework_canvas as canvas;
 use crate::vcs::{FlowRetainedVcs, FlowVcsAuthority, FlowVcsClosePhase, FlowVcsFault, FlowVcsGrant, FlowVcsHandle, FlowVcsPage, FlowVcsPoll};
 use protocol::{FlowBridge, FlowDomain, FlowFailure, FlowFeature, FlowFeatureAdmission, FlowFeatureStep, FlowPayloadReader, FlowPayloadWriter};
 use semio_framework::abi::{decode_abi_message, encode_abi_message, AbiErrorCode, AbiMessage, AbiPort, AbiPortPoll, AbiWorkBudget};
@@ -5909,8 +5909,8 @@ mod surface_canvas {
         let height = physical(logical_height, dpr);
         future_to_promise(async move {
             match CanvasGpuSession::create_canvas_surface(canvas.clone(), width, height).await {
-                Ok((render_ctx, renderer, gpu_surface)) => {
-                    SURFACE_CANVASES.with(|map| map.borrow_mut().entry(surface).or_default().finish_attach(canvas, render_ctx, renderer, gpu_surface));
+                Ok(admission) => {
+                    SURFACE_CANVASES.with(|map| map.borrow_mut().entry(surface).or_default().finish_attach(admission));
                     Ok(JsValue::TRUE)
                 }
                 Err(_) => Ok(JsValue::FALSE),

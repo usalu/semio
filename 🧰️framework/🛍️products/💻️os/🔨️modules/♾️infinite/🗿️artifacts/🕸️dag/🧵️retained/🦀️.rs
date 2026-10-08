@@ -429,7 +429,7 @@ impl ArtifactOwnedValueRetirementFactory<DagMutation> for DagMutationRetirementF
 
 /// ♻️ One owned `DagSnapshot` as the framework's own incremental owner cursor, so a DAG document can
 /// be opened as an owned MEMBER of a composed document. It drives this module's own
-/// [`DagRetirement`] frontier one owner per turn under the caller's byte grant; a zero grant is
+/// [`DagRetirement`] frontier one owner per turn under the caller's logical-work grant; a zero grant is
 /// reported as budget exhaustion rather than as progress, so a caller can never mistake a refused
 /// turn for a released one.
 struct DagOwnedSnapshotCursor {
@@ -437,19 +437,30 @@ struct DagOwnedSnapshotCursor {
 }
 
 impl semio_framework_value::retirement::RetirementCursor for DagOwnedSnapshotCursor {
-    fn close_step(&mut self, maximum_bytes: usize) -> semio_framework_value::retirement::RetirementStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
         if self.retirement.terminal_is_empty() {
             return semio_framework_value::retirement::RetirementStep::Complete;
         }
-        if maximum_bytes == 0 {
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 {
             return semio_framework_value::retirement::RetirementStep::BudgetExhausted;
         }
-        match ErasedSnapshotRetirement::close_step(&mut self.retirement, 1, maximum_bytes) {
+        if grant.maximum_depth == 0 {
+            return semio_framework_value::retirement::RetirementStep::Failure(ValueError::new(ValueRefusalKind::DepthLimit, "DAG retirement has no admitted structural depth"));
+        }
+        match ErasedSnapshotRetirement::close_step(&mut self.retirement, 1, grant.maximum_copy_bytes) {
             Ok(SnapshotRetirementStep::Complete) => semio_framework_value::retirement::RetirementStep::Complete,
-            Ok(SnapshotRetirementStep::Pending { released_bytes, .. }) => semio_framework_value::retirement::RetirementStep::Bytes(released_bytes.min(maximum_bytes)),
-            Ok(SnapshotRetirementStep::Blocked) | Err(_) => semio_framework_value::retirement::RetirementStep::BudgetExhausted,
+            Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= grant.maximum_copy_bytes => {
+                if released_bytes != 0 { semio_framework_value::retirement::RetirementStep::ProcessedBytes(released_bytes) }
+                else if released_items != 0 { semio_framework_value::retirement::RetirementStep::Advanced }
+                else { semio_framework_value::retirement::RetirementStep::BudgetExhausted }
+            }
+            Ok(SnapshotRetirementStep::Pending { .. }) => semio_framework_value::retirement::RetirementStep::Failure(ValueError::new(ValueRefusalKind::InvariantViolated, "DAG retirement exceeded its admitted logical work grant")),
+            Ok(SnapshotRetirementStep::Blocked) => semio_framework_value::retirement::RetirementStep::BudgetExhausted,
+            Err(error) => semio_framework_value::retirement::RetirementStep::Failure(error),
         }
     }
+
+    fn next_work_byte_demand(&self) -> usize { usize::from(!self.retirement.terminal_is_empty()) }
 
     fn terminal_is_empty(&self) -> bool {
         ErasedSnapshotRetirement::terminal_is_empty(&self.retirement)

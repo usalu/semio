@@ -18,6 +18,7 @@ pub struct CreateThermostat {
     pub cooling_setpoint_schedule_id: crate::model::ScheduleId,
     pub heating_throttle_range_k: f64,
     pub cooling_throttle_range_k: f64,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
@@ -28,8 +29,9 @@ pub fn create_thermostat(
     cooling_setpoint_schedule_id: crate::model::ScheduleId,
     heating_throttle_range_k: f64,
     cooling_throttle_range_k: f64,
+    index: Option<u32>,
 ) -> EnergyModelMutation {
-    EnergyModelMutation::CreateThermostat(CreateThermostat { id, zone_id, heating_setpoint_schedule_id, cooling_setpoint_schedule_id, heating_throttle_range_k, cooling_throttle_range_k })
+    EnergyModelMutation::CreateThermostat(CreateThermostat { id, zone_id, heating_setpoint_schedule_id, cooling_setpoint_schedule_id, heating_throttle_range_k, cooling_throttle_range_k, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateThermostat {

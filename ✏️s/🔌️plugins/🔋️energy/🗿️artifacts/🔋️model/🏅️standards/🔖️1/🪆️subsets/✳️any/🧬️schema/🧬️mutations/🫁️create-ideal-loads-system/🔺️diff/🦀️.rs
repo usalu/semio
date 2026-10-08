@@ -36,7 +36,11 @@ pub fn diff(payload: &super::CreateIdealLoadsSystem, base: &EnergyModelSnapshot)
     if payload.max_cooling_capacity_present && (!payload.max_cooling_capacity_w.is_finite() || payload.max_cooling_capacity_w <= 0.0) {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A stated cooling capacity must be a positive finite number, got {}.", payload.max_cooling_capacity_w), [payload.id.0.to_string()]);
     }
-    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { ideal_loads: Rows::inserting(base.model.ideal_loads.len(), crate::model::IdealLoadsSystem {
+    let position = payload.index.map_or(base.model.ideal_loads.len(), |index| index as usize);
+    if position > base.model.ideal_loads.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} ideal_loads.", position, base.model.ideal_loads.len()), [payload.id.0.to_string()]);
+    }
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { ideal_loads: Rows::inserting(position, crate::model::IdealLoadsSystem {
         id: payload.id,
         zone_id: payload.zone_id,
         max_heating_supply_air_temp_c: payload.max_heating_supply_air_temp_c,

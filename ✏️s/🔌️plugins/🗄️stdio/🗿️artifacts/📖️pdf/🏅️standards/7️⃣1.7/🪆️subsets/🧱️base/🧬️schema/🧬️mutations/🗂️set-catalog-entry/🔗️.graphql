@@ -2,4 +2,5 @@
 input SetCatalogEntryMutationInput {
   key: String
   value: PdfObjectInput
+  index: Int
 }

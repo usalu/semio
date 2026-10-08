@@ -13,7 +13,7 @@ async function cases(): Promise<{ functions: PdfFunction[]; colors: PdfColorSpac
   const white: [Binary64, Binary64, Binary64] = [values[0]!, values[1]!, values[2]!];
   const exponent: PdfFunction = { kind: "exponential", domain: values, range: [], c0: [], c1: values, n: values[5]! };
   const functions: PdfFunction[] = [
-    { kind: "sampled", domain: values, range: [], size: [4294967295, 0], bitsPerSample: 32, order: null, encode: [], decode: null, samples: input.sampleBytes }, exponent,
+    { kind: "sampled", domain: values, range: [], size: [4294967295, 0], bitsPerSample: 32, order: null, encode: [], decode: null, samples: input.functionSampleWords }, exponent,
     { kind: "stitching", domain: values, range: null, functions: [exponent], bounds: [], encode: values },
     { kind: "postScript", domain: values, range: [], code: input.postScript }, { kind: "array", functions: [] }
   ];
@@ -80,4 +80,16 @@ test("PDF function and alternate color traversal is iterative, bounded and rejec
 test("PDF function and color native JSON admission uses the same owned Binary64 model", () => {
   expect(parsePdfFunction(pdfFunctionFromNativeJson({ kind: "exponential", domain: [0, -0], range: null, c0: [1], c1: [], n: -0 }))).toEqual({ kind: "exponential", domain: [{ bits: 0n }, { bits: 0x8000000000000000n }], range: null, c0: [{ bits: 0x3ff0000000000000n }], c1: [], n: { bits: 0x8000000000000000n } });
   expect(parsePdfColorSpace(pdfColorFromNativeJson({ kind: "pattern", base: { kind: "calGray", whitePoint: [1, 0, -0], blackPoint: null, gamma: 0 } }))).toEqual({ kind: "pattern", base: { kind: "calGray", whitePoint: [{ bits: 0x3ff0000000000000n }, { bits: 0n }, { bits: 0x8000000000000000n }], blackPoint: null, gamma: { bits: 0n } } });
+});
+
+test("PDF sampled function rows preserve logical u32 words independently", async () => {
+  const fixture = await Bun.file(new URL("../../🌈️color/🧫️fixtures/🔣️.json", import.meta.url)).json();
+  const value = (await cases()).functions[0]!;
+  const encoded = await pdfFunctionToSqliteDatabase(value);
+  const sql = Database.deserialize(await exportSqliteDatabase(encoded.database));
+  expect(sql.query("SELECT value FROM pdf_function_sample ORDER BY ordinal").all()).toEqual(fixture.functionSampleWords.map((value: number) => ({ value })));
+  expect(sql.query("SELECT sample_count FROM pdf_function").get()).toEqual({ sample_count: fixture.functionSampleWords.length });
+  sql.run("DELETE FROM pdf_function_sample WHERE ordinal=3");
+  await expect(pdfFunctionFromSqliteDatabase(await importSqliteDatabase(sql.serialize()), encoded.root)).rejects.toThrow("sample count");
+  sql.close(); console.log("[DEBUG] PDF sampled function logical words native513=true exactU32=true independentSqlRows=true");
 });

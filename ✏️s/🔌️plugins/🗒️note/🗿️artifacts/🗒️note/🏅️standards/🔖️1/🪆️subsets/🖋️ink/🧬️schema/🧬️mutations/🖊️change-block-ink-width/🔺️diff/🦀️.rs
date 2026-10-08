@@ -1,7 +1,7 @@
 //! 🔺️ Diff fragment yielded by `ChangeBlockInkWidth`. Error `target-missing` when the block is
 //! absent or not an ink block, Warning `no-op` when already at that width.
 use super::ChangeBlockInkWidth;
-use crate::schema::diff::note_block_patch_diff;
+use crate::schema::diff::NoteBlockPatch;
 use crate::NoteDiff;
 use crate::NoteSnapshot;
 
@@ -16,10 +16,6 @@ pub fn diff(payload: &ChangeBlockInkWidth, base: &NoteSnapshot) -> protocol::Mut
     if *stroke_width == payload.new_stroke_width {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Block \"{}\" ink width is already {}.", payload.id, payload.new_stroke_width));
     }
-    let mut updated = block.clone();
-    if let crate::NoteBlockNode::Ink { stroke_width, .. } = &mut updated {
-        *stroke_width = payload.new_stroke_width;
-    }
-    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, &updated))
+    protocol::MutationOutcome::new(NoteDiff::block_patches([(payload.id.clone(), NoteBlockPatch { stroke_width: Some(payload.new_stroke_width), ..Default::default() })]))
 }
 //#endregion 🔖️Diff

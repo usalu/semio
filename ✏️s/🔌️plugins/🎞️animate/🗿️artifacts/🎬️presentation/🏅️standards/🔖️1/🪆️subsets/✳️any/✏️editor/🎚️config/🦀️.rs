@@ -70,7 +70,47 @@ impl store::ArtifactPack for PresentationConfig {
 
 
 
-store::impl_whole_record_config!(PresentationConfig);
+impl store::ConfigRecord for PresentationConfig {}
+
+/// 🔺️ Sparse field delta over [`PresentationConfig`]: every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct PresentationConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub engagement_input: Option<String>,
+}
+
+impl protocol::MutationDiff<PresentationConfig> for PresentationConfigDiff {
+    fn apply(&self, base: &PresentationConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<PresentationConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.engagement_input {
+            next.engagement_input = value.clone();
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.engagement_input.is_some() {
+            self.engagement_input = other.engagement_input;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<PresentationConfig> for PresentationConfigDiff {
+    fn inverse(&self, base: &PresentationConfig) -> Self {
+        Self {
+            engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()),
+        }
+    }
+    fn between(base: &PresentationConfig, other: &PresentationConfig) -> Self {
+        Self {
+            engagement_input: (base.engagement_input != other.engagement_input).then(|| other.engagement_input.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.engagement_input.is_none()
+    }
+}
+
 //#endregion 🔖️Config
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]

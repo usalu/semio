@@ -81,8 +81,7 @@
         "insert-element",
         "remove-element",
         "set-attribute",
-        "set-text",
-        "patch-snapshot"
+        "set-text"
       ]
     }
   ],
@@ -107,27 +106,6 @@
             "operation": "insert-element",
             "bridgeVersion": 1,
             "variant": "InsertElement"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "xml-1-0-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "quick-xml-1-0-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "xml-1-0-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

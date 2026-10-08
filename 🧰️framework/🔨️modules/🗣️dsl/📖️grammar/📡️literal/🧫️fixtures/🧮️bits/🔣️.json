@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "source": "dialect protocol\nprotocol native.bits\nversion 1\nschema native.bits\nstart root\nframing literal\nrecord root { flags u64 payload u8 if flags bits MASK }\n",
+  "payload": 91,
+  "cases": [
+    {
+      "word": "0",
+      "mask": "1",
+      "present": false
+    },
+    {
+      "word": "1",
+      "mask": "1",
+      "present": true
+    },
+    {
+      "word": "2",
+      "mask": "1",
+      "present": false
+    },
+    {
+      "word": "3",
+      "mask": "3",
+      "present": true
+    },
+    {
+      "word": "5",
+      "mask": "3",
+      "present": false
+    },
+    {
+      "word": "65535",
+      "mask": "256",
+      "present": true
+    },
+    {
+      "word": "9223372036854775808",
+      "mask": "9223372036854775808",
+      "present": true
+    },
+    {
+      "word": "18446744073709551615",
+      "mask": "9223372036854775809",
+      "present": true
+    }
+  ],
+  "invalidMasks": [
+    "0"
+  ],
+  "unknownOperator": "contains"
+}

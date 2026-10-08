@@ -6,6 +6,7 @@
   "additionalProperties": false,
   "required": [
     "mutation",
+    "index",
     "id",
     "zoneId",
     "humidifyingSetpointScheduleId",
@@ -16,6 +17,29 @@
   "properties": {
     "mutation": {
       "const": "createHumidistat"
+    },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Insertion position in the model's list; empty appends (or keeps id order).",
+          "de": "Einfügeposition in der Modellliste; leer hängt an (oder behält die ID-Reihenfolge)."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 5
+      }
     },
     "id": {
       "type": "integer",

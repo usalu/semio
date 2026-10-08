@@ -3,25 +3,25 @@
     "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/project.json",
     "kind": "updated",
     "beforeSha256": "be35f5d50eb733dc61852162d74e85449a3d94847198cee02055f6857afd4513",
-    "currentSha256": "3e28591a1257633461036d75b0f1d40540965ac62a7c7b114d24ac25cc287fb8"
+    "currentSha256": "fb520bf9dd40cb602999c1c6aa1f1888eff0f4b076e3ba31cb8cf2f547444068"
   },
   {
     "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️isolated-verification/📜️script.ts",
     "kind": "updated",
     "beforeSha256": "9db5d63a85681d4aff6f4fd9662270550014347f9b9b72cf0080bae2c85ad9ff",
-    "currentSha256": "d77edbdfda6a3fafefe6d98f6e9812405d11192bb7bd011721a3e66f81c81735"
+    "currentSha256": "51c0740ea45cbe28aa950112ca1f47fe58477c0a1632d2b3dade6949240d8087"
   },
   {
     "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️verification-registration/📜️script.ts",
     "kind": "updated",
     "beforeSha256": "7b3cd6f5a089d8853c3504877a18fa11be7b6d81b45f8cb05b6ed4098a1a74e6",
-    "currentSha256": "ff57080bcd9bdbf0f32bf02a9bf775336619ef1312f208a3ae95432a6b89eff3"
+    "currentSha256": "dd00a296081e12d951fe36c4c914f353abbd1cfff1a6605ebdf4dc4dba0dbaa9"
   },
   {
     "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧪️tests/📋️native-owner/🟦️.ts",
     "kind": "updated",
     "beforeSha256": "a3b1a664095f04c832cfc71c17ca5cc338a0cb86d6b5d48696009d8bd5d2df11",
-    "currentSha256": "c737a67eb521ef60874776ae063a2ebde0c1cdd6ce3579a2f4f8fdd7c8bf2d74"
+    "currentSha256": "6e9720a75e9898a24e471ca35828f0fd8bc20719d31a52288865e56a2ad6ca98"
   },
   {
     "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🔨️modules/🏠️host/🧰️owned/🧬️schema/📋️native-owner/🔣️.json",
@@ -30,16 +30,22 @@
     "currentSha256": null
   },
   {
+    "path": "✏️s/🧑‍💻dev/🧩️service-composition/🧪️tests/🟦️.ts",
+    "kind": "updated",
+    "beforeSha256": "4e660330cba5c065d75e5b665bce4639ee56963d3428af9291959ba2cb064c01",
+    "currentSha256": "fe10d9dac05445c1dbc401c3ded28e23e13c1344daa795c2061c22d6035bc32e"
+  },
+  {
     "path": "📋️project.json",
     "kind": "updated",
     "beforeSha256": "44d89aa529b1cdb5813e026bab79e25c4641c051a2f8c3fb4382716ea6fe01b2",
-    "currentSha256": "a75bfb0d6f1ed469c331bd5a0b516f0cc08fcf7b59a584c6c53bb93a9e3e5300"
+    "currentSha256": "069f5c2e717f801ee32827208bc2e5fa9cf8b1c207d28531a6959fb967b884d9"
   },
   {
     "path": "📜️script.ts",
     "kind": "updated",
     "beforeSha256": "38cef1a52ac95adfcb7ec7d55e1a2be8f5a6cfcaa26f1a109290c58f2915764e",
-    "currentSha256": "77e4e2eb09dba7c5db2c05d28171598d2fc23bb8380374144cfb62c1f3ab0ab3"
+    "currentSha256": "6548a068b0041dea4b350d3a282d15ccf841dc0d4a94a08d4f9c41058050a7a2"
   },
   {
     "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🧬️schema/🎮️native-owner/🔣️.json",
@@ -51,7 +57,7 @@
     "path": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🧩️neutral-owner/🟦️.ts",
     "kind": "updated",
     "beforeSha256": "b58b255db5a1c3b1ffdcd22fcfd7cf11f8c5dcfc4c3a3d5cc77e89a022a5e792",
-    "currentSha256": "4b36367ff6c903b04edc96baf5f443f0486cd33283abafe93c8bab73f77040cc"
+    "currentSha256": "cf94d9863c81ce425d91c998f8f2d4026f4036eae5db146098777c1f9c8829a5"
   },
   {
     "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️schema/🧷️borrow-authority/🔣️.json",
@@ -75,7 +81,7 @@
     "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📨️messages/✂️clamp/🧪️tests/🟦️.ts",
     "kind": "updated",
     "beforeSha256": "60a9ab04cfc588bc6e5b4cdc2b17d64af08a60d522a32a01ee44aaf2d6df7025",
-    "currentSha256": "be4f401189e3ccc87fc13e1de815fd43685bcd1b4aa3730ff8af03d16135f7a4"
+    "currentSha256": "efb8c518bc33eeb6f29a88d3059765783e902a4631359d95fcb3669e9f901e9e"
   },
   {
     "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📨️messages/✂️clamp/🧬️schema/🔣️.json",
@@ -99,13 +105,19 @@
     "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🟦️.ts",
     "kind": "updated",
     "beforeSha256": "cc96515ac6d1a2718327f878c3abf40363d4f576d37b63bfad1677a122fc23f0",
-    "currentSha256": "df06d9090c002b4091a892d69efc2b9ba0eb92e7f6866a74aea072a8f97180f0"
+    "currentSha256": "28eb0e9baf2d375839de8a75cd0fc7b72362d7a114ddf3f109a036e2233b4832"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/📇️canonical-bootstrap-folder-mirror/🟦️.ts",
+    "kind": "updated",
+    "beforeSha256": "760b61986eb929646610fe1063fc8dd9b945209f7e5324c8b31c230a192d2b56",
+    "currentSha256": "b39f14fe21475c17af4ebbb9903440e6c5623899823f4c011042af528f8881de"
   },
   {
     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
     "kind": "updated",
     "beforeSha256": "6403ff2d4ab7e05f6df76db417db47a9919a66cbbcd52e6d81758557bce0ce73",
-    "currentSha256": "0c05dd9e4ae831da3b2cbaa2db9f6e6ca792000e5188c59838ae975224b897ab"
+    "currentSha256": "ea2e4a7a353126e28f5d86fe6245358004a9057e01b480079daf07ab8cbfae43"
   },
   {
     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧬️schema-scope-catalog/🔣️.json",

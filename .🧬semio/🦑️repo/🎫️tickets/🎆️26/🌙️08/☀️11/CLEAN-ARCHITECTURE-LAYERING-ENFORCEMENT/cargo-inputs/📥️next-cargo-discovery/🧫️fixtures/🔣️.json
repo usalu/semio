@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "workspace": "[workspace]\nresolver=\"2\"\nmembers=[\"kernel\"]\n[workspace.metadata.semio.repository]\nschema-version=1\nowner-manifests=[\"**/Cargo.toml\"]\nmember-manifests=[\"kernel/Cargo.toml\"]\nexclude-patterns=[\"**/standards/**\"]\n",
+  "files": {
+    "kernel/Cargo.toml": "[package]\nname=\"neutral-kernel\"\nversion=\"0.1.0\"\n",
+    "specific/Cargo.toml": "[workspace]\nresolver=\"2\"\nmembers=[\"model\"]\n[workspace.metadata.semio.repository]\nschema-version=1\nowner-manifests=[\"model/Cargo.toml\"]\nmember-manifests=[\"model/Cargo.toml\"]\nexclude-patterns=[]\n",
+    "specific/model/Cargo.toml": "[package]\nname=\"specific-model\"\nversion=\"0.1.0\"\n",
+    "standards/broken/Cargo.toml": "invalid = [ unfinished\n",
+    "specific/standards/deep/Cargo.toml": "invalid = [ unfinished\n"
+  },
+  "owners": [
+    "Cargo.toml",
+    "specific/Cargo.toml"
+  ],
+  "packages": [
+    "kernel/Cargo.toml",
+    "specific/model/Cargo.toml"
+  ],
+  "discovery": {
+    "maximumUnits": 8388608,
+    "maximumOwnedBytes": 67108864,
+    "maximumDepth": 64
+  },
+  "blockedDepth": 65
+}

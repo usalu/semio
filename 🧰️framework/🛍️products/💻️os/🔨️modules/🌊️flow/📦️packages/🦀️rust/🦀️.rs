@@ -20,7 +20,7 @@ pub use semio_framework_os_infinite as infinite;
 
 //#region 🔖️DagCanvasNeural
 pub use crate::infinite::board::ports::directed_dag as dag;
-pub use crate::infinite::canvas;
+pub use semio_framework_canvas as canvas;
 pub use neural_engine as neural;
 //#endregion 🔖️DagCanvasNeural
 

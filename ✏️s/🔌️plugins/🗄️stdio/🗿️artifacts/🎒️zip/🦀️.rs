@@ -96,9 +96,9 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// side-effect-free `subset_validator_entry_of::<ZipIso21320Validator>()` constructor
 /// `🚪️io/🦀️.rs`'s own (module-private) `validator_entry()` calls.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn zip_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
-    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
-    ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<standards::v2_0::subsets::iso21320::io::ZipIso21320Validator>()]).as_slice()
+fn zip_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
+    ENTRIES.get_or_init(|| vec![semio_framework_plugin::io::subset_validator_entry_of::<standards::v2_0::subsets::iso21320::io::ZipIso21320Validator>()]).as_slice()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary), copied verbatim (five
@@ -189,7 +189,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v2_0::subsets::base::io::io_registry as v2_0;
-    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
+    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();

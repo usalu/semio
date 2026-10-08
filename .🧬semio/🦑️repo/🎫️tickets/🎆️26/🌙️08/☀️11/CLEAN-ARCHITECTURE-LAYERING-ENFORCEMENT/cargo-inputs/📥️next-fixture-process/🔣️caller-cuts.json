@@ -1,0 +1,14 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧬️mutation-authority/🟦️.ts",
+    "tests": 4,
+    "calls": 4,
+    "spawns": 4
+  },
+  {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+    "tests": 14,
+    "calls": 14,
+    "spawns": 8
+  }
+]

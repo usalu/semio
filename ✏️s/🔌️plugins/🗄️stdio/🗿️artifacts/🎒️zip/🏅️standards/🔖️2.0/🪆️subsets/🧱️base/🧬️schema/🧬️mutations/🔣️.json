@@ -5,12 +5,6 @@
   "description": "Discriminated union over this module's mutation leaves (internally tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/zip/2.0/base/mutation/set-snapshot/schema.json"
-    },
-    {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/zip/2.0/base/mutation/patch-snapshot/schema.json"
-    },
-    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/zip/2.0/base/mutation/set-archive-comment/schema.json"
     },
     {

@@ -1,7 +1,7 @@
 //! 🔺️ `move-nodes` sparse diff — every addressed widget's layout entry moves by the payload offset from its BASE
 //! position; a widget without a stored position or without a widget is skipped (`mutation.partial`).
 
-use crate::standards::v1::subsets::any::schema::diff::{diff_snapshot_from_helpers, Generation3dDiff, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{Generation3dDiff, Generation3dLayoutDelta, Generation3dLayoutRow};
 use crate::standards::v1::subsets::any::schema::mutations::move_nodes::MoveNodes;
 use crate::standards::v1::subsets::any::schema::mutations::{generation3d_partial,generation3d_targets_invariant,widget_index};
 
@@ -39,5 +39,6 @@ pub fn diff(payload: &MoveNodes, base: &Generation3dSnapshot) -> protocol::Mutat
     if moved.iter().any(|(_, layout)| !layout.x.is_finite() || !layout.y.is_finite()) {
         return protocol::MutationOutcome::error("mutation.target-mismatch", "the moved position leaves the finite canvas", payload.ids.clone());
     }
-    protocol::MutationOutcome::new(diff_snapshot_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff { removed: Vec::new(), set: moved }, None, None)).absorb_messages(messages)
+    let patched = moved.into_iter().map(|(id, layout)| Generation3dLayoutRow { id, layout }).collect();
+    protocol::MutationOutcome::new(Generation3dDiff { layout: Some(Generation3dLayoutDelta { patched, ..Default::default() }), ..Default::default() }).absorb_messages(messages)
 }

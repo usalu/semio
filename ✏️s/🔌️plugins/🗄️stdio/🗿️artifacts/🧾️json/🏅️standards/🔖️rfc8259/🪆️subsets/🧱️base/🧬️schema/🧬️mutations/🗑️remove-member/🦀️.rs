@@ -4,49 +4,38 @@ use crate::schema::mutation_support::{diff_at_path, resolve, JsonPath};
 use crate::schema::snapshot::JsonValue;
 use crate::JsonSnapshot;
 
-
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-pub struct RemoveMemberPayload {
+pub struct RemoveMemberMutation {
     pub path: JsonPath,
     pub key: String,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol, payload = Apply)]
-#[value(tag = "phase", content = "value", rename_all = "camelCase")]
-pub enum RemoveMemberMutation {
-    Apply(RemoveMemberPayload),
-    Restore(JsonDiff),
-}
+pub type RemoveMemberPayload = RemoveMemberMutation;
 
 impl protocol::MutationKind<JsonSnapshot, super::JsonMutation> for RemoveMemberMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "member", kind: "remove-member", record: "RemovedMember" };
 
     fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<JsonDiff> {
-        match self {
-            Self::Apply(payload) => protocol::MutationOutcome::new(match resolve(&base.value, &payload.path) {
-                Some(JsonValue::Object { members }) if members.iter().any(|member| member.key == payload.key) => {
-                    diff_at_path(&payload.path, Some(JsonValueDiff::Object { diff: JsonObjectDiff { removed: vec![payload.key.clone()], modified: Vec::new(), added: Vec::new() } }))
-                }
-                _ => JsonDiff::default(),
-            }),
-            Self::Restore(diff) => protocol::MutationOutcome::new(diff.clone()),
-        }
+        protocol::MutationOutcome::new(match resolve(&base.value, &self.path) {
+            Some(JsonValue::Object { members }) if members.iter().any(|member| member.key == self.key) => {
+                diff_at_path(&self.path, Some(JsonValueDiff::Object { diff: JsonObjectDiff { removed: vec![self.key.clone()], modified: Vec::new(), added: Vec::new() } }))
+            }
+            _ => JsonDiff::default(),
+        })
     }
 
     fn inverse(&self, base: &JsonSnapshot) -> Result<Vec<super::JsonMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<JsonSnapshot, super::JsonMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || <JsonDiff as protocol::DiffAlgebra<JsonSnapshot>>::is_empty(outcome.diff()) {
-            return Vec::new();
-        }
-        let inverse = <JsonDiff as protocol::DiffAlgebra<JsonSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::JsonMutation::RemoveMember(Self::Restore(inverse))]
-    
-    })())
-}
+        Ok(match resolve(&base.value, &self.path) {
+            Some(JsonValue::Object { members }) => members
+                .iter()
+                .position(|member| member.key == self.key)
+                .map(|position| vec![super::JsonMutation::SetMember(super::SetMemberMutation { path: self.path.clone(), key: self.key.clone(), value: members[position].value.clone(), index: Some(position) })])
+                .unwrap_or_default(),
+            _ => Vec::new(),
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove Member", "Eigenschaft entfernen")

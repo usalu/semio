@@ -1,9 +1,13 @@
 {
-  "artifact": null,
-  "assets": null,
+  "schema": null,
+  "id": null,
+  "title": null,
   "blocks": {
-    "added": [
+    "rows": [
       {
+        "row": "add",
+        "parentId": null,
+        "index": 2,
         "block": {
           "height": 140.0,
           "id": "blk-photo",
@@ -16,25 +20,18 @@
           "width": 200.0,
           "x": 620.0,
           "y": 0.0
-        },
-        "index": 2,
-        "parentId": null
+        }
       }
-    ],
-    "patched": [],
-    "removed": [],
-    "reordered": null
+    ]
   },
-  "eraserRadius": null,
-  "gridOpacity": null,
+  "gridVisible": null,
   "gridSpacing": null,
   "gridSubdivisions": null,
-  "gridVisible": null,
-  "id": null,
-  "linkedArtifact": null,
-  "pencilWidth": null,
-  "schema": null,
+  "gridOpacity": null,
   "snapEnabled": null,
   "snapGridSpacing": null,
-  "title": null
+  "pencilWidth": null,
+  "eraserRadius": null,
+  "assets": null,
+  "linkedArtifact": null
 }

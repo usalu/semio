@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../.."
 name = "semio-s-artifact-stdio-tiff"
 version.workspace = true
 edition.workspace = true
@@ -51,10 +51,11 @@ semio-s-artifact-stdio-contract = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 tiff = "0.11.3"
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async-macros = { workspace = true }
-image = { version = "0.25", default-features = false, features = ["png", "tiff"] }
+image = { version = "0.25", default-features = false, features = ["png", "tiff", "jpeg"] }
 
 [package.metadata.semio.composition]
 manifest = "../../🧩️composition/🔣️.json"

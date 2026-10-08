@@ -40,12 +40,69 @@ impl store::ArtifactPack for WriterMainWindowTransient {
     }
 }
 
-impl protocol::MutationDiff<WriterMainWindowTransient> for WriterMainWindowTransient {
-    fn apply(&self, _base: &WriterMainWindowTransient) -> protocol::MutationApplyResult<WriterMainWindowTransient> {
-        Ok(self.clone())
+/// 🧱️ Carries an optional value as a present slot, so clearing it stays distinct from leaving it untouched on every wire.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct WriterOptionalSelection {
+    pub value: Option<WriterEditorSelection>,
+}
+
+/// 🔺️ Sparse field delta over [`WriterMainWindowTransient`]: every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct WriterMainWindowTransientDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub editor_selection: Option<WriterOptionalSelection>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub lint_generation: Option<u32>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub engagement_input: Option<String>,
+}
+
+impl protocol::MutationDiff<WriterMainWindowTransient> for WriterMainWindowTransientDiff {
+    fn apply(&self, base: &WriterMainWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<WriterMainWindowTransient> {
+        let mut next = base.clone();
+        if let Some(value) = &self.editor_selection {
+            next.editor_selection = value.value.clone();
+        }
+        if let Some(value) = &self.lint_generation {
+            next.lint_generation = value.clone();
+        }
+        if let Some(value) = &self.engagement_input {
+            next.engagement_input = value.clone();
+        }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if other.editor_selection.is_some() {
+            self.editor_selection = other.editor_selection;
+        }
+        if other.lint_generation.is_some() {
+            self.lint_generation = other.lint_generation;
+        }
+        if other.engagement_input.is_some() {
+            self.engagement_input = other.engagement_input;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<WriterMainWindowTransient> for WriterMainWindowTransientDiff {
+    fn inverse(&self, base: &WriterMainWindowTransient) -> Self {
+        Self {
+            editor_selection: self.editor_selection.as_ref().map(|_| WriterOptionalSelection { value: base.editor_selection.clone() }),
+            lint_generation: self.lint_generation.as_ref().map(|_| base.lint_generation.clone()),
+            engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()),
+        }
+    }
+    fn between(base: &WriterMainWindowTransient, other: &WriterMainWindowTransient) -> Self {
+        Self {
+            editor_selection: (base.editor_selection != other.editor_selection).then(|| WriterOptionalSelection { value: other.editor_selection.clone() }),
+            lint_generation: (base.lint_generation != other.lint_generation).then(|| other.lint_generation.clone()),
+            engagement_input: (base.engagement_input != other.engagement_input).then(|| other.engagement_input.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.editor_selection.is_none() && self.lint_generation.is_none() && self.engagement_input.is_none()
     }
 }
 

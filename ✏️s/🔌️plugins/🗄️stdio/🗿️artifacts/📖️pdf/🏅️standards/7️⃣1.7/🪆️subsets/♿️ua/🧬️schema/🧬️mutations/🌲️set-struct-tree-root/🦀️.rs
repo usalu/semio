@@ -9,14 +9,18 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-pub struct SetStructTreeRoot {}
+pub struct SetStructTreeRoot {
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub placements: Vec<support::ObjectPlacement>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub entry_index: Option<usize>,
+}
 
 impl MutationKind<PdfSnapshot, PdfUaMutation> for SetStructTreeRoot {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "struct-tree-root", kind: "set-struct-tree-root", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let (root, rows) = support::insert_object_rows(base, support::struct_tree_root_object());
-        MutationOutcome::new(diff::graph_edit(diff::sequence(rows, support::set_catalog_entry_rows(base, "StructTreeRoot", PdfObject::Ref(root)))))
+        MutationOutcome::new(diff::graph_edit(support::struct_tree_root_rows(base, &self.placements, self.entry_index)))
     }
 
     fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {

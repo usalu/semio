@@ -2,9 +2,11 @@
 //! `mutation.target-missing`.
 
 use super::ChangeGeometryParameters;
-use crate::{Vdi3805Diff, Vdi3805Snapshot};
+use crate::{Vdi3805Snapshot};
+use crate::diff::{Vdi3805Diff, Vdi3805GeometryRows, Vdi3805GeometryPatch};
 
 //#region 🔖️Diff
+
 pub fn diff(payload: &ChangeGeometryParameters, base: &Vdi3805Snapshot) -> protocol::MutationOutcome<Vdi3805Diff> {
     let Some(entry) = base.geometry.get(&payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Geometry \"{}\" does not exist.", payload.id), [payload.id.clone()]);
@@ -12,10 +14,8 @@ pub fn diff(payload: &ChangeGeometryParameters, base: &Vdi3805Snapshot) -> proto
     if entry.parameters == payload.new_parameters {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Geometry \"{}\" already has these parameters.", payload.id));
     }
-    let mut geometry = base.geometry.clone();
-    if let Some(entry) = geometry.get_mut(&payload.id) {
-        entry.parameters = payload.new_parameters.clone();
-    }
-    protocol::MutationOutcome::new(Vdi3805Diff { geometry: Some(geometry), ..Default::default() })
+    protocol::MutationOutcome::new(Vdi3805Diff {
+        geometry: Some(Vdi3805GeometryRows { modified: vec![Vdi3805GeometryPatch { key: payload.id.clone(), parameters: Some(payload.new_parameters.clone()), ..Default::default() }], ..Default::default() }),
+        ..Default::default()
+    })
 }
-//#endregion 🔖️Diff

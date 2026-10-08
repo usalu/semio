@@ -24,16 +24,9 @@ impl protocol::MutationKind<TiffSnapshot, TiffMutation> for InsertIfdMutation {
         protocol::MutationOutcome::new(contribute(base, *index, ifd.clone()))
     }
     fn inverse(&self, base: &TiffSnapshot) -> Result<Vec<TiffMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
         let Self { index, .. } = self;
-        let outcome = <Self as protocol::MutationKind<TiffSnapshot, TiffMutation>>::diff(self, base);
-        if <TiffDiff as protocol::DiffAlgebra<TiffSnapshot>>::is_empty(outcome.diff()) {
-            return Vec::new();
-        }
-        vec![TiffMutation::RemoveIfd(crate::schema::mutations::RemoveIfdMutation { index: (*index).min(base.ifds.len()) })]
-    
-    })())
-}
+        Ok(vec![TiffMutation::RemoveIfd(crate::schema::mutations::RemoveIfdMutation { index: (*index).min(base.ifds.len()) })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert IFD", "IFD einfügen")
     }

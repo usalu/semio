@@ -1,4 +1,0 @@
-> bun ./📜️script.ts test-owner-command "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts" canonical-bootstrap-folder-mirror-check source
-
-[DEBUG] isolated Nx verification test-owner-command
-canonical-bootstrap-folder-mirror: phase=source payloads=canonical-pair markers=8

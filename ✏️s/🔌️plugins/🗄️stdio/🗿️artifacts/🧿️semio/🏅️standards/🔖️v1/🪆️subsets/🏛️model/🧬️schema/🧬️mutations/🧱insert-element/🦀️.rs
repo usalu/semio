@@ -7,6 +7,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertElement {
     pub element: SemioModelElement,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl protocol::MutationKind<SemioModelSnapshot, SemioModelMutation> for InsertElement {

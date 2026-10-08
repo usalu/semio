@@ -1,0 +1,5 @@
+# Current Workspace Owner Publication Frontier
+
+Actual WGPU terminal16550 exitedNx130/10.4s beforeTrunk. Runtime reports current root Cargo preparation has no source-bound members, and generator native owner-command requests absent `🧰️framework/.config/nextest.toml`. Root `.config/nextest.toml` physically exists; this is not permission to copy it into a new owner. Final4/Registry/session/Dev/Hub remain held; no compiler or mount proof inferred.
+
+Read-only bounded authored member-array inventory retained `🗑️generated/oct8-plugin-artifacts/current-workspace-split-inventory.json`, exact current file hashes, declared and present member counts. The root still declares product members while a new framework workspace exists. The actual canonical architecture owner is changing workspace organization; no compatibility restoration, oldroot fallback, lock/cache cleanup or extra Cargo was performed by this lane. Genuine current registered producer workspace ownership must be resolved before dispatch. Python available runtime lacks tomllib, so inventory uses the explicit authored member string array only and makes no Cargo resolution claim.

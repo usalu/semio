@@ -94,43 +94,6 @@
           }
         }
       ]
-    },
-    "InsertArrayElementMutation": {
-      "description": "The whole wire of InsertArrayElementMutation: the editable apply payload (this document's root) or the inert restore.",
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "phase",
-            "value"
-          ],
-          "properties": {
-            "phase": {
-              "const": "apply"
-            },
-            "value": {
-              "$ref": "#"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "phase",
-            "value"
-          ],
-          "properties": {
-            "phase": {
-              "const": "restore"
-            },
-            "value": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/diff.json"
-            }
-          }
-        }
-      ]
     }
   }
 }

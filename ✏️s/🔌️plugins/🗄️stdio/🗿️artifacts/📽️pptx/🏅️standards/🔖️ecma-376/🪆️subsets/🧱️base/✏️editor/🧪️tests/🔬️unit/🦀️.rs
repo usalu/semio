@@ -77,10 +77,7 @@ async fn natural_file_route_exports_edited_pptx_xml_and_reopens_through_one_muta
     }
     assert!(text.iter().any(|value| value == "Natural Open Save"));
     let reopened = <PptxEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("PPTX natural bytes reopen");
-    let Some(PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: opened })) = <PptxEditor as ArtifactEditor>::whole_document_operation(reopened) else {
-        panic!("natural PPTX opens through one event-sourced snapshot mutation")
-    };
-    assert_eq!(crate::schema::mutations::xml_address::pptx_slides(&opened).unwrap()[0].shapes[0].text.as_deref(), Some("Natural Open Save"));
+    assert_eq!(crate::schema::mutations::xml_address::pptx_slides(&reopened).unwrap()[0].shapes[0].text.as_deref(), Some("Natural Open Save"));
 }
 
 #[semio_framework_async_macros::async_test]

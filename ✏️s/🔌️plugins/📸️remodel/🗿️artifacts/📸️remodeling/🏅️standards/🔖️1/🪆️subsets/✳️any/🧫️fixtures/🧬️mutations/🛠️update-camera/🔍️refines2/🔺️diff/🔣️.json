@@ -1,67 +1,61 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "streams": null,
   "assets": null,
   "durableArtifacts": null,
   "calibration": {
-    "cameras": [
-      {
-        "id": "cam-a",
-        "label": "Front",
-        "model": "brownConrady",
-        "fx": 1024.0,
-        "fy": 1024.0,
-        "cx": 512.0,
-        "cy": 384.0,
-        "skew": 0.0,
-        "distortion": [
-          0.0625,
-          -0.03125,
-          0.0,
-          0.0,
-          0.0
-        ],
-        "rmsReprojectionPx": 0.25,
-        "locked": false
-      },
-      {
-        "id": "cam-b",
-        "label": "Side",
-        "model": "pinhole",
-        "fx": 800.0,
-        "fy": 800.0,
-        "cx": 320.0,
-        "cy": 240.0,
-        "skew": 0.0,
-        "distortion": [
-          0.0,
-          0.0,
-          0.0,
-          0.0,
-          0.0
-        ],
-        "rmsReprojectionPx": null,
-        "locked": true
-      }
-    ],
-    "rig": [
-      {
-        "cameraId": "cam-a",
-        "rotationWxyz": [
-          1.0,
-          0.0,
-          0.0,
-          0.0
-        ],
-        "translationM": [
-          0.0,
-          0.0,
-          0.0
-        ]
-      }
-    ]
+    "cameras": {
+      "rows": [
+        {
+          "row": "replace",
+          "entity": {
+            "id": "cam-a",
+            "label": "Front",
+            "model": "brownConrady",
+            "fx": {
+              "bits": "4090000000000000"
+            },
+            "fy": {
+              "bits": "4090000000000000"
+            },
+            "cx": {
+              "bits": "4080000000000000"
+            },
+            "cy": {
+              "bits": "4078000000000000"
+            },
+            "skew": {
+              "bits": "0000000000000000"
+            },
+            "distortion": [
+              {
+                "bits": "3d800000"
+              },
+              {
+                "bits": "bd000000"
+              },
+              {
+                "bits": "00000000"
+              },
+              {
+                "bits": "00000000"
+              },
+              {
+                "bits": "00000000"
+              }
+            ],
+            "rmsReprojectionPx": {
+              "bits": "3e800000"
+            },
+            "locked": false
+          }
+        }
+      ]
+    },
+    "rig": {
+      "rows": []
+    }
   },
   "params": null,
   "gcps": null,

@@ -22,6 +22,22 @@
         "group": "value",
         "order": 10
       }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "label": {
+          "en": "Index",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Position to insert at; absent appends.",
+          "de": "Einfügeposition; ohne Angabe wird angehängt."
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   },
   "$defs": {

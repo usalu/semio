@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../.."
 name = "semio-s-artifact-stdio-semio"
 version.workspace = true
 edition.workspace = true
@@ -141,6 +141,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 # 🔮 Test-only geometry ORACLE (never a `[dependencies]` entry, never reachable from a
 # production target) — same crate and version `semio-framework-3d` already uses as its collision

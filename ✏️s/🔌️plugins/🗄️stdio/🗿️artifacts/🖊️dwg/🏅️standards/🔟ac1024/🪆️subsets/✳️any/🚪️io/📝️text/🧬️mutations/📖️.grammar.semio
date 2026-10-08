@@ -1,14 +1,13 @@
-# Direct identities: set-snapshot, set-version-info.
+# Direct identities: set-version-info.
 #
 # `DwgMutation`'s OpText is the SHARED canonical-JSON op codec
 # (`impl_serde_op_codec!(DwgMutation, "dwg-mutation")`, 📇️registry/🧬️contract/🦀️.rs): `print_op` is
 # `pack::json_to_string(json_from_dsl_value(to_value(self)))` and nothing else, so the real wire of
-# every kind is one internally-tagged JSON object — `{"mutation":"setSnapshot","snapshot":{…}}` /
+# every kind is one internally-tagged JSON object —
 # `{"mutation":"setVersionInfo","version":…,"maintenanceVersion":…,"codepage":…}` — with
 # `#[value(tag = "mutation", rename_all = "camelCase")]` fixing the discriminant key and the
 # camelCase kind spellings. A grammar is a DESCRIPTION of that printer, so it describes JSON. The
-# version this replaced described a keyword-and-record op text (`"set-snapshot" "snapshot" record`,
-# kebab kinds, `IDENT "="` fields) that no printer in this crate has emitted since the shared codec
+# version this replaced described a keyword-and-record op text (kebab kinds, `IDENT "="` fields) that no printer in this crate has emitted since the shared codec
 # landed, and `ops_grammar_conformance_law` failed on the very first case.
 #
 # The discriminant is NOT spelled as a literal production here: literals in this dialect match a

@@ -17,6 +17,6 @@ pub struct SetField {
 //#region 🔖️Handler
 pub fn handle(payload: &SetField, doc: &ArtifactView<'_, En1991Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1991Mutation, NoConfigMutation>, Fault> {
     let path = crate::field_meta::flatten_editor_path(&payload.path);
-    crate::app_surface::dispatch_set_field(doc.snapshot, &path, &payload.value_json, |base, target| En1991Mutation::from_snapshot(base, target))
+    crate::app_surface::dispatch_set_field(doc.snapshot, &path, &payload.value_json, |document, edit| crate::mutations::EDIT_RULES.resolve(document, edit))
 }
 //#endregion 🔖️Handler

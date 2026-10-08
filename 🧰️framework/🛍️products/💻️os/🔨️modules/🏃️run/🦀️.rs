@@ -360,7 +360,7 @@ pub async fn media_from_document<B: BlobStore>(descriptor: &[u8], data: Vec<u8>,
             MediaPayload::Intrinsic { schema,value }
         }
         MediaWireFormat::Binary { format_kind } => {
-            let mime = semio_framework::format_descriptor(&format_kind)
+            let mime = semio_framework_os_kernel::io::format_descriptor(&format_kind)
                 .map_err(|error| RunError::Host(error.to_string()))?
                 .ok_or_else(|| RunError::Host(format!("unknown media format kind {format_kind:?}")))?
                 .mimes

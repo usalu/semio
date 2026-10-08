@@ -2,7 +2,7 @@
   "fixture": "snapshot/sqlite/full-domain",
   "schema": "owned PDF 世界\u0000",
   "repeat": 16384,
-  "bytes": 336358,
+  "bytes": 336428,
   "counts": {
     "pdf_acro_field": 5,
     "pdf_acro_font": 2,
@@ -80,6 +80,7 @@
     "pdf_function": 11,
     "pdf_function_child": 4,
     "pdf_function_real": 45,
+    "pdf_function_sample": 2,
     "pdf_function_shading": 1,
     "pdf_function_size": 1,
     "pdf_image": 5,
@@ -127,5 +128,5 @@
     "pdf_unknown_operand": 2,
     "pdf_viewer_preferences": 1
   },
-  "rows": 1278
+  "rows": 1280
 }

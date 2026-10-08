@@ -1,0 +1,43 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-os-node-graph"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "OS DAG node-graph render-session composition"
+
+[package.metadata.semio]
+role = "product"
+id = "os-node-graph"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-surface = { path = "../../../../../../../../../🔨️modules/🗺️surface/📦️packages/🦀️rust" }
+semio-framework-os-infinite = { path = "../../../../../../♾️infinite/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-pack-error = { path = "../../../../../../../../../🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-replication = { path = "../../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust" }
+semio-framework-ui-viewport = { path = "../../../../../../../../../🔨️modules/🖱️ui/🪟️viewport/📦️packages/🦀️rust" }
+ui_styling = { path = "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+canvas = { path = "../../../../../../../../../🔨️modules/🖼️canvas/📦️packages/🦀️rust", package = "semio-framework-canvas" }
+semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-async = { path = "../../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-artifact-infinite-dag = { workspace = true }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
+js-sys = "0.3.83"
+wasm-bindgen = "0.2.106"
+web-sys = { version = "0.3.98", features = ["HtmlCanvasElement", "Window"] }
+
+[dev-dependencies]
+semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }

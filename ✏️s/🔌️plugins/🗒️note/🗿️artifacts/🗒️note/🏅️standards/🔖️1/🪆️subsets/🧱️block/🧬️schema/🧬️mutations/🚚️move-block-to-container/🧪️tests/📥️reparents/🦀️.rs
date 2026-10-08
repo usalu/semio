@@ -100,7 +100,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "move-block-to-container/reparents-ink-into-the-callout-group: committed diff did not carry before to after");
 }
 
@@ -114,4 +114,10 @@ async fn block_changes_parent_at_an_index_without_moving_in_space() {
     assert_eq!(find_block_location(&applied.blocks, "blk-nested"), Some((Some("blk-group".to_string()), 1)), "the group's existing child must be pushed right by the index-0 insertion");
     assert_eq!(applied.blocks.len(), base.blocks.len() - 1, "the root list must lose exactly the reparented block");
     assert_eq!(block_bounds(find_block(&applied.blocks, "blk-ink").expect("the moved block exists")), block_bounds(find_block(&base.blocks, "blk-ink").expect("the base block exists")), "reparenting must not move the block in space");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

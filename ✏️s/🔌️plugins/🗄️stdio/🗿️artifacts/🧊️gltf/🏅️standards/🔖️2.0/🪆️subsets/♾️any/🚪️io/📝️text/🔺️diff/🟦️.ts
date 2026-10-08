@@ -1,5 +1,5 @@
 /** 🚪️ Native JSON member lowering with canonical semantic models. */
-import type {GltfTouchedRegion,GltfDiffDerivation,GltfJsonPresence,GltfModified,GltfAdded,GltfCollectionDiff,GltfAssetDiff,GltfSceneDiff,GltfNodeDiff,GltfMeshDiff,GltfAccessorDiff,GltfMaterialDiff,GltfBufferDiff,GltfScenesDiff,GltfNodesDiff,GltfMeshesDiff,GltfAccessorsDiff,GltfMaterialsDiff,GltfBuffersDiff,GltfBufferViewsDiff,GltfBufferBytesDiff,GltfTexturesDiff,GltfImagesDiff,GltfSamplersDiff,GltfSkinsDiff,GltfAnimationsDiff,GltfCamerasDiff,GltfDiff,GltfPhase} from "../../../🧬️schema/🔺️diff/🟦️.ts";
+import type {GltfTouchedRegion,GltfDiffDerivation,GltfJsonPresence,GltfModified,GltfAdded,GltfCollectionDiff,GltfAssetDiff,GltfSceneDiff,GltfNodeDiff,GltfMeshDiff,GltfAccessorDiff,GltfMaterialDiff,GltfBufferDiff,GltfScenesDiff,GltfNodesDiff,GltfMeshesDiff,GltfAccessorsDiff,GltfMaterialsDiff,GltfBuffersDiff,GltfBufferViewsDiff,GltfBufferBytesDiff,GltfTexturesDiff,GltfImagesDiff,GltfSamplersDiff,GltfSkinsDiff,GltfAnimationsDiff,GltfCamerasDiff,GltfDiff,GltfApplyPhase,GltfPrimitiveDiff,GltfTextureDiff,GltfImageDiff,GltfBufferViewDiff,GltfSkinDiff,GltfAnimationDiff} from "../../../🧬️schema/🔺️diff/🟦️.ts";
 export type * from "../../../🧬️schema/🔺️diff/🟦️.ts";
 import type {Binary64} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🔢️ieee754/🟦️.ts";
 /** 🔺️ GltfDiff twin: the sparse per-field diff with index-keyed collection triples and no full-replace `snapshot` slot,
@@ -45,6 +45,9 @@ import {
   parseGltfTexture,
   parseGltfTextureInfo,
   parseGltfAccessor,
+  parseGltfAnimationChannel,
+  parseGltfAnimationSampler,
+  parseGltfMorphTarget,
   type GltfAccessor,
   type GltfAccessorType,
   type GltfAlphaMode,
@@ -116,7 +119,14 @@ export const parseGltfNodeDiff = gltfWireObject<GltfNodeDiff>({
   extensions: presence,
   extras: presence,
 });
-export const parseGltfMeshDiff = gltfWireObject<GltfMeshDiff>({ primitives: gltfWireOptional(gltfWireArray(parseGltfPrimitive)), weights: numbers, name: nullableName, extensions: presence, extras: presence });
+export const parseGltfPrimitiveDiff = gltfWireObject<GltfPrimitiveDiff>({ attributes: gltfWireOptional(parseGltfMorphTarget), indices: nullableIndex, material: nullableIndex, mode: nullableIndex, targets: gltfWireOptional(gltfWireArray(parseGltfMorphTarget)), extensions: presence, extras: presence });
+export const parseGltfTextureDiff = gltfWireObject<GltfTextureDiff>({ sampler: nullableIndex, source: nullableIndex, name: nullableName, extensions: presence, extras: presence });
+export const parseGltfImageDiff = gltfWireObject<GltfImageDiff>({ uri: nullableName, mimeType: nullableName, bufferView: nullableIndex, name: nullableName, extensions: presence, extras: presence });
+export const parseGltfBufferViewDiff = gltfWireObject<GltfBufferViewDiff>({ buffer: gltfWireOptional(gltfWireIndex), byteOffset: gltfWireOptional(gltfWireIndex), byteLength: gltfWireOptional(gltfWireIndex), byteStride: nullableIndex, target: nullableIndex, name: nullableName, extensions: presence, extras: presence });
+export const parseGltfSkinDiff = gltfWireObject<GltfSkinDiff>({ inverseBindMatrices: nullableIndex, skeleton: nullableIndex, joints: indices, name: nullableName, extensions: presence, extras: presence });
+export const parseGltfAnimationDiff = gltfWireObject<GltfAnimationDiff>({ channels: gltfWireOptional(gltfWireArray(parseGltfAnimationChannel)), samplers: gltfWireOptional(gltfWireArray(parseGltfAnimationSampler)), name: nullableName, extensions: presence, extras: presence });
+export const parseGltfPrimitivesDiff = collection(parseGltfPrimitive, parseGltfPrimitiveDiff);
+export const parseGltfMeshDiff = gltfWireObject<GltfMeshDiff>({ primitives: gltfWireOptional(parseGltfPrimitivesDiff), weights: numbers, name: nullableName, extensions: presence, extras: presence });
 export const parseGltfAccessorDiff = gltfWireObject<GltfAccessorDiff>({
   bufferView: nullableIndex,
   byteOffset: gltfWireOptional(gltfWireIndex),
@@ -151,13 +161,13 @@ export const parseGltfMeshesDiff = collection(parseGltfMesh, parseGltfMeshDiff);
 export const parseGltfAccessorsDiff = collection(parseGltfAccessor, parseGltfAccessorDiff);
 export const parseGltfMaterialsDiff = collection(parseGltfMaterial, parseGltfMaterialDiff);
 export const parseGltfBuffersDiff = collection(parseGltfBuffer, parseGltfBufferDiff);
-export const parseGltfBufferViewsDiff = collection(parseGltfBufferView, parseGltfBufferView);
+export const parseGltfBufferViewsDiff = collection(parseGltfBufferView, parseGltfBufferViewDiff);
 export const parseGltfBufferBytesDiff = collection(gltfWireArray(gltfWireByte), gltfWireArray(gltfWireByte));
-export const parseGltfTexturesDiff = collection(parseGltfTexture, parseGltfTexture);
-export const parseGltfImagesDiff = collection(parseGltfImage, parseGltfImage);
+export const parseGltfTexturesDiff = collection(parseGltfTexture, parseGltfTextureDiff);
+export const parseGltfImagesDiff = collection(parseGltfImage, parseGltfImageDiff);
 export const parseGltfSamplersDiff = collection(parseGltfSampler, parseGltfSampler);
-export const parseGltfSkinsDiff = collection(parseGltfSkin, parseGltfSkin);
-export const parseGltfAnimationsDiff = collection(parseGltfAnimation, parseGltfAnimation);
+export const parseGltfSkinsDiff = collection(parseGltfSkin, parseGltfSkinDiff);
+export const parseGltfAnimationsDiff = collection(parseGltfAnimation, parseGltfAnimationDiff);
 export const parseGltfCamerasDiff = collection(parseGltfCamera, parseGltfCamera);
 export const parseGltfDiff = gltfWireObject<GltfDiff>({
   asset: gltfWireOptional(parseGltfAssetDiff),
@@ -189,10 +199,7 @@ export const parseGltfDiffDerivation = gltfWireObject<GltfDiffDerivation>({
   touchedRegions: gltfWireRequired(gltfWireArray(parseGltfTouchedRegion)),
 });
 
-/** 🔀️ Reads a leaf's phase wire: `apply` through the leaf's own payload reader, `restore` through the recorded diff's. */
-export const gltfWirePhase = <P, R>(apply: GltfWireReader<P>, restore: GltfWireReader<R>): GltfWireReader<GltfPhase<P, R>> =>
-  gltfWireTagged<GltfPhase<P, R>, "phase">("phase", {
-    apply: gltfWireObject<{ readonly phase: "apply"; readonly value: P }>({ phase: gltfWireRequired(gltfWireLiteral("apply")), value: gltfWireRequired(apply) }),
-    restore: gltfWireObject<{ readonly phase: "restore"; readonly value: R }>({ phase: gltfWireRequired(gltfWireLiteral("restore")), value: gltfWireRequired(restore) }),
-  });
+/** 🔀️ Reads a leaf's phase wire through the leaf's own payload reader. */
+export const gltfWireApplyPhase = <P>(apply: GltfWireReader<P>): GltfWireReader<GltfApplyPhase<P>> =>
+  gltfWireObject<GltfApplyPhase<P>>({ phase: gltfWireRequired(gltfWireLiteral("apply")), value: gltfWireRequired(apply) });
 //#endregion 📥️Parsers

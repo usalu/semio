@@ -1,74 +1,112 @@
-type AccessoryLink { accessoryId: String! required: Boolean! quantity: Int! }
-type CompositionLink { componentId: String! quantity: Int! }
-# 🧬️ Vdi3805 diff schema — sparse field delta.
+# 🧬️ Vdi3805 diff schema — keyed sparse diff: scalar setters, id/index/key keyed row diffs and per-field section patches.
 
-
-type LocalizedText { locale: String! text: String! }
-type BuildingSystemNumber { systemCode: String! subsystem: String! sequence: Int! }
-type ExtensionFields { fields: [Vdi3805StringMapEntry!]! }
-type ManufacturerFile {
-  headerVersion: String!
-  manufacturer: String!
-  buildingSystemNumber: BuildingSystemNumber!
-  created: String!
-  charset: String!
-  recordCount: Int!
-  extensions: ExtensionFields!
+type Vdi3805ManufacturerFilePatch {
+  headerVersion: String
+  manufacturer: String
+  buildingSystemNumber: BuildingSystemNumber
+  created: String
+  charset: String
+  recordCount: Int
+  extensions: ExtensionBag
 }
-type NativeRecord { family: String! fields: [String!]! extensions: ExtensionFields! }
-type ValveHeatingAttributes { dn: Int! kvsM3S: Float! pressureClass: String! connectionType: String! authorityMin: Float! authorityMax: Float! }
-type RadiatorAttributes { standardOutputW: Float! heatExponentN: Float! lengthM: Float! heightM: Float! depthM: Float! connectionType: String! }
-type PumpHeatingAttributes { dnSuction: Int! dnDischarge: Int! nominalFlowM3S: Float! nominalHeadM: Float! motorPowerW: Float! hydraulicEfficiency: Float! qhCurveRef: String }
-type HeatGeneratorAttributes { nominalHeatOutputW: Float! fuelType: String! flowTempMaxC: Float! returnTempMinC: Float! }
-union SheetAttributes = ValveHeatingAttributes | RadiatorAttributes | PumpHeatingAttributes | HeatGeneratorAttributes | GenericAttributes
-type GenericAttribute { key: String! value: String! unit: String }
-type GenericAttributes { entries: [GenericAttribute!]! }
-type Configuration { id: String! attributes: SheetAttributes! geometryRef: String functionRefs: [String!]! }
-type ProductIdentity { manufacturerCode: String! productGroup: String! articleNumber: String! }
-type Product {
+
+type Vdi3805ProductsPatch {
   id: String!
-  identity: ProductIdentity!
-  title: [LocalizedText!]!
-  sheet: Int!
-  records: [NativeRecord!]!
-  configuration: Configuration!
-  accessories: [AccessoryLink!]!
-  components: [CompositionLink!]!
-  extensions: ExtensionFields!
+  title: [LocalizedText!]
+  configuration: Configuration
 }
-type ManufacturerCatalog { file: ManufacturerFile! products: [Product!]! extensions: ExtensionFields! }
-type EditionId { year: Int! month: Int! }
-type CatalogIndexEntry { productId: String! sheet: Int! tags: [String!]! dn: Int }
-type CatalogIndex { entries: [CatalogIndexEntry!]! }
-type BoundingBox { minX: Float! minY: Float! minZ: Float! maxX: Float! maxY: Float! maxZ: Float! }
-type GeometryConnection { id: String! medium: String! position: [Float!]! direction: [Float!]! diameterMm: Float }
-type ParametricGeometry { id: String! bbox: BoundingBox! connections: [GeometryConnection!]! parameters: [Vdi3805FloatMapEntry!]! }
-type CurvePoint { x: Float! y: Float! }
-type CharacteristicCurve { id: String! points: [CurvePoint!]! }
-type Vdi3805StringMapEntry { key: String! value: String! }
-type Vdi3805FloatMapEntry { key: String! value: Float! }
 
-type Vdi3805Artifact {
-  manufacturerFile: ManufacturerFile @state(class: ARTIFACT)
-  catalog: ManufacturerCatalog!
-  editionProfile: [Vdi3805StringMapEntry!]!
-  correctionAsOf: EditionId!
-  strictMode: Boolean!
-  index: CatalogIndex!
-  geometry: [Vdi3805GeometryMapEntry!]!
-  curves: [Vdi3805CurveMapEntry!]!
+type Vdi3805ProductsRows {
+  added: [CatalogueProduct!]!
+  removed: [String!]!
+  modified: [Vdi3805ProductsPatch!]!
+  order: [String!]
 }
-type Vdi3805GeometryMapEntry { key: String! value: ParametricGeometry! }
-type Vdi3805CurveMapEntry { key: String! value: CharacteristicCurve! }
+
+type Vdi3805EditionProfileEntry {
+  key: String!
+  value: EditionProfileChoice!
+}
+
+type Vdi3805EditionProfileRows {
+  added: [Vdi3805EditionProfileEntry!]!
+  removed: [String!]!
+  modified: [Vdi3805EditionProfileEntry!]!
+}
+
+type Vdi3805IndexEntriesPatchDnValue {
+  value: Int
+}
+
+type Vdi3805IndexEntriesPatch {
+  id: String!
+  dn: Vdi3805IndexEntriesPatchDnValue
+  tags: [String!]
+}
+
+type Vdi3805IndexEntriesRows {
+  added: [CatalogIndexEntry!]!
+  removed: [String!]!
+  modified: [Vdi3805IndexEntriesPatch!]!
+  order: [String!]
+}
+
+type Vdi3805GeometryConnectionsRows {
+  added: [ConnectionPoint!]!
+  removed: [String!]!
+  order: [String!]
+}
+
+type Vdi3805GeometryEntry {
+  key: String!
+  value: ParametricGeometry!
+}
+
+type Vdi3805GeometryPatch {
+  key: String!
+  bbox: BoundingBox
+  parameters: JSON
+  connections: Vdi3805GeometryConnectionsRows
+}
+
+type Vdi3805GeometryRows {
+  added: [Vdi3805GeometryEntry!]!
+  removed: [String!]!
+  modified: [Vdi3805GeometryPatch!]!
+}
+
+type Vdi3805CurvesEntry {
+  key: String!
+  value: CharacteristicCurve!
+}
+
+type Vdi3805CurvesPatch {
+  key: String!
+  points: [CurvePoint!]
+}
+
+type Vdi3805CurvesRows {
+  added: [Vdi3805CurvesEntry!]!
+  removed: [String!]!
+  modified: [Vdi3805CurvesPatch!]!
+}
+
+type Vdi3805LimitsPatch {
+  maxFileBytes: Int
+  maxRecords: Int
+  maxFieldLength: Int
+  maxNestingDepth: Int
+}
 
 type Vdi3805Diff {
-  artifact: Vdi3805Artifact @state(class: ARTIFACT)
-  manufacturerFile: ManufacturerFile @state(class: ARTIFACT)
-  catalog: ManufacturerCatalog @state(class: ARTIFACT)
-  editionProfile: [Vdi3805StringMapEntry!] @state(class: ARTIFACT)
+  manufacturerFile: Vdi3805ManufacturerFilePatch @state(class: ARTIFACT)
+  products: Vdi3805ProductsRows @state(class: ARTIFACT)
+  catalogExtensions: ExtensionBag @state(class: ARTIFACT)
+  editionProfile: Vdi3805EditionProfileRows @state(class: ARTIFACT)
   correctionAsOf: EditionId @state(class: ARTIFACT)
   strictMode: Boolean @state(class: ARTIFACT)
-  index: CatalogIndex @state(class: ARTIFACT)
-  geometry: [Vdi3805GeometryMapEntry!] @state(class: ARTIFACT)
-  curves: [Vdi3805CurveMapEntry!] @state(class: ARTIFACT)
+  indexEntries: Vdi3805IndexEntriesRows @state(class: ARTIFACT)
+  geometry: Vdi3805GeometryRows @state(class: ARTIFACT)
+  curves: Vdi3805CurvesRows @state(class: ARTIFACT)
+  limits: Vdi3805LimitsPatch @state(class: ARTIFACT)
 }

@@ -22,7 +22,8 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
   `{kind, value}` (ASCII as its NUL-terminated octets), and an IFD's raster travels as its `storage`
   — strip chunks of raw sample bytes whose offsets and byte counts each writer lays out itself.
   `paint-region` paints only uncompressed TILED pages and is guarded by the revision of the subject's
-  canonical snapshot; neither committed document is tiled, so it is witnessed on the wire only.
+  canonical snapshot; neither committed document is tiled, so it is witnessed on the wire only. `replace-samples` rewrites a run of sample words
+  inside one block and is the leaf `paint-region` undoes itself with; it is witnessed on the wire only as well.
 
   On the @id-identity-round-trip scenario the "re-encoded bytes must differ from the input" half of
   the law binds NEITHER side, and the exact-bytes law binds BOTH. The committed fixture is the output
@@ -39,11 +40,6 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
   `insert-ifd` inserts an 8x8 RGB page whose `storage` is one strip of real sample bytes and whose
   `RowsPerStrip` states that one strip covers the page (TIFF6 §Strips), so both writers lay the page
   out identically and the projection compares its seven entries and its raster.
-
-  The snapshot-editing kinds production dispatch offers are measured here too: `set-snapshot`
-  installs a 2x2 RGB document whose IFD 0 states its geometry, one strip and a Software tag, and
-  `patch-snapshot` flips the header byte order through the editor's path-addressed patch. The
-  IFD-chain oracle reads both through its own model.
 
   @id-mutate
   @level-exhaustive
@@ -62,8 +58,6 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
       | remove-ifd | {"index":1} |
       | replace-tag | {"ifdIndex":0,"tag":315,"values":{"kind":"ascii","value":[68,101,114,105,118,101,100,32,102,111,114,32,116,105,99,107,101,116,32,50,54,47,48,56,47,50,51,47,69,78,68,45,84,79,45,69,78,68,45,84,69,83,84,73,78,71,45,82,69,70,65,67,84,79,82,0]}} |
       | remove-tag | {"ifdIndex":0,"tag":282} |
-      | set-snapshot | {"snapshot":{"schema":"stdio.tiff","byteOrder":"littleEndian","ifds":[{"entries":[{"tag":256,"values":{"kind":"short","value":[2]}},{"tag":257,"values":{"kind":"short","value":[2]}},{"tag":258,"values":{"kind":"short","value":[8,8,8]}},{"tag":259,"values":{"kind":"short","value":[1]}},{"tag":262,"values":{"kind":"short","value":[2]}},{"tag":277,"values":{"kind":"short","value":[3]}},{"tag":278,"values":{"kind":"long","value":[2]}},{"tag":305,"values":{"kind":"ascii","value":[115,101,109,105,111,0]}}],"storage":{"kind":"strips","offsetsKind":"long","byteCountsKind":"long","chunks":[[255,0,0,0,255,0,0,0,255,255,255,255]]}}]}} |
-      | patch-snapshot | {"patch":{"operation":"set","path":"/byteOrder","value":"bigEndian"}} |
 
   @id-inverse
   @level-exhaustive
@@ -83,8 +77,6 @@ Feature: Apply every typed TIFF 6.0 mutation to a real-world document
       | remove-ifd | {"index":1} |
       | replace-tag | {"ifdIndex":0,"tag":315,"values":{"kind":"ascii","value":[68,101,114,105,118,101,100,32,102,111,114,32,116,105,99,107,101,116,32,50,54,47,48,56,47,50,51,47,69,78,68,45,84,79,45,69,78,68,45,84,69,83,84,73,78,71,45,82,69,70,65,67,84,79,82,0]}} |
       | remove-tag | {"ifdIndex":0,"tag":282} |
-      | set-snapshot | {"snapshot":{"schema":"stdio.tiff","byteOrder":"littleEndian","ifds":[{"entries":[{"tag":256,"values":{"kind":"short","value":[2]}},{"tag":257,"values":{"kind":"short","value":[2]}},{"tag":258,"values":{"kind":"short","value":[8,8,8]}},{"tag":259,"values":{"kind":"short","value":[1]}},{"tag":262,"values":{"kind":"short","value":[2]}},{"tag":277,"values":{"kind":"short","value":[3]}},{"tag":278,"values":{"kind":"long","value":[2]}},{"tag":305,"values":{"kind":"ascii","value":[115,101,109,105,111,0]}}],"storage":{"kind":"strips","offsetsKind":"long","byteCountsKind":"long","chunks":[[255,0,0,0,255,0,0,0,255,255,255,255]]}}]}} |
-      | patch-snapshot | {"patch":{"operation":"set","path":"/byteOrder","value":"bigEndian"}} |
 
   @id-identity-round-trip
   @level-long

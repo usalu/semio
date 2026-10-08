@@ -1,33 +1,46 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { dirname, isAbsolute, join, relative } from "node:path";
 
-const repo = process.env.SEMIO_FIXTURE_REPO_ROOT!;
+const repo = process.env.SEMIO_FIXTURE_REPO_ROOT;
+assert(repo, "Explicit current repository root required");
 const ticket = dirname(dirname(import.meta.dir));
 const generated = join(ticket, "🗑️generated/coordinator/mcp");
 const module = join(repo, "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp");
 const executable = join(generated, process.platform === "win32" ? "repo-mcp.exe" : "repo-mcp");
 mkdirSync(generated, { recursive: true });
 const command = process.argv[2];
+const digest = (path: string) => createHash("sha256").update(readFileSync(path)).digest("hex");
 if (command === "prepare") {
-  const original = join(module, "🖥️server.go");
+  const { canonicalGoPlan } = await import(join(repo, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts"));
+  const plan = canonicalGoPlan(module);
+  const replacements = { ...plan.sourceReplacements };
+  const original = join(module, "🖥️server/🐹️.go");
   const source = readFileSync(original, "utf8");
   assert(source.includes("MaxPayloadBytes: 1 << 20"));
   const replacement = join(generated, "server.go");
   writeFileSync(replacement, source.replace("MaxPayloadBytes: 1 << 20", "MaxPayloadBytes: 32 << 20"));
   const overlay = join(generated, "overlay.json");
-  const lifecycle = join(repo, "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧩️component.go");
+  const lifecycle = join(repo, "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🧩️component/🐹️.go");
   const lifecycleSource = readFileSync(lifecycle, "utf8");
   assert(lifecycleSource.includes("ticketOversizedFileBytes   = 5 << 20") && lifecycleSource.includes("ticketOversizedFolderBytes = 10 << 20"));
   const retainedLifecycle = join(generated, "lifecycle.go");
   writeFileSync(retainedLifecycle, lifecycleSource.replace("ticketOversizedFileBytes   = 5 << 20", "ticketOversizedFileBytes   = 1 << 60").replace("ticketOversizedFolderBytes = 10 << 20", "ticketOversizedFolderBytes = 1 << 60"));
-  writeFileSync(overlay, JSON.stringify({ Replace: { [original]: replacement, [lifecycle]: retainedLifecycle } }) + "\n");
-  const child = Bun.spawn(["go", "build", "-overlay", overlay, "-o", executable, "."], { cwd: module, env: { ...process.env, GOWORK: "off" }, stdout: "inherit", stderr: "inherit" });
+  for (const [source, retained] of [[original, replacement], [lifecycle, retainedLifecycle]]) {
+    const owners = Object.entries(replacements).filter(([, value]) => value === source);
+    assert.equal(owners.length, 1, "Exactly one canonical virtual input must own each private overlay");
+    replacements[owners[0]![0]] = retained;
+  }
+  writeFileSync(overlay, JSON.stringify({ Replace: replacements }) + "\n");
+  const inputs = [...new Set([import.meta.path, join(repo, "go.work"), ...Object.values(plan.sourceReplacements)])].sort().map(path => ({ path, sha256: digest(path) }));
+  const child = Bun.spawn(["go", "build", "-overlay", overlay, "-o", executable, "."], { cwd: module, env: { ...process.env, GOWORK: join(repo, "go.work") }, stdout: "inherit", stderr: "inherit" });
   process.on("SIGINT", () => child.kill("SIGINT"));
   assert.equal(await child.exited, 0);
+  for (const input of inputs) assert.equal(digest(input.path), input.sha256, "Private lifecycle source changed during preparation");
+  writeFileSync(join(generated, "build.json"), JSON.stringify({ inputs, executable: { path: executable, sha256: digest(executable) } }, null, 2) + "\n");
   console.log("[DEBUG] ticket-private MCP built with preserved input/report retention and unchanged repository sources");
-} else if (command === "probe" || command === "close" || command === "restore") {
+} else if (command === "probe" || command === "close" || command === "close-current" || command === "restore") {
   const child = Bun.spawn([executable], { cwd: repo, env: { ...process.env, SEMIO_REPO_MCP_CLIENT: "codex" }, stdin: "pipe", stdout: "pipe", stderr: "pipe" });
   const pending = new Map<number, { resolve(value: any): void; reject(error: unknown): void }>();
   let buffer = "";
@@ -61,6 +74,23 @@ if (command === "prepare") {
       assert(result.tools.some((tool: { name: string }) => tool.name === "ticket_close"));
       writeFileSync(join(generated, "tools.json"), JSON.stringify(result, null, 2) + "\n");
       console.log("[DEBUG] actual repository MCP lifecycle tools available");
+    } else if (command === "close-current") {
+      const build = JSON.parse(readFileSync(join(generated, "build.json"), "utf8"));
+      assert.equal(build.executable.path, executable);
+      assert.equal(digest(executable), build.executable.sha256);
+      assert(build.inputs.length && build.inputs.some((input: { path: string }) => input.path === import.meta.path));
+      for (const input of build.inputs) assert.equal(digest(input.path), input.sha256, "Prepare the current lifecycle sources again before closure");
+      const input = JSON.parse(readFileSync(join(ticket, "📥️oct8-current-ticket-close-input.json"), "utf8"));
+      assert.equal(input.path, "26/05/30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY");
+      assert.equal(input.no_management, true);
+      assert(!input.title, "Current closure preserves its canonical ticket coordinate");
+      assert.equal(JSON.parse(readFileSync(join(ticket, "🎫️ticket.json"), "utf8")).status, "open");
+      assert(typeof input.summary === "string" && input.summary.trim() && Array.isArray(input.files) && input.files.length);
+      assert(input.files.every((path: unknown) => typeof path === "string" && path.trim() === path && path.length > 0 && !isAbsolute(path) && !/^[A-Za-z]:/u.test(path) && !path.includes("\\") && path.split("/").every(part => part && part !== "." && part !== ".." && part !== "AGENTS.md" && part !== "🗑️generated")));
+      assert.equal(new Set(input.files).size, input.files.length);
+      const result = await request(2, "tools/call", { name: "ticket_close", arguments: input });
+      assert(!result.isError, JSON.stringify(result));
+      console.log("[DEBUG] actual current ticket_close result=" + JSON.stringify(result));
     } else if (command === "restore") {
       const path = "26/05/30/ASSETS-AND-FIXTURES-SEPARATION";
       assert.equal(JSON.parse(readFileSync(join(ticket, "🎫️ticket.json"), "utf8")).status, "open");
@@ -101,4 +131,4 @@ if (command === "prepare") {
     const stderr = await errors;
     if (stderr) process.stderr.write(stderr);
   }
-} else throw new Error("Expected prepare, probe, close or restore");
+} else throw new Error("Expected prepare, probe, close-current, close or restore");

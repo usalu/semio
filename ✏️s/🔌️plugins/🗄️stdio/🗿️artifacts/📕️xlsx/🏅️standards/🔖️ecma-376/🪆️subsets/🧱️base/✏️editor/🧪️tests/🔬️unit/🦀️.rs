@@ -349,7 +349,7 @@ async fn canonical_xlsx_no_op_save_preserves_all_xml_fields_and_custom_part_path
 }
 
 #[semio_framework_async_macros::async_test]
-async fn natural_file_route_preserves_canonical_xlsx_xml_and_reopens_through_one_mutation() {
+async fn natural_file_route_preserves_canonical_xlsx_xml_and_reopens() {
     use crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_xlsx;
     use crate::standards::v_ecma_376::subsets::base::schema::mutations::{apply_xlsx_mutation, cell_address::xlsx_cell_address, set_cell::SetCell};
     for case in canonical_save_fixture()["cases"].as_array().unwrap() {
@@ -361,10 +361,7 @@ async fn natural_file_route_preserves_canonical_xlsx_xml_and_reopens_through_one
         let independently_reopened = decode_xlsx(&encoded).unwrap_or_else(|error| panic!("{} independent reopen: {error}", case["id"]));
         assert_eq!(independently_reopened.project_workbook().unwrap().sheets[0].cells[0].value, XlsxCellValue::Number(99.25));
         let reopened = <XlsxEditor as ArtifactEditor>::decode_natural_file(&encoded).unwrap_or_else(|error| panic!("{} natural reopen: {error}", case["id"]));
-        let Some(XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: opened })) = <XlsxEditor as ArtifactEditor>::whole_document_operation(reopened) else {
-            panic!("natural XLSX opens through one event-sourced snapshot mutation")
-        };
-        assert_eq!(opened.project_workbook().unwrap().sheets[0].cells[0].value, XlsxCellValue::Number(99.25));
+        assert_eq!(reopened.project_workbook().unwrap().sheets[0].cells[0].value, XlsxCellValue::Number(99.25));
         if case["calamine"].as_bool().unwrap() {
             assert_independent_spreadsheet_values(encoded, case, true);
         }

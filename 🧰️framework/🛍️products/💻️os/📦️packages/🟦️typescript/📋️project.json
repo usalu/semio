@@ -204,6 +204,15 @@
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test-channel-oracles"
       }
+    },
+    "test-scene-wire-source": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-scene-wire-source"
+      },
+      "outputs": []
     }
   }
 }

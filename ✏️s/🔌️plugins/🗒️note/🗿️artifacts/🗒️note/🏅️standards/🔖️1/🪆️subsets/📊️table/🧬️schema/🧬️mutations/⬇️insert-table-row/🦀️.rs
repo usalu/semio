@@ -15,11 +15,15 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "insert-table-row")]
 pub struct InsertTableRow {
     pub id: String,
+    /// 🧱️ The cells of the appended row; absent appends a blank row as wide as the table.
+    #[value(default)]
+    #[serde(default)]
+    pub cells: Option<Vec<crate::NoteTableCell>>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 pub fn insert_table_row(id: String) -> NoteMutation {
-    NoteMutation::InsertTableRow(InsertTableRow { id })
+    NoteMutation::InsertTableRow(InsertTableRow { id, cells: None })
 }
 
 impl MutationKind<NoteSnapshot, NoteMutation> for InsertTableRow {

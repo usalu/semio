@@ -5,10 +5,10 @@ pub(super) fn sequence(c:&mut Census<'_,'_>,table:&str,v:&D)->Result<(),ValueErr
 pub(super) fn function(c:&mut Census<'_,'_>,v:&D)->Result<(),ValueError>{
  if c.depth>=64{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"PDF borrowed semantic containment depth exceeded"))}c.depth+=1;let result=(||{
  let tag=kind(v)?;let mut f=[Null;8];
- match tag{"sampled"=>{f[1]=Int;f[2]=Int;f[3]=Int;f[4]=integer(field(v,"order")?)?;f[6]=c.blob(field(v,"samples")?)?;},"exponential"=>{f[0]=Int;f[5]=real(field(v,"n")?)?;},"stitching"=>f[0]=Int,"postScript"=>f[7]=Text(text(field(v,"code")?)?),"array"=>{},_=>return Err(invalid())}
+ match tag{"sampled"=>{f[1]=Int;f[2]=Int;f[3]=Int;f[4]=integer(field(v,"order")?)?;f[6]=Int;},"exponential"=>{f[0]=Int;f[5]=real(field(v,"n")?)?;},"stitching"=>f[0]=Int,"postScript"=>f[7]=Text(text(field(v,"code")?)?),"array"=>{},_=>return Err(invalid())}
  let mut cells=Cells::from(&[Text(tag)]);cells.extend(f);c.row("pdf_function",&cells)?;
  for role in match tag{"sampled"=>&["domain","range","encode","decode"][..],"exponential"=>&["domain","range","c0","c1"],"stitching"=>&["domain","range","bounds","encode"],"postScript"=>&["domain","range"],_=>&[]}{reals(c,"pdf_function_real",role,field(v,role)?)?;}
- if tag=="sampled"{for value in list(field(v,"size")?)?{c.row("pdf_function_size",&[Int,Int,integer(value)?])?;}}
+ if tag=="sampled"{for value in list(field(v,"samples")?)?{c.row("pdf_function_sample",&[Int,Int,integer(value)?])?;}for value in list(field(v,"size")?)?{c.row("pdf_function_size",&[Int,Int,integer(value)?])?;}}
  if matches!(tag,"array"|"stitching"){for child in list(field(v,"functions")?)?{function(c,child)?;c.relation("pdf_function_child")?;}}Ok(())
 })();c.depth-=1;result
 }

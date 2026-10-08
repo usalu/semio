@@ -9,19 +9,29 @@ import { semioBackboneVitePlugin, semioSourceFreshnessVitePlugins } from "../../
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const workspace = resolve(root, "../../../../../../../../..");
-export default () => {
-  const variant = process.env.SEMIO_PLUGIN;
-  const playground = PLAYGROUND_BUILD_TARGETS.find(row => row.variant === variant);
-  if (!playground) throw new Error("Select a generated WGPU playground through Nx");
-  const profile = process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev";
-  const moduleRoot = pluginModulesRoot(profile);
-  const runtime = developmentRuntimeRoot(resolve(root, "../../../../../🧑‍💻dev/📦️packages/🟦️typescript"), variant!, profile, "wgpu");
-  const config = createWgpuBrowserConfig({
-    workspace, root, profile, variant,
+/** 🎚️ Selects the server's actual completed build profile. */
+export function wgpuCompletedProfileV1(): "dev" | "release" {
+  return process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev";
+}
+/** 📂️ Owns the completed native/browser roots shared by server mounts and runtime graph verification. */
+export function wgpuCompletedFrameworkRootsV1(profile: "dev" | "release") {
+  return {
     compilerRoot: resolve(root, "../📦️packages/🦀️rust/dist", "wasm-" + profile),
     bootRoot: resolve(root, "../🚀️browser-boot/🤖️generated"),
     libraryRoot: resolve(root, "../🎬️renderer-boot/🤖️generated"),
     workerRoot: resolve(root, "../🎞️frame-worker/🤖️generated"),
+  };
+}
+export default () => {
+  const variant = process.env.SEMIO_PLUGIN;
+  const playground = PLAYGROUND_BUILD_TARGETS.find(row => row.variant === variant);
+  if (!playground) throw new Error("Select a generated WGPU playground through Nx");
+  const profile = wgpuCompletedProfileV1();
+  const moduleRoot = pluginModulesRoot(profile);
+  const runtime = developmentRuntimeRoot(resolve(root, "../../../../../🧑‍💻dev/📦️packages/🟦️typescript"), variant!, profile, "wgpu");
+  const config = createWgpuBrowserConfig({
+    workspace, root, profile, variant,
+    ...wgpuCompletedFrameworkRootsV1(profile),
     moduleRoot,
     extensionRoot: join(runtime, "extensions"),
     reloadFile: join(runtime, "activation", ACTIVATION_RECEIPT_FILE),

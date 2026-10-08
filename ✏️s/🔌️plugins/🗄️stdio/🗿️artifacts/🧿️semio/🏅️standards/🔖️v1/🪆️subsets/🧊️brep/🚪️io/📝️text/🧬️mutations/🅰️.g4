@@ -8,15 +8,15 @@ op: createVertex | deleteVertex | createEdge | deleteEdge | createFace | deleteF
   | moveVertex
   ;
 
-createVertex: 'create-vertex' 'id' '=' HEX 'point' '=' point3 'tol' '=' number;
+createVertex: 'create-vertex' 'id' '=' HEX 'point' '=' point3 'tol' '=' number ('at' '=' INT)?;
 deleteVertex: 'delete-vertex' 'id' '=' HEX;
-createEdge: 'create-edge' 'id' '=' HEX 'start' '=' HEX 'end' '=' HEX 'curve' '=' curve 'tol' '=' number;
+createEdge: 'create-edge' 'id' '=' HEX 'start' '=' HEX 'end' '=' HEX 'curve' '=' curve 'tol' '=' number ('at' '=' INT)?;
 deleteEdge: 'delete-edge' 'id' '=' HEX;
-createFace: 'create-face' 'id' '=' HEX 'outer' '=' HEX 'inner' '=' hexList 'surface' '=' surface 'orientation' '=' bool 'tol' '=' number;
+createFace: 'create-face' 'id' '=' HEX 'outer' '=' HEX 'inner' '=' hexList 'surface' '=' surface 'orientation' '=' bool 'tol' '=' number ('at' '=' INT)?;
 deleteFace: 'delete-face' 'id' '=' HEX;
-createShell: 'create-shell' 'id' '=' HEX 'faces' '=' shellFaceList;
+createShell: 'create-shell' 'id' '=' HEX 'faces' '=' shellFaceList ('at' '=' INT)?;
 deleteShell: 'delete-shell' 'id' '=' HEX;
-createSolid: 'create-solid' 'id' '=' HEX 'shells' '=' solidShellList;
+createSolid: 'create-solid' 'id' '=' HEX 'shells' '=' solidShellList ('at' '=' INT)?;
 deleteSolid: 'delete-solid' 'id' '=' HEX;
 replaceCurve: 'replace-curve' 'edge' '=' HEX 'curve' '=' curve;
 replaceSurface: 'replace-surface' 'face' '=' HEX 'surface' '=' surface;

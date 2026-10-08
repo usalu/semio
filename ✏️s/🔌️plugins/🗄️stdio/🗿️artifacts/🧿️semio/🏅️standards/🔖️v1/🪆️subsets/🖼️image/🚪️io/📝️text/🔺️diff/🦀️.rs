@@ -7,7 +7,7 @@ mod diff_codec {
 use super::*;
 use crate::standards::v1::subsets::image::schema::diff::*;
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, dec_named_added, dec_named_triple, enc_indexed_triple, enc_named_added, enc_named_triple};
 use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
 use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
@@ -206,12 +206,12 @@ pub(crate) fn dec_frames_diff(s: &str) -> Result<SemioImageFramesDiff, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_metadata_diff(d: &SemioImageMetadataDiff) -> String {
-    enc_named_triple(d, |k: &String| hex_encode_str(k), |v: &String| hex_encode_str(v), enc_metadata_entry)
+    enc_named_triple(d, |k: &String| hex_encode_str(k), |v: &String| hex_encode_str(v), |a| enc_named_added(a, enc_metadata_entry))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_metadata_diff(s: &str) -> Result<SemioImageMetadataDiff, String> {
-    dec_named_triple(s, hex_decode_str, hex_decode_str, dec_metadata_entry)
+    dec_named_triple(s, hex_decode_str, hex_decode_str, |t| dec_named_added(t, dec_metadata_entry))
 }
 }
 pub use diff_codec::*;

@@ -1,7 +1,4 @@
-//! 📐️ `set-track-dimensions` — authored as its own mutation leaf. The aggregate's original
-//! `diff`/`inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf
-//! reconstructs its aggregate value and delegates, so the semantics are preserved by construction
-//! rather than re-derived.
+//! 📐️ `set-track-dimensions` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -19,14 +16,18 @@ pub struct SetTrackDimensions {
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetTrackDimensions {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "track-dimensions", kind: "set-track-dimensions", record: "SetTrackDimensions" };
     fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
-        agg_diff(&Mp4Mutation::SetTrackDimensions(self.clone()), base)
+        let Self { track_index, width, height } = self;
+        protocol::MutationOutcome::new(track_diff_for(*track_index, Mp4TrackDiff { width: Some(*width), height: Some(*height), ..Mp4TrackDiff::default() }))
     }
     fn inverse(&self, base: &Mp4Snapshot) -> Result<Vec<Mp4Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&Mp4Mutation::SetTrackDimensions(self.clone()), base)?
-    
-    })
-}
+        let Self { track_index, .. } = self;
+        Ok({
+            match base.tracks.get(*track_index) {
+                Some(track) => vec![Mp4Mutation::SetTrackDimensions(set_track_dimensions::SetTrackDimensions { track_index: *track_index, width: track.width, height: track.height })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set track dimensions", "Abmessungen der Spur setzen")
     }

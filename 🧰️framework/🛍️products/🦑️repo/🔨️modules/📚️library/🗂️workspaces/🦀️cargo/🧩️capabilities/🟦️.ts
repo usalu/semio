@@ -1,3 +1,5 @@
+import {fileURLToPath} from "node:url";
+import {observeCargoPreparationSourceV1,observeCargoPreparationInputV1,observeCargoPreparationOutputV1} from "../🛠️preparation/🧾️custody/🟦️.ts";
 import { lstatSync, readFileSync, writeFileSync } from "node:fs";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 
@@ -58,17 +60,17 @@ function physical(root: string, path: string, optional = false): boolean {
     current = resolve(current, part);
     let info;
     try { info = lstatSync(current); }
-    catch (error) { if (optional && (error as NodeJS.ErrnoException).code === "ENOENT") return false; throw error; }
+    catch (error) { if (optional && (error as NodeJS.ErrnoException).code === "ENOENT") {observeCargoPreparationInputV1(path,"presence");return false;} throw error; }
     if (info.isSymbolicLink()) throw new Error("Capability authority follows a symlink");
   }
-  return true;
+  observeCargoPreparationInputV1(path,"presence");return true;
 }
 
 function read(root: string, path: string): string {
   physical(root, path);
   const info = lstatSync(path);
   if (!info.isFile() || info.size > 1024 * 1024) throw new Error("Capability authority is not a bounded regular file");
-  return readFileSync(path, "utf8");
+  const bytes=readFileSync(path);observeCargoPreparationInputV1(path,"file",bytes);return bytes.toString("utf8");
 }
 
 function region(source: string, name: string, value: string): string {
@@ -79,6 +81,7 @@ function region(source: string, name: string, value: string): string {
 
 /** 📦️ Publishes native capability edges from physically present, owner-authored target manifests. */
 export function prepareCargoCapabilityLinksV1(repoRoot: string, ownerRoot: string, manifestRelative: string, linksRelative: string): number {
+  observeCargoPreparationSourceV1(fileURLToPath(import.meta.url));
   within(repoRoot, ownerRoot);
   const path = resolve(ownerRoot, manifestRelative), authorityPath = resolve(ownerRoot, linksRelative);
   within(ownerRoot, path); within(ownerRoot, authorityPath);
@@ -105,5 +108,6 @@ export function prepareCargoCapabilityLinksV1(repoRoot: string, ownerRoot: strin
   const next = region(region(previous, "Capability Features", features.join("\n")), "Capability Dependencies", dependencies);
   if ([...observed].some(([path, source]) => read(repoRoot, path) !== source) || [...presence].some(([path, available]) => physical(repoRoot, path, true) !== available)) throw new Error("Capability authority changed during publication");
   if (next !== previous) writeFileSync(path, next);
+  observeCargoPreparationOutputV1(path,next);
   return selected.length;
 }

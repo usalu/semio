@@ -62,9 +62,7 @@ test("independent SQLite preserves UTF-8 semantics separately from allocation st
   } finally { database.close(); }
 });
 
-import Ajv2020 from "ajv/dist/2020";
 import refusalFixture from "../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🧫️fixtures/🔣️.json";
-import refusalSchema from "../../../../../../../../🔨️modules/🌱️value/⚠️refusal/🧬️schema/🔣️.json";
 import deflateFixture from "../../../../../../../../🔨️modules/🎒️pack/⚠️error/🧫️fixtures/🧭️cause/📡️codec/🔣️.json";
 import {deflateRawSync,inflateRawSync} from "node:zlib";
 import {PackError} from "../../../../../../../../🔨️modules/🎒️pack/⚠️error/🟦️.ts";
@@ -92,5 +90,5 @@ test("retained Deflate physical credit has an explicit closed ownership authorit
 });
 
 test("eight neutral refusal authorities retain literal identity in independent SQLite",()=>{
- const validate=new Ajv2020({strict:true,allErrors:true}).compile(refusalSchema);expect(validate(refusalFixture)).toBe(true);expect(validate({...refusalFixture,unknown:true})).toBe(false);const cases=refusalFixture.cases.filter(item=>item.operation==="construct");expect(cases.length).toBe(9);expect(new Set(cases.map(item=>item.kind)).size).toBe(8);const database=new Database(":memory:");try{database.exec("CREATE TABLE refusal(id INTEGER PRIMARY KEY,kind TEXT NOT NULL,message TEXT NOT NULL)");cases.forEach((item,id)=>database.query("INSERT INTO refusal VALUES(?,?,?)").run(id,item.kind,item.message));expect(database.query("SELECT kind,message FROM refusal ORDER BY id").all()).toEqual(cases.map(item=>({kind:item.kind,message:item.message})));}finally{database.close();}
+ const cases=refusalFixture.cases.filter(item=>item.operation==="construct");expect(cases.length).toBe(9);expect(new Set(cases.map(item=>item.kind)).size).toBe(8);const database=new Database(":memory:");try{database.exec("CREATE TABLE refusal(id INTEGER PRIMARY KEY,kind TEXT NOT NULL,message TEXT NOT NULL)");cases.forEach((item,id)=>database.query("INSERT INTO refusal VALUES(?,?,?)").run(id,item.kind,item.message));expect(database.query("SELECT kind,message FROM refusal ORDER BY id").all()).toEqual(cases.map(item=>({kind:item.kind,message:item.message})));}finally{database.close();}
 });

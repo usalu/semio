@@ -17,8 +17,6 @@ pub const REGISTRY: &[(&str, Printer, Parser)] = &[
     (crate::standards::v1_4::subsets::base::io::text::mutations::move_page::OPCODE, crate::standards::v1_4::subsets::base::io::text::mutations::move_page::print, crate::standards::v1_4::subsets::base::io::text::mutations::move_page::parse),
     (crate::standards::v1_4::subsets::base::io::text::mutations::resize_page::OPCODE, crate::standards::v1_4::subsets::base::io::text::mutations::resize_page::print, crate::standards::v1_4::subsets::base::io::text::mutations::resize_page::parse),
     (crate::standards::v1_4::subsets::base::io::text::mutations::replace_page_text::OPCODE, crate::standards::v1_4::subsets::base::io::text::mutations::replace_page_text::print, crate::standards::v1_4::subsets::base::io::text::mutations::replace_page_text::parse),
-    (crate::standards::v1_4::subsets::base::io::text::mutations::set_snapshot::OPCODE, crate::standards::v1_4::subsets::base::io::text::mutations::set_snapshot::print, crate::standards::v1_4::subsets::base::io::text::mutations::set_snapshot::parse),
-    (crate::standards::v1_4::subsets::base::io::text::mutations::patch_snapshot::OPCODE, crate::standards::v1_4::subsets::base::io::text::mutations::patch_snapshot::print, crate::standards::v1_4::subsets::base::io::text::mutations::patch_snapshot::parse),
 ];
 //#endregion 🔖️Registry
 
@@ -52,12 +50,6 @@ pub mod move_page;
 
 #[path = "🗑️remove-page/🦀️.rs"]
 pub mod remove_page;
-
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 
 #[path = "♻️replace-page-text/🦀️.rs"]
 pub mod replace_page_text;

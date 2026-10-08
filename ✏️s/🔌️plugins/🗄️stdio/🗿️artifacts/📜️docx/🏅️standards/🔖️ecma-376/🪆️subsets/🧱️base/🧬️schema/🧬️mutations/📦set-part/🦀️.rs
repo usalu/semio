@@ -1,6 +1,4 @@
-//! 📦️ `set-part` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 📦️ `set-part` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -19,20 +17,21 @@ pub struct SetPart {
     pub(crate) path: String,
     pub(crate) content_type: String,
     pub(crate) payload: DocxPartContent,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) index: Option<usize>,
 }
 
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetPart {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "part", kind: "set-part", record: "SetPart" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as Mutation<DocxSnapshot>>::Diff> {
-        agg_diff(&DocxMutation::SetPart(self.clone()), base)
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
+        part_outcome(set_part_diff(base, &self.path, &self.content_type, &self.payload, self.index))
     }
+
     fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&DocxMutation::SetPart(self.clone()), base)?
-    
-    })
-}
+        set_part_inverse(base, &self.path)
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set part", "Paketteil setzen")
     }

@@ -5,17 +5,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "artifact": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/artifact.json"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "annex": {
       "anyOf": [
         {
@@ -28,44 +17,966 @@
       "x-semio-state": "artifact"
     },
     "members": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/properties/members"
-            }
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
+      "$ref": "#/$defs/En1995MemberDelta",
       "x-semio-state": "artifact"
     },
     "connections": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/properties/connections"
+      "$ref": "#/$defs/En1995ConnectionDelta",
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "En1995MemberActionPatch": {
+      "title": "En1995MemberActionPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/CharacteristicAction/properties/kind"
+            },
+            {
+              "type": "null"
             }
+          ]
+        },
+        "category": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/CharacteristicAction/properties/category"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "loadDuration": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/CharacteristicAction/properties/loadDuration"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "qLineNPerM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/CharacteristicAction/properties/qLineNPerM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fPointN": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/CharacteristicAction/properties/fPointN"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mKNm": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/CharacteristicAction/properties/mKNm"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "vKN": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/CharacteristicAction/properties/vKN"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nKN": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/CharacteristicAction/properties/nKN"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nTKN": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/CharacteristicAction/properties/nTKN"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fC90KN": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/CharacteristicAction/properties/fC90KN"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995MemberActionAddition": {
+      "title": "En1995MemberActionAddition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after",
+        "row"
+      ],
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/CharacteristicAction"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995MemberActionModification": {
+      "title": "En1995MemberActionModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1995MemberActionPatch"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995MemberActionDelta": {
+      "title": "En1995MemberActionDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         },
-        {
-          "type": "null"
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1995MemberActionAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1995MemberActionModification"
+          }
         }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995ConnectionActionPatch": {
+      "title": "En1995ConnectionActionPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/ConnectionAction/properties/kind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "loadDuration": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/ConnectionAction/properties/loadDuration"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fKN": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/ConnectionAction/properties/fKN"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995ConnectionActionAddition": {
+      "title": "En1995ConnectionActionAddition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after",
+        "row"
       ],
-      "x-semio-state": "artifact"
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/ConnectionAction"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995ConnectionActionModification": {
+      "title": "En1995ConnectionActionModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1995ConnectionActionPatch"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995ConnectionActionDelta": {
+      "title": "En1995ConnectionActionDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1995ConnectionActionAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1995ConnectionActionModification"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995MemberPatch": {
+      "title": "En1995MemberPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "labelEn": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/labelEn"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "labelDe": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/labelDe"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "role": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/role"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "strengthClass": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/strengthClass"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "serviceClass": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/serviceClass"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "support": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/support"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/bM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/hM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "spanM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/spanM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "supportLengthM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/supportLengthM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bearingLengthM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/bearingLengthM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bucklingLengthYM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/bucklingLengthYM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bucklingLengthZM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/bucklingLengthZM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lateralRestraintSpacingM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/lateralRestraintSpacingM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "notchDepthM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/notchDepthM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "notchDistanceM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/notchDistanceM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mCritNm": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/mCritNm"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "massKgPerM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/massKgPerM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "massKgPerM2": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/massKgPerM2"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dampingXi": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/dampingXi"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fireDurationS": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/fireDurationS"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bridgeNObs": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/bridgeNObs"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bridgeTLYears": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/bridgeTLYears"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bridgeBeta": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/bridgeBeta"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bridgeA": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/bridgeA"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bridgeB": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/bridgeB"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bridgeCrowdPerM2": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember/properties/bridgeCrowdPerM2"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actions": {
+          "$ref": "#/$defs/En1995MemberActionDelta"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995MemberAddition": {
+      "title": "En1995MemberAddition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after",
+        "row"
+      ],
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberMember"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995MemberModification": {
+      "title": "En1995MemberModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1995MemberPatch"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995MemberDelta": {
+      "title": "En1995MemberDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1995MemberAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1995MemberModification"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995ConnectionPatch": {
+      "title": "En1995ConnectionPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "labelEn": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection/properties/labelEn"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "labelDe": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection/properties/labelDe"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fastenerType": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection/properties/fastenerType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "strengthClass": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection/properties/strengthClass"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "serviceClass": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection/properties/serviceClass"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "diameterM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection/properties/diameterM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "number": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection/properties/number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rows": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection/properties/rows"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "spacingM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection/properties/spacingM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "edgeDistanceM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection/properties/edgeDistanceM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "endDistanceM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection/properties/endDistanceM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "t1M": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection/properties/t1M"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "t2M": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection/properties/t2M"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "steelPlate": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection/properties/steelPlate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "steelPlateThicknessM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection/properties/steelPlateThicknessM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shearPlanes": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection/properties/shearPlanes"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fUK": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection/properties/fUK"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actions": {
+          "$ref": "#/$defs/En1995ConnectionActionDelta"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995ConnectionAddition": {
+      "title": "En1995ConnectionAddition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after",
+        "row"
+      ],
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/TimberConnection"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995ConnectionModification": {
+      "title": "En1995ConnectionModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1995ConnectionPatch"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1995ConnectionDelta": {
+      "title": "En1995ConnectionDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1995ConnectionAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1995ConnectionModification"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
     }
   }
 }

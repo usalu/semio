@@ -25,6 +25,23 @@
           "de": "Indexzeile des neuen Artefakts."
         }
       }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Where the row is inserted; absent appends.",
+          "de": "Wo die Zeile eingefügt wird; fehlt die Angabe, wird angehängt."
+        },
+        "step": 1
+      }
     }
   },
   "$defs": {

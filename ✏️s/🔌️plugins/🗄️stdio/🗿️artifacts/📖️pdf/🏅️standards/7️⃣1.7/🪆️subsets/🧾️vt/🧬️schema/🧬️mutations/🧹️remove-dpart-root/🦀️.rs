@@ -2,7 +2,7 @@
 
 use super::set_dpart_root::SetDpartRoot;
 use super::PdfVtMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -19,9 +19,9 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveDpartRoot {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfVtMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        support::catalog_entry(base, "DPartRoot").map(|_| PdfVtMutation::SetDpartRoot(SetDpartRoot { job: support::dpart_job(base).unwrap_or_default() })).into_iter().collect()
-    })())
+        Ok({
+            support::catalog_entry(base, "DPartRoot").map(|_| PdfVtMutation::SetDpartRoot(SetDpartRoot { job: support::dpart_job(base).unwrap_or_default(), placements: support::placements_of(base, &support::dpart_root_creation_ids(base)), entry_index: support::catalog_entry_position(base, "DPartRoot") })).into_iter().collect()
+        })
     }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

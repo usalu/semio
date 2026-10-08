@@ -1,6 +1,6 @@
 //! 🧬️ Sets camera on the addressed Jack graph window.
 
-use super::{JackGraphWindowConfig, JackGraphWindowConfigMutation};
+use super::{JackGraphWindowConfig, JackGraphWindowConfigDiff, JackGraphWindowConfigMutation};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "set-camera")]
@@ -13,10 +13,11 @@ pub struct SetCamera {
 impl protocol::MutationKind<JackGraphWindowConfig, JackGraphWindowConfigMutation> for SetCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "window-camera", kind: "set-camera", record: "SetCamera" };
 
-    fn diff(&self, base: &JackGraphWindowConfig) -> protocol::MutationOutcome<JackGraphWindowConfig> {
-        let mut next = base.clone();
-        next.camera.clone_from(&self.camera);
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, base: &JackGraphWindowConfig) -> protocol::MutationOutcome<JackGraphWindowConfigDiff> {
+        if self.camera == base.camera {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The window camera is unchanged.");
+        }
+        protocol::MutationOutcome::new(JackGraphWindowConfigDiff { camera: Some(self.camera.clone()), ..Default::default() })
     }
 
     fn inverse(&self, base: &JackGraphWindowConfig) -> Result<Vec<JackGraphWindowConfigMutation>, semio_framework_value::ValueError> {

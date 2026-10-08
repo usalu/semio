@@ -1,29 +1,19 @@
 {
   "rows": {
-    "values": [
+    "removed": [
+      2
+    ],
+    "added": [
       {
-        "cells": [
-          {
-            "kind": "str",
-            "value": "Hamburg"
-          }
-        ]
-      },
-      {
-        "cells": [
-          {
-            "kind": "str",
-            "value": "Hannover"
-          }
-        ]
-      },
-      {
-        "cells": [
-          {
-            "kind": "str",
-            "value": "Berlin"
-          }
-        ]
+        "index": 0,
+        "item": {
+          "cells": [
+            {
+              "kind": "str",
+              "value": "Hamburg"
+            }
+          ]
+        }
       }
     ]
   }

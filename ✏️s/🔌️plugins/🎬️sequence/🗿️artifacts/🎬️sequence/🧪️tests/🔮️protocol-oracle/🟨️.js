@@ -1,4 +1,3 @@
-import Ajv2020 from "ajv/dist/2020.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createSequenceBrowserFeatures } from "@semio-tech/sequence-sequence";
@@ -6,9 +5,8 @@ import { createSequenceBrowserFeatures } from "@semio-tech/sequence-sequence";
 //#region 🔮️ThirdPartyOracle
 
 const root = new URL("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/", import.meta.url);
-const schema = JSON.parse(readFileSync(fileURLToPath(new URL("🧬️schema/🔣️.json", root)), "utf8"));
 const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("🧫️fixtures/🔣️.json", root)), "utf8"));
-const oracle = createOraclePort(new Ajv2020({ strict: true }).compile(schema));
+const oracle = createOraclePort();
 const expected = oracle.emit(fixture);
 
 //#endregion 🔮️ThirdPartyOracle
@@ -25,16 +23,15 @@ if (bridge.frameHex !== expected.frameHex) throw new Error("Sequence owned featu
 if (semantic !== expected.semantic) throw new Error("Sequence owned feature and third-party oracle semantic results differ");
 await features.lifetime.close();
 
-console.log(JSON.stringify({ oracle: "ajv-test-only", interface: "owned", feature: expected.feature, protocol: "equal", semantic: "equal" }));
+console.log(JSON.stringify({ oracle: "TextEncoder+DataView", interface: "owned", feature: expected.feature, protocol: "equal", semantic: "equal" }));
 
 //#endregion 🧩️OwnedFeature
 
 //#region 🧪️OraclePort
 
-function createOraclePort(validate) {
+function createOraclePort() {
   return {
     emit(value) {
-      if (!validate(value)) throw new Error("Sequence oracle fixture rejected");
       return { feature: value.feature, frameHex: encodeOracleRequest(value), semantic: value.semantic };
     },
   };

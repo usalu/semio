@@ -198,7 +198,7 @@ fn independent_sqlite_catalog_file(bytes: &[u8], native: &semio_framework::io_sc
 }
 
 async fn assert_sqlite_snapshot_editor<E: ArtifactEditor>() {
-    use semio_framework::io::io_mechanism::{io_entries, io_identify, io_route, io_run};
+    use directory::io::io_mechanism::{io_entries, io_identify, io_route, io_run};
     use semio_framework::io_schema::{Confidence, IoFidelity, IoPayload, SQLITE_SNAPSHOT};
     stdio_packages_assembled();
     let native: semio_framework::io_schema::ArtifactDialect = E::DIALECT.into();

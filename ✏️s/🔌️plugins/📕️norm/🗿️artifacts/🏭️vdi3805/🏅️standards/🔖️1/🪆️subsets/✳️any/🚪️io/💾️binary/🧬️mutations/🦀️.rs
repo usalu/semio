@@ -169,6 +169,7 @@ impl protocol::OpBinary for Vdi3805Mutation {
             Vdi3805Mutation::AddGeometryConnection(p) => {
                 write_str_bin(&mut out, &p.id);
                 write_json_bin(&mut out, &p.connection);
+                write_opt_usize_bin(&mut out, &p.index);
             }
             Vdi3805Mutation::RemoveGeometryConnection(p) => {
                 write_str_bin(&mut out, &p.id);
@@ -230,7 +231,8 @@ impl protocol::OpBinary for Vdi3805Mutation {
             TAG_ADD_GEOMETRY_CONNECTION => {
                 let id = read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))?;
                 let connection = read_json_bin(&mut reader).map_err(|e| malformed("connection", reader.position(), e))?;
-                Ok(Vdi3805Mutation::AddGeometryConnection(AddGeometryConnection { id, connection }))
+                let index = read_opt_usize_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
+                Ok(Vdi3805Mutation::AddGeometryConnection(AddGeometryConnection { id, connection, index }))
             }
             TAG_REMOVE_GEOMETRY_CONNECTION => {
                 let id = read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))?;

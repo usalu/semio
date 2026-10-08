@@ -25,6 +25,7 @@ pub enum WidgetInputValue {
     Boolean(bool),
     Point([f64; 3]),
     Vector([f64; 3]),
+    Plane { origin: [f64; 3], normal: [f64; 3] },
     NumberList(Vec<f64>),
     TextList(Vec<String>),
     BooleanList(Vec<bool>),
@@ -41,6 +42,7 @@ impl WidgetInputValue {
             Self::Boolean(_) | Self::BooleanList(_) => "boolean",
             Self::Point(_) | Self::PointList(_) => "point",
             Self::Vector(_) | Self::VectorList(_) => "vector",
+            Self::Plane { .. } => "plane",
         }
     }
 
@@ -77,6 +79,7 @@ impl WidgetInputValue {
         match self {
             Self::Number(value) => value.is_finite(),
             Self::Point(axes) | Self::Vector(axes) => axes.iter().all(|value| value.is_finite()),
+            Self::Plane { origin, normal } => origin.iter().chain(normal).all(|value| value.is_finite()),
             Self::Text(text) => text.chars().count() <= CHANGE_WIDGET_INPUT_MAXIMUM_TEXT,
             Self::Boolean(_) => true,
             _ => self.items().is_some_and(|items| items.len() <= 1024 && items.iter().all(Self::admissible)),
@@ -96,6 +99,7 @@ impl WidgetInputValue {
             Self::Text(value) => scalar(semio_framework_value::DslValue::String(value.clone())),
             Self::Boolean(value) => scalar(semio_framework_value::DslValue::Bool(*value)),
             Self::Point(axes) | Self::Vector(axes) => semio_framework_value::DslValue::Object(std::iter::once(schema.clone()).chain(["x", "y", "z"].iter().zip(axes).map(|(axis, value)| (axis.to_string(), semio_framework_value::DslValue::float(*value)))).collect()),
+            Self::Plane { origin, normal } => semio_framework_value::DslValue::Object(vec![schema.clone(), ("origin".to_string(), Self::Point(*origin).literal()), ("normal".to_string(), Self::Vector(*normal).literal())]),
             _ => unreachable!(),
         }
     }
@@ -113,6 +117,10 @@ impl WidgetInputValue {
             "boolean" => Self::Boolean(literal.get("value")?.as_bool()?),
             "point" => Self::Point(axes()?),
             "vector" => Self::Vector(axes()?),
+            "plane" => match (Self::of_literal(literal.get("origin")?)?, Self::of_literal(literal.get("normal")?)?) {
+                (Self::Point(origin), Self::Vector(normal)) => Self::Plane { origin, normal },
+                _ => return None,
+            },
             _ => return None,
         })
     }
@@ -140,6 +148,11 @@ impl WidgetInputValue {
             Self::Point(axes) | Self::Vector(axes) => {
                 let [(x_en, x_de), (y_en, y_de), (z_en, z_de)] = axes.map(generation3d_label_number);
                 (format!("({x_en}, {y_en}, {z_en})"), format!("({x_de}; {y_de}; {z_de})"))
+            }
+            Self::Plane { origin, normal } => {
+                let [(ox_en, ox_de), (oy_en, oy_de), (oz_en, oz_de)] = origin.map(generation3d_label_number);
+                let [(nx_en, nx_de), (ny_en, ny_de), (nz_en, nz_de)] = normal.map(generation3d_label_number);
+                (format!("plane at ({ox_en}, {oy_en}, {oz_en}) facing ({nx_en}, {ny_en}, {nz_en})"), format!("Ebene bei ({ox_de}; {oy_de}; {oz_de}) mit Normale ({nx_de}; {ny_de}; {nz_de})"))
             }
             _ => { let count = self.items().map_or(0, |items| items.len()); (format!("{count} {} items", self.schema()), format!("{count} Listeneinträge")) }
         }

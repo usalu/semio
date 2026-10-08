@@ -11,7 +11,6 @@
     "mutation": {
       "type": "string",
       "enum": [
-        "setSnapshot",
         "insertNode",
         "removeNode",
         "setNodeKind",
@@ -25,9 +24,6 @@
         "setEdgeKind",
         "dragNodes"
       ]
-    },
-    "snapshot": {
-      "$ref": "#/definitions/SemioFlowSnapshot"
     },
     "node": {
       "$ref": "#/definitions/FlowNode"
@@ -70,6 +66,10 @@
     },
     "dy": {
       "type": "number"
+    },
+    "at": {
+      "type": "integer",
+      "minimum": 0
     }
   },
   "definitions": {

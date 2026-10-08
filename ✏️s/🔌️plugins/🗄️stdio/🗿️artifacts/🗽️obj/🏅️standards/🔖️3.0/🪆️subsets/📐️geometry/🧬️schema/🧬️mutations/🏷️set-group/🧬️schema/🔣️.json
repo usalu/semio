@@ -51,6 +51,22 @@
         "group": "value",
         "order": 20
       }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "label": {
+          "en": "Index",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Position to create the entry at; absent appends. Ignored when the name already exists.",
+          "de": "Position, an der der Eintrag angelegt wird; ohne Angabe wird angehängt. Wird ignoriert, wenn der Name bereits existiert."
+        },
+        "group": "target",
+        "order": 20
+      }
     }
   }
 }

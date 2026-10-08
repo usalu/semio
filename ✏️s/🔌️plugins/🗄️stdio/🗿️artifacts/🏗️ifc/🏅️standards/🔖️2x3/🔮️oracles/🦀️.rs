@@ -58,6 +58,11 @@ pub(crate) mod part21 {
         }
     }
 
+    /// 🕳️ Optional position member: absent or `null` means "no position".
+    pub fn opt_usize_field(value: &Json, key: &str) -> Result<Option<usize>, String> {
+        opt_u64_field(value, key).map(|index| index.map(|index| index as usize))
+    }
+
     /// 🕳️ Optional string member, same `null`-means-clear rule.
     pub fn opt_str_field(value: &Json, key: &str) -> Result<Option<String>, String> {
         match value.get(key) {
@@ -234,22 +239,6 @@ pub(crate) mod part21 {
                 })
                 .collect(),
         )
-    }
-
-    /// 📸️ `set-snapshot`: the whole document becomes the `Ifc2x3Snapshot` wire record `snapshot` — its header and its
-    /// instance graph, in the record's own order.
-    pub fn replace_with_snapshot(exchange: &mut Exchange, snapshot: &Json) -> Result<(), String> {
-        let document = snapshot.get("document").ok_or("an IFC2X3 snapshot carries `document`")?;
-        header_from_wire(exchange, document.get("header").ok_or("an IFC2X3 document carries `header`")?)?;
-        exchange.data = vec![DataSection { meta: Vec::new(), entities: document.array("instances").iter().map(instance_from_wire).collect::<Result<Vec<_>, String>>()? }];
-        Ok(())
-    }
-
-    /// 📸️ The document as a `set-snapshot` payload `{snapshot}` — what restores it through [`replace_with_snapshot`].
-    pub fn snapshot_payload(exchange: &Exchange) -> Json {
-        let instances = exchange.data.iter().flat_map(|section| section.entities.iter()).map(instance_to_wire).collect();
-        let document = Json::Object(vec![("header".to_string(), header_to_wire(exchange)), ("instances".to_string(), Json::Array(instances))]);
-        Json::Object(vec![("snapshot".to_string(), Json::Object(vec![("schema".to_string(), Json::String("stdio.ifc.2x3".to_string())), ("document".to_string(), document)]))])
     }
     //#endregion 🧾️Wire
 
@@ -437,12 +426,16 @@ pub(crate) mod part21 {
     }
 
     /// ➕ Inserts a brand-new simple instance, or replaces an existing id's whole record.
-    pub fn upsert_simple(exchange: &mut Exchange, id: u64, name: &str, args: Vec<Parameter>) -> Result<(), String> {
+    /// ➕ Upserts a simple instance; a brand-new id lands at `index` (clamped to the end) instead of last.
+    pub fn upsert_simple_at(exchange: &mut Exchange, id: u64, name: &str, args: Vec<Parameter>, index: Option<usize>) -> Result<(), String> {
         let instance = EntityInstance::Simple { id, record: Record { name: name.to_string(), parameter: Parameter::List(args) } };
         let section = section_mut(exchange)?;
         match section.entities.iter_mut().find(|entity| entity_id(entity) == id) {
             Some(existing) => *existing = instance,
-            None => section.entities.push(instance),
+            None => {
+                let at = index.map_or(section.entities.len(), |at| at.min(section.entities.len()));
+                section.entities.insert(at, instance);
+            }
         }
         Ok(())
     }

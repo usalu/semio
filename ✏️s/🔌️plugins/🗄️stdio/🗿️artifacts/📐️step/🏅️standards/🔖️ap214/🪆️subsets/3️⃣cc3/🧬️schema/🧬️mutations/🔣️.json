@@ -8,18 +8,6 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
-      ],
-      "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/step/ap214/cc3/mutation/set-snapshot/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
         "SetFileSchema"
       ],
       "properties": {
@@ -61,6 +49,18 @@
       "properties": {
         "DemoteShapeRepresentation": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/step/ap214/cc3/mutation/demote-shape-representation/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RestoreEntities"
+      ],
+      "properties": {
+        "RestoreEntities": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/step/ap214/cc3/mutation/restore-entities/schema.json"
         }
       }
     }

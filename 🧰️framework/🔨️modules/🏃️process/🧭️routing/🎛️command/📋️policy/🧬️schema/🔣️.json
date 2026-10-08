@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "context",
+    "budgetMs",
+    "maximumOutputBytes",
+    "artifactDirectory",
+    "retainArtifacts",
+    "cargoPolicies",
+    "vitestPolicy",
+    "cargoArtifactPolicy"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "context": {
+      "type": "object"
+    },
+    "budgetMs": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "maximumOutputBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "artifactDirectory": {
+      "type": "string",
+      "minLength": 1
+    },
+    "retainArtifacts": {
+      "type": "boolean"
+    },
+    "cargoPolicies": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "object"
+      }
+    },
+    "vitestPolicy": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "cargoArtifactPolicy": {
+      "type": [
+        "object",
+        "null"
+      ]
+    }
+  }
+}

@@ -1,39 +1,41 @@
 {
-  "artifact": null,
-  "catalogue": null,
-  "dictionary": null,
-  "geometry": {
-    "objects": {
-      "geom.pr600": {
-        "id": "geom.pr600",
-        "shape": {
-          "node": "primitive",
-          "kind": "box",
-          "parameters": {
-            "depth": 0.1,
-            "height": 0.9,
-            "width": 0.6
-          }
-        },
-        "symbolic": null,
-        "spaces": [],
-        "surfaces": [],
-        "ports": [],
-        "parameterBindings": {}
-      }
-    },
-    "primitiveRegistry": [
+  "catalogueName": null,
+  "manufacturerName": null,
+  "productGroups": null,
+  "productClasses": null,
+  "productSeries": null,
+  "products": null,
+  "productIndexes": null,
+  "propertyDefinitions": null,
+  "subjects": null,
+  "geometryObjects": {
+    "added": [
       {
-        "id": "box",
-        "parameters": [
-          "width",
-          "height",
-          "depth"
-        ]
+        "key": "geom.pr600",
+        "value": {
+          "id": "geom.pr600",
+          "shape": {
+            "node": "primitive",
+            "kind": "box",
+            "parameters": {
+              "depth": 0.1,
+              "height": 0.9,
+              "width": 0.6
+            }
+          },
+          "symbolic": null,
+          "spaces": [],
+          "surfaces": [],
+          "ports": [],
+          "parameterBindings": {}
+        }
       }
-    ]
+    ],
+    "removed": []
   },
-  "selection": null,
+  "selectionClassId": null,
+  "selectionSeriesId": null,
+  "selectionConstraints": null,
   "partNumberRule": null,
   "partNumberInputs": null,
   "scriptLimits": null,

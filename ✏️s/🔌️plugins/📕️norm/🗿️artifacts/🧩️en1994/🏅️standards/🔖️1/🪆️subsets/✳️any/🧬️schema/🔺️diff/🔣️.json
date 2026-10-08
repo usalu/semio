@@ -5,17 +5,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "artifact": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/artifact.json"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "annex": {
       "anyOf": [
         {
@@ -52,16 +41,7 @@
     "beams": {
       "anyOf": [
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/properties/beams"
-            }
-          }
+          "$ref": "#/$defs/En1994BeamsRows"
         },
         {
           "type": "null"
@@ -72,16 +52,7 @@
     "columns": {
       "anyOf": [
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/properties/columns"
-            }
-          }
+          "$ref": "#/$defs/En1994ColumnsRows"
         },
         {
           "type": "null"
@@ -92,16 +63,7 @@
     "slabs": {
       "anyOf": [
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/properties/slabs"
-            }
-          }
+          "$ref": "#/$defs/En1994SlabsRows"
         },
         {
           "type": "null"
@@ -141,6 +103,448 @@
         }
       ],
       "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "En1994BeamsActionsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "qAreaPa"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "qAreaPa": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CharacteristicAction/properties/qAreaPa"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1994BeamsActionsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modified"
+      ],
+      "properties": {
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1994BeamsActionsPatch"
+          }
+        }
+      }
+    },
+    "En1994BeamsInserted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam"
+        }
+      }
+    },
+    "En1994BeamsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "spanM",
+        "slabThicknessM",
+        "construction",
+        "transverseAsM2PerM",
+        "studsDiameterM",
+        "studsFUPa",
+        "studsSpacingM",
+        "studsTotalCount",
+        "actions"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "spanM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/spanM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "slabThicknessM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/slabThicknessM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "construction": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/construction"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transverseAsM2PerM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/transverseAsM2PerM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "studsDiameterM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/HeadedStuds/properties/diameterM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "studsFUPa": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/HeadedStuds/properties/fUPa"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "studsSpacingM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/HeadedStuds/properties/spacingM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "studsTotalCount": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/HeadedStuds/properties/totalCount"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/En1994BeamsActionsRows"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1994BeamsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1994BeamsInserted"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1994BeamsPatch"
+          }
+        }
+      }
+    },
+    "En1994ColumnsActionsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "nKN"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nKN": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ColumnAction/properties/nKN"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1994ColumnsActionsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modified"
+      ],
+      "properties": {
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1994ColumnsActionsPatch"
+          }
+        }
+      }
+    },
+    "En1994ColumnsInserted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn"
+        }
+      }
+    },
+    "En1994ColumnsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "kind",
+        "actions"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/kind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/En1994ColumnsActionsRows"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1994ColumnsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1994ColumnsInserted"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1994ColumnsPatch"
+          }
+        }
+      }
+    },
+    "En1994SlabsActionsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "qAreaPa"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "qAreaPa": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CharacteristicAction/properties/qAreaPa"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1994SlabsActionsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modified"
+      ],
+      "properties": {
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1994SlabsActionsPatch"
+          }
+        }
+      }
+    },
+    "En1994SlabsInserted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeSlab"
+        }
+      }
+    },
+    "En1994SlabsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "concreteThicknessM",
+        "actions"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "concreteThicknessM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeSlab/properties/concreteThicknessM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/En1994SlabsActionsRows"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1994SlabsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1994SlabsInserted"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1994SlabsPatch"
+          }
+        }
+      }
     }
   }
 }

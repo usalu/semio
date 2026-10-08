@@ -61,7 +61,6 @@ message PlySnapshot {
 }
 
 enum PlyMutationKind {
-  SET_SNAPSHOT = 0;
   SET_FORMAT = 2;
   INSERT_COMMENT = 3;
   REMOVE_COMMENT = 4;

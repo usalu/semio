@@ -102,8 +102,22 @@ message PlyElementsDiff {
 }
 
 // `schema` is an identity field and never appears here.
+message PlyCommentModified {
+  uint64 index = 1;
+  string diff = 2;
+}
+message PlyCommentAdded {
+  uint64 index = 1;
+  string item = 2;
+}
+message PlyCommentsDiff {
+  repeated uint64 removed = 1;
+  repeated PlyCommentModified modified = 2;
+  repeated PlyCommentAdded added = 3;
+}
+
 message PlyDiff {
   optional PlyFormat format = 1;
-  repeated string comments = 2;
+  PlyCommentsDiff comments = 2;
   PlyElementsDiff elements = 3;
 }

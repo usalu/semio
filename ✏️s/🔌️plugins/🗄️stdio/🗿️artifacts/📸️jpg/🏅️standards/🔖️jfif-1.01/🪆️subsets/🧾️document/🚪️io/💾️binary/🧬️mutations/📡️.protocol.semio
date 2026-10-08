@@ -3,34 +3,44 @@ protocol stdio.jpg.mutations
 version 1
 schema stdio.jpg.op
 start op
-framing record
+framing literal
 
-# Real op frame: `format u8` (`OP_BINARY_FORMAT`) then `tag u8`, then the kind's own payload (its leaf's `💾️binary` codec).
-# Each record is one mutation kind at its wire tag. This file is the only source of those tags: every leaf
-# codec derives its tag from its record at compile time (`dsl::protocol_record::tag_u8`).
-header fixed 2
-field format u8
-field tag u8
-record change-jfif-header tag=2
-field payload bytes
-record replace-quant-table tag=3
-field payload bytes
-record remove-quant-table tag=4
-field payload bytes
-record replace-huffman-table tag=5
-field payload bytes
-record remove-huffman-table tag=6
-field payload bytes
-record change-restart-interval tag=7
-field payload bytes
-record insert-other-segment tag=8
-field payload bytes
-record remove-other-segment tag=9
-field payload bytes
-record replace-pixels tag=10
-field payload bytes
-field payload bytes
-record set-snapshot tag=12
-field payload bytes
-record patch-snapshot tag=13
-field payload bytes
+record op {
+ format Format
+ tag MutationTag
+ jfif change-jfif-header if tag eq 1
+ insert insert-other-segment if tag eq 2
+ remove remove-other-segment if tag eq 3
+ pixels replace-pixels if tag eq 4
+ image replace-image if tag eq 5
+}
+enum Format { current=1 }
+enum MutationTag { change_jfif=1 insert_segment=2 remove_segment=3 replace_pixels=4 replace_image=5 }
+enum Presence { absent=0 present=1 }
+enum DensityUnits { aspect=0 pixels_per_inch=1 pixels_per_cm=2 }
+record Version { major u8 minor u8 }
+record Thumbnail { width u8 height u8 rgb_data bytes }
+record OptionalThumbnail { presence Presence value Thumbnail if presence eq 1 }
+record Segment { marker u8 data bytes }
+record Image {
+ width varint
+ height varint
+ pixels bytes
+ jfif_version Version
+ jfif_density_units DensityUnits
+ jfif_x_density varint
+ jfif_y_density varint
+ jfif_thumbnail OptionalThumbnail
+ other_segments Array(Segment,Varint)
+}
+record change-jfif-header tag=1 {
+ version Version
+ density_units DensityUnits
+ x_density varint
+ y_density varint
+ thumbnail OptionalThumbnail
+}
+record insert-other-segment tag=2 { index varint segment Segment }
+record remove-other-segment tag=3 { index varint }
+record replace-pixels tag=4 { pixels bytes }
+record replace-image tag=5 { image Image }

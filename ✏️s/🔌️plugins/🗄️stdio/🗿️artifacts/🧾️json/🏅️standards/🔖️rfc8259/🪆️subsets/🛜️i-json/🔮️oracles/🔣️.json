@@ -46,7 +46,6 @@
       "subsetDirectoryName": "🛜️i-json",
       "vectors": [],
       "kinds": [
-        "set-snapshot",
         "set-top-level",
         "upsert-member",
         "remove-member",
@@ -159,26 +158,6 @@
             "operation": "set-safe-number",
             "bridgeVersion": 1,
             "variant": "SetSafeNumber"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "json-rfc8259-i-json-mutate",
-              "qualifyingKind": "third-party-library"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "json-rfc8259-i-json-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
           },
           "oracleRequirements": [
             {
@@ -461,48 +440,6 @@
       "reproducible": true,
       "family": "i-json-carrier",
       "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. SetSafeNumber sets a member to the literal lexeme 9007199254740991 — the largest I-JSON-safe integer (2^53-1, RFC 7493 section 2.2) — proving the mutation is scoped to values that round-trip exactly through an IEEE 754 double, the whole point of I-JSON's number restriction."
-    },
-    {
-      "id": "set-snapshot-applied",
-      "class": "handcrafted",
-      "target": {
-        "artifact": "s.stdio.json",
-        "standard": "rfc8259",
-        "subset": "i-json"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before",
-          "path": "../🧫️fixtures/📸️set-snapshot/⬅️before.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:dfb20f3eed522765e2ab2417457ac5d0e036cbcb748c0ccb9a3cc2c9f75725bc",
-          "bytes": 100
-        },
-        {
-          "role": "expected-after",
-          "path": "../🧫️fixtures/📸️set-snapshot/➡️after.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:4f28f4b9ae19fd07341b215f808cdabbea09adf4fcba4f35e8733494ef7ea1f9",
-          "bytes": 91
-        }
-      ],
-      "provenance": {
-        "source": "authored",
-        "license": "public-domain (handcrafted by this repository)",
-        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "ordered-json-v1",
-      "reproducible": true,
-      "family": "i-json-carrier",
-      "notes": "Handcrafted I-JSON (RFC 7493) before/after document pair. SetSnapshot replaces the whole document with a different, equally I-JSON-compliant document."
     },
     {
       "id": "set-string-applied",

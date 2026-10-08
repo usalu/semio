@@ -118,6 +118,12 @@ fn committed_diff_is_canonical() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: BitmapDiff = crate::standards::v1::subsets::any::io::text::bitmap_json_decode(DIFF).expect("committed diff decodes");
-    let produced = <BitmapDiff as protocol::MutationDiff<BitmapSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-palette-color/🖍️recolours: committed diff did not carry before to after");
+}
+
+/// ➕️ The concrete inverse operations' diffs sum to exactly the negative of the forward diff (law L3).
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

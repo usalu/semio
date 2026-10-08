@@ -8,8 +8,8 @@ use crate::ProgramSnapshot;
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::DeleteOrganizationalRequirement, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    match base.organizational.iter().find(|row| row.header.id == payload.id) {
-        Some(existing) => vec![ProgramMutation::CreateOrganizationalRequirement(super::super::create_organizational_requirement::CreateOrganizationalRequirement { organizational_requirement: existing.clone() })],
+    match base.organizational.iter().position(|row| row.header.id == payload.id) {
+        Some(position) => vec![ProgramMutation::CreateOrganizationalRequirement(super::super::create_organizational_requirement::CreateOrganizationalRequirement { organizational_requirement: base.organizational[position].clone(), index: Some(position) })],
         None => Vec::new(),
     }
 

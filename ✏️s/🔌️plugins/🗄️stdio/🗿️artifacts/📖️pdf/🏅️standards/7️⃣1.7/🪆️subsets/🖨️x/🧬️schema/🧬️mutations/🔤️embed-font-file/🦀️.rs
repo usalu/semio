@@ -13,26 +13,27 @@ pub struct EmbedFontFile {
     pub descriptor_ordinal: usize,
     pub key: String,
     pub program: ObjRef,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub entry_index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfXMutation> for EmbedFontFile {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "font-file", kind: "embed-font-file", record: "Embed" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let rows = support::font_descriptors(base).get(self.descriptor_ordinal).copied().map_or_else(PdfDiff::default, |id| support::embed_font_file_rows(base, id, &self.key, self.program));
+        let rows = support::font_descriptors(base).get(self.descriptor_ordinal).copied().map_or_else(PdfDiff::default, |id| support::embed_font_file_rows(base, id, &self.key, self.program, self.entry_index));
         MutationOutcome::new(diff::graph_edit(rows))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfXMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let Some(id) = support::font_descriptors(base).get(self.descriptor_ordinal).copied() else { return Vec::new() };
-        match support::font_program(base, id) {
-            Some((key, program)) => vec![PdfXMutation::EmbedFontFile(EmbedFontFile { descriptor_ordinal: self.descriptor_ordinal, key, program })],
-            None => vec![PdfXMutation::RemoveFontFile(RemoveFontFile { descriptor_ordinal: self.descriptor_ordinal })],
-        }
-    
-    })())
-}
+        Ok({
+            let Some(id) = support::font_descriptors(base).get(self.descriptor_ordinal).copied() else { return Ok(Vec::new()) };
+            match support::font_program(base, id) {
+                Some((key, program)) => vec![PdfXMutation::EmbedFontFile(EmbedFontFile { descriptor_ordinal: self.descriptor_ordinal, key, program, entry_index: None })],
+                None => vec![PdfXMutation::RemoveFontFile(RemoveFontFile { descriptor_ordinal: self.descriptor_ordinal })],
+            }
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Embed {} on font descriptor {}", self.key, self.descriptor_ordinal), &format!("{} in Schriftdeskriptor {} einbetten", self.key, self.descriptor_ordinal))

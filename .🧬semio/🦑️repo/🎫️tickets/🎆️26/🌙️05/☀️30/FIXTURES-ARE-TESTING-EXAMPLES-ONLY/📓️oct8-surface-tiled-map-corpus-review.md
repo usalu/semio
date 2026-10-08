@@ -1,0 +1,7 @@
+# Surface and Tiled Map Corpus Review
+
+Independently read both actual current documents before closure. Surface root schema fixes all provider ports (four name/providerPackage records), synthetic selected IDs α/🧬 and anchor, pointer hover IDs, three methods, and one viewport x=-12.5/y=8/zoom=1.25. This admits one concrete whole specimen rather than the real variable domain selection/hover/viewport contracts. Suite imports it at line8 and compiles it against the complete ports fixture at64–66, rejecting removal of one provider. Retire only that corpus admission and document; preserve real port/selection behavior assertions.
+
+Tiled-map root schema const contains the complete six-file fixture inventory: file paths, exact SHA256/bytes, layer feature counts/extents/geometryTypes. Suite imports it13 and admits whole tileCorpus at45–47. This is fixed test asset authority. Preserve ordinary inventory data and actual per-file SHA/protobuf oracle. The protobuf Tile schema consumed at49 and actual pbf bytes at51 describe/verify real per-value native data and must remain. No production resource import is inferred merely from test fixture loading.
+
+Exact owners: `🧰️framework/🔨️modules/🗺️surface/🧬️schema/🔣️.json` and `🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🧬️schema/🔣️.json`; exact reader `🧰️framework/🔨️modules/🗺️surface/🧪️tests/🧩️suite/🟦️.ts`. Parent owns source removal. No writer attribution, source mutation, or compiler dispatch by this review.

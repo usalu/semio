@@ -4,7 +4,7 @@ use super::*;
 async fn invalid_collection_targets_are_rejected_before_mutation() {
     let base = StepSnapshot::default();
     let diff = StepDiff { entities: Some(StepEntitiesDiff { removed: vec![1], ..Default::default() }), ..Default::default() };
-    let error = diff.apply(&base).expect_err("missing entity target must be rejected");
+    let error = protocol::apply_diff(&diff, &base).expect_err("missing entity target must be rejected");
     assert_eq!(error.code, "mutation.apply.invalid-remove-target");
     assert_eq!(error.target, vec!["entities", "1"]);
     assert_eq!(base, StepSnapshot::default());
@@ -71,7 +71,7 @@ async fn absorb_insert_insert_same_index_both_survive() {
     let d1 = absorb_entities(Some(d1), Some(d2)).expect("absorb of two non-empty diffs must be Some");
     assert_eq!(d1.added, vec![StepEntityAdded { index: 2, entity: e.clone() }, StepEntityAdded { index: 2, entity: f.clone() }]);
     let base = vec![entity(1, "BASE0", vec![]), entity(2, "BASE1", vec![])];
-    let applied = d1.apply(&base);
+    let applied = protocol::apply_diff(&d1, &base);
     let pos_e = applied.iter().position(|x| x.id == 50).expect("e survives");
     let pos_f = applied.iter().position(|x| x.id == 51).expect("f survives");
     assert_eq!(pos_f, 2, "later-absorbed insert (f) lands at the target index");
@@ -112,7 +112,7 @@ async fn absorb_law_holds_over_curated_ops() {
     let mut d1 = <StepDiff as DiffAlgebra<StepSnapshot>>::between(&base, &mid);
     let d2 = <StepDiff as DiffAlgebra<StepSnapshot>>::between(&mid, &after);
     d1.absorb(d2);
-    assert_eq!(d1.apply(&base).expect("valid absorbed diff"), after);
+    assert_eq!(protocol::apply_diff(&d1, &base).expect("valid absorbed diff"), after);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -122,9 +122,9 @@ async fn between_roundtrip_law() {
     b.entities.push(entity(4, "EXTRA", vec![StepValue::Enum("T".into())]));
     b.header.file_schema.schemas.push("CONFIG_CONTROL_DESIGN".into());
     let ab = <StepDiff as DiffAlgebra<StepSnapshot>>::between(&a, &b);
-    assert_eq!(ab.apply(&a).expect("valid forward diff"), b);
+    assert_eq!(protocol::apply_diff(&ab, &a).expect("valid forward diff"), b);
     let ba = <StepDiff as DiffAlgebra<StepSnapshot>>::between(&b, &a);
-    assert_eq!(ba.apply(&b).expect("valid backward diff"), a);
+    assert_eq!(protocol::apply_diff(&ba, &b).expect("valid backward diff"), a);
     assert!(<StepDiff as DiffAlgebra<StepSnapshot>>::between(&a, &a).is_empty());
 }
 
@@ -140,9 +140,9 @@ async fn inverse_law() {
         s
     };
     let d = <StepDiff as DiffAlgebra<StepSnapshot>>::between(&base, &next);
-    let mutated = d.apply(&base).expect("valid forward diff");
+    let mutated = protocol::apply_diff(&d, &base).expect("valid forward diff");
     let inv = d.inverse(&base);
-    assert_eq!(inv.apply(&mutated).expect("valid inverse diff"), base);
+    assert_eq!(protocol::apply_diff(&inv, &mutated).expect("valid inverse diff"), base);
 }
 
 /// 🧪️ Field sweep — the acceptance criterion: `sweep_a`/`sweep_b` differ in EVERY mutable
@@ -187,7 +187,7 @@ async fn field_sweep_covers_every_mutable_field() {
     };
 
     let ab = <StepDiff as DiffAlgebra<StepSnapshot>>::between(&sweep_a, &sweep_b);
-    assert_eq!(ab.apply(&sweep_a).expect("valid forward sweep diff"), sweep_b);
+    assert_eq!(protocol::apply_diff(&ab, &sweep_a).expect("valid forward sweep diff"), sweep_b);
     assert!(ab.file_description.is_some());
     assert!(ab.file_name.is_some());
     assert!(ab.file_schema.is_some());
@@ -202,7 +202,7 @@ async fn field_sweep_covers_every_mutable_field() {
     assert!(!args_diff.added.is_empty(), "arg 2 added (b's entity 1 has 3 args, a's has 2)");
 
     let ba = <StepDiff as DiffAlgebra<StepSnapshot>>::between(&sweep_b, &sweep_a);
-    assert_eq!(ba.apply(&sweep_b).expect("valid backward sweep diff"), sweep_a);
+    assert_eq!(protocol::apply_diff(&ba, &sweep_b).expect("valid backward sweep diff"), sweep_a);
     let entities_ba = ba.entities.as_ref().expect("entities must differ");
     assert!(!entities_ba.removed.is_empty(), "reverse direction must exercise removed (ids 3,4 absent from a)");
     assert!(!entities_ba.added.is_empty(), "reverse direction must exercise added (id 2 absent from b)");

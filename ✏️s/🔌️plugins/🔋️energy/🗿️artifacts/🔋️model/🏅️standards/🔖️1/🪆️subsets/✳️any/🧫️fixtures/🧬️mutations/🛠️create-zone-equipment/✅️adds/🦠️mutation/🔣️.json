@@ -5,5 +5,6 @@
   "equipmentType": "Baseboard",
   "priority": 1,
   "heatingCapacityW": 2000.0,
-  "coolingCapacityW": 0.0
+  "coolingCapacityW": 0.0,
+  "index": null
 }

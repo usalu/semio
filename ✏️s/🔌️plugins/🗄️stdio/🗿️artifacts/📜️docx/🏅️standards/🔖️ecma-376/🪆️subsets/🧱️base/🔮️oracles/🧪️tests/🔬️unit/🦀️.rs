@@ -7,9 +7,6 @@ use semio_repo_test_host::law::feature_rows;
 /// `w:tbl`, seven declared styles and seven OPC parts.
 const FIXTURE: &[u8] = include_bytes!("../../../🧫️fixtures/📜️example-readme.docx");
 
-/// 📸️ The committed after-document the case's `set-snapshot` scenarios replace the README with.
-const AFTER: &[u8] = include_bytes!("../../../🧫️fixtures/🧾️readme-afters/📸️set-snapshot/➡️after.docx");
-
 /// 🧾️ The case's own `Examples` rows, read rather than restated — see [`semio_repo_test_host::law::feature_rows`].
 const FEATURE: &str = include_str!("../../../🧪️tests/📜️mutate-docx-ecma-376/🥒️.feature");
 
@@ -27,8 +24,8 @@ fn spec(kind: &str, params: &Json) -> Json {
 fn every_declared_kind_is_observable_and_its_inverse_restores_the_document() {
     let base = project_docx_ecma_376(FIXTURE).expect("the independent reader projects the real package");
     let rows = feature_rows(FEATURE);
-    assert_eq!(rows.len(), KINDS.len() - 2, "one Examples row per declared kind but `set-snapshot` (a whole package, its own scenario pair) and `replace-xml-node` (no reference model of an arbitrary XML node)");
-    assert!(rows.iter().all(|(kind, _)| kind != "set-snapshot" && kind != "replace-xml-node"), "set-snapshot and replace-xml-node carry no Examples row");
+    assert_eq!(rows.len(), KINDS.len() - 1, "one Examples row per declared kind but `replace-xml-node` (no reference model of an arbitrary XML node)");
+    assert!(rows.iter().all(|(kind, _)| kind != "replace-xml-node"), "replace-xml-node carries no Examples row");
     for (kind, params) in &rows {
         assert!(KINDS.contains(&kind.as_str()), "the feature exercises {kind:?}, which the docx-ecma-376-any catalog does not declare");
         let forward = spec(kind, params);
@@ -59,16 +56,6 @@ fn the_round_trip_is_projection_stable_and_not_a_byte_passthrough() {
     let rebuilt = oracle_round_trip(FIXTURE).expect("the reference re-serializes the package");
     assert_ne!(rebuilt.as_slice(), FIXTURE, "zip+quick-xml rebuild the archive and every part from their own trees; identical bytes would mean the input was smuggled");
     assert_eq!(project_docx_ecma_376(&rebuilt).unwrap(), project_docx_ecma_376(FIXTURE).unwrap());
-}
-
-/// 📸️ The whole-document replacement moves the projection onto the after-document's, and replacing back restores the README.
-#[test]
-fn replacing_the_package_is_observable_and_replacing_back_restores_it() {
-    let base = project_docx_ecma_376(FIXTURE).unwrap();
-    let replaced = oracle_replace_package(FIXTURE, AFTER).expect("the reference replaces the package");
-    assert_ne!(project_docx_ecma_376(&replaced).unwrap(), base, "the committed after-document differs from the README");
-    assert_eq!(project_docx_ecma_376(&replaced).unwrap(), project_docx_ecma_376(AFTER).unwrap(), "the replacement is the after-document");
-    assert_eq!(project_docx_ecma_376(&oracle_replace_package(&replaced, FIXTURE).unwrap()).unwrap(), base, "replacing back restores the README");
 }
 
 /// 🗜️ The real package with every entry `edit` returns re-stated and every other entry carried as it is.

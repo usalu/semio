@@ -89,7 +89,7 @@ export class GuestFrameworkCheckScript extends BundleScript {
     for (const check of readGuestFrameworkChecks()) {
       const started = Date.now();
       console.log(`guest-framework-check ${check.target} (${check.workspace}): ${check.packages.join(", ")}`);
-      runCmd("cargo", [...guestFrameworkCheckArgs(check)], { cwd: repoRoot, ...orchestratorBudgetOpts() });
+      runCmd("cargo", [...guestFrameworkCheckArgs(check), "--message-format=json"], { cwd: repoRoot, ...orchestratorBudgetOpts() });
       console.log(`guest-framework-check ${check.target} done in ${Math.round((Date.now() - started) / 1000)} s`);
     }
   }

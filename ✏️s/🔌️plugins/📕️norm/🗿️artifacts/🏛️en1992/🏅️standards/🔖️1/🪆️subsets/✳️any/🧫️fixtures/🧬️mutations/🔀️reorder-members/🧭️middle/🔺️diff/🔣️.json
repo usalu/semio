@@ -1,0 +1,21 @@
+{
+  "annex": null,
+  "title": null,
+  "designWorkingLifeYears": null,
+  "deltaCDev": null,
+  "cementType": null,
+  "concreteGrades": null,
+  "reinforcementGrades": null,
+  "prestressSteels": null,
+  "members": {
+    "added": [],
+    "removed": [],
+    "modified": [],
+    "order": [
+      "wall-W1-2",
+      "wall-W1",
+      "wall-W1-m2"
+    ]
+  },
+  "anchors": null
+}

@@ -176,7 +176,31 @@ impl Generation3dConfig {
     }
 }
 
-store::impl_whole_record_config!(Generation3dConfig);
+impl store::ConfigRecord for Generation3dConfig {}
+
+/// 🧭️ The leaf mutations that carry `base` to `next`, one per field that differs.
+pub fn config_replacement(base: &Generation3dConfig, next: &Generation3dConfig) -> Vec<Generation3dConfigMutation> {
+    let mut steps = Vec::new();
+    if base.lod_mode != next.lod_mode {
+        steps.push(Generation3dConfigMutation::SetLodMode(SetLodMode { value: next.lod_mode.clone() }));
+    }
+    if base.show_mode != next.show_mode {
+        steps.push(Generation3dConfigMutation::SetShowMode(SetShowMode { value: next.show_mode.clone() }));
+    }
+    if base.camera != next.camera {
+        steps.push(Generation3dConfigMutation::SetCamera(SetCamera { camera: next.camera.clone() }));
+    }
+    if base.preview_camera != next.preview_camera {
+        steps.push(Generation3dConfigMutation::SetPreviewCamera(SetPreviewCamera { camera: next.preview_camera.clone() }));
+    }
+    if base.sun_json != next.sun_json {
+        steps.push(Generation3dConfigMutation::SetSun(SetSun { json: next.sun_json.clone() }));
+    }
+    if base.selected_generation_id != next.selected_generation_id {
+        steps.push(Generation3dConfigMutation::SetSelectedGeneration(SetSelectedGeneration { selected_generation_id: next.selected_generation_id.clone() }));
+    }
+    steps
+}
 //#endregion 🔖️Config
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
@@ -191,3 +215,70 @@ mod tests;
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
+
+/// 🩹 Owned-field diff of [`Generation3dConfig`]: exactly the fields a leaf sets.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Generation3dConfigPatch {
+    pub lod_mode: Option<String>,
+    pub show_mode: Option<String>,
+    pub camera: Option<CameraJson>,
+    pub preview_camera: Option<Generation3dPreviewCamera>,
+    pub sun_json: Option<String>,
+    pub selected_generation_id: Option<Generation3dSelectedGenerationChange>,
+}
+
+/// 🔺️ One change of the nullable `selected_generation_id`: the inner `None` clears it.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Generation3dSelectedGenerationChange {
+    pub id: Option<String>,
+}
+
+impl protocol::MutationDiff<Generation3dConfig> for Generation3dConfigPatch {
+    fn apply(&self, base: &Generation3dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Generation3dConfig> {
+        Ok(Generation3dConfig {
+            lod_mode: self.lod_mode.clone().unwrap_or_else(|| base.lod_mode.clone()),
+            show_mode: self.show_mode.clone().unwrap_or_else(|| base.show_mode.clone()),
+            camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()),
+            preview_camera: self.preview_camera.clone().unwrap_or_else(|| base.preview_camera.clone()),
+            sun_json: self.sun_json.clone().unwrap_or_else(|| base.sun_json.clone()),
+            selected_generation_id: self.selected_generation_id.clone().map_or_else(|| base.selected_generation_id.clone(), |change| change.id),
+            ..base.clone()
+        })
+    }
+    fn absorb(&mut self, other: Self) {
+        self.lod_mode = other.lod_mode.or_else(|| self.lod_mode.take());
+        self.show_mode = other.show_mode.or_else(|| self.show_mode.take());
+        self.camera = other.camera.or_else(|| self.camera.take());
+        self.preview_camera = other.preview_camera.or_else(|| self.preview_camera.take());
+        self.sun_json = other.sun_json.or_else(|| self.sun_json.take());
+        self.selected_generation_id = other.selected_generation_id.or_else(|| self.selected_generation_id.take());
+    }
+}
+
+impl protocol::DiffAlgebra<Generation3dConfig> for Generation3dConfigPatch {
+    fn inverse(&self, base: &Generation3dConfig) -> Self {
+        Self {
+            lod_mode: self.lod_mode.as_ref().map(|_| base.lod_mode.clone()),
+            show_mode: self.show_mode.as_ref().map(|_| base.show_mode.clone()),
+            camera: self.camera.as_ref().map(|_| base.camera.clone()),
+            preview_camera: self.preview_camera.as_ref().map(|_| base.preview_camera.clone()),
+            sun_json: self.sun_json.as_ref().map(|_| base.sun_json.clone()),
+            selected_generation_id: self.selected_generation_id.as_ref().map(|_| Generation3dSelectedGenerationChange { id: base.selected_generation_id.clone() }),
+        }
+    }
+    fn between(base: &Generation3dConfig, other: &Generation3dConfig) -> Self {
+        Self {
+            lod_mode: (base.lod_mode != other.lod_mode).then(|| other.lod_mode.clone()),
+            show_mode: (base.show_mode != other.show_mode).then(|| other.show_mode.clone()),
+            camera: (base.camera != other.camera).then(|| other.camera.clone()),
+            preview_camera: (base.preview_camera != other.preview_camera).then(|| other.preview_camera.clone()),
+            sun_json: (base.sun_json != other.sun_json).then(|| other.sun_json.clone()),
+            selected_generation_id: (base.selected_generation_id != other.selected_generation_id).then(|| Generation3dSelectedGenerationChange { id: other.selected_generation_id.clone() }),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.lod_mode.is_none() && self.show_mode.is_none() && self.camera.is_none() && self.preview_camera.is_none() && self.sun_json.is_none() && self.selected_generation_id.is_none()
+    }
+}

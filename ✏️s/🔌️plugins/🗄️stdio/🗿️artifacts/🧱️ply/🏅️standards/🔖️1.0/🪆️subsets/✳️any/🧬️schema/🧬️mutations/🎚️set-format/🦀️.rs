@@ -1,6 +1,4 @@
-//! 🎚️ `set-format` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🎚️ `set-format` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,14 +13,12 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for SetFormat {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "format", kind: "set-format", record: "SetFormat" };
 
     fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
-        agg_diff(&PlyMutation::SetFormat(self.clone()), base)
+        let Self { format } = self;
+        protocol::MutationOutcome::new(diff_set_format(*format))
     }
     fn inverse(&self, base: &PlySnapshot) -> Result<Vec<PlyMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&PlyMutation::SetFormat(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![PlyMutation::SetFormat(set_format::SetFormat { format: base.format })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set format", "Format setzen")
     }

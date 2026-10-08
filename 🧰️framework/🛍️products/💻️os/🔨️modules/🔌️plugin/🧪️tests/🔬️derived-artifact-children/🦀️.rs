@@ -1,4 +1,5 @@
 use super::*;
+use crate::io::{Analysis, AnalyzeSource, ComposeError, Composition, ComposeSource};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -72,11 +73,11 @@ struct ChildrenTestAnalysis;
 impl ArtifactAnalysis for ChildrenTestAnalysis {
     type Parts = ();
     const DIALECT: Dialect = Dialect { artifact_kind: "s.test.children-parent", standard: StandardId("1"), subset: SubsetId::ANY };
-    fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-        IoConfidence::Low
+    fn sniff(_source: &AnalyzeSource<'_>) -> crate::io::Confidence {
+        crate::io::Confidence::Low
     }
     fn analyze(_sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
-        Analysis { parts: (), dialect: Self::DIALECT, confidence: IoConfidence::Low, diagnostics: Vec::new() }
+        Analysis { parts: (), dialect: Self::DIALECT, confidence: crate::io::Confidence::Low, diagnostics: Vec::new() }
     }
 }
 

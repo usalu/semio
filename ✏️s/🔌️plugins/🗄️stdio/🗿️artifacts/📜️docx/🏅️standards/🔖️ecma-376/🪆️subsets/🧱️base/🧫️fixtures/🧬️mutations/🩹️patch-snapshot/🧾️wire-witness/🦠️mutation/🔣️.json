@@ -1,8 +1,0 @@
-{
-  "mutation": "patchSnapshot",
-  "patch": {
-    "operation": "rename",
-    "path": "/opc/relationships/custom~1source.xml",
-    "key": "custom/destination.xml"
-  }
-}

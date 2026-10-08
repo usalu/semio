@@ -9,31 +9,7 @@
       {
         "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
         "patch": {
-          "replacement": {
-            "anchor": "fixed",
-            "handles": [
-              {
-                "angle": -2.3561944901923453,
-                "handleKind": "core rectangular bottom",
-                "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1:c0",
-                "radius": 3.0
-              },
-              {
-                "angle": -0.7853981633974483,
-                "handleKind": "core rectangular bottom",
-                "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1:c1",
-                "radius": 3.0
-              }
-            ],
-            "iconKind": "base",
-            "id": "7dc5b737-3b6b-4068-b315-b7bacc91c2e1",
-            "nodeKind": "Base",
-            "radius": 20.0,
-            "root": true,
-            "text": "b",
-            "x": 0.663,
-            "y": 983.866
-          }
+          "root": true
         }
       }
     ],

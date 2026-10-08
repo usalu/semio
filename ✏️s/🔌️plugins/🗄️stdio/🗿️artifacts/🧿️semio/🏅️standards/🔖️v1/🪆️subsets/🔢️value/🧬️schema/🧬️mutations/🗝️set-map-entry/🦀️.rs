@@ -9,6 +9,8 @@ pub struct SetMapEntry {
     pub path: SemioValuePath,
     pub key: String,
     pub value: SemioValue,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl protocol::MutationKind<SemioValueSnapshot, SemioValueMutation> for SetMapEntry {

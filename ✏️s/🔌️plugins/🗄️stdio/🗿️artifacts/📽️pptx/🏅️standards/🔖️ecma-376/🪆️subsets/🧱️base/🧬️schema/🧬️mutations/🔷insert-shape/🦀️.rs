@@ -1,6 +1,4 @@
-//! 🔷️ `insert-shape` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🔷️ `insert-shape` -- builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,15 +14,14 @@ pub struct InsertShape {
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for InsertShape {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "shape", kind: "insert-shape", record: "InsertShape" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxMutation as Mutation<PptxSnapshot>>::Diff> {
-        agg_diff(&PptxMutation::InsertShape(self.clone()), base)
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
+        plan_outcome(xml_address::insert_shape_plan(base, &self.vacancy, &self.shape))
     }
+
     fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&PptxMutation::InsertShape(self.clone()), base)?
-    
-    })
-}
+        Ok(plan_inverse(xml_address::insert_shape_plan(base, &self.vacancy, &self.shape)))
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert shape", "Form einfügen")
     }

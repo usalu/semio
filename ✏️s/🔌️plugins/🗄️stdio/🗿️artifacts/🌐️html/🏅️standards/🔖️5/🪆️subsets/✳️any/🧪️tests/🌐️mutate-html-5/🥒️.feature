@@ -71,7 +71,6 @@ Feature: Apply every typed HTML 5 mutation to a real-world document
     And the semantic projection moved
     Examples:
       | id                | params                                                                                                                                                                                     |
-      | set-snapshot       | {"snapshot": {"schema":"stdio.html","doctype":"DOCTYPE html","root":{"kind":"element","name":"html","attributes":[{"name":"lang","value":"de"}],"children":[{"kind":"element","name":"head","attributes":[],"children":[{"kind":"element","name":"title","attributes":[],"children":[{"kind":"text","text":"Wave 7 Snapshot Title"}]}]},{"kind":"element","name":"body","attributes":[],"children":[{"kind":"text","text":"Wave 7 snapshot replacement content"}]}]}}} |
       | set-doctype        | {"doctype": "DOCTYPE htmlWave7"}                                                                                                                                                          |
       | insert-node        | {"parent": [2], "index": 0, "node": {"kind":"element","name":"div","attributes":[{"name":"id","value":"wave7-marker"}],"children":[{"kind":"text","text":"Wave 7 mutation testing"}]}}    |
       | remove-node        | {"parent": [2], "index": 9}                                                                                                                                                               |
@@ -93,7 +92,6 @@ Feature: Apply every typed HTML 5 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                | params                                                                                                                                                                                     |
-      | set-snapshot       | {"snapshot": {"schema":"stdio.html","doctype":"DOCTYPE html","root":{"kind":"element","name":"html","attributes":[{"name":"lang","value":"de"}],"children":[{"kind":"element","name":"head","attributes":[],"children":[{"kind":"element","name":"title","attributes":[],"children":[{"kind":"text","text":"Wave 7 Snapshot Title"}]}]},{"kind":"element","name":"body","attributes":[],"children":[{"kind":"text","text":"Wave 7 snapshot replacement content"}]}]}}} |
       | set-doctype        | {"doctype": "DOCTYPE htmlWave7"}                                                                                                                                                          |
       | insert-node        | {"parent": [2], "index": 0, "node": {"kind":"element","name":"div","attributes":[{"name":"id","value":"wave7-marker"}],"children":[{"kind":"text","text":"Wave 7 mutation testing"}]}}    |
       | remove-node        | {"parent": [2], "index": 9}                                                                                                                                                               |

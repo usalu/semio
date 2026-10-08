@@ -1,18 +1,19 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "shapeModel": null,
   "buildingModel": null,
   "energyModel": null,
   "structureClassicModel": {
-    "childId": "cad-structure-2",
-    "target": {
-      "artifactId": "cad-structure-2",
-      "dialect": {
-        "artifactKind": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "model"
+    "child": {
+      "childId": "cad-structure-2",
+      "target": {
+        "artifactId": "cad-structure-2",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "model"
+        }
       }
     }
   },

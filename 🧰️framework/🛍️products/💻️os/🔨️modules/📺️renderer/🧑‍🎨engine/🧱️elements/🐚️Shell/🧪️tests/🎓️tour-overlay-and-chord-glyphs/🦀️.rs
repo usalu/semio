@@ -320,9 +320,12 @@ fn the_platform_door_is_wired_end_to_end() {
     let worker = std::fs::read_to_string(engine_root().join("🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts")).expect("the frame worker");
     assert!(worker.contains("loaded.semioWgpuSetHostPlatform?.(message.platform)"), "⌨️ the frame Worker applies the boot value");
     let page = std::fs::read_to_string(engine_root().join("🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts")).expect("the page boot");
-    assert!(page.contains("platform: hostPlatform()"), "⌨️ the page makes the read");
+    assert!(page.contains("mountWgpuBrowserHost(root,"), "⌨️ the page enters the browser host");
+    let host = std::fs::read_to_string(engine_root().join("🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts")).expect("the browser host");
+    assert!(host.contains("return resolveWgpuHostPlatform(window)"), "⌨️ the browser host reads the page platform");
+    assert!(host.contains("platform: hostPlatform()"), "⌨️ the browser host forwards the read");
     let embed = std::fs::read_to_string(engine_root().join("🎯️targets/🧊️wgpu/🎬️renderer-boot/🟦️.ts")).expect("the embeddable door");
-    assert!(embed.contains("semioWgpuSetHostPlatform?.(resolveWgpuHostPlatform(window))"), "⌨️ and so does the embeddable door, which runs on the page itself");
+    assert!(embed.contains("return mountWgpuBrowserHost(root,"), "⌨️ the embeddable door enters the same browser host");
 }
 
 //#endregion ⌨️ChordGlyphLaw

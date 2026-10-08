@@ -130,7 +130,7 @@ impl Generation2dMutation {
 /// naming (`name`/`value` here, `new_name`/`new_value` there).
 pub fn generation_mutation_to_generation2d(operation: GenerationMutation) -> Generation2dMutation {
     match operation {
-        GenerationMutation::Add { generation } => Generation2dMutation::CreateGeneration(super::create_generation::CreateGeneration { generation }),
+        GenerationMutation::Add { generation } => Generation2dMutation::CreateGeneration(super::create_generation::CreateGeneration { generation, index: None }),
         GenerationMutation::Remove { id } => Generation2dMutation::DeleteGeneration(super::delete_generation::DeleteGeneration { id }),
         GenerationMutation::Rename { id, name } => Generation2dMutation::RenameGeneration(super::rename_generation::RenameGeneration { id, name }),
         GenerationMutation::UpdateValues { id, question_id, value } => Generation2dMutation::ChangeGenerationValue(super::change_generation_value::ChangeGenerationValue { id, question_id, value }),
@@ -218,7 +218,7 @@ pub fn apply_generation2d_mutation(projection: &mut Generation2dSnapshot, mutati
         delta.retire_cold();
         return Err(messages);
     }
-    let applied = protocol::MutationDiff::apply(&delta, &*projection);
+    let applied = protocol::apply_diff(&delta, &*projection);
     delta.retire_cold();
     match applied {
         Ok(next) => {

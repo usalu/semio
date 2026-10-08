@@ -17,8 +17,6 @@ pub const REGISTRY: &[(u8, Encoder, Decoder)] = &[
     (crate::standards::v1_4::subsets::base::io::binary::mutations::move_page::TAG, crate::standards::v1_4::subsets::base::io::binary::mutations::move_page::encode, crate::standards::v1_4::subsets::base::io::binary::mutations::move_page::decode),
     (crate::standards::v1_4::subsets::base::io::binary::mutations::resize_page::TAG, crate::standards::v1_4::subsets::base::io::binary::mutations::resize_page::encode, crate::standards::v1_4::subsets::base::io::binary::mutations::resize_page::decode),
     (crate::standards::v1_4::subsets::base::io::binary::mutations::replace_page_text::TAG, crate::standards::v1_4::subsets::base::io::binary::mutations::replace_page_text::encode, crate::standards::v1_4::subsets::base::io::binary::mutations::replace_page_text::decode),
-    (crate::standards::v1_4::subsets::base::io::binary::mutations::set_snapshot::TAG, crate::standards::v1_4::subsets::base::io::binary::mutations::set_snapshot::encode, crate::standards::v1_4::subsets::base::io::binary::mutations::set_snapshot::decode),
-    (crate::standards::v1_4::subsets::base::io::binary::mutations::patch_snapshot::TAG, crate::standards::v1_4::subsets::base::io::binary::mutations::patch_snapshot::encode, crate::standards::v1_4::subsets::base::io::binary::mutations::patch_snapshot::decode),
 ];
 //#endregion 🔖️Registry
 
@@ -104,12 +102,6 @@ pub mod move_page;
 
 #[path = "🗑️remove-page/🦀️.rs"]
 pub mod remove_page;
-
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 
 #[path = "♻️replace-page-text/🦀️.rs"]
 pub mod replace_page_text;

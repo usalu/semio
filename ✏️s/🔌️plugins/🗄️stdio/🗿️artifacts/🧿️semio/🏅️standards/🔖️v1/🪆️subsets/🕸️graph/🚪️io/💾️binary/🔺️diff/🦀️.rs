@@ -57,4 +57,5 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     Ok(SemioGraphDiff { nodes, edges })
 }
 }
+}
 pub use diff_codec::*;

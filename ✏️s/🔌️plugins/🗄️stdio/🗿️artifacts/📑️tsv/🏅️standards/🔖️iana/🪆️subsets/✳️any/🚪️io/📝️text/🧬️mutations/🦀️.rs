@@ -7,7 +7,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod mutations_codec {
 use super::*;
 use crate::standards::iana::subsets::any::schema::mutations::*;
-use crate::standards::iana::subsets::any::schema::diff::{diff_set_snapshot, TsvDiff, TsvRowAdded, TsvRowDiff, TsvRowModified, TsvRowsDiff};
+use crate::standards::iana::subsets::any::schema::diff::{TsvDiff, TsvRowAdded, TsvRowDiff, TsvRowModified, TsvRowsDiff};
 use crate::standards::iana::subsets::any::io::text::diff::{dec_str};
 use crate::standards::iana::subsets::any::io::text::diff::{enc_str};
 use crate::standards::iana::subsets::any::io::text::diff::{dec_row};
@@ -39,8 +39,6 @@ pub(crate) fn dec_tsv_snapshot(s: &str) -> Result<TsvSnapshot, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_tsv_mutation(m: &TsvMutation) -> String {
     match m {
-        TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_tsv_snapshot(snapshot)),
-        TsvMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline }) => format!("set-trailing-newline trailing-newline={}", if *trailing_newline { 1 } else { 0 }),
         TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending }) => format!("set-line-ending line-ending={}", crate::standards::iana::subsets::any::io::text::diff::enc_line_ending(*line_ending)),
         TsvMutation::InsertRow(insert_row::InsertRow { index, row }) => format!("insert-row index={index} row={}", enc_row(row)),
@@ -56,8 +54,6 @@ pub(crate) fn parse_tsv_mutation(line: &str) -> Result<TsvMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("tsv mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| TsvMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
-        "set-snapshot" => Ok(TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_tsv_snapshot(arg("snapshot")?)? })),
         "set-trailing-newline" => Ok(TsvMutation::SetTrailingNewline(set_trailing_newline::SetTrailingNewline { trailing_newline: arg("trailing-newline")? == "1" })),
         "set-line-ending" => Ok(TsvMutation::SetLineEnding(set_line_ending::SetLineEnding { line_ending: crate::standards::iana::subsets::any::io::text::diff::dec_line_ending(arg("line-ending")?)? })),
         "insert-row" => Ok(TsvMutation::InsertRow(insert_row::InsertRow { index: usize_arg("index")?, row: dec_row(arg("row")?)? })),

@@ -12,7 +12,7 @@ pub mod derived_composition {
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use {semio_framework_plugin::register_subset_validator,semio_framework_plugin::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::SubsetValidator,semio_framework_plugin::SubsetValidatorEntry};
+    use {semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
     use std::sync::OnceLock;
 
     const DIALECT_SELF: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("cc6") };
@@ -103,7 +103,7 @@ pub use derived_composition::*;
 pub mod derived_construction {
     use crate::standards::v_ap214::subsets::cc6::io::check_cc6_conformance;
     use crate::{StepDiff, StepSnapshot};
-    use crate::standards::v_ap214::subsets::cc6::schema::mutations::{StepCc6Mutation, apply_step_cc6_mutation};
+    use crate::standards::v_ap214::subsets::cc6::schema::mutations::{StepCc6Mutation};
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::Severity;
     use semio_framework_plugin::ArtifactBuilder;
@@ -137,12 +137,13 @@ use semio_framework_diagnostic::Severity;
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = apply_step_cc6_mutation(&mut self.snapshot, &mutation);
+            let (next, diff) = store::apply_outcome(&self.snapshot, protocol::Mutation::diff(&mutation, &self.snapshot));
+            self.snapshot = next;
             (self, diff)
         }
 
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <StepDiff as protocol::MutationDiff<StepSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             Ok(self)
         }
 
@@ -178,7 +179,7 @@ use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("cc6") };
@@ -242,7 +243,7 @@ use semio_framework_diagnostic::TextSpan;
         type Parts = StepParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             StepAnyAnalyzer::sniff(source)
         }
 
@@ -253,7 +254,7 @@ use semio_framework_diagnostic::TextSpan;
             if let Some(snapshot) = &inner.parts.snapshot {
                 let checks = check_cc6_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
-                    confidence = IoConfidence::Low;
+                    confidence = semio_framework_plugin::io::Confidence::Low;
                 }
                 diagnostics.extend(checks);
             }
@@ -278,5 +279,7 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: StepCc6Composer,
 );
 
-#[path = "🧬️mutations/🦀️.rs"]
-pub mod mutations;
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;

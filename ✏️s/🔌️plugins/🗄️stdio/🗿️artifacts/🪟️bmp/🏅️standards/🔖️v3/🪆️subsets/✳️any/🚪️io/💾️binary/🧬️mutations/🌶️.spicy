@@ -1,3 +1,3 @@
 module Stdio_bmp_mutation;
-# Direct tags: set-snapshot=7, patch-snapshot=8, paint-indexed-region=9, paint-direct-region=10
+# Direct tags: paint-indexed-region=9, paint-direct-region=10
 public type Mutation = unit { format: uint8; tag: uint8; payload: bytes &eod; };

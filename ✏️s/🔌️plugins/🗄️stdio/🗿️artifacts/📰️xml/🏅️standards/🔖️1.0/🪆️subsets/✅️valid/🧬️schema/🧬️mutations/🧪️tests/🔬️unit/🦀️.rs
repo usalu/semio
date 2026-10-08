@@ -55,8 +55,6 @@ fn applied(base: &XmlSnapshot, mutation: &XmlValidMutation) -> (XmlSnapshot, pro
 #[test]
 fn kinds_matches_enum_variants_in_declaration_order() {
     let one_per_variant = vec![
-        XmlValidMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: XmlSnapshot::default() }),
-        XmlValidMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         XmlValidMutation::DeclareDoctype(declare_doctype::DeclareDoctype { external_id: None }),
         XmlValidMutation::RenameDocumentElement(rename_document_element::RenameDocumentElement { name: "x".into() }),
         XmlValidMutation::SetExternalSubset(set_external_subset::SetExternalSubset { external_id: None }),
@@ -78,14 +76,6 @@ fn gate_agrees_with_the_subset_conformance_checker() {
     let mismatched = <XmlSnapshot as store::ArtifactDsl>::parse_dsl("<!DOCTYPE book>\n<plist/>").expect("parses");
     assert!(blocked_snapshot_violation(&mismatched).expect("a desynchronised DOCTYPE Name is hard-invalid").contains(CODE_ROOT_NAME_MISMATCH));
     assert_eq!(blocked_snapshot_violation(&valid_document()), None, "the always-on advisory is a Warning and must never block");
-}
-
-#[test]
-fn set_snapshot_refuses_a_replacement_that_is_not_valid() {
-    let base = valid_document();
-    let (next, outcome) = applied(&base, &XmlValidMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: <XmlSnapshot as store::ArtifactDsl>::parse_dsl("<plist/>").expect("parses") }));
-    assert!(outcome.messages().iter().any(|message| message.code.0 == CODE_REJECTED), "got {:?}", outcome.messages());
-    assert_eq!(next, base, "a rejected mutation must leave the document untouched");
 }
 
 #[test]
@@ -147,8 +137,6 @@ fn declare_entity_inserts_at_the_declared_index_and_inverts_to_the_prior_list() 
 fn every_kind_round_trips_through_its_own_inverse() {
     let base = valid_document();
     let cases = vec![
-        XmlValidMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: <XmlSnapshot as store::ArtifactDsl>::parse_dsl("<!DOCTYPE root>\n<root><child>text</child></root>").expect("parses") }),
-        XmlValidMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         XmlValidMutation::DeclareDoctype(declare_doctype::DeclareDoctype { external_id: Some(XmlExternalId::System { system_id: "plist.dtd".into() }) }),
         XmlValidMutation::RenameDocumentElement(rename_document_element::RenameDocumentElement { name: "propertyList".into() }),
         XmlValidMutation::SetExternalSubset(set_external_subset::SetExternalSubset { external_id: None }),
@@ -181,5 +169,22 @@ fn set_standalone_is_exact_in_every_declaration_combination() {
             }
             assert_eq!(next, base, "set-standalone({target:?}) on {source:?} must invert exactly");
         }
+    }
+}
+
+/// ⚖️ `mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff.
+#[semio_framework_async_macros::async_test]
+async fn mutation_inverse_sum_law_holds_for_every_leaf() {
+    let base = valid_document();
+    for mutation in [
+        XmlValidMutation::DeclareDoctype(declare_doctype::DeclareDoctype { external_id: Some(XmlExternalId::System { system_id: "plist.dtd".into() }) }),
+        XmlValidMutation::RenameDocumentElement(rename_document_element::RenameDocumentElement { name: "propertyList".into() }),
+        XmlValidMutation::SetExternalSubset(set_external_subset::SetExternalSubset { external_id: None }),
+        XmlValidMutation::SetStandalone(set_standalone::SetStandalone { standalone: Some(true) }),
+        XmlValidMutation::DeclareEntity(declare_entity::DeclareEntity { index: 0, parameter: false, name: "semio".into(), value: "Semio".into() }),
+        XmlValidMutation::SetInternalSubset(set_internal_subset::SetInternalSubset { declarations: vec![XmlDtdDeclaration::Entity { parameter: true, name: "shared".into(), value: "<!ELEMENT dummy EMPTY>".into() }] }),
+        XmlValidMutation::SetText(set_text::SetText { path: XmlNodePath(vec![0, 0]), text: "Renamed".into() }),
+    ] {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     }
 }

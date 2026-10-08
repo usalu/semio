@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "invalid-token",
+      "text": "not json"
+    },
+    {
+      "name": "unfinished-object",
+      "text": "{"
+    },
+    {
+      "name": "null-viewport",
+      "text": "{\"viewport\":null}"
+    },
+    {
+      "name": "zero-zoom",
+      "text": "{\"viewport\":{\"x\":0.0,\"y\":0.0,\"zoom\":0.0}}"
+    },
+    {
+      "name": "text-x",
+      "text": "{\"viewport\":{\"x\":\"west\",\"y\":0.0,\"zoom\":1.0}}"
+    },
+    {
+      "name": "unknown-viewport-field",
+      "text": "{\"viewport\":{\"x\":0.0,\"y\":0.0,\"zoom\":1.0,\"depth\":1}}"
+    }
+  ],
+  "refusal": "InvalidValue",
+  "errorProvider": "semio-framework-value",
+  "packErrorProvider": "semio-framework-pack-error"
+}

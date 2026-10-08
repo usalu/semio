@@ -27,28 +27,33 @@ pub fn decode_set_line_ending_payload(value: &semio_framework_value::DslValue) -
 //#endregion 🔖️Payload
 
 //#region ⚙️Semantics
+impl SetLineEndingMutation {
+    /// 🧭️ The refusal reason, or whether the line ending actually changes.
+    fn plan(&self, base: &TxtSnapshot) -> Result<bool, String> {
+        if let Some(reason) = native_snapshot_error(base) {
+            return Err(reason);
+        }
+        if let Some(reason) = native_lines_error(&base.lines, base.trailing_newline, self.value) {
+            return Err(reason);
+        }
+        Ok(base.line_ending != self.value)
+    }
+}
+
 impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for SetLineEndingMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "line-ending", kind: "set-line-ending", record: "SetLineEnding" };
 
     fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<TxtDiff> {
-        if let Some(reason) = native_snapshot_error(base) {
-            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
+        match self.plan(base) {
+            Err(reason) => protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new()),
+            Ok(false) => protocol::MutationOutcome::new(TxtDiff::default()),
+            Ok(true) => protocol::MutationOutcome::new(TxtDiff { line_ending: Some(self.value), ..Default::default() }),
         }
-        if let Some(reason) = native_lines_error(&base.lines, base.trailing_newline, self.value) {
-            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
-        }
-        protocol::MutationOutcome::new(if base.line_ending == self.value { TxtDiff::default() } else { TxtDiff { line_ending: Some(self.value), ..Default::default() } })
     }
 
     fn inverse(&self, base: &TxtSnapshot) -> Result<Vec<super::TxtMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        if self.diff(base).diff().line_ending.is_none() {
-            return Vec::new();
-        }
-        vec![super::TxtMutation::SetLineEnding(Self { value: base.line_ending })]
-    
-    })())
-}
+        Ok(if self.plan(base) == Ok(true) { vec![super::TxtMutation::SetLineEnding(Self { value: base.line_ending })] } else { Vec::new() })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Line Ending", "Zeilenende setzen")

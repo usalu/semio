@@ -8,14 +8,23 @@ use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
 #[derive(Clone,Copy,Default)]
 struct ShellObservation { recording:bool,count:usize,addresses:[usize;8],sizes:[usize;8],released:usize }
 thread_local! {static SHELL_OBSERVATION:std::cell::Cell<ShellObservation>=const {std::cell::Cell::new(ShellObservation {recording:false,count:0,addresses:[0;8],sizes:[0;8],released:0})};}
+thread_local! {static OWNERSHIP_OBSERVATION:std::cell::Cell<Option<(usize,usize)>>=const {std::cell::Cell::new(None)};}
+pub(crate) fn observe_ownership<T>(operation:impl FnOnce()->T)->(T,usize,usize) {
+    OWNERSHIP_OBSERVATION.with(|state|assert!(state.replace(Some((0,0))).is_none()));
+    let value=operation();
+    let (allocated,released)=OWNERSHIP_OBSERVATION.with(|state|state.replace(None).unwrap());
+    (value,allocated,released)
+}
 struct ObservedSystem;
 unsafe impl std::alloc::GlobalAlloc for ObservedSystem {
     unsafe fn alloc(&self,layout:std::alloc::Layout)->*mut u8 {
         let pointer=unsafe {std::alloc::GlobalAlloc::alloc(&std::alloc::System,layout)};
         if !pointer.is_null(){let _=SHELL_OBSERVATION.try_with(|state|{let mut observed=state.get();if observed.recording&&observed.count<observed.addresses.len(){let index=observed.count;observed.addresses[index]=pointer as usize;observed.sizes[index]=layout.size();observed.count+=1;state.set(observed);}});}
+        if !pointer.is_null(){let _=OWNERSHIP_OBSERVATION.try_with(|state|{if let Some((allocated,released))=state.get(){state.set(Some((allocated+layout.size(),released)));}});}
         pointer
     }
     unsafe fn dealloc(&self,pointer:*mut u8,layout:std::alloc::Layout) {
+        let _=OWNERSHIP_OBSERVATION.try_with(|state|{if let Some((allocated,released))=state.get(){state.set(Some((allocated,released+layout.size())));}});
         let _=SHELL_OBSERVATION.try_with(|state|{let mut observed=state.get();if let Some(index)=observed.addresses.iter().position(|address|*address==pointer as usize){observed.addresses[index]=0;observed.released+=layout.size();state.set(observed);}});
         unsafe {std::alloc::GlobalAlloc::dealloc(&std::alloc::System,pointer,layout)};
     }

@@ -217,19 +217,8 @@ pub mod os_directory;
 // file's own `os_workflow` mount for the real fix, and the run crate's glue.rs for the matching
 // `extern crate semio_framework as workflow;` alias change.
 
-// 🚪️ `io`'s FULL registry file (`ComposerEntry`/`IoKey`/`io_dispatch`/`SubsetValidator`/…) is
-// still mounted independently here AND in `semio-framework`'s own glue (as `io`) — that half of
-// the double-mount is recorded debt D2 (ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM),
-// cleaned up wholesale at W6 alongside the old registry itself. This mount exists solely so
-// `store::ArtifactEnvelope` can carry a persisted `dialect`/`migrated_from` coordinate (26/08/10
-// D4 evolution slice); a kernel-side dependency on the full `semio-framework` crate (to reuse ITS
-// `io` mount instead) would be circular — see the `os_workflow`/`workflow` comment above.
-#[path = "../../../../🔨️modules/🚪️io/🦀️.rs"]
-pub mod os_io;
-
-// 🪡 Thunk macros resolve their types and dispatch through this canonical kernel I/O owner.
-pub use crate::os_io as io;
-pub use crate::os_io::{ComposeFuture, ErasedComposeSource};
+#[path = "../../🔨️modules/🚪️io/🦀️.rs"]
+pub mod io;
 
 pub use semio_framework_io_schema as io_schema;
 
@@ -303,6 +292,15 @@ use semio_framework_value::{DslValue,FromValue,ToValue,ValueError,ValueRefusalKi
 
 
 pub use semio_framework_ui_viewport::{Viewport2d, Viewport3dOrbit};
+
+/// 🧬️ The crates `sparse_record_diff!`/`field_set_mutations!`/`config_record!` expand against, re-exported so the expansion
+/// resolves the same in every invoking crate.
+#[doc(hidden)]
+pub use semio_framework_diagnostic as __diagnostic;
+#[doc(hidden)]
+pub use semio_framework_pack_json as __pack_json;
+#[doc(hidden)]
+pub use semio_framework_value as __value;
 
 /// 🌿️ Publishes the canonical retained ownership derives beside their owned value traits.
 

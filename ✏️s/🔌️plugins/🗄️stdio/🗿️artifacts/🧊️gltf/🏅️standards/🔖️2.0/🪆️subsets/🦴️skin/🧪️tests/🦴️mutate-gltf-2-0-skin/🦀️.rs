@@ -104,7 +104,7 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{create_skin,delete_skin,move_skin,reorder_skins};
+    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{apply_gltf_mutation,create_skin,delete_skin,move_skin,reorder_skins};
 use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutations::{gltf_inverse_restored_document};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
     use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::project_gltf;
@@ -131,15 +131,15 @@ use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutati
     //#endregion 🔖️Params
 
     //#region 🔖️Dispatch
-    /// 📐️ Full parse → typed leaf `apply()` → re-serialize from the model alone — the
+    /// 📐️ Full parse → typed leaf mutation through the central applier → re-serialize from the model alone — the
     /// no-byte-pass-through rule this wave exists to enforce. Dispatches through each of the 4
     /// leaves' own real `apply()` directly, same shape `🎥️camera`'s adapter already established.
     fn apply_kind(before: &GltfSnapshot, kind: &str, params: &Json) -> Result<GltfSnapshot, String> {
         match kind {
-            "create-skin" => create_skin::apply(&create_skin::GltfCreateSkinPayload { position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "delete-skin" => delete_skin::apply(&delete_skin::GltfDeleteSkinPayload { index: num(params, "index")? }, before).map_err(|error| error.detail),
-            "move-skin" => move_skin::apply(&move_skin::GltfMoveSkinPayload { index: num(params, "index")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "reorder-skins" => reorder_skins::apply(&reorder_skins::GltfReorderSkinsPayload { order: order(params, "order")? }, before).map_err(|error| error.detail),
+            "create-skin" => apply_gltf_mutation(before, &create_skin::mutation(create_skin::GltfCreateSkinPayload { position: num(params, "position")?, skin: None })),
+            "delete-skin" => apply_gltf_mutation(before, &delete_skin::mutation(delete_skin::GltfDeleteSkinPayload { index: num(params, "index")? })),
+            "move-skin" => apply_gltf_mutation(before, &move_skin::mutation(move_skin::GltfMoveSkinPayload { index: num(params, "index")?, position: num(params, "position")? })),
+            "reorder-skins" => apply_gltf_mutation(before, &reorder_skins::mutation(reorder_skins::GltfReorderSkinsPayload { order: order(params, "order")? })),
             other => Err(format!("unrecognised mutation kind {other:?}")),
         }
     }

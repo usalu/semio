@@ -55,22 +55,8 @@
       "capability": "semio-v1-presentation-mutate",
       "standardDirectoryName": "🔖️v1",
       "subsetDirectoryName": "📽️presentation",
-      "vectors": [
-        {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
-          "scenarios": [
-            {
-              "id": "rewrites-the-second-slides-textbox-and-adds-a-speaker-note",
-              "directoryName": "🔤️rewrites"
-            }
-          ]
-        }
-      ],
+      "vectors": [],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "insert-slide",
         "remove-slide",
         "set-slide-layout",
@@ -340,47 +326,6 @@
             "operation": "set-slide-notes",
             "bridgeVersion": 1,
             "variant": "SetSlideNotes"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-presentation-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "semio-v1-presentation-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-presentation-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "semio-v1-presentation-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

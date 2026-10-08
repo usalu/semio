@@ -1,11 +1,8 @@
 /** 🧬️ PlyMutation union — discriminated on `mutation`, mirroring the Rust `PlyMutation` enum. */
 
 import type { PlyElement, PlyFormat, PlyRow, PlySnapshot, PlyValue } from '../📸️snapshot/🟦️.ts';
-import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export type PlyMutation =
-  | { mutation: 'setSnapshot'; snapshot: PlySnapshot }
-  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
   | { mutation: 'setFormat'; format: PlyFormat }
   | { mutation: 'insertComment'; index: number; comment: string }
   | { mutation: 'removeComment'; index: number }

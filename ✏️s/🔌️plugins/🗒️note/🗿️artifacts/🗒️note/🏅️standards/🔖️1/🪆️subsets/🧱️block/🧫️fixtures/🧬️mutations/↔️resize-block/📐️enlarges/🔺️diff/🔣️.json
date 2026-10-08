@@ -1,32 +1,35 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "title": null,
   "blocks": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "rows": [
       {
+        "row": "patch",
         "id": "blk-image",
         "patch": {
-          "block": {
-            "kind": "image",
-            "id": "blk-image",
-            "name": "Logo",
-            "x": 340.0,
-            "y": 0.0,
-            "width": 320.0,
-            "height": 200.0,
-            "rotation": 0.0,
-            "visible": true,
-            "locked": false,
-            "imageKey": "asset-logo"
-          }
+          "name": null,
+          "x": null,
+          "y": null,
+          "width": 320.0,
+          "height": 200.0,
+          "rotation": null,
+          "visible": null,
+          "locked": null,
+          "content": null,
+          "fontSize": null,
+          "fontWeight": null,
+          "align": null,
+          "imageKey": null,
+          "table": null,
+          "tex": null,
+          "displayMode": null,
+          "points": null,
+          "strokeWidth": null,
+          "color": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "gridVisible": null,
   "gridSpacing": null,

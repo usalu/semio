@@ -62,7 +62,6 @@ Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                    | params |
-      | set-snapshot           | {"snapshot": {"schema": "stdio.las", "header": {"versionMajor": 1, "versionMinor": 0, "systemIdentifier": "SEMIO-SNAP", "generatingSoftware": "semio-test", "creationDayOfYear": 1, "creationYear": 2026, "headerSize": 227, "offsetToPointData": 227, "numberOfVlrs": 0, "pointDataFormatId": 0, "pointDataRecordLength": 20, "numberOfPointRecords": 0, "pointsByReturn": [3, 0, 0, 0, 0], "xScale": 0.01, "yScale": 0.01, "zScale": 0.01, "xOffset": 0.0, "yOffset": 0.0, "zOffset": 0.0, "maxX": 10.0, "minX": 0.0, "maxY": 10.0, "minY": 0.0, "maxZ": 10.0, "minZ": 0.0}, "vlrs": [{"userId": "semio", "recordId": 1, "description": "snap-vlr", "data": [115, 110, 97, 112, 45, 100, 97, 116, 97]}], "points": [{"x": 0.0, "y": 0.0, "z": 0.0, "intensity": 10, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": false, "edgeOfFlightLine": false, "classification": 2, "scanAngleRank": 0, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}, {"x": 1.0, "y": 1.0, "z": 1.0, "intensity": 20, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": false, "edgeOfFlightLine": false, "classification": 4, "scanAngleRank": 5, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}, {"x": 2.0, "y": 2.0, "z": 2.5, "intensity": 30, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": true, "edgeOfFlightLine": false, "classification": 6, "scanAngleRank": -5, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}]}} |
       | set-version            | {"major": 1, "minor": 1} |
       | set-system-identifier  | {"systemIdentifier": "RENAMED-SYSTEM"} |
       | set-software-info      | {"generatingSoftware": "renamed-software"} |
@@ -70,7 +69,6 @@ Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
       | set-scale-and-offset   | {"scale": [0.0005, 0.0005, 0.0005], "offset": [583000.0, 5804000.0, 0.0]} |
       | set-bounds             | {"max": [583020.0, 5804020.0, 20.0], "min": [582980.0, 5803980.0, -20.0]} |
       | set-points-by-return   | {"counts": [8000, 300, 100, 40, 8]} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/header/systemIdentifier", "value": "PATCHED-SYSTEM"}} |
 
   @id-inverse
   @level-exhaustive
@@ -85,7 +83,6 @@ Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
     Then the oracle and the subject agree on the semantic projection of the original point cloud
     Examples:
       | id                    | params |
-      | set-snapshot           | {"snapshot": {"schema": "stdio.las", "header": {"versionMajor": 1, "versionMinor": 0, "systemIdentifier": "SEMIO-SNAP", "generatingSoftware": "semio-test", "creationDayOfYear": 1, "creationYear": 2026, "headerSize": 227, "offsetToPointData": 227, "numberOfVlrs": 0, "pointDataFormatId": 0, "pointDataRecordLength": 20, "numberOfPointRecords": 0, "pointsByReturn": [3, 0, 0, 0, 0], "xScale": 0.01, "yScale": 0.01, "zScale": 0.01, "xOffset": 0.0, "yOffset": 0.0, "zOffset": 0.0, "maxX": 10.0, "minX": 0.0, "maxY": 10.0, "minY": 0.0, "maxZ": 10.0, "minZ": 0.0}, "vlrs": [{"userId": "semio", "recordId": 1, "description": "snap-vlr", "data": [115, 110, 97, 112, 45, 100, 97, 116, 97]}], "points": [{"x": 0.0, "y": 0.0, "z": 0.0, "intensity": 10, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": false, "edgeOfFlightLine": false, "classification": 2, "scanAngleRank": 0, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}, {"x": 1.0, "y": 1.0, "z": 1.0, "intensity": 20, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": false, "edgeOfFlightLine": false, "classification": 4, "scanAngleRank": 5, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}, {"x": 2.0, "y": 2.0, "z": 2.5, "intensity": 30, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": true, "edgeOfFlightLine": false, "classification": 6, "scanAngleRank": -5, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}]}} |
       | set-version            | {"major": 1, "minor": 1} |
       | set-system-identifier  | {"systemIdentifier": "RENAMED-SYSTEM"} |
       | set-software-info      | {"generatingSoftware": "renamed-software"} |
@@ -93,7 +90,6 @@ Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
       | set-scale-and-offset   | {"scale": [0.0005, 0.0005, 0.0005], "offset": [583000.0, 5804000.0, 0.0]} |
       | set-bounds             | {"max": [583020.0, 5804020.0, 20.0], "min": [582980.0, 5803980.0, -20.0]} |
       | set-points-by-return   | {"counts": [8000, 300, 100, 40, 8]} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/header/systemIdentifier", "value": "PATCHED-SYSTEM"}} |
 
   @id-identity-round-trip
   @level-long

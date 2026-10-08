@@ -6,8 +6,8 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "cwd": "🧰️framework/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-source-projection",
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-source-projection",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -20,8 +20,8 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "cwd": "🧰️framework/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test-directory-discovery",
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-directory-discovery",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -33,151 +33,151 @@
     "test-action-choices": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts test-action-choices"
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-action-choices"
       }
     },
     "test-tool-run-actions": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts test-tool-run-actions"
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-tool-run-actions"
       }
     },
     "test-history-edit-actions": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts test-history-edit-actions"
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-history-edit-actions"
       }
     },
     "test-mutation-inputs": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts test-mutation-inputs"
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-mutation-inputs"
       }
     },
     "test-host-effect-invocation": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts owner-command --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts test-host-effect-invocation"
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-host-effect-invocation"
       }
     },
     "test-snapshot-sqlite": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust --test-manifest 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-snapshot-sqlite"
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-snapshot-sqlite"
       }
     },
     "test-snapshot-sqlite-native": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust --test-manifest 🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-snapshot-sqlite native"
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-snapshot-sqlite native"
       }
     },
     "test-core-modules": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust --test-manifest 🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml --test-manifest 🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml --test-manifest 🧰️framework/🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust/Cargo.toml --test-manifest 🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-core-modules",
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🔏️hash/📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🔲️pixels/📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/📏️intrinsic-size/📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-core-modules",
         "forwardAllArgs": true
       }
     },
     "test-deflate-encoding": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust --test-manifest 🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-deflate-encoding",
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml --test-manifest 🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-deflate-encoding",
         "forwardAllArgs": true
       }
     },
     "test-wire-retirement-source": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts owner-command --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts test-wire-retirement-source"
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-wire-retirement-source"
       }
     },
     "test-wire-retirement-native": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts test-wire-retirement-native",
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-wire-retirement-native",
         "forwardAllArgs": true
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts test",
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
     },
     "test-package-descriptor-value-codec": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts test-package-descriptor-value-codec"
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-package-descriptor-value-codec"
       }
     },
     "test-quick": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts test quick",
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test quick",
         "forwardAllArgs": true
       }
     },
     "test-long": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts test long",
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test long",
         "forwardAllArgs": true
       }
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts test exhaustive",
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test exhaustive",
         "forwardAllArgs": true
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts lint",
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts lint",
         "forwardAllArgs": true
       }
     },
     "generate": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts generate",
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts generate",
         "forwardAllArgs": true
       }
     },
     "preview-generated": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts preview-generated"
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts preview-generated"
       },
       "outputs": []
     },
     "check": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts check",
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts check",
         "forwardAllArgs": true
       }
     },
@@ -185,8 +185,8 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts owner-command --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts test-fixture-ownership-source"
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-fixture-ownership-source"
       }
     },
     "test-snapshot-sqlite-source": {
@@ -194,30 +194,30 @@
       "cache": true,
       "outputs": [],
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts owner-command --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts test-snapshot-sqlite source"
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-snapshot-sqlite source"
       }
     },
     "test-artifact-kind-source": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts owner-command --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts test-artifact-kind-source"
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-artifact-kind-source"
       }
     },
     "test-command-ingress-consumer": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts owner-command --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts test-command-ingress-consumer",
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust -- bun ./📜️script.ts test-command-ingress-consumer",
         "forwardAllArgs": true
       },
       "inputs": [
         "default",
         "^default",
-        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/🧰️framework/Cargo.toml",
         "{workspaceRoot}/package.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🏛️ownership/📥️command-ingress/**/*",
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️testing/🧩️consumer/🟦️.ts",
@@ -228,8 +228,8 @@
     "test-history-progress": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest 🧰️framework/📦️packages/🦀️rust/Cargo.toml --cwd 🧰️framework/📦️packages/🦀️rust -- bun ./📜️script.ts test-history-progress"
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-history-progress"
       }
     }
   }

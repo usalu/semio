@@ -1,10 +1,8 @@
 //! 🧪️ `delete-primitive` fixture — `🚫️removes`.
 //!
 //! Transcribed from `../../🔺️diff/🦀️.rs`: an absent mesh/primitive pair is Error
-//! `mutation.target-missing`; otherwise the diff is a nested `primitives.removed[id]` inside a
-//! `meshes.modified` entry. The inverse mirrors `delete-mesh`'s dance one level down — strip the
-//! trailing primitives, re-create the removed one, rebuild the tail — which is why the fixture
-//! removes the LEADING primitive of two.
+//! `mutation.target-missing`; otherwise the diff is a nested `primitives.removed[id]` inside a `meshes.modified` entry.
+//! The inverse is one create carrying the removed index (`at`), so order is restored exactly.
 
 use crate::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
 use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
@@ -31,25 +29,24 @@ fn mutation() -> SemioMeshMutation {
 #[semio_framework_async_macros::async_test]
 async fn removes_the_leading_primitive_inside_the_mesh() {
     let base = before();
-    assert_eq!(base.meshes[0].primitives.len(), 2, "the fixture needs a trailing primitive for the order-restoring inverse to matter");
-    let produced = mutation().diff(&base).diff().apply(&base).expect("delete-primitive applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-primitive applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-primitive/removes-the-leading-primitive-and-keeps-the-trailing-one: applied state differs from the committed after-snapshot");
     assert_eq!(produced.meshes.len(), base.meshes.len(), "removing the last-but-one primitive must not remove the mesh itself");
     assert_eq!(produced.meshes[0].primitives, vec![base.meshes[0].primitives[1].clone()], "the trailing primitive slides down into index 0");
 }
 
-/// ↩️ The undo is the same three-step dance one level down.
+/// ↩️ The undo is ONE create carrying the removed index, so the original position is restored exactly.
 #[semio_framework_async_macros::async_test]
-async fn the_undo_strips_the_tail_recreates_the_primitive_then_rebuilds_the_tail() {
+async fn the_undo_recreates_the_primitive_at_its_original_index() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
-    assert_eq!(undo.len(), 3, "one delete per trailing primitive, then the re-create, then one create per trailing primitive");
-    assert!(matches!(undo[0], SemioMeshMutation::DeletePrimitive(_)), "the tail is stripped first");
-    assert!(matches!(undo[1], SemioMeshMutation::CreatePrimitive(_)) && matches!(undo[2], SemioMeshMutation::CreatePrimitive(_)), "then the removed primitive and the tail are re-created in order");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-primitive applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("each undo step applies to the running state");
+    assert_eq!(undo.len(), 1, "the removed primitive is restored by exactly one create");
+    assert!(matches!(&undo[0], SemioMeshMutation::CreatePrimitive(create) if create.at == Some(0)), "the create must name the removed index");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-primitive applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
     }
     assert_eq!(current, base, "delete-primitive/removes-the-leading-primitive-and-keeps-the-trailing-one: the undo did not restore the before-snapshot, order included");
 }
@@ -107,6 +104,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-primitive diff decodes");
-    let produced = decoded.apply(&before()).expect("committed delete-primitive diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-primitive diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-primitive/removes-the-leading-primitive-and-keeps-the-trailing-one: committed diff did not carry before to after");
 }

@@ -1,11 +1,9 @@
 # 🧬️ Program diff schema — sparse field delta.
-# import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 
 type ProgramDiff {
-  artifact: ProgramArtifact @state(class: ARTIFACT)
   schema: String @state(class: ARTIFACT)
-  meta: ProgramMeta @state(class: ARTIFACT)
-  project: ProjectDefinition @state(class: ARTIFACT)
+  meta: ProgramMetaEdit @state(class: ARTIFACT)
+  project: ProjectDefinitionEdit @state(class: ARTIFACT)
   stakeholders: ProgramStakeholdersDelta @state(class: ARTIFACT)
   users: ProgramUsersDelta @state(class: ARTIFACT)
   activities: ProgramActivitiesDelta @state(class: ARTIFACT)
@@ -69,12 +67,10 @@ type ProgramDiff {
   issues: ProgramIssuesDelta @state(class: ARTIFACT)
   auditEvents: ProgramAuditEventsDelta @state(class: ARTIFACT)
   templates: ProgramTemplatesDelta @state(class: ARTIFACT)
-  knowledgePayload: [KnowledgeRecord!] @state(class: ARTIFACT)
-  knowledge: ArtifactChild @state(class: ARTIFACT)
-  benchmarksPayload: [BenchmarkRecord!] @state(class: ARTIFACT)
-  benchmarks: ArtifactChild @state(class: ARTIFACT)
+  knowledge: ProgramKnowledgeDelta @state(class: ARTIFACT)
+  benchmarks: ProgramBenchmarksDelta @state(class: ARTIFACT)
   traces: ProgramTracesDelta @state(class: ARTIFACT)
-  governance: Governance @state(class: ARTIFACT)
+  governance: GovernanceEdit @state(class: ARTIFACT)
 }
 
 type ProgramStakeholdersDelta {
@@ -847,4 +843,43 @@ type ProgramTracesPatchEntry {
 
 type ProgramStringList {
   values: [String!]!
+}
+
+type ProgramKnowledgeDelta {
+  added: [KnowledgeRecord!]!
+  removed: [String!]!
+  patched: [ProgramKnowledgePatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramKnowledgePatchEntry {
+  id: String!
+  item: KnowledgeRecord!
+}
+
+type ProgramBenchmarksDelta {
+  added: [BenchmarkRecord!]!
+  removed: [String!]!
+  patched: [ProgramBenchmarksPatchEntry!]!
+  reordered: [String!]
+}
+
+type ProgramBenchmarksPatchEntry {
+  id: String!
+  item: BenchmarkRecord!
+}
+
+type ProgramMetaEdit {
+  set: ProgramMeta
+  patch: ProgramMeta
+}
+
+type ProjectDefinitionEdit {
+  set: ProjectDefinition
+  patch: ProjectDefinition
+}
+
+type GovernanceEdit {
+  set: Governance
+  patch: Governance
 }

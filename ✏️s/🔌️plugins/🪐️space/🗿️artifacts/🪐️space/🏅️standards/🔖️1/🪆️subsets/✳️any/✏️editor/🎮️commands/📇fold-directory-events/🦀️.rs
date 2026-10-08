@@ -13,7 +13,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::SSpaceMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
-use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation, SpaceIndexMember};
+use crate::editor::space_index::config::{SpaceIndexConfig, SpaceIndexConfigMutation, SpaceIndexDirectoryProjection, SpaceIndexMember};
 use semio_framework_os_kernel::os_directory::{fold_all, DirectoryEvent, DirectoryReadModel, DirectorySpaceRole, DirectorySpaceVisibility};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
@@ -37,7 +37,7 @@ fn visibility_str(visibility: DirectorySpaceVisibility) -> &'static str {
     }
 }
 
-pub fn handle(payload: &FoldDirectoryEvents, doc: &ArtifactView<'_, SSpaceSnapshot>, cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
+pub fn handle(payload: &FoldDirectoryEvents, doc: &ArtifactView<'_, SSpaceSnapshot>, _cfg: &ConfigView<'_, SpaceIndexConfig>) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation>, Fault> {
     let events: Vec<DirectoryEvent> = semio_framework_pack_json::from_json_str(&payload.events_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.directory.decode"), error.to_string()))?;
     let model = ::semio_framework_async::poll::resolve_ready(fold_all(DirectoryReadModel::default(), &events));
     let selected = match doc.snapshot.space_id.as_str() {
@@ -48,13 +48,12 @@ pub fn handle(payload: &FoldDirectoryEvents, doc: &ArtifactView<'_, SSpaceSnapsh
     let Some(space) = selected else {
         return Ok(Emit::default());
     };
-    let next = SpaceIndexConfig {
+    let projection = SpaceIndexDirectoryProjection {
         visibility: visibility_str(space.view.visibility).into(),
         members: space.members.iter().map(|member| SpaceIndexMember { user_id: member.user_id.clone(), email: member.email.clone(), display_name: member.display_name.clone(), role: role_str(member.role).into() }).collect(),
         indexed_artifacts: space.indexed_documents.iter().filter_map(SpaceIndexConfig::indexed_artifact_from_directory).collect(),
-        presence: cfg.snapshot.presence.clone(),
     };
-    Ok(Emit { config_mutations: vec![SpaceIndexConfigMutation::Snapshot { config: next }], ..Default::default() })
+    Ok(Emit { config_mutations: vec![SpaceIndexConfigMutation::ReplaceDirectoryProjection { projection }], ..Default::default() })
 }
 
 //#region 🧪️Tests

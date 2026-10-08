@@ -66,6 +66,16 @@ pub fn permuted<T: Clone>(items: &[T], order: &[usize]) -> Vec<T> {
 pub fn changed<D: Default + PartialEq>(diff: D) -> Option<D> {
     (diff != D::default()).then_some(diff)
 }
+/// 🩹 One modified primitive row of `mesh`, or nothing when the row names no field.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn primitive_patch(mesh: usize, primitive: usize, diff: GltfPrimitiveDiff) -> Option<GltfMeshesDiff> {
+    patch(mesh, GltfMeshDiff { primitives: patch(primitive, diff), ..Default::default() })
+}
+/// 🩹 Keyed rows of the primitive collection of `mesh`, or nothing when they name no change.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn primitives_rows(mesh: usize, rows: GltfPrimitivesDiff) -> Option<GltfMeshesDiff> {
+    patch(mesh, GltfMeshDiff { primitives: (!rows.is_empty()).then_some(rows), ..Default::default() })
+}
 /// 🩹 One modified row at base `index`, or nothing when the row names no field.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn patch<T, D: Default + PartialEq>(index: usize, diff: D) -> Option<GltfCollectionDiff<T, D>> {
@@ -81,10 +91,9 @@ fn row<T, D: Default>(slot: &mut Option<GltfCollectionDiff<T, D>>, index: usize)
     &mut collection.modified[at].diff
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn put<T: Clone + PartialEq>(slot: &mut Option<GltfCollectionDiff<T, T>>, index: usize, base: &T, next: T) {
-    if &next != base {
-        slot.get_or_insert_with(GltfCollectionDiff::default).modified.push(GltfModified { index, diff: next });
-    }
+fn primitive_row(diff: &mut GltfDiff, mesh: usize, primitive: usize) -> &mut GltfPrimitiveDiff {
+    let mesh_row = row(&mut diff.meshes, mesh);
+    row(&mut mesh_row.primitives, primitive)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn sorted<T, D>(slot: &mut Option<GltfCollectionDiff<T, D>>) {
@@ -186,12 +195,20 @@ pub fn rewire(base: &GltfSnapshot, family: GltfTopLevelFamily, remap: Remap) -> 
                 }
             }
             for (index, skin) in document.skins.iter().enumerate() {
-                let next = GltfSkin { skeleton: optional(skin.skeleton, remap), joints: list(&skin.joints, remap), ..skin.clone() };
-                put(&mut diff.skins, index, skin, next);
+                let skeleton = optional(skin.skeleton, remap);
+                if skeleton != skin.skeleton {
+                    row(&mut diff.skins, index).skeleton = Some(skeleton);
+                }
+                let joints = list(&skin.joints, remap);
+                if joints != skin.joints {
+                    row(&mut diff.skins, index).joints = Some(joints);
+                }
             }
             for (index, animation) in document.animations.iter().enumerate() {
-                let channels = animation.channels.iter().map(|channel| GltfAnimationChannel { target: GltfAnimationChannelTarget { node: optional(channel.target.node, remap), ..channel.target.clone() }, ..channel.clone() }).collect();
-                put(&mut diff.animations, index, animation, GltfAnimation { channels, ..animation.clone() });
+                let channels: Vec<GltfAnimationChannel> = animation.channels.iter().map(|channel| GltfAnimationChannel { target: GltfAnimationChannelTarget { node: optional(channel.target.node, remap), ..channel.target.clone() }, ..channel.clone() }).collect();
+                if channels != animation.channels {
+                    row(&mut diff.animations, index).channels = Some(channels);
+                }
             }
         }
         GltfTopLevelFamily::Meshes => {
@@ -204,26 +221,32 @@ pub fn rewire(base: &GltfSnapshot, family: GltfTopLevelFamily, remap: Remap) -> 
         }
         GltfTopLevelFamily::Accessors => {
             for (index, mesh) in document.meshes.iter().enumerate() {
-                let primitives: Vec<GltfPrimitive> = mesh
-                    .primitives
-                    .iter()
-                    .map(|primitive| GltfPrimitive {
-                        attributes: pairs(&primitive.attributes, remap),
-                        indices: optional(primitive.indices, remap),
-                        targets: primitive.targets.iter().map(|target| GltfMorphTarget(pairs(&target.0, remap))).collect(),
-                        ..primitive.clone()
-                    })
-                    .collect();
-                if primitives != mesh.primitives {
-                    row(&mut diff.meshes, index).primitives = Some(primitives);
+                for (position, primitive) in mesh.primitives.iter().enumerate() {
+                    let attributes = pairs(&primitive.attributes, remap);
+                    if attributes != primitive.attributes {
+                        primitive_row(&mut diff, index, position).attributes = Some(GltfMorphTarget(attributes));
+                    }
+                    let indices = optional(primitive.indices, remap);
+                    if indices != primitive.indices {
+                        primitive_row(&mut diff, index, position).indices = Some(indices);
+                    }
+                    let targets: Vec<GltfMorphTarget> = primitive.targets.iter().map(|target| GltfMorphTarget(pairs(&target.0, remap))).collect();
+                    if targets != primitive.targets {
+                        primitive_row(&mut diff, index, position).targets = Some(targets);
+                    }
                 }
             }
             for (index, skin) in document.skins.iter().enumerate() {
-                put(&mut diff.skins, index, skin, GltfSkin { inverse_bind_matrices: optional(skin.inverse_bind_matrices, remap), ..skin.clone() });
+                let inverse_bind_matrices = optional(skin.inverse_bind_matrices, remap);
+                if inverse_bind_matrices != skin.inverse_bind_matrices {
+                    row(&mut diff.skins, index).inverse_bind_matrices = Some(inverse_bind_matrices);
+                }
             }
             for (index, animation) in document.animations.iter().enumerate() {
-                let samplers = animation.samplers.iter().map(|sampler| GltfAnimationSampler { input: remap(sampler.input).unwrap_or(sampler.input), output: remap(sampler.output).unwrap_or(sampler.output), ..sampler.clone() }).collect();
-                put(&mut diff.animations, index, animation, GltfAnimation { samplers, ..animation.clone() });
+                let samplers: Vec<GltfAnimationSampler> = animation.samplers.iter().map(|sampler| GltfAnimationSampler { input: remap(sampler.input).unwrap_or(sampler.input), output: remap(sampler.output).unwrap_or(sampler.output), ..sampler.clone() }).collect();
+                if samplers != animation.samplers {
+                    row(&mut diff.animations, index).samplers = Some(samplers);
+                }
             }
         }
         GltfTopLevelFamily::BufferViews => {
@@ -244,19 +267,27 @@ pub fn rewire(base: &GltfSnapshot, family: GltfTopLevelFamily, remap: Remap) -> 
                 }
             }
             for (index, image) in document.images.iter().enumerate() {
-                put(&mut diff.images, index, image, GltfImage { buffer_view: optional(image.buffer_view, remap), ..image.clone() });
+                let buffer_view = optional(image.buffer_view, remap);
+                if buffer_view != image.buffer_view {
+                    row(&mut diff.images, index).buffer_view = Some(buffer_view);
+                }
             }
         }
         GltfTopLevelFamily::Buffers => {
             for (index, view) in document.buffer_views.iter().enumerate() {
-                put(&mut diff.buffer_views, index, view, GltfBufferView { buffer: remap(view.buffer).unwrap_or(view.buffer), ..view.clone() });
+                let buffer = remap(view.buffer).unwrap_or(view.buffer);
+                if buffer != view.buffer {
+                    row(&mut diff.buffer_views, index).buffer = Some(buffer);
+                }
             }
         }
         GltfTopLevelFamily::Materials => {
             for (index, mesh) in document.meshes.iter().enumerate() {
-                let primitives: Vec<GltfPrimitive> = mesh.primitives.iter().map(|primitive| GltfPrimitive { material: optional(primitive.material, remap), ..primitive.clone() }).collect();
-                if primitives != mesh.primitives {
-                    row(&mut diff.meshes, index).primitives = Some(primitives);
+                for (position, primitive) in mesh.primitives.iter().enumerate() {
+                    let material = optional(primitive.material, remap);
+                    if material != primitive.material {
+                        primitive_row(&mut diff, index, position).material = Some(material);
+                    }
                 }
             }
         }
@@ -282,12 +313,18 @@ pub fn rewire(base: &GltfSnapshot, family: GltfTopLevelFamily, remap: Remap) -> 
         }
         GltfTopLevelFamily::Images => {
             for (index, texture) in document.textures.iter().enumerate() {
-                put(&mut diff.textures, index, texture, GltfTexture { source: optional(texture.source, remap), ..texture.clone() });
+                let source = optional(texture.source, remap);
+                if source != texture.source {
+                    row(&mut diff.textures, index).source = Some(source);
+                }
             }
         }
         GltfTopLevelFamily::Samplers => {
             for (index, texture) in document.textures.iter().enumerate() {
-                put(&mut diff.textures, index, texture, GltfTexture { sampler: optional(texture.sampler, remap), ..texture.clone() });
+                let sampler = optional(texture.sampler, remap);
+                if sampler != texture.sampler {
+                    row(&mut diff.textures, index).sampler = Some(sampler);
+                }
             }
         }
         GltfTopLevelFamily::Skins => {
@@ -306,6 +343,11 @@ pub fn rewire(base: &GltfSnapshot, family: GltfTopLevelFamily, remap: Remap) -> 
                     row(&mut diff.nodes, index).camera = Some(camera);
                 }
             }
+        }
+    }
+    if let Some(meshes) = &mut diff.meshes {
+        for entry in &mut meshes.modified {
+            sorted(&mut entry.diff.primitives);
         }
     }
     sorted(&mut diff.scenes);
@@ -405,26 +447,46 @@ pub struct GltfLengths {
     pub cameras: usize,
 }
 impl GltfLengths {
+    /// 📏️ The collection lengths of `base`.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn of(base: &GltfSnapshot) -> Self {
+        let document = &base.document;
+        Self {
+            scenes: document.scenes.len(),
+            nodes: document.nodes.len(),
+            meshes: document.meshes.len(),
+            accessors: document.accessors.len(),
+            buffer_views: document.buffer_views.len(),
+            buffers: document.buffers.len(),
+            materials: document.materials.len(),
+            textures: document.textures.len(),
+            images: document.images.len(),
+            samplers: document.samplers.len(),
+            skins: document.skins.len(),
+            animations: document.animations.len(),
+            cameras: document.cameras.len(),
+        }
+    }
     /// 📏️ The collection lengths of `base` after `family` gained one entry.
     // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
     pub fn after_insert(base: &GltfSnapshot, family: GltfTopLevelFamily) -> Self {
-        let document = &base.document;
-        let grow = |candidate: GltfTopLevelFamily, length: usize| length + usize::from(candidate == family);
-        Self {
-            scenes: grow(GltfTopLevelFamily::Scenes, document.scenes.len()),
-            nodes: grow(GltfTopLevelFamily::Nodes, document.nodes.len()),
-            meshes: grow(GltfTopLevelFamily::Meshes, document.meshes.len()),
-            accessors: grow(GltfTopLevelFamily::Accessors, document.accessors.len()),
-            buffer_views: grow(GltfTopLevelFamily::BufferViews, document.buffer_views.len()),
-            buffers: grow(GltfTopLevelFamily::Buffers, document.buffers.len()),
-            materials: grow(GltfTopLevelFamily::Materials, document.materials.len()),
-            textures: grow(GltfTopLevelFamily::Textures, document.textures.len()),
-            images: grow(GltfTopLevelFamily::Images, document.images.len()),
-            samplers: grow(GltfTopLevelFamily::Samplers, document.samplers.len()),
-            skins: grow(GltfTopLevelFamily::Skins, document.skins.len()),
-            animations: grow(GltfTopLevelFamily::Animations, document.animations.len()),
-            cameras: grow(GltfTopLevelFamily::Cameras, document.cameras.len()),
+        let mut lengths = Self::of(base);
+        match family {
+            GltfTopLevelFamily::Scenes => lengths.scenes += 1,
+            GltfTopLevelFamily::Nodes => lengths.nodes += 1,
+            GltfTopLevelFamily::Meshes => lengths.meshes += 1,
+            GltfTopLevelFamily::Accessors => lengths.accessors += 1,
+            GltfTopLevelFamily::BufferViews => lengths.buffer_views += 1,
+            GltfTopLevelFamily::Buffers => lengths.buffers += 1,
+            GltfTopLevelFamily::Materials => lengths.materials += 1,
+            GltfTopLevelFamily::Textures => lengths.textures += 1,
+            GltfTopLevelFamily::Images => lengths.images += 1,
+            GltfTopLevelFamily::Samplers => lengths.samplers += 1,
+            GltfTopLevelFamily::Skins => lengths.skins += 1,
+            GltfTopLevelFamily::Animations => lengths.animations += 1,
+            GltfTopLevelFamily::Cameras => lengths.cameras += 1,
         }
+        lengths
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

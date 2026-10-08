@@ -37,7 +37,7 @@ use crate::editor::wfc2d::transient::Wfc2dTransient;
 use crate::editor::wfc2d::transient::mutations::SetSolve;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
-/// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `Wfc2dTransient`.
+/// crate: production dispatch (`protocol::apply_diff`) and the mutation's own inverse over `Wfc2dTransient`.
 ///
 /// @see store::os_store::test_support::mutation_report_json
 pub fn wfc2d_transient_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {

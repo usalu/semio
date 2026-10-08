@@ -1,5 +1,5 @@
 [package]
-workspace = "../../.."
+workspace = "../.."
 name = "semio-framework"
 version = "0.1.0"
 edition = "2021"
@@ -44,14 +44,13 @@ semio-framework-io-base64 = { path = "../../🔨️modules/🚪️io/🔤️base
 # crate of exactly such bounds. Workspace-internal — the external dependency count is unchanged.
 semio-framework-trace = { workspace = true }
 semio-framework-mesh-engine = { path = "../../🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
-# 🎯️ OS kernel owns spr/dsl types — aliases avoid dual trees / cycle with old implementations.
-semio-framework-os-kernel = { path = "../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-value-derive = { path = "../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 # 🧬️ `register_scope_schema_exports`/`resolve_schema_export` — the `(scope id, export id, format id)`
 # registry this crate's mounted `interaction::schema` leaf declares its named exports into.
 semio-framework-schema = { workspace = true }
 
 [dev-dependencies]
+pack = { workspace = true }
 semio-framework-async-macros = { path = "../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🔬️ Third-party oracle for `kernel::media_export_bytes`'s base64 lane — dev-only, never a runtime dep.
 base64 = "0.22.1"

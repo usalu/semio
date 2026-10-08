@@ -1,0 +1,1398 @@
+{
+  "description": "Language-agnostic laws of the analysis.measure geometry widgets. Shapes are recipes (box, sphere, cylinder, translate, rotate, cut, compound, vertex, face and edge picked by outward normal or end points, curvedFace, curvedEdge, rectangleWire) that Rust builds with the kernel and TypeScript rebuilds with manifold-3d and three. A box has one corner at the origin and spans its size along x, y and z; a sphere is centered at the origin; a cylinder stands on the XY plane along +Z. Selections name faces by outward normal. Outputs match to `tolerance` (absolute, relative above magnitude one) against the analytic values of the kernel; the oracle recomputes them from triangle meshes to `oracleTolerance` (default 1e-6 for flat shapes). `unchecked` lists output ports that must be present but have no unique value.",
+  "tolerance": 0.000001,
+  "oracleTolerance": 0.000001,
+  "cases": [
+    {
+      "name": "volume of a box",
+      "kind": "analysis.volume",
+      "inputs": {
+        "solid": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        }
+      },
+      "outputs": {
+        "volume": 24
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "volume of a sphere",
+      "kind": "analysis.volume",
+      "inputs": {
+        "solid": {
+          "recipe": "sphere",
+          "radius": 1.5
+        }
+      },
+      "outputs": {
+        "volume": 14.137166941154069
+      },
+      "tolerance": 0.000001,
+      "oracleTolerance": 0.005
+    },
+    {
+      "name": "volume of a cylinder",
+      "kind": "analysis.volume",
+      "inputs": {
+        "solid": {
+          "recipe": "cylinder",
+          "radius": 1,
+          "height": 2
+        }
+      },
+      "outputs": {
+        "volume": 6.283185307179586
+      },
+      "tolerance": 0.000001,
+      "oracleTolerance": 0.005
+    },
+    {
+      "name": "volume of a box with a cylindrical hole",
+      "kind": "analysis.volume",
+      "inputs": {
+        "solid": {
+          "recipe": "cut",
+          "target": {
+            "recipe": "box",
+            "size": [4, 4, 4]
+          },
+          "tool": {
+            "recipe": "translate",
+            "of": {
+              "recipe": "cylinder",
+              "radius": 1,
+              "height": 6
+            },
+            "by": [2, 2, -1]
+          }
+        }
+      },
+      "outputs": {
+        "volume": 51.43362938564083
+      },
+      "tolerance": 0.00001,
+      "oracleTolerance": 0.005
+    },
+    {
+      "name": "volume of a compound adds its solids",
+      "kind": "analysis.volume",
+      "inputs": {
+        "solid": {
+          "recipe": "compound",
+          "of": [
+            {
+              "recipe": "box",
+              "size": [1, 1, 1]
+            },
+            {
+              "recipe": "translate",
+              "of": {
+                "recipe": "box",
+                "size": [2, 1, 1]
+              },
+              "by": [3, 0, 0]
+            }
+          ]
+        }
+      },
+      "outputs": {
+        "volume": 3
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "volume of a face",
+      "kind": "analysis.volume",
+      "inputs": {
+        "solid": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "normal": [0, 0, 1]
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.measure-unsupported",
+        "port": "solid"
+      }
+    },
+    {
+      "name": "area of a box",
+      "kind": "analysis.area",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        }
+      },
+      "outputs": {
+        "area": 52
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "area of a sphere",
+      "kind": "analysis.area",
+      "inputs": {
+        "shape": {
+          "recipe": "sphere",
+          "radius": 1.5
+        }
+      },
+      "outputs": {
+        "area": 28.274333882308138
+      },
+      "tolerance": 0.000001,
+      "oracleTolerance": 0.005
+    },
+    {
+      "name": "area of a cylinder",
+      "kind": "analysis.area",
+      "inputs": {
+        "shape": {
+          "recipe": "cylinder",
+          "radius": 1,
+          "height": 2
+        }
+      },
+      "outputs": {
+        "area": 18.84955592153876
+      },
+      "tolerance": 0.000001,
+      "oracleTolerance": 0.005
+    },
+    {
+      "name": "area of a box with a cylindrical hole",
+      "kind": "analysis.area",
+      "inputs": {
+        "shape": {
+          "recipe": "cut",
+          "target": {
+            "recipe": "box",
+            "size": [4, 4, 4]
+          },
+          "tool": {
+            "recipe": "translate",
+            "of": {
+              "recipe": "cylinder",
+              "radius": 1,
+              "height": 6
+            },
+            "by": [2, 2, -1]
+          }
+        }
+      },
+      "outputs": {
+        "area": 114.84955592153875
+      },
+      "tolerance": 0.00001,
+      "oracleTolerance": 0.005
+    },
+    {
+      "name": "area of one face",
+      "kind": "analysis.area",
+      "inputs": {
+        "shape": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "normal": [0, 0, 1]
+        }
+      },
+      "outputs": {
+        "area": 6
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "area of a vertex",
+      "kind": "analysis.area",
+      "inputs": {
+        "shape": {
+          "recipe": "vertex",
+          "point": [1, 2, 3]
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.measure-unsupported",
+        "port": "shape"
+      }
+    },
+    {
+      "name": "length of a box edge",
+      "kind": "analysis.length",
+      "inputs": {
+        "curve": {
+          "recipe": "edge",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "from": [0, 0, 0],
+          "to": [2, 0, 0]
+        }
+      },
+      "outputs": {
+        "length": 2
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "length of a circular edge",
+      "kind": "analysis.length",
+      "inputs": {
+        "curve": {
+          "recipe": "curvedEdge",
+          "of": {
+            "recipe": "cylinder",
+            "radius": 1,
+            "height": 2
+          }
+        }
+      },
+      "outputs": {
+        "length": 6.283185307179586
+      },
+      "tolerance": 0.000001
+    },
+    {
+      "name": "length of a rectangle wire",
+      "kind": "analysis.length",
+      "inputs": {
+        "curve": {
+          "recipe": "rectangleWire",
+          "width": 3,
+          "height": 2
+        }
+      },
+      "outputs": {
+        "length": 10
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "length of a line curve",
+      "kind": "analysis.length",
+      "inputs": {
+        "curve": {
+          "recipe": "line",
+          "start": [0, 0, 0],
+          "end": [3, 4, 0]
+        }
+      },
+      "outputs": {
+        "length": 5
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "length of a circle curve",
+      "kind": "analysis.length",
+      "inputs": {
+        "curve": {
+          "recipe": "circle",
+          "center": [1, 1, 1],
+          "normal": [0, 0, 1],
+          "radius": 2
+        }
+      },
+      "outputs": {
+        "length": 12.566370614359172
+      },
+      "tolerance": 0.000001
+    },
+    {
+      "name": "area of a bare curve",
+      "kind": "analysis.area",
+      "inputs": {
+        "shape": {
+          "recipe": "line",
+          "start": [0, 0, 0],
+          "end": [3, 4, 0]
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.no-topology",
+        "port": "shape"
+      }
+    },
+    {
+      "name": "centroid of a box",
+      "kind": "analysis.centroid",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        }
+      },
+      "outputs": {
+        "centroid": [1, 1.5, 2]
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "centroid of a sphere",
+      "kind": "analysis.centroid",
+      "inputs": {
+        "shape": {
+          "recipe": "sphere",
+          "radius": 1.5
+        }
+      },
+      "outputs": {
+        "centroid": [0, 0, 0]
+      },
+      "tolerance": 0.000001
+    },
+    {
+      "name": "centroid of a cylinder",
+      "kind": "analysis.centroid",
+      "inputs": {
+        "shape": {
+          "recipe": "cylinder",
+          "radius": 1,
+          "height": 2
+        }
+      },
+      "outputs": {
+        "centroid": [0, 0, 1]
+      },
+      "tolerance": 0.000001
+    },
+    {
+      "name": "centroid of a box with a cylindrical hole",
+      "kind": "analysis.centroid",
+      "inputs": {
+        "shape": {
+          "recipe": "cut",
+          "target": {
+            "recipe": "box",
+            "size": [4, 4, 4]
+          },
+          "tool": {
+            "recipe": "translate",
+            "of": {
+              "recipe": "cylinder",
+              "radius": 1,
+              "height": 6
+            },
+            "by": [2, 2, -1]
+          }
+        }
+      },
+      "outputs": {
+        "centroid": [2, 2, 2]
+      },
+      "tolerance": 0.00001
+    },
+    {
+      "name": "centroid of a compound is mass weighted",
+      "kind": "analysis.centroid",
+      "inputs": {
+        "shape": {
+          "recipe": "compound",
+          "of": [
+            {
+              "recipe": "box",
+              "size": [1, 1, 1]
+            },
+            {
+              "recipe": "translate",
+              "of": {
+                "recipe": "box",
+                "size": [2, 1, 1]
+              },
+              "by": [3, 0, 0]
+            }
+          ]
+        }
+      },
+      "outputs": {
+        "centroid": [2.8333333333333335, 0.5, 0.5]
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "centroid of a face is its area center",
+      "kind": "analysis.centroid",
+      "inputs": {
+        "shape": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "normal": [0, 0, 1]
+        }
+      },
+      "outputs": {
+        "centroid": [1, 1.5, 4]
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "centroid of a vertex",
+      "kind": "analysis.centroid",
+      "inputs": {
+        "shape": {
+          "recipe": "vertex",
+          "point": [1, 2, 3]
+        }
+      },
+      "outputs": {
+        "centroid": [1, 2, 3]
+      },
+      "tolerance": 1e-12
+    },
+    {
+      "name": "centroid of an edge",
+      "kind": "analysis.centroid",
+      "inputs": {
+        "shape": {
+          "recipe": "edge",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "from": [0, 0, 0],
+          "to": [2, 0, 0]
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.measure-unsupported",
+        "port": "shape"
+      }
+    },
+    {
+      "name": "bounding box of a box",
+      "kind": "analysis.boundingBox",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        }
+      },
+      "outputs": {
+        "min": [0, 0, 0],
+        "max": [2, 3, 4],
+        "size": [2, 3, 4],
+        "box": {
+          "kind": "solid",
+          "volume": 24,
+          "area": 52
+        }
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "bounding box of a moved box",
+      "kind": "analysis.boundingBox",
+      "inputs": {
+        "shape": {
+          "recipe": "translate",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "by": [1, 2, 3]
+        }
+      },
+      "outputs": {
+        "min": [1, 2, 3],
+        "max": [3, 5, 7],
+        "size": [2, 3, 4],
+        "box": {
+          "kind": "solid",
+          "volume": 24,
+          "area": 52
+        }
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "bounding box of a sphere",
+      "kind": "analysis.boundingBox",
+      "inputs": {
+        "shape": {
+          "recipe": "sphere",
+          "radius": 1.5
+        }
+      },
+      "outputs": {
+        "min": [-1.5, -1.5, -1.5],
+        "max": [1.5, 1.5, 1.5],
+        "size": [3, 3, 3],
+        "box": {
+          "kind": "solid",
+          "volume": 27,
+          "area": 54
+        }
+      },
+      "tolerance": 0.000001,
+      "oracleTolerance": 0.005
+    },
+    {
+      "name": "bounding box of a cylinder",
+      "kind": "analysis.boundingBox",
+      "inputs": {
+        "shape": {
+          "recipe": "cylinder",
+          "radius": 1,
+          "height": 2
+        }
+      },
+      "outputs": {
+        "min": [-1, -1, 0],
+        "max": [1, 1, 2],
+        "size": [2, 2, 2],
+        "box": {
+          "kind": "solid",
+          "volume": 8,
+          "area": 24
+        }
+      },
+      "tolerance": 0.000001
+    },
+    {
+      "name": "bounding box of a flat face has no box solid",
+      "kind": "analysis.boundingBox",
+      "inputs": {
+        "shape": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "normal": [0, 0, 1]
+        }
+      },
+      "outputs": {
+        "min": [0, 0, 4],
+        "max": [2, 3, 4],
+        "size": [2, 3, 0]
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "mass properties of a box",
+      "kind": "analysis.massProperties",
+      "inputs": {
+        "solid": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "density": 2
+      },
+      "outputs": {
+        "mass": 48,
+        "volume": 24,
+        "centroid": [1, 1.5, 2],
+        "inertia": [100, 0, 0, 0, 80, 0, 0, 0, 52],
+        "principalMoments": [52, 80, 100],
+        "principalAxes": [
+          [0, 0, 1],
+          [0, 1, 0],
+          [-1, 0, 0]
+        ]
+      },
+      "tolerance": 1e-9,
+      "oracleTolerance": 1e-9
+    },
+    {
+      "name": "mass properties of a sphere",
+      "kind": "analysis.massProperties",
+      "inputs": {
+        "solid": {
+          "recipe": "sphere",
+          "radius": 1.5
+        },
+        "density": 3
+      },
+      "outputs": {
+        "mass": 42.411500823462205,
+        "volume": 14.137166941154069,
+        "centroid": [0, 0, 0],
+        "inertia": [38.17035074111599, 0, 0, 0, 38.17035074111599, 0, 0, 0, 38.17035074111599],
+        "principalMoments": [38.17035074111599, 38.17035074111599, 38.17035074111599]
+      },
+      "tolerance": 0.00001,
+      "oracleTolerance": 0.01,
+      "unchecked": ["principalAxes"]
+    },
+    {
+      "name": "mass properties of a cylinder",
+      "kind": "analysis.massProperties",
+      "inputs": {
+        "solid": {
+          "recipe": "cylinder",
+          "radius": 1,
+          "height": 2
+        },
+        "density": 1
+      },
+      "outputs": {
+        "mass": 6.283185307179586,
+        "volume": 6.283185307179586,
+        "centroid": [0, 0, 1],
+        "inertia": [3.665191429188092, 0, 0, 0, 3.665191429188092, 0, 0, 0, 3.141592653589793],
+        "principalMoments": [3.141592653589793, 3.665191429188092, 3.665191429188092]
+      },
+      "tolerance": 0.00001,
+      "oracleTolerance": 0.01,
+      "unchecked": ["principalAxes"]
+    },
+    {
+      "name": "mass properties of a compound use the parallel axis theorem",
+      "kind": "analysis.massProperties",
+      "inputs": {
+        "solid": {
+          "recipe": "compound",
+          "of": [
+            {
+              "recipe": "box",
+              "size": [1, 1, 1]
+            },
+            {
+              "recipe": "translate",
+              "of": {
+                "recipe": "box",
+                "size": [2, 1, 1]
+              },
+              "by": [3, 0, 0]
+            }
+          ]
+        },
+        "density": 1
+      },
+      "outputs": {
+        "mass": 3,
+        "volume": 3,
+        "centroid": [2.8333333333333335, 0.5, 0.5],
+        "inertia": [0.5, 0, 0, 0, 9.166666666666666, 0, 0, 0, 9.166666666666666],
+        "principalMoments": [0.5, 9.166666666666666, 9.166666666666666]
+      },
+      "tolerance": 1e-9,
+      "oracleTolerance": 1e-9,
+      "unchecked": ["principalAxes"]
+    },
+    {
+      "name": "mass properties with zero density",
+      "kind": "analysis.massProperties",
+      "inputs": {
+        "solid": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "density": 0
+      },
+      "fault": {
+        "code": "generation3d.geometry.math-range",
+        "port": "density"
+      }
+    },
+    {
+      "name": "distance between separated boxes",
+      "kind": "analysis.distance",
+      "inputs": {
+        "a": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "b": {
+          "recipe": "translate",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "by": [5, 0, 0]
+        }
+      },
+      "outputs": {
+        "distance": 3
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "distance between touching boxes",
+      "kind": "analysis.distance",
+      "inputs": {
+        "a": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "b": {
+          "recipe": "translate",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "by": [2, 0, 0]
+        }
+      },
+      "outputs": {
+        "distance": 0
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "distance between overlapping boxes",
+      "kind": "analysis.distance",
+      "inputs": {
+        "a": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "b": {
+          "recipe": "translate",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "by": [1, 0, 0]
+        }
+      },
+      "outputs": {
+        "distance": 0
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "distance between a sphere and a box",
+      "kind": "analysis.distance",
+      "inputs": {
+        "a": {
+          "recipe": "sphere",
+          "radius": 1.5
+        },
+        "b": {
+          "recipe": "translate",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "by": [4.5, 0, 0]
+        }
+      },
+      "outputs": {
+        "distance": 3
+      },
+      "tolerance": 0.000001,
+      "oracleTolerance": 0.005
+    },
+    {
+      "name": "distance between a vertex and a box",
+      "kind": "analysis.distance",
+      "inputs": {
+        "a": {
+          "recipe": "vertex",
+          "point": [5, 1, 1]
+        },
+        "b": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        }
+      },
+      "outputs": {
+        "distance": 3
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "closest point outside a box",
+      "kind": "analysis.closestPoint",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "point": [5, 1, 1]
+      },
+      "outputs": {
+        "point": [2, 1, 1]
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "closest point inside a box",
+      "kind": "analysis.closestPoint",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "point": [0.5, 1.5, 2]
+      },
+      "outputs": {
+        "point": [0, 1.5, 2]
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "closest point of a sphere",
+      "kind": "analysis.closestPoint",
+      "inputs": {
+        "shape": {
+          "recipe": "sphere",
+          "radius": 1.5
+        },
+        "point": [0, 0, 3]
+      },
+      "outputs": {
+        "point": [0, 0, 1.5]
+      },
+      "tolerance": 0.000001,
+      "oracleTolerance": 0.005
+    },
+    {
+      "name": "classify a point inside a box",
+      "kind": "analysis.classifyPoint",
+      "inputs": {
+        "solid": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "point": [1, 1, 1]
+      },
+      "outputs": {
+        "classification": "inside"
+      }
+    },
+    {
+      "name": "classify a point outside a box",
+      "kind": "analysis.classifyPoint",
+      "inputs": {
+        "solid": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "point": [5, 5, 5]
+      },
+      "outputs": {
+        "classification": "outside"
+      }
+    },
+    {
+      "name": "classify a point on a box face",
+      "kind": "analysis.classifyPoint",
+      "inputs": {
+        "solid": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "point": [2, 1.5, 2]
+      },
+      "outputs": {
+        "classification": "boundary"
+      }
+    },
+    {
+      "name": "classify a point inside a sphere",
+      "kind": "analysis.classifyPoint",
+      "inputs": {
+        "solid": {
+          "recipe": "sphere",
+          "radius": 1.5
+        },
+        "point": [0, 0, 0.5]
+      },
+      "outputs": {
+        "classification": "inside"
+      }
+    },
+    {
+      "name": "classify a point in the second solid of a compound",
+      "kind": "analysis.classifyPoint",
+      "inputs": {
+        "solid": {
+          "recipe": "compound",
+          "of": [
+            {
+              "recipe": "box",
+              "size": [1, 1, 1]
+            },
+            {
+              "recipe": "translate",
+              "of": {
+                "recipe": "box",
+                "size": [2, 1, 1]
+              },
+              "by": [3, 0, 0]
+            }
+          ]
+        },
+        "point": [4, 0.5, 0.5]
+      },
+      "outputs": {
+        "classification": "inside"
+      }
+    },
+    {
+      "name": "classify a point between the solids of a compound",
+      "kind": "analysis.classifyPoint",
+      "inputs": {
+        "solid": {
+          "recipe": "compound",
+          "of": [
+            {
+              "recipe": "box",
+              "size": [1, 1, 1]
+            },
+            {
+              "recipe": "translate",
+              "of": {
+                "recipe": "box",
+                "size": [2, 1, 1]
+              },
+              "by": [3, 0, 0]
+            }
+          ]
+        },
+        "point": [2, 0.5, 0.5]
+      },
+      "outputs": {
+        "classification": "outside"
+      }
+    },
+    {
+      "name": "classify a point in a hole",
+      "kind": "analysis.classifyPoint",
+      "inputs": {
+        "solid": {
+          "recipe": "cut",
+          "target": {
+            "recipe": "box",
+            "size": [4, 4, 4]
+          },
+          "tool": {
+            "recipe": "translate",
+            "of": {
+              "recipe": "cylinder",
+              "radius": 1,
+              "height": 6
+            },
+            "by": [2, 2, -1]
+          }
+        },
+        "point": [2, 2, 2]
+      },
+      "outputs": {
+        "classification": "outside"
+      }
+    },
+    {
+      "name": "classify a point beside a hole",
+      "kind": "analysis.classifyPoint",
+      "inputs": {
+        "solid": {
+          "recipe": "cut",
+          "target": {
+            "recipe": "box",
+            "size": [4, 4, 4]
+          },
+          "tool": {
+            "recipe": "translate",
+            "of": {
+              "recipe": "cylinder",
+              "radius": 1,
+              "height": 6
+            },
+            "by": [2, 2, -1]
+          }
+        },
+        "point": [0.5, 0.5, 0.5]
+      },
+      "outputs": {
+        "classification": "inside"
+      }
+    },
+    {
+      "name": "angle between perpendicular faces",
+      "kind": "analysis.angle",
+      "inputs": {
+        "a": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "normal": [0, 0, -1]
+        },
+        "b": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "normal": [0, -1, 0]
+        }
+      },
+      "outputs": {
+        "angle": 1.5707963267948966
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "angle between opposite faces",
+      "kind": "analysis.angle",
+      "inputs": {
+        "a": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "normal": [0, 0, 1]
+        },
+        "b": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "normal": [0, 0, -1]
+        }
+      },
+      "outputs": {
+        "angle": 3.141592653589793
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "angle between a face and itself",
+      "kind": "analysis.angle",
+      "inputs": {
+        "a": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "normal": [1, 0, 0]
+        },
+        "b": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "normal": [1, 0, 0]
+        }
+      },
+      "outputs": {
+        "angle": 0
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "angle between a face and a turned copy",
+      "kind": "analysis.angle",
+      "inputs": {
+        "a": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "normal": [0, -1, 0]
+        },
+        "b": {
+          "recipe": "face",
+          "of": {
+            "recipe": "rotate",
+            "of": {
+              "recipe": "box",
+              "size": [2, 3, 4]
+            },
+            "axis": [0, 0, 1],
+            "angle": 0.7853981633974483
+          },
+          "normal": [0.7071067811865476, -0.7071067811865476, 0]
+        }
+      },
+      "outputs": {
+        "angle": 0.7853981633974483
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "angle between perpendicular edges",
+      "kind": "analysis.angle",
+      "inputs": {
+        "a": {
+          "recipe": "edge",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "from": [0, 0, 0],
+          "to": [2, 0, 0]
+        },
+        "b": {
+          "recipe": "edge",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "from": [2, 0, 0],
+          "to": [2, 3, 0]
+        }
+      },
+      "outputs": {
+        "angle": 1.5707963267948966
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "angle between parallel edges",
+      "kind": "analysis.angle",
+      "inputs": {
+        "a": {
+          "recipe": "edge",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "from": [0, 0, 0],
+          "to": [2, 0, 0]
+        },
+        "b": {
+          "recipe": "edge",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "from": [0, 3, 0],
+          "to": [2, 3, 0]
+        }
+      },
+      "outputs": {
+        "angle": 0
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "angle between an edge and a turned copy",
+      "kind": "analysis.angle",
+      "inputs": {
+        "a": {
+          "recipe": "edge",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "from": [0, 0, 0],
+          "to": [2, 0, 0]
+        },
+        "b": {
+          "recipe": "edge",
+          "of": {
+            "recipe": "rotate",
+            "of": {
+              "recipe": "box",
+              "size": [2, 3, 4]
+            },
+            "axis": [0, 0, 1],
+            "angle": 0.7853981633974483
+          },
+          "from": [0, 0, 0],
+          "to": [1.4142135623730951, 1.4142135623730951, 0]
+        }
+      },
+      "outputs": {
+        "angle": 0.7853981633974483
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "angle between a face and an edge",
+      "kind": "analysis.angle",
+      "inputs": {
+        "a": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "normal": [0, 0, 1]
+        },
+        "b": {
+          "recipe": "edge",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "from": [0, 0, 0],
+          "to": [2, 0, 0]
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.angle-mismatch",
+        "port": "b"
+      }
+    },
+    {
+      "name": "angle of a curved face",
+      "kind": "analysis.angle",
+      "inputs": {
+        "a": {
+          "recipe": "curvedFace",
+          "of": {
+            "recipe": "cylinder",
+            "radius": 1,
+            "height": 2
+          }
+        },
+        "b": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "normal": [0, 0, 1]
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.not-planar",
+        "port": "a"
+      }
+    },
+    {
+      "name": "angle of a curved edge",
+      "kind": "analysis.angle",
+      "inputs": {
+        "a": {
+          "recipe": "edge",
+          "of": {
+            "recipe": "box",
+            "size": [2, 3, 4]
+          },
+          "from": [0, 0, 0],
+          "to": [2, 0, 0]
+        },
+        "b": {
+          "recipe": "curvedEdge",
+          "of": {
+            "recipe": "cylinder",
+            "radius": 1,
+            "height": 2
+          }
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.not-straight",
+        "port": "b"
+      }
+    },
+    {
+      "name": "area of two faces",
+      "kind": "analysis.selectionArea",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "faces": {
+          "component": "face",
+          "normals": [
+            [0, 0, 1],
+            [0, 1, 0]
+          ]
+        }
+      },
+      "outputs": {
+        "area": 14
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "area of one face by selection",
+      "kind": "analysis.selectionArea",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "faces": {
+          "component": "face",
+          "normals": [
+            [1, 0, 0]
+          ]
+        }
+      },
+      "outputs": {
+        "area": 12
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "area of every face by selection",
+      "kind": "analysis.selectionArea",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "faces": {
+          "component": "face",
+          "normals": [
+            [1, 0, 0],
+            [-1, 0, 0],
+            [0, 1, 0],
+            [0, -1, 0],
+            [0, 0, 1],
+            [0, 0, -1]
+          ]
+        }
+      },
+      "outputs": {
+        "area": 52
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "area of a repeated face counts it once",
+      "kind": "analysis.selectionArea",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "faces": {
+          "component": "face",
+          "normals": [
+            [0, 0, 1],
+            [0, 0, 1]
+          ]
+        }
+      },
+      "outputs": {
+        "area": 6
+      },
+      "tolerance": 1e-9
+    },
+    {
+      "name": "area of a stale selection",
+      "kind": "analysis.selectionArea",
+      "inputs": {
+        "shape": {
+          "recipe": "box",
+          "size": [2, 3, 4]
+        },
+        "faces": {
+          "component": "face",
+          "labels": [987654321]
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.selection-stale",
+        "port": "faces"
+      }
+    }
+  ]
+}

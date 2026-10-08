@@ -16,7 +16,7 @@ start record
 #
 # Past that header, `version`/`topics`/`parts` (whichever `flags` marks present, in that FIXED
 # order) are bundled into ONE opaque trailing `bytes` chain: `topics`'s own recursive
-# `NamedTripleDiff<String,BcfTopicDiff,BcfTopic>` nests BACK through a modified topic's own
+# `IndexedDiff<BcfTopic,BcfTopicDiff>` nests BACK through a modified topic's own
 # `comments`/`viewpoints` collection triples, and `viewpoints`' own `BcfViewpointDiff.camera` field
 # reaches the genuinely data-carrying `BcfCamera` enum -- the SAME `protocol-prim-ref-recursion`
 # mechanism gap every other stdio artifact's diff payload hits (`Prim::Ref` unconditionally errors

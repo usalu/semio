@@ -551,7 +551,7 @@ pub fn decode_glb(bytes: &[u8]) -> Result<GltfSnapshot, String> {
 pub mod derived_composition {
     use crate::standards::v2_0::subsets::any::io::GltfAnalyzer;
     use crate::GltfSnapshot;
-    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
@@ -605,7 +605,7 @@ mod tests;
 /// 🚪️ Dissolved out of `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 pub mod io_registry {
     use crate::standards::v2_0::subsets::any::io::GltfComposer as GltfRawAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -673,7 +673,7 @@ pub mod derived_construction {
             if outcome.worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error) {
                 self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.gltf.mutation-rejected", semio_framework_diagnostic::TextSpan::at(1, 1), format!("{:?}", outcome.messages())));
             }
-            match <GltfDiff as protocol::MutationDiff<GltfSnapshot>>::apply(outcome.diff(), &self.snapshot) {
+            match protocol::apply_diff(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => {
                     self.snapshot = snapshot;
                 }
@@ -684,7 +684,7 @@ pub mod derived_construction {
             (self, outcome)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <GltfDiff as protocol::MutationDiff<GltfSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
@@ -873,7 +873,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::GltfSnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.gltf` parts.
@@ -914,20 +914,20 @@ pub mod derived_analysis {
         type Parts = GltfParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if looks_like_glb(bytes) {
-                        IoConfidence::High
+                        semio_framework_plugin::io::Confidence::High
                     } else {
-                        IoConfidence::Low
+                        semio_framework_plugin::io::Confidence::Low
                     }
                 }
                 AnalyzeSource::Text(text) => {
                     if looks_like_gltf_json(text) {
-                        IoConfidence::High
+                        semio_framework_plugin::io::Confidence::High
                     } else {
-                        IoConfidence::Medium
+                        semio_framework_plugin::io::Confidence::Medium
                     }
                 }
             }
@@ -936,7 +936,7 @@ pub mod derived_analysis {
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = GltfParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
+            let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => {
@@ -947,7 +947,7 @@ pub mod derived_analysis {
                         match result {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),
                             Err(err) => {
-                                confidence = IoConfidence::Low;
+                                confidence = semio_framework_plugin::io::Confidence::Low;
                                 diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err));
                             }
                         }
@@ -960,7 +960,7 @@ pub mod derived_analysis {
                         match result {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),
                             Err(err) => {
-                                confidence = IoConfidence::Low;
+                                confidence = semio_framework_plugin::io::Confidence::Low;
                                 diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err));
                             }
                         }

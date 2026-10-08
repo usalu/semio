@@ -26,11 +26,9 @@
 //! @see <https://www.rfc-editor.org/rfc/rfc7493> (I-JSON Message Format)
 //! @see `../🦀️.rs` `derived_analysis::check_i_json_conformance` — the same four clauses as an acceptance gate
 
-use crate::standards::v_rfc8259::subsets::base::schema::diff::JsonDiff;
-use crate::standards::v_rfc8259::subsets::base::schema::mutations::{
-    InsertArrayElementMutation, InsertArrayElementPayload, JsonMutation, JsonPath, JsonPathSegment, RemoveArrayElementMutation, RemoveArrayElementPayload, RemoveMemberMutation, RemoveMemberPayload, SetMemberMutation, SetMemberPayload,
-    SetScalarMutation, SetScalarPayload,
-};
+use crate::standards::v_rfc8259::subsets::base::schema::diff::{JsonDiff, JsonObjectAdded, JsonObjectDiff, JsonValueDiff};
+use crate::standards::v_rfc8259::subsets::base::schema::mutation_support::diff_at_path;
+use crate::standards::v_rfc8259::subsets::base::schema::mutations::{InsertArrayElementPayload, JsonMutation, JsonPath, JsonPathSegment, RemoveArrayElementPayload, RemoveMemberPayload, SetMemberPayload, SetScalarPayload};
 use crate::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonMember, JsonSnapshot, JsonValue};
 use protocol::Mutation;
 
@@ -82,8 +80,6 @@ pub mod set_safe_number;
 /// 📐️ Typed content mutation for `s.stdio.json@rfc8259/i-json` — see this file's header for what
 /// each variant owes to RFC 7493 and which four are inherited from the ✳️any sibling unchanged.
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "🔤set-string/🦀️.rs"]
 pub mod set_string;
 #[path = "🌳set-top-level/🦀️.rs"]
@@ -98,7 +94,6 @@ pub mod upsert_member;
 #[mutations(snapshot = JsonSnapshot, diff = JsonDiff, schema = "JsonIJsonMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum JsonIJsonMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
     /// 🌳️ §2.1 — replaces the whole document root with an object or an array.
     SetTopLevel(set_top_level::SetTopLevel),
     /// ➕️ Sets (creating or overwriting) member `key` on the object at `path`. Inherited from ✳️any.
@@ -123,7 +118,7 @@ pub enum JsonIJsonMutation {
 /// 🧾️ Kebab-case spelling of every `JsonIJsonMutation` variant, in declaration order — the
 /// `json-rfc8259-i-json` catalog in `../../🔣️oracle.json` is measured against this exact
 /// list, and `kinds_match_the_enum_and_the_catalog` below proves it never drifts from either side.
-pub const KINDS: &[&str] = &["set-snapshot", "set-top-level", "upsert-member", "remove-member", "rename-member", "set-safe-number", "set-string", "insert-array-element", "remove-array-element"];
+pub const KINDS: &[&str] = &["set-top-level", "upsert-member", "remove-member", "rename-member", "set-safe-number", "set-string", "insert-array-element", "remove-array-element"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Clauses
@@ -195,65 +190,20 @@ fn target_of(path: &[JsonPathSegment]) -> Vec<String> {
 }
 //#endregion 🔖️Navigation
 
-//#region 🔖️Lowering
+//#region 🔖️Delegation
 /// 🚫️ One refused I-JSON clause: the frozen code, the prose, and the address it was refused at.
 type Refusal = (&'static str, String, Vec<String>);
 
-/// ⬇️ The single ✳️any op this I-JSON verb means, or the clause that refuses it. Every variant
-/// lowers to exactly one op, so the `JsonDiff` algebra never gains a second semantics here.
+/// ⬇️ The diff of the one ✳️any op an I-JSON verb means, so the `JsonDiff` algebra stays a single semantics source.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn lower(mutation: &JsonIJsonMutation, base: &JsonSnapshot) -> Result<JsonMutation, Refusal> {
-    match mutation {
-        JsonIJsonMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => Ok(JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: Vec::new(), value: snapshot.value.clone() }))),
-        JsonIJsonMutation::SetTopLevel(set_top_level::SetTopLevel { root }) => Ok(JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: Vec::new(), value: root.to_value() }))),
-        JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path, key, value }) => Ok(JsonMutation::SetMember(SetMemberMutation::Apply(SetMemberPayload { path: path.clone(), key: key.clone(), value: value.clone() }))),
-        JsonIJsonMutation::RemoveMember(remove_member::RemoveMember { path, key }) => Ok(JsonMutation::RemoveMember(RemoveMemberMutation::Apply(RemoveMemberPayload { path: path.clone(), key: key.clone() }))),
-        JsonIJsonMutation::RenameMember(rename_member::RenameMember { path, from, to }) => {
-            let Some(JsonValue::Object { members }) = resolve(&base.value, path) else {
-                return Err((CODE_TARGET_MISSING, format!("rename-member: no object at the addressed path, so member {from:?} cannot be renamed"), target_of(path)));
-            };
-            if !members.iter().any(|member| &member.key == from) {
-                return Err((CODE_TARGET_MISSING, format!("rename-member: the object carries no member named {from:?}"), target_of(path)));
-            }
-            if from != to && members.iter().any(|member| &member.key == to) {
-                return Err((
-                    CODE_INVARIANT,
-                    format!("rename-member: the object already carries a member named {to:?} -- RFC 7493 §2.3 requires member names to be unique within one object, so this rename would create the duplicate the clause forbids"),
-                    target_of(path),
-                ));
-            }
-            let renamed = members.iter().map(|member| if &member.key == from { JsonMember { key: to.clone(), value: member.value.clone() } } else { member.clone() }).collect();
-            Ok(JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: path.clone(), value: JsonValue::Object { members: renamed } })))
-        }
-        JsonIJsonMutation::SetSafeNumber(set_safe_number::SetSafeNumber { path, lexeme }) => {
-            if !matches!(resolve(&base.value, path), Some(JsonValue::Number { .. })) {
-                return Err((CODE_TARGET_MISSING, "set-safe-number: the addressed path does not hold a number, and this verb writes a number over a number so that its own inverse is always another set-safe-number".to_string(), target_of(path)));
-            }
-            if !is_safe_number_lexeme(lexeme) {
-                return Err((
-                    CODE_INVARIANT,
-                    format!("set-safe-number: integer {lexeme} exceeds ±{MAX_SAFE_INTEGER_MAGNITUDE} = ±(2^53-1) and is not exactly representable as an IEEE-754 double -- RFC 7493 §2.2 forbids it in I-JSON"),
-                    target_of(path),
-                ));
-            }
-            Ok(JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: path.clone(), value: JsonValue::Number { lexeme: lexeme.clone() } })))
-        }
-        JsonIJsonMutation::SetString(set_string::SetString { path, value }) => {
-            if !matches!(resolve(&base.value, path), Some(JsonValue::String { .. })) {
-                return Err((CODE_TARGET_MISSING, "set-string: the addressed path does not hold a string, and this verb writes a string over a string so that its own inverse is always another set-string".to_string(), target_of(path)));
-            }
-            if let Some(offending) = value.chars().find(|c| is_unicode_noncharacter(*c)) {
-                return Err((CODE_INVARIANT, format!("set-string: the value carries the Unicode noncharacter U+{:04X} -- RFC 7493 §2.4 forbids noncharacters in I-JSON text", offending as u32), target_of(path)));
-            }
-            Ok(JsonMutation::SetScalar(SetScalarMutation::Apply(SetScalarPayload { path: path.clone(), value: JsonValue::String { value: value.clone() } })))
-        }
-        JsonIJsonMutation::InsertArrayElement(insert_array_element::InsertArrayElement { path, index, value }) => {
-            Ok(JsonMutation::InsertArrayElement(InsertArrayElementMutation::Apply(InsertArrayElementPayload { path: path.clone(), index: *index, value: value.clone() })))
-        }
-        JsonIJsonMutation::RemoveArrayElement(remove_array_element::RemoveArrayElement { path, index }) => Ok(JsonMutation::RemoveArrayElement(RemoveArrayElementMutation::Apply(RemoveArrayElementPayload { path: path.clone(), index: *index }))),
+fn delegated(step: Result<JsonMutation, Refusal>, base: &JsonSnapshot) -> protocol::MutationOutcome<JsonDiff> {
+    match step {
+        Ok(step) => <JsonMutation as Mutation<JsonSnapshot>>::diff(&step, base),
+        Err((CODE_TARGET_MISSING, message, target)) => protocol::MutationOutcome::error(CODE_TARGET_MISSING, message, target),
+        Err((code, message, target)) => protocol::MutationOutcome::fatal(code, message, target),
     }
 }
-//#endregion 🔖️Lowering
+//#endregion 🔖️Delegation
 
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. The diff is the single semantics source: computed once from
@@ -262,7 +212,7 @@ pub fn lower(mutation: &JsonIJsonMutation, base: &JsonSnapshot) -> Result<JsonMu
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_json_i_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonIJsonMutation) -> protocol::MutationOutcome<JsonDiff> {
     let outcome = <JsonIJsonMutation as Mutation<JsonSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -272,83 +222,6 @@ pub fn apply_json_i_json_mutation(snapshot: &mut JsonSnapshot, mutation: &JsonIJ
 }
 
 //#endregion 🔖️Apply
-
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-///
-/// 🧮️ Gate first, then delegate. A refused clause yields an empty diff at the level the frozen vocabulary
-/// fixes for its code — `Error` for a missing target, `Fatal` for an invariant (LAW 1: `JsonDiff::default()`),
-/// so a refused I-JSON edit can never reach the snapshot by any path.
-pub(crate) fn agg_diff(this: &JsonIJsonMutation, base: &JsonSnapshot) -> protocol::MutationOutcome<JsonDiff> {
-    match lower(this, base) {
-        Ok(step) => <JsonMutation as Mutation<JsonSnapshot>>::diff(&step, base),
-        Err((CODE_TARGET_MISSING, message, target)) => protocol::MutationOutcome::error(CODE_TARGET_MISSING, message, target),
-        Err((code, message, target)) => protocol::MutationOutcome::fatal(code, message, target),
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-///
-/// ↩️ Handcrafted, clause-aware and exact. `SetSafeNumber`/`SetString` are total because they refuse
-/// a target of the wrong kind up front, so the prior value is always a lexeme/string they can write
-/// back; `RenameMember` inverts to itself with the two names swapped, which is why it had to be
-/// one atomic verb rather than a remove/insert pair.
-///
-/// ⚠️ `RemoveMember` is the one verb whose minimal undo is not always spellable here. Member ORDER
-/// is state in this model (`JsonValue::Object` carries a `Vec<JsonMember>`, and the I-JSON profile
-/// exists precisely to surface member order), while `UpsertMember` on an absent key APPENDS — so it
-/// re-creates a member that was not last in the WRONG position. The vocabulary has no positional
-/// member insert (adding one would change the wire and the cross-language catalog), so the undo of a
-/// non-last member degrades to the whole-snapshot restore, which is exact. The `🐍️.py` oracle of
-/// `🔀️mutate-json-rfc8259-i-json` carries the same rule, for the same reason.
-pub(crate) fn agg_inverse(this: &JsonIJsonMutation, base: &JsonSnapshot) -> Result<Vec<JsonIJsonMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    match this {
-        JsonIJsonMutation::SetSnapshot(_) => vec![JsonIJsonMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        JsonIJsonMutation::SetTopLevel(_) => match JsonIJsonRoot::from_value(&base.value) {
-            Some(root) => vec![JsonIJsonMutation::SetTopLevel(set_top_level::SetTopLevel { root })],
-            None => vec![JsonIJsonMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        },
-        JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path, key, .. }) => match resolve(&base.value, path) {
-            Some(JsonValue::Object { members }) => match members.iter().find(|member| &member.key == key) {
-                Some(existing) => vec![JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path: path.clone(), key: key.clone(), value: existing.value.clone() })],
-                None => vec![JsonIJsonMutation::RemoveMember(remove_member::RemoveMember { path: path.clone(), key: key.clone() })],
-            },
-            _ => Vec::new(),
-        },
-        JsonIJsonMutation::RemoveMember(remove_member::RemoveMember { path, key }) => match resolve(&base.value, path) {
-            Some(JsonValue::Object { members }) => match members.iter().position(|member| &member.key == key) {
-                Some(position) if position + 1 == members.len() => vec![JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path: path.clone(), key: key.clone(), value: members[position].value.clone() })],
-                Some(_) => vec![JsonIJsonMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-                None => Vec::new(),
-            },
-            _ => Vec::new(),
-        },
-        JsonIJsonMutation::RenameMember(rename_member::RenameMember { path, from, to }) => vec![JsonIJsonMutation::RenameMember(rename_member::RenameMember { path: path.clone(), from: to.clone(), to: from.clone() })],
-        JsonIJsonMutation::SetSafeNumber(set_safe_number::SetSafeNumber { path, .. }) => match resolve(&base.value, path) {
-            Some(JsonValue::Number { lexeme }) => vec![JsonIJsonMutation::SetSafeNumber(set_safe_number::SetSafeNumber { path: path.clone(), lexeme: lexeme.clone() })],
-            _ => Vec::new(),
-        },
-        JsonIJsonMutation::SetString(set_string::SetString { path, .. }) => match resolve(&base.value, path) {
-            Some(JsonValue::String { value }) => vec![JsonIJsonMutation::SetString(set_string::SetString { path: path.clone(), value: value.clone() })],
-            _ => Vec::new(),
-        },
-        JsonIJsonMutation::InsertArrayElement(insert_array_element::InsertArrayElement { path, index, .. }) => match resolve(&base.value, path) {
-            Some(JsonValue::Array { items }) => vec![JsonIJsonMutation::RemoveArrayElement(remove_array_element::RemoveArrayElement { path: path.clone(), index: (*index).min(items.len()) })],
-            _ => Vec::new(),
-        },
-        JsonIJsonMutation::RemoveArrayElement(remove_array_element::RemoveArrayElement { path, index }) => match resolve(&base.value, path) {
-            Some(JsonValue::Array { items }) => match items.get(*index) {
-                Some(item) => vec![JsonIJsonMutation::InsertArrayElement(insert_array_element::InsertArrayElement { path: path.clone(), index: *index, value: item.clone() })],
-                None => Vec::new(),
-            },
-            _ => Vec::new(),
-        },
-    }
-
-    })())
-}
-//#endregion 🔖️MutationTrait
 
 //#region 🧪️Tests
 #[cfg(test)]

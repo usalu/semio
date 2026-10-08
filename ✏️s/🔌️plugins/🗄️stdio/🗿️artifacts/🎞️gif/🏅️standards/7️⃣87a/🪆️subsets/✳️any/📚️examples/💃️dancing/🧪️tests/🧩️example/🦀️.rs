@@ -11,7 +11,7 @@ use crate::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
 use crate::standards::v89a::subsets::any::io::GifAnalyzer;
 use crate::standards::v89a::subsets::any::io::GifBuilderConstruction as GifBuilder;
 use protocol::Inference;
-use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder};
+use semio_framework_plugin::{io::AnalyzeSource, ArtifactBuilder};
 
 const DANCING_GIF_BYTES: &[u8] = include_bytes!("../../🖼️assets/🧪️dancing/🖼️.gif");
 

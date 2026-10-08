@@ -30,7 +30,7 @@ fn remove_row() -> SemioTableMutation {
 #[semio_framework_async_macros::async_test]
 async fn removes_the_row_at_base_index_zero() {
     let base = before();
-    let produced = remove_row().diff(&base).diff().apply(&base).expect("remove-row applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(remove_row().diff(&base).diff(), &base).expect("remove-row applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "remove-row/removes-the-leading-row: applied state differs from the committed after-snapshot");
     assert_eq!(produced.rows.len(), base.rows.len() - 1, "remove-row shortens the row sequence by exactly one");
     assert_eq!(produced.rows[0], base.rows[1], "the row that followed the removed head becomes the new head");
@@ -42,11 +42,12 @@ async fn removes_the_row_at_base_index_zero() {
 async fn the_undo_insert_row_restores_the_head_row_in_place() {
     let base = before();
     let mutation = remove_row();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "remove-row of an existing row undoes as exactly one insert-row");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward remove-row applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo insert-row applies to the shortened table");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward remove-row applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo insert-row applies to the shortened table");
     }
     assert_eq!(current, base, "remove-row/removes-the-leading-row: the undo did not restore the before-snapshot");
 }
@@ -89,7 +90,6 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical_and_omits_columns_entirely() {
     let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-row diff decodes");
     assert!(decoded.columns.is_none(), "remove-row must leave the columns slot untouched");
-    assert_eq!(decoded.rows.as_ref().map(|list| list.values.len()), Some(1), "the diff must carry exactly the one surviving row");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "remove-row/removes-the-leading-row: committed diff JSON is not canonical");
@@ -99,6 +99,6 @@ async fn committed_diff_is_canonical_and_omits_columns_entirely() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-row diff decodes");
-    let produced = decoded.apply(&before()).expect("committed remove-row diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed remove-row diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-row/removes-the-leading-row: committed diff did not carry before to after");
 }

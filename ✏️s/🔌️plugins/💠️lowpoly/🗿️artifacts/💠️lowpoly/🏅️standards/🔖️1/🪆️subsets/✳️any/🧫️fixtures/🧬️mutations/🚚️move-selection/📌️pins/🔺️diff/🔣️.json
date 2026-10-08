@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "objects": {
     "added": [],
     "patched": [
@@ -21,9 +20,25 @@
           "meshContent": "{\"vertices\":[{\"position\":[-1.0,0.0,-1.0],\"normal\":[0.0,-1.0,0.0],\"halfedge\":0},{\"position\":[2.0,0.0,-1.0],\"normal\":[0.0,-1.0,0.0],\"halfedge\":1},{\"position\":[2.0,0.0,1.0],\"normal\":[0.0,-1.0,0.0],\"halfedge\":2},{\"position\":[-1.0,0.0,1.0],\"normal\":[0.0,-1.0,0.0],\"halfedge\":3}],\"halfedges\":[{\"vertex\":0,\"twin\":null,\"next\":1,\"face\":0,\"uv\":[0.0,0.0]},{\"vertex\":1,\"twin\":null,\"next\":2,\"face\":0,\"uv\":[1.0,0.0]},{\"vertex\":2,\"twin\":null,\"next\":3,\"face\":0,\"uv\":[1.0,1.0]},{\"vertex\":3,\"twin\":null,\"next\":0,\"face\":0,\"uv\":[0.0,1.0]}],\"faces\":[{\"halfedge\":0,\"smooth\":false,\"flipped\":false}],\"uv_seams\":[]}",
           "name": null,
           "smoothShading": null,
-          "transform": null,
-          "meshState": null
-        }
+          "meshState": null,
+          "position": null,
+          "rotation": null,
+          "scale": null
+        },
+        "meshMotions": [
+          {
+            "motion": "offset",
+            "vertexIds": [
+              1,
+              2
+            ],
+            "offset": [
+              1.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
       }
     ],
     "removed": [],

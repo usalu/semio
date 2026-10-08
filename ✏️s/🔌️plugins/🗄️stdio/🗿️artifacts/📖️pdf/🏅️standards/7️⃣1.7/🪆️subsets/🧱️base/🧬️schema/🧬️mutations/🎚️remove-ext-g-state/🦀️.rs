@@ -26,7 +26,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveExtGState {
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.ext_g_states.iter().find(|item| item.id == self.id).map(|item| PdfMutation::SetExtGState(super::set_ext_g_state::SetExtGState { state: item.clone() })).into_iter().collect()
+        base.ext_g_states.iter().position(|item| item.id == self.id).map(|index| PdfMutation::SetExtGState(super::set_ext_g_state::SetExtGState { state: base.ext_g_states[index].clone(), index: Some(index) })).into_iter().collect()
     
     })())
 }

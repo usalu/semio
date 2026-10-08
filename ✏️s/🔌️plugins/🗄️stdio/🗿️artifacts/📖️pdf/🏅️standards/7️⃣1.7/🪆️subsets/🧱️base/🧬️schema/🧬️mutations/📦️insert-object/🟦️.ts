@@ -4,4 +4,5 @@ export interface InsertObjectMutation {
   mutation: 'insertObject';
   id: ObjRef;
   value: PdfObject;
+  index?: number | null;
 }

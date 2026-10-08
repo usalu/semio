@@ -1,11 +1,64 @@
 # import DslValue from "🧰️framework/🔨️modules/🌱️value/🧬️schema/🔗️.graphql"
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
-# import EquationGraph, EquationGeometry from "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
+# import EquationNode, EquationEdge, EquationPoint from "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
 type EquationDiff {
-  graph: EquationGraph @state(class: ARTIFACT)
-  geometry: EquationGeometry @state(class: ARTIFACT)
+  directed: Boolean @state(class: ARTIFACT)
+  algorithm: String @state(class: ARTIFACT)
+  algorithmSeed: EquationOptionalSeed @state(class: ARTIFACT)
+  nodes: EquationNodesDelta @state(class: ARTIFACT)
+  edges: EquationEdgesDelta @state(class: ARTIFACT)
+  points: EquationPointsDelta @state(class: ARTIFACT)
   notation: ArtifactChild @state(class: ARTIFACT)
   results: ArtifactChild @state(class: ARTIFACT)
   computed: ArtifactChild @state(class: ARTIFACT)
-  equation: DslValue @state(class: ARTIFACT)
+  equation: EquationExprDiff @state(class: ARTIFACT)
+}
+
+type EquationOptionalSeed { value: String }
+
+type EquationNodesDelta {
+  added: [EquationNode!]!
+  removed: [String!]!
+  patched: [EquationNodePatch!]!
+  reordered: [String!]
+}
+
+type EquationNodePatch {
+  id: String!
+  label: String
+  x: Float
+  y: Float
+}
+
+type EquationEdgesDelta {
+  added: [EquationEdge!]!
+  removed: [String!]!
+  patched: [EquationEdgePatch!]!
+  reordered: [String!]
+}
+
+type EquationEdgePatch {
+  id: String!
+  source: String
+  target: String
+}
+
+type EquationPointsDelta { edits: [EquationPointEdit!]! }
+
+union EquationPointEdit = EquationPointInsert | EquationPointRemove | EquationPointSet
+
+type EquationPointInsert { op: String! at: Int! point: EquationPoint! }
+
+type EquationPointRemove { op: String! at: Int! }
+
+type EquationPointSet { op: String! at: Int! point: EquationPoint! }
+
+type EquationExprDiff {
+  kinds: [EquationKindPatch!]!
+  nextLabel: Int
+}
+
+type EquationKindPatch {
+  label: Int!
+  kind: DslValue!
 }

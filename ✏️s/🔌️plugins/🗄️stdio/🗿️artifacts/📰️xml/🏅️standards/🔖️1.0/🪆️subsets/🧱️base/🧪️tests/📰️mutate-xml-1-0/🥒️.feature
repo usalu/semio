@@ -114,7 +114,6 @@ Feature: Apply every typed XML 1.0 mutation to a real 92 KB OOXML document part
       | remove-element   | {"path": [0,359,0], "index": 1}                                                                                                                                                                                                              |
       | set-attribute    | {"path": [0,0,0,0], "name": "w:val", "value": "Heading2"}                                                                                                                                                                                  |
       | set-text         | {"path": [0,275,3,0,0], "text": "Wave 7 <mutation> & review text"}                                                                                                                                                                           |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/doc/root/children/0/children/0/children/0/children/0/attrs/0/value", "value": "Heading3"}} |
 
   @id-inverse
   @level-exhaustive
@@ -134,7 +133,6 @@ Feature: Apply every typed XML 1.0 mutation to a real 92 KB OOXML document part
       | remove-element   | {"path": [0,359,0], "index": 1}                                                                                                                                                                                                              |
       | set-attribute    | {"path": [0,0,0,0], "name": "w:val", "value": "Heading2"}                                                                                                                                                                                  |
       | set-text         | {"path": [0,275,3,0,0], "text": "Wave 7 <mutation> & review text"}                                                                                                                                                                           |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/doc/root/children/0/children/0/children/0/children/0/attrs/0/value", "value": "Heading3"}} |
 
   @id-identity-round-trip
   @level-long

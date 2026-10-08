@@ -29,10 +29,11 @@ async fn mutation_diff_law_covers_every_variant() {
     let base = fixture();
     for m in demo_mutation_cases() {
         let diff = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::diff(&m, &base);
-        let via_diff = diff.diff().apply(&base).expect("apply must succeed for a well-formed fixture");
+        let via_diff = protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
 
         let mut applied = base.clone();
-        let returned_diff = apply_semio_animation_mutation(&mut applied, &m);
+        let (__next, returned_diff) = crate::applied(&applied, &m);
+        applied = __next;
 
         assert_eq!(via_diff, applied, "diff().apply(base) must match apply_semio_animation_mutation's result for {m:?}");
         assert_eq!(returned_diff, diff, "apply_semio_animation_mutation must return the same diff as Mutation::diff for {m:?}");
@@ -45,11 +46,13 @@ async fn inverse_law_covers_every_variant() {
     let base = fixture();
     for m in demo_mutation_cases() {
         let mut mutated = base.clone();
-        let _ = apply_semio_animation_mutation(&mut mutated, &m);
+        let (__next, _) = crate::applied(&mutated, &m);
+        mutated = __next;
         let inv = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
         let mut restored = mutated.clone();
-        for step in &inv {
-            let _ = apply_semio_animation_mutation(&mut restored, step);
+        for step in inv.iter().rev() {
+            let (__next, _) = crate::applied(&restored, step);
+            restored = __next;
         }
         assert_eq!(restored, base, "inverse must restore base for {m:?}");
     }

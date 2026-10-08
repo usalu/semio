@@ -10,9 +10,9 @@ use super::*;
 fn kinds_match_enum_and_catalog() {
     fn kind_of(mutation: &XlsxStrictMutation) -> &'static str {
         match mutation {
-            XlsxStrictMutation::SetSnapshot(_) => "set-snapshot",
             XlsxStrictMutation::SetMainNamespace(_) => "set-main-namespace",
             XlsxStrictMutation::SetRelationshipsNamespace(_) => "set-relationships-namespace",
+            XlsxStrictMutation::SetRelationshipBase(_) => "set-relationship-base",
             XlsxStrictMutation::SetConformanceAttribute(_) => "set-conformance-attribute",
             XlsxStrictMutation::RemoveConformanceAttribute(_) => "remove-conformance-attribute",
             XlsxStrictMutation::InsertVmlPart(_) => "insert-vml-part",
@@ -21,12 +21,12 @@ fn kinds_match_enum_and_catalog() {
         }
     }
     let samples = [
-        XlsxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: XlsxSnapshot::default() }),
         XlsxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace: String::new() }),
         XlsxStrictMutation::SetRelationshipsNamespace(set_relationships_namespace::SetRelationshipsNamespace { namespace: String::new() }),
+        XlsxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: String::new() }),
         XlsxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value: String::new() }),
         XlsxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
-        XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: String::new(), document: XmlDocument::default() }),
+        XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: String::new(), document: XmlDocument::default(), index: None }),
         XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: String::new() }),
         XlsxStrictMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path: String::new(), content_type: String::new() }),
     ];
@@ -43,13 +43,44 @@ fn kinds_match_enum_and_catalog() {
 //#endregion 🔖️KindsConformanceLaw
 
 //#region 🔖️StampLaw
-/// 🏅️ The class stamp is bijective: stamping into one class and back out of it lands on the
-/// snapshot it started from. This is what makes `SetSnapshot` exactly invertible on this axis,
-/// and it is proven on a snapshot built by this repository's own code, not asserted.
-#[test]
-fn stamping_into_a_class_and_back_is_the_identity() {
-    let base = XlsxSnapshot::default();
-    assert_eq!(stamp_conformance_class(stamp_conformance_class(base.clone(), true), false), stamp_conformance_class(base, false));
+/// 🏗️ A three-sheet workbook declaring the transitional families, so every stamp kind has something to retarget.
+fn stampable() -> XlsxSnapshot {
+    use crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx;
+    use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{XlsxSheet, XlsxWorkbook};
+    let workbook = XlsxWorkbook { sheets: ["One", "Two", "Three"].into_iter().map(|name| XlsxSheet { name: name.into(), cells: vec![] }).collect(), shared_strings: vec![] };
+    build_minimal_xlsx(workbook)
+}
+
+/// 🏅️ Every stamp kind satisfies the inverse sum law on a workbook declaring the opposite class, and stamping into the class and back out restores the workbook.
+#[semio_framework_async_macros::async_test]
+async fn every_stamp_kind_satisfies_the_inverse_sum_law_and_stamping_round_trips() {
+    let base = stampable();
+    for mutation in stamp_conformance_class_mutations(true) {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+    let mut stamped = base.clone();
+    for mutation in stamp_conformance_class_mutations(true) {
+        apply_xlsx_strict_mutation(&mut stamped, &mutation);
+    }
+    assert_ne!(stamped, base);
+    for mutation in stamp_conformance_class_mutations(false) {
+        apply_xlsx_strict_mutation(&mut stamped, &mutation);
+    }
+    assert_eq!(stamped, base);
+}
+
+/// ⚖️ The VML part kinds satisfy the inverse sum law with the part in the MIDDLE of the part list, and the worksheet retype restores the content type.
+#[semio_framework_async_macros::async_test]
+async fn the_vml_and_content_type_kinds_satisfy_the_inverse_sum_law_at_a_middle_position() {
+    let base = stampable();
+    let document: XmlDocument = semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(r#"<xml xmlns:v="urn:schemas-microsoft-com:vml"><v:shape/></xml>"#).expect("valid XML");
+    let insert = XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: "xl/drawings/vmlDrawing1.vml".into(), document, index: Some(3) });
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&insert, &base).await;
+    let mut with_part = base.clone();
+    apply_xlsx_strict_mutation(&mut with_part, &insert);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: "xl/drawings/vmlDrawing1.vml".into() }), &with_part).await;
+    let retype = XlsxStrictMutation::SetWorksheetContentType(set_worksheet_content_type::SetWorksheetContentType { path: "xl/worksheets/sheet2.xml".into(), content_type: "application/xml".into() });
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&retype, &base).await;
 }
 //#endregion 🔖️StampLaw
 
@@ -75,7 +106,7 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧬️mutations/✒️insert-vml-part/🧾️owned-document/🔣️.json")).unwrap();
     let path = fixture["path"].as_str().unwrap().to_string();
     let document: XmlDocument = semio_framework_pack_json::from_json_str(&fixture["document"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let mutation = XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone() });
+    let mutation = XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: None });
     assert_eq!(XlsxStrictMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
     let encoded = mutation.encode_op().unwrap();
     assert_ne!(encoded, mutation.print_op().into_bytes());
@@ -85,7 +116,7 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
     assert!(XlsxStrictMutation::decode_op(&invalid).is_err());
     let before = XlsxSnapshot::default();
     let outcome = mutation.diff(&before);
-    let inserted = protocol::MutationDiff::apply(outcome.diff(), &before).unwrap();
+    let inserted = protocol::apply_diff(outcome.diff(), &before).unwrap();
     let part = inserted.xml_part(&path).unwrap();
     assert_eq!(part.document, document);
     let physical = semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text(&document);
@@ -104,7 +135,7 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
     assert_eq!(carrier, fixture["document"]);
     let removal = XlsxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path });
     let inverse = removal.inverse(&inserted).unwrap();
-    assert_eq!(inverse, vec![mutation]);
-    let removed = protocol::MutationDiff::apply(removal.diff(&inserted).diff(), &inserted).unwrap();
+    assert_eq!(inverse, vec![XlsxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: document.clone(), index: Some(inserted.xml_parts.len() - 1) })]);
+    let removed = protocol::apply_diff(removal.diff(&inserted).diff(), &inserted).unwrap();
     assert_eq!(removed, before);
 }

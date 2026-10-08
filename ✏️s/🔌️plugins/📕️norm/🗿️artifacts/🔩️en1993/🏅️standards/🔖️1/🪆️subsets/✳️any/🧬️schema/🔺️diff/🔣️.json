@@ -17,151 +17,266 @@
       "x-semio-state": "artifact"
     },
     "materials": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/En1993MaterialEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/En1993MaterialDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "sections": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/En1993SectionEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/En1993SectionDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "members": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/En1993MemberEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/En1993MemberDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "loadCases": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/En1993LoadCaseEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/En1993LoadCaseDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "memberActions": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/En1993MemberActionEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/En1993MemberActionDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "joints": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/En1993JointEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/En1993JointDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "fatigueDetails": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/En1993FatigueDetailEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/En1993FatigueDetailDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "fireExposures": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/En1993FireExposureEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/En1993FireExposureDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "coldFormedMembers": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/En1993ColdFormedMemberEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/En1993ColdFormedMemberDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "platedPanels": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/En1993PlatedPanelEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/En1993PlatedPanelDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "siloShells": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/En1993SiloShellEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/En1993SiloShellDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "tensionComponents": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/En1993TensionComponentEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/En1993TensionComponentDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "bridgeFatigue": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/En1993BridgeFatigueEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/En1993BridgeFatigueDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "towerLegs": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/En1993TowerLegEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/En1993TowerLegDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "piles": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/En1993PileEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/En1993PileDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "craneRunways": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/En1993CraneRunwayEdit"
-      },
+      "anyOf": [
+        {
+          "$ref": "#/$defs/En1993CraneRunwayDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     }
   },
   "$defs": {
-    "En1993RowOp": {
-      "enum": [
-        "Insert",
-        "Remove",
-        "Replace"
-      ]
+    "En1993MaterialDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993MaterialAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993MaterialModification"
+          }
+        }
+      }
     },
-    "En1993MaterialEdit": {
+    "En1993MaterialAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/En1993RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelMaterial"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelMaterial"
+        }
+      }
+    },
+    "En1993MaterialModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1993MaterialPatch"
+        }
+      }
+    },
+    "En1993MaterialPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "grade": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fy": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fu": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eModulus": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "gModulus": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "subgrade": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "type": "string"
             },
             {
               "type": "null"
@@ -170,31 +285,257 @@
         }
       }
     },
-    "En1993SectionEdit": {
+    "En1993SectionDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993SectionAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993SectionModification"
+          }
+        }
+      }
+    },
+    "En1993SectionAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/En1993RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelSection"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelSection"
+        }
+      }
+    },
+    "En1993SectionModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1993SectionPatch"
+        }
+      }
+    },
+    "En1993SectionPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "designation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "h": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "b": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tw": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tf": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "r": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "area": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shearAreaY": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shearAreaZ": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "iy": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "iz": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "it": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "iw": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "wElY": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "wElZ": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "wPlY": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "wPlZ": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "areaNet": {
+          "anyOf": [
+            {
+              "type": "number"
             },
             {
               "type": "null"
@@ -203,31 +544,207 @@
         }
       }
     },
-    "En1993MemberEdit": {
+    "En1993MemberDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993MemberAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993MemberModification"
+          }
+        }
+      }
+    },
+    "En1993MemberAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/En1993RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelMember"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelMember"
+        }
+      }
+    },
+    "En1993MemberModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1993MemberPatch"
+        }
+      }
+    },
+    "En1993MemberPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "memberType": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sectionId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "materialId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "length": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bucklingLengthY": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bucklingLengthZ": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ltbLength": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ltbRestraintSpacing": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "loadApplication": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "endMomentRatioPsi": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "momentDiagram": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "deflectionLimitRatio": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "analysis": {
+          "anyOf": [
+            {
+              "type": "string"
             },
             {
               "type": "null"
@@ -236,31 +753,97 @@
         }
       }
     },
-    "En1993LoadCaseEdit": {
+    "En1993LoadCaseDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993LoadCaseAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993LoadCaseModification"
+          }
+        }
+      }
+    },
+    "En1993LoadCaseAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/En1993RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/LoadCase"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/LoadCase"
+        }
+      }
+    },
+    "En1993LoadCaseModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1993LoadCasePatch"
+        }
+      }
+    },
+    "En1993LoadCasePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "category": {
+          "anyOf": [
+            {
+              "type": "string"
             },
             {
               "type": "null"
@@ -269,31 +852,97 @@
         }
       }
     },
-    "En1993MemberActionEdit": {
+    "En1993MemberActionDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993MemberActionAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993MemberActionModification"
+          }
+        }
+      }
+    },
+    "En1993MemberActionAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/En1993RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/MemberAction"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/MemberAction"
+        }
+      }
+    },
+    "En1993MemberActionModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1993MemberActionPatch"
+        }
+      }
+    },
+    "En1993MemberActionPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "memberId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "loadCaseId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "action": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/DesignAction"
             },
             {
               "type": "null"
@@ -302,31 +951,308 @@
         }
       }
     },
-    "En1993JointEdit": {
+    "En1993JointDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993JointAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993JointModification"
+          }
+        }
+      }
+    },
+    "En1993JointAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/En1993RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelJoint"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelJoint"
+        }
+      }
+    },
+    "En1993JointModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1993JointPatch"
+        }
+      }
+    },
+    "En1993JointPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "memberId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "boltClass": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "boltDiameter": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "boltRows": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "boltsPerRow": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pitch": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "gauge": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "endDistance": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "edgeDistance": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shearPlanes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plateThickness": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plateFu": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "weldThroat": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "weldLength": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "weldFu": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "weldGrade": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actions": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/JointForceAction"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "category": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "frictionMu": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "preloadForce": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "slipFactorKs": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "frictionSurfaces": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
             },
             {
               "type": "null"
@@ -335,31 +1261,112 @@
         }
       }
     },
-    "En1993FatigueDetailEdit": {
+    "En1993FatigueDetailDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993FatigueDetailAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993FatigueDetailModification"
+          }
+        }
+      }
+    },
+    "En1993FatigueDetailAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/En1993RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/FatigueDetail"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/FatigueDetail"
+        }
+      }
+    },
+    "En1993FatigueDetailModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1993FatigueDetailPatch"
+        }
+      }
+    },
+    "En1993FatigueDetailPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "memberId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "category": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "spectrum": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/FatigueBand"
+              }
             },
             {
               "type": "null"
@@ -368,31 +1375,157 @@
         }
       }
     },
-    "En1993FireExposureEdit": {
+    "En1993FireExposureDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993FireExposureAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993FireExposureModification"
+          }
+        }
+      }
+    },
+    "En1993FireExposureAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/En1993RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/FireExposure"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/FireExposure"
+        }
+      }
+    },
+    "En1993FireExposureModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1993FireExposurePatch"
+        }
+      }
+    },
+    "En1993FireExposurePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "memberId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rating": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "protectionThickness": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sectionFactor": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mu0": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "designTemperature": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "protectionConductivity": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "protectionDensity": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "protectionSpecificHeat": {
+          "anyOf": [
+            {
+              "type": "number"
             },
             {
               "type": "null"
@@ -401,31 +1534,140 @@
         }
       }
     },
-    "En1993ColdFormedMemberEdit": {
+    "En1993ColdFormedMemberDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993ColdFormedMemberAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993ColdFormedMemberModification"
+          }
+        }
+      }
+    },
+    "En1993ColdFormedMemberAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/En1993RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/ColdFormedMember"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/ColdFormedMember"
+        }
+      }
+    },
+    "En1993ColdFormedMemberModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1993ColdFormedMemberPatch"
+        }
+      }
+    },
+    "En1993ColdFormedMemberPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bBar": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "thickness": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kSigma": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "psi": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fy": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "grossResistance": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actions": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/ForceAction"
+              }
             },
             {
               "type": "null"
@@ -434,31 +1676,130 @@
         }
       }
     },
-    "En1993PlatedPanelEdit": {
+    "En1993PlatedPanelDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993PlatedPanelAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993PlatedPanelModification"
+          }
+        }
+      }
+    },
+    "En1993PlatedPanelAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/En1993RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/PlatedPanel"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/PlatedPanel"
+        }
+      }
+    },
+    "En1993PlatedPanelModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1993PlatedPanelPatch"
+        }
+      }
+    },
+    "En1993PlatedPanelPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "a": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "b": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "thickness": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fy": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kSigma": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actions": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/ForceAction"
+              }
             },
             {
               "type": "null"
@@ -467,31 +1808,127 @@
         }
       }
     },
-    "En1993SiloShellEdit": {
+    "En1993SiloShellDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993SiloShellAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993SiloShellModification"
+          }
+        }
+      }
+    },
+    "En1993SiloShellAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/En1993RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SiloShell"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SiloShell"
+        }
+      }
+    },
+    "En1993SiloShellModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1993SiloShellPatch"
+        }
+      }
+    },
+    "En1993SiloShellPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "thickness": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "radius": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "depth": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "k": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "gamma": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fy": {
+          "anyOf": [
+            {
+              "type": "number"
             },
             {
               "type": "null"
@@ -500,31 +1937,100 @@
         }
       }
     },
-    "En1993TensionComponentEdit": {
+    "En1993TensionComponentDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993TensionComponentAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993TensionComponentModification"
+          }
+        }
+      }
+    },
+    "En1993TensionComponentAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/En1993RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/TensionComponent"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/TensionComponent"
+        }
+      }
+    },
+    "En1993TensionComponentModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1993TensionComponentPatch"
+        }
+      }
+    },
+    "En1993TensionComponentPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fUk": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fK": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actions": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/ForceAction"
+              }
             },
             {
               "type": "null"
@@ -533,31 +2039,129 @@
         }
       }
     },
-    "En1993BridgeFatigueEdit": {
+    "En1993BridgeFatigueDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993BridgeFatigueAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993BridgeFatigueModification"
+          }
+        }
+      }
+    },
+    "En1993BridgeFatigueAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/En1993RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/BridgeFatigue"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/BridgeFatigue"
+        }
+      }
+    },
+    "En1993BridgeFatigueModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1993BridgeFatiguePatch"
+        }
+      }
+    },
+    "En1993BridgeFatiguePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "memberId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lambda": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "phi2": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "deltaSigmaP": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "category": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
             },
             {
               "type": "null"
@@ -566,31 +2170,110 @@
         }
       }
     },
-    "En1993TowerLegEdit": {
+    "En1993TowerLegDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993TowerLegAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993TowerLegModification"
+          }
+        }
+      }
+    },
+    "En1993TowerLegAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/En1993RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/TowerLeg"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/TowerLeg"
+        }
+      }
+    },
+    "En1993TowerLegModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1993TowerLegPatch"
+        }
+      }
+    },
+    "En1993TowerLegPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "memberId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "forceCoefficient": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dynamicFactor": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actions": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/ForceAction"
+              }
             },
             {
               "type": "null"
@@ -599,31 +2282,130 @@
         }
       }
     },
-    "En1993PileEdit": {
+    "En1993PileDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993PileAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993PileModification"
+          }
+        }
+      }
+    },
+    "En1993PileAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/En1993RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelPile"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SteelPile"
+        }
+      }
+    },
+    "En1993PileModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1993PilePatch"
+        }
+      }
+    },
+    "En1993PilePatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sectionId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "materialId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "drivingStress": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "embeddedLength": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shaftPerimeter": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actions": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/ForceAction"
+              }
             },
             {
               "type": "null"
@@ -632,31 +2414,140 @@
         }
       }
     },
-    "En1993CraneRunwayEdit": {
+    "En1993CraneRunwayDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993CraneRunwayAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1993CraneRunwayModification"
+          }
+        }
+      }
+    },
+    "En1993CraneRunwayAddition": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "op",
-        "index",
-        "id",
-        "value"
+        "after",
+        "row"
       ],
       "properties": {
-        "op": {
-          "$ref": "#/$defs/En1993RowOp"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295
-        },
-        "id": {
-          "type": "string"
-        },
-        "value": {
+        "after": {
           "anyOf": [
             {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/CraneRunway"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/CraneRunway"
+        }
+      }
+    },
+    "En1993CraneRunwayModification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1993CraneRunwayPatch"
+        }
+      }
+    },
+    "En1993CraneRunwayPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "memberId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "wheelContactLength": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "dispersion": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "webThickness": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fy": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "phi": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actions": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/ForceAction"
+              }
             },
             {
               "type": "null"

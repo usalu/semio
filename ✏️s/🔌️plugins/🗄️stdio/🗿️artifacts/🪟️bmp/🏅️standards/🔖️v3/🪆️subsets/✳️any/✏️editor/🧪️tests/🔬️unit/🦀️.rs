@@ -53,7 +53,7 @@ fn drive(command: &BmpEditCommand, snapshot: &BmpSnapshot, tool_id: &'static str
             semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
         match work.step(&ArtifactCommandInputs { command, snapshot, snapshot_owner: Some(&reader), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut cx).expect("BMP paint work step") {
             ArtifactCommandWorkStep::Progress { preview, .. } => assert!(std::str::from_utf8(preview).expect("localized progress").contains("de")),
-            ArtifactCommandWorkStep::Complete(emit) => return emit.artifact_mutations,
+            ArtifactCommandWorkStep::Complete(emit) => {work.begin_close();for _ in 0..10000{if work.close_step(1,4096)==semio_framework_job::InteractiveJobCloseStep::Complete{assert!(work.terminal_is_empty());return emit.artifact_mutations;}}panic!("BMP paint retained result did not close");},
             ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::CompleteWithEphemeral { .. } | ArtifactCommandWorkStep::CompleteDownload { .. } => panic!("unexpected BMP paint work step"),
         }
     }
@@ -81,8 +81,8 @@ fn natural_file_route_preserves_bmp_v3_bytes_and_opens_a_fresh_snapshot_event() 
     let independent = semio_s_artifact_stdio_bmp_test_oracle::standards::v_v3::subsets::any::oracle_identity_round_trip(&exported).expect("image crate reopens BMP export");
     let independent = crate::standards::v_v3::subsets::any::io::decode_bmp(&independent).expect("independent BMP output reopens");
     assert_eq!(crate::standards::v_v3::subsets::any::schema::operations::bmp_rgba8_preview(&independent).unwrap(), crate::standards::v_v3::subsets::any::schema::operations::bmp_rgba8_preview(&imported).unwrap());
-    let Some(BmpMutation::SetSnapshot(set)) = <BmpEditor as ArtifactEditor>::whole_document_operation(imported.clone()) else { panic!("natural BMP opens through one event-sourced snapshot mutation") };
-    assert_eq!(set.snapshot, imported);
+    let Some(BmpMutation::ReplaceImage(set)) = <BmpEditor as ArtifactEditor>::whole_document_operation(imported.clone()) else { panic!("natural BMP opens through one event-sourced snapshot mutation") };
+    assert_eq!(set.image, imported.image);
     assert_eq!(current, <BmpEditor as ArtifactEditor>::initial_snapshot(), "opening does not replace the selected owner before publication");
 }
 
@@ -107,10 +107,10 @@ fn retained_direct_paint_captures_revision_and_preserves_unaddressed_bytes() {
     let before = direct_snapshot();
     let mutations = drive(&direct_command(), &before, paint_region::DIRECT_ACTION_ID);
     assert_eq!(mutations.len(), 1);
-    let BmpMutation::SetSnapshot(payload) = &mutations[0] else { panic!("owned paint result publication") };
-    assert_eq!(payload.snapshot.image.opaque_gap,before.image.opaque_gap);
-    assert_eq!(payload.snapshot.image.opaque_trailer,before.image.opaque_trailer);
-    let after = mutations[0].diff(&before).diff().apply(&before).expect("apply direct paint");
+    let BmpMutation::PaintDirectRegion(payload) = &mutations[0] else { panic!("typed direct paint intent publication") };
+    assert_eq!(payload.revision,crate::schema::operations::bmp_revision(&before));
+    let after = protocol::apply_diff(&mutations[0].diff(&before).diff(), &before).expect("apply direct paint");
+    assert_eq!(after.image.opaque_gap,before.image.opaque_gap);assert_eq!(after.image.opaque_trailer,before.image.opaque_trailer);
     let layout = crate::standards::v_v3::subsets::any::io::bmp_layout(&before).unwrap();
     for row in 0..2 {
         let sample = layout.data_offset + row * layout.row_stride + 3;
@@ -129,7 +129,7 @@ fn retained_indexed_paint_keeps_duplicate_color_indices_distinct() {
             .unwrap();
     let preview = crate::standards::v_v3::subsets::any::schema::operations::bmp_rgba8_preview(&before).unwrap();
     let mutations = drive(&command, &before, paint_region::INDEXED_ACTION_ID);
-    let after = mutations[0].diff(&before).diff().apply(&before).unwrap();
+    let after = protocol::apply_diff(&mutations[0].diff(&before).diff(), &before).unwrap();
     assert_eq!(crate::standards::v_v3::subsets::any::schema::operations::bmp_rgba8_preview(&after).unwrap(), preview);
     assert_ne!(crate::standards::v_v3::subsets::any::io::encode_bmp(&after).unwrap(), crate::standards::v_v3::subsets::any::io::encode_bmp(&before).unwrap(), "the equal-color palette entry remains a distinct authored index");
 }
@@ -152,7 +152,7 @@ fn cancelled_retained_paint_discards_revision_without_publication() {
     let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
     assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { stage: "bmp-paint-region-copy", .. }));
     work.begin_close();
-    assert!(matches!(work.close_step(1, 0), semio_framework_job::InteractiveJobCloseStep::Pending {released_items:0,released_bytes:0}));
+    assert_eq!(work.close_step(1, 0),semio_framework_job::InteractiveJobCloseStep::Complete);
     for _ in 0..100_000 {if work.terminal_is_empty() {break;}work.close_step(1,usize::MAX);}
     assert!(work.terminal_is_empty());
     assert_eq!(snapshot, &direct_snapshot());

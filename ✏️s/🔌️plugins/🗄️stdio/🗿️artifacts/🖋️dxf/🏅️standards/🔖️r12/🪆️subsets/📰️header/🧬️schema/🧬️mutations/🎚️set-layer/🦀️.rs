@@ -1,6 +1,4 @@
-//! 🎚️ `set-layer` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🎚️ `set-layer` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,14 +14,21 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetLayer {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "layer", kind: "set-layer", record: "SetLayer" };
 
     fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
-        agg_diff(&DxfMutation::SetLayer(self.clone()), base)
+        let Self { name, layer } = self;
+        protocol::MutationOutcome::new({
+            let old = base.tables.layers.iter().find(|l| &l.name == name).cloned().unwrap_or_default();
+            diff_set_layer(name, layer_diff_between(&old, layer))
+        })
     }
     fn inverse(&self, base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&DxfMutation::SetLayer(self.clone()), base)?
-    
-    })
-}
+        let Self { name, .. } = self;
+        Ok({
+            match base.tables.layers.iter().find(|l| &l.name == name) {
+                Some(l) => vec![DxfMutation::SetLayer(set_layer::SetLayer { name: name.clone(), layer: l.clone() })],
+                None => vec![DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name: name.clone() })],
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set layer", "Layer setzen")
     }

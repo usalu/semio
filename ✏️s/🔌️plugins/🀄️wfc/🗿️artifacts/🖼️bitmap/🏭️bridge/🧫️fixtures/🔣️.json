@@ -1,0 +1,28 @@
+{
+  "artifact": "s.wfc.bitmap",
+  "producedBy": "semio-wfc-mutation-bridge",
+  "excludedOwnerSegments": [
+    "👁️viewer",
+    "✏️editor"
+  ],
+  "aggregates": [
+    "BitmapTransientMutation",
+    "BitmapMutation"
+  ],
+  "coordinates": [
+    {
+      "artifact": "s.wfc.bitmap",
+      "standard": "1",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any"
+    },
+    {
+      "artifact": "s.wfc.bitmap",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🫧️transient",
+      "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient"
+    }
+  ]
+}

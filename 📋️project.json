@@ -3210,6 +3210,44 @@
       "cache": false,
       "outputs": [],
       "dependsOn": []
+    },
+    "runtime-fixture-graph": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts schema runtime-graph",
+        "env": {
+          "CARGO_TARGET_DIR": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/target",
+          "CARGO_BUILD_BUILD_DIR": ".🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build"
+        }
+      }
+    },
+    "build-canvas-font-assets": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts build canvas fonts",
+        "forwardAllArgs": true
+      }
+    },
+    "test-canvas-native": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test canvas native",
+        "forwardAllArgs": true
+      }
+    },
+    "test-canvas-react": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test canvas react",
+        "forwardAllArgs": true
+      }
     }
   }
 }

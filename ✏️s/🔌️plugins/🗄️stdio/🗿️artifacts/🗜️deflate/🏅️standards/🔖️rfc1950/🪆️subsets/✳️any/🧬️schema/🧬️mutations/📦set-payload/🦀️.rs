@@ -1,7 +1,4 @@
-//! 📦️ `set-payload` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 📦️ `set-payload` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 //! `#[derive(dsl::DslRecord)]` gives this leaf its own `DslField` impl with the SAME field spec
 //! `record_codegen` built when this field lived inline in the enum variant — the aggregate's
 //! tuple variant is a single-field newtype, so `#[derive(dsl::DslOps)]`'s `DslVariants` derive

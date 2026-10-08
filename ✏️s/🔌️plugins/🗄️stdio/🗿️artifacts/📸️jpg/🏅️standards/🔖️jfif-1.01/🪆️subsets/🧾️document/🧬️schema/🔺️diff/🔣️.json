@@ -52,33 +52,6 @@
       ],
       "x-semio-state": "artifact"
     },
-    "frame": {
-      "$ref": "#/definitions/frameChange",
-      "x-semio-state": "artifact"
-    },
-    "sofMarker": {
-      "type": "integer",
-      "x-semio-state": "artifact"
-    },
-    "arithmetic": {
-      "type": "boolean",
-      "x-semio-state": "artifact"
-    },
-    "quantTables": {
-      "$ref": "#/definitions/quantTablesDiff",
-      "x-semio-state": "artifact"
-    },
-    "huffmanTables": {
-      "$ref": "#/definitions/huffmanTablesDiff",
-      "x-semio-state": "artifact"
-    },
-    "restartInterval": {
-      "type": [
-        "integer",
-        "null"
-      ],
-      "x-semio-state": "artifact"
-    },
     "otherSegments": {
       "$ref": "#/definitions/otherSegmentsDiff",
       "x-semio-state": "artifact"
@@ -342,5 +315,6 @@
         }
       }
     }
-  }
+  },
+  "required": []
 }

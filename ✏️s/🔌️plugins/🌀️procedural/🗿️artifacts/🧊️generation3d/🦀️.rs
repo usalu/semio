@@ -148,6 +148,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(standards::v1::subsets::any::schema::generation3d_artifact_schema_descriptor())
         .inferences([standards::v1::subsets::any::schema::inferences::generation3d_artifact_inference_descriptor()])
+        .inference_services([host::geometry_service::geometry_inference_service()])
         .composers(standards::v1::subsets::any::io::io_registry::entries())
         .document_codec::<semio_framework_plugin::EditorApp<editor::generation3d::Generation3dPlayApp>>()
         .try_build()
@@ -221,6 +222,12 @@ pub mod standards {
                         #[path = "."]
                         pub mod topology {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🦀️.rs"]
+                            mod component;
+                            pub use component::*;
+                        }
+                        #[path = "."]
+                        pub mod geometry {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🦀️.rs"]
                             mod component;
                             pub use component::*;
                         }

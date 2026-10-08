@@ -1,9 +1,9 @@
 use super::*;
 use dsl::os_pack as pack;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{Mutation, OpBinary, OpText};
 
-#[test]
-fn shooting_presence_contract_vectors_match_the_json_oracle() {
+#[semio_framework_async_macros::async_test]
+async fn shooting_presence_contract_vectors_match_the_json_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
     let base: ShootingPresence = semio_framework_pack_json::from_json_str(&vectors["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned base decoder");
     assert_eq!(<ShootingPresenceMutation as Mutation<ShootingPresence>>::DESCRIPTORS.len(), vectors["cases"].as_array().expect("cases").len());
@@ -19,5 +19,6 @@ fn shooting_presence_contract_vectors_match_the_json_oracle() {
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&next)).expect("independent state oracle"), vector["expected"]);
         let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture").into_iter().fold(next, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).expect("apply inverse"));
         assert_eq!(restored, base);
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     }
 }

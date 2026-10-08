@@ -1,2 +1,0 @@
-# 📸️ Whole PNG snapshot replacement.
-input SetSnapshot { snapshot: PngSnapshotInput! }

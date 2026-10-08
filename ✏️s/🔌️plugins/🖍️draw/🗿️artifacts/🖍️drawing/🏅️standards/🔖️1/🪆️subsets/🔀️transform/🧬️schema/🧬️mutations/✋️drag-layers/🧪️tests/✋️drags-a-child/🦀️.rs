@@ -3,7 +3,7 @@
 //! byte for byte and pin the partial, target-missing, no-op, invariant and label outcomes.
 use crate::mutations::{apply_drawing_mutation, drag_layers, inverse_drawing_mutation, DrawingMutation};
 use crate::DrawingSnapshot;
-use protocol::{Mutation, MutationDiff, SemanticMutation};
+use protocol::{Mutation, SemanticMutation};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/📸️snapshot/➡️after/🔣️.json");

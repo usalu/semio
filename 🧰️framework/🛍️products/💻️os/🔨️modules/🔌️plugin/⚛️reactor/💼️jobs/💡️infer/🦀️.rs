@@ -499,8 +499,8 @@ impl InteractiveInferenceJob {
                 }
                 None
             }
-            StepOutcome::Complete(candidate) => match copy_retained_payload(&candidate.output, LOSSLESS_MAX_BYTES) {
-                Ok(output) => Some(encode_result(self.request.clone(), output)),
+            StepOutcome::Complete(candidate) => match copy_retained_payload(&candidate.output, LOSSLESS_MAX_BYTES).and_then(|output| copy_retained_payload(&candidate.state, LOSSLESS_MAX_BYTES).map(|state| (output, state))) {
+                Ok((output, state)) => Some(encode_result(self.request.clone(), output, (!state.is_empty()).then_some(state).or_else(|| self.checkpoint.clone()))),
                 Err(error) => {
                     self.outcome = Some(outcome);
                     return PumpTransition::Settled(self.fail(error));
@@ -669,7 +669,10 @@ fn bridge_fault(error: &InferenceBridgeError) -> semio_framework::Fault {
     super::fault("job.infer.bridge", error.to_string())
 }
 
-fn encode_result(request: crate::app::WireArtifactInferenceRequest, canonical_payload: Vec<u8>) -> Result<Vec<u8>, semio_framework::Fault> {
+/// 🧾️ The result of a completed interactive inference, reporting only what the host observed: the job completed (`complete`), faulted nowhere (`valid`),
+/// its final persisted state or last checkpoint is the resume state (`previous_state`), and it published no diagnostics on the success path. A fidelity the
+/// job never declared is `unreported`, never `exact`.
+fn encode_result(request: crate::app::WireArtifactInferenceRequest, canonical_payload: Vec<u8>, resume_state: Option<Vec<u8>>) -> Result<Vec<u8>, semio_framework::Fault> {
     let allocation = usize::try_from(request.budgets.allocation_bytes).map_err(|_| super::fault("job.infer.result", "allocation budget exceeds this runtime's address space"))?;
     if canonical_payload.len() > allocation {
         return Err(super::fault("job.infer.result", format!("interactive inference result has {} bytes, above allocation budget {allocation}", canonical_payload.len())));
@@ -696,14 +699,14 @@ fn encode_result(request: crate::app::WireArtifactInferenceRequest, canonical_pa
         source_dialect: request.source_dialect,
         policy: request.policy,
         budgets: request.budgets,
-        previous_state: request.previous_state,
+        previous_state: resume_state,
         requested_cache_mode: request.requested_cache_mode.clone(),
         canonical_payload,
         dependencies: request.dependencies,
         diagnostics: Vec::new(),
         provenance,
         validity: "valid".into(),
-        quality: "exact".into(),
+        quality: "unreported".into(),
         complete: true,
         actual_cache_mode: request.requested_cache_mode,
         cancellation_id: request.cancellation_id,

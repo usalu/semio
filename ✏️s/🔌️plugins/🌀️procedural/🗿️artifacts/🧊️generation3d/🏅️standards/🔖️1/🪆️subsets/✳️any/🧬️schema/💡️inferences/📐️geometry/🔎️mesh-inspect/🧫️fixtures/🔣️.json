@@ -1,0 +1,837 @@
+{
+ "description": "Language-agnostic laws of the mesh.inspect widgets: the position of a vertex, the ends and length of an edge, the corner ids, unit normal and center of a face. Edge ids are half-edge handles.",
+ "tolerance": 1e-05,
+ "cases": [
+  {
+   "name": "vertex 6 of the cube",
+   "kind": "mesh.inspect.vertex",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "vertex": [
+     6
+    ]
+   },
+   "outputs": {
+    "position": [
+     1,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "name": "edge 0 of the cube",
+   "kind": "mesh.inspect.edge",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "edge": [
+     0
+    ]
+   },
+   "outputs": {
+    "start": [
+     0,
+     0,
+     0
+    ],
+    "end": [
+     0,
+     1,
+     0
+    ],
+    "length": 1
+   }
+  },
+  {
+   "name": "a diagonal edge",
+   "kind": "mesh.inspect.edge",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       3,
+       4,
+       0
+      ],
+      [
+       0,
+       4,
+       0
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       1,
+       2
+      ]
+     ]
+    },
+    "edge": [
+     0
+    ]
+   },
+   "outputs": {
+    "start": [
+     0,
+     0,
+     0
+    ],
+    "end": [
+     3,
+     4,
+     0
+    ],
+    "length": 5
+   }
+  },
+  {
+   "name": "the top face of the cube",
+   "kind": "mesh.inspect.face",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "face": [
+     1
+    ]
+   },
+   "outputs": {
+    "vertices": [
+     4,
+     5,
+     6,
+     7
+    ],
+    "normal": [
+     0,
+     0,
+     1
+    ],
+    "center": [
+     0.5,
+     0.5,
+     1
+    ]
+   }
+  },
+  {
+   "name": "a slanted triangle",
+   "kind": "mesh.inspect.face",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       3,
+       0,
+       0
+      ],
+      [
+       0,
+       3,
+       3
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       1,
+       2
+      ]
+     ]
+    },
+    "face": [
+     0
+    ]
+   },
+   "outputs": {
+    "vertices": [
+     0,
+     1,
+     2
+    ],
+    "normal": [
+     0,
+     -0.7071067811865475,
+     0.7071067811865475
+    ],
+    "center": [
+     1,
+     1,
+     1
+    ]
+   }
+  },
+  {
+   "name": "a vertex beyond the mesh is stale",
+   "kind": "mesh.inspect.vertex",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "vertex": [
+     8
+    ]
+   },
+   "fault": {
+    "code": "generation3d.geometry.selection-stale",
+    "port": "vertex"
+   }
+  },
+  {
+   "name": "an edge beyond the mesh is stale",
+   "kind": "mesh.inspect.edge",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "edge": [
+     24
+    ]
+   },
+   "fault": {
+    "code": "generation3d.geometry.selection-stale",
+    "port": "edge"
+   }
+  },
+  {
+   "name": "a face beyond the mesh is stale",
+   "kind": "mesh.inspect.face",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "face": [
+     6
+    ]
+   },
+   "fault": {
+    "code": "generation3d.geometry.selection-stale",
+    "port": "face"
+   }
+  },
+  {
+   "name": "two vertices are one too many",
+   "kind": "mesh.inspect.vertex",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "vertex": [
+     0,
+     1
+    ]
+   },
+   "fault": {
+    "code": "generation3d.geometry.selection-count",
+    "port": "vertex"
+   }
+  },
+  {
+   "name": "a collinear triangle has no normal",
+   "kind": "mesh.inspect.face",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       2,
+       0,
+       0
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       1,
+       2
+      ]
+     ]
+    },
+    "face": [
+     0
+    ]
+   },
+   "fault": {
+    "code": "generation3d.geometry.mesh-degenerate",
+    "port": "face"
+   }
+  }
+ ]
+}

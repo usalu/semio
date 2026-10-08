@@ -1,14 +1,10 @@
 //! 🔺️ BcfDiff — handcrafted sparse diff over `BcfSnapshot`. No `snapshot: Option<BcfSnapshot>`
-//! full-replace slot — even `SetSnapshot`'s diff is the sparse field-by-field
-//! `BcfDiff::between(base, next)`.
+//! full-replace slot — every diff is sparse.
 //!
-//! `topics` (guid-keyed) and, within a modified topic, `comments`/`viewpoints` (also guid-keyed)
-//! are diffed via a generic `NamedTripleDiff<K, D, T>` engine — the same shape docx's
-//! `NamedTripleDiff` established (see `f4-docx-report.md` §3) for name/key-keyed collections.
-//! This artifact defines its OWN copy rather than importing docx's (cross-artifact imports would
-//! be architecturally wrong; docx's own report flags hoisting this engine into a shared location
-//! as `glue_followup`, which this wave inherits). `parts` (unknown/unmodeled files) uses the same
-//! engine, keyed by name.
+//! `topics` and, within a modified topic, `comments`/`viewpoints` (and the unmodeled `parts`) are
+//! diffed as index-keyed `IndexedDiff<T, D>` triples, so an inverse restores a removed row at its
+//! ORIGINAL position and `absorb` stays base-free. The guid-addressed leaves resolve a guid to its
+//! base index when they build the diff.
 
 use crate::schema::snapshot::{BcfCamera, BcfColoring, BcfComment, BcfComponents, BcfPoint3, BcfRawPart, BcfTopic, BcfViewpoint, BcfVisibility};
 use crate::BcfSnapshot;
@@ -16,201 +12,238 @@ use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
-//#region 🔖️GenericNamedEngine
-/// 🏷️ Name/key-keyed collection triple, generic over key `K`, item `T`, and per-field diff `D`.
-/// `added` carries the full item (which already contains its own key). Mirrors docx's
-/// `NamedTripleDiff` verbatim (see that module's doc comment for the `bound(...)` rationale — a
-/// known serde_derive limitation where `#[value(default)]` on a `Vec<T>` field spuriously infers
-/// `T: Default`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+//#region 🔖️IndexedTriple
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
-pub struct NamedTripleDiff<K, D, T> {
+pub struct IndexedDiff<T, D> {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
-    pub removed: Vec<K>,
+    pub removed: Vec<usize>,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
-    pub modified: Vec<NamedModified<K, D>>,
+    pub modified: Vec<IndexedModified<D>>,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
-    pub added: Vec<T>,
+    pub added: Vec<IndexedAdded<T>>,
 }
 
-impl<K, D, T> Default for NamedTripleDiff<K, D, T> {
-    fn default() -> Self {
-        Self { removed: Vec::new(), modified: Vec::new(), added: Vec::new() }
+impl<T, D> IndexedDiff<T, D> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
+        self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
-pub struct NamedModified<K, D> {
-    pub key: K,
+pub struct IndexedModified<D> {
+    pub index: usize,
     pub diff: D,
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
-where
-    K: PartialEq + Clone,
-    T: Clone + PartialEq,
-{
-    let mut removed = Vec::new();
-    let mut modified = Vec::new();
-    for b in base {
-        let bk = key_of(b);
-        match other.iter().find(|o| key_of(o) == bk) {
-            None => removed.push(bk),
-            Some(o) if o != b => {
-                if let Some(d) = diff_item(b, o) {
-                    modified.push(NamedModified { key: bk, diff: d });
-                }
-            }
-            Some(_) => {}
-        }
-    }
-    let mut added = Vec::new();
-    for o in other {
-        let ok = key_of(o);
-        if !base.iter().any(|b| key_of(b) == ok) {
-            added.push(o.clone());
-        }
-    }
-    if removed.is_empty() && modified.is_empty() && added.is_empty() {
-        None
-    } else {
-        Some(NamedTripleDiff { removed, modified, added })
-    }
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct IndexedAdded<T> {
+    pub index: usize,
+    pub item: T,
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
-where
-    K: PartialEq + Clone,
-    T: Clone,
-{
-    items.retain(|i| !diff.removed.contains(&key_of(i)));
+pub fn apply_indexed<T: Clone, D>(base: &[T], diff: &IndexedDiff<T, D>, apply_item: impl Fn(&T, &D) -> T) -> Vec<T> {
+    let mut kept: Vec<(usize, T)> = base.iter().enumerate().filter(|(i, _)| !diff.removed.contains(i)).map(|(i, t)| (i, t.clone())).collect();
     for m in &diff.modified {
-        if let Some(item) = items.iter_mut().find(|i| key_of(i) == m.key) {
-            apply_item(item, &m.diff);
+        if let Some(entry) = kept.iter_mut().find(|(i, _)| *i == m.index) {
+            entry.1 = apply_item(&entry.1, &m.diff);
         }
     }
-    for item in &diff.added {
-        items.push(item.clone());
+    let mut result: Vec<T> = kept.into_iter().map(|(_, t)| t).collect();
+    let mut adds = diff.added.clone();
+    adds.sort_by_key(|a| a.index);
+    for a in adds {
+        let idx = a.index.min(result.len());
+        result.insert(idx, a.item);
     }
+    result
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn validate_named<K, T, D>(items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K) -> MutationApplyResult<()>
-where
-    K: PartialEq + Clone,
-    T: Clone,
-{
-    let keys: Vec<K> = items.iter().map(&key_of).collect();
-    for (position, key) in diff.removed.iter().enumerate() {
-        if !keys.contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named removal target does not exist").at(["removed"]));
+fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_item: impl Fn(&T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()> {
+    let mut removed = std::collections::HashSet::new();
+    for &index in &diff.removed {
+        if index >= base.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist"));
         }
-        if diff.removed[..position].contains(key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named removal target is repeated").at(["removed"]));
+        if !removed.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated"));
         }
     }
-    for (position, modified) in diff.modified.iter().enumerate() {
-        if !keys.contains(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.missing-target", "named modification target does not exist").at(["modified"]));
+    let mut modified = std::collections::HashSet::new();
+    for entry in &diff.modified {
+        if entry.index >= base.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist"));
         }
-        if diff.removed.contains(&modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "named modification targets a removed item").at(["modified"]));
+        if removed.contains(&entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item"));
         }
-        if diff.modified[..position].iter().any(|candidate| candidate.key == modified.key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named modification target is repeated").at(["modified"]));
+        if !modified.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated"));
         }
+        validate_item(&base[entry.index], &entry.diff).map_err(|error| error.under(vec!["modified".to_string(), entry.index.to_string()]))?;
     }
-    let mut added_keys = Vec::new();
-    for item in &diff.added {
-        let key = key_of(item);
-        if keys.contains(&key) || added_keys.contains(&key) || diff.removed.contains(&key) || diff.modified.iter().any(|modified| modified.key == key) {
-            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "named addition target already exists or conflicts").at(["added"]));
+    let final_len = base.len() - removed.len() + diff.added.len();
+    let mut added = std::collections::HashSet::new();
+    for entry in &diff.added {
+        if entry.index > final_len {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection"));
         }
-        added_keys.push(key);
+        if !added.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position"));
+        }
     }
     Ok(())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
-where
-    K: PartialEq + Clone,
-    T: Clone,
-{
-    let removed: Vec<K> = diff.added.iter().map(&key_of).collect();
+pub fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], between_item: impl Fn(&T, &T) -> D, item_is_empty: impl Fn(&D) -> bool) -> IndexedDiff<T, D> {
+    let min_len = base.len().min(other.len());
     let mut modified = Vec::new();
-    for m in &diff.modified {
-        if let Some(original) = base_items.iter().find(|i| key_of(i) == m.key) {
-            modified.push(NamedModified { key: m.key.clone(), diff: inverse_item(original, &m.diff) });
+    for i in 0..min_len {
+        if base[i] != other[i] {
+            let d = between_item(&base[i], &other[i]);
+            if !item_is_empty(&d) {
+                modified.push(IndexedModified { index: i, diff: d });
+            }
         }
     }
-    let mut added = Vec::new();
-    for k in &diff.removed {
-        if let Some(original) = base_items.iter().find(|i| &key_of(i) == k) {
-            added.push(original.clone());
-        }
-    }
-    NamedTripleDiff { removed, modified, added }
+    let removed: Vec<usize> = if other.len() < base.len() { (other.len()..base.len()).collect() } else { Vec::new() };
+    let added: Vec<IndexedAdded<T>> = if other.len() > base.len() { (base.len()..other.len()).map(|i| IndexedAdded { index: i, item: other[i].clone() }).collect() } else { Vec::new() };
+    IndexedDiff { removed, modified, added }
 }
 
-/// 🧮️ Name-keyed absorb — identity is the KEY (not position): a `d2`-removal of a `d1`-added key
-/// annihilates the add; a `d2`-modify of a `d1`-added key patches into the carried payload;
-/// everything else composes directly on the shared key space.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
-where
-    K: PartialEq + Clone,
-    T: Clone,
-    D: Clone,
-{
-    let d1_added_keys: Vec<K> = d1.added.iter().map(&key_of).collect();
-    let mut removed = d1.removed.clone();
-    let mut annihilated: Vec<K> = Vec::new();
-    for k in &d2.removed {
-        if d1_added_keys.contains(k) {
-            annihilated.push(k.clone());
-        } else if !removed.contains(k) {
-            removed.push(k.clone());
-        }
-    }
-    let mut working_added: Vec<T> = d1.added.into_iter().filter(|a| !annihilated.contains(&key_of(a))).collect();
-    let mut modified: Vec<NamedModified<K, D>> = d1.modified.into_iter().filter(|m| !removed.contains(&m.key)).collect();
-    for m2 in &d2.modified {
-        if let Some(added) = working_added.iter_mut().find(|a| key_of(a) == m2.key) {
-            apply_item(added, &m2.diff);
-            continue;
-        }
-        if removed.contains(&m2.key) {
-            continue;
-        }
-        match modified.iter_mut().find(|m| m.key == m2.key) {
-            Some(existing) => existing.diff = absorb_item(existing.diff.clone(), m2.diff.clone()),
-            None => modified.push(NamedModified { key: m2.key.clone(), diff: m2.diff.clone() }),
-        }
-    }
-    for a2 in &d2.added {
-        let k2 = key_of(a2);
-        match working_added.iter_mut().find(|a| key_of(a) == k2) {
-            Some(existing) => *existing = a2.clone(),
-            None => working_added.push(a2.clone()),
-        }
-    }
-    NamedTripleDiff { removed, modified, added: working_added }
+fn count_le(sorted: &[usize], x: usize) -> usize {
+    sorted.partition_point(|&v| v <= x)
 }
-//#endregion 🔖️GenericNamedEngine
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
+    pos - count_le(excluded_sorted, pos)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
+    let mut candidate = rank;
+    loop {
+        let next = rank + count_le(excluded_sorted, candidate);
+        if next == candidate {
+            return candidate;
+        }
+        candidate = next;
+    }
+}
+
+/// ➕️ Structural, total, base-free absorb — see mp4's `absorb_indexed` for the full derivation
+/// (identical algorithm, adapted from gif 89a's `absorb_indexed_collection`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: IndexedDiff<T, D>, absorb_item: impl Fn(&mut D, D), apply_item_diff: impl Fn(&mut T, &D)) {
+    let mut removed1_sorted = d1.removed.clone();
+    removed1_sorted.sort_unstable();
+    let mut added1_index_sorted: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
+    added1_index_sorted.sort_unstable();
+    let mut removed2_sorted = d2.removed.clone();
+    removed2_sorted.sort_unstable();
+    let mut added2_index_sorted: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
+    added2_index_sorted.sort_unstable();
+
+    let mut merged_added: Vec<IndexedAdded<T>> = std::mem::take(&mut d1.added);
+    let mut annihilated: std::collections::HashSet<usize> = Default::default();
+
+    let mut merged_removed_base: Vec<usize> = removed1_sorted.clone();
+    for &r2 in &removed2_sorted {
+        if added1_index_sorted.binary_search(&r2).is_ok() {
+            annihilated.insert(r2);
+            merged_added.retain(|a| a.index != r2);
+        } else {
+            let post_remove_rank = rank_excluding(r2, &added1_index_sorted);
+            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
+            merged_removed_base.push(base_index);
+        }
+    }
+    merged_removed_base.sort_unstable();
+    merged_removed_base.dedup();
+
+    let mut modified_map: std::collections::BTreeMap<usize, D> = std::mem::take(&mut d1.modified).into_iter().map(|m| (m.index, m.diff)).collect();
+    for base_index in &merged_removed_base {
+        modified_map.remove(base_index);
+    }
+    for m2 in d2.modified {
+        if annihilated.contains(&m2.index) {
+            continue;
+        }
+        if added1_index_sorted.binary_search(&m2.index).is_ok() {
+            if let Some(entry) = merged_added.iter_mut().find(|a| a.index == m2.index) {
+                apply_item_diff(&mut entry.item, &m2.diff);
+            }
+        } else {
+            let post_remove_rank = rank_excluding(m2.index, &added1_index_sorted);
+            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
+            if merged_removed_base.binary_search(&base_index).is_ok() {
+                continue;
+            }
+            match modified_map.get_mut(&base_index) {
+                Some(existing) => absorb_item(existing, m2.diff),
+                None => {
+                    modified_map.insert(base_index, m2.diff);
+                }
+            }
+        }
+    }
+
+    let mut merged_added_final: Vec<IndexedAdded<T>> = merged_added
+        .into_iter()
+        .map(|a| {
+            let after_pos = if removed2_sorted.binary_search(&a.index).is_ok() {
+                a.index
+            } else {
+                let post_remove_rank = rank_excluding(a.index, &removed2_sorted);
+                unrank_excluding(post_remove_rank, &added2_index_sorted)
+            };
+            IndexedAdded { index: after_pos, item: a.item }
+        })
+        .collect();
+    merged_added_final.extend(d2.added);
+    merged_added_final.sort_by_key(|a| a.index);
+
+    d1.removed = merged_removed_base;
+    d1.modified = modified_map.into_iter().map(|(index, diff)| IndexedModified { index, diff }).collect();
+    d1.added = merged_added_final;
+}
+
+/// ↩️ Negative rows for an indexed collection triple against its BASE items: added rows become removals at their final index,
+/// removed rows return at their base index, and each modified row restores its base value at the index the row has after the
+/// diff. Every list comes back ascending, the normal form [`absorb_indexed`] emits.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_indexed<T: Clone, D>(diff: &IndexedDiff<T, D>, base: &[T], inverse_item: impl Fn(&D, &T) -> D) -> IndexedDiff<T, D> {
+    let mut removed_sorted = diff.removed.clone();
+    removed_sorted.sort_unstable();
+    removed_sorted.dedup();
+    let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
+    added_final.sort_unstable();
+    let after_index = |index: usize| {
+        let survivor = index - removed_sorted.iter().filter(|dropped| **dropped < index).count();
+        added_final.iter().fold(survivor, |position, inserted| if *inserted <= position { position + 1 } else { position })
+    };
+    let mut modified: Vec<IndexedModified<D>> = diff.modified.iter().filter_map(|row| base.get(row.index).map(|item| IndexedModified { index: after_index(row.index), diff: inverse_item(&row.diff, item) })).collect();
+    modified.sort_by_key(|row| row.index);
+    let added = removed_sorted.iter().filter_map(|index| base.get(*index).map(|item| IndexedAdded { index: *index, item: item.clone() })).collect();
+    IndexedDiff { removed: added_final, modified, added }
+}
+//#endregion 🔖️IndexedTriple
 
 //#region 🔖️DiffTypes
-pub type BcfTopicsDiff = NamedTripleDiff<String, BcfTopicDiff, BcfTopic>;
-pub type BcfCommentsDiff = NamedTripleDiff<String, BcfCommentDiff, BcfComment>;
-pub type BcfViewpointsDiff = NamedTripleDiff<String, BcfViewpointDiff, BcfViewpoint>;
-pub type BcfPartsDiff = NamedTripleDiff<String, BcfPartDiff, BcfRawPart>;
+pub type BcfTopicsDiff = IndexedDiff<BcfTopic, BcfTopicDiff>;
+pub type BcfCommentsDiff = IndexedDiff<BcfComment, BcfCommentDiff>;
+pub type BcfViewpointsDiff = IndexedDiff<BcfViewpoint, BcfViewpointDiff>;
+pub type BcfPartsDiff = IndexedDiff<BcfRawPart, BcfPartDiff>;
 
 /// 🔺️ Diff for `stdio.bcf`.
 /// 🧪️ F6 CONFIRMED (real `cargo check` error, `dsl::DslDiff` attempted and reverted): fails on
-/// BOTH independent blockers simultaneously — (1) `topics`/`parts`: `NamedTripleDiff<K,D,T>` has
+/// BOTH independent blockers simultaneously — (1) `topics`/`parts`: `IndexedDiff<T,D>` has
 /// no `DslField` impl (no blanket bridge from `DslVariants`/generic collection types into
 /// `DslField` exists anywhere in the `dsl` crate, same root cause as every other collection-triple
 /// artifact); (2) `viewpoint_ref`/`camera`/`components`/`snapshot` are tri-state
@@ -240,7 +273,7 @@ pub struct BcfDiff {
 
 /// 🔺️ Per-topic sparse diff. `title`/`description`/`status`/`priority`/`creation_date`/
 /// `creation_author` are scalar patches; `labels` is whole-value replaced (not itself a keyed
-/// collection per the completeness target); `comments`/`viewpoints` are recursive guid-keyed
+/// collection per the completeness target); `comments`/`viewpoints` are recursive index-keyed
 /// triples.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
@@ -302,24 +335,40 @@ pub struct BcfPartDiff {
 //#endregion 🔖️DiffTypes
 
 //#region 🔖️WrapHelpers
-/// 🧭️ Lowers a per-topic leaf diff into a full `BcfDiff` (mirrors svg's `diff_at_path` /
-/// docx's `wrap_body_diff`, specialized to this artifact's fixed two-level guid nesting instead of
-/// a generic path — bcf's tree never grows deeper than topic -> {comment,viewpoint}).
+/// 🧭️ The base index of the topic with `guid`; `usize::MAX` (a missing target the apply refuses) when absent.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn wrap_topic_diff(guid: &str, diff: BcfTopicDiff) -> BcfDiff {
-    BcfDiff { version: None, topics: Some(BcfTopicsDiff { removed: Vec::new(), modified: vec![NamedModified { key: guid.to_string(), diff }], added: Vec::new() }), parts: None }
+pub fn topic_index(base: &BcfSnapshot, guid: &str) -> usize {
+    base.topics.iter().position(|topic| topic.guid == guid).unwrap_or(usize::MAX)
+}
+
+/// 🧭️ The base index of the comment `guid` inside topic `topic_guid`; `usize::MAX` when absent.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn comment_index(base: &BcfSnapshot, topic_guid: &str, guid: &str) -> usize {
+    base.topics.iter().find(|topic| topic.guid == topic_guid).and_then(|topic| topic.comments.iter().position(|comment| comment.guid == guid)).unwrap_or(usize::MAX)
+}
+
+/// 🧭️ The base index of the viewpoint `guid` inside topic `topic_guid`; `usize::MAX` when absent.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn viewpoint_index(base: &BcfSnapshot, topic_guid: &str, guid: &str) -> usize {
+    base.topics.iter().find(|topic| topic.guid == topic_guid).and_then(|topic| topic.viewpoints.iter().position(|viewpoint| viewpoint.guid == guid)).unwrap_or(usize::MAX)
+}
+
+/// 🧭️ Lowers a per-topic leaf diff into a full `BcfDiff` addressing the topic `guid` of `base`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn wrap_topic_diff(base: &BcfSnapshot, guid: &str, diff: BcfTopicDiff) -> BcfDiff {
+    BcfDiff { version: None, topics: Some(BcfTopicsDiff { removed: Vec::new(), modified: vec![IndexedModified { index: topic_index(base, guid), diff }], added: Vec::new() }), parts: None }
 }
 
 /// 🧭️ Lowers a per-comment leaf diff (inside topic `topic_guid`) into a full `BcfDiff`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn wrap_comment_diff(topic_guid: &str, comment_guid: &str, diff: BcfCommentDiff) -> BcfDiff {
-    wrap_topic_diff(topic_guid, BcfTopicDiff { comments: Some(BcfCommentsDiff { removed: Vec::new(), modified: vec![NamedModified { key: comment_guid.to_string(), diff }], added: Vec::new() }), ..Default::default() })
+pub fn wrap_comment_diff(base: &BcfSnapshot, topic_guid: &str, comment_guid: &str, diff: BcfCommentDiff) -> BcfDiff {
+    wrap_topic_diff(base, topic_guid, BcfTopicDiff { comments: Some(BcfCommentsDiff { removed: Vec::new(), modified: vec![IndexedModified { index: comment_index(base, topic_guid, comment_guid), diff }], added: Vec::new() }), ..Default::default() })
 }
 
 /// 🧭️ Lowers a per-viewpoint leaf diff (inside topic `topic_guid`) into a full `BcfDiff`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn wrap_viewpoint_diff(topic_guid: &str, viewpoint_guid: &str, diff: BcfViewpointDiff) -> BcfDiff {
-    wrap_topic_diff(topic_guid, BcfTopicDiff { viewpoints: Some(BcfViewpointsDiff { removed: Vec::new(), modified: vec![NamedModified { key: viewpoint_guid.to_string(), diff }], added: Vec::new() }), ..Default::default() })
+pub fn wrap_viewpoint_diff(base: &BcfSnapshot, topic_guid: &str, viewpoint_guid: &str, diff: BcfViewpointDiff) -> BcfDiff {
+    wrap_topic_diff(base, topic_guid, BcfTopicDiff { viewpoints: Some(BcfViewpointsDiff { removed: Vec::new(), modified: vec![IndexedModified { index: viewpoint_index(base, topic_guid, viewpoint_guid), diff }], added: Vec::new() }), ..Default::default() })
 }
 //#endregion 🔖️WrapHelpers
 
@@ -332,10 +381,10 @@ impl MutationDiff<BcfSnapshot> for BcfDiff {
             next.version = v.clone();
         }
         if let Some(td) = &self.topics {
-            apply_named(&mut next.topics, td, |t| t.guid.clone(), apply_topic);
+            next.topics = apply_indexed(&base.topics, td, apply_topic_cloned);
         }
         if let Some(pd) = &self.parts {
-            apply_named(&mut next.parts, pd, |p| p.name.clone(), apply_part);
+            next.parts = apply_indexed(&base.parts, pd, apply_part_cloned);
         }
         Ok(next)
     }
@@ -347,12 +396,18 @@ impl MutationDiff<BcfSnapshot> for BcfDiff {
         self.topics = match (self.topics.take(), other.topics) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, &b, |t| t.guid.clone(), absorb_topic_diff, apply_topic)),
+            (Some(mut a), Some(b)) => {
+                absorb_indexed(&mut a, b, absorb_topic_diff_mut, apply_topic);
+                Some(a)
+            }
         };
         self.parts = match (self.parts.take(), other.parts) {
             (None, b) => b,
             (a, None) => a,
-            (Some(a), Some(b)) => Some(absorb_named(a, &b, |p| p.name.clone(), absorb_part_diff, apply_part)),
+            (Some(mut a), Some(b)) => {
+                absorb_indexed(&mut a, b, absorb_part_diff_mut, apply_part);
+                Some(a)
+            }
         };
     }
 }
@@ -360,15 +415,10 @@ impl MutationDiff<BcfSnapshot> for BcfDiff {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn validate_bcf_diff(diff: &BcfDiff, base: &BcfSnapshot) -> MutationApplyResult<()> {
     if let Some(topics) = &diff.topics {
-        validate_named(&base.topics, topics, |topic| topic.guid.clone())?;
-        for modified in &topics.modified {
-            if let Some(topic) = base.topics.iter().find(|topic| topic.guid == modified.key) {
-                validate_topic_diff(topic, &modified.diff)?;
-            }
-        }
+        validate_indexed(&base.topics, topics, validate_topic_diff)?;
     }
     if let Some(parts) = &diff.parts {
-        validate_named(&base.parts, parts, |part| part.name.clone())?;
+        validate_indexed(&base.parts, parts, |_, _| Ok(()))?;
     }
     Ok(())
 }
@@ -376,10 +426,10 @@ fn validate_bcf_diff(diff: &BcfDiff, base: &BcfSnapshot) -> MutationApplyResult<
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn validate_topic_diff(base: &BcfTopic, diff: &BcfTopicDiff) -> MutationApplyResult<()> {
     if let Some(comments) = &diff.comments {
-        validate_named(&base.comments, comments, |comment| comment.guid.clone())?;
+        validate_indexed(&base.comments, comments, |_, _| Ok(()))?;
     }
     if let Some(viewpoints) = &diff.viewpoints {
-        validate_named(&base.viewpoints, viewpoints, |viewpoint| viewpoint.guid.clone())?;
+        validate_indexed(&base.viewpoints, viewpoints, |_, _| Ok(()))?;
     }
     Ok(())
 }
@@ -408,10 +458,10 @@ fn apply_topic(topic: &mut BcfTopic, diff: &BcfTopicDiff) {
         topic.creation_author = v.clone();
     }
     if let Some(cd) = &diff.comments {
-        apply_named(&mut topic.comments, cd, |c| c.guid.clone(), apply_comment);
+        topic.comments = apply_indexed(&topic.comments.clone(), cd, apply_comment_cloned);
     }
     if let Some(vd) = &diff.viewpoints {
-        apply_named(&mut topic.viewpoints, vd, |v| v.guid.clone(), apply_viewpoint);
+        topic.viewpoints = apply_indexed(&topic.viewpoints.clone(), vd, apply_viewpoint_cloned);
     }
 }
 
@@ -450,6 +500,31 @@ fn apply_part(part: &mut BcfRawPart, diff: &BcfPartDiff) {
         part.data = v.clone();
     }
 }
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_topic_cloned(base: &BcfTopic, diff: &BcfTopicDiff) -> BcfTopic {
+    let mut next = base.clone();
+    apply_topic(&mut next, diff);
+    next
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_comment_cloned(base: &BcfComment, diff: &BcfCommentDiff) -> BcfComment {
+    let mut next = base.clone();
+    apply_comment(&mut next, diff);
+    next
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_viewpoint_cloned(base: &BcfViewpoint, diff: &BcfViewpointDiff) -> BcfViewpoint {
+    let mut next = base.clone();
+    apply_viewpoint(&mut next, diff);
+    next
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn apply_part_cloned(base: &BcfRawPart, diff: &BcfPartDiff) -> BcfRawPart {
+    let mut next = base.clone();
+    apply_part(&mut next, diff);
+    next
+}
 //#endregion 🔖️Apply
 
 //#region 🔖️DiffAlgebra
@@ -457,16 +532,16 @@ impl DiffAlgebra<BcfSnapshot> for BcfDiff {
     fn inverse(&self, base: &BcfSnapshot) -> Self {
         BcfDiff {
             version: self.version.as_ref().map(|_| base.version.clone()),
-            topics: self.topics.as_ref().map(|d| inverse_named(&base.topics, d, |t| t.guid.clone(), inverse_topic)),
-            parts: self.parts.as_ref().map(|d| inverse_named(&base.parts, d, |p| p.name.clone(), inverse_part)),
+            topics: self.topics.as_ref().map(|d| inverse_indexed(d, &base.topics, |diff, topic| inverse_topic(topic, diff))).filter(|d| !d.is_empty()),
+            parts: self.parts.as_ref().map(|d| inverse_indexed(d, &base.parts, |diff, part| inverse_part(part, diff))).filter(|d| !d.is_empty()),
         }
     }
 
     fn between(base: &BcfSnapshot, other: &BcfSnapshot) -> Self {
         BcfDiff {
             version: if base.version != other.version { Some(other.version.clone()) } else { None },
-            topics: between_named(&base.topics, &other.topics, |t| t.guid.clone(), between_topic),
-            parts: between_named(&base.parts, &other.parts, |p| p.name.clone(), between_part),
+            topics: Some(between_indexed(&base.topics, &other.topics, |a, b| between_topic(a, b).unwrap_or_default(), |d| *d == BcfTopicDiff::default())).filter(|d| !d.is_empty()),
+            parts: Some(between_indexed(&base.parts, &other.parts, |a, b| between_part(a, b).unwrap_or_default(), |d| *d == BcfPartDiff::default())).filter(|d| !d.is_empty()),
         }
     }
 
@@ -485,8 +560,8 @@ fn inverse_topic(base: &BcfTopic, diff: &BcfTopicDiff) -> BcfTopicDiff {
         labels: diff.labels.as_ref().map(|_| base.labels.clone()),
         creation_date: diff.creation_date.as_ref().map(|_| base.creation_date.clone()),
         creation_author: diff.creation_author.as_ref().map(|_| base.creation_author.clone()),
-        comments: diff.comments.as_ref().map(|d| inverse_named(&base.comments, d, |c| c.guid.clone(), inverse_comment)),
-        viewpoints: diff.viewpoints.as_ref().map(|d| inverse_named(&base.viewpoints, d, |v| v.guid.clone(), inverse_viewpoint)),
+        comments: diff.comments.as_ref().map(|d| inverse_indexed(d, &base.comments, |diff, comment| inverse_comment(comment, diff))).filter(|d| !d.is_empty()),
+        viewpoints: diff.viewpoints.as_ref().map(|d| inverse_indexed(d, &base.viewpoints, |diff, viewpoint| inverse_viewpoint(viewpoint, diff))).filter(|d| !d.is_empty()),
     }
 }
 
@@ -519,8 +594,8 @@ fn between_topic(base: &BcfTopic, other: &BcfTopic) -> Option<BcfTopicDiff> {
     let labels = if base.labels != other.labels { Some(other.labels.clone()) } else { None };
     let creation_date = if base.creation_date != other.creation_date { Some(other.creation_date.clone()) } else { None };
     let creation_author = if base.creation_author != other.creation_author { Some(other.creation_author.clone()) } else { None };
-    let comments = between_named(&base.comments, &other.comments, |c| c.guid.clone(), between_comment);
-    let viewpoints = between_named(&base.viewpoints, &other.viewpoints, |v| v.guid.clone(), between_viewpoint);
+    let comments = Some(between_indexed(&base.comments, &other.comments, |a, b| between_comment(a, b).unwrap_or_default(), |d| *d == BcfCommentDiff::default())).filter(|d| !d.is_empty());
+    let viewpoints = Some(between_indexed(&base.viewpoints, &other.viewpoints, |a, b| between_viewpoint(a, b).unwrap_or_default(), |d| *d == BcfViewpointDiff::default())).filter(|d| !d.is_empty());
     if title.is_none() && description.is_none() && status.is_none() && priority.is_none() && labels.is_none() && creation_date.is_none() && creation_author.is_none() && comments.is_none() && viewpoints.is_none() {
         None
     } else {
@@ -588,14 +663,36 @@ fn absorb_topic_diff(mut a: BcfTopicDiff, b: BcfTopicDiff) -> BcfTopicDiff {
     a.comments = match (a.comments.take(), b.comments) {
         (None, x) => x,
         (x, None) => x,
-        (Some(x), Some(y)) => Some(absorb_named(x, &y, |c| c.guid.clone(), absorb_comment_diff, apply_comment)),
+        (Some(mut x), Some(y)) => {
+            absorb_indexed(&mut x, y, absorb_comment_diff_mut, apply_comment);
+            Some(x)
+        }
     };
     a.viewpoints = match (a.viewpoints.take(), b.viewpoints) {
         (None, x) => x,
         (x, None) => x,
-        (Some(x), Some(y)) => Some(absorb_named(x, &y, |v| v.guid.clone(), absorb_viewpoint_diff, apply_viewpoint)),
+        (Some(mut x), Some(y)) => {
+            absorb_indexed(&mut x, y, absorb_viewpoint_diff_mut, apply_viewpoint);
+            Some(x)
+        }
     };
     a
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_topic_diff_mut(a: &mut BcfTopicDiff, b: BcfTopicDiff) {
+    *a = absorb_topic_diff(std::mem::take(a), b);
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_comment_diff_mut(a: &mut BcfCommentDiff, b: BcfCommentDiff) {
+    *a = absorb_comment_diff(std::mem::take(a), b);
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_viewpoint_diff_mut(a: &mut BcfViewpointDiff, b: BcfViewpointDiff) {
+    *a = absorb_viewpoint_diff(std::mem::take(a), b);
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_part_diff_mut(a: &mut BcfPartDiff, b: BcfPartDiff) {
+    *a = absorb_part_diff(std::mem::take(a), b);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -638,25 +735,16 @@ fn absorb_part_diff(mut a: BcfPartDiff, b: BcfPartDiff) -> BcfPartDiff {
 }
 //#endregion 🔖️DiffAlgebra
 
-//#region 🔖️SetSnapshot
-/// 🧩️ Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No
-/// `snapshot: Option<BcfSnapshot>` full-replace slot -- this IS `BcfDiff::between`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &BcfSnapshot, next: &BcfSnapshot) -> BcfDiff {
-    BcfDiff::between(base, next)
-}
-//#endregion 🔖️SetSnapshot
-
 //#region 🔖️HandcraftedDiffCodec
 /// 🧪️ F6: hand-rolled `protocol::DiffCodec` for `BcfDiff` — required per the doc comment on
-/// `BcfDiff` above (both `NamedTripleDiff`'s missing `DslField` impl AND the tri-state/`BcfCamera`
+/// `BcfDiff` above (both `IndexedDiff`'s missing `DslField` impl AND the tri-state/`BcfCamera`
 /// enum blockers, confirmed via real `cargo check` errors). Same grammar style established by
 /// `GifDiff`/`SvgDiff` (bracket-depth-aware split, hex for strings/bytes, `[0]`/`[1,x]` for
 /// `Option<T>`, tag-prefixed single letters for data-carrying enums) — see `f6-recon-report.md`
 /// §5 for the primitive rationale. This artifact's own copy of the small helper set (no shared
 /// "hand-roll helpers" module exists yet); adds `enc_list`/`dec_list` and generic
-/// `enc_named_triple`/`dec_named_triple` beyond the recon's base primitive set (a direct,
-/// in-spirit extension: bcf's `NamedTripleDiff<K,D,T>` engine is itself generic, so its grammar
+/// `enc_indexed_triple`/`dec_indexed_triple` beyond the recon's base primitive set (a direct,
+/// in-spirit extension: bcf's `IndexedDiff<T,D>` engine is itself generic, so its grammar
 /// codec is written generically once and instantiated per collection, rather than copy-pasted
 /// per collection the way svg's non-generic `SvgChildrenDiff`/`SvgAttributesDiff` needed).
 //#region 🔖️Primitives

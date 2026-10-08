@@ -13,11 +13,11 @@ use flow::{
     FlowHost,
 };
 use framework_editor::EditorHost;
-use framework_surface_node_graph::node_graph::GraphHost;
-use framework_surface_node_graph::paint::{RasterHost,PaintTarget};
-use framework_surface_tiled_map::tiled_map::tiles as map_tiles;
-use framework_surface_tiled_map::tiled_map::{MapHost, MapInteractionIntent};
-use infinite_canvas as canvas;
+use semio_framework_os_node_graph::GraphHost;
+use semio_framework_surface::paint::{RasterHost,PaintTarget};
+use semio_framework_surface::tiled_map::tiles as map_tiles;
+use semio_framework_surface::tiled_map::{MapHost, MapInteractionIntent};
+use semio_framework_canvas as canvas;
 use infinite_world::world::{tool_run_trace, WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -26,9 +26,9 @@ use crate::interpreter::WorkerCell;
 use std::sync::Arc;
 use ui_wgpu::wgpu::{draw_text_overlay, FontAtlas, GpuContext, KeyAction, PointerModifiers, RasterTextureStageFault, Rect, Rgba, Theme};
 use ui_wgpu::wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
-use vello::peniko::Color;
+use canvas::Color;
 use vello::wgpu;
-use vello::{AaConfig, AaSupport, RenderParams, Renderer, RendererOptions};
+use canvas::native_render::CanvasRasterSession;
 
 #[cfg(target_arch = "wasm32")]
 use js_sys;
@@ -373,7 +373,7 @@ enum EngineSurfaceClosePhase {
 }
 
 enum NodeGraphEngineRetirement {
-    Dag(framework_surface_node_graph::node_graph::GraphHostRetirement),
+    Dag(semio_framework_os_node_graph::GraphHostRetirement),
     Flow(flow::FlowHostRetirement),
 }
 
@@ -413,9 +413,9 @@ struct EngineSurfaceRetirement {
     raster_sync_cache: RasterSyncCache,
     last_note_click: Option<(String, f64)>,
     node_graph: Option<NodeGraphEngineRetirement>,
-    map: Option<framework_surface_tiled_map::tiled_map::MapHostRetirement>,
+    map: Option<semio_framework_surface::tiled_map::MapHostRetirement>,
     editor: Option<framework_editor::EditorHostRetirement>,
-    raster: Option<framework_surface_node_graph::paint::RasterHostRetirement>,
+    raster: Option<semio_framework_surface::paint::RasterHostRetirement>,
     board: Option<infinite_canvas::BoardHostRetirement>,
     phase: EngineSurfaceClosePhase,
     faulted: bool,
@@ -642,7 +642,7 @@ impl EngineSurfaceRetirement {
                 if self.node_graph.is_none() {
                     if let Some(owner) = self.node_graph_source.take() {
                         self.node_graph = Some(match owner {
-                            NodeGraphEngine::Dag(owner) => NodeGraphEngineRetirement::Dag(framework_surface_node_graph::node_graph::GraphHostRetirement::new(owner)),
+                            NodeGraphEngine::Dag(owner) => NodeGraphEngineRetirement::Dag(semio_framework_os_node_graph::GraphHostRetirement::new(owner)),
                             NodeGraphEngine::Flow(owner) => NodeGraphEngineRetirement::Flow(flow::FlowHostRetirement::new(owner)),
                         });
                     } else {
@@ -667,12 +667,12 @@ impl EngineSurfaceRetirement {
             EngineSurfaceClosePhase::Map => {
                 if self.map.is_none() {
                     if let Some(owner) = self.map_source.take() {
-                        self.map = Some(framework_surface_tiled_map::tiled_map::MapHostRetirement::new(owner));
+                        self.map = Some(semio_framework_surface::tiled_map::MapHostRetirement::new(owner));
                     } else {
                         self.phase = EngineSurfaceClosePhase::MapSync;
                     }
-                } else if self.map.as_mut().is_some_and(framework_surface_tiled_map::tiled_map::MapHostRetirement::close_step) {
-                    if !self.map.as_ref().is_some_and(framework_surface_tiled_map::tiled_map::MapHostRetirement::terminal_is_empty) {
+                } else if self.map.as_mut().is_some_and(semio_framework_surface::tiled_map::MapHostRetirement::close_step) {
+                    if !self.map.as_ref().is_some_and(semio_framework_surface::tiled_map::MapHostRetirement::terminal_is_empty) {
                         self.faulted = true;
                         return false;
                     }
@@ -719,12 +719,12 @@ impl EngineSurfaceRetirement {
             EngineSurfaceClosePhase::Raster => {
                 if self.raster.is_none() {
                     if let Some(owner) = self.raster_source.take() {
-                        self.raster = Some(framework_surface_node_graph::paint::RasterHostRetirement::new(owner));
+                        self.raster = Some(semio_framework_surface::paint::RasterHostRetirement::new(owner));
                     } else {
                         self.phase = EngineSurfaceClosePhase::RasterSync;
                     }
-                } else if self.raster.as_mut().is_some_and(framework_surface_node_graph::paint::RasterHostRetirement::close_step) {
-                    if !self.raster.as_ref().is_some_and(framework_surface_node_graph::paint::RasterHostRetirement::terminal_is_empty) {
+                } else if self.raster.as_mut().is_some_and(semio_framework_surface::paint::RasterHostRetirement::close_step) {
+                    if !self.raster.as_ref().is_some_and(semio_framework_surface::paint::RasterHostRetirement::terminal_is_empty) {
                         self.faulted = true;
                         return false;
                     }
@@ -1153,7 +1153,7 @@ struct EngineGpuCandidate {
     width: u32,
     height: u32,
     admission: Option<ui_wgpu::wgpu::RasterTextureAdmission>,
-    renderer: Option<Renderer>,
+    renderer: Option<CanvasRasterSession>,
     texture: Option<wgpu::Texture>,
     view: Option<wgpu::TextureView>,
     phase: EngineGpuBuildPhase,
@@ -1453,7 +1453,7 @@ impl EngineCanvasPresenter {
                 let admission = build.admission.as_ref().ok_or_else(|| "engine renderer admission was missing".to_string())?;
                 gpu.validate_engine_renderer_allocation(admission, expected)?;
                 build.renderer = Some(
-                    Renderer::new(gpu.device(), RendererOptions { use_cpu: false, antialiasing_support: AaSupport::area_only(), num_init_threads: std::num::NonZeroUsize::new(1), pipeline_cache: None })
+                    CanvasRasterSession::new(gpu.device())
                         .map_err(|error| format!("vello renderer: {error:?}"))?,
                 );
                 build.phase = EngineGpuBuildPhase::Render;
@@ -1461,9 +1461,7 @@ impl EngineCanvasPresenter {
             EngineGpuBuildPhase::Render => {
                 let renderer = build.renderer.as_mut().ok_or_else(|| "engine renderer owner was missing".to_string())?;
                 let view = build.view.as_ref().ok_or_else(|| "engine render view owner was missing".to_string())?;
-                let params = RenderParams { base_color: packet.clear, width: build.width, height: build.height, antialiasing_method: AaConfig::Area };
-                let vello_scene = packet.scene.vello_scene();
-                renderer.render_to_texture(gpu.device(), gpu.queue(), &vello_scene, view, &params).map_err(|error| format!("vello render: {error:?}"))?;
+                renderer.render(gpu.device(), gpu.queue(), &packet.scene, view, packet.clear, build.width, build.height)?;
                 build.phase = EngineGpuBuildPhase::Stage;
             }
             EngineGpuBuildPhase::Stage => {
@@ -3791,7 +3789,7 @@ pub fn node_graph_fit_camera(surface_id: &str) -> Option<[f64; 3]> {
 /// to call from the shell's per-refresh `publish_app_catalogue` sweep. Returns whether a live host
 /// took it — `false` when the surface has no engine yet (the shell simply republishes next refresh).
 ///
-/// @see `framework_surface_node_graph::node_graph::GraphHost::set_catalogue_json`
+/// @see `semio_framework_os_node_graph::GraphHost::set_catalogue_json`
 /// @see `semio_framework_os_flow::FlowHost::set_host_catalogue_json`
 pub fn node_graph_set_catalogue_json(surface_id: &str, json: &str) -> bool {
     ENGINE_SURFACES.with(|cell| {
@@ -4156,7 +4154,7 @@ struct GraphInteractionSnapshot {
 
 enum NodeGraphWheelPlan {
     Flow(flow::FlowWheelPlan),
-    Dag(framework_surface_node_graph::node_graph::GraphWheelPlan),
+    Dag(semio_framework_os_node_graph::GraphWheelPlan),
 }
 
 enum NodeGraphPointerPlan {
@@ -4794,7 +4792,7 @@ fn clamp_label_font_px(atlas: &mut FontAtlas, text: &str, target_px: f32, max_h:
 
 /// ✂️ The wgpu shell's half of the shared caption law: clip by the GLYPH ATLAS's own measure. Its
 /// browser twin is `dagEllipsizeOverlayLabel` in `🕸️NodeGraph/🟦️.tsx`, and both are pinned to the
-/// rows of `♾️infinite/🖼️canvas/🧫️fixtures/🏷️label-fit/🔣️.json`.
+/// rows of `🧰️framework/🔨️modules/🖼️canvas/🧫️fixtures/🏷️label-fit/🔣️.json`.
 fn fit_overlay_label_text(atlas: &mut FontAtlas, text: &str, font_px: f32, max_w: f32) -> String {
     canvas::text::ellipsize_by_measure(text, f64::from(max_w), |candidate| f64::from(atlas.measure_text(candidate, font_px).0))
 }
@@ -6596,7 +6594,7 @@ fn flush_paint2d_edit(scene: &UiComponentSceneNode, input: &mut ui_wgpu::wgpu::I
  * reads brush, colour, tolerance, target and selection from its session.
  *
  * @see `🧱️elements/🖌️Paint2dHost/✍️editing/🟦️.tsx` — `pick`/`up`/`move` */
-fn write_paint2d_edit(scene: &UiComponentSceneNode, edit: &framework_surface_node_graph::paint::PaintEditCommand, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+fn write_paint2d_edit(scene: &UiComponentSceneNode, edit: &semio_framework_surface::paint::PaintEditCommand, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let fill = edit.action() == "fillRegion";
     let (click, stroke) = (["x", "y"], ["tool", edit.tool, "xs", "ys"]);
     let mut fields = vec![scene.controller_id.as_str(), edit.action(), "surfaceId", scene.surface_id.as_str(), "layerId", edit.layer_id.as_str()];

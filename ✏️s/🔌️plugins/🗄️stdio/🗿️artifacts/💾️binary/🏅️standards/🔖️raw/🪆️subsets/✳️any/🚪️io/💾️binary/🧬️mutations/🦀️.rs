@@ -7,7 +7,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod mutations_codec {
 use super::*;
 use crate::standards::v_raw::subsets::any::schema::mutations::*;
-use crate::schema::diff::{diff_set_snapshot, BinaryDiff, ByteSplice};
+use crate::schema::diff::{BinaryDiff, ByteSplice};
 use crate::BinarySnapshot;
 use protocol::Mutation;
 use protocol::{OpBinary, OpText};

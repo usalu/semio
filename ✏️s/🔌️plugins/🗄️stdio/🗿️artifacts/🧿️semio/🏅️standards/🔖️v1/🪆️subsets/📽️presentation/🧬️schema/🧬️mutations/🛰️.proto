@@ -10,9 +10,9 @@ message InsertShape { uint64 slide_index = 1; uint64 shape_index = 2; bytes shap
 message RemoveShape { uint64 slide_index = 1; uint64 shape_index = 2; }
 message SetShapeFrame { uint64 slide_index = 1; uint64 shape_index = 2; bytes frame = 3; }
 message SetTextBoxBlocks { uint64 slide_index = 1; uint64 shape_index = 2; repeated bytes blocks = 3; }
-message InsertMaster { bytes master = 1; }
+message InsertMaster { bytes master = 1; optional uint64 at = 2; }
 message RemoveMaster { string id = 1; }
-message InsertLayout { bytes layout = 1; }
+message InsertLayout { bytes layout = 1; optional uint64 at = 2; }
 message RemoveLayout { string id = 1; }
 message SetLayoutMaster { string id = 1; string master_id = 2; }
 

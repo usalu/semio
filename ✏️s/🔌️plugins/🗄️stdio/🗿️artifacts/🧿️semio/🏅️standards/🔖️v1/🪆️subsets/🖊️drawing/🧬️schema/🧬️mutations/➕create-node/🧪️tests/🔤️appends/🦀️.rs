@@ -31,7 +31,7 @@ fn mutation() -> SemioDrawingMutation {
 #[semio_framework_async_macros::async_test]
 async fn appends_the_caption_as_the_fourth_child() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("create-node applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("create-node applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "create-node/appends-a-caption-text-node-to-the-layer-root: applied state differs from the committed after-snapshot");
     let crate::standards::v1::subsets::drawing::schema::snapshot::DrawNode::Group { children, .. } = &produced.layers[0].root else { panic!("the layer root is a group") };
     assert_eq!(children.len(), 4, "create-node adds exactly one child");
@@ -44,13 +44,14 @@ async fn appends_the_caption_as_the_fourth_child() {
 async fn the_undo_delete_node_addresses_the_path_the_node_landed_at() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "create-node undoes as exactly one delete-node");
     let SemioDrawingMutation::DeleteNode(remove) = &undo[0] else { panic!("create-node must undo as delete-node") };
     assert_eq!(remove.at.path, vec![3usize], "the undo path is the parent path plus the clamped landing index");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward create-node applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo delete-node applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward create-node applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo delete-node applies");
     }
     assert_eq!(current, base, "create-node/appends-a-caption-text-node-to-the-layer-root: the undo did not restore the before-snapshot");
 }
@@ -115,6 +116,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-node diff decodes");
-    let produced = decoded.apply(&before()).expect("committed create-node diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed create-node diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-node/appends-a-caption-text-node-to-the-layer-root: committed diff did not carry before to after");
 }

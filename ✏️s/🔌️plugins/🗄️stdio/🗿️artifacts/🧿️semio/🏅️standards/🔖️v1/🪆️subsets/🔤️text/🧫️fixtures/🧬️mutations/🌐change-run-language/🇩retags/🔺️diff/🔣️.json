@@ -1,15 +1,11 @@
 {
   "runs": {
-    "values": [
+    "modified": [
       {
-        "language": "en",
-        "content": "Hello",
-        "marks": []
-      },
-      {
-        "language": "de",
-        "content": "Welt",
-        "marks": []
+        "index": 1,
+        "diff": {
+          "language": "de"
+        }
       }
     ]
   }

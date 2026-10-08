@@ -1731,5 +1731,1323 @@
       7,
       9
     ]
+  },
+  "annotationProjection": {
+    "$comment": "Screen-space projection of an annotation layer through a perspective camera, produced with three.js (PerspectiveCamera + Vector3.project) and the React twin projectWorld3dAnnotations. A wgpu or other renderer must reproduce points to 0.05 px, arrow/arc angles to 1e-3 rad and the same visibility. The camera maps the engine's Z-up orbit camera: three.js lookAt and the engine's look-at agree.",
+    "camera": {
+      "position": [
+        6,
+        -6,
+        4
+      ],
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "up": [
+        0,
+        0,
+        1
+      ],
+      "fovYDegrees": 45,
+      "near": 0.1,
+      "far": 1000
+    },
+    "size": {
+      "width": 800,
+      "height": 600
+    },
+    "layer": {
+      "title": {
+        "en": "Projected",
+        "de": "Projiziert"
+      },
+      "items": [
+        {
+          "kind": "dimension",
+          "id": "dim-edge",
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            4,
+            0,
+            0
+          ],
+          "offset": [
+            0,
+            -1.5,
+            0
+          ],
+          "text": {
+            "en": "Edge 4 mm",
+            "de": "Kante 4 mm"
+          },
+          "tone": "primary"
+        },
+        {
+          "kind": "angle",
+          "id": "ang-corner",
+          "vertex": [
+            0,
+            0,
+            0
+          ],
+          "directionA": [
+            1,
+            0,
+            0
+          ],
+          "directionB": [
+            0,
+            1,
+            0
+          ],
+          "radiusPx": 48,
+          "text": {
+            "en": "Right angle",
+            "de": "Rechter Winkel"
+          }
+        },
+        {
+          "kind": "angle",
+          "id": "ang-wide",
+          "vertex": [
+            0,
+            0,
+            2
+          ],
+          "directionA": [
+            1,
+            0,
+            0
+          ],
+          "directionB": [
+            -1,
+            0.2,
+            0
+          ],
+          "radiusPx": 32,
+          "text": {
+            "en": "Wide angle",
+            "de": "Stumpfer Winkel"
+          },
+          "tone": "warning"
+        },
+        {
+          "kind": "marker",
+          "id": "mk-dot",
+          "position": [
+            2,
+            1,
+            1
+          ],
+          "text": {
+            "en": "Centre",
+            "de": "Mitte"
+          }
+        },
+        {
+          "kind": "marker",
+          "id": "mk-cross",
+          "position": [
+            1,
+            1,
+            0
+          ],
+          "shape": "cross",
+          "text": {
+            "en": "Cross",
+            "de": "Kreuz"
+          },
+          "tone": "danger"
+        },
+        {
+          "kind": "marker",
+          "id": "mk-ring",
+          "position": [
+            3,
+            0,
+            1
+          ],
+          "shape": "ring",
+          "text": {
+            "en": "Ring",
+            "de": "Ring"
+          },
+          "tone": "success"
+        },
+        {
+          "kind": "leader",
+          "id": "ld-right",
+          "anchor": [
+            1,
+            0,
+            1
+          ],
+          "labelOffsetPx": [
+            48,
+            -32
+          ],
+          "text": {
+            "en": "Fillet",
+            "de": "Verrundung"
+          }
+        },
+        {
+          "kind": "leader",
+          "id": "ld-left",
+          "anchor": [
+            0,
+            2,
+            0
+          ],
+          "labelOffsetPx": [
+            -48,
+            -32
+          ],
+          "text": {
+            "en": "Chamfer",
+            "de": "Fase"
+          },
+          "tone": "info"
+        },
+        {
+          "kind": "marker",
+          "id": "mk-behind",
+          "position": [
+            20,
+            -20,
+            12
+          ],
+          "text": {
+            "en": "Behind",
+            "de": "Dahinter"
+          }
+        },
+        {
+          "kind": "dimension",
+          "id": "dim-behind",
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            20,
+            -20,
+            12
+          ],
+          "offset": [
+            0,
+            0,
+            1
+          ],
+          "text": {
+            "en": "Half behind",
+            "de": "Halb dahinter"
+          }
+        }
+      ]
+    },
+    "expected": [
+      {
+        "id": "dim-edge",
+        "kind": "dimension",
+        "tone": "primary",
+        "visible": true,
+        "lines": [
+          [
+            399.99999999999994,
+            299.9999999999997,
+            308.7805506941652,
+            338.8961038751363
+          ],
+          [
+            700.2640206317061,
+            428.0330085889907,
+            618.3738331866954,
+            504.8528137423853
+          ],
+          [
+            308.7805506941652,
+            338.8961038751363,
+            618.3738331866954,
+            504.8528137423853
+          ]
+        ],
+        "arrows": [
+          {
+            "x": 308.7805506941652,
+            "y": 338.8961038751363,
+            "angle": 3.633660715447262
+          },
+          {
+            "x": 618.3738331866954,
+            "y": 504.8528137423853,
+            "angle": 0.4920680618574691
+          }
+        ],
+        "label": {
+          "x": 470.1914863319761,
+          "y": 409.53545116219675,
+          "align": "middle"
+        }
+      },
+      {
+        "id": "ang-corner",
+        "kind": "angle",
+        "tone": "neutral",
+        "visible": true,
+        "lines": [
+          [
+            399.99999999999994,
+            299.9999999999997,
+            444.15357812837436,
+            318.82714897326537
+          ],
+          [
+            399.99999999999994,
+            299.9999999999997,
+            444.15357812837436,
+            281.17285102673407
+          ]
+        ],
+        "arrows": [],
+        "arc": {
+          "cx": 399.99999999999994,
+          "cy": 299.9999999999997,
+          "radius": 48,
+          "start": 0.403057074466113,
+          "sweep": -0.8061141489322255
+        },
+        "label": {
+          "x": 461.99999999999994,
+          "y": 299.9999999999997,
+          "align": "middle"
+        }
+      },
+      {
+        "id": "ang-wide",
+        "kind": "angle",
+        "tone": "warning",
+        "visible": true,
+        "lines": [
+          [
+            399.9999999999999,
+            146.3603896932105,
+            431.15471254471896,
+            153.66681742883642
+          ],
+          [
+            399.9999999999999,
+            146.3603896932105,
+            369.81333563925887,
+            135.7412892241515
+          ]
+        ],
+        "arrows": [],
+        "arc": {
+          "cx": 399.9999999999999,
+          "cy": 146.3603896932105,
+          "radius": 32,
+          "start": 0.23035777942383479,
+          "sweep": -3.0336896966459754
+        },
+        "label": {
+          "x": 412.9027472559946,
+          "y": 102.20703066756082,
+          "align": "middle"
+        }
+      },
+      {
+        "id": "mk-dot",
+        "kind": "marker",
+        "tone": "neutral",
+        "visible": true,
+        "lines": [],
+        "arrows": [],
+        "marker": {
+          "x": 584.7778588502806,
+          "y": 247.4736375019521,
+          "shape": "dot"
+        }
+      },
+      {
+        "id": "mk-cross",
+        "kind": "marker",
+        "tone": "danger",
+        "visible": true,
+        "lines": [],
+        "arrows": [],
+        "marker": {
+          "x": 509.1869165933476,
+          "y": 299.9999999999997,
+          "shape": "cross"
+        }
+      },
+      {
+        "id": "mk-ring",
+        "kind": "marker",
+        "tone": "success",
+        "visible": true,
+        "lines": [],
+        "arrows": [],
+        "marker": {
+          "x": 618.3738331866954,
+          "y": 299.99999999999966,
+          "shape": "ring"
+        }
+      },
+      {
+        "id": "ld-right",
+        "kind": "leader",
+        "tone": "neutral",
+        "visible": true,
+        "lines": [
+          [
+            461.59261961676015,
+            247.47363750195214,
+            509.59261961676015,
+            215.47363750195214
+          ]
+        ],
+        "arrows": [],
+        "marker": {
+          "x": 461.59261961676015,
+          "y": 247.47363750195214,
+          "shape": "dot"
+        },
+        "label": {
+          "x": 509.59261961676015,
+          "y": 215.47363750195214,
+          "align": "start"
+        }
+      },
+      {
+        "id": "ld-left",
+        "kind": "leader",
+        "tone": "info",
+        "visible": true,
+        "lines": [
+          [
+            496.0844866021459,
+            259.02943725152255,
+            448.0844866021459,
+            227.02943725152255
+          ]
+        ],
+        "arrows": [],
+        "marker": {
+          "x": 496.0844866021459,
+          "y": 259.02943725152255,
+          "shape": "dot"
+        },
+        "label": {
+          "x": 448.0844866021459,
+          "y": 227.02943725152255,
+          "align": "end"
+        }
+      },
+      {
+        "id": "mk-behind",
+        "kind": "marker",
+        "tone": "neutral",
+        "visible": false,
+        "lines": [],
+        "arrows": []
+      },
+      {
+        "id": "dim-behind",
+        "kind": "dimension",
+        "tone": "neutral",
+        "visible": false,
+        "lines": [],
+        "arrows": []
+      }
+    ]
+  },
+  "legendLines": {
+    "$comment": "Legend text per locale: title with unit, one line per tick bottom to top, and the no-data caption. Number formatting is Intl.NumberFormat(maximumSignificantDigits 4); only the en and de families are pinned.",
+    "rows": [
+      {
+        "field": {
+          "meshId": "mesh:part",
+          "domain": "vertex",
+          "values": [
+            0,
+            0.25,
+            0.5,
+            null,
+            1,
+            2,
+            -1
+          ],
+          "ramp": "inferno",
+          "range": {
+            "min": 0,
+            "max": 1
+          },
+          "legend": {
+            "title": {
+              "en": "Wall thickness",
+              "de": "Wandstaerke"
+            },
+            "unit": "mm"
+          }
+        },
+        "locale": "en",
+        "lines": {
+          "title": "Wall thickness (mm)",
+          "ticks": [
+            {
+              "text": "0 mm",
+              "hex": "#000004"
+            },
+            {
+              "text": "0.25 mm",
+              "hex": "#57106e"
+            },
+            {
+              "text": "0.5 mm",
+              "hex": "#bc3754"
+            },
+            {
+              "text": "0.75 mm",
+              "hex": "#f98e09"
+            },
+            {
+              "text": "1 mm",
+              "hex": "#fcffa4"
+            }
+          ],
+          "noData": "No data"
+        }
+      },
+      {
+        "field": {
+          "meshId": "mesh:part",
+          "domain": "vertex",
+          "values": [
+            0,
+            0.25,
+            0.5,
+            null,
+            1,
+            2,
+            -1
+          ],
+          "ramp": "inferno",
+          "range": {
+            "min": 0,
+            "max": 1
+          },
+          "legend": {
+            "title": {
+              "en": "Wall thickness",
+              "de": "Wandstaerke"
+            },
+            "unit": "mm"
+          }
+        },
+        "locale": "de",
+        "lines": {
+          "title": "Wandstaerke (mm)",
+          "ticks": [
+            {
+              "text": "0 mm",
+              "hex": "#000004"
+            },
+            {
+              "text": "0,25 mm",
+              "hex": "#57106e"
+            },
+            {
+              "text": "0,5 mm",
+              "hex": "#bc3754"
+            },
+            {
+              "text": "0,75 mm",
+              "hex": "#f98e09"
+            },
+            {
+              "text": "1 mm",
+              "hex": "#fcffa4"
+            }
+          ],
+          "noData": "Keine Daten"
+        }
+      },
+      {
+        "field": {
+          "meshId": "mesh:part",
+          "domain": "face",
+          "values": [
+            10,
+            15,
+            20
+          ],
+          "ramp": "coolwarm",
+          "range": {
+            "min": 10,
+            "max": 20
+          },
+          "legend": {
+            "title": {
+              "en": "Draft angle",
+              "de": "Entformungswinkel"
+            },
+            "unit": "deg",
+            "ticks": 3
+          }
+        },
+        "locale": "en",
+        "lines": {
+          "title": "Draft angle (deg)",
+          "ticks": [
+            {
+              "text": "10 deg",
+              "hex": "#3b4cc0"
+            },
+            {
+              "text": "15 deg",
+              "hex": "#dddddd"
+            },
+            {
+              "text": "20 deg",
+              "hex": "#b40426"
+            }
+          ],
+          "noData": null
+        }
+      },
+      {
+        "field": {
+          "meshId": "mesh:part",
+          "domain": "face",
+          "values": [
+            10,
+            15,
+            20
+          ],
+          "ramp": "coolwarm",
+          "range": {
+            "min": 10,
+            "max": 20
+          },
+          "legend": {
+            "title": {
+              "en": "Draft angle",
+              "de": "Entformungswinkel"
+            },
+            "unit": "deg",
+            "ticks": 3
+          }
+        },
+        "locale": "de",
+        "lines": {
+          "title": "Entformungswinkel (deg)",
+          "ticks": [
+            {
+              "text": "10 deg",
+              "hex": "#3b4cc0"
+            },
+            {
+              "text": "15 deg",
+              "hex": "#dddddd"
+            },
+            {
+              "text": "20 deg",
+              "hex": "#b40426"
+            }
+          ],
+          "noData": null
+        }
+      }
+    ]
+  },
+  "legendValues": {
+    "$comment": "Intl.NumberFormat(locale, { maximumSignificantDigits: 4 }) outputs; ICU is the oracle.",
+    "rows": [
+      {
+        "locale": "en",
+        "value": 0,
+        "text": "0"
+      },
+      {
+        "locale": "en",
+        "value": 0.25,
+        "text": "0.25"
+      },
+      {
+        "locale": "en",
+        "value": 0.5,
+        "text": "0.5"
+      },
+      {
+        "locale": "en",
+        "value": 1,
+        "text": "1"
+      },
+      {
+        "locale": "en",
+        "value": 12,
+        "text": "12"
+      },
+      {
+        "locale": "en",
+        "value": 123.4,
+        "text": "123.4"
+      },
+      {
+        "locale": "en",
+        "value": 1234.5678,
+        "text": "1,235"
+      },
+      {
+        "locale": "en",
+        "value": 12345.678,
+        "text": "12,350"
+      },
+      {
+        "locale": "en",
+        "value": 0.00012345,
+        "text": "0.0001235"
+      },
+      {
+        "locale": "en",
+        "value": 1e-7,
+        "text": "0.0000001"
+      },
+      {
+        "locale": "en",
+        "value": 123456789,
+        "text": "123,500,000"
+      },
+      {
+        "locale": "en",
+        "value": 99999.5,
+        "text": "100,000"
+      },
+      {
+        "locale": "en",
+        "value": 0.99995,
+        "text": "1"
+      },
+      {
+        "locale": "en",
+        "value": -3.14159,
+        "text": "-3.142"
+      },
+      {
+        "locale": "en",
+        "value": -1234.5,
+        "text": "-1,235"
+      },
+      {
+        "locale": "en",
+        "value": 1.005,
+        "text": "1.005"
+      },
+      {
+        "locale": "en",
+        "value": 2.5,
+        "text": "2.5"
+      },
+      {
+        "locale": "en",
+        "value": 1e+21,
+        "text": "1,000,000,000,000,000,000,000"
+      },
+      {
+        "locale": "en",
+        "value": 0.30000000000000004,
+        "text": "0.3"
+      },
+      {
+        "locale": "en",
+        "value": 1000,
+        "text": "1,000"
+      },
+      {
+        "locale": "en",
+        "value": 999.95,
+        "text": "1,000"
+      },
+      {
+        "locale": "en",
+        "value": 1.0005,
+        "text": "1.001"
+      },
+      {
+        "locale": "en",
+        "value": 0.12345,
+        "text": "0.1235"
+      },
+      {
+        "locale": "en",
+        "value": 8.0005,
+        "text": "8.001"
+      },
+      {
+        "locale": "en",
+        "value": 0.000045,
+        "text": "0.000045"
+      },
+      {
+        "locale": "en",
+        "value": 1234567.891,
+        "text": "1,235,000"
+      },
+      {
+        "locale": "en",
+        "value": -0.0001,
+        "text": "-0.0001"
+      },
+      {
+        "locale": "en-US",
+        "value": 0,
+        "text": "0"
+      },
+      {
+        "locale": "en-US",
+        "value": 0.25,
+        "text": "0.25"
+      },
+      {
+        "locale": "en-US",
+        "value": 0.5,
+        "text": "0.5"
+      },
+      {
+        "locale": "en-US",
+        "value": 1,
+        "text": "1"
+      },
+      {
+        "locale": "en-US",
+        "value": 12,
+        "text": "12"
+      },
+      {
+        "locale": "en-US",
+        "value": 123.4,
+        "text": "123.4"
+      },
+      {
+        "locale": "en-US",
+        "value": 1234.5678,
+        "text": "1,235"
+      },
+      {
+        "locale": "en-US",
+        "value": 12345.678,
+        "text": "12,350"
+      },
+      {
+        "locale": "en-US",
+        "value": 0.00012345,
+        "text": "0.0001235"
+      },
+      {
+        "locale": "en-US",
+        "value": 1e-7,
+        "text": "0.0000001"
+      },
+      {
+        "locale": "en-US",
+        "value": 123456789,
+        "text": "123,500,000"
+      },
+      {
+        "locale": "en-US",
+        "value": 99999.5,
+        "text": "100,000"
+      },
+      {
+        "locale": "en-US",
+        "value": 0.99995,
+        "text": "1"
+      },
+      {
+        "locale": "en-US",
+        "value": -3.14159,
+        "text": "-3.142"
+      },
+      {
+        "locale": "en-US",
+        "value": -1234.5,
+        "text": "-1,235"
+      },
+      {
+        "locale": "en-US",
+        "value": 1.005,
+        "text": "1.005"
+      },
+      {
+        "locale": "en-US",
+        "value": 2.5,
+        "text": "2.5"
+      },
+      {
+        "locale": "en-US",
+        "value": 1e+21,
+        "text": "1,000,000,000,000,000,000,000"
+      },
+      {
+        "locale": "en-US",
+        "value": 0.30000000000000004,
+        "text": "0.3"
+      },
+      {
+        "locale": "en-US",
+        "value": 1000,
+        "text": "1,000"
+      },
+      {
+        "locale": "en-US",
+        "value": 999.95,
+        "text": "1,000"
+      },
+      {
+        "locale": "en-US",
+        "value": 1.0005,
+        "text": "1.001"
+      },
+      {
+        "locale": "en-US",
+        "value": 0.12345,
+        "text": "0.1235"
+      },
+      {
+        "locale": "en-US",
+        "value": 8.0005,
+        "text": "8.001"
+      },
+      {
+        "locale": "en-US",
+        "value": 0.000045,
+        "text": "0.000045"
+      },
+      {
+        "locale": "en-US",
+        "value": 1234567.891,
+        "text": "1,235,000"
+      },
+      {
+        "locale": "en-US",
+        "value": -0.0001,
+        "text": "-0.0001"
+      },
+      {
+        "locale": "de",
+        "value": 0,
+        "text": "0"
+      },
+      {
+        "locale": "de",
+        "value": 0.25,
+        "text": "0,25"
+      },
+      {
+        "locale": "de",
+        "value": 0.5,
+        "text": "0,5"
+      },
+      {
+        "locale": "de",
+        "value": 1,
+        "text": "1"
+      },
+      {
+        "locale": "de",
+        "value": 12,
+        "text": "12"
+      },
+      {
+        "locale": "de",
+        "value": 123.4,
+        "text": "123,4"
+      },
+      {
+        "locale": "de",
+        "value": 1234.5678,
+        "text": "1.235"
+      },
+      {
+        "locale": "de",
+        "value": 12345.678,
+        "text": "12.350"
+      },
+      {
+        "locale": "de",
+        "value": 0.00012345,
+        "text": "0,0001235"
+      },
+      {
+        "locale": "de",
+        "value": 1e-7,
+        "text": "0,0000001"
+      },
+      {
+        "locale": "de",
+        "value": 123456789,
+        "text": "123.500.000"
+      },
+      {
+        "locale": "de",
+        "value": 99999.5,
+        "text": "100.000"
+      },
+      {
+        "locale": "de",
+        "value": 0.99995,
+        "text": "1"
+      },
+      {
+        "locale": "de",
+        "value": -3.14159,
+        "text": "-3,142"
+      },
+      {
+        "locale": "de",
+        "value": -1234.5,
+        "text": "-1.235"
+      },
+      {
+        "locale": "de",
+        "value": 1.005,
+        "text": "1,005"
+      },
+      {
+        "locale": "de",
+        "value": 2.5,
+        "text": "2,5"
+      },
+      {
+        "locale": "de",
+        "value": 1e+21,
+        "text": "1.000.000.000.000.000.000.000"
+      },
+      {
+        "locale": "de",
+        "value": 0.30000000000000004,
+        "text": "0,3"
+      },
+      {
+        "locale": "de",
+        "value": 1000,
+        "text": "1.000"
+      },
+      {
+        "locale": "de",
+        "value": 999.95,
+        "text": "1.000"
+      },
+      {
+        "locale": "de",
+        "value": 1.0005,
+        "text": "1,001"
+      },
+      {
+        "locale": "de",
+        "value": 0.12345,
+        "text": "0,1235"
+      },
+      {
+        "locale": "de",
+        "value": 8.0005,
+        "text": "8,001"
+      },
+      {
+        "locale": "de",
+        "value": 0.000045,
+        "text": "0,000045"
+      },
+      {
+        "locale": "de",
+        "value": 1234567.891,
+        "text": "1.235.000"
+      },
+      {
+        "locale": "de",
+        "value": -0.0001,
+        "text": "-0,0001"
+      },
+      {
+        "locale": "de-DE",
+        "value": 0,
+        "text": "0"
+      },
+      {
+        "locale": "de-DE",
+        "value": 0.25,
+        "text": "0,25"
+      },
+      {
+        "locale": "de-DE",
+        "value": 0.5,
+        "text": "0,5"
+      },
+      {
+        "locale": "de-DE",
+        "value": 1,
+        "text": "1"
+      },
+      {
+        "locale": "de-DE",
+        "value": 12,
+        "text": "12"
+      },
+      {
+        "locale": "de-DE",
+        "value": 123.4,
+        "text": "123,4"
+      },
+      {
+        "locale": "de-DE",
+        "value": 1234.5678,
+        "text": "1.235"
+      },
+      {
+        "locale": "de-DE",
+        "value": 12345.678,
+        "text": "12.350"
+      },
+      {
+        "locale": "de-DE",
+        "value": 0.00012345,
+        "text": "0,0001235"
+      },
+      {
+        "locale": "de-DE",
+        "value": 1e-7,
+        "text": "0,0000001"
+      },
+      {
+        "locale": "de-DE",
+        "value": 123456789,
+        "text": "123.500.000"
+      },
+      {
+        "locale": "de-DE",
+        "value": 99999.5,
+        "text": "100.000"
+      },
+      {
+        "locale": "de-DE",
+        "value": 0.99995,
+        "text": "1"
+      },
+      {
+        "locale": "de-DE",
+        "value": -3.14159,
+        "text": "-3,142"
+      },
+      {
+        "locale": "de-DE",
+        "value": -1234.5,
+        "text": "-1.235"
+      },
+      {
+        "locale": "de-DE",
+        "value": 1.005,
+        "text": "1,005"
+      },
+      {
+        "locale": "de-DE",
+        "value": 2.5,
+        "text": "2,5"
+      },
+      {
+        "locale": "de-DE",
+        "value": 1e+21,
+        "text": "1.000.000.000.000.000.000.000"
+      },
+      {
+        "locale": "de-DE",
+        "value": 0.30000000000000004,
+        "text": "0,3"
+      },
+      {
+        "locale": "de-DE",
+        "value": 1000,
+        "text": "1.000"
+      },
+      {
+        "locale": "de-DE",
+        "value": 999.95,
+        "text": "1.000"
+      },
+      {
+        "locale": "de-DE",
+        "value": 1.0005,
+        "text": "1,001"
+      },
+      {
+        "locale": "de-DE",
+        "value": 0.12345,
+        "text": "0,1235"
+      },
+      {
+        "locale": "de-DE",
+        "value": 8.0005,
+        "text": "8,001"
+      },
+      {
+        "locale": "de-DE",
+        "value": 0.000045,
+        "text": "0,000045"
+      },
+      {
+        "locale": "de-DE",
+        "value": 1234567.891,
+        "text": "1.235.000"
+      },
+      {
+        "locale": "de-DE",
+        "value": -0.0001,
+        "text": "-0,0001"
+      }
+    ]
+  },
+  "subElementPaint": {
+    "$comment": "Sub-element hover and selection paint: a highlight token overrides exactly its granularity over the theme defaults; tones resolve to 'tone:<name>' here.",
+    "rows": [
+      {
+        "name": "no-highlight",
+        "highlight": null,
+        "defaults": {
+          "select": "select",
+          "hover": "hover",
+          "edgeHover": "edge-hover",
+          "edgeWidth": 2,
+          "vertexMarkPx": 6
+        },
+        "expected": {
+          "faceSelect": "select",
+          "faceHover": "hover",
+          "edgeSelect": "select",
+          "edgeHover": "edge-hover",
+          "vertexSelect": "select",
+          "vertexHover": "hover",
+          "edgeWidth": 2,
+          "vertexMarkPx": 6
+        }
+      },
+      {
+        "name": "face-hover-only",
+        "highlight": {
+          "face": {
+            "hover": "info"
+          }
+        },
+        "defaults": {
+          "select": "select",
+          "hover": "hover",
+          "edgeHover": "edge-hover",
+          "edgeWidth": 2,
+          "vertexMarkPx": 6
+        },
+        "expected": {
+          "faceSelect": "select",
+          "faceHover": "tone:info",
+          "edgeSelect": "select",
+          "edgeHover": "edge-hover",
+          "vertexSelect": "select",
+          "vertexHover": "hover",
+          "edgeWidth": 2,
+          "vertexMarkPx": 6
+        }
+      },
+      {
+        "name": "edge-selected-and-width",
+        "highlight": {
+          "edge": {
+            "selected": "danger",
+            "widthPx": 4
+          }
+        },
+        "defaults": {
+          "select": "select",
+          "hover": "hover",
+          "edgeHover": "edge-hover",
+          "edgeWidth": 2,
+          "vertexMarkPx": 6
+        },
+        "expected": {
+          "faceSelect": "select",
+          "faceHover": "hover",
+          "edgeSelect": "tone:danger",
+          "edgeHover": "edge-hover",
+          "vertexSelect": "select",
+          "vertexHover": "hover",
+          "edgeWidth": 4,
+          "vertexMarkPx": 6
+        }
+      },
+      {
+        "name": "vertex-all",
+        "highlight": {
+          "vertex": {
+            "hover": "success",
+            "selected": "warning",
+            "widthPx": 8
+          }
+        },
+        "defaults": {
+          "select": "select",
+          "hover": "hover",
+          "edgeHover": "edge-hover",
+          "edgeWidth": 2,
+          "vertexMarkPx": 6
+        },
+        "expected": {
+          "faceSelect": "select",
+          "faceHover": "hover",
+          "edgeSelect": "select",
+          "edgeHover": "edge-hover",
+          "vertexSelect": "tone:warning",
+          "vertexHover": "tone:success",
+          "edgeWidth": 2,
+          "vertexMarkPx": 8
+        }
+      },
+      {
+        "name": "all-granularities",
+        "highlight": {
+          "face": {
+            "hover": "primary",
+            "selected": "secondary"
+          },
+          "edge": {
+            "hover": "tertiary"
+          },
+          "vertex": {
+            "selected": "neutral"
+          }
+        },
+        "defaults": {
+          "select": "select",
+          "hover": "hover",
+          "edgeHover": "edge-hover",
+          "edgeWidth": 2,
+          "vertexMarkPx": 6
+        },
+        "expected": {
+          "faceSelect": "tone:secondary",
+          "faceHover": "tone:primary",
+          "edgeSelect": "select",
+          "edgeHover": "tone:tertiary",
+          "vertexSelect": "tone:neutral",
+          "vertexHover": "hover",
+          "edgeWidth": 2,
+          "vertexMarkPx": 6
+        }
+      }
+    ]
   }
 }

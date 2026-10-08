@@ -10,11 +10,7 @@ use crate::standards::v_r12::subsets::any::io::binary::diff::dec_block_bin;
 use crate::standards::v_r12::subsets::any::schema::mutations::*;
 use crate::schema::diff::{block_diff_between, // 🧪️ P2-FG1: real recursive binary twins backing the upgraded `OpBinary` impl below (see
     // `🔺️diff/🦀️.rs`'s `#region 🔖️ItemBinaryCodecs`/`#region 🔖️BinaryPrimitives`).
-    diff_insert_block, diff_insert_entity, diff_insert_layer, diff_insert_linetype, diff_insert_style, diff_remove_block, diff_remove_entity, diff_remove_header_var, diff_remove_layer, diff_remove_linetype, diff_remove_style, diff_set_block, diff_set_entity, diff_set_header_var, diff_set_layer, diff_set_linetype, diff_set_snapshot, diff_set_style, entity_diff_between_pub, layer_diff_between, linetype_diff_between, style_diff_between, DxfDiff};
-use crate::standards::v_r12::subsets::any::io::binary::snapshot::{dec_dxf_snapshot_bin};
-use crate::standards::v_r12::subsets::any::io::binary::snapshot::{enc_dxf_snapshot_bin};
-use crate::standards::v_r12::subsets::any::io::text::snapshot::{dec_dxf_snapshot};
-use crate::standards::v_r12::subsets::any::io::text::snapshot::{enc_dxf_snapshot};
+    diff_insert_block, diff_insert_entity, diff_insert_layer, diff_insert_linetype, diff_insert_style, diff_remove_block, diff_remove_entity, diff_remove_header_var, diff_remove_layer, diff_remove_linetype, diff_remove_style, diff_set_block, diff_set_entity, diff_set_header_var, diff_set_layer, diff_set_linetype, diff_set_style, entity_diff_between_pub, layer_diff_between, linetype_diff_between, style_diff_between, DxfDiff};
 use crate::standards::v_r12::subsets::any::io::text::diff::{dec_linetype};
 use crate::standards::v_r12::subsets::any::io::text::diff::{enc_linetype};
 use crate::standards::v_r12::subsets::any::io::text::diff::{dec_style};
@@ -57,8 +53,6 @@ use protocol::{Mutation, MutationDiff, OpText};
 impl OpBinary for DxfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            DxfMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
-            DxfMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
             DxfMutation::SetHeaderVar(_) => TAG_SET_HEADER_VAR,
             DxfMutation::RemoveHeaderVar(_) => TAG_REMOVE_HEADER_VAR,
             DxfMutation::InsertLayer(_) => TAG_INSERT_LAYER,
@@ -79,11 +73,13 @@ impl OpBinary for DxfMutation {
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
-            DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_dxf_snapshot_bin(snapshot, &mut out),
-            DxfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => out.extend(protocol::OpBinary::encode_op(patch)?),
-            DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name, header_var }) => {
+            DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name, header_var, index }) => {
                 write_str_lp(&mut out, name);
                 enc_header_var_bin(header_var, &mut out);
+                out.push(if index.is_some() { 1 } else { 0 });
+                if let Some(index) = index {
+                    store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                }
             }
             DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name }) => write_str_lp(&mut out, name),
             DxfMutation::InsertLayer(insert_layer::InsertLayer { index, layer }) => {
@@ -141,12 +137,14 @@ impl OpBinary for DxfMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            TAG_PATCH_SNAPSHOT => Ok(DxfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(reader.read_bytes(reader.remaining()).map_err(|e| protocol::ProtocolError::Malformed { what: "patch-snapshot payload", offset: reader.position() as u64, detail: e.to_string() })?)? })),
-            TAG_SET_SNAPSHOT => Ok(DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_dxf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))? })),
             TAG_SET_HEADER_VAR => {
                 let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
                 let header_var = dec_header_var_bin(&mut reader).map_err(|e| malformed("op header_var", reader.position(), e))?;
-                Ok(DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name, header_var }))
+                let index = match reader.read_u8().map_err(|e| malformed("op index presence", reader.position(), e.to_string()))? {
+                    0 => None,
+                    _ => Some(reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize),
+                };
+                Ok(DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name, header_var, index }))
             }
             TAG_REMOVE_HEADER_VAR => Ok(DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name: read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))? })),
             TAG_INSERT_LAYER => {
@@ -214,8 +212,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `DxfMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_SET_HEADER_VAR: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-header-var");
 const TAG_REMOVE_HEADER_VAR: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-header-var");
 const TAG_INSERT_LAYER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-layer");

@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "streams": null,
@@ -8,44 +7,29 @@
   "calibration": null,
   "params": null,
   "gcps": {
-    "values": [
+    "rows": [
       {
-        "id": "gcp-corner",
-        "name": "Corner",
-        "worldPosition": [
-          1.0,
-          2.0,
-          3.0
-        ],
-        "observations": [
-          {
-            "streamId": "stream-b",
-            "frameIndex": 0,
-            "pixel": [
-              10.0,
-              20.0
+        "row": "patch",
+        "key": "gcp-ridge",
+        "patch": {
+          "observations": {
+            "removed": [],
+            "added": [
+              {
+                "streamId": "stream-a",
+                "frameIndex": 1,
+                "pixel": [
+                  {
+                    "bits": "41f00000"
+                  },
+                  {
+                    "bits": "42200000"
+                  }
+                ]
+              }
             ]
           }
-        ]
-      },
-      {
-        "id": "gcp-ridge",
-        "name": "Ridge",
-        "worldPosition": [
-          4.0,
-          5.0,
-          6.0
-        ],
-        "observations": [
-          {
-            "streamId": "stream-a",
-            "frameIndex": 1,
-            "pixel": [
-              30.0,
-              40.0
-            ]
-          }
-        ]
+        }
       }
     ]
   },

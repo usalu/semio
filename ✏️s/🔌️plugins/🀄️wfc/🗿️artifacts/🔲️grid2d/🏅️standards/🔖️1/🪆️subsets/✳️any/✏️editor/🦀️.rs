@@ -506,9 +506,9 @@ impl Grid2dEditor {
         Ok(Emit::tool_once(Self::TOOL_APP_ID, utility, doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()), leaves))
     }
 
-    fn config_emit(view_state: Option<&ViewModel>, config: Grid2dWindowConfig) -> Result<Emit<Grid2dMutation>, Fault> {
+    fn config_emit(view_state: Option<&ViewModel>, mutation: window::Grid2dWindowConfigMutation) -> Result<Emit<Grid2dMutation>, Fault> {
         let view = view_state.ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid2d.window.required"), "wfc.grid2d.window.required"))?;
-        let mutation = window::addressed_config(view, config)?;
+        let mutation = window::addressed_config(view, mutation)?;
         Ok(Emit { window_config_mutations: vec![mutation], ..Default::default() })
     }
 
@@ -559,25 +559,25 @@ impl Grid2dEditor {
                 return Ok(Emit { effects: vec![reset_document_effect(&next)], ..Default::default() });
             }
             Grid2dEditorCommand::SetActiveTile { tile_id } => {
-                return Self::config_emit(view_state, Grid2dWindowConfig { active_tile_id: tile_id.clone(), ..window_config });
+                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetActiveTile { tile_id: tile_id.clone() });
             }
             Grid2dEditorCommand::SetCamera { x, y, zoom } | Grid2dEditorCommand::SyncCamera { x, y, zoom } => {
-                return Self::config_emit(view_state, Grid2dWindowConfig { camera_x: *x, camera_y: *y, camera_zoom: if *zoom > 0.0 { *zoom } else { 1.0 }, ..window_config });
+                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetCamera { x: *x, y: *y, zoom: if *zoom > 0.0 { *zoom } else { 1.0 } });
             }
             Grid2dEditorCommand::SetGridVisible { visible } => {
-                return Self::config_emit(view_state, Grid2dWindowConfig { grid_visible: *visible, ..window_config });
+                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetGridVisible { visible: *visible });
             }
             Grid2dEditorCommand::SetGridSnapEnabled { enabled } => {
-                return Self::config_emit(view_state, Grid2dWindowConfig { grid_snap_enabled: *enabled, ..window_config });
+                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetGridSnapEnabled { enabled: *enabled });
             }
             Grid2dEditorCommand::SetGridFactor { factor } => {
-                return Self::config_emit(view_state, Grid2dWindowConfig { grid_factor: if *factor > 0.0 { *factor } else { 1.0 }, ..window_config });
+                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetGridFactor { factor: if *factor > 0.0 { *factor } else { 1.0 } });
             }
             Grid2dEditorCommand::Solve => {
                 return Ok(Emit::effect(fill_tool::start_effect()));
             }
             Grid2dEditorCommand::CommitFill { solve_json } => {
-                return Self::config_emit(view_state, Grid2dWindowConfig { solve_json: solve_json.clone(), ..window_config });
+                return Self::config_emit(view_state, window::Grid2dWindowConfigMutation::SetSolveJson { solve_json: solve_json.clone() });
             }
         };
         Ok(Emit::mutations(vec![mutation]))

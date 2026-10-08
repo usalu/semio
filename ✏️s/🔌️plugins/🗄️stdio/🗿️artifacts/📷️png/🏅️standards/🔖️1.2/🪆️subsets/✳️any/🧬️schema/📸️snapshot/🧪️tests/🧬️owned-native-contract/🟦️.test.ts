@@ -59,13 +59,33 @@ test("native paint intent re-evaluates every neutral sample witness without a fr
 
 
 import {applyPatch as independentPatch} from "fast-json-patch";
-test("native PNG metadata intent agrees with literal neutral targets and RFC6902", async () => {
+import replacementSchema from "../../../🧬️mutations/🔄️replace-image/🧬️schema/🔣️.json";
+test("native PNG image replacement and inverse retain the exact sixteen-bit samples",async()=>{
+ const validator=new Ajv({strict:false,allErrors:true}).addSchema(schema).compile(replacementSchema);
+ const base=parsePngSnapshot(fixture.cases[0]!.snapshot);
+ for(const row of fixture.cases){
+  const target=parsePngSnapshot(row.snapshot),payload={image:target.image};
+  expect(validator(payload),row.name).toBe(true);expect(validator({...payload,bytes:[0]}),row.name).toBe(false);
+  const actual=await applyPngMutation(base,{mutation:"replace-image",payload});expect(actual).toEqual(target);
+  const diff=betweenPngSnapshots(base,actual);expect(applyPngDiff(actual,inversePngDiff(base,diff))).toEqual(base);
+  const bytes=await encodePngSnapshot(actual);expect(await decodePngSnapshot(bytes)).toEqual(target);
+  const independent=IndependentPng.sync.read(Buffer.from(bytes),{skipRescale:true});
+  const expected=IndependentPng.sync.read(Buffer.from(await encodePngSnapshot(target)),{skipRescale:true});
+  expect(Array.from(independent.data)).toEqual(Array.from(expected.data));
+  console.log(`[DEBUG] PNG typed image replacement neutral=${row.name} nativeWordsExact=true inverseExact=true`);
+ }
+});
+test("native PNG metadata diffs agree with literal neutral targets and RFC6902", () => {
  for(const row of fixture.metadataEdits) {
   const source=parsePngSnapshot(row.snapshot);
   const independent=independentPatch(structuredClone(row.snapshot),[{op:"replace",path:row.patch.path,value:row.patch.value}],true,false).newDocument;
-  expect(independent,row.name).toEqual(row.expected);
-  expect(await applyPngMutation(source,{mutation:"patch-snapshot",payload:{patch:row.patch}}),row.name).toEqual(row.expected);
+  const expected=parsePngSnapshot(row.expected);
+  expect(parsePngSnapshot(independent),row.name).toEqual(expected);
+  const diff=betweenPngSnapshots(source,expected);
+  const actual=applyPngDiff(source,diff);
+  expect(actual,row.name).toEqual(expected);
+  expect(applyPngDiff(actual,inversePngDiff(source,diff)),row.name).toEqual(source);
   expect(validate(independent),row.name).toBe(true);
-  console.log(`[DEBUG] native PNG metadata intent neutral=${row.name} path=${row.patch.path} exactMetadata=true`);
+  console.log(`[DEBUG] native PNG metadata diff neutral=${row.name} path=${row.patch.path} exactMetadata=true inverseExact=true`);
  }
 });

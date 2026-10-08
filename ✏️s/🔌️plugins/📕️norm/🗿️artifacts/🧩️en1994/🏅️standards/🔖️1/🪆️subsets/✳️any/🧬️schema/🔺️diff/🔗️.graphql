@@ -1,52 +1,98 @@
-# 🧬️ En1994 diff schema — sparse field delta.
+# 🧬️ En1994 diff schema — keyed sparse diff: scalar setters, id/index/key keyed row diffs and per-field section patches.
 
-type En1994Diff {
-  artifact: En1994Artifact @state(class: ARTIFACT)
-  annex: String @state(class: ARTIFACT)
-  mEdKnm: Float @state(class: ARTIFACT)
-  vEdKn: Float @state(class: ARTIFACT)
-  mPla: Float @state(class: ARTIFACT)
-  mPlRd: Float @state(class: ARTIFACT)
-  eta: Float @state(class: ARTIFACT)
-  vLRd: Float @state(class: ARTIFACT)
-  insulationThicknessMm: Float @state(class: ARTIFACT)
-  fireRating: String @state(class: ARTIFACT)
-  deckType: String @state(class: ARTIFACT)
-  deltaSigmaMpa: Float @state(class: ARTIFACT)
-  fatigueDetail: String @state(class: ARTIFACT)
-  dMm: Float @state(class: ARTIFACT)
-  hScMm: Float @state(class: ARTIFACT)
-  fCkMpa: Float @state(class: ARTIFACT)
-  fUMpa: Float @state(class: ARTIFACT)
-  eCmMpa: Float @state(class: ARTIFACT)
-  vEdPerStudKn: Float @state(class: ARTIFACT)
-  spanM: Float @state(class: ARTIFACT)
-  fYMpa: Float @state(class: ARTIFACT)
-  nCyclesStud: Float @state(class: ARTIFACT)
-  deltaTauStudMpa: Float @state(class: ARTIFACT)
+type En1994BeamsActionsPatch {
+  index: Int!
+  qAreaPa: Float
 }
 
-type En1994Artifact {
-  annex: String
-  mEdKnm: Float
-  vEdKn: Float
-  mPla: Float
-  mPlRd: Float
-  eta: Float
-  vLRd: Float
-  insulationThicknessMm: Float
-  fireRating: String
-  deckType: String
-  deltaSigmaMpa: Float
-  fatigueDetail: String
-  dMm: Float
-  hScMm: Float
-  fCkMpa: Float
-  fUMpa: Float
-  eCmMpa: Float
-  vEdPerStudKn: Float
+type En1994BeamsActionsRows {
+  modified: [En1994BeamsActionsPatch!]!
+}
+
+type En1994BeamsPatch {
+  index: Int!
   spanM: Float
-  fYMpa: Float
-  nCyclesStud: Float
-  deltaTauStudMpa: Float
+  slabThicknessM: Float
+  construction: String
+  transverseAsM2PerM: Float
+  studsDiameterM: Float
+  studsFUPa: Float
+  studsSpacingM: Float
+  studsTotalCount: Int
+  actions: En1994BeamsActionsRows
+}
+
+type En1994BeamsInserted {
+  index: Int!
+  row: CompositeBeam!
+}
+
+type En1994BeamsRows {
+  removed: [Int!]!
+  inserted: [En1994BeamsInserted!]!
+  modified: [En1994BeamsPatch!]!
+}
+
+type En1994ColumnsActionsPatch {
+  index: Int!
+  nKN: Float
+}
+
+type En1994ColumnsActionsRows {
+  modified: [En1994ColumnsActionsPatch!]!
+}
+
+type En1994ColumnsPatch {
+  index: Int!
+  kind: String
+  actions: En1994ColumnsActionsRows
+}
+
+type En1994ColumnsInserted {
+  index: Int!
+  row: CompositeColumn!
+}
+
+type En1994ColumnsRows {
+  removed: [Int!]!
+  inserted: [En1994ColumnsInserted!]!
+  modified: [En1994ColumnsPatch!]!
+}
+
+type En1994SlabsActionsPatch {
+  index: Int!
+  qAreaPa: Float
+}
+
+type En1994SlabsActionsRows {
+  modified: [En1994SlabsActionsPatch!]!
+}
+
+type En1994SlabsPatch {
+  index: Int!
+  concreteThicknessM: Float
+  actions: En1994SlabsActionsRows
+}
+
+type En1994SlabsInserted {
+  index: Int!
+  row: CompositeSlab!
+}
+
+type En1994SlabsRows {
+  removed: [Int!]!
+  inserted: [En1994SlabsInserted!]!
+  modified: [En1994SlabsPatch!]!
+}
+
+type En1994Diff {
+  annex: AnnexChoice @state(class: ARTIFACT)
+  structureKind: String @state(class: ARTIFACT)
+  steelFYPa: Float @state(class: ARTIFACT)
+  beams: En1994BeamsRows @state(class: ARTIFACT)
+  columns: En1994ColumnsRows @state(class: ARTIFACT)
+  slabs: En1994SlabsRows @state(class: ARTIFACT)
+  fireRating: String @state(class: ARTIFACT)
+  insulationThicknessM: Float @state(class: ARTIFACT)
+  fatigueDetail: String @state(class: ARTIFACT)
 }

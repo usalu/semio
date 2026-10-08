@@ -26,11 +26,11 @@ export function nativeHostContractLaws(repoRoot:string):void {
   assert.deepEqual(nativeHostSourceFactsV1(root,view),{...facts,outputs:{"native-build":undefined,"native-build-release":undefined}});
   for(const bad of [`${root}/Cargo.toml`,root,"owners"]) assert.throws(()=>nativeHostSourceFactsV1(root,{...view,kind:(path:string)=>path===bad?"symlink":view.kind(path)}));
   assert.throws(()=>nativeHostSourceFactsV1(root,{...view,readText:(path:string)=>path.endsWith("📜️script.ts")?" ".repeat(1024*1024+1):view.readText(path)}));
-  const actualRoot=repoRoot, actualHost={cratePath:"✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust",project:"@semio-tech/s-services-native",package:"semio-s-dev-services",binary:"semio-s-services-native",target:"native-build"};
+  const actualRoot=repoRoot, actualHost={cratePath:"✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/📦️packages/🦀️rust",project:"@semio-tech/s-gis-services-native",package:"semio-s-dev-gis-services",binary:"semio-s-gis-services-native",target:"native-build"};
   const actualView={kind:(path:string)=>{try {const stat=lstatSync(resolve(actualRoot,path));return stat.isSymbolicLink()?"symlink":stat.isDirectory()?"directory":stat.isFile()?"file":null;}catch{return null;}},readText:(path:string)=>readFileSync(resolve(actualRoot,path),"utf8")};
   assert.deepEqual(admitPlaygroundNativeHostV1(actualHost,(owner:string)=>nativeHostSourceFactsV1(owner,actualView)),actualHost);
   const actualFacts=nativeHostSourceFactsV1(actualHost.cratePath,actualView);
-  const actualMcpHost={...actualHost,binary:"semio-s-services-mcp",target:"mcp-build"};
+  const actualMcpHost={...actualHost,binary:"semio-s-gis-services-mcp",target:"mcp-build"};
   assert.deepEqual(admitPlaygroundNativeHostV1(actualMcpHost,(owner:string)=>nativeHostSourceFactsV1(owner,actualView)),actualMcpHost);
   assert.equal(nativeHostArtifactPathV1(actualMcpHost,"dev",actualFacts,"linux"),`${actualMcpHost.cratePath}/dist/mcp-dev/${actualMcpHost.binary}`);
   assert.equal(nativeHostArtifactPathV1(actualMcpHost,"release",actualFacts,"win32"),`${actualMcpHost.cratePath}/dist/mcp-release/${actualMcpHost.binary}.exe`);

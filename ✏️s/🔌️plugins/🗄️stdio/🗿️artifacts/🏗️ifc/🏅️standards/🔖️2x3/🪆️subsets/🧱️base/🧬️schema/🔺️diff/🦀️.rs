@@ -157,11 +157,32 @@ impl MutationDiff<Ifc2x3Snapshot> for Ifc2x3Diff {
 }
 
 impl DiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
-    /// 🔁️ Same `apply`+`between` composition proof `txt::TxtDiff::inverse` uses: `next =
-    /// self.apply(base)`, so `between(next, base)` is by definition the diff that restores `base`.
+    /// 🔁️ Diff-level undo: header, schema and preamble return to their base values, instances the diff created are removed, instances it
+    /// removed or replaced return as they stood in `base`, and the base order is restored whenever the inverse alone would not land on it.
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Self {
-        let next = apply_ifc2x3_diff_unchecked(self, base);
-        Self::between(&next, base)
+        let base_order: Vec<u64> = base.document.instances.iter().map(|instance| instance.id).collect();
+        let created: Vec<u64> = self.upserted_instances.iter().map(|instance| instance.id).filter(|id| !base_order.contains(id)).collect();
+        let mut upserted_instances: Vec<Part21Instance> = self.removed_instances.iter().chain(self.upserted_instances.iter().map(|instance| &instance.id).filter(|id| base_order.contains(id))).filter_map(|id| base.document.instance(*id).cloned()).collect();
+        upserted_instances.sort_by_key(|instance| instance.id);
+        upserted_instances.dedup_by_key(|instance| instance.id);
+        let mut after_order: Vec<u64> = match &self.instance_order {
+            Some(order) => order.clone(),
+            None => {
+                let mut order: Vec<u64> = base_order.iter().copied().filter(|id| !self.removed_instances.contains(id)).collect();
+                order.extend(created.iter().copied());
+                order
+            }
+        };
+        after_order.retain(|id| !created.contains(id));
+        after_order.extend(upserted_instances.iter().map(|instance| instance.id).filter(|id| !after_order.contains(id)));
+        Self {
+            schema: self.schema.as_ref().map(|_| base.schema.clone()),
+            header: self.header.as_ref().map(|_| base.document.header.clone()),
+            removed_instances: created,
+            upserted_instances,
+            edm_preamble: self.edm_preamble.as_ref().map(|_| base.edm_preamble.clone()),
+            instance_order: (after_order != base_order).then_some(base_order),
+        }
     }
 
     fn between(base: &Ifc2x3Snapshot, other: &Ifc2x3Snapshot) -> Self {
@@ -195,23 +216,6 @@ impl DiffAlgebra<Ifc2x3Snapshot> for Ifc2x3Diff {
     }
 }
 
-/// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &Ifc2x3Snapshot, snapshot: &Ifc2x3Snapshot) -> Ifc2x3Diff {
-    Ifc2x3Diff::between(base, snapshot)
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_upsert_instance(instance: &Part21Instance) -> Ifc2x3Diff {
-    Ifc2x3Diff { upserted_instances: vec![instance.clone()], ..Default::default() }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_remove_instance(id: u64) -> Ifc2x3Diff {
-    Ifc2x3Diff { removed_instances: vec![id], ..Default::default() }
-}
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_header(header: &Part21Header) -> Ifc2x3Diff {
-    Ifc2x3Diff { header: Some(header.clone()), ..Default::default() }
-}
 //#endregion 🔖️Diff
 
 //#region 🔖️HandcraftedDiffCodec

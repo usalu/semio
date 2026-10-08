@@ -1,10 +1,7 @@
-#[test]
-fn applies_change_eccentricity_bottom() {
-    use crate::mutations::change_eccentricity_bottom::ChangeEccentricityBottom;
-    use crate::En1996Snapshot;
-    use protocol::MutationKind;
-    let base = En1996Snapshot::compliant_clay_wall();
-    let _ = base;
-    // Constructed in aggregate from_snapshot / unit suite; leaf compiles and SEMANTICS are wired.
-    assert_eq!(<ChangeEccentricityBottom as MutationKind<En1996Snapshot, crate::En1996Mutation>>::SEMANTICS.kind, "change-eccentricity-bottom");
+//! 🧪️ `change-eccentricity-bottom` — the committed applied vector's inverse diffs sum to the negative of its forward diff.
+
+#[semio_framework_async_macros::async_test]
+async fn change_eccentricity_bottom_inverse_diffs_sum_to_the_negative_diff() {
+    let (mutation, before) = crate::mutations::fixture_tests::applied_vector("change-eccentricity-bottom");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
 }

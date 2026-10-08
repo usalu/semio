@@ -13,7 +13,6 @@
 //! glue-mounted siblings.
 
 use crate::{LayoutDiff, LayoutSnapshot};
-use crate::standards::v1::subsets::any::io::text::mutations::{bridge_decode_pair, bridge_render};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 use super::{
@@ -97,7 +96,7 @@ pub fn layout_frame_selection_diff(base: &LayoutSnapshot, page_id: &str, targets
     };
     let missing: Vec<String> = targets.iter().filter(|id| !page.frames.iter().any(|frame| frame.id() == id.as_str())).cloned().collect();
     let locked: Vec<String> = page.frames.iter().filter(|frame| targets.iter().any(|id| id == frame.id()) && crate::frame_edits_blocked(base, page, frame)).map(|frame| frame.id().to_string()).collect();
-    let movable: Vec<&crate::Frame> = page.frames.iter().filter(|frame| targets.iter().any(|id| id == frame.id()) && !crate::frame_edits_blocked(base, page, frame)).collect();
+    let movable = layout_frame_selection_targets(base, page_id, targets);
     if movable.is_empty() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} target(s) is an unlocked frame of page \"{page_id}\".", targets.len()), targets.to_vec());
     }
@@ -117,31 +116,10 @@ pub fn layout_frame_selection_diff(base: &LayoutSnapshot, page_id: &str, targets
     .absorb_messages(partial)
 }
 
-/// ↩️ The exact base-derived inverse of a frame-selection transform: per frame its forward `outcome` patches, the
-/// absolute setters restoring the BASE origin (`move-frame`), extent (`resize-frame`) and rotation (`rotate-frame`)
-/// the transform changed — never a negated offset, angle or factor that would accumulate float error.
-pub fn layout_frame_selection_inverse(base: &LayoutSnapshot, page_id: &str, outcome: protocol::MutationOutcome<LayoutDiff>) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    let (diff, _) = outcome.into_parts();
+/// 🎯️ The frames a frame-selection transform moves: the unlocked frames of `page_id` named by `targets`, in page order.
+pub fn layout_frame_selection_targets<'a>(base: &'a LayoutSnapshot, page_id: &str, targets: &[String]) -> Vec<&'a crate::Frame> {
     let Some(page) = base.pages.iter().find(|page| page.id == page_id) else { return Vec::new() };
-    let mut steps = Vec::new();
-    for entry in diff.pages.iter().flat_map(|delta| &delta.patched).flat_map(|entry| &entry.patch.frames_patched) {
-        let Some(frame) = page.frames.iter().find(|frame| frame.id() == entry.frame_id) else { continue };
-        let bounds = frame.bounds();
-        let (page_id, frame_id) = (page_id.to_string(), entry.frame_id.clone());
-        if entry.patch.x.is_some() || entry.patch.y.is_some() {
-            steps.push(LayoutMutation::MoveFrame(move_frame::MoveFrame { page_id: page_id.clone(), frame_id: frame_id.clone(), new_x: bounds.x, new_y: bounds.y }));
-        }
-        if entry.patch.width.is_some() || entry.patch.height.is_some() {
-            steps.push(LayoutMutation::ResizeFrame(resize_frame::ResizeFrame { page_id: page_id.clone(), frame_id: frame_id.clone(), new_width: bounds.width, new_height: bounds.height }));
-        }
-        if entry.patch.rotation.is_some() {
-            steps.push(LayoutMutation::RotateFrame(rotate_frame::RotateFrame { page_id, frame_id, new_rotation: bounds.rotation }));
-        }
-    }
-    steps
-
-    })())
+    page.frames.iter().filter(|frame| targets.iter().any(|id| id == frame.id()) && !crate::frame_edits_blocked(base, page, frame)).collect()
 }
 
 /// 🚨️ A frame-selection target set names at least one frame and no frame twice — the schema's `minItems`/`uniqueItems`.
@@ -197,48 +175,16 @@ mod tests;
 /// ▶️ One diff-and-apply step, keeping the diagnostic codes the outcome raised — a rejected or
 /// no-op kind is a RESULT this bridge reports, never an error it swallows.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn bridge_step(snapshot: &LayoutSnapshot, mutation: &LayoutMutation) -> Result<(LayoutSnapshot, Vec<String>), String> {
+pub(crate) fn bridge_step(snapshot: &LayoutSnapshot, mutation: &LayoutMutation) -> Result<(LayoutSnapshot, Vec<String>), String> {
     use protocol::{Mutation, MutationDiff};
     let outcome = <LayoutMutation as Mutation<LayoutSnapshot>>::diff(mutation, snapshot);
     let messages: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
-    match MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => Ok((next, messages)),
         Err(error) => Err(format!("{error:?}")),
     }
 }
 
-
-
-/// 🌉️ Applies one committed mutation payload to one committed before-document and answers
-/// `{"snapshot": …, "messages": [ … ]}`.
-///
-/// The bridge exists because the generated Rust test host links only `semio-repo-test-host` and,
-/// behind its `sut` feature, this crate — `serde_json`, `protocol` and `store` are private
-/// extern-crate aliases (`🦀️.rs`) and cannot be named from a case adapter. Same shape and same
-/// reason as `🗄️stdio`'s `decode_semio_mesh_mutation_json`/`apply_semio_mesh_mutation` pair.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_layout_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
-    let (snapshot, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
-    let (applied, messages) = bridge_step(&snapshot, &mutation)?;
-    Ok(bridge_render(&applied, &messages))
-}
-
-/// ↩️ Applies one committed mutation payload and then EVERY step of its own computed inverse,
-/// answering in the same shape — the metamorphic half of the evidence the `layout-mutation-semantics` no-oracle
-/// decision rests on. The inverse is computed against the PRE-mutation document, which is the only
-/// state that carries what a delete removed.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn undo_layout_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
-    use protocol::Mutation;
-    let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
-    let (mut current, mut messages) = bridge_step(&base, &mutation)?;
-    for undo in <LayoutMutation as Mutation<LayoutSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
-        let (next, raised) = bridge_step(&current, &undo)?;
-        current = next;
-        messages.extend(raised);
-    }
-    Ok(bridge_render(&current, &messages))
-}
 
 
 //#endregion 🌉️ExternalCodecBridge

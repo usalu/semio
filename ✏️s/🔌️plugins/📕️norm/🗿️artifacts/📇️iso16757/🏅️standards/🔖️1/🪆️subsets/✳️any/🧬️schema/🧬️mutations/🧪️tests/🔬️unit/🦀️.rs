@@ -61,7 +61,7 @@ async fn selection_class_and_constraints_round_trip() {
     assert_eq!(after.selection.class_id, "class-other");
 
     let constraint = part_1::SelectionConstraint { id: "constraint-default".into(), property_id: "prop-other".into(), operator: part_1::ConstraintOperator::NotEqual, value: crate::CatalogueValue::Text { value: "x".into() } };
-    let add = Iso16757Mutation::AddSelectionConstraint(add_selection_constraint::mutation::AddSelectionConstraint { constraint });
+    let add = Iso16757Mutation::AddSelectionConstraint(add_selection_constraint::mutation::AddSelectionConstraint { constraint, index: None });
     let after_add = round_trip(&base, &add);
     assert_eq!(after_add.selection.constraints.len(), base.selection.constraints.len() + 1);
 

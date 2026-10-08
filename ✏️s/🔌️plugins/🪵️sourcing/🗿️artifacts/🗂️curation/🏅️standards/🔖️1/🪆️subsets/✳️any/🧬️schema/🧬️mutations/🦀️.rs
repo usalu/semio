@@ -3,7 +3,7 @@
 use crate::{CurationDiff, CurationSnapshot};
 
 pub use super::change_curated_item_count::{change_curated_item_count, ChangeCuratedItemCount};
-pub use super::create_curated_item::{create_curated_item, CreateCuratedItem};
+pub use super::create_curated_item::{create_curated_item, create_curated_item_at, CreateCuratedItem};
 pub use super::delete_curated_item::{delete_curated_item, DeleteCuratedItem};
 pub use crate::schema::operations::*;
 

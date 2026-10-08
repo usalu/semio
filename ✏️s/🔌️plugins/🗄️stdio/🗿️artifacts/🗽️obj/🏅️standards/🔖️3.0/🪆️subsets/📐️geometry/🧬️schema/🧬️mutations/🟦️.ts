@@ -1,4 +1,3 @@
-import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 /** 🧬️ ObjMutation union — mirrors 🦀️.rs's `#[serde(tag = "mutation")]` enum. */
 type S = import('../📸️snapshot/🟦️.ts').ObjSnapshot;
 type Vertex = import('../📸️snapshot/🟦️.ts').ObjVertex;
@@ -10,8 +9,6 @@ type SmoothingRange = import('../📸️snapshot/🟦️.ts').ObjSmoothingRange;
 type UnknownStatement = import('../📸️snapshot/🟦️.ts').ObjUnknownStatement;
 
 export type ObjMutation =
-  | { mutation: 'setSnapshot'; snapshot: S }
-  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
   | { mutation: 'insertVertex'; index: number; vertex: Vertex }
   | { mutation: 'removeVertex'; index: number }
   | { mutation: 'setVertex'; index: number; vertex: Vertex }
@@ -24,9 +21,9 @@ export type ObjMutation =
   | { mutation: 'insertFace'; index: number; face: Face }
   | { mutation: 'removeFace'; index: number }
   | { mutation: 'setFace'; index: number; face: Face }
-  | { mutation: 'setGroup'; name: string; faces: bigint[] }
+  | { mutation: 'setGroup'; name: string; faces: bigint[]; index?: number }
   | { mutation: 'removeGroup'; name: string }
-  | { mutation: 'setObject'; name: string; faces: bigint[] }
+  | { mutation: 'setObject'; name: string; faces: bigint[]; index?: number }
   | { mutation: 'removeObject'; name: string }
   | { mutation: 'setMtllib'; mtllib?: string }
   | { mutation: 'setUsemtl'; usemtl: UsemtlRange[] }

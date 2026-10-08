@@ -8,11 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod mutations_codec {
 use super::*;
 use crate::standards::v_ap214::subsets::base::schema::mutations::*;
-use crate::schema::diff::{diff_set_snapshot, StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified};
-use crate::standards::v_ap214::subsets::base::io::binary::snapshot::{dec_step_snapshot_bin};
-use crate::standards::v_ap214::subsets::base::io::binary::snapshot::{enc_step_snapshot_bin};
-use crate::standards::v_ap214::subsets::base::io::text::snapshot::{dec_step_snapshot};
-use crate::standards::v_ap214::subsets::base::io::text::snapshot::{enc_step_snapshot};
+use crate::schema::diff::{StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified};
 use crate::standards::v_ap214::subsets::base::io::text::diff::{dec_value};
 use crate::standards::v_ap214::subsets::base::io::text::diff::{enc_value};
 use crate::standards::v_ap214::subsets::base::io::binary::diff::{dec_value_bin};
@@ -50,15 +46,13 @@ use protocol::{Mutation, MutationDiff, OpText};
 /// `value: StepValue` fail directly (`StepValue: DslField` unsatisfied) — `#[derive(dsl::DslOps)]`
 /// requires `DslField` on every variant field, transitively; `StepValue`/`StepEntity` are real
 /// data-carrying types with no `DslField` impl, same root cause as `SvgMutation`'s `InsertElement`/
-/// `SetSnapshot` blockers. Reuses `StepDiff`'s `pub(crate)` grammar primitives (`enc_value`/
-/// `enc_entity`/`enc_step_snapshot`/...) rather than duplicating them — same pattern `SvgMutation`
+/// blockers. Reuses `StepDiff`'s `pub(crate)` grammar primitives (`enc_value`/
+/// `enc_entity`/...) rather than duplicating them — same pattern `SvgMutation`
 /// uses against `SvgDiff`. Grammar: `keyword arg=value ...` (space-separated), one match arm per
 /// variant (no `DslVariants` scaffolding available since nothing here derives it).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_step_mutation(m: &StepMutation) -> String {
     match m {
-        StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_step_snapshot(snapshot)),
-        StepMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description }) => format!("set-file-description file-description={}", enc_file_description(file_description)),
         StepMutation::SetFileName(set_file_name::SetFileName { file_name }) => format!("set-file-name file-name={}", enc_file_name(file_name)),
         StepMutation::SetFileSchema(set_file_schema::SetFileSchema { file_schema }) => format!("set-file-schema file-schema={}", enc_file_schema(file_schema)),
@@ -79,8 +73,6 @@ pub(crate) fn parse_step_mutation(line: &str) -> Result<StepMutation, String> {
     let usize_arg = |k: &str| -> Result<usize, String> { parse_usize(arg(k)?) };
     let u64_arg = |k: &str| -> Result<u64, String> { parse_u64(arg(k)?) };
     match keyword {
-        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| StepMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
-        "set-snapshot" => Ok(StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_step_snapshot(arg("snapshot")?)? })),
         "set-file-description" => Ok(StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: dec_file_description(arg("file-description")?)? })),
         "set-file-name" => Ok(StepMutation::SetFileName(set_file_name::SetFileName { file_name: dec_file_name(arg("file-name")?)? })),
         "set-file-schema" => Ok(StepMutation::SetFileSchema(set_file_schema::SetFileSchema { file_schema: dec_file_schema(arg("file-schema")?)? })),

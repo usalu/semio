@@ -34,7 +34,7 @@ async fn applies_the_committed_diff_to_the_committed_after() {
     let outcome = produced();
     assert!(outcome.messages().is_empty(), "an in-range drag raises no diagnostic, got {:?}", outcome.messages());
     assert_eq!(outcome.diff(), &committed_diff(), "move-points/translates: produced diff differs from the committed 🔺️diff");
-    let applied = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(outcome.diff(), &snapshot(BEFORE)).expect("the drag applies");
+    let applied = protocol::apply_diff(outcome.diff(), &snapshot(BEFORE)).expect("the drag applies");
     assert_eq!(applied, snapshot(AFTER), "move-points/translates: applied state differs from the committed after-snapshot");
     let declared = semio_framework_pack_json::parse(OUTCOME, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("outcome decodes");
     assert_eq!(declared.get("status").and_then(semio_framework_pack_json::Value::as_str), Some("applied"));
@@ -50,10 +50,11 @@ async fn inverse_is_one_absolute_row_that_restores_before() {
     let mut state = snapshot(AFTER);
     for step in &inverse {
         let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(step, &state);
-        state = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(outcome.diff(), &state).expect("the inverse applies");
+        state = protocol::apply_diff(outcome.diff(), &state).expect("the inverse applies");
     }
     assert_eq!(state, base, "move-points/translates: the inverse did not restore the before-snapshot");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation()).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &base).await;
 }
 
 /// 🔣️ Every committed document is canonical, and its handles are the content addresses of its own state.

@@ -18,7 +18,6 @@ include!("../../../🧪️tests/🐕️wgpu-present-stall-watch/🦀️.rs");
 //   component and the `WindowLayoutNode` tree helpers in `#region ShellHelpers`.
 // - `interpreter`/widget rendering ~ React's `UiNode` component tree rendering.
 
-extern crate framework_surface_node_graph as framework_surface_tiled_map;
 extern crate infinite_canvas as infinite_world;
 extern crate semio_framework_os_kernel as dsl;
 #[cfg(not(target_arch = "wasm32"))]

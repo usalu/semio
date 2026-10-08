@@ -491,10 +491,10 @@ fn first_positioned_shape(snapshot: &PptxSnapshot) -> (crate::schema::mutations:
 
 #[semio_framework_async_macros::async_test]
 async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
-    use crate::schema::mutations::{set_shape_position, set_shape_text, set_snapshot};
+    use crate::schema::mutations::{set_shape_position, set_shape_text};
     use crate::{PptxDiff, PptxMutation};
     use protocol::{DiffAlgebra, DiffBinary,DiffCodec,DiffText, Mutation, MutationDiff, OpBinary, OpText};
-    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};
+    use semio_framework_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactComposition, io::ComposeSource};
 
     let snapshot = decode_pptx(&exact_pptx_bytes().await).expect("import exact fixture");
     assert_eq!(snapshot.presentation().expect("derived fixture presentation").slides.len(), 7);
@@ -553,7 +553,7 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
 
     let self_diff = PptxDiff::between(&snapshot, &snapshot);
     assert!(self_diff.is_empty());
-    assert_exact_export(&self_diff.apply(&snapshot).unwrap(), &exact_bytes).await;
+    assert_exact_export(&protocol::apply_diff(&self_diff, &snapshot).unwrap(), &exact_bytes).await;
 
     let (address, position) = first_positioned_shape(&snapshot);
     let mut missing = address.clone();
@@ -577,37 +577,33 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
     assert_eq!(changed, snapshot);
     assert_exact_export(&changed, &exact_bytes).await;
 
-    let mid = forward.diff().apply(&snapshot).unwrap();
+    let mid = protocol::apply_diff(forward.diff(), &snapshot).unwrap();
     let inverse = forward.diff().inverse(&snapshot);
     let mut absorbed = forward.diff().clone();
     absorbed.absorb(inverse.clone());
-    let restored = inverse.apply(&mid).unwrap();
+    let restored = protocol::apply_diff(&inverse, &mid).unwrap();
     assert_eq!(restored, snapshot);
-    assert_eq!(absorbed.apply(&snapshot).unwrap(), snapshot);
+    assert_eq!(protocol::apply_diff(&absorbed, &snapshot).unwrap(), snapshot);
     assert_exact_export(&restored, &exact_bytes).await;
-    assert_exact_export(&absorbed.apply(&snapshot).unwrap(), &exact_bytes).await;
+    assert_exact_export(&protocol::apply_diff(&absorbed, &snapshot).unwrap(), &exact_bytes).await;
 
     let mut without_xml_parts = snapshot.clone();
     without_xml_parts.xml_parts.clear();
     let xml_parts_diff = PptxDiff::between(&without_xml_parts, &snapshot);
     let printed_diff = xml_parts_diff.print_diff();
     let parsed_diff = PptxDiff::parse_diff(&printed_diff).expect("parse logical XML parts diff");
-    assert_exact_export(&parsed_diff.apply(&without_xml_parts).unwrap(), &exact_bytes).await;
+    assert_exact_export(&protocol::apply_diff(&parsed_diff, &without_xml_parts).unwrap(), &exact_bytes).await;
     let encoded_diff = xml_parts_diff.encode_diff().expect("encode logical XML parts diff");
     let decoded_diff = PptxDiff::decode_diff(&encoded_diff).expect("decode logical XML parts diff");
-    assert_exact_export(&decoded_diff.apply(&without_xml_parts).unwrap(), &exact_bytes).await;
+    assert_exact_export(&protocol::apply_diff(&decoded_diff, &without_xml_parts).unwrap(), &exact_bytes).await;
 
-    let set_snapshot = PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot.clone() });
-    let printed_op = set_snapshot.print_op();
-    let parsed_op = PptxMutation::parse_op(&printed_op).expect("parse exact set-snapshot");
-    let mut via_text_op = without_xml_parts.clone();
-    crate::schema::mutations::apply_pptx_mutation(&mut via_text_op, &parsed_op);
-    assert_exact_export(&via_text_op, &exact_bytes).await;
-    let encoded_op = set_snapshot.encode_op().expect("encode exact set-snapshot");
-    let decoded_op = PptxMutation::decode_op(&encoded_op).expect("decode exact set-snapshot");
-    let mut via_binary_op = without_xml_parts;
-    crate::schema::mutations::apply_pptx_mutation(&mut via_binary_op, &decoded_op);
-    assert_exact_export(&via_binary_op, &exact_bytes).await;
+    let part = &snapshot.xml_parts[0];
+    let replace = PptxMutation::ReplaceXmlNode(crate::schema::mutations::replace_xml_node::ReplaceXmlNode {
+        address: crate::schema::mutations::xml_address::pptx_xml_address(&snapshot, &part.path, Vec::new()).expect("root address"),
+        node: part.document.root.clone().expect("root"),
+    });
+    assert_eq!(PptxMutation::parse_op(&replace.print_op()).expect("parse replace-xml-node"), replace);
+    assert_eq!(PptxMutation::decode_op(&replace.encode_op().expect("encode replace-xml-node")).expect("decode replace-xml-node"), replace);
 }
 //#endregion 🔖️ExactSourceRoundtrip
 

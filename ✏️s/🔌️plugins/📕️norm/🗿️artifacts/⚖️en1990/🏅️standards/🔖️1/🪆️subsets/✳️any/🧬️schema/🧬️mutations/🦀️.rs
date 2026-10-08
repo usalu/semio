@@ -3,6 +3,10 @@
 use crate::diff::En1990Diff;
 use crate::En1990Snapshot;
 
+#[path = "🧭️edit-rules/🦀️.rs"]
+mod edit_rules;
+pub use edit_rules::EDIT_RULES;
+
 //#region 🔖️Leaves
 use super::change_annex;
 use super::change_project_id;

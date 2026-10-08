@@ -1,11 +1,4 @@
-# 🧬️ Din4108 diff schema — sparse scalar fields and ordered per-collection row edits.
-
-enum Din4108RowOp {
-  INSERT
-  REMOVE
-  REPLACE
-  PATCH
-}
+# 🧬️ Din4108 diff schema — sparse scalar fields plus keyed row deltas.
 
 type Din4108Diff {
   climateZone: String @state(class: ARTIFACT)
@@ -15,74 +8,25 @@ type Din4108Diff {
   hasMechanicalVentilation: Boolean @state(class: ARTIFACT)
   airtightnessN50: Float @state(class: ARTIFACT)
   bb2DetailsConform: Boolean @state(class: ARTIFACT)
-  zones: [Din4108ZoneEdit!]! @state(class: ARTIFACT)
-  elements: [Din4108ElementEdit!]! @state(class: ARTIFACT)
-  thermalBridges: [Din4108ThermalBridgeEdit!]! @state(class: ARTIFACT)
+  zones: Din4108ZoneDelta! @state(class: ARTIFACT)
+  elements: Din4108ElementDelta! @state(class: ARTIFACT)
+  thermalBridges: Din4108ThermalBridgeDelta! @state(class: ARTIFACT)
 }
 
-type Din4108ZoneEdit {
-  op: Din4108RowOp!
-  index: Int!
-  id: String!
-  value: Din4108ThermalZone
-  patch: Din4108ZonePatch
+type Din4108WindowDelta {
+  removed: [String!]!
+  added: [Din4108WindowAddition!]!
+  modified: [Din4108WindowModification!]!
 }
 
-type Din4108ElementEdit {
-  op: Din4108RowOp!
-  index: Int!
-  id: String!
-  value: Din4108EnvelopeElement
-  patch: Din4108ElementPatch
+type Din4108WindowAddition {
+  after: String
+  row: Din4108ZoneWindow!
 }
 
-type Din4108ThermalBridgeEdit {
-  op: Din4108RowOp!
-  index: Int!
-  id: String!
-  value: Din4108ThermalBridge
-  patch: Din4108ThermalBridgePatch
-}
-
-type Din4108WindowEdit {
-  op: Din4108RowOp!
-  index: Int!
-  id: String!
-  value: Din4108ZoneWindow
-  patch: Din4108WindowPatch
-}
-
-type Din4108LayerEdit {
-  op: Din4108RowOp!
-  index: Int!
-  id: String!
-  value: Din4108LayerDocument
-  patch: Din4108LayerPatch
-}
-
-type Din4108ZonePatch {
-  floorAreaM2: Float
-  heaviness: String
-  nightVentilation: String
-  windows: [Din4108WindowEdit!]!
-}
-
-type Din4108ElementPatch {
-  kind: String
-  orientationDeg: Float
-  inclinationDeg: Float
-  adjacent: String
-  areaM2: Float
-  deltaUG: Float
-  deltaUF: Float
-  deltaUR: Float
-  layers: [Din4108LayerEdit!]!
-}
-
-type Din4108ThermalBridgePatch {
-  psi: Float
-  lengthM: Float
-  bb2Type: String
+type Din4108WindowModification {
+  key: String!
+  patch: Din4108WindowPatch!
 }
 
 type Din4108WindowPatch {
@@ -93,11 +37,106 @@ type Din4108WindowPatch {
   shadingFc: Float
 }
 
+type Din4108LayerDelta {
+  removed: [String!]!
+  added: [Din4108LayerAddition!]!
+  modified: [Din4108LayerModification!]!
+}
+
+type Din4108LayerAddition {
+  after: String
+  row: Din4108LayerDocument!
+}
+
+type Din4108LayerModification {
+  key: String!
+  patch: Din4108LayerPatch!
+}
+
 type Din4108LayerPatch {
   materialId: String
   thicknessM: Float
   lambda: Float
   mu: Float
+  density: Float
   applicationType: String
   compressiveClass: String
+  waterClass: String
+  tensileClass: String
+  acousticClass: String
+  segments: String
+}
+
+type Din4108ZoneDelta {
+  removed: [String!]!
+  added: [Din4108ZoneAddition!]!
+  modified: [Din4108ZoneModification!]!
+}
+
+type Din4108ZoneAddition {
+  after: String
+  row: Din4108ThermalZone!
+}
+
+type Din4108ZoneModification {
+  key: String!
+  patch: Din4108ZonePatch!
+}
+
+type Din4108ZonePatch {
+  floorAreaM2: Float
+  heaviness: String
+  nightVentilation: String
+  windows: Din4108WindowDelta!
+}
+
+type Din4108ElementDelta {
+  removed: [String!]!
+  added: [Din4108ElementAddition!]!
+  modified: [Din4108ElementModification!]!
+}
+
+type Din4108ElementAddition {
+  after: String
+  row: Din4108EnvelopeElement!
+}
+
+type Din4108ElementModification {
+  key: String!
+  patch: Din4108ElementPatch!
+}
+
+type Din4108ElementPatch {
+  kind: String
+  zoneId: String
+  orientationDeg: Float
+  inclinationDeg: Float
+  adjacent: String
+  areaM2: Float
+  deltaUG: Float
+  deltaUF: Float
+  deltaUR: Float
+  layers: Din4108LayerDelta!
+}
+
+type Din4108ThermalBridgeDelta {
+  removed: [String!]!
+  added: [Din4108ThermalBridgeAddition!]!
+  modified: [Din4108ThermalBridgeModification!]!
+}
+
+type Din4108ThermalBridgeAddition {
+  after: String
+  row: Din4108ThermalBridge!
+}
+
+type Din4108ThermalBridgeModification {
+  key: String!
+  patch: Din4108ThermalBridgePatch!
+}
+
+type Din4108ThermalBridgePatch {
+  psi: Float
+  lengthM: Float
+  bb2Type: String
 }

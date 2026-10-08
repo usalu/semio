@@ -21,12 +21,14 @@ semio_framework_value::artifact_retire_struct!(FlowWindowTransient { generation_
 semio_framework_plugin::transient_root! {
     state: FlowWindowTransient,
     mutation: FlowWindowTransientMutation,
+    diff: FlowWindowTransientDiff,
     owner: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🫧️transient",
     kind: "set-window-transient",
     display_name: "Set Flow Window Transient",
     payload_schema: "flow.windowtransient",
     envelope: "s.flow.flow.windowtransient",
     extension: "flowwindowtransient",
+    fields: { generation_json: String, duplicate_widget_progress_json: String },
 }
 
 semio_framework_plugin::window_transient_owners! {

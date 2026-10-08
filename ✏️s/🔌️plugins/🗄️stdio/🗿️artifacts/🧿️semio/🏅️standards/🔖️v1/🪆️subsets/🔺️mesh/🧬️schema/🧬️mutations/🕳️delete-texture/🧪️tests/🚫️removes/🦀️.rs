@@ -33,7 +33,7 @@ fn mutation() -> SemioMeshMutation {
 async fn removes_the_leading_texture() {
     let base = before();
     assert_eq!(base.textures.len(), 2, "the fixture needs a trailing texture for the order-restoring inverse to matter");
-    let produced = mutation().diff(&base).diff().apply(&base).expect("delete-texture applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-texture applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-texture/removes-the-leading-texture-and-keeps-the-trailing-one: applied state differs from the committed after-snapshot");
     assert!(!produced.textures.iter().any(|texture| texture.id == "tex-a"), "the named texture must be gone");
     assert_eq!(produced.textures, vec![base.textures[1].clone()], "the trailing texture slides down into index 0");
@@ -45,13 +45,14 @@ async fn removes_the_leading_texture() {
 async fn the_undo_restores_original_position_without_mutating_referenced_siblings() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1);
-    let SemioMeshMutation::PatchSnapshot(recreate) = &undo[0] else { panic!("undo must insert the deleted texture at its original position") };
-    assert_eq!(recreate.patch.path(), "/textures/0");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-texture applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("each undo step applies to the running state");
+    let SemioMeshMutation::CreateTexture(recreate) = &undo[0] else { panic!("undo must insert the deleted texture at its original position") };
+    assert_eq!((recreate.texture.id.as_str(), recreate.at), ("tex-a", Some(0)));
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-texture applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
     }
     assert_eq!(current, base, "delete-texture/removes-the-leading-texture-and-keeps-the-trailing-one: the undo did not restore the before-snapshot, order included");
 }
@@ -107,7 +108,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-texture diff decodes");
-    let produced = decoded.apply(&before()).expect("committed delete-texture diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-texture diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-texture/removes-the-leading-texture-and-keeps-the-trailing-one: committed diff did not carry before to after");
 }
 
@@ -118,8 +119,8 @@ async fn texture_references_refuse_deletion_and_keep_sibling_references_during_i
     let targeted = SemioMeshMutation::DeleteTexture(crate::standards::v1::subsets::mesh::schema::mutations::delete_texture::DeleteTexture { id: base.textures[1].id.clone() });
     let refused = targeted.diff(&base);
     assert!(!refused.messages().is_empty());
-    assert_eq!(refused.diff().apply(&base).unwrap(), base);
-    let mut current = mutation().diff(&base).diff().apply(&base).unwrap();
-    for step in mutation().inverse(&base).expect("valid retained mutation inverse fixture") { let outcome = step.diff(&current); assert!(outcome.messages().is_empty()); current = outcome.diff().apply(&current).unwrap(); }
+    assert_eq!(protocol::apply_diff(refused.diff(), &base).unwrap(), base);
+    let mut current = protocol::apply_diff(mutation().diff(&base).diff(), &base).unwrap();
+    for step in mutation().inverse(&base).expect("valid retained mutation inverse fixture") { let outcome = step.diff(&current); assert!(outcome.messages().is_empty()); current = protocol::apply_diff(outcome.diff(), &current).unwrap(); }
     assert_eq!(current, base);
 }

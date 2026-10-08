@@ -7,4 +7,5 @@ import "../../🔺️diff/🛰️.proto";
 // 🌈️ Direct set-color-space protobuf payload.
 message SetColorSpaceMutation {
   PdfNamedColorSpace color_space = 1;
+  optional uint64 index = 2;
 }

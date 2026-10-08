@@ -257,11 +257,16 @@ pub fn equation_children(graph: &EquationGraph, geometry: &EquationGeometry) -> 
     (equation_derived_child(notation_prefix, notation_subset, &notation), equation_derived_child(results_prefix, results_subset, &results), equation_derived_child(computed_prefix, computed_subset, &computed))
 }
 
-/// 🔺️ The diff a parent leaf yields for its next state: the new `graph`/`geometry` and the re-minted derived handles (a handle
-/// whose derived content did not change keeps its address).
-pub fn equation_state_diff(graph: EquationGraph, geometry: EquationGeometry) -> EquationDiff {
-    let (notation, results, computed) = equation_children(&graph, &geometry);
-    EquationDiff { graph: Some(graph), geometry: Some(geometry), notation: Some(notation), results: Some(results), computed: Some(computed), ..Default::default() }
+/// 🔺️ The diff a parent leaf yields for its next state: the leaf's sparse graph/point slots plus the derived handles re-minted from
+/// the state they leave behind `base` (a handle whose derived content did not change keeps its address).
+pub fn equation_state_diff(diff: EquationDiff, base: &EquationSnapshot) -> EquationDiff {
+    match diff.state_after(base) {
+        Ok((graph, geometry)) => {
+            let (notation, results, computed) = equation_children(&graph, &geometry);
+            EquationDiff { notation: Some(notation), results: Some(results), computed: Some(computed), ..diff }
+        }
+        Err(_) => diff,
+    }
 }
 
 /// 🌱️ `ArtifactApp::genesis_child_pack`: the derived content of the composed member `slot` a document names, minted from the

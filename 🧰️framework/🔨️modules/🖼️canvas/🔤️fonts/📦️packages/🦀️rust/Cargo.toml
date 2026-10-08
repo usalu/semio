@@ -1,0 +1,21 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-canvas-font-assets"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Packed font assets for Canvas hosts"
+
+[package.metadata.semio]
+role = "tool"
+id = "font-assets"
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "pack-typst-font-assets"
+path = "../../🦀️.rs"
+
+[dependencies]
+typst-assets = { version = "=0.14.2", features = ["fonts"] }

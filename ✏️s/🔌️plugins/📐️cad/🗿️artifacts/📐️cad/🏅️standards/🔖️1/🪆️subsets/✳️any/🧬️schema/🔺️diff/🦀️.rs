@@ -1,6 +1,6 @@
 //! 🧬️ Cad diff schema — sparse field delta over the artifact.
 
-use crate::mutations::{CadNodePatch, CadReferencePatch};
+use crate::mutations::{CadNodePatch, CadOpacitySet, CadOrientationSet, CadReferencePatch, CadScaleSet};
 use crate::{CadBrepChild, CadDrawingChild, CadModelChild, CadNode, CadReference};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -17,13 +17,13 @@ pub struct CadDiff {
     #[state(artifact)]
     pub id: Option<String>,
     #[state(artifact)]
-    pub shape_model: Option<Option<CadModelChild>>,
+    pub shape_model: Option<CadModelSlot>,
     #[state(artifact)]
-    pub building_model: Option<Option<CadModelChild>>,
+    pub building_model: Option<CadModelSlot>,
     #[state(artifact)]
-    pub energy_model: Option<Option<CadModelChild>>,
+    pub energy_model: Option<CadModelSlot>,
     #[state(artifact)]
-    pub structure_classic_model: Option<Option<CadModelChild>>,
+    pub structure_classic_model: Option<CadModelSlot>,
     #[state(artifact)]
     pub drawings: Option<CadDrawingsDelta>,
     #[state(artifact)]
@@ -41,6 +41,14 @@ pub struct CadDiff {
 #[value(rename_all = "camelCase", default)]
 pub struct CadStringList {
     pub values: Vec<String>,
+}
+
+/// 🧱️ Explicit replacement of one fixed model slot: preserves an untouched slot (absent) apart from a cleared one (`child: None`),
+/// which a bare `Option<Option<_>>` would collapse on the wire.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(rename_all = "camelCase", default)]
+pub struct CadModelSlot {
+    pub child: Option<CadModelChild>,
 }
 
 /// 🧩️ Identified-collection delta for the `drawings` composed CHILD COLLECTION: removed ids, appended children and, only when the
@@ -317,11 +325,11 @@ fn patch_reference(reference: &mut CadReference, patch: &CadReferencePatch) {
     if let Some(origin) = patch.origin {
         reference.origin = origin;
     }
-    if let Some(orientation) = patch.orientation {
-        reference.orientation = orientation;
+    if let Some(orientation) = &patch.orientation {
+        reference.orientation = orientation.value;
     }
-    if let Some(scale) = patch.scale {
-        reference.scale = scale;
+    if let Some(scale) = &patch.scale {
+        reference.scale = scale.value;
     }
     if let Some(width_world) = patch.width_world {
         reference.width_world = width_world;
@@ -332,8 +340,8 @@ fn patch_reference(reference: &mut CadReference, patch: &CadReferencePatch) {
     if let Some(locked) = patch.locked {
         reference.locked = locked;
     }
-    if let Some(opacity) = patch.opacity {
-        reference.opacity = opacity;
+    if let Some(opacity) = &patch.opacity {
+        reference.opacity = opacity.value;
     }
 }
 
@@ -361,12 +369,12 @@ fn invert_reference_patch(patch: &CadReferencePatch, base: &CadReference) -> Cad
         source_url: patch.source_url.as_ref().map(|_| base.source_url.clone()),
         media_kind: patch.media_kind.as_ref().map(|_| base.media_kind.clone()),
         origin: patch.origin.map(|_| base.origin),
-        orientation: patch.orientation.map(|_| base.orientation),
-        scale: patch.scale.map(|_| base.scale),
+        orientation: patch.orientation.as_ref().map(|_| CadOrientationSet { value: base.orientation }),
+        scale: patch.scale.as_ref().map(|_| CadScaleSet { value: base.scale }),
         width_world: patch.width_world.map(|_| base.width_world),
         hidden: patch.hidden.map(|_| base.hidden),
         locked: patch.locked.map(|_| base.locked),
-        opacity: patch.opacity.map(|_| base.opacity),
+        opacity: patch.opacity.as_ref().map(|_| CadOpacitySet { value: base.opacity }),
     }
 }
 
@@ -375,12 +383,12 @@ fn compare_references(base: &CadReference, other: &CadReference) -> Option<Optio
         source_url: (base.source_url != other.source_url).then(|| other.source_url.clone()),
         media_kind: (base.media_kind != other.media_kind).then(|| other.media_kind.clone()),
         origin: (base.origin != other.origin).then_some(other.origin),
-        orientation: (base.orientation != other.orientation).then_some(other.orientation),
-        scale: (base.scale != other.scale).then_some(other.scale),
+        orientation: (base.orientation != other.orientation).then_some(CadOrientationSet { value: other.orientation }),
+        scale: (base.scale != other.scale).then_some(CadScaleSet { value: other.scale }),
         width_world: (base.width_world != other.width_world).then_some(other.width_world),
         hidden: (base.hidden != other.hidden).then_some(other.hidden),
         locked: (base.locked != other.locked).then_some(other.locked),
-        opacity: (base.opacity != other.opacity).then_some(other.opacity),
+        opacity: (base.opacity != other.opacity).then_some(CadOpacitySet { value: other.opacity }),
     };
     Some((patch != CadReferencePatch::default()).then_some(patch))
 }
@@ -448,17 +456,17 @@ impl MutationDiff<CadSnapshot> for CadDiff {
         if let Some(id) = &self.id {
             next.id = id.clone();
         }
-        if let Some(value) = &self.shape_model {
-            next.shape_model = value.clone();
+        if let Some(slot) = &self.shape_model {
+            next.shape_model = slot.child.clone();
         }
-        if let Some(value) = &self.building_model {
-            next.building_model = value.clone();
+        if let Some(slot) = &self.building_model {
+            next.building_model = slot.child.clone();
         }
-        if let Some(value) = &self.energy_model {
-            next.energy_model = value.clone();
+        if let Some(slot) = &self.energy_model {
+            next.energy_model = slot.child.clone();
         }
-        if let Some(value) = &self.structure_classic_model {
-            next.structure_classic_model = value.clone();
+        if let Some(slot) = &self.structure_classic_model {
+            next.structure_classic_model = slot.child.clone();
         }
         if let Some(delta) = &self.drawings {
             next.drawings = delta.rows().apply(&next.drawings, |_, _| {}).map_err(|error| error.under(["drawings"]))?;
@@ -562,10 +570,10 @@ impl protocol::DiffAlgebra<CadSnapshot> for CadDiff {
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
             id: self.id.as_ref().map(|_| base.id.clone()),
-            shape_model: self.shape_model.as_ref().map(|_| base.shape_model.clone()),
-            building_model: self.building_model.as_ref().map(|_| base.building_model.clone()),
-            energy_model: self.energy_model.as_ref().map(|_| base.energy_model.clone()),
-            structure_classic_model: self.structure_classic_model.as_ref().map(|_| base.structure_classic_model.clone()),
+            shape_model: self.shape_model.as_ref().map(|_| CadModelSlot { child: base.shape_model.clone() }),
+            building_model: self.building_model.as_ref().map(|_| CadModelSlot { child: base.building_model.clone() }),
+            energy_model: self.energy_model.as_ref().map(|_| CadModelSlot { child: base.energy_model.clone() }),
+            structure_classic_model: self.structure_classic_model.as_ref().map(|_| CadModelSlot { child: base.structure_classic_model.clone() }),
             drawings: self.drawings.as_ref().map(|delta| CadDrawingsDelta::from_rows(delta.rows().inverse(&base.drawings, |_, _| ()))),
             breps: self.breps.as_ref().map(|delta| CadBrepsDelta::from_rows(delta.rows().inverse(&base.breps, |_, _| ()))),
             references_by_model_definition_id: self.references_by_model_definition_id.as_ref().map(|models| {
@@ -600,10 +608,10 @@ impl protocol::DiffAlgebra<CadSnapshot> for CadDiff {
         Self {
             schema: (base.schema != other.schema).then(|| other.schema.clone()),
             id: (base.id != other.id).then(|| other.id.clone()),
-            shape_model: (base.shape_model != other.shape_model).then(|| other.shape_model.clone()),
-            building_model: (base.building_model != other.building_model).then(|| other.building_model.clone()),
-            energy_model: (base.energy_model != other.energy_model).then(|| other.energy_model.clone()),
-            structure_classic_model: (base.structure_classic_model != other.structure_classic_model).then(|| other.structure_classic_model.clone()),
+            shape_model: (base.shape_model != other.shape_model).then(|| CadModelSlot { child: other.shape_model.clone() }),
+            building_model: (base.building_model != other.building_model).then(|| CadModelSlot { child: other.building_model.clone() }),
+            energy_model: (base.energy_model != other.energy_model).then(|| CadModelSlot { child: other.energy_model.clone() }),
+            structure_classic_model: (base.structure_classic_model != other.structure_classic_model).then(|| CadModelSlot { child: other.structure_classic_model.clone() }),
             drawings: (!drawings.is_empty()).then_some(drawings),
             breps: (!breps.is_empty()).then_some(breps),
             references_by_model_definition_id: (!models.is_empty()).then_some(models),

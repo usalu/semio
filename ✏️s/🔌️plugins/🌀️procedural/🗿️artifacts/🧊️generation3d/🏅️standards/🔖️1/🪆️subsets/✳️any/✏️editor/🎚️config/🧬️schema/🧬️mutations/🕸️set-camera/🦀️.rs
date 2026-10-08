@@ -14,13 +14,11 @@ pub struct SetCamera {
 impl protocol::MutationKind<Generation3dConfig, Generation3dConfigMutation> for SetCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "camera", kind: "set-camera", record: "SetCamera" };
 
-    fn diff(&self, base: &Generation3dConfig) -> protocol::MutationOutcome<Generation3dConfig> {
+    fn diff(&self, base: &Generation3dConfig) -> protocol::MutationOutcome<Generation3dConfigPatch> {
         if base.camera == self.camera {
-            return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "Flow graph camera is already in the requested state.");
+            return protocol::MutationOutcome::new(Generation3dConfigPatch::default()).warning("mutation.no-op", "Flow graph camera is already in the requested state.");
         }
-        let mut next = base.clone();
-        next.camera = self.camera.clone();
-        protocol::MutationOutcome::new(next)
+        protocol::MutationOutcome::new(Generation3dConfigPatch { camera: Some(self.camera.clone()), ..Default::default() })
     }
 
     fn inverse(&self, base: &Generation3dConfig) -> Result<Vec<Generation3dConfigMutation>, semio_framework_value::ValueError> {

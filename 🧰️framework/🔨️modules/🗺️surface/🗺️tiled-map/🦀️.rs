@@ -16,7 +16,7 @@
 //! `SetVectorStyle`, `ToggleLayerVisibility`, `SetLayerStrokeScale`, `set_lod_mode`). No new
 //! `🧬️mutations` vocabulary is authored here — the owners already have it.
 
-pub use infinite_canvas::{self as canvas, *};
+pub use canvas::{self, *};
 pub use std::sync::Arc;
 
 use canvas::lod::{Lod, LodScale};
@@ -3951,13 +3951,13 @@ impl MapSession {
         let ph = ((lh as f64 * dpr).round() as u32).max(1);
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let (render_ctx, renderer, surface) = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+            let admission = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
             let mut g = inner.borrow_mut();
             if g.gpu.gpu_ready() {
                 return Err(JsValue::from_str("canvas surface already attached"));
             }
             g.set_logical_size(lw, lh, dpr, pw, ph);
-            g.gpu.finish_attach(canvas, render_ctx, renderer, surface);
+            g.gpu.finish_attach(admission);
             Ok(JsValue::UNDEFINED)
         })
     }

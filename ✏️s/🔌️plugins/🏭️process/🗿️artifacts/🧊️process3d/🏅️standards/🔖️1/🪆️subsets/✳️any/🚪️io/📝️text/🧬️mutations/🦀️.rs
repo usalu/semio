@@ -222,12 +222,18 @@ pub fn process3d_mutation_report_json(base_json: &str, mutation_json: &str, afte
     let expected = decode_snapshot(after_json)?;
     let mutation: Process3dMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mut applied = base.clone();
-    let forward = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
+    let forward = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(&mutation, &base);
+    if let Ok(next) = protocol::apply_diff(forward.diff(), &applied) {
+        applied = next;
+    }
     let inverse = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     for step in &inverse {
-        let outcome = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
+        let outcome = <Process3dMutation as protocol::Mutation<Process3dSnapshot>>::diff(step, &undone);
+        if let Ok(next) = protocol::apply_diff(outcome.diff(), &undone) {
+            undone = next;
+        }
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
     let report = semio_framework_pack_json::object([

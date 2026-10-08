@@ -46,7 +46,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "structural",
-      "notes": "InsertPoint{index:1,point:<the real Puzzle5D pattern-sphere third point>} inserts a real point (identical to the one this subset's own differential feature uses for set-snapshot) between the two base points."
+      "notes": "InsertPoint{index:1,point:<the real Puzzle5D pattern-sphere third point>} inserts a real point (identical to the one this subset's own differential feature uses) between the two base points."
     },
     {
       "id": "remove-point-applied",

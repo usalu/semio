@@ -4,6 +4,9 @@
 //! `✳️ccN`'s `check_ccN_conformance` calls into these primitives rather than re-deriving the
 //! ladder or the shared base scans independently — one classification, six consumers.
 
+use crate::schema::diff::{StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified};
+use crate::schema::snapshot::{StepEntity, StepFileSchema, StepValue};
+use crate::StepSnapshot;
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};
 
 //#region 🔖️Ladder
@@ -128,11 +131,11 @@ pub fn ensure_file_schema(doc: &mut Part21Document, schema_name: &str) {
 //#endregion 🔖️BaseChecks
 
 //#region 🔖️ConformanceEdits
-/// 🪜️ The representation type that SITS EXACTLY on a class's ceiling rung — the most capable
+/// 🪜️ The representation type that SITS EXACTLY on a class's ceiling rung -- the most capable
 /// geometry an ISO 10303-214 conformance class admits, and therefore the type a demotion rewrites an
 /// over-rung instance INTO. `None` for a ceiling of 1: CC1 (config data only) admits no
 /// `*_SHAPE_REPRESENTATION` at all, so it has no ceiling type and its only conformance repair is
-/// deletion — which is why `1️⃣cc1`'s vocabulary carries `remove-shape-representation` where
+/// deletion -- which is why `1️⃣cc1`'s vocabulary carries `remove-shape-representation` where
 /// `2️⃣cc2`..`5️⃣cc5` carry `demote-shape-representation`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn ceiling_type_of(max_rung: u8) -> Option<&'static str> {
@@ -148,7 +151,7 @@ pub fn ceiling_type_of(max_rung: u8) -> Option<&'static str> {
 
 /// 🧱️ One `*_SHAPE_REPRESENTATION` instance as a conformance-class edit addresses it: which rung of
 /// the ladder it sits on (through its type name) and the three arguments ISO 10303-42's
-/// `representation` supertype gives it — `name`, `items` and `context_of_items`. Nothing more is
+/// `representation` supertype gives it -- `name`, `items` and `context_of_items`. Nothing more is
 /// modelled, because nothing more is what a CONFORMANCE CLASS is about: the class restricts which
 /// representation types may appear, not what geometry they carry.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -196,201 +199,262 @@ pub fn file_schema_names(doc: &Part21Document) -> Vec<String> {
 pub fn set_file_schema_names(doc: &mut Part21Document, names: &[String]) {
     doc.header.file_schema = vec![Part21Value::List(names.iter().map(|name| Part21Value::Str(name.clone())).collect())];
 }
+//#endregion 🔖️ConformanceEdits
+
+//#region 🔖️EntityDiffs
+/// 🧬️ Every entity type name `entity` carries: its leading name and, for a complex instance, each constituent.
+fn type_names(entity: &StepEntity) -> impl Iterator<Item = &str> {
+    std::iter::once(entity.name.as_str()).chain(entity.complex.iter().map(|part| part.name.as_str()))
+}
+
+/// 🔍️ Does `entity` carry any of the (case-insensitive) type names in `names`?
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn is_of_any(entity: &StepEntity, names: &[&str]) -> bool {
+    type_names(entity).any(|have| names.iter().any(|want| have.eq_ignore_ascii_case(want)))
+}
+
+/// 🪜️ Is `entity` a `*_SHAPE_REPRESENTATION` on the ladder?
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn is_shape_representation(entity: &StepEntity) -> bool {
+    type_names(entity).any(|name| ladder_rung_of(name).is_some())
+}
+
+/// 🏭️ Does `entity` sit on one of the three product identity chain rungs?
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn is_chain_rung(entity: &StepEntity) -> bool {
+    chain_groups().iter().any(|group| is_of_any(entity, group))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn chain_groups() -> [&'static [&'static str]; 3] {
+    [PRODUCT_TYPES, PRODUCT_DEFINITION_FORMATION_TYPES, PRODUCT_DEFINITION_TYPES]
+}
 
 /// 🔎️ The ladder-relevant instance `id` carries, read back as a [`ShapeRepresentationRow`], or
 /// `None` when `id` is absent or is not a `*_SHAPE_REPRESENTATION` at all.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn shape_representation_row(doc: &Part21Document, id: u64) -> Option<ShapeRepresentationRow> {
-    let instance = doc.instance(id)?;
-    let (type_name, args) = instance.entities.iter().find(|(name, _)| ladder_rung_of(name).is_some())?;
+pub fn shape_representation_row(base: &StepSnapshot, id: u64) -> Option<ShapeRepresentationRow> {
+    let entity = base.entities.iter().find(|entity| entity.id == id)?;
+    let (type_name, args) = if ladder_rung_of(&entity.name).is_some() {
+        (entity.name.as_str(), entity.args.as_slice())
+    } else {
+        entity.complex.iter().find(|part| ladder_rung_of(&part.name).is_some()).map(|part| (part.name.as_str(), part.args.as_slice()))?
+    };
     Some(ShapeRepresentationRow {
-        type_name: type_name.clone(),
-        name: args.first().and_then(Part21Value::as_str).unwrap_or_default().to_string(),
-        items: args.get(1).and_then(Part21Value::as_list).map(|items| items.iter().filter_map(Part21Value::as_ref_id).collect()).unwrap_or_default(),
-        context: args.get(2).and_then(Part21Value::as_ref_id),
+        type_name: type_name.to_string(),
+        name: match args.first() {
+            Some(StepValue::String(text)) => text.clone(),
+            _ => String::new(),
+        },
+        items: match args.get(1) {
+            Some(StepValue::Aggregate(items)) => items.iter().filter_map(|item| if let StepValue::Reference(id) = item { Some(*id) } else { None }).collect(),
+            _ => Vec::new(),
+        },
+        context: match args.get(2) {
+            Some(StepValue::Reference(id)) => Some(*id),
+            _ => None,
+        },
     })
 }
 
-/// ✍️ Writes `row` at `id`, replacing whatever was there. The class ceiling is NOT checked here —
-/// the guard belongs to each `✳️ccN` vocabulary, which is the thing that knows its own rung and owes
-/// the caller a message naming its own class.
+/// 🧱️ The simple entity `row` authors at `id`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn upsert_shape_representation(doc: &mut Part21Document, id: u64, row: &ShapeRepresentationRow) {
-    let args = vec![
-        Part21Value::Str(row.name.clone()),
-        Part21Value::List(row.items.iter().map(|item| Part21Value::Ref(*item)).collect()),
-        match row.context {
-            Some(context) => Part21Value::Ref(context),
-            None => Part21Value::Unset,
-        },
-    ];
-    let instance = Part21Instance { id, entities: vec![(row.type_name.to_ascii_uppercase(), args)] };
-    match doc.instances.iter().position(|existing| existing.id == id) {
-        Some(at) => doc.instances[at] = instance,
-        None => doc.instances.push(instance),
+pub fn representation_entity(id: u64, row: &ShapeRepresentationRow) -> StepEntity {
+    StepEntity {
+        id,
+        name: row.type_name.to_ascii_uppercase(),
+        args: vec![StepValue::String(row.name.clone()), StepValue::Aggregate(row.items.iter().map(|item| StepValue::Reference(*item)).collect()), row.context.map_or(StepValue::Unset, StepValue::Reference)],
+        complex: Vec::new(),
     }
 }
 
-/// 🗑️ Deletes the instance at `id`, refusing anything that is not a `*_SHAPE_REPRESENTATION` — a
-/// conformance repair must never delete a real geometry or product record because a scenario named
-/// the wrong id.
+/// 🏭️ The product identity chain `base` carries (the first instance of each rung), or `None` when any rung is missing -- the exact
+/// condition [`has_product_definition_chain`] reports on.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn remove_shape_representation(doc: &mut Part21Document, id: u64) -> Result<(), String> {
-    match doc.instances.iter().position(|instance| instance.id == id && instance.entities.iter().any(|(name, _)| ladder_rung_of(name).is_some())) {
-        Some(at) => {
-            doc.instances.remove(at);
-            Ok(())
-        }
-        None => Err(format!("#{id} is not a *_SHAPE_REPRESENTATION instance in this document -- a ladder edit addresses the ladder, never an arbitrary entity")),
-    }
-}
-
-/// ⬇️ Rewrites the representation at `id` to `ceiling`, keeping its `name`, `items` and
-/// `context_of_items` exactly — the minimal edit that brings an over-rung instance INTO a class
-/// without inventing or discarding geometry. Returns the type name it replaced, which is what the
-/// inverse needs.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn demote_shape_representation(doc: &mut Part21Document, id: u64, ceiling: &str) -> Result<String, String> {
-    let row = shape_representation_row(doc, id).ok_or_else(|| format!("#{id} is not a *_SHAPE_REPRESENTATION instance in this document"))?;
-    let previous = row.type_name.clone();
-    upsert_shape_representation(doc, id, &ShapeRepresentationRow { type_name: ceiling.to_string(), ..row });
-    Ok(previous)
-}
-
-/// 🔎️ The product identity chain the document carries, or `None` when any of its three rungs is
-/// missing — the exact condition [`has_product_definition_chain`] reports on.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn product_identity(doc: &Part21Document) -> Option<ProductIdentity> {
-    let text = |instance: &Part21Instance| instance.entities.first().and_then(|(_, args)| args.first()).and_then(Part21Value::as_str).unwrap_or_default().to_string();
-    let product = instance_of_any(doc, PRODUCT_TYPES)?;
-    let formation = instance_of_any(doc, PRODUCT_DEFINITION_FORMATION_TYPES)?;
-    let definition = instance_of_any(doc, PRODUCT_DEFINITION_TYPES)?;
+pub fn product_identity(base: &StepSnapshot) -> Option<ProductIdentity> {
+    let text = |entity: &StepEntity| match entity.args.first() {
+        Some(StepValue::String(text)) => text.clone(),
+        _ => String::new(),
+    };
+    let find = |names: &[&str]| base.entities.iter().find(|entity| is_of_any(entity, names));
+    let (product, formation, definition) = (find(PRODUCT_TYPES)?, find(PRODUCT_DEFINITION_FORMATION_TYPES)?, find(PRODUCT_DEFINITION_TYPES)?);
     Some(ProductIdentity { product: product.id, product_name: text(product), formation: formation.id, formation_id: text(formation), definition: definition.id, definition_id: text(definition) })
 }
 
-/// ✍️ Writes the whole product identity chain, or — with `None` — removes every instance of all
-/// three rungs, which is the only edit that deterministically turns the soft
-/// `product-definition-chain` diagnostic ON. Writing keeps each rung's supertype name, because a
-/// chain this function AUTHORS has no source to specify and `product_definition_formation` is the
-/// form the specification names.
+/// 🧬️ The three rungs of `identity`, authored with each rung's supertype name (the form the specification names), ascending by id.
 ///
-/// ⚠️ The authored `PRODUCT` carries three of ISO 10303-41's four attributes: `frame_of_reference`
-/// is omitted rather than written as the empty aggregate `()` ISO 10303-21 §6.2 permits, so that
-/// this function and the AP214 reference oracle author the SAME shape. The reason is recorded where
-/// it was measured — `../../../../🦀️oracle.rs`'s `set_product_identity` — and it is a
-/// defect in `ruststep` 0.4, reproduced standalone: that reader cannot parse an empty aggregate as
-/// an argument value at all, so emitting the spec-legal `()` would produce a document the registered
-/// independent reader refuses to read back.
+/// ⚠️ The authored `PRODUCT` carries three of ISO 10303-41's four attributes: `frame_of_reference` is omitted rather than written as the
+/// empty aggregate `()` ISO 10303-21 §6.2 permits, so this and the AP214 reference oracle author the SAME shape. The reason is recorded
+/// where it was measured -- `../../../../🦀️oracle.rs`'s `set_product_identity` -- a defect in `ruststep` 0.4: that reader cannot parse
+/// an empty aggregate as an argument value at all.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn set_product_identity(doc: &mut Part21Document, identity: Option<&ProductIdentity>) {
-    let chain: Vec<&str> = PRODUCT_TYPES.iter().chain(PRODUCT_DEFINITION_FORMATION_TYPES).chain(PRODUCT_DEFINITION_TYPES).copied().collect();
-    doc.instances.retain(|instance| !chain.iter().any(|name| instance.is_type(name)));
-    let Some(identity) = identity else { return };
-    let rung = |id: u64, type_name: &str, args: Vec<Part21Value>| Part21Instance { id, entities: vec![(type_name.to_string(), args)] };
-    doc.instances.push(rung(identity.product, PRODUCT_TYPES[0], vec![Part21Value::Str(identity.product_name.clone()), Part21Value::Str(identity.product_name.clone()), Part21Value::Str(String::new())]));
-    doc.instances.push(rung(identity.formation, PRODUCT_DEFINITION_FORMATION_TYPES[0], vec![Part21Value::Str(identity.formation_id.clone()), Part21Value::Unset, Part21Value::Ref(identity.product)]));
-    doc.instances.push(rung(identity.definition, PRODUCT_DEFINITION_TYPES[0], vec![Part21Value::Str(identity.definition_id.clone()), Part21Value::Unset, Part21Value::Ref(identity.formation), Part21Value::Unset]));
-    doc.instances.sort_by_key(|instance| instance.id);
+pub fn identity_rungs(identity: &ProductIdentity) -> Vec<StepEntity> {
+    let rung = |id: u64, name: &str, args: Vec<StepValue>| StepEntity { id, name: name.to_string(), args, complex: Vec::new() };
+    let mut rungs = vec![
+        rung(identity.product, PRODUCT_TYPES[0], vec![StepValue::String(identity.product_name.clone()), StepValue::String(identity.product_name.clone()), StepValue::String(String::new())]),
+        rung(identity.formation, PRODUCT_DEFINITION_FORMATION_TYPES[0], vec![StepValue::String(identity.formation_id.clone()), StepValue::Unset, StepValue::Reference(identity.product)]),
+        rung(identity.definition, PRODUCT_DEFINITION_TYPES[0], vec![StepValue::String(identity.definition_id.clone()), StepValue::Unset, StepValue::Reference(identity.formation), StepValue::Unset]),
+    ];
+    rungs.sort_by_key(|rung| rung.id);
+    rungs
 }
-//#endregion 🔖️ConformanceEdits
 
-//#region 🔖️ClassEdits
-/// 🎚️ The class-neutral shape of a conformance-class edit, one variant per axis
-/// `check_ccN_conformance` actually reads. The six `✳️ccN` vocabularies are NOT copies of each other
-/// and are not copies of this: each declares its OWN enum, carrying only the verbs its class admits
-/// (`1️⃣cc1` has no way to write a representation at all; `6️⃣cc6` has nothing to demote from), and
-/// then routes through here so the ONE implementation of each axis serves all six. This is the
-/// family-module rule applied to a vocabulary: what is genuinely shared is shared by construction,
-/// what differs per class stays in the class.
+/// 🧩️ The diff that sets (`Some`, at `index` when new) or removes (`None`) entity `id`: an absent id with `None` is the empty diff, a present id
+/// with `Some` is edited in place name-by-name and argument-by-argument.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn entity_diff(base: &StepSnapshot, id: u64, entity: Option<&StepEntity>, index: Option<usize>) -> StepDiff {
+    let entities = match (base.entities.iter().find(|existing| existing.id == id), entity) {
+        (None, None) => return StepDiff::default(),
+        (Some(existing), Some(entity)) if existing == entity => return StepDiff::default(),
+        (Some(_), None) => StepEntitiesDiff { removed: vec![id], ..Default::default() },
+        (Some(existing), Some(entity)) => StepEntitiesDiff { modified: vec![StepEntityModified { id, diff: StepEntityDiff::between(existing, entity) }], ..Default::default() },
+        (None, Some(entity)) => StepEntitiesDiff { added: vec![StepEntityAdded { index: index.map_or(base.entities.len(), |at| at.min(base.entities.len())), entity: entity.clone() }], ..Default::default() },
+    };
+    StepDiff { entities: Some(entities), ..Default::default() }
+}
+
+/// 🏷️ The diff that declares exactly `schemas` in `FILE_SCHEMA`; an all-blank declaration is refused under `class`'s name.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn file_schema_diff(base: &StepSnapshot, class: &str, schemas: &[String]) -> Result<StepDiff, String> {
+    if schemas.iter().all(|name| name.trim().is_empty()) {
+        return Err(format!("{class} requires FILE_SCHEMA to declare a schema -- an empty declaration is not an AP214 exchange structure"));
+    }
+    let file_schema = StepFileSchema { schemas: schemas.to_vec() };
+    Ok(StepDiff { file_schema: (base.header.file_schema != file_schema).then_some(file_schema), ..Default::default() })
+}
+
+/// 🗑️ The diff that deletes the representation at `id`, refusing anything that is not a `*_SHAPE_REPRESENTATION` -- a conformance repair must
+/// never delete a real geometry or product record because a scenario named the wrong id.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn remove_representation_diff(base: &StepSnapshot, id: u64) -> Result<StepDiff, String> {
+    match base.entities.iter().find(|entity| entity.id == id) {
+        Some(entity) if is_shape_representation(entity) => Ok(entity_diff(base, id, None, None)),
+        _ => Err(format!("#{id} is not a *_SHAPE_REPRESENTATION instance in this document -- a ladder edit addresses the ladder, never an arbitrary entity")),
+    }
+}
+
+/// ✍️ The diff that writes representation `row` at `id` under `class`'s ceiling of `max_rung`. Every rejection names the class and the rung.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn representation_diff(base: &StepSnapshot, class: &str, max_rung: u8, id: u64, row: &ShapeRepresentationRow, index: Option<usize>) -> Result<StepDiff, String> {
+    let rung = ladder_rung_of(&row.type_name).ok_or_else(|| format!("{:?} is not a *_SHAPE_REPRESENTATION type -- {class}'s ladder verb addresses the ladder only", row.type_name))?;
+    if rung > max_rung {
+        return Err(format!("{:?} sits on ladder rung {rung}, above {class}'s ceiling of {max_rung} -- writing it would put the document outside the class it claims", row.type_name));
+    }
+    if base.entities.iter().any(|entity| entity.id == id && !is_shape_representation(entity)) {
+        return Err(format!("#{id} is not a *_SHAPE_REPRESENTATION instance in this document -- a ladder edit addresses the ladder, never an arbitrary entity"));
+    }
+    Ok(entity_diff(base, id, Some(&representation_entity(id, row)), index))
+}
+
+/// ⬇️ The diff that rewrites the representation at `id` onto `class`'s ceiling type, keeping its `name`, `items` and `context_of_items` exactly.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn demotion_diff(base: &StepSnapshot, class: &str, max_rung: u8, id: u64) -> Result<StepDiff, String> {
+    let ceiling = ceiling_type_of(max_rung).ok_or_else(|| format!("{class} admits no *_SHAPE_REPRESENTATION at all, so it has no ceiling to demote onto"))?;
+    let row = shape_representation_row(base, id).ok_or_else(|| format!("#{id} is not a *_SHAPE_REPRESENTATION instance in this document"))?;
+    Ok(entity_diff(base, id, Some(&representation_entity(id, &ShapeRepresentationRow { type_name: ceiling.to_string(), ..row })), None))
+}
+
+/// 🏭️ The diff that replaces every product identity chain rung with `identity`'s three (`Some`), or removes the chain (`None`) -- the only
+/// edit that deterministically turns the soft `product-definition-chain` diagnostic ON. The authored rungs land at their id-ordered slot among
+/// the retained entities; an identity that already stands exactly so is the empty diff.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn product_identity_diff(base: &StepSnapshot, identity: Option<&ProductIdentity>) -> StepDiff {
+    let removed: Vec<u64> = base.entities.iter().filter(|entity| is_chain_rung(entity)).map(|entity| entity.id).collect();
+    let mut working: Vec<&StepEntity> = base.entities.iter().filter(|entity| !is_chain_rung(entity)).collect();
+    let rungs = identity.map(identity_rungs).unwrap_or_default();
+    let mut added = Vec::new();
+    for rung in &rungs {
+        let index = working.iter().filter(|entity| entity.id < rung.id).count();
+        working.insert(index, rung);
+        added.push(StepEntityAdded { index, entity: rung.clone() });
+    }
+    if working.len() == base.entities.len() && working.iter().zip(&base.entities).all(|(left, right)| *left == right) {
+        return StepDiff::default();
+    }
+    StepDiff { entities: Some(StepEntitiesDiff { removed, added, ..Default::default() }), ..Default::default() }
+}
+
+/// 📦️ One row that puts entity `id` back exactly: `entity` is its absolute value (`None` removes it) and `index` the position a new entity takes
+/// among the final entities (last when absent).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-pub enum ClassEdit {
-    /// 🏷️ `CODE_FILE_SCHEMA` — the axis `file_schema_contains(doc, "AUTOMOTIVE_DESIGN")` reads.
-    FileSchema { schemas: Vec<String> },
-    /// 🏭️ `CODE_PRODUCT_CHAIN` — the axis [`has_product_definition_chain`] reads.
-    ProductIdentity { identity: Option<ProductIdentity> },
-    /// 🪜️ The ladder axis: `Some` writes a representation the class admits, `None` deletes one.
-    Representation { id: u64, row: Option<ShapeRepresentationRow> },
-    /// ⬇️ The ladder axis's repair verb: rewrite an over-rung representation onto the class ceiling.
-    Demotion { id: u64 },
+#[value(rename_all = "camelCase")]
+pub struct EntityRestore {
+    pub id: u64,
+    pub entity: Option<StepEntity>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
-/// ▶️ Applies one class edit under `class`'s own ceiling. Every rejection names the class and the
-/// rung, because a caller who asked CC3 to hold a faceted B-rep needs to be told which class refused
-/// and why — not handed a silently unchanged document.
+/// 🧩️ The ONE diff that carries `base` to the state `rows` name: removed ids, in-place modifications, and additions ordered by their final
+/// index. A row whose entity carries another id is refused.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply_class_edit(doc: &mut Part21Document, class: &str, max_rung: u8, edit: &ClassEdit) -> Result<(), String> {
-    match edit {
-        ClassEdit::FileSchema { schemas } => {
-            if schemas.iter().all(|name| name.trim().is_empty()) {
-                return Err(format!("{class} requires FILE_SCHEMA to declare a schema -- an empty declaration is not an AP214 exchange structure"));
-            }
-            set_file_schema_names(doc, schemas);
-            Ok(())
-        }
-        ClassEdit::ProductIdentity { identity } => {
-            set_product_identity(doc, identity.as_ref());
-            Ok(())
-        }
-        ClassEdit::Representation { id, row: None } => remove_shape_representation(doc, *id),
-        ClassEdit::Representation { id, row: Some(row) } => {
-            let rung = ladder_rung_of(&row.type_name).ok_or_else(|| format!("{:?} is not a *_SHAPE_REPRESENTATION type -- {class}'s ladder verb addresses the ladder only", row.type_name))?;
-            if rung > max_rung {
-                return Err(format!("{:?} sits on ladder rung {rung}, above {class}'s ceiling of {max_rung} -- writing it would put the document outside the class it claims", row.type_name));
-            }
-            upsert_shape_representation(doc, *id, row);
-            Ok(())
-        }
-        ClassEdit::Demotion { id } => {
-            let ceiling = ceiling_type_of(max_rung).ok_or_else(|| format!("{class} admits no *_SHAPE_REPRESENTATION at all, so it has no ceiling to demote onto"))?;
-            demote_shape_representation(doc, *id, ceiling).map(|_| ())
-        }
+pub fn restore_diff(base: &StepSnapshot, rows: &[EntityRestore]) -> Result<StepDiff, String> {
+    if let Some(row) = rows.iter().find(|row| row.entity.as_ref().is_some_and(|entity| entity.id != row.id)) {
+        return Err(format!("entity #{} cannot be restored at #{}", row.entity.as_ref().map_or(0, |entity| entity.id), row.id));
     }
-}
-
-/// ↩️ The in-class inverse of `edit` against the UNMUTATED `base`, or `None` when this class has no
-/// verb that can express it.
-///
-/// ⚠️ `None` is a real answer, not a gap. A conformance class is not closed under inversion: undoing
-/// a repair RE-INTRODUCES the violation the repair removed, and a class whose whole point is to
-/// forbid rung-6 geometry cannot own a verb that writes rung-6 geometry back. Each `✳️ccN`
-/// vocabulary therefore degrades exactly those cases to `SetSnapshot`, and says so at the variant.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn invert_class_edit(base: &Part21Document, max_rung: u8, edit: &ClassEdit) -> Option<ClassEdit> {
-    match edit {
-        ClassEdit::FileSchema { .. } => Some(ClassEdit::FileSchema { schemas: file_schema_names(base) }),
-        ClassEdit::ProductIdentity { .. } => Some(ClassEdit::ProductIdentity { identity: product_identity(base) }),
-        ClassEdit::Representation { id, .. } | ClassEdit::Demotion { id } => match shape_representation_row(base, *id) {
-            None => Some(ClassEdit::Representation { id: *id, row: None }),
-            Some(row) => match ladder_rung_of(&row.type_name) {
-                Some(rung) if rung <= max_rung => Some(ClassEdit::Representation { id: *id, row: Some(row) }),
-                _ => None,
+    let mut diff = StepEntitiesDiff::default();
+    let mut unplaced = Vec::new();
+    for row in rows {
+        match (base.entities.iter().find(|existing| existing.id == row.id), &row.entity) {
+            (None, None) => {}
+            (Some(_), None) => diff.removed.push(row.id),
+            (Some(existing), Some(entity)) => {
+                if existing != entity {
+                    diff.modified.push(StepEntityModified { id: row.id, diff: StepEntityDiff::between(existing, entity) });
+                }
+            }
+            (None, Some(entity)) => match row.index {
+                Some(index) => diff.added.push(StepEntityAdded { index, entity: entity.clone() }),
+                None => unplaced.push(entity.clone()),
             },
-        },
+        }
+    }
+    let total = base.entities.len() - diff.removed.len() + diff.added.len() + unplaced.len();
+    diff.added.iter_mut().for_each(|added| added.index = added.index.min(total.saturating_sub(1)));
+    diff.added.sort_by_key(|added| added.index);
+    let end = total - unplaced.len();
+    diff.added.extend(unplaced.into_iter().enumerate().map(|(offset, entity)| StepEntityAdded { index: end + offset, entity }));
+    Ok(StepDiff { entities: (!diff.is_empty()).then_some(diff), ..Default::default() })
+}
+
+/// ↩️ The single row that puts entity `id` back as `base` holds it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn restore_entity_rows(base: &StepSnapshot, id: u64) -> Vec<EntityRestore> {
+    match base.entities.iter().position(|entity| entity.id == id) {
+        Some(at) => vec![EntityRestore { id, entity: Some(base.entities[at].clone()), index: Some(at) }],
+        None => vec![EntityRestore { id, entity: None, index: None }],
     }
 }
 
-/// ↩️ [`invert_class_edit`], kept honest by RUNNING it: the candidate inverse is accepted only when
-/// applying `edit` to `base` and then the candidate really lands back on `base`, byte-identical
-/// document for document. Otherwise this returns `None` and the caller degrades to its documented
-/// whole-snapshot restore, exactly as it already does for an inverse the class has no verb for.
-///
-/// ⚠️ The case that makes this necessary is POSITIONAL, not semantic: [`set_product_identity`]
-/// removes every instance of the three chain rungs and re-authors them (ISO 10303-41 supertype
-/// names, id-ascending), so a document whose chain did not sit in id-ascending order to begin with
-/// comes back with the SAME instances in a different order — and Part-21 instance order is state
-/// this artifact's own `StepSnapshot` carries (its `insert-entity` verb takes an INDEX). An
-/// "inverse" that restores the members but not the order is not an inverse, and the six `✳️ccN`
-/// vocabularies' own `every_conformance_axis_round_trips_through_its_own_inverse` is what measures
-/// it.
+/// ↩️ The rows that undo [`product_identity_diff`] with `identity` on `base`: the authored rungs are removed (reverse of the order the diff adds
+/// them) and every base chain rung is restored at its exact base position.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn invert_class_edit_restoring(base: &Part21Document, class: &str, max_rung: u8, edit: &ClassEdit) -> Option<ClassEdit> {
-    let candidate = invert_class_edit(base, max_rung, edit)?;
-    let mut forward = base.clone();
-    apply_class_edit(&mut forward, class, max_rung, edit).ok()?;
-    apply_class_edit(&mut forward, class, max_rung, &candidate).ok()?;
-    (forward == *base).then_some(candidate)
+pub fn chain_restore_rows(base: &StepSnapshot, identity: Option<&ProductIdentity>) -> Vec<EntityRestore> {
+    let mut rows: Vec<EntityRestore> = identity.map(identity_rungs).unwrap_or_default().iter().rev().map(|rung| EntityRestore { id: rung.id, entity: None, index: None }).collect();
+    rows.extend(base.entities.iter().enumerate().filter(|(_, entity)| is_chain_rung(entity)).map(|(at, entity)| EntityRestore { id: entity.id, entity: Some(entity.clone()), index: Some(at) }));
+    rows
 }
-//#endregion 🔖️ClassEdits
+
+/// 🧮️ The rows that carry `base` to `next`: added entities at their final position, changed retained entities rewritten in place, removed
+/// entities cleared. `None` when `next` changes the relative order of the retained entities, which no row expresses.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn net_restore_rows(base: &StepSnapshot, next: &StepSnapshot) -> Option<Vec<EntityRestore>> {
+    let retained: Vec<usize> = base.entities.iter().filter_map(|before| next.entities.iter().position(|after| after.id == before.id)).collect();
+    if retained.windows(2).any(|pair| pair[0] > pair[1]) {
+        return None;
+    }
+    let mut rows: Vec<EntityRestore> = Vec::new();
+    for (at, after) in next.entities.iter().enumerate() {
+        match base.entities.iter().find(|before| before.id == after.id) {
+            None => rows.push(EntityRestore { id: after.id, entity: Some(after.clone()), index: Some(at) }),
+            Some(before) if before != after => rows.push(EntityRestore { id: after.id, entity: Some(after.clone()), index: None }),
+            Some(_) => {}
+        }
+    }
+    rows.extend(base.entities.iter().filter(|before| !next.entities.iter().any(|after| after.id == before.id)).map(|before| EntityRestore { id: before.id, entity: None, index: None }));
+    Some(rows)
+}
+//#endregion 🔖️EntityDiffs
 
 //#region 🧪️Tests
 #[cfg(test)]

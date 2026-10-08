@@ -1,19 +1,23 @@
 {
-  "artifact": null,
-  "catalogue": null,
-  "dictionary": {
-    "reference": {
-      "id": "bsdd.fixture",
-      "version": "2026-01"
-    },
-    "subjects": [],
-    "relationships": [],
-    "properties": [],
-    "controlledLists": [],
-    "metaSubjects": []
+  "catalogueName": null,
+  "manufacturerName": null,
+  "productGroups": null,
+  "productClasses": null,
+  "productSeries": null,
+  "products": null,
+  "productIndexes": null,
+  "propertyDefinitions": null,
+  "subjects": {
+    "added": [],
+    "removed": [
+      "subject.radiator"
+    ],
+    "order": null
   },
-  "geometry": null,
-  "selection": null,
+  "geometryObjects": null,
+  "selectionClassId": null,
+  "selectionSeriesId": null,
+  "selectionConstraints": null,
   "partNumberRule": null,
   "partNumberInputs": null,
   "scriptLimits": null,

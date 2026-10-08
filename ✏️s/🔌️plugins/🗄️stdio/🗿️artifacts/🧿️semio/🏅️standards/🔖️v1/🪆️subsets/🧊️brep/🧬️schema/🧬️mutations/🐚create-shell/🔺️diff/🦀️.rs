@@ -10,6 +10,6 @@ pub fn diff(payload: &super::CreateShell, base: &SemioBrepSnapshot) -> protocol:
     if base.shells.iter().any(|x| x.id == payload.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A shell with id \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(SemioBrepDiff { shells: Some(NamedTripleDiff { removed: vec![], modified: vec![], added: vec![BrepShell { id: payload.id.clone(), faces: payload.faces.clone() }] }), ..Default::default() })
+    protocol::MutationOutcome::new(SemioBrepDiff { shells: Some(NamedTripleDiff { removed: vec![], modified: vec![], added: vec![crate::standards::v1::subsets::base::schema::triples::NamedAdded { index: payload.at.map_or(base.shells.len(), |at| at.min(base.shells.len())), item: BrepShell { id: payload.id.clone(), faces: payload.faces.clone() } }] }), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -8,7 +8,7 @@
 use crate::editor::txt::modes::edit;
 use crate::editor::txt::modes::edit::windows::main;
 use crate::schema::mutation_support::{native_snapshot_error, txt_usize_to_u32};
-use crate::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetLineEndingMutation, SetLineMutation, SetSnapshotMutation, SetTrailingNewlineMutation};
+use crate::schema::mutations::{InsertLineMutation, RemoveLineMutation, SetLineEndingMutation, SetLineMutation, SetTrailingNewlineMutation};
 use crate::{TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -291,7 +291,7 @@ fn txt_net_mutations(snapshot: &TxtSnapshot, next: &TxtSnapshot) -> Option<Vec<T
         if !outcome.messages().is_empty() {
             return None;
         }
-        running = protocol::MutationDiff::apply(outcome.diff(), &running).ok()?;
+        running = protocol::apply_diff(outcome.diff(), &running).ok()?;
     }
     (running == *next).then_some(leaves)
 }
@@ -462,8 +462,8 @@ impl ArtifactEditor for TxtEditor {
         Ok(TxtSnapshot::from_body(text))
     }
 
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(TxtMutation::SetSnapshot(SetSnapshotMutation { snapshot }))
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {

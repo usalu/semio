@@ -577,6 +577,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🕳️delete-node/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_node_n3_without_cascading_to_its_support;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🕳️delete-node/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+                            mod tests_removes_a_middle_row;
                         }
                         #[path = "."]
                         pub mod create_element {
@@ -618,6 +621,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗑️delete-element/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_bar_e2_and_keeps_its_end_nodes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗑️delete-element/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+                            mod tests_removes_a_middle_row;
                         }
                         #[path = "."]
                         pub mod replace_element {
@@ -687,6 +693,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-30f7a2/🦀️.rs"]
                             mod tests_removes_the_unreferenced_timber_material;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+                            mod tests_removes_a_middle_row;
                         }
                         #[path = "."]
                         pub mod replace_material {
@@ -756,6 +765,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/✂️delete-section/🧪️tests/🚫️removes-the-spare-1c235a/🦀️.rs"]
                             mod tests_removes_the_spare_hollow_section;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/✂️delete-section/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+                            mod tests_removes_a_middle_row;
                         }
                         #[path = "."]
                         pub mod replace_section {
@@ -819,6 +831,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-82b34f/🦀️.rs"]
                             mod tests_releases_the_roller_at_node_n2;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+                            mod tests_removes_a_middle_row;
                         }
                         #[path = "."]
                         pub mod replace_support {
@@ -891,6 +906,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🚫️delete-region/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_the_slab_and_keeps_its_material;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🚫️delete-region/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+                            mod tests_removes_a_middle_row;
                         }
                         #[path = "."]
                         pub mod replace_region {
@@ -960,6 +978,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_the_live_case_together_with_its_loads;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+                            mod tests_removes_a_middle_row;
                         }
                         #[path = "."]
                         pub mod add_load {
@@ -1001,6 +1022,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/✂️strips-the-roof-udl-0c1b3c/🦀️.rs"]
                             mod tests_strips_the_trailing_roof_udl_from_the_dead_case;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+                            mod tests_removes_a_middle_row;
                         }
                         #[path = "."]
                         pub mod change_load_case_self_weight {
@@ -1061,6 +1085,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes/🦀️.rs"]
                             mod tests_removes_the_uls_combination_and_keeps_both_cases;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+                            mod tests_removes_a_middle_row;
                         }
                         #[path = "."]
                         pub mod update_analysis_settings {

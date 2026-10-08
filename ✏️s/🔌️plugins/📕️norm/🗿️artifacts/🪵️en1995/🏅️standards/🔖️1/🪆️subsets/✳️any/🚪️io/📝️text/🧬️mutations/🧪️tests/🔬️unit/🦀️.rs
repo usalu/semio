@@ -14,7 +14,7 @@ async fn every_variant_op_text_round_trips() {
 fn every_mutation() -> Vec<En1995Mutation> {
     let base = crate::En1995Snapshot::compliant_building_beam();
     vec![
-        En1995Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
+        En1995Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
         En1995Mutation::InsertMember(insert_member::InsertMember { index: 99, member: crate::TimberMember { id: "beam-B9".into(), ..base.members[0].clone() } }),
         En1995Mutation::RemoveMember(remove_member::RemoveMember { index: 0 }),
         En1995Mutation::ChangeMemberLabelEn(change_member_label_en::ChangeMemberLabelEn { member_id: base.members[0].id.clone(), new_value: "Beam B1 (revised)".into() }),

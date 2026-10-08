@@ -74,7 +74,6 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
     Then the independent implementation and the subject agree on the resulting snapshot
     Examples:
       | id                  | mutation                                                                                                                                                                                                                                                                                             |
-      | set-snapshot        | {"mutation":"setSnapshot","snapshot":{"schema":"s.stdio.semio.document","styles":[],"images":[],"blocks":[{"kind":"pageBreak"}]}}                                                                                                                                                                    |
       | insert-block        | {"mutation":"insertBlock","path":{"segments":[{"kind":"tableCell","blockIndex":3,"row":0,"cell":0}],"index":0},"block":{"kind":"paragraph","style_id":null,"runs":[{"text":"header cell","style":{"bold":true,"italic":false,"underline":false,"size":null,"font":null,"color":null,"link":null}}]}} |
       | remove-block        | {"mutation":"removeBlock","path":{"segments":[],"index":4}}                                                                                                                                                                                                                                          |
       | set-block-content   | {"mutation":"setBlockContent","path":{"segments":[{"kind":"listItem","blockIndex":2,"item":0}],"index":0},"block":{"kind":"code","language":"python","text":"print(1)"}}                                                                                                                             |
@@ -91,18 +90,6 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
       | insert-image        | {"mutation":"insertImage","image":{"id":"img2","mime":"image/jpeg","bytes":[255,216,255]}}                                                                                                                                                                                                           |
       | remove-image        | {"mutation":"removeImage","id":"img1"}                                                                                                                                                                                                                                                               |
       | set-image-bytes     | {"mutation":"setImageBytes","id":"img1","mime":"image/gif","bytes":[71,73,70]}                                                                                                                                                                                                                       |
-      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/styles/0/name", "value": "Patched style"}} |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real committed memo
-    Given the real committed memo asset://🗒️memo/🗣️.dsl.semio
-    When the no-mutation mutation is applied to the memo parsed from it
-      """
-      {"mutation":"noMutation"}
-      """
-    Then the independent implementation and the subject agree on the resulting snapshot
 
   @id-inverse
   @level-exhaustive
@@ -116,7 +103,6 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
     Then both sides restore the memo and agree on the mutated and the restored snapshot
     Examples:
       | id                  | mutation                                                                                                                                                                                                                                                                                             |
-      | set-snapshot        | {"mutation":"setSnapshot","snapshot":{"schema":"s.stdio.semio.document","styles":[],"images":[],"blocks":[{"kind":"pageBreak"}]}}                                                                                                                                                                    |
       | insert-block        | {"mutation":"insertBlock","path":{"segments":[{"kind":"tableCell","blockIndex":3,"row":0,"cell":0}],"index":0},"block":{"kind":"paragraph","style_id":null,"runs":[{"text":"header cell","style":{"bold":true,"italic":false,"underline":false,"size":null,"font":null,"color":null,"link":null}}]}} |
       | remove-block        | {"mutation":"removeBlock","path":{"segments":[],"index":4}}                                                                                                                                                                                                                                          |
       | set-block-content   | {"mutation":"setBlockContent","path":{"segments":[{"kind":"listItem","blockIndex":2,"item":0}],"index":0},"block":{"kind":"code","language":"python","text":"print(1)"}}                                                                                                                             |
@@ -133,18 +119,6 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
       | insert-image        | {"mutation":"insertImage","image":{"id":"img2","mime":"image/jpeg","bytes":[255,216,255]}}                                                                                                                                                                                                           |
       | remove-image        | {"mutation":"removeImage","id":"img1"}                                                                                                                                                                                                                                                               |
       | set-image-bytes     | {"mutation":"setImageBytes","id":"img1","mime":"image/gif","bytes":[71,73,70]}                                                                                                                                                                                                                       |
-      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/styles/0/name", "value": "Patched style"}} |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing no-mutation restores the real committed memo
-    Given the real committed memo asset://🗒️memo/🗣️.dsl.semio
-    When the no-mutation mutation is applied to the memo parsed from it and each side undoes it with its own computed inverse
-      """
-      {"mutation":"noMutation"}
-      """
-    Then both sides restore the memo and agree on the mutated and the restored snapshot
 
   @id-spec-vector
   @level-exhaustive
@@ -155,8 +129,6 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id | fixture |
-      | no-mutation | ⏸️no-mutation |
-      | set-snapshot | 📸️set-snapshot |
       | insert-block | 🧱️insert-block |
       | remove-block | 🪓️remove-block |
       | set-block-content | 📦️set-block-content |
@@ -180,6 +152,6 @@ Feature: Apply every typed semio DOCUMENT mutation to the real committed memo, a
   Scenario: Re-emit both committed encodings of the real memo from the parsed snapshot
     Given the real committed memo asset://🗒️memo/🗣️.dsl.semio
     And its committed binary twin asset://🗒️memo/🎒️.pack.semio
-    And the committed specification vector shared://📃️mutate-semio-document/⏸️no-mutation/🦠️mutation/🔣️.json whose before-snapshot is that artifact decoded
+    And the committed specification vector shared://📃️mutate-semio-document/🎨️set-run-style/🦠️mutation/🔣️.json whose before-snapshot is that artifact decoded
     When each implementation parses the text artifact, prints it back, decodes the binary twin and re-encodes it
     Then both reproduce the two committed files byte for byte and agree on the memo and on the digests of what they emitted

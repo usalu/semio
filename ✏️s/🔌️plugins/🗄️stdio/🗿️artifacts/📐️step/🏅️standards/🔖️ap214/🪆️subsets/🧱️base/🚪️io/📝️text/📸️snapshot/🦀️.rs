@@ -48,25 +48,5 @@ use crate::schema::snapshot::StepFileSchema;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::schema::snapshot::StepValue;
 
-/// 📸️ Full `StepSnapshot` codec — needed by `SetSnapshot`'s `OpText`/`OpBinary` (mutations file
-/// imports this `pub(crate)`), never by `StepDiff` itself (no `snapshot: Option<StepSnapshot>`
-/// full-replace slot exists on the diff).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_step_snapshot(s: &StepSnapshot) -> String {
-    format!("[{},{},{},{},[{}]]", enc_str(&s.schema), enc_file_description(&s.header.file_description), enc_file_name(&s.header.file_name), enc_file_schema(&s.header.file_schema), s.entities.iter().map(enc_entity).collect::<Vec<_>>().join(","),)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_step_snapshot(s: &str) -> Result<StepSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, file_description, file_name, file_schema, entities] = parts.as_slice() else {
-        return Err(format!("step snapshot: expected 5 fields, got {}", parts.len()));
-    };
-    Ok(StepSnapshot {
-        schema: dec_str(schema)?,
-        header: crate::schema::snapshot::StepHeader { file_description: dec_file_description(file_description)?, file_name: dec_file_name(file_name)?, file_schema: dec_file_schema(file_schema)? },
-        entities: split_top_level(strip_brackets(entities)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_entity).collect::<Result<Vec<_>, String>>()?,
-    })
-}
 }
 pub use diff_codec::*;

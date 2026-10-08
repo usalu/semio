@@ -10,9 +10,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn wrong_schema_via_raw_mutate_still_fails_build() {
         let snapshot = Ifc2x3CobieBuilderConstruction::new().build().unwrap();
-        let mut bad = snapshot.clone();
-        bad.document.header.file_schema = vec![Part21Value::List(vec![Part21Value::Str("IFC4".into())])];
-        let (mutated, _diff) = Ifc2x3CobieBuilderConstruction::from_snapshot(Ifc2x3Snapshot::default()).mutate(Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(bad) }));
+        let mut header = snapshot.document.header.clone();
+        header.file_schema = vec![Part21Value::List(vec![Part21Value::Str("IFC4".into())])];
+        let (mutated, _diff) = Ifc2x3CobieBuilderConstruction::from_snapshot(snapshot).mutate(Ifc2x3Mutation::SetHeader(crate::standards::v2x3::subsets::base::schema::mutations::set_header::SetHeader { header }));
         let err = mutated.build().expect_err("a non-IFC2X3 FILE_SCHEMA must fail build()");
         assert!(err.iter().any(|d| d.code.0 == crate::standards::v2x3::subsets::cobie::io::CODE_FILE_SCHEMA));
     }

@@ -1,6 +1,5 @@
 syntax = "proto3";
 import "../📸️snapshot/🛰️.proto";
-import "../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🛰️.proto";
 package semio.s_stdio_bmp.mutations;
 
 message PaintIndexedRegion {
@@ -24,6 +23,6 @@ message PaintDirectRegion {
   uint32 alpha = 9;
 }
 
-message SetSnapshotMutation { semio.s_stdio_bmp.snapshot.BmpSnapshot snapshot = 1; }
-message PatchSnapshotMutation { semio.stdio.editing.SnapshotPatch patch = 1; }
-message BmpMutation { oneof payload { SetSnapshotMutation set_snapshot = 1; PatchSnapshotMutation patch_snapshot = 2; PaintIndexedRegion paint_indexed_region = 3; PaintDirectRegion paint_direct_region = 4; } }
+message BmpMutation { oneof payload { ReplaceImage replace_image = 12; PaintIndexedRegion paint_indexed_region = 3; PaintDirectRegion paint_direct_region = 4; } }
+
+message ReplaceImage { semio.s_stdio_bmp.snapshot.BmpImage image = 1; }

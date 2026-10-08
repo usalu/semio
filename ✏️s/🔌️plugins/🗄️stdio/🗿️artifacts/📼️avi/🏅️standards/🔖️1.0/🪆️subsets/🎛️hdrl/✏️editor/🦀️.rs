@@ -5,7 +5,7 @@
 
 use crate::editor::avi::modes::edit;
 use crate::editor::avi::modes::edit::windows::main;
-use crate::standards::v1_0::subsets::any::schema::mutations::{patch_snapshot,set_snapshot as snapshot_edit_set_snapshot,AviMutation};
+use crate::standards::v1_0::subsets::any::schema::mutations::{AviMutation};
 
 use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
 use crate::{AVI_DIALECT, STDIO_AVI_DOCUMENT_SCHEMA};
@@ -218,8 +218,8 @@ impl ArtifactEditor for AviEditor {
         }
     }
 
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(AviMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot }))
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
@@ -346,7 +346,7 @@ impl editing::SnapshotEditingEditor for AviEditor {
         }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_patch(event, snapshot, |patch| AviMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| AviMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot })))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::v1_0::subsets::any::schema::mutations::net_mutations)
     }
 }
 

@@ -1,0 +1,129 @@
+{
+  "cases": [
+    {
+      "name": "Empty Inventory",
+      "installed": [],
+      "cancel": "none",
+      "fail": null,
+      "expected": []
+    },
+    {
+      "name": "One Installed Owner",
+      "installed": [
+        "alpha"
+      ],
+      "cancel": "none",
+      "fail": null,
+      "expected": [
+        "mount:alpha",
+        "dispose:alpha"
+      ]
+    },
+    {
+      "name": "Ordered Owners",
+      "installed": [
+        "alpha",
+        "beta",
+        "gamma"
+      ],
+      "cancel": "none",
+      "fail": null,
+      "expected": [
+        "mount:alpha",
+        "mount:beta",
+        "mount:gamma",
+        "dispose:gamma",
+        "dispose:beta",
+        "dispose:alpha"
+      ]
+    },
+    {
+      "name": "Cancelled Before Mount",
+      "installed": [
+        "alpha"
+      ],
+      "cancel": "before",
+      "fail": null,
+      "expected": []
+    },
+    {
+      "name": "Cancelled During Mount",
+      "installed": [
+        "alpha",
+        "beta"
+      ],
+      "cancel": "mount",
+      "fail": null,
+      "expected": [
+        "mount:alpha",
+        "dispose:alpha"
+      ]
+    },
+    {
+      "name": "Mount Failure Rollback",
+      "installed": [
+        "alpha",
+        "beta",
+        "gamma"
+      ],
+      "cancel": "none",
+      "fail": "beta",
+      "expected": [
+        "mount:alpha",
+        "mount:beta",
+        "dispose:alpha"
+      ]
+    }
+  ],
+  "admission": [
+    {
+      "name": "Empty Explicit Browser Inventory",
+      "value": {
+        "plugins": [],
+        "documentServices": [],
+        "surfaceSessionFactories": []
+      },
+      "accepted": true
+    },
+    {
+      "name": "Variable Explicit Browser Inventory",
+      "value": {
+        "plugins": [
+          {
+            "pluginId": "alpha",
+            "moduleUrl": "/alpha.mjs"
+          },
+          {
+            "pluginId": "beta",
+            "moduleUrl": "/beta.mjs"
+          }
+        ],
+        "documentServices": [],
+        "surfaceSessionFactories": []
+      },
+      "accepted": true
+    },
+    {
+      "name": "Absent Browser Inventory",
+      "value": null,
+      "accepted": false
+    },
+    {
+      "name": "Missing Service Inventory",
+      "value": {
+        "plugins": [],
+        "surfaceSessionFactories": []
+      },
+      "accepted": false
+    },
+    {
+      "name": "Nonarray Worker Factory Inventory",
+      "value": {
+        "plugins": [],
+        "documentServices": [],
+        "surfaceSessionFactories": {}
+      },
+      "accepted": false
+    }
+  ]
+}

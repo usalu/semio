@@ -1,12 +1,18 @@
 {
-  "artifact": null,
   "manufacturerFile": null,
-  "catalog": null,
+  "products": null,
+  "catalogExtensions": null,
   "editionProfile": null,
   "correctionAsOf": null,
   "strictMode": null,
-  "index": null,
-  "geometry": {},
+  "indexEntries": null,
+  "geometry": {
+    "added": [],
+    "removed": [
+      "geom-valve-50"
+    ],
+    "modified": []
+  },
   "curves": null,
   "limits": null
 }

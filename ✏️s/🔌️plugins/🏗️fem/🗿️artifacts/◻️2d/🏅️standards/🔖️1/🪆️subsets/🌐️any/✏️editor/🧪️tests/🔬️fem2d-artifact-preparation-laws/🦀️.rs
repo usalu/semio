@@ -4,7 +4,7 @@ use store::{ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFact
 #[test]
 fn admitted_document_mutations_make_bounded_progress_and_retire() {
     let factory = Fem2dArtifactPreparationFactory;
-    let mutation = Fem2dMutation::CreateNode(crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: crate::FemNode { id: "n1".into(), x: 0.0, y: 0.0 } });
+    let mutation = Fem2dMutation::CreateNode(crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: crate::FemNode { id: "n1".into(), x: 0.0, y: 0.0 }, index: None });
     assert_eq!(factory.preflight(&mutation, store::HistoryLane::Document).expect("document admission").work_items, store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, "one forward row plus its single inverse row");
     let mut work = Fem2dArtifactPreparation { base: None, mutation: Some(mutation), authority: None, prepared: None, checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false };
     assert!(matches!(work.advance(store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 1_048_576 }), Ok(store::ArtifactStoreOneItemPreparationStep::Blocked)));

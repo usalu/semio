@@ -100,7 +100,79 @@ impl store::ArtifactPack for EnergyModelConfig {
 }
 //#endregion 🔖️ArtifactCodec
 
-store::impl_whole_record_config!(EnergyModelConfig);
+impl store::ConfigRecord for EnergyModelConfig {}
+
+/// 🔺️ Sparse field delta over [`EnergyModelConfig`]: every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, ToValueDerive, FromValueDerive)]
+#[value(rename_all = "camelCase", default)]
+pub struct EnergyModelConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub zone_timestep_minutes: Option<u32>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub system_timestep_minutes: Option<u32>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub warmup_days: Option<u32>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub result_field: Option<String>,
+}
+
+impl protocol::MutationDiff<EnergyModelConfig> for EnergyModelConfigDiff {
+    fn apply(&self, base: &EnergyModelConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<EnergyModelConfig> {
+        let mut next = base.clone();
+        if let Some(value) = self.zone_timestep_minutes {
+            next.zone_timestep_minutes = value;
+        }
+        if let Some(value) = self.system_timestep_minutes {
+            next.system_timestep_minutes = value;
+        }
+        if let Some(value) = self.warmup_days {
+            next.warmup_days = value;
+        }
+        if let Some(value) = &self.result_field {
+            next.result_field = value.clone();
+        }
+        Ok(next)
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.zone_timestep_minutes.is_some() {
+            self.zone_timestep_minutes = other.zone_timestep_minutes;
+        }
+        if other.system_timestep_minutes.is_some() {
+            self.system_timestep_minutes = other.system_timestep_minutes;
+        }
+        if other.warmup_days.is_some() {
+            self.warmup_days = other.warmup_days;
+        }
+        if other.result_field.is_some() {
+            self.result_field = other.result_field;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<EnergyModelConfig> for EnergyModelConfigDiff {
+    fn inverse(&self, base: &EnergyModelConfig) -> Self {
+        Self {
+            zone_timestep_minutes: self.zone_timestep_minutes.map(|_| base.zone_timestep_minutes),
+            system_timestep_minutes: self.system_timestep_minutes.map(|_| base.system_timestep_minutes),
+            warmup_days: self.warmup_days.map(|_| base.warmup_days),
+            result_field: self.result_field.as_ref().map(|_| base.result_field.clone()),
+        }
+    }
+
+    fn between(base: &EnergyModelConfig, other: &EnergyModelConfig) -> Self {
+        Self {
+            zone_timestep_minutes: (base.zone_timestep_minutes != other.zone_timestep_minutes).then_some(other.zone_timestep_minutes),
+            system_timestep_minutes: (base.system_timestep_minutes != other.system_timestep_minutes).then_some(other.system_timestep_minutes),
+            warmup_days: (base.warmup_days != other.warmup_days).then_some(other.warmup_days),
+            result_field: (base.result_field != other.result_field).then(|| other.result_field.clone()),
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.zone_timestep_minutes.is_none() && self.system_timestep_minutes.is_none() && self.warmup_days.is_none() && self.result_field.is_none()
+    }
+}
 //#endregion 🔖️Config
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]

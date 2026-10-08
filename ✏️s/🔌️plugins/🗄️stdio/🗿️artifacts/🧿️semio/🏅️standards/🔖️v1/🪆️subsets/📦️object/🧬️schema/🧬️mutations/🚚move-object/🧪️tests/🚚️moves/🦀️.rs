@@ -32,7 +32,7 @@ fn move_object() -> SemioObjectMutation {
 #[semio_framework_async_macros::async_test]
 async fn replaces_the_translation_and_keeps_rotation_and_scale() {
     let base = before();
-    let produced = move_object().diff(&base).diff().apply(&base).expect("move-object applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(move_object().diff(&base).diff(), &base).expect("move-object applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "move-object/moves-the-object-to-a-new-translation: applied state differs from the committed after-snapshot");
     assert_eq!(produced.transform.translation.x, 2.0, "translation.x must become the payload's absolute value, not base + payload");
     assert_eq!(produced.transform.translation.y, -0.5, "translation.y must become the payload's absolute value");
@@ -47,11 +47,12 @@ async fn replaces_the_translation_and_keeps_rotation_and_scale() {
 async fn the_undo_move_object_restores_the_original_translation() {
     let base = before();
     let mutation = move_object();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "move-object undoes as exactly one move-object");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward move-object applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo move-object applies to the moved object");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward move-object applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo move-object applies to the moved object");
     }
     assert_eq!(current, base, "move-object/moves-the-object-to-a-new-translation: the undo did not restore the before-snapshot");
 }
@@ -107,6 +108,6 @@ async fn committed_diff_is_canonical_and_touches_only_the_transform_slot() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed move-object diff decodes");
-    let produced = decoded.apply(&before()).expect("committed move-object diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed move-object diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "move-object/moves-the-object-to-a-new-translation: committed diff did not carry before to after");
 }

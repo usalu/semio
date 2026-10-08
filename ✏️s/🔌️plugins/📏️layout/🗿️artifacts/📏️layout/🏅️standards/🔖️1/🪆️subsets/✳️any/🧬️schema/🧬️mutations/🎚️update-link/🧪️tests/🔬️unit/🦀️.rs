@@ -17,13 +17,13 @@ fn update_link_raises_resolution_and_switches_the_print_profile() {
     assert!(before.iter().any(|issue| issue.code == "asset.low_resolution"));
     assert!(before.iter().any(|issue| issue.code == "asset.rgb_in_print"));
     let mutation = LayoutMutation::UpdateLink(UpdateLink { id: "link-missing".into(), width: 100, height: 100, dpi: 300, color_profile: Some("CMYK".into()) });
-    let next = mutation.diff(&base).diff().apply(&base).expect("link applies");
+    let next = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("link applies");
     assert_eq!(next.links[0].dpi, 300);
     assert_eq!(next.links[0].color_profile.as_deref(), Some("CMYK"));
     let after = crate::editor::layout::panels::preflight::run_layout_preflight(&next, labels);
     assert!(after.iter().all(|issue| issue.code != "asset.low_resolution"));
     assert!(after.iter().all(|issue| issue.code != "asset.rgb_in_print"));
-    let restored = mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff().apply(&next).expect("inverse");
+    let restored = protocol::apply_diff(mutation.inverse(&base).expect("valid retained mutation inverse fixture")[0].diff(&next).diff(), &next).expect("inverse");
     assert_eq!(restored.links[0].dpi, 72);
     assert_eq!(restored.links[0].color_profile.as_deref(), Some("RGB"));
 }

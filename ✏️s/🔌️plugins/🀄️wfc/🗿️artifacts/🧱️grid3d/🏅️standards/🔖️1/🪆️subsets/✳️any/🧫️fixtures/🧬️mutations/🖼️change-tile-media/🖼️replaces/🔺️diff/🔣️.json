@@ -10,33 +10,45 @@
   "periodicX": null,
   "periodicY": null,
   "periodicZ": null,
-  "tilesRemoved": [],
-  "tilesUpserted": [
-    [
-      2,
+  "tiles": {
+    "removed": [],
+    "added": [],
+    "patched": [
       {
         "id": "wall",
-        "weight": 3.0,
-        "media": {
-          "kind": "mesh",
-          "mesh": {
-            "positions": [],
-            "indices": [],
-            "color": {
-              "r": 40,
-              "g": 44,
-              "b": 52,
-              "a": 255
+        "patch": {
+          "weight": null,
+          "media": {
+            "kind": "mesh",
+            "mesh": {
+              "positions": [],
+              "indices": [],
+              "color": {
+                "r": 40,
+                "g": 44,
+                "b": 52,
+                "a": 255
+              }
             }
-          }
+          },
+          "label": null
         }
       }
     ]
-  ],
-  "rulesRemoved": [],
-  "rulesUpserted": [],
-  "pinnedRemoved": [],
-  "pinnedUpserted": [],
-  "maskedRemoved": [],
-  "maskedUpserted": []
+  },
+  "rules": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "pinned": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "masked": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  }
 }

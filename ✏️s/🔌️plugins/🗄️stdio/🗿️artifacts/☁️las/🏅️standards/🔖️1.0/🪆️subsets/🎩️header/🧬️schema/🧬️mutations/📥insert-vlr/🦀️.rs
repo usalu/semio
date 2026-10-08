@@ -1,7 +1,4 @@
-//! 📥️ `insert-vlr` — its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 📥️ `insert-vlr` — its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 //!
 //! ➕️ Inserts a fully-specified VLR at `index` (final position, clamped to `len`).
 use super::*;
@@ -19,14 +16,13 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for InsertVlr {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "vlr", kind: "insert-vlr", record: "InsertVlr" };
 
     fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
-        agg_diff(&LasMutation::InsertVlr(self.clone()), base)
+        let Self { index, vlr } = self;
+        protocol::MutationOutcome::new(diff::diff_insert_vlr(base, *index, vlr.clone()))
     }
     fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&LasMutation::InsertVlr(self.clone()), base)?
-    
-    })
-}
+        let Self { index, .. } = self;
+        Ok({ vec![LasMutation::RemoveVlr(remove_vlr::RemoveVlr { index: (*index).min(base.vlrs.len()) })] })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert VLR", "VLR einfügen")
     }

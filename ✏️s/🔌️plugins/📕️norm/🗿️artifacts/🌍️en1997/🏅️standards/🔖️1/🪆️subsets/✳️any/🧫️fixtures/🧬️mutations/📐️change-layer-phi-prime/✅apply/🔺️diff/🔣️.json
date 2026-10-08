@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "structureId": null,
   "geotechnicalCategory": null,
   "designSituation": null,
@@ -8,38 +7,16 @@
   "groundwaterLevel": null,
   "investigationDepth": null,
   "layers": {
-    "values": [
+    "added": [],
+    "removed": [],
+    "modified": [
       {
         "id": "layer-sand",
-        "soilType": "sand",
-        "depthTop": 0.0,
-        "depthBottom": 8.0,
-        "gamma": 19000.0,
-        "gammaPrime": 10000.0,
-        "phiPrimeDeg": 32.5,
-        "cohesionEffective": 0.0,
-        "cohesionUndrained": 0.0,
-        "oedometricModulus": 40000000.0,
-        "poissonRatio": 0.3,
-        "cptQc": 8000000.0,
-        "sptN": 18.0
-      },
-      {
-        "id": "layer-gravel",
-        "soilType": "gravel",
-        "depthTop": 8.0,
-        "depthBottom": 20.0,
-        "gamma": 20000.0,
-        "gammaPrime": 11000.0,
-        "phiPrimeDeg": 35.0,
-        "cohesionEffective": 0.0,
-        "cohesionUndrained": 0.0,
-        "oedometricModulus": 60000000.0,
-        "poissonRatio": 0.28,
-        "cptQc": 12000000.0,
-        "sptN": 28.0
+        "oedometricModulus": null,
+        "phiPrimeDeg": 32.5
       }
-    ]
+    ],
+    "order": null
   },
   "footings": null,
   "piles": null,

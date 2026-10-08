@@ -223,8 +223,8 @@ pub fn find_block_location<'a>(spec: &'a PlaybookSpec, block_id: &str) -> Option
 
 pub type PlaybookValues = semio_framework_value::ordered::OrderedMap<DslValue>;
 
-fn retire_displaced_playbook_value(value: Option<std::sync::Arc<DslValue>>) {
-    if let Some(value) = value.and_then(std::sync::Arc::into_inner) { FromValue::retire_decoded(value); }
+fn retire_displaced_playbook_value(value: Option<DslValue>) {
+    if let Some(value) = value { FromValue::retire_decoded(value); }
 }
 
 fn dsl_object_nonempty(value: &DslValue) -> bool {

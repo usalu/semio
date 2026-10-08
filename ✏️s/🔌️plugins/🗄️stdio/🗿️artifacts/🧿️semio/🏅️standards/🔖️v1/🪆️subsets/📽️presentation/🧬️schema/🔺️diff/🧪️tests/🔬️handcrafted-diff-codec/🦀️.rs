@@ -17,9 +17,9 @@ async fn shape_kind_change_produces_replace_and_round_trips() {
     assert_eq!(shapes_diff.modified.len(), 1);
     assert!(matches!(&shapes_diff.modified[0].diff, SlideShapeDiff::Replace { .. }), "expected Replace for a shape-kind change, got {:?}", shapes_diff.modified[0].diff);
 
-    assert_eq!(MutationDiff::apply(&diff, &a).expect("apply must succeed for a well-formed fixture"), b);
+    assert_eq!(protocol::apply_diff(&diff, &a).expect("apply must succeed for a well-formed fixture"), b);
     let inv = DiffAlgebra::inverse(&diff, &a);
-    assert_eq!(MutationDiff::apply(&inv, &b).expect("apply must succeed for a well-formed fixture"), a);
+    assert_eq!(protocol::apply_diff(&inv, &b).expect("apply must succeed for a well-formed fixture"), a);
 
     let printed = diff.print_diff();
     let parsed = SemioPresentationDiff::parse_diff(&printed).expect("parse_diff");

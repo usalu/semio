@@ -1,0 +1,21 @@
+{
+  "schema": "stdio.jpg",
+  "image": {
+    "width": 1,
+    "height": 1,
+    "pixels": [
+      1,
+      2,
+      3,
+      255
+    ],
+    "jfifVersion": [
+      1,
+      1
+    ],
+    "jfifDensityUnits": "aspect",
+    "jfifXDensity": 1,
+    "jfifYDensity": 1,
+    "otherSegments": []
+  }
+}

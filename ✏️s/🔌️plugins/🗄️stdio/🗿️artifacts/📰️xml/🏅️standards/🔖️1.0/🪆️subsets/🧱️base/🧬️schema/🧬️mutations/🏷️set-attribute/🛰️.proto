@@ -1,4 +1,4 @@
 syntax = "proto3";
 package stdio.xml.mutation;
 // set-attribute/SetAttribute
-message SetAttributePayload { bytes path = 1; string name = 2; string value = 3; }
+message SetAttributePayload { bytes path = 1; string name = 2; string value = 3; optional uint32 index = 4; }

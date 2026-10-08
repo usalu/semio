@@ -61,7 +61,7 @@ impl Drop for OwnedRewriteRuleStore {
 //#region 🔖️BatchHelpers
 pub fn apply_rewrite_rule_mutation(snapshot: &mut RewritingSnapshot, mutation: &RewriteRuleMutation) -> protocol::MutationApplyResult<()> {
     let outcome = protocol::Mutation::diff(mutation, snapshot);
-    let next = protocol::MutationDiff::apply(outcome.diff(), snapshot)?;
+    let next = protocol::apply_diff(outcome.diff(), snapshot)?;
     *snapshot = next;
     Ok(())
 }

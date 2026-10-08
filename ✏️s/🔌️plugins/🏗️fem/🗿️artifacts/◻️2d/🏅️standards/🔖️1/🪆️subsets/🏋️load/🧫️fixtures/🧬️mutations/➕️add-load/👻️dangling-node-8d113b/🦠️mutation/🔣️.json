@@ -7,5 +7,6 @@
     "nodeId": "n42",
     "dof": "Tx",
     "value": 7500.0
-  }
+  },
+  "index": null
 }

@@ -12,7 +12,7 @@ pub mod derived_composition {
     use semio_framework_diagnostic::FaultCode;
     use semio_framework_diagnostic::Severity;
     use semio_framework_diagnostic::TextSpan;
-    use {semio_framework_plugin::register_subset_validator,semio_framework_plugin::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::SubsetValidator,semio_framework_plugin::SubsetValidatorEntry};
+    use {semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
     use std::sync::OnceLock;
 
     const DIALECT_STRICT: Dialect = Dialect { artifact_kind: "s.stdio.pptx", standard: StandardId("ecma-376"), subset: SubsetId("strict") };
@@ -96,8 +96,6 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 pub mod derived_construction {
-    #[cfg(test)]
-    use crate::schema::mutations::set_snapshot;
     use crate::standards::v_ecma_376::subsets::base::io::PptxBuilder as PptxAnyBuilder;
     use crate::standards::v_ecma_376::subsets::strict::schema::conformance::check_strict_conformance;
     use crate::{PptxDiff, PptxMutation, PptxSnapshot};
@@ -170,7 +168,7 @@ pub mod derived_analysis {
     use semio_framework_diagnostic::FaultScope;
     use semio_framework_diagnostic::Severity;
     use semio_framework_diagnostic::TextSpan;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use semio_s_artifact_stdio_zip::opc::OpcPackage;
 
     /// 🎯️ This subset's dialect coordinate.
@@ -191,7 +189,7 @@ pub mod derived_analysis {
         type Parts = PptxParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             PptxAnyAnalyzer::sniff(source)
         }
 
@@ -202,7 +200,7 @@ pub mod derived_analysis {
             if let Some(snapshot) = &inner.parts.snapshot {
                 let checks = check_strict_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
-                    confidence = IoConfidence::Low;
+                    confidence = semio_framework_plugin::io::Confidence::Low;
                 }
                 diagnostics.extend(checks);
             }

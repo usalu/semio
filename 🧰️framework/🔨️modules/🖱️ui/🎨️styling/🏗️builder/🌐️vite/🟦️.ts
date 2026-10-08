@@ -26,7 +26,7 @@ import faviconDelivery from "../../🌐️favicon/🔣️.json" with { type: "js
 
 // #endregion 🔌️Adapters
 
-export { playgroundIframeEmbedHeadersPlugin };
+export { playgroundIframeEmbedHeadersPlugin } from "../../🌐️iframe/🟦️.ts";
 
 /** 🥽️ Supplies one owner-authored mesh catalog to its build provider. */
 export type MeshCollectionAssetSpecV1 = { readonly kind: "mesh-collection"; readonly route: string; readonly catalog: string };

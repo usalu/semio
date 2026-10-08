@@ -1,0 +1,21 @@
+{
+  "profileId": "neutral-profile",
+  "generationId": "8888888888888888888888888888888888888888888888888888888888888888",
+  "revision": "1",
+  "files": {
+    "component": "neutral component",
+    "descriptor": "neutral descriptor",
+    "actor": "neutral closed actor",
+    "cargo": "{\"status\":0}\n",
+    "policy": "{\"neutral\":true}",
+    "compiler": "export const neutral=true;"
+  },
+  "refusals": [
+    "missing-publication",
+    "pointer-drift",
+    "bundle-drift",
+    "producer-drift",
+    "component-drift",
+    "escaped-producer"
+  ]
+}

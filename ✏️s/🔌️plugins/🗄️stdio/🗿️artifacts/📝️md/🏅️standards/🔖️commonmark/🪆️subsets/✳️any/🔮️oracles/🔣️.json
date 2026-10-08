@@ -36,21 +36,8 @@
       "capability": "md-commonmark-mutate",
       "standardDirectoryName": "🔖️commonmark",
       "subsetDirectoryName": "✳️any",
-      "vectors": [
-        {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
-          "scenarios": [
-            {
-              "id": "demotes-the-tower-heading-to-level-3",
-              "directoryName": "🔽️demotes"
-            }
-          ]
-        }
-      ],
+      "vectors": [],
       "kinds": [
-        "set-snapshot",
         "insert-block",
         "remove-block",
         "replace-block",
@@ -139,27 +126,6 @@
             "operation": "set-inlines",
             "bridgeVersion": 1,
             "variant": "SetInlines"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "md-commonmark-mutate",
-              "qualifyingKind": "third-party-library"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "md-commonmark-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
           },
           "oracleRequirements": [
             {

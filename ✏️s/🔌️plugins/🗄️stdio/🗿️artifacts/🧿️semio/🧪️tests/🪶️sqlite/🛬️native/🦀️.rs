@@ -9,7 +9,7 @@ fn check<P:ArtifactSqliteSnapshot+ArtifactDsl+ArtifactPack+Default+PartialEq+std
     if provider.snapshot_type!=Some(std::any::TypeId::of::<P>()){failures.push(format!("{name}: declaration type differs"));return;}
     let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:subset.into()};
     for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
-        let payload=match encoding{SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(snapshot.encode_pack()),SnapshotEncoding::Text=>store::os_io::IoPayload::Text(snapshot.print_dsl())};
+        let payload=match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(snapshot.encode_pack()),SnapshotEncoding::Text=>store::io::IoPayload::Text(snapshot.print_dsl())};
         match P::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())){Ok(actual)=>assert_eq!(actual,snapshot,"{name} {encoding:?}"),Err(error)=>{failures.push(format!("{name} {encoding:?}: {error}"));continue;}}
         if let Err(error)=(provider.export)(&codec.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())){failures.push(format!("{name} declaration {encoding:?}: {error:?}"));}
     }

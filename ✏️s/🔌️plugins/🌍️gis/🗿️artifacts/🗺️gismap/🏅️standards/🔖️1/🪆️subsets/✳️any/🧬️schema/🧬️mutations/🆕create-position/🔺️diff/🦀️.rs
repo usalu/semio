@@ -11,6 +11,11 @@ pub fn diff(payload: &CreatePosition, base: &GisMapSnapshot) -> protocol::Mutati
     if base.positions.iter().any(|feature| feature.id == payload.item.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A position with id \"{}\" already exists.", payload.item.id), [payload.item.id.clone()]);
     }
-    protocol::MutationOutcome::new(GisMapDiff { positions: Some(GisMapFeaturesDelta { added: vec![payload.item.clone()], ..Default::default() }), ..Default::default() })
+    let reordered = (payload.index < base.positions.len()).then(|| {
+        let mut order: Vec<String> = base.positions.iter().map(|feature| feature.id.clone()).collect();
+        order.insert(payload.index, payload.item.id.clone());
+        order
+    });
+    protocol::MutationOutcome::new(GisMapDiff { positions: Some(GisMapFeaturesDelta { added: vec![payload.item.clone()], reordered, ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔹Diff

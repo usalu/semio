@@ -1,2 +1,0 @@
-# 📸️ Whole JpgSnapshot replacement.
-input SetSnapshot { snapshot: JpgSnapshot! }

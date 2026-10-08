@@ -1,10 +1,7 @@
-#[test]
-fn applies_insert_load_case() {
-    use crate::mutations::insert_load_case::InsertLoadCase;
-    use crate::En1996Snapshot;
-    use protocol::MutationKind;
-    let base = En1996Snapshot::compliant_clay_wall();
-    let _ = base;
-    // Constructed in aggregate from_snapshot / unit suite; leaf compiles and SEMANTICS are wired.
-    assert_eq!(<InsertLoadCase as MutationKind<En1996Snapshot, crate::En1996Mutation>>::SEMANTICS.kind, "insert-load-case");
+//! 🧪️ `insert-load-case` — the committed applied vector's inverse diffs sum to the negative of its forward diff.
+
+#[semio_framework_async_macros::async_test]
+async fn insert_load_case_inverse_diffs_sum_to_the_negative_diff() {
+    let (mutation, before) = crate::mutations::fixture_tests::applied_vector("insert-load-case");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
 }

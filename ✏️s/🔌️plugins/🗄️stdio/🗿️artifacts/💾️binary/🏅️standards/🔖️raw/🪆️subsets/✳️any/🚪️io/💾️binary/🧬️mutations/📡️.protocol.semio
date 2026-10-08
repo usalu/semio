@@ -11,8 +11,6 @@ framing record
 header fixed 2
 field format u8
 field tag varint
-record set-snapshot tag=0
-field payload bytes
 record replace-byte-range tag=1
 field payload bytes
 record append-bytes tag=2

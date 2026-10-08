@@ -1,48 +1,35 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "title": null,
   "blocks": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "rows": [
       {
+        "row": "patch",
         "id": "blk-text",
         "patch": {
-          "block": {
-            "kind": "text",
-            "id": "blk-text",
-            "name": "Intro",
-            "x": 0.0,
-            "y": 0.0,
-            "width": 280.0,
-            "height": 120.0,
-            "rotation": 0.0,
-            "visible": true,
-            "locked": false,
-            "content": {
-              "handle": {
-                "childId": "note-text-2252e245395c55b7",
-                "target": {
-                  "artifactId": "blk-text-text",
-                  "dialect": {
-                    "artifactKind": "s.stdio.semio",
-                    "standard": "v1",
-                    "subset": "text"
-                  }
-                }
-              },
-              "paragraphs": []
-            },
-            "fontSize": 24.0,
-            "fontWeight": "normal",
-            "align": "left"
-          }
+          "name": null,
+          "x": null,
+          "y": null,
+          "width": null,
+          "height": null,
+          "rotation": null,
+          "visible": null,
+          "locked": null,
+          "content": null,
+          "fontSize": 24.0,
+          "fontWeight": null,
+          "align": null,
+          "imageKey": null,
+          "table": null,
+          "tex": null,
+          "displayMode": null,
+          "points": null,
+          "strokeWidth": null,
+          "color": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "gridVisible": null,
   "gridSpacing": null,

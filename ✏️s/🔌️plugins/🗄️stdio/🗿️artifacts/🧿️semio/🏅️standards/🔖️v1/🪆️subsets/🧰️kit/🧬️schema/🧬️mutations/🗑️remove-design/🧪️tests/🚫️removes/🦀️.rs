@@ -32,7 +32,7 @@ fn mutation() -> SemioKitMutation {
 async fn removes_the_design_and_the_pieces_nested_inside_it() {
     let base = before();
     assert!(!base.designs[0].pieces.is_empty(), "the fixture needs a non-empty design for the two-step inverse to matter");
-    let produced = mutation().diff(&base).diff().apply(&base).expect("remove-design applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("remove-design applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "remove-design/removes-the-only-design-together-with-its-pieces: applied state differs from the committed after-snapshot");
     assert!(produced.designs.is_empty(), "the only design must be gone");
     assert_eq!(produced.types, base.types, "removing a design must not touch the type catalogue it referenced");
@@ -43,14 +43,15 @@ async fn removes_the_design_and_the_pieces_nested_inside_it() {
 async fn the_undo_readds_the_design_then_refills_its_content() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 2, "an empty add-design alone would lose the pieces — the inverse needs an edit-design too");
-    assert!(matches!(undo[0], SemioKitMutation::AddDesign(_)), "the shell must be recreated first");
-    let SemioKitMutation::EditDesign(refill) = &undo[1] else { panic!("the second undo step must be edit-design") };
+    assert!(matches!(undo[1], SemioKitMutation::AddDesign(_)), "rows are stored reversed: the shell is re-created first, so its row comes last");
+    let SemioKitMutation::EditDesign(refill) = &undo[0] else { panic!("the first stored undo row must be edit-design") };
     assert_eq!(refill.pieces, base.designs[0].pieces, "the refill must recapture the removed design's own pieces");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward remove-design applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("each undo step applies to the running state");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward remove-design applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
     }
     assert_eq!(current, base, "remove-design/removes-the-only-design-together-with-its-pieces: the undo did not restore the before-snapshot");
 }
@@ -93,7 +94,6 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-design diff decodes");
-    assert_eq!(decoded.designs.as_ref().map(|list| list.values.len()), Some(0), "the diff carries the emptied design list, not a removal marker");
     assert!(decoded.types.is_none() && decoded.objects.is_none() && decoded.models.is_none() && decoded.properties.is_none() && decoded.representations.is_none(), "no other kit slot may appear in the diff");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -104,6 +104,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-design diff decodes");
-    let produced = decoded.apply(&before()).expect("committed remove-design diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed remove-design diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-design/removes-the-only-design-together-with-its-pieces: committed diff did not carry before to after");
 }

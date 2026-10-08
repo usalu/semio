@@ -57,8 +57,8 @@ fn between_roundtrip_law_scalars_and_kind_change() {
     ];
     for (a, b) in cases {
         let (sa, sb) = (snap(a.clone(), vec![]), snap(b.clone(), vec![]));
-        assert_eq!(SemioValueTreeDiff::between(&sa, &sb).apply(&sa).expect("apply must succeed for a well-formed fixture"), sb, "a={a:?} b={b:?}");
-        assert_eq!(SemioValueTreeDiff::between(&sb, &sa).apply(&sb).expect("apply must succeed for a well-formed fixture"), sa);
+        assert_eq!(protocol::apply_diff(&SemioValueTreeDiff::between(&sa, &sb), &sa).expect("apply must succeed for a well-formed fixture"), sb, "a={a:?} b={b:?}");
+        assert_eq!(protocol::apply_diff(&SemioValueTreeDiff::between(&sb, &sa), &sb).expect("apply must succeed for a well-formed fixture"), sa);
     }
 }
 
@@ -66,8 +66,8 @@ fn between_roundtrip_law_scalars_and_kind_change() {
 fn between_roundtrip_law_nested_collections_and_graph() {
     let a = snap(mapv(vec![("tags", listv(vec![strv("x"), strv("y")])), ("n", intv("1"))]), vec![node("n1", strv("hello"))]);
     let b = snap(mapv(vec![("tags", listv(vec![strv("x"), strv("z"), strv("w")])), ("n", intv("2")), ("extra", refv("n1"))]), vec![node("n1", strv("world")), node("n2", intv("9"))]);
-    assert_eq!(SemioValueTreeDiff::between(&a, &b).apply(&a).expect("apply must succeed for a well-formed fixture"), b);
-    assert_eq!(SemioValueTreeDiff::between(&b, &a).apply(&b).expect("apply must succeed for a well-formed fixture"), a);
+    assert_eq!(protocol::apply_diff(&SemioValueTreeDiff::between(&a, &b), &a).expect("apply must succeed for a well-formed fixture"), b);
+    assert_eq!(protocol::apply_diff(&SemioValueTreeDiff::between(&b, &a), &b).expect("apply must succeed for a well-formed fixture"), a);
 }
 
 #[test]
@@ -83,10 +83,10 @@ fn inverse_law_diff_level() {
     let a = snap(mapv(vec![("x", intv("1")), ("y", listv(vec![intv("1"), intv("2")]))]), vec![node("n1", strv("a"))]);
     let b = snap(mapv(vec![("x", intv("2")), ("z", strv("new"))]), vec![node("n1", strv("b")), node("n2", intv("5"))]);
     let d = SemioValueTreeDiff::between(&a, &b);
-    let mid = d.apply(&a).expect("apply must succeed for a well-formed fixture");
+    let mid = protocol::apply_diff(&d, &a).expect("apply must succeed for a well-formed fixture");
     assert_eq!(mid, b);
     let inv = d.inverse(&a);
-    assert_eq!(inv.apply(&mid).expect("apply must succeed for a well-formed fixture"), a);
+    assert_eq!(protocol::apply_diff(&inv, &mid).expect("apply must succeed for a well-formed fixture"), a);
 }
 //#endregion inverse_law
 
@@ -105,10 +105,10 @@ fn absorb_list_insert_then_remove_before() {
     let base = snap(listv(vec![strv("a"), strv("b"), strv("c")]), vec![]);
     let d1 = list_diff(IndexedTripleDiff { added: vec![IndexAdded { index: 2, item: strv("f") }], ..Default::default() });
     let d2 = list_diff(IndexedTripleDiff { removed: vec![0], ..Default::default() });
-    let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&base).expect("apply must succeed for a well-formed fixture"), sequential);
+    assert_eq!(protocol::apply_diff(&combined, &base).expect("apply must succeed for a well-formed fixture"), sequential);
     assert_eq!(sequential.root, listv(vec![strv("b"), strv("f"), strv("c")]));
     match &combined.root {
         Some(SemioValueDiff::List { diff }) => {
@@ -124,10 +124,10 @@ fn absorb_list_insert_insert_same_index_both_survive() {
     let base = snap(listv(vec![strv("a"), strv("b")]), vec![]);
     let d1 = list_diff(IndexedTripleDiff { added: vec![IndexAdded { index: 2, item: strv("f") }], ..Default::default() });
     let d2 = list_diff(IndexedTripleDiff { added: vec![IndexAdded { index: 2, item: strv("g") }], ..Default::default() });
-    let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&base).expect("apply must succeed for a well-formed fixture"), sequential);
+    assert_eq!(protocol::apply_diff(&combined, &base).expect("apply must succeed for a well-formed fixture"), sequential);
     assert_eq!(sequential.root, listv(vec![strv("a"), strv("b"), strv("g"), strv("f")]));
     match &combined.root {
         Some(SemioValueDiff::List { diff }) => assert_eq!(diff.added.len(), 2, "both inserts must survive"),
@@ -140,10 +140,10 @@ fn absorb_list_insert_then_remove_of_same_added_item_cancels() {
     let base = snap(listv(vec![strv("a")]), vec![]);
     let d1 = list_diff(IndexedTripleDiff { added: vec![IndexAdded { index: 1, item: strv("f") }], ..Default::default() });
     let d2 = list_diff(IndexedTripleDiff { removed: vec![1], ..Default::default() });
-    let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&base).expect("apply must succeed for a well-formed fixture"), sequential);
+    assert_eq!(protocol::apply_diff(&combined, &base).expect("apply must succeed for a well-formed fixture"), sequential);
     assert_eq!(sequential, base);
     assert!(combined.is_empty(), "cancelling insert+remove must coalesce to an empty diff");
 }
@@ -156,10 +156,10 @@ fn absorb_list_add_then_setfield_patches_added_payload() {
         modified: vec![IndexModified { index: 0, diff: SemioValueDiff::Map { diff: NamedTripleDiff { added: vec![NamedAdded { index: 1, item: SemioValueEntry { key: "y".into(), value: intv("2") } }], ..Default::default() } } }],
         ..Default::default()
     });
-    let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&base).expect("apply must succeed for a well-formed fixture"), sequential);
+    assert_eq!(protocol::apply_diff(&combined, &base).expect("apply must succeed for a well-formed fixture"), sequential);
     assert_eq!(sequential.root, listv(vec![mapv(vec![("x", intv("1")), ("y", intv("2"))])]));
     match &combined.root {
         Some(SemioValueDiff::List { diff }) => {
@@ -176,10 +176,10 @@ fn absorb_list_modify_then_remove_drops_pending_patch() {
     let base = snap(listv(vec![intv("1"), intv("2")]), vec![]);
     let d1 = list_diff(IndexedTripleDiff { modified: vec![IndexModified { index: 0, diff: SemioValueDiff::Int { lexeme: "9".into() } }], ..Default::default() });
     let d2 = list_diff(IndexedTripleDiff { removed: vec![0], ..Default::default() });
-    let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&base).expect("apply must succeed for a well-formed fixture"), sequential);
+    assert_eq!(protocol::apply_diff(&combined, &base).expect("apply must succeed for a well-formed fixture"), sequential);
     assert_eq!(sequential.root, listv(vec![intv("2")]));
     match &combined.root {
         Some(SemioValueDiff::List { diff }) => {
@@ -209,8 +209,8 @@ fn absorb_list_associativity() {
     let mut right = d1.clone();
     right.absorb(right_tail);
 
-    assert_eq!(left.apply(&s0).expect("apply must succeed for a well-formed fixture"), s3);
-    assert_eq!(right.apply(&s0).expect("apply must succeed for a well-formed fixture"), s3);
+    assert_eq!(protocol::apply_diff(&left, &s0).expect("apply must succeed for a well-formed fixture"), s3);
+    assert_eq!(protocol::apply_diff(&right, &s0).expect("apply must succeed for a well-formed fixture"), s3);
     assert_eq!(left, right);
 }
 //#endregion absorb_law canonical cases (list/index-keyed)
@@ -225,7 +225,7 @@ fn absorb_map_add_then_setfield_patches_added_payload() {
     let d2 = SemioValueTreeDiff::between(&mid, &after);
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&base).expect("apply must succeed for a well-formed fixture"), after);
+    assert_eq!(protocol::apply_diff(&combined, &base).expect("apply must succeed for a well-formed fixture"), after);
     match &combined.root {
         Some(SemioValueDiff::Map { diff }) => {
             assert!(diff.modified.is_empty());
@@ -245,7 +245,7 @@ fn absorb_map_modify_then_remove_drops_pending_patch() {
     let d2 = SemioValueTreeDiff::between(&mid, &after);
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&base).expect("apply must succeed for a well-formed fixture"), after);
+    assert_eq!(protocol::apply_diff(&combined, &base).expect("apply must succeed for a well-formed fixture"), after);
     match &combined.root {
         Some(SemioValueDiff::Map { diff }) => {
             assert_eq!(diff.removed, vec!["a".to_string()]);
@@ -264,7 +264,7 @@ fn absorb_map_insert_insert_both_survive() {
     let d2 = SemioValueTreeDiff::between(&mid, &after);
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&base).expect("apply must succeed for a well-formed fixture"), after);
+    assert_eq!(protocol::apply_diff(&combined, &base).expect("apply must succeed for a well-formed fixture"), after);
     match &combined.root {
         Some(SemioValueDiff::Map { diff }) => assert_eq!(diff.added.len(), 2),
         other => panic!("expected map diff, got {other:?}"),
@@ -280,7 +280,7 @@ fn absorb_map_insert_then_remove_of_same_added_item_cancels() {
     let d2 = SemioValueTreeDiff::between(&mid, &after);
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&base).expect("apply must succeed for a well-formed fixture"), base);
+    assert_eq!(protocol::apply_diff(&combined, &base).expect("apply must succeed for a well-formed fixture"), base);
     assert!(combined.is_empty());
 }
 
@@ -303,8 +303,8 @@ fn absorb_map_associativity() {
     let mut right = d1.clone();
     right.absorb(right_tail);
 
-    assert_eq!(left.apply(&s0).expect("apply must succeed for a well-formed fixture"), s3);
-    assert_eq!(right.apply(&s0).expect("apply must succeed for a well-formed fixture"), s3);
+    assert_eq!(protocol::apply_diff(&left, &s0).expect("apply must succeed for a well-formed fixture"), s3);
+    assert_eq!(protocol::apply_diff(&right, &s0).expect("apply must succeed for a well-formed fixture"), s3);
     assert_eq!(left, right);
 }
 //#endregion absorb_law canonical cases (map/name-keyed)
@@ -319,7 +319,7 @@ fn absorb_nodes_add_then_setfield_patches_added_payload() {
     let d2 = SemioValueTreeDiff::between(&mid, &after);
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&base).expect("apply must succeed for a well-formed fixture"), after);
+    assert_eq!(protocol::apply_diff(&combined, &base).expect("apply must succeed for a well-formed fixture"), after);
     match &combined.nodes {
         Some(diff) => {
             assert!(diff.modified.is_empty());
@@ -339,7 +339,7 @@ fn absorb_nodes_modify_then_remove_drops_pending_patch() {
     let d2 = SemioValueTreeDiff::between(&mid, &after);
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&base).expect("apply must succeed for a well-formed fixture"), after);
+    assert_eq!(protocol::apply_diff(&combined, &base).expect("apply must succeed for a well-formed fixture"), after);
     match &combined.nodes {
         Some(diff) => {
             assert_eq!(diff.removed, vec![ValueId::new("a")]);
@@ -368,8 +368,8 @@ fn absorb_nodes_associativity() {
     let mut right = d1.clone();
     right.absorb(right_tail);
 
-    assert_eq!(left.apply(&s0).expect("apply must succeed for a well-formed fixture"), s3);
-    assert_eq!(right.apply(&s0).expect("apply must succeed for a well-formed fixture"), s3);
+    assert_eq!(protocol::apply_diff(&left, &s0).expect("apply must succeed for a well-formed fixture"), s3);
+    assert_eq!(protocol::apply_diff(&right, &s0).expect("apply must succeed for a well-formed fixture"), s3);
     assert_eq!(left, right);
 }
 //#endregion absorb_law canonical cases (nodes graph / id-keyed)
@@ -420,8 +420,8 @@ fn sweep_b() -> SemioValueSnapshot {
 #[test]
 fn field_sweep_between_roundtrips_both_directions() {
     let (a, b) = (sweep_a(), sweep_b());
-    assert_eq!(SemioValueTreeDiff::between(&a, &b).apply(&a).expect("apply must succeed for a well-formed fixture"), b);
-    assert_eq!(SemioValueTreeDiff::between(&b, &a).apply(&b).expect("apply must succeed for a well-formed fixture"), a);
+    assert_eq!(protocol::apply_diff(&SemioValueTreeDiff::between(&a, &b), &a).expect("apply must succeed for a well-formed fixture"), b);
+    assert_eq!(protocol::apply_diff(&SemioValueTreeDiff::between(&b, &a), &b).expect("apply must succeed for a well-formed fixture"), a);
     assert!(SemioValueTreeDiff::between(&a, &a).is_empty());
 }
 

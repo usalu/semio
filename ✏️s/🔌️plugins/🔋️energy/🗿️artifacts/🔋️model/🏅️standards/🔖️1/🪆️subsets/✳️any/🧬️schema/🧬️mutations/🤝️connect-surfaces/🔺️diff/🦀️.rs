@@ -16,7 +16,10 @@ pub fn diff(payload: &super::ConnectSurfaces, base: &EnergyModelSnapshot) -> pro
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", "These two surfaces are already adjacent.", [payload.surface_a_id.0.to_string(), payload.surface_b_id.0.to_string()]);
     }
     let pair = crate::model::AdjacencyPair { surface_a_id: payload.surface_a_id, surface_b_id: payload.surface_b_id };
-    let position = base.model.adjacency_pairs.iter().position(|item| (item.surface_a_id, item.surface_b_id) > (pair.surface_a_id, pair.surface_b_id)).unwrap_or(base.model.adjacency_pairs.len());
+    let position = payload.index.map_or_else(|| base.model.adjacency_pairs.iter().position(|item| (item.surface_a_id, item.surface_b_id) > (pair.surface_a_id, pair.surface_b_id)).unwrap_or(base.model.adjacency_pairs.len()), |index| index as usize);
+    if position > base.model.adjacency_pairs.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} adjacency_pairs.", position, base.model.adjacency_pairs.len()), [payload.surface_a_id.0.to_string(), payload.surface_b_id.0.to_string()]);
+    }
     protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { adjacency_pairs: Rows::inserting(position, pair), ..Default::default() }))
 }
 //#endregion 🔖️Diff

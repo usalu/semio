@@ -11,6 +11,9 @@ pub fn inverse(payload: &super::AddOutputVariable, base: &EnergyModelSnapshot) -
     if payload.name.trim().is_empty() || base.model.output_variables.iter().any(|spec| spec.name == payload.name && spec.key == payload.key) {
         return Vec::new();
     }
+    if payload.index.is_some_and(|index| index as usize > base.model.output_variables.len()) {
+        return Vec::new();
+    }
     vec![vocabulary::remove_output_variable(payload.name.clone(), payload.key.clone())]
 
     })())

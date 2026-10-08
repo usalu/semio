@@ -40,10 +40,11 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
+    use semio_s_artifact_stdio_semio::apply_diff;
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::mutations::{
-        apply_semio_image_mutation, insert_frame, inverse_semio_image_mutation, move_frame, remove_frame, remove_metadata_entry, set_bit_depth, set_colorspace, set_dimensions, set_frame_delay, set_frame_pixels, set_icc, set_metadata_entry, set_snapshot, SemioImageMutation,
+        diff_semio_image_mutation, insert_frame, inverse_semio_image_mutation, move_frame, remove_frame, remove_metadata_entry, set_bit_depth, set_colorspace, set_dimensions, set_frame_delay, set_frame_pixels, set_icc, set_metadata_entry, SemioImageMutation,
     };
     use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::image::io::binary::snapshot::{encode_semio_image_pack};
@@ -120,19 +121,8 @@ mod subject {
             metadata: json.array("metadata").iter().map(|entry| SemioImageMetadataEntry { key: entry.str("key"), value: entry.str("value") }).collect(),
         })
     }
-    /// 🧫️ The committed mutation payloads are serde's internally-tagged shape (`{"mutation": "…"}`)
-    /// with camelCase VARIANT names, exactly `SemioImageMutation`'s own `#[serde(tag = "mutation",
-    /// rename_all = "camelCase")]` declaration. That attribute renames variants and NOT their
-    /// fields, so a struct-variant's own keys stay snake_case — `bit_depth`, `delay_ms` — while a
-    /// NESTED payload keeps its own camelCase (`bitDepth`, `delayMs`).
-    /// 🧭️ `"noMutation"` is the dropped `NoMutation` verb's committed spelling (`no` is not an
-    /// APPROVED_VERB, so the leaf migration could not keep it as a variant) — it maps to the
-    /// identity mutation `SetSnapshot(base.clone())` rather than failing, so the committed
-    /// `no-mutation` scenario keeps exercising the "nothing changes" law instead of being deleted.
     fn decode_mutation(json: &Json, base: &SemioImageSnapshot) -> Result<SemioImageMutation, String> {
         match json.str("mutation").as_str() {
-            "noMutation" => Ok(SemioImageMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })),
-            "setSnapshot" => Ok(SemioImageMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: decode_snapshot(json.get("snapshot").ok_or("setSnapshot payload carries no snapshot")?)? })),
             "setDimensions" => Ok(SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width: u32_field(json, "width")?, height: u32_field(json, "height")? })),
             "setColorspace" => Ok(SemioImageMutation::SetColorspace(set_colorspace::SetColorspace { colorspace: decode_colorspace(&json.str("colorspace"))? })),
             "setBitDepth" => Ok(SemioImageMutation::SetBitDepth(set_bit_depth::SetBitDepth { bit_depth: u32_field(json, "bit_depth")? as u8 })),
@@ -142,7 +132,7 @@ mod subject {
             "moveFrame" => Ok(SemioImageMutation::MoveFrame(move_frame::MoveFrame { from: usize_field(json, "from")?, to: usize_field(json, "to")? })),
             "setFrameDelay" => Ok(SemioImageMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index: usize_field(json, "index")?, delay_ms: u32_field(json, "delay_ms")? })),
             "setFramePixels" => Ok(SemioImageMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index: usize_field(json, "index")?, rgba8: bytes_field(json, "rgba8")? })),
-            "setMetadataEntry" => Ok(SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: json.str("key"), value: json.str("value") })),
+            "setMetadataEntry" => Ok(SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: json.str("key"), value: json.str("value"), at: None })),
             "removeMetadataEntry" => Ok(SemioImageMutation::RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry { key: json.str("key") })),
             other => Err(format!("no decoder for mutation variant {other:?}")),
         }
@@ -154,9 +144,6 @@ mod subject {
         parse_semio_image_dsl(&text)
     }
 
-    /// 📜️ The scenario's own mutation payload — the committed fixture its steps name, or, for the
-    /// `no-mutation` baselines, the sentinel in its doc string. The feature owns both; `base` is only
-    /// consulted for that sentinel's identity mapping.
     fn payload(ctx: &Context, base: &SemioImageSnapshot) -> Result<SemioImageMutation, String> {
         let json = match mutation_uri(ctx) {
             Some(uri) => ctx.input_json(&uri)?,
@@ -244,9 +231,10 @@ mod subject {
     }
 
     fn apply(current: &mut SemioImageSnapshot, step: &SemioImageMutation, what: &str) -> Result<(), String> {
-        let outcome = apply_semio_image_mutation(current, step);
+        let outcome = diff_semio_image_mutation(step, current);
         let refusals = semio_mutation_refusals(&outcome);
         if refusals.is_empty() {
+            *current = apply_diff(outcome.diff(), current).map_err(|error| format!("the diff could not be applied: {error:?}"))?;
             return Ok(());
         }
         Err(format!("{what}: the mutation was rejected: {refusals:?}"))
@@ -271,7 +259,7 @@ mod subject {
         let mut current = base.clone();
         apply(&mut current, &step, &ctx.scenario.id)?;
         let mutated = snapshot_json(&current);
-        for undo in inverse_semio_image_mutation(&step, &base).expect("valid retained mutation inverse fixture") {
+        for undo in inverse_semio_image_mutation(&step, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             apply(&mut current, &undo, &ctx.scenario.id)?;
         }
         if current != base {
@@ -354,9 +342,9 @@ pub fn adapter() -> Adapter {
     #[cfg(feature = "sut")]
     {
         built = built
-            .subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate)
-            .subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse)
-            .subject("spec-vector", subject::spec_vector).subject("spec-vector-no-mutation", subject::spec_vector);
+            .subject("mutate", subject::mutate)
+            .subject("inverse", subject::inverse)
+            .subject("spec-vector", subject::spec_vector);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

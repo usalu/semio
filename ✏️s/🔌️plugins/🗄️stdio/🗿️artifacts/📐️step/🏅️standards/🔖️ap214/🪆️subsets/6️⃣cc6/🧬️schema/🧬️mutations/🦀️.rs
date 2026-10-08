@@ -33,11 +33,8 @@
 //! real `ADVANCED_BREP_SHAPE_REPRESENTATION`, rung 6, sitting exactly on this ceiling. Every other
 //! class has to repair the file before it conforms; CC6 has to preserve it.
 //!
-//! ⚠️ **A conformance class is not closed under inversion** — except, uniquely, this one. Because no
-//! representation is above CC6's ceiling, the base's own representation is always admissible here,
-//! so `inverse()` never has to degrade a ladder edit to `SetSnapshot`. The degradation path is
-//! written anyway, because the shared inversion it routes through is class-neutral and a class must
-//! not assume its own reachability argument; it is documented as unreachable rather than deleted.
+//! ⚠️ **A conformance class is not closed under inversion** -- except, uniquely, this one, because no representation is above CC6's
+//! ceiling. `inverse()` still restores every touched entity through the class-neutral `restore-entities`, an exact absolute write at the original position.
 //!
 //! @see ../../../🧱️base/🚪️io/🪜️ladder/🦀️.rs — the class-neutral edit implementations all six
 //!      `✳️ccN` vocabularies route through, so each axis has ONE implementation and six callers.
@@ -46,58 +43,54 @@
 use crate::schema::diff::StepDiff;
 #[cfg(test)]
 use crate::standards::v_ap214::engine::ladder::ShapeRepresentationRow;
-use crate::standards::v_ap214::engine::ladder::{self, ClassEdit};
-use crate::standards::v_ap214::subsets::cc6::schema::MAX_RUNG;
+use crate::standards::v_ap214::engine::ladder;
 use crate::StepSnapshot;
-use protocol::command::DiffAlgebra;
 use protocol::Mutation;
 
 pub use crate::standards::v_ap214::subsets::base::schema::mutations::{apply_step_mutation, StepMutation};
 
 //#region 🔖️Vocabulary
 /// 🏷️ How this class names itself in a rejection message.
-const CLASS: &str = "ISO 10303-214 CC6 (advanced B-Rep, top of the ladder)";
+pub(crate) const CLASS: &str = "ISO 10303-214 CC6 (advanced B-Rep, top of the ladder)";
 
 //#region 🔖️Leaves
+#[path = "↩️restore-entities/🦀️.rs"]
+pub mod restore_entities;
 #[path = "🏷️set-file-schema/🦀️.rs"]
 pub mod set_file_schema;
 #[path = "🪪set-product-identity/🦀️.rs"]
 pub mod set_product_identity;
 #[path = "🪜set-shape-representation/🦀️.rs"]
 pub mod set_shape_representation;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed conformance-class mutation for `stdio.step` at `ap214/6️⃣cc6`.
 ///
-/// ⚠️ `NoMutation` is GONE — `#[derive(dsl::Mutations)]` requires every variant to wrap exactly one
-/// leaf payload and a unit variant wraps none. Its only role was `inverse()`'s "nothing to undo" arm,
-/// now the empty vector. `SetSnapshot` is KEPT: the derive checks `SEMANTICS.verb`, not the kind, and
-/// `set` is approved — so this class's whole-document restore survives intact.
+/// Every inverse restores the touched entities through `restore-entities`, an exact absolute write that is not filtered by the class
+/// ceiling, so undoing a repair can re-introduce the violation the repair removed.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = StepSnapshot, diff = StepDiff, schema = "s.stdio.step.cc6")]
 pub enum StepCc6Mutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
     SetFileSchema(set_file_schema::SetFileSchema),
     SetProductIdentity(set_product_identity::SetProductIdentity),
     SetShapeRepresentation(set_shape_representation::SetShapeRepresentation),
+    RestoreEntities(restore_entities::RestoreEntities),
 }
 
 /// 📇️ Kebab-case spelling of every `StepCc6Mutation` variant, in declaration order — the
 /// `step-ap214-cc6` catalog in `../../🔣️oracle.json` must match verbatim. Four kinds,
 /// not five: see the module header for why a demotion verb would be unobservable at this ceiling.
-pub const KINDS: &[&str] = &["set-snapshot", "set-file-schema", "set-product-identity", "set-shape-representation"];
+pub const KINDS: &[&str] = &["set-file-schema", "set-product-identity", "set-shape-representation", "restore-entities"];
 
 impl StepCc6Mutation {
     /// 🏷️ This mutation's own kebab-case kind — the single spelling `KINDS`, the catalog and the
     /// feature file's `Examples` row ids are all measured against.
     pub fn kind(&self) -> &'static str {
         match self {
-            StepCc6Mutation::SetSnapshot(_) => "set-snapshot",
             StepCc6Mutation::SetFileSchema(_) => "set-file-schema",
             StepCc6Mutation::SetProductIdentity(_) => "set-product-identity",
             StepCc6Mutation::SetShapeRepresentation(_) => "set-shape-representation",
+            StepCc6Mutation::RestoreEntities(_) => "restore-entities",
         }
     }
 }
@@ -110,7 +103,7 @@ impl StepCc6Mutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_step_cc6_mutation(snapshot: &mut StepSnapshot, mutation: &StepCc6Mutation) -> protocol::MutationOutcome<StepDiff> {
     let outcome = <StepCc6Mutation as Mutation<StepSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -124,40 +117,32 @@ pub(crate) fn rejected(message: String) -> protocol::MutationOutcome<StepDiff> {
     protocol::MutationOutcome::error("mutation.target-mismatch", message, Vec::<String>::new())
 }
 
+/// ↩️ Wraps the neutral restore rows into this class's single `restore-entities` mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn edited(base: &StepSnapshot, edit: &ClassEdit) -> Result<StepSnapshot, String> {
-    let mut doc = base.to_part21_document();
-    ladder::apply_class_edit(&mut doc, CLASS, MAX_RUNG, edit)?;
-    Ok(StepSnapshot::from_part21_document(&doc))
+pub(crate) fn restored(rows: Vec<ladder::EntityRestore>) -> Vec<StepCc6Mutation> {
+    if rows.is_empty() {
+        return Vec::new();
+    }
+    vec![StepCc6Mutation::RestoreEntities(restore_entities::RestoreEntities { entities: rows })]
+}
+
+/// 🧮️ The leaf mutations that carry `base` to `next`: a changed `FILE_SCHEMA` becomes `set-file-schema` and every entity edit becomes a
+/// `restore-entities` row ordered so no intermediate snapshot holds a dangling reference. `None` when `next` changes the document `schema`, the
+/// file description or the file name, which this class has no verb for, or when the entity edits cannot be ordered.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn net_mutations(base: &StepSnapshot, next: &StepSnapshot) -> Option<Vec<StepCc6Mutation>> {
+    if base.schema != next.schema || base.header.file_description != next.header.file_description || base.header.file_name != next.header.file_name {
+        return None;
+    }
+    let mut leaves = Vec::new();
+    if base.header.file_schema != next.header.file_schema {
+        leaves.push(StepCc6Mutation::SetFileSchema(set_file_schema::SetFileSchema { schemas: next.header.file_schema.schemas.clone() }));
+    }
+    leaves.extend(restored(ladder::net_restore_rows(base, next)?));
+    Some(leaves)
 }
 //#endregion 🔖️Apply
 
-//#region 🔖️ClassEdit
-/// 🎚️ The diff every ladder-axis leaf produces: perform the class-neutral edit, or report the class's
-/// own refusal. One implementation, every leaf a caller.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn class_diff(base: &StepSnapshot, edit: &ClassEdit) -> protocol::MutationOutcome<StepDiff> {
-    match edited(base, edit) {
-        Ok(next) => protocol::MutationOutcome::new(<StepDiff as DiffAlgebra<StepSnapshot>>::between(base, &next)),
-        Err(message) => rejected(message),
-    }
-}
-
-/// ↩️ A real per-axis inverse read off the base wherever this class owns a verb for it, and an
-/// explicit whole-snapshot restore where it does not.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn class_inverse(base: &StepSnapshot, edit: &ClassEdit) -> Result<Vec<StepCc6Mutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    match ladder::invert_class_edit_restoring(&base.to_part21_document(), CLASS, MAX_RUNG, edit) {
-        Some(ClassEdit::FileSchema { schemas }) => vec![StepCc6Mutation::SetFileSchema(set_file_schema::SetFileSchema { schemas })],
-        Some(ClassEdit::ProductIdentity { identity }) => vec![StepCc6Mutation::SetProductIdentity(set_product_identity::SetProductIdentity { identity })],
-        Some(ClassEdit::Representation { id, row }) => vec![StepCc6Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id, representation: row })],
-        _ => vec![StepCc6Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-    }
-
-    })())
-}
-//#endregion 🔖️ClassEdit
 
 //#region 🧪️Tests
 #[cfg(test)]

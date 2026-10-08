@@ -14,5 +14,6 @@
       3.0
     ]
   ],
-  "transmittanceScheduleId": null
+  "transmittanceScheduleId": null,
+  "index": null
 }

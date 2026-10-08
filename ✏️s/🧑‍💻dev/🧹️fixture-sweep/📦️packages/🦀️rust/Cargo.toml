@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../.."
+workspace = "../.."
 name = "semio-s-fixture-sweep"
 version = "0.1.0"
 edition = "2021"
@@ -75,3 +75,6 @@ semio-s-artifact-trinity-rewriting = { workspace = true }
 semio-s-artifact-vcs-vcs = { workspace = true }
 semio-s-artifact-writer-writer = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["mutation-testing"] }

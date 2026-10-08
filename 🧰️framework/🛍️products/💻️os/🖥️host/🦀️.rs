@@ -917,7 +917,7 @@ use semio_framework_value::ValueError;
                 node.label = label.into();
             }
             self.dispatch_apply(vec![workflow::WorkflowMutation::AddNode(workflow::AddNode { node })])?;
-            resolve_kernel_future(space_store.dispatch(ArtifactCommand::Apply { mutations: vec![space::SpaceMutation::InstallProgram { plugin_id: plugin_id.into() }], transaction: None }))?;
+            resolve_kernel_future(space_store.dispatch(ArtifactCommand::Apply { mutations: vec![space::SpaceMutation::InstallProgram { plugin_id: plugin_id.into(), index: None }], transaction: None }))?;
             Ok(node_id)
         }
 
@@ -2021,7 +2021,7 @@ pub mod media_export_raster {
     impl OsMediaExportResult {
         /// 📤️ Build an export result from raw bytes + stdio format kind id.
         pub fn from_format_kind_bytes(bytes: Vec<u8>, format_artifact_kind: &str, file_stem: &str) -> Result<Self, String> {
-            let entry = semio_framework::format_descriptor(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
+            let entry = semio_framework_os_kernel::io::format_descriptor(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
             let mime_type = entry.mimes.first().cloned().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no MIME claim"))?;
             let extension = entry.extensions.first().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no extension claim"))?;
             let data = if entry.is_binary { base64_codec::base64_standard_encode(&bytes) } else { String::from_utf8(bytes).map_err(|error| error.to_string())? };
@@ -2030,8 +2030,8 @@ pub mod media_export_raster {
     }
 
     /// 🗂️ Build a file-picker `accept` filter from stdio format kind ids (`dwg` / `stdio.dwg`).
-    pub fn media_accept_filter_kinds(format_artifact_kinds: &[&str]) -> Result<String, semio_framework::FormatRegistryError> {
-        semio_framework::format_accept_filter(format_artifact_kinds)
+    pub fn media_accept_filter_kinds(format_artifact_kinds: &[&str]) -> Result<String, semio_framework_os_kernel::io::FormatRegistryError> {
+        semio_framework_os_kernel::io::format_accept_filter(format_artifact_kinds)
     }
 
     #[cfg(not(any(feature = "os-host-full", feature = "space-guest")))]
@@ -2214,7 +2214,7 @@ pub mod media_export_raster {
     pub fn register_mesh_exporter(artifact_kind: &'static str, file_stem: &'static str, mesh_from_document: fn(&Value) -> Result<semio_framework_plugin::MeshData, String>, exporter: Box<dyn semio_framework_plugin::MeshExporter>) {
         let format_kind = exporter.format_kind();
         register_os_media_export_handler_kind(artifact_kind, format_kind, move |doc| {
-            let descriptor = semio_framework::format_descriptor(format_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown mesh export format kind `{format_kind}`"))?;
+            let descriptor = semio_framework_os_kernel::io::format_descriptor(format_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown mesh export format kind `{format_kind}`"))?;
             let extension = descriptor.extensions.first().ok_or_else(|| format!("mesh export format kind `{format_kind}` has no extension claim"))?;
             let mime_type = descriptor.mimes.first().cloned().ok_or_else(|| format!("mesh export format kind `{format_kind}` has no MIME claim"))?;
             let mesh = mesh_from_document(doc)?;
@@ -2448,9 +2448,9 @@ pub mod workflow {
         }
         if !source.export_stdio_kinds.is_empty() && !target.import_stdio_kinds.is_empty() {
             for kind in &source.export_stdio_kinds {
-                let format_kind = semio_framework::format_descriptor(kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown source stdio format kind `{kind}`"))?.kind_id;
+                let format_kind = semio_framework_os_kernel::io::format_descriptor(kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown source stdio format kind `{kind}`"))?.kind_id;
                 for other in &target.import_stdio_kinds {
-                    let target_format_kind = semio_framework::format_descriptor(other).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown target stdio format kind `{other}`"))?.kind_id;
+                    let target_format_kind = semio_framework_os_kernel::io::format_descriptor(other).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown target stdio format kind `{other}`"))?.kind_id;
                     if target_format_kind == format_kind {
                         return Ok(Some(MediaWireFormat::Binary { format_kind }));
                     }
@@ -2467,15 +2467,15 @@ pub mod workflow {
     /// the full rationale — consults the live typed IO registry as a supplement to the
     /// `export_stdio_kinds`/`import_stdio_kinds` static lists, catching drift between the two.
     fn registry_shared_stdio_dialect(source_kind: &str, target_kind: &str) -> Result<Option<String>, String> {
-        use semio_framework::IoDirection;
-        let target_reads: HashSet<&str> = crate::host::resolve_kernel_future(semio_framework::io_dialects_for(target_kind, IoDirection::Import)).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
+        use semio_framework_os_kernel::io::IoDirection;
+        let target_reads: HashSet<&str> = crate::host::resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(target_kind, IoDirection::Import)).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
         if target_reads.contains(source_kind) {
-            let descriptor = semio_framework::format_descriptor(source_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown source dialect format kind `{source_kind}`"))?;
+            let descriptor = semio_framework_os_kernel::io::format_descriptor(source_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown source dialect format kind `{source_kind}`"))?;
             return Ok(Some(descriptor.kind_id));
         }
-        let source_reads: HashSet<&str> = crate::host::resolve_kernel_future(semio_framework::io_dialects_for(source_kind, IoDirection::Import)).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
+        let source_reads: HashSet<&str> = crate::host::resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(source_kind, IoDirection::Import)).map_err(|error| format!("{} registry unavailable", error.registry))?.iter().map(|d| d.artifact_kind).collect();
         if let Some(candidate) = target_reads.intersection(&source_reads).next() {
-            let descriptor = semio_framework::format_descriptor(candidate).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown shared dialect format kind `{candidate}`"))?;
+            let descriptor = semio_framework_os_kernel::io::format_descriptor(candidate).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown shared dialect format kind `{candidate}`"))?;
             return Ok(Some(descriptor.kind_id));
         }
         Ok(None)
@@ -2834,7 +2834,7 @@ pub mod workflow {
     /// `String` (just the `artifact_kind` segment, no `@standard/subset`) because this function's own
     /// two remaining callers (`registry_shared_stdio_dialect` below, and the OLD `io_dispatch`
     /// fallback paths in `registry_export_media`/`registry_import_media`) both talk to the OLD
-    /// `semio_framework::io_dialects_for`/`IoKey` registry (debt D2), whose `Dialect.artifact_kind`
+    /// `semio_framework_os_kernel::io::dialects_for`/`IoKey` registry (debt D2), whose `Dialect.artifact_kind`
     /// is a bare `&str` with no standard/subset fields of its own -- the NEW io-mechanism path below
     /// builds a full `ArtifactDialect` directly from `os_artifact_dialect`, not from this function.
     fn native_dialect_kind(workflow_kind: &str) -> String {
@@ -2866,7 +2866,7 @@ pub mod workflow {
         /// 📤️ Build an export result from raw bytes + stdio format kind id (the legacy format enum was retired —
         /// ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6).
         pub fn from_format_kind_bytes(bytes: Vec<u8>, format_artifact_kind: &str, file_stem: &str) -> Result<Self, String> {
-            let entry = semio_framework::format_descriptor(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
+            let entry = semio_framework_os_kernel::io::format_descriptor(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
             let mime_type = entry.mimes.first().cloned().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no MIME claim"))?;
             let extension = entry.extensions.first().ok_or_else(|| format!("stdio format kind `{format_artifact_kind}` has no extension claim"))?;
             let data = if entry.is_binary { base64_codec::base64_standard_encode(&bytes) } else { String::from_utf8(bytes).map_err(|error| error.to_string())? };
@@ -2893,7 +2893,7 @@ pub mod workflow {
 
     /// 📤️ Export via `(artifact_kind, format_artifact_kind)` stdio kind ids.
     pub fn export_os_app_instance_media_kind(node: &WorkflowNode, source_document: &Value, format_artifact_kind: &str) -> Result<OsMediaExportResult, String> {
-        let format_kind = semio_framework::normalize_format_kind(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
+        let format_kind = semio_framework_os_kernel::io::normalize_format_kind(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
         if let Some(result) = registry_export_media(&node.yields, &format_kind, source_document) {
             return result;
         }
@@ -2925,10 +2925,10 @@ pub mod workflow {
     /// `registry_export_media` below falls through to the OLD path for every production caller until
     /// W2+ cuts real subsets over -- this is debt D2's "coexist, do not bridge" shape, not a silent gap.
     fn registry_export_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, format_kind: &str, source_document: &Value, file_stem: &str) -> Option<Result<OsMediaExportResult, String>> {
-        use semio_framework::io::io_mechanism::{io_route, io_run};
+        use semio_framework_os_kernel::io::io_mechanism::{io_route, io_run};
         use semio_framework::io_schema::{IoPayload as NewIoPayload, CARRIER_BINARY, CARRIER_TEXT};
 
-        let is_binary = semio_framework::format_descriptor(format_kind).ok().flatten()?.is_binary;
+        let is_binary = semio_framework_os_kernel::io::format_descriptor(format_kind).ok().flatten()?.is_binary;
         let carrier: ArtifactDialect = (if is_binary { CARRIER_BINARY } else { CARRIER_TEXT }).into();
         let route = crate::host::resolve_kernel_future(io_route(artifact_dialect, &carrier, 3)).ok()?.value;
         // 🌉️ `source_document` is this artifact's own JSON-shaped snapshot as the OS document store
@@ -2965,10 +2965,10 @@ pub mod workflow {
     /// io-mechanism yet -- W6 deletes this function outright. Never merged with the new path above;
     /// `registry_export_media` picks ONE or the other per call, never blends their results.
     fn registry_export_media_legacy(artifact_kind: &str, format_kind: &str, source_document: &Value) -> Option<Result<OsMediaExportResult, String>> {
-        use {semio_framework_artifact_reference::Dialect,semio_framework::ErasedComposeSource,semio_framework::IoDirection,semio_framework::IoKey,semio_framework::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+        use {semio_framework_artifact_reference::Dialect,semio_framework_os_kernel::io::ErasedComposeSource,semio_framework_os_kernel::io::IoDirection,semio_framework_os_kernel::io::IoKey,semio_framework_os_kernel::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
         let native_kind = native_dialect_kind(artifact_kind);
         let target_kind = format!("s.{format_kind}");
-        let target = match crate::host::resolve_kernel_future(semio_framework::io_dialects_for(&native_kind, IoDirection::Export)) {
+        let target = match crate::host::resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(&native_kind, IoDirection::Export)) {
             Ok(dialects) => dialects.into_iter().find(|dialect| dialect.artifact_kind == target_kind)?,
             Err(error) => return Some(Err(format!("{} registry unavailable", error.registry))),
         };
@@ -2984,7 +2984,7 @@ pub mod workflow {
         let json_bridge = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
         let json_text = serde_json::to_string(source_document).ok()?;
         let sources = [ErasedComposeSource { dialect: json_bridge, payload: IoPayload::Text(json_text) }];
-        let composed = crate::host::resolve_kernel_future(semio_framework::io_dispatch(&key, &sources)).ok()?;
+        let composed = crate::host::resolve_kernel_future(semio_framework_os_kernel::io::io_dispatch(&key, &sources)).ok()?;
         let bytes = match composed.payload {
             IoPayload::Binary(b) => b,
             IoPayload::Text(t) => t.into_bytes(),
@@ -3004,8 +3004,8 @@ pub mod workflow {
         registry_export_media_legacy(artifact_kind, format_kind, source_document)
     }
 
-    pub fn os_media_export_extension_for_format_kind(format_artifact_kind: &str) -> Result<Option<String>, semio_framework::FormatRegistryError> {
-        Ok(semio_framework::format_descriptor(format_artifact_kind)?.and_then(|row| row.extensions.first().cloned()))
+    pub fn os_media_export_extension_for_format_kind(format_artifact_kind: &str) -> Result<Option<String>, semio_framework_os_kernel::io::FormatRegistryError> {
+        Ok(semio_framework_os_kernel::io::format_descriptor(format_artifact_kind)?.and_then(|row| row.extensions.first().cloned()))
     }
 
     type OsMediaImportHandler = Box<dyn Fn(&[u8]) -> Result<Value, String> + Send + Sync>;
@@ -3022,7 +3022,7 @@ pub mod workflow {
 
     /// 📥️ Import via `(artifact_kind, format_artifact_kind)` stdio kind ids.
     pub fn import_os_app_instance_media_kind(node: &WorkflowNode, data: &[u8], format_artifact_kind: &str) -> Result<Value, String> {
-        let format_kind = semio_framework::normalize_format_kind(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
+        let format_kind = semio_framework_os_kernel::io::normalize_format_kind(format_artifact_kind).map_err(|error| error.to_string())?.ok_or_else(|| format!("unknown stdio format kind `{format_artifact_kind}`"))?;
         if let Some(result) = registry_import_media(&node.yields, &format_kind, data) {
             return result;
         }
@@ -3042,10 +3042,10 @@ pub mod workflow {
     /// this is a SINGLE `io_route(carrier -> artifact_dialect)` + `io_run`, never `io_identify` --
     /// `io_identify` is for the genuinely-unknown-dialect "open this file" case, not this one.
     fn registry_import_media_via_io_mechanism(artifact_dialect: &ArtifactDialect, format_kind: &str, data: &[u8]) -> Option<Result<Value, String>> {
-        use semio_framework::io::io_mechanism::{io_route, io_run};
+        use semio_framework_os_kernel::io::io_mechanism::{io_route, io_run};
         use semio_framework::io_schema::{IoPayload as NewIoPayload, CARRIER_BINARY, CARRIER_TEXT};
 
-        let is_binary = semio_framework::format_descriptor(format_kind).ok().flatten()?.is_binary;
+        let is_binary = semio_framework_os_kernel::io::format_descriptor(format_kind).ok().flatten()?.is_binary;
         let carrier: ArtifactDialect = (if is_binary { CARRIER_BINARY } else { CARRIER_TEXT }).into();
         let carrier_payload = if is_binary { NewIoPayload::Binary(data.to_vec()) } else { NewIoPayload::Text(String::from_utf8(data.to_vec()).ok()?) };
         let route = crate::host::resolve_kernel_future(io_route(&carrier, artifact_dialect, 3)).ok()?.value;
@@ -3068,11 +3068,14 @@ pub mod workflow {
     /// working, UNCHANGED logic, as the fallback for artifacts that have not migrated onto the new
     /// io-mechanism yet -- W6 deletes this function outright.
     fn registry_import_media_legacy(artifact_kind: &str, format_kind: &str, data: &[u8]) -> Option<Result<Value, String>> {
-        use semio_framework::{ErasedComposeSource, IoDirection, IoKey, IoPayload};
+        use semio_framework_os_kernel::io::ErasedComposeSource;
+        use semio_framework_os_kernel::io::IoDirection;
+        use semio_framework_os_kernel::io::IoKey;
+        use semio_framework_os_kernel::io::IoPayload;
         let native_kind = native_dialect_kind(artifact_kind);
         let target_kind = format!("s.{format_kind}");
 
-        let source_dialect = match crate::host::resolve_kernel_future(semio_framework::io_dialects_for(&native_kind, IoDirection::Import)) {
+        let source_dialect = match crate::host::resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(&native_kind, IoDirection::Import)) {
             Ok(dialects) => dialects.into_iter().find(|dialect| dialect.artifact_kind == target_kind)?,
             Err(error) => return Some(Err(format!("{} registry unavailable", error.registry))),
         };
@@ -3086,9 +3089,9 @@ pub mod workflow {
             format_subset: source_dialect.subset.0.to_string(),
         };
         let sources = [ErasedComposeSource { dialect: source_dialect, payload: IoPayload::Binary(data.to_vec()) }];
-        let native = crate::host::resolve_kernel_future(semio_framework::io_dispatch(&import_key, &sources)).ok()?;
+        let native = crate::host::resolve_kernel_future(semio_framework_os_kernel::io::io_dispatch(&import_key, &sources)).ok()?;
 
-        let export_dialect = match crate::host::resolve_kernel_future(semio_framework::io_dialects_for(&native_kind, IoDirection::Export)) {
+        let export_dialect = match crate::host::resolve_kernel_future(semio_framework_os_kernel::io::dialects_for(&native_kind, IoDirection::Export)) {
             Ok(dialects) => dialects.into_iter().find(|dialect| dialect.artifact_kind == "s.stdio.json")?,
             Err(error) => return Some(Err(format!("{} registry unavailable", error.registry))),
         };
@@ -3102,7 +3105,7 @@ pub mod workflow {
             format_subset: export_dialect.subset.0.to_string(),
         };
         let native_sources = [ErasedComposeSource { dialect: native.dialect, payload: native.payload }];
-        let json_out = crate::host::resolve_kernel_future(semio_framework::io_dispatch(&export_key, &native_sources)).ok()?;
+        let json_out = crate::host::resolve_kernel_future(semio_framework_os_kernel::io::io_dispatch(&export_key, &native_sources)).ok()?;
         let bytes = match json_out.payload {
             IoPayload::Binary(b) => b,
             IoPayload::Text(t) => t.into_bytes(),
@@ -3224,7 +3227,7 @@ pub mod codec_abi {
     #[cfg(any(feature = "os-host-full", feature = "space-guest"))]
     impl OsHostFormatResolver for RegisteredOsHostFormatResolver {
         fn resolve_format(&mut self, kind: &str) -> Result<Option<OsHostCodecFormat>, OsHostCodecFailure> {
-            semio_framework::format_descriptor(kind)
+            semio_framework_os_kernel::io::format_descriptor(kind)
                 .map(|row| row.map(|row| OsHostCodecFormat { short_id: row.short_id, extensions: row.extensions }))
                 .map_err(|_| OsHostCodecFailure::fixed(OsHostCodecErrorCode::InvalidState, "stdio format registry unavailable"))
         }

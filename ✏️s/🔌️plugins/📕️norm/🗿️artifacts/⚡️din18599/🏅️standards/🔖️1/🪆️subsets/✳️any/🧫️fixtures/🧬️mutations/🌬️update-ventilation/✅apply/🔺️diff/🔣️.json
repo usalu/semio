@@ -14,8 +14,8 @@
   "dhw": null,
   "ventilation": {
     "airflowM3H": 154.0,
-    "heatRecoveryEta": 0.8,
-    "fanPowerW": 60.0
+    "heatRecoveryEta": null,
+    "fanPowerW": null
   },
   "cooling": null,
   "lighting": null,

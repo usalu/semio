@@ -79,7 +79,7 @@ use semio_framework_value::ToValue;
                 } else {
                     new_adjacency(program, &a, &b, kind)
                 };
-                Ok(Emit::mutations(vec![ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency })]))
+                Ok(Emit::mutations(vec![ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency, index: None })]))
             }
             None => {
                 if let Some(row) = existing {

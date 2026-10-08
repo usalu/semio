@@ -17,6 +17,6 @@ pub struct InsertItem {
 
 //#region 🔖️Handler
 pub fn handle(payload: &InsertItem, doc: &ArtifactView<'_, En1992Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1992Mutation, NoConfigMutation>, Fault> {
-    crate::app_surface::dispatch_insert_item(doc.snapshot, &payload.path, payload.index as usize, payload.value_json.as_deref(), |base, target| En1992Mutation::from_snapshot(base, target))
+    crate::app_surface::dispatch_insert_item(doc.snapshot, &payload.path, payload.index as usize, payload.value_json.as_deref(), |document, edit| crate::mutations::resolve_edit(document, edit))
 }
 //#endregion 🔖️Handler

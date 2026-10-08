@@ -4,7 +4,7 @@ use super::ArtifactCreationActorV1;
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use directory::os_directory::schema::space_artifact_creation::{SpaceArtifactCreateV1, SpaceArtifactCreationDialectV1, SpaceArtifactCreationPhaseV1, SpaceArtifactCreationReadyV1, SpaceArtifactCreationStatusV1};
 use directory::os_directory::{ArtifactCheckpoint, ArtifactHash, DocumentDescriptor, DocumentOwner, DocumentScope};
-use directory::os_io::ArtifactDialect;
+use semio_framework_artifact_reference::ArtifactDialect;
 use directory::{FromValue, ToValue};
 use semio_framework_hash::Sha256;
 

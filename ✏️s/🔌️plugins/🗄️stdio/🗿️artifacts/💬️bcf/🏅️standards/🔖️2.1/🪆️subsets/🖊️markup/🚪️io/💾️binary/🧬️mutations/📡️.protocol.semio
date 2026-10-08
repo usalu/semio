@@ -11,8 +11,6 @@ framing record
 header fixed 2
 field format u8
 field tag u8
-record set-snapshot tag=1
-field payload bytes
 record set-version tag=2
 field payload bytes
 record insert-topic tag=3
@@ -36,6 +34,4 @@ field payload bytes
 record set-viewpoint-components tag=12
 field payload bytes
 record set-viewpoint-snapshot tag=13
-field payload bytes
-record patch-snapshot tag=14
 field payload bytes

@@ -5,7 +5,7 @@
 
 use crate::editor::pptx::standards::v_ecma_376::subsets::transitional::modes::edit;
 use crate::editor::pptx::standards::v_ecma_376::subsets::transitional::modes::edit::windows::main;
-use crate::schema::mutations::{patch_snapshot, set_shape_text, set_snapshot};
+use crate::schema::mutations::{net_mutations, set_shape_text};
 use crate::{PptxMutation, PptxSnapshot, STDIO_PPTX_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactView;
@@ -101,10 +101,6 @@ impl ArtifactEditor for PptxTransitionalEditor {
             .map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
-    }
-
     semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/🦀️.rs",
         controller: "s.stdio.pptx@ecma-376/transitional#editor",
@@ -179,7 +175,9 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for PptxTra
     }
 
     fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| PptxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))
+        let next = semio_s_artifact_stdio_contract::editing::apply_snapshot_edit(snapshot, event).map_err(|error| Fault::from(error.to_string()))?;
+        let leaves = net_mutations(snapshot, &next).ok_or_else(|| Fault::from("pptx: the edit changes something the node-level mutations do not address (schema, OPC layer or which parts exist)"))?;
+        Ok(Emit { artifact_mutations: leaves, ..Default::default() })
     }
 }
 

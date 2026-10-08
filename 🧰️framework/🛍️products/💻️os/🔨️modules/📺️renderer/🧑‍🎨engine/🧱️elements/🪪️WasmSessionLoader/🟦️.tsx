@@ -8,7 +8,7 @@
 
 // #region 🔌️Adapters
 import { parseHubProgramIdV1 } from "../../../../🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
-import { type GraphWasmSession } from "@semio-tech/infinite-canvas-react-renderer";
+import { type WasmCanvasSession } from "@semio-tech/canvas-react-renderer";
 import { createContext } from "react";
 // #endregion 🔌️Adapters
 
@@ -44,9 +44,9 @@ async function createSurfaceSession<T>(construct: (module: SurfaceSessionModule)
 
 
 //#region GraphSession
-export async function createGraphSession(): Promise<GraphWasmSession> {
-  return createSurfaceSession((module) => new module.GraphSession());
-}
+type GraphSessionModule=typeof import("@semio-tech/framework-os-node-graph-rs");
+const loadGraphSessionModule=createWasmModuleLoader<GraphSessionModule>(async()=>{const module=await import("@semio-tech/framework-os-node-graph-rs");await module.default();return module;});
+export async function createGraphSession():Promise<WasmCanvasSession>{const module=await loadGraphSessionModule();return new module.GraphSession();}
 //#endregion GraphSession
 
 //#region FlowSession
@@ -74,7 +74,7 @@ export async function createFlowSession(): Promise<FlowWasmSession> {
 //#endregion FlowSession
 
 //#region EditorSession
-export type EditorWasmSession = GraphWasmSession & {
+export type EditorWasmSession = WasmCanvasSession & {
   synchronizeScene(bytes: Uint8Array, format: 0 | 1, maximumInputBytes: number, maximumOwnedBytes: number, progress: (completed: number, total: number, ownedBytes: number) => boolean): void;
   setText(text: string): void;
   text(): string;

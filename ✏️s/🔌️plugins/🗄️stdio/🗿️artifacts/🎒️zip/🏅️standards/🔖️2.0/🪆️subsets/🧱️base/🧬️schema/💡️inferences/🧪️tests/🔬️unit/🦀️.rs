@@ -64,11 +64,6 @@ mod conformance_laws {
             let printed = mutation.print_op();
             assert!(recognizer.recognize(&printed).unwrap_or(false), "mutations grammar did not recognize {printed:?} (from {mutation:?})");
         }
-        let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧬️mutations/🧫️fixtures/🩹️structured/🔣️.json")).unwrap();
-        for case in corpus["cases"].as_array().unwrap() {
-            assert!(recognizer.recognize(case["source"].as_str().unwrap()).unwrap(), "{}", case["id"]);
-        }
-        assert!(!recognizer.recognize("patch-snapshot patch=00").unwrap());
     }
 
     /// ✅️ `diff_grammar_conformance_law`: the diff grammar recognizes real `print_diff` output

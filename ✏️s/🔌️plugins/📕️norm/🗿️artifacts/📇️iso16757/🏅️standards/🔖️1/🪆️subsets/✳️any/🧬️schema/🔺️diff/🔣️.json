@@ -5,10 +5,10 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "artifact": {
+    "catalogueName": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/artifact.json"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/LocalizedText/properties/text"
         },
         {
           "type": "null"
@@ -16,10 +16,10 @@
       ],
       "x-semio-state": "artifact"
     },
-    "catalogue": {
+    "manufacturerName": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/properties/catalogue"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/LocalizedText/properties/text"
         },
         {
           "type": "null"
@@ -27,10 +27,10 @@
       ],
       "x-semio-state": "artifact"
     },
-    "dictionary": {
+    "productGroups": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/properties/dictionary"
+          "$ref": "#/$defs/Iso16757ProductGroupsRows"
         },
         {
           "type": "null"
@@ -38,10 +38,10 @@
       ],
       "x-semio-state": "artifact"
     },
-    "geometry": {
+    "productClasses": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/properties/geometry"
+          "$ref": "#/$defs/Iso16757ProductClassesRows"
         },
         {
           "type": "null"
@@ -49,10 +49,98 @@
       ],
       "x-semio-state": "artifact"
     },
-    "selection": {
+    "productSeries": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/properties/selection"
+          "$ref": "#/$defs/Iso16757ProductSeriesRows"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "products": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Iso16757ProductsRows"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "productIndexes": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Iso16757ProductIndexesRows"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "propertyDefinitions": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Iso16757PropertyDefinitionsRows"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "subjects": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Iso16757SubjectsRows"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "geometryObjects": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Iso16757GeometryObjectsRows"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "selectionClassId": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/SelectionRequest/properties/classId"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "selectionSeriesId": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Iso16757SelectionSeriesIdValue"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "selectionConstraints": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Iso16757SelectionConstraintsRows"
         },
         {
           "type": "null"
@@ -74,7 +162,7 @@
     "partNumberInputs": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/properties/partNumberInputs"
+          "$ref": "#/$defs/Iso16757PartNumberInputsRows"
         },
         {
           "type": "null"
@@ -85,7 +173,7 @@
     "scriptLimits": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/properties/scriptLimits"
+          "$ref": "#/$defs/Iso16757ScriptLimitsPatch"
         },
         {
           "type": "null"
@@ -103,6 +191,496 @@
         }
       ],
       "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "Iso16757GeometryObjectsEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/GeometryObject"
+        }
+      }
+    },
+    "Iso16757GeometryObjectsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Iso16757GeometryObjectsEntry"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Iso16757PartNumberInputsEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/properties/partNumberInputs/additionalProperties"
+        }
+      }
+    },
+    "Iso16757PartNumberInputsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "modified"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Iso16757PartNumberInputsEntry"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Iso16757PartNumberInputsEntry"
+          }
+        }
+      }
+    },
+    "Iso16757ProductClassesRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/ProductClass"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Iso16757ProductGroupsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/LocalizedText/properties/text"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Iso16757ProductGroupsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "modified",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/ProductGroup"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Iso16757ProductGroupsPatch"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Iso16757ProductIndexesRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/ProductIndex"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Iso16757ProductSeriesRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/ProductSeries"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Iso16757ProductsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/LocalizedText/properties/text"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Iso16757ProductsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "modified",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/Product"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Iso16757ProductsPatch"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Iso16757PropertyDefinitionsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/PropertyDefinition"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Iso16757ScriptLimitsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maxSteps",
+        "maxRecursion",
+        "timeoutMs"
+      ],
+      "properties": {
+        "maxSteps": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/ScriptLimits/properties/maxSteps"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "maxRecursion": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/ScriptLimits/properties/maxRecursion"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timeoutMs": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/ScriptLimits/properties/timeoutMs"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Iso16757SelectionConstraintsInserted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/SelectionConstraint"
+        }
+      }
+    },
+    "Iso16757SelectionConstraintsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Iso16757SelectionConstraintsInserted"
+          }
+        }
+      }
+    },
+    "Iso16757SelectionSeriesIdValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/SelectionRequest/properties/seriesId"
+        }
+      }
+    },
+    "Iso16757SubjectsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/iso16757/snapshot.json#/$defs/Subject"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
     }
   }
 }

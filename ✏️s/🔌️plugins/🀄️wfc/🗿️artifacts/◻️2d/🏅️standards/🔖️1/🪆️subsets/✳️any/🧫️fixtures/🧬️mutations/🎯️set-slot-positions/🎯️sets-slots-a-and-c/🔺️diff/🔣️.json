@@ -1,34 +1,45 @@
 {
   "schema": null,
   "seed": null,
-  "slotsRemoved": [],
-  "slotsUpserted": [
-    [
-      0,
+  "slots": {
+    "removed": [],
+    "added": [],
+    "patched": [
       {
         "id": "slot-a",
-        "x": -1.0,
-        "y": 2.5,
-        "width": 2.0,
-        "height": 2.0
-      }
-    ],
-    [
-      2,
+        "patch": {
+          "x": -1.0,
+          "y": 2.5,
+          "width": null,
+          "height": null,
+          "pinnedTileId": null
+        }
+      },
       {
         "id": "slot-c",
-        "x": 5.0,
-        "y": 1.0,
-        "width": 2.0,
-        "height": 2.0,
-        "pinnedTileId": "tile-wall"
+        "patch": {
+          "x": 5.0,
+          "y": 1.0,
+          "width": null,
+          "height": null,
+          "pinnedTileId": null
+        }
       }
     ]
-  ],
-  "edgesRemoved": [],
-  "edgesUpserted": [],
-  "tilesRemoved": [],
-  "tilesUpserted": [],
-  "rulesRemoved": [],
-  "rulesUpserted": []
+  },
+  "edges": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "tiles": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "rules": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  }
 }

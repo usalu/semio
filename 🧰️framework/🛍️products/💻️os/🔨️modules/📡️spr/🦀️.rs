@@ -40,7 +40,7 @@ pub use crate::os_spr::channel::{
     AppDocumentIdentity, DocumentArchiveLoadHost, DocumentArchiveLoadOutcome, DocumentArchiveLoadRefusal, DocumentArchiveLoadState, DocumentArchiveLoadStatus, DocumentArchiveLoadStep, DocumentArchiveOwnerRef, DocumentArchivePack, MediaExportHandleWire, MediaExportStateWire, OwnedDocumentMemberPackEntry, PagedAppCommandDecodeCursor, PresenceCommandCursor, WindowConfigPackEntry, CHANNEL_VERSION, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS,
 };
 pub use crate::os_spr::command::{
-    apply_diff, fold_plan_diff, fold_plan_inverse, indexed_apply, is_approved_verb, mutation_descriptor, mutation_fixture_ops, mutation_input_schema_failures, mutation_inverse_rows_declaration_failures, mutation_inverse_rows_failures, mutation_label_failures, mutation_payload_round_trip_failures,
+    apply_diff, fold_plan_diff, fold_plan_inverse, indexed_apply, is_approved_verb, mutation_descriptor, mutation_input_schema_failures, mutation_inverse_rows_declaration_failures, mutation_label_failures, mutation_payload_round_trip_failures,
     named_apply, outcome_code_level, plan_foreign_steps, plan_of,
     register_mutation_descriptor, register_mutation_descriptors, str_eq, validate_mutation_leaf_descriptor, validate_mutation_leaf_descriptor_roster, validate_mutation_leaf_descriptor_roster_uniqueness, validate_mutation_leaf_source, worst_level,
     ApplyCapability, CollectionDiff, CommandOutcome, CompositeMutationKind, DiffAlgebra, DiffRegions, Edit, ForeignStep, ForeignTarget, Identified, IndexedTripleDiff, Inference, InferenceFieldSpec, InferenceSpec, ItemPatch, Mutation,
@@ -49,6 +49,8 @@ pub use crate::os_spr::command::{
     MutationMeta, MutationOrigin, MutationOutcome, MutationOutcomeClass, MutationOwnerLayout, MutationSourceProvenance, MutationUpcaster, NamedTripleDiff, OutcomeCode, Patchable, PlanError, PlanStep, Planner, SemanticDescriptor,
     SemanticMutation, TouchedPaths, TransactionRef, ValidatedMutationLeafSourceScope, APPLY_OUTCOME_CODE_PREFIX, APPROVED_VERBS, MAX_PLAN_DEPTH, OUTCOME_CODES,
 };
+#[cfg(any(test, feature = "mutation-testing"))]
+pub use crate::os_spr::command::{mutation_fixture_ops, mutation_inverse_rows_failures};
 pub use crate::os_spr::conflict::{Conflict, ConflictId, ConflictKind, ConflictResolution, ConflictStatus, DispatchReport, EditMessages, MergeReport, MutationReplayOutcome, ReplayReport};
 pub use crate::os_spr::wire::{
     decode_client_frame, decode_presence_peer, decode_server_frame, encode_client_frame, encode_presence_peer, encode_server_frame, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresenceToolRun, PresenceToolRunState, PresenceUi, PresenceViewKind, PresenceWindowView,

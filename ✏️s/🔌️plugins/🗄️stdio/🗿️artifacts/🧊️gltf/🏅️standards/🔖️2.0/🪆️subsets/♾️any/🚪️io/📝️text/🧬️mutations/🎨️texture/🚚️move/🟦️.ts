@@ -4,7 +4,7 @@ export type * from "../../../../../🧬️schema/🧬️mutations/🎨️texture
 /** 🚚️ `move-texture` wire twin: the flat `Apply` payload `GltfMoveTexturePayload` and the phase wire `MoveTextureMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
 export const parseGltfMoveTexturePayload = gltfWireObject<GltfMoveTexturePayload>({ index: gltfWireRequired(gltfWireIndex), position: gltfWireRequired(gltfWireIndex) });
-export const parseMoveTextureMutation = gltfWirePhase(parseGltfMoveTexturePayload, parseGltfDiff);
+export const parseMoveTextureMutation = gltfWireApplyPhase(parseGltfMoveTexturePayload);

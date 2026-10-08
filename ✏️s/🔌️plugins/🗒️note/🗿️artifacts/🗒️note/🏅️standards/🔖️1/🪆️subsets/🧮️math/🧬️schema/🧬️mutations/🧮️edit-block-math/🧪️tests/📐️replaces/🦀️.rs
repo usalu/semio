@@ -100,7 +100,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "edit-block-math/replaces-the-tex-with-pythagoras: committed diff did not carry before to after");
 }
 
@@ -119,4 +119,10 @@ async fn tex_source_is_replaced_verbatim_and_display_mode_is_untouched() {
     assert_eq!(tex, "a^2 + b^2 = c^2", "the TeX source must be stored verbatim, unparsed and unnormalized");
     assert!(*display_mode, "display_mode is a separate concern — editing the source must not flip it");
     assert_eq!(block_bounds(find_block(&applied.blocks, "blk-math").expect("the math block exists")), (0.0, 400.0, 200.0, 80.0), "editing the TeX must not re-lay-out the block");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

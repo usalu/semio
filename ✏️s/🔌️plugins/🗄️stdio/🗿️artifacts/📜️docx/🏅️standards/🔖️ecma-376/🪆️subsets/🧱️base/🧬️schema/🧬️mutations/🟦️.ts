@@ -1,5 +1,4 @@
 import type { DocxXmlAddress } from './🧭️xml-address/🟦️.ts';
-import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 export { parseDocxXmlAddress, DocxXmlAddressGuardRefusal, type DocxXmlAddress } from './🧭️xml-address/🟦️.ts';
 
 /** 🧭️ Projected semantic block address retained by the remaining block-level commands. */
@@ -10,8 +9,6 @@ export interface DocxBlockPath {
 
 /** 🧬️ Complete DOCX mutation union. */
 export type DocxMutation =
-  | { readonly mutation: 'setSnapshot'; readonly snapshot: import('../📸️snapshot/🟦️.ts').DocxSnapshot }
-  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
   | { readonly mutation: 'insertBlock'; readonly path: DocxBlockPath; readonly block: import('../📸️snapshot/🟦️.ts').DocxBlock }
   | { readonly mutation: 'removeBlock'; readonly path: DocxBlockPath }
   | { readonly mutation: 'setBlockContent'; readonly path: DocxBlockPath; readonly block: import('../📸️snapshot/🟦️.ts').DocxBlock }
@@ -27,7 +24,7 @@ export type DocxMutation =
   | { readonly mutation: 'removeStyle'; readonly id: string }
   | { readonly mutation: 'setStyleName'; readonly id: string; readonly name: string }
   | { readonly mutation: 'setStyleBasedOn'; readonly id: string; readonly based_on: string | null }
-  | { readonly mutation: 'setPart'; readonly path: string; readonly content_type: string; readonly payload: DocxPartContent }
+  | { readonly mutation: 'setPart'; readonly path: string; readonly content_type: string; readonly payload: DocxPartContent; readonly index?: number }
   | { readonly mutation: 'removePart'; readonly path: string };
 
 /** 📦️ Authoritative part content independent of physical XML parsing. */

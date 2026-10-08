@@ -15,10 +15,10 @@ export type GuestLogLine = {
   level: GuestLogLevel;
 };
 
-/** 🗣️ `[TRACE]` prefixes are routine guest chatter; anything else on stderr is a fault. */
+/** 🗣️ Explicit trace severity and complete maintenance diagnostics preserve genuine stderr faults. */
 export function classifyGuestLogLine(channel: "stdout" | "stderr", text: string): GuestLogLevel {
   if (channel === "stdout") return "log";
-  return text.startsWith("[TRACE]") ? "debug" : "error";
+  return text.startsWith("[TRACE]") || /^cooperative-maintenance instance=[0-9]+ turn=[0-9]+ generation=[0-9]+$/.test(text) ? "debug" : "error";
 }
 
 /** 🧵 One logical guest line is one host emit — tokens without a newline stay pending. */

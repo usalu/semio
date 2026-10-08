@@ -5,7 +5,8 @@ use semio_framework_value::retirement::{RetireOwned, RetirementCursor, Retiremen
 
 struct PropertyRetirement(std::mem::ManuallyDrop<Option<PropertyValue>>);
 impl RetirementCursor for PropertyRetirement {
-    fn close_step(&mut self, _: usize) -> RetirementStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> RetirementStep {
+        if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
         match self.0.take() {
             None | Some(PropertyValue::Null) => RetirementStep::Complete,
             Some(PropertyValue::Bool(value)) => RetirementStep::Child(value.retirement()),

@@ -1,10 +1,8 @@
 {
   "schema": null,
   "name": null,
-  "manifestId": null,
   "manifest": null,
   "camera": null,
   "content": null,
-  "rootNodeId": null,
   "query": "MATCH (a:Piece) RETURN a.name"
 }

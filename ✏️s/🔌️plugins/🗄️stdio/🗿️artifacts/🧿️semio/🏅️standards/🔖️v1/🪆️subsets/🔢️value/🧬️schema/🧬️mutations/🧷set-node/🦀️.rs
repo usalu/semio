@@ -8,6 +8,8 @@ use super::*;
 pub struct SetNode {
     pub id: ValueId,
     pub value: SemioValue,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl protocol::MutationKind<SemioValueSnapshot, SemioValueMutation> for SetNode {

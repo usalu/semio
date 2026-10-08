@@ -4,7 +4,7 @@
 //! previous impl here made exactly that mistake, fixed in passing).
 
 use crate::{writer_snapshot_with_text, WriterSnapshot, WRITER_DOCUMENT_SCHEMA};
-use semio_framework::io::io_mechanism::Deserializer;
+use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_md::MdSnapshot;

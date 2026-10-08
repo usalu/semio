@@ -46,6 +46,17 @@
     "one-logical-message-one-host-call",
     "debug-lines-use-debug-level"
   ],
+  "classificationCases": [
+    { "channel": "stderr", "text": "cooperative-maintenance instance=1 turn=2 generation=1", "level": "debug" },
+    { "channel": "stderr", "text": "cooperative-maintenance instance=0 turn=0 generation=0", "level": "debug" },
+    { "channel": "stderr", "text": "cooperative-maintenance instance=1 turn=2", "level": "error" },
+    { "channel": "stderr", "text": "cooperative-maintenance instance=-1 turn=2 generation=1", "level": "error" },
+    { "channel": "stderr", "text": "cooperative-maintenance instance=1x turn=2 generation=1", "level": "error" },
+    { "channel": "stderr", "text": "cooperative-maintenance instance=1 turn=2 generation=1 guest trapped: rust_oom", "level": "error" },
+    { "channel": "stderr", "text": "guest trapped: rust_oom", "level": "error" },
+    { "channel": "stderr", "text": "[TRACE] cooperative-maintenance instance=1 turn=2 generation=1", "level": "debug" },
+    { "channel": "stdout", "text": "guest trapped: rust_oom", "level": "log" }
+  ],
   "lineBuffer": {
     "chunks": [
       "cooperative-maintenance instance=",

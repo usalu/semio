@@ -171,3 +171,20 @@ fn interactive_bridge_diagnostic_ring_is_item_and_byte_bounded() {
     assert!(bridge.diagnostic_bytes <= DIAGNOSTIC_MAX_BYTES);
     assert_eq!(bridge.diagnostics.front().expect("ring head").payload, vec![9; 8]);
 }
+
+/// 🧾️ G3: an interactive result states what the host observed, not what a request echo or a constant claims.
+#[test]
+fn an_interactive_result_forwards_the_jobs_resume_state_and_claims_no_fidelity_it_was_not_told() {
+    let request = decode_request(&request_bytes("jobtest-cancel-encode")).expect("the fixture request decodes");
+    let decoded = |bytes: Vec<u8>| -> crate::app::WireArtifactInferenceResult { semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).expect("result UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the result decodes") };
+
+    let resumable = decoded(encode_result(request.clone(), vec![1, 2, 3], Some(vec![4, 5])).expect("encodes"));
+    assert_eq!((resumable.canonical_payload, resumable.previous_state, resumable.complete), (vec![1, 2, 3], Some(vec![4, 5]), true));
+    assert_eq!((resumable.validity.as_str(), resumable.quality.as_str()), ("valid", "unreported"));
+    assert!(resumable.diagnostics.is_empty());
+
+    let mut resumed = request;
+    resumed.previous_state = Some(vec![9, 9]);
+    let stateless = decoded(encode_result(resumed, vec![1], None).expect("encodes"));
+    assert_eq!(stateless.previous_state, None, "the request's own previous state is not the job's resume state");
+}

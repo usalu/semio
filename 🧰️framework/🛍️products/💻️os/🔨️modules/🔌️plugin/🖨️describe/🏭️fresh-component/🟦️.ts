@@ -1,10 +1,12 @@
 import {captureOwnedProcess} from "../../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
+import { writeCompletedCargoInvocationProvenanceV1 } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts";
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, realpathSync, readdirSync, renameSync, rmSync, writeFileSync, writeSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { acquireCargoBuildLeaseV1 } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
+import { selectedCargoArguments } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
 import { cargoDirectories } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { isGeneratedPath } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
@@ -17,7 +19,7 @@ import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_COMPONENT_MAX
 import { emitOwnerDescriptorPairV1, type DescriptorEmissionControlV1 } from "../🛂️descriptor-emission/🟦️.ts";
 import { FRESH_SOURCE_EPOCH_LIMITS, captureFreshSourceEpochV1, freshCheckpoint, freshPathIsWithin, freshSourceEpochBytesV1, freshSourceOrderedJson, parseFreshRustDepInfoV1, type FreshBuildControlV1, type FreshComponentLeaseV1, type FreshComponentProducedV1, type FreshComponentReceiptV1, type FreshComponentRequestV1 } from "../🧾️source-epoch/🟦️.ts";
 
-export async function freshRun(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv, control: FreshBuildControlV1, stage: string, completed: number, total: number): Promise<void> {
+export async function freshRun(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv, control: FreshBuildControlV1, stage: string, completed: number, total: number): Promise<string | undefined> {
   freshCheckpoint(control, stage, completed, total);
   const budgetMs = control.remainingMs();
   if (!Number.isSafeInteger(budgetMs) || budgetMs <= 0 || budgetMs > 86_400_000) throw new Error("fresh process budget must be 1..86400000ms");
@@ -27,7 +29,8 @@ export async function freshRun(command: string, args: string[], cwd: string, env
   const info = lstatSync(root);
   if (!info.isDirectory() || info.isSymbolicLink()) throw new Error("fresh process evidence root must be a regular directory");
   if (command === "cargo" && args.some((arg) => arg === "--message-format" || arg.startsWith("--message-format="))) throw new Error("fresh Cargo diagnostics format is producer-owned");
-  const argv = command === "cargo" ? [...args, "--message-format=json"] : args;
+  const selectedArgs = command === "cargo" ? selectedCargoArguments(cwd, args) : args;
+  const argv = command === "cargo" ? [...selectedArgs, "--message-format=json"] : selectedArgs;
   const trace = mkdtempSync(join(root, "fresh-process-"));
   const evidence = retained ? trace : "ephemeral";
   if (retained) console.log("fresh-component-process: stage=" + stage + " evidence=" + evidence);
@@ -37,11 +40,14 @@ export async function freshRun(command: string, args: string[], cwd: string, env
   let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;
   try {
     observe();
-    if (command === "cargo") lease = await acquireCargoBuildLeaseV1({ directory: repoCacheDirectory(cwd, "agents", "resource-leases"), buildDirectory: cargoDirectories(cwd, env).build, args, signal: controller.signal, onWait: () => freshCheckpoint(control, "wait-build-lease", completed, total) });
+    if (command === "cargo") lease = await acquireCargoBuildLeaseV1({ directory: repoCacheDirectory(cwd, "agents", "resource-leases"), buildDirectory: cargoDirectories(cwd, env).build, args: selectedArgs, signal: controller.signal, onWait: () => freshCheckpoint(control, "wait-build-lease", completed, total) });
     if (command === "cargo") freshCheckpoint(control, stage, completed, total);
+    const builtAtMs = Date.now();
+    const directories = command === "cargo" ? cargoDirectories(cwd, env) : undefined;
+    const observedEnv = directories ? { ...env, SEMIO_COMPILER_RESOURCE_ROOT: join(directories.build, "semio-compiler-resources") } : env;
     const result = await captureOwnedProcess(command, argv, {
       cwd,
-      env,
+      env: observedEnv,
       budgetMs: Math.min(budgetMs, control.remainingMs()),
       maxOutputBytes: 64 * 1024 * 1024,
       stdoutPath: join(trace, "stdout.jsonl"),
@@ -49,6 +55,14 @@ export async function freshRun(command: string, args: string[], cwd: string, env
       cancelled: () => control.cancelled(),
     });
     const reason = result.reason ?? "exit";
+    let provenance: string | undefined;
+    if (directories) {
+      const messages = result.stdout.split(/\r?\n/u).flatMap(line => { try { return [JSON.parse(line)]; } catch { return []; } });
+      const manifestIndex = selectedArgs.indexOf("--manifest-path");
+      const manifest = resolve(cwd, manifestIndex >= 0 ? selectedArgs[manifestIndex + 1]! : selectedArgs.find(arg => arg.startsWith("--manifest-path="))?.slice("--manifest-path=".length) ?? "Cargo.toml");
+      provenance = join(directories.build, "semio-cargo-provenance", "cargo-unit-provenance-" + trace.split(/[\\/]/u).at(-1) + ".json");
+      writeCompletedCargoInvocationProvenanceV1(provenance, { manifest, cwd, command, args: argv, buildDirectory: directories.build, builtAtMs, status: result.status ?? -1, cancelled: reason !== "exit", units: messages.filter(message => message.reason === "compiler-artifact").map(message => ({message})), buildScripts: messages.filter(message => message.reason === "build-script-executed") }, new Map(), env.CARGO_HOME);
+    }
     writeFileSync(join(trace, "outcome.json"), JSON.stringify({ schema: "semio.plugin.fresh-process/v1", stage, command, args: argv, cargoTargetDir: env.CARGO_TARGET_DIR ?? null, status: result.status, signal: result.signal, reason }) + "\n", {
       flag: "wx",
       mode: 0o600,
@@ -69,6 +83,7 @@ export async function freshRun(command: string, args: string[], cwd: string, env
       throw new Error("fresh component " + reason + " at " + stage + " (status=" + result.status + ", signal=" + result.signal + "); evidence=" + evidence + "\n" + detail);
     }
     freshCheckpoint(control, stage, completed + 1, total);
+    return provenance;
   } finally {
     try { lease?.release(); }
     finally { clearInterval(watch); if (!retained) rmSync(trace, { recursive: true, force: true }); }
@@ -269,7 +284,7 @@ export async function produceFreshComponentV1<T>(
     const cargo = request.rootCdylib
       ? ["rustc", "-p", request.cargoPackage, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", request.componentProfile]
       : ["build", "-p", request.cargoPackage, "--target", "wasm32-wasip2", "--profile", request.componentProfile];
-    await freshRun("cargo", cargo, repoRoot, env, control, "build", 0, total);
+    const componentInvocation = await freshRun("cargo", cargo, repoRoot, env, control, "build", 0, total);
     const cargoComponent = pluginWasmArtifactPath(repoRoot, request.cargoPackage, request.componentProfile, targetRoot);
     if (cargoComponent !== join(targetRoot, "wasm32-wasip2", request.componentProfile, request.outputName)) throw new Error("fresh component output identity differs from the shared Cargo artifact path");
     freshWasmArtifactSize(cargoComponent, FRESH_COMPONENT_MAX_BYTES, "fresh WASIp2 component");
@@ -306,7 +321,7 @@ export async function produceFreshComponentV1<T>(
     // documents. Requiring it here is the earliest point the absence is visible — at the built
     // artifact, before a descriptor or a catalog generation is derived from it.
     if (!["checkpoint", "codec", "describe", "jobs", "reactor"].every((name) => witExports.includes(name))) throw new Error("fresh component omits a required actor export");
-    await freshRun("cargo", ["build", "-p", CRATE_NAME], repoRoot, env, control, "build-descriptor-emitter", 3, total);
+    const descriptorInvocation = await freshRun("cargo", ["build", "-p", CRATE_NAME], repoRoot, env, control, "build-descriptor-emitter", 3, total);
     const emitter = join(targetRoot, "debug", process.platform === "win32" ? `${CRATE_NAME}.exe` : CRATE_NAME);
     const descriptorRoot = join(workRoot, "descriptor");
     mkdirSync(descriptorRoot, { mode: 0o700 });
@@ -314,7 +329,9 @@ export async function produceFreshComponentV1<T>(
     const descriptorPack = join(descriptorRoot, DESCRIPTOR_PACK_FILENAME);
     const descriptorJson = join(descriptorRoot, DESCRIPTOR_JSON_FILENAME);
     snapshot = await captureFreshComponentInputs(repoRoot, request, componentBytes, coreBytes, { descriptorPack, descriptorJson }, control);
-    return await stageFreshComponentInputs(request, snapshot, stageRoot, witExports, control, derive);
+    const produced = await stageFreshComponentInputs(request, snapshot, stageRoot, witExports, control, derive);
+    if (!componentInvocation || !descriptorInvocation) throw new Error("fresh component compiler observations are missing");
+    return { ...produced, compilerInvocations: [componentInvocation, descriptorInvocation] };
   } finally {
     componentBytes?.fill(0);
     coreBytes?.fill(0);

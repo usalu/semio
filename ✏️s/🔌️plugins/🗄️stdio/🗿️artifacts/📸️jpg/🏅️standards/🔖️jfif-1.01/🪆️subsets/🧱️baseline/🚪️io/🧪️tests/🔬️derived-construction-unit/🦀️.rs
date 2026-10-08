@@ -19,17 +19,17 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn real_encoded_jpeg_builds_clean_via_from_binary() {
         let (w, h) = (24u32, 24u32);
-        let snap = JpgSnapshot { width: w, height: h, pixels: gradient_image(w, h), ..JpgSnapshot::default() };
-        let bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&snap, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snap.frame.as_ref())).expect("encode");
+        let snap = JpgSnapshot { schema: crate::STDIO_JPG_DOCUMENT_SCHEMA.into(), image: crate::schema::snapshot::JpgImage { width: w,height: h,pixels: gradient_image(w, h),..crate::schema::snapshot::JpgImage::default() } };
+        let bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&snap, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).expect("encode");
         let decoded = crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg(&bytes).expect("decode");
         let packed = <JpgSnapshot as store::ArtifactPack>::encode_pack(&decoded);
         let built = JpgBaselineBuilderConstruction::from_binary(&packed).expect("from_binary").build().expect("real baseline JPEG must build clean");
-        assert!(built.frame.is_some());
+        assert_eq!(built,decoded);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn empty_snapshot_fails_build_with_no_frame() {
         let err = JpgBaselineBuilderConstruction::empty().build().expect_err("an empty snapshot has no SOF0 frame -- must fail build()");
-        assert!(err.iter().any(|d| d.code.0 == crate::standards::v_jfif_1_01::subsets::baseline::schema::CODE_NO_FRAME));
+        assert!(err.iter().any(|d| d.code.0 == "stdio.jpg.baseline.native-refused"));
     }
 }

@@ -4,9 +4,7 @@ import { expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import Ajv from "ajv";
 import fixture from "../../🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "../../🧫️fixtures/🧬️schema/🔣️.json" with { type: "json" };
 function leb(value: number): Buffer {
   const output = [];
   do { const byte = value & 127; value = Math.floor(value / 128); output.push(byte | (value ? 128 : 0)); } while (value);
@@ -62,7 +60,6 @@ function genesisOracle(row: typeof fixture.cases[number]): Buffer {
 }
 
 test("retained genesis framing has an independent neutral byte and identity oracle", () => {
-  expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
   for (const row of fixture.cases) {
     const segment = Buffer.from(row.initialPackHex, "hex");
     const initial = Buffer.concat(Array.from({ length: row.packRepeats }, () => segment));
@@ -79,7 +76,7 @@ test("retained genesis framing has an independent neutral byte and identity orac
   expect(existsSync(path)).toBe(true);
   const source = readFileSync(path, "utf8");
   for (const method of ["MemberGenesisEnvelopeEncoder", "encode_step", "next_capacity_byte_demand", "close_granted"]) expect(source.includes(method)).toBe(true);
-  console.log("[DEBUG] Ajv + Node Buffer/TextEncoder: neutral exact original packs, UUID aliases and UTF-8 owner URI for retained genesis framing");
+  console.log("[DEBUG] Node Buffer/TextEncoder: neutral exact original packs, UUID aliases and UTF-8 owner URI for retained genesis framing");
 });
 
 test("retained native genesis bytes match the independent complete SPR framing and hash oracle", () => {

@@ -32,7 +32,7 @@ fn mutation() -> SemioBrepMutation {
 #[semio_framework_async_macros::async_test]
 async fn removes_the_solid_and_leaves_the_whole_topology_under_it() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("delete-solid applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-solid applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-solid/removes-the-only-solid-and-leaves-its-shell-behind: applied state differs from the committed after-snapshot");
     assert!(produced.solids.is_empty(), "the only solid must be gone");
     assert_eq!(produced.shells, base.shells, "delete-solid must NOT cascade down into the shells it bounded");
@@ -44,13 +44,14 @@ async fn removes_the_solid_and_leaves_the_whole_topology_under_it() {
 async fn the_undo_create_solid_restores_the_captured_shell_list() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "delete-solid of an existing solid undoes as exactly one create-solid");
     let SemioBrepMutation::CreateSolid(recreate) = &undo[0] else { panic!("delete-solid must undo as create-solid") };
     assert_eq!(recreate.shells, base.solids[0].shells, "the undo must recapture the deleted solid's own shell list verbatim, is_void flags included");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-solid applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo create-solid applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-solid applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo create-solid applies");
     }
     assert_eq!(current, base, "delete-solid/removes-the-only-solid-and-leaves-its-shell-behind: the undo did not restore the before-snapshot");
 }
@@ -107,6 +108,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded = decode_semio_brep_diff_json(DIFF).expect("committed delete-solid diff decodes");
-    let produced = decoded.apply(&before()).expect("committed delete-solid diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-solid diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-solid/removes-the-only-solid-and-leaves-its-shell-behind: committed diff did not carry before to after");
 }

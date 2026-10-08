@@ -36,9 +36,10 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
+    use semio_s_artifact_stdio_semio::apply_diff;
     use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::io::text::snapshot::decode_csv;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::mutations::{apply_semio_table_mutation, inverse_semio_table_mutation, SemioTableMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::mutations::{diff_semio_table_mutation, inverse_semio_table_mutation, SemioTableMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::table::io::text::mutations::{decode_semio_table_mutation_json};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::table::io::binary::snapshot::{decode_semio_table_pack};
@@ -81,9 +82,10 @@ mod subject {
     }
 
     fn apply(current: &mut SemioTableSnapshot, step: &SemioTableMutation, what: &str) -> Result<(), String> {
-        let outcome = apply_semio_table_mutation(current, step);
+        let outcome = diff_semio_table_mutation(step, current);
         let refusals = semio_mutation_refusals(&outcome);
         if refusals.is_empty() {
+            *current = apply_diff(outcome.diff(), current).map_err(|error| format!("the diff could not be applied: {error:?}"))?;
             return Ok(());
         }
         Err(format!("{what}: the mutation was rejected: {refusals:?}"))
@@ -118,7 +120,7 @@ mod subject {
         let mut current = base.clone();
         apply(&mut current, &step, &ctx.scenario.id)?;
         let mutated = projection(&current)?;
-        for undo in inverse_semio_table_mutation(&step, &base).expect("valid retained mutation inverse fixture") {
+        for undo in inverse_semio_table_mutation(&step, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             apply(&mut current, &undo, &ctx.scenario.id)?;
         }
         if current != base {

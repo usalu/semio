@@ -2,6 +2,6 @@ use super::*;
 
 #[test]
 fn owned_payload_round_trips() {
-    let payload = SetStructTreeRoot {};
+    let payload = SetStructTreeRoot { placements: Vec::new(), entry_index: None };
     assert_eq!(parse(&print(&payload).unwrap()).unwrap(), payload);
 }

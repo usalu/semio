@@ -1,57 +1,9 @@
 //! 🧬️ JpgArtifact schema — full artifact state.
 
 use crate::JpgSnapshot;
-use framework_schema::ArtifactSchema;
+pub use crate::schema::snapshot::JpgSnapshot as JpgArtifact;
 
-/// 🎪️ Reduced UI-editable view: identity + the raster the user is directly manipulating. Ticket
-/// 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION killed the shared
-/// `RasterImage` wrapper (jpg/png/tiff each copy-pasted it) — `width`/`height`/`pixels` are
-/// first-class fields here, matching `JpgSnapshot`'s own shape.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
-#[value(rename_all = "camelCase")]
-#[artifact_schema(id = "s.stdio.jpg")]
-pub struct JpgArtifact {
-    #[state(artifact)]
-    pub schema: String,
-    #[state(artifact)]
-    #[value(default)]
-    pub width: u32,
-    #[state(artifact)]
-    #[value(default)]
-    pub height: u32,
-    #[state(artifact)]
-    #[value(default)]
-    pub pixels: Vec<u8>,
-}
-
-impl Default for JpgArtifact {
-    fn default() -> Self {
-        Self::from_snapshot(JpgSnapshot::default())
-    }
-}
-
-impl JpgArtifact {
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn to_snapshot(&self) -> JpgSnapshot {
-        // 🎪️ `JpgArtifact` is the reduced UI-editable view (schema+raster only) — it never
-        // carries frame/table data, so `frame`/`sof_marker`/`arithmetic`/`quant_tables`/
-        // `huffman_tables`/etc. fall back to `JpgSnapshot::default()`'s "no decoded frame" state.
-        JpgSnapshot { schema: self.schema.clone(), width: self.width, height: self.height, pixels: self.pixels.clone(), ..JpgSnapshot::default() }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn from_snapshot(snapshot: JpgSnapshot) -> Self {
-        Self { schema: snapshot.schema, width: snapshot.width, height: snapshot.height, pixels: snapshot.pixels }
-    }
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn set_snapshot(&mut self, snapshot: JpgSnapshot) {
-        self.schema = snapshot.schema;
-        self.width = snapshot.width;
-        self.height = snapshot.height;
-        self.pixels = snapshot.pixels;
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+/// 🧬️ Declares the canonical owned image schema facets.
 pub fn jpg_artifact_schema_descriptor() -> semio_framework_schema_registry::ArtifactSchemaDescriptor {
     semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.stdio.jpg",
@@ -128,18 +80,6 @@ pub(crate) fn demo_jpg_snapshot() -> JpgSnapshot {
         px[2] = (i * 17 % 255) as u8;
         px[3] = 255;
     }
-    JpgSnapshot {
-        schema: STDIO_JPG_DOCUMENT_SCHEMA.into(),
-        width: w,
-        height: h,
-        pixels,
-        jfif_version: (1, 1),
-        jfif_density_units: crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::JfifDensityUnits::PixelsPerInch,
-        jfif_x_density: 72,
-        jfif_y_density: 72,
-        jfif_thumbnail: None,
-        other_segments: Vec::new(),
-        ..JpgSnapshot::default()
-    }
+    JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), image: crate::schema::snapshot::JpgImage { width: w,height: h,pixels,jfif_version: (1, 1),jfif_density_units: crate::standards::v_jfif_1_01::subsets::document::schema::snapshot::JfifDensityUnits::PixelsPerInch,jfif_x_density: 72,jfif_y_density: 72,jfif_thumbnail: None,other_segments: Vec::new(),..crate::schema::snapshot::JpgImage::default() } }
 }
 //#endregion 🔖️DocumentHelpers

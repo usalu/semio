@@ -21,14 +21,12 @@ insert-shape = "insert-shape" "slide-index" "=" INT "shape-index" "=" INT "shape
 remove-shape = "remove-shape" "slide-index" "=" INT "shape-index" "=" INT
 set-shape-frame = "set-shape-frame" "slide-index" "=" INT "shape-index" "=" INT "frame" "=" frame
 set-text-box-blocks = "set-text-box-blocks" "slide-index" "=" INT "shape-index" "=" INT "blocks" "=" "[" block-items? "]"
-insert-master = "insert-master" "master" "=" master
+insert-master = "insert-master" "master" "=" master ("at" "=" INT)?
 remove-master = "remove-master" "id" "=" hex
-insert-layout = "insert-layout" "layout" "=" layout
+insert-layout = "insert-layout" "layout" "=" layout ("at" "=" INT)?
 remove-layout = "remove-layout" "id" "=" hex
 set-layout-master = "set-layout-master" "id" "=" hex "master-id" "=" hex
 
-# `enc_presentation_snapshot` — `[schema,[masters],[layouts],[slides]]`.
-snapshot-lit = "[" hex "," "[" master-items? "]" "," "[" layout-items? "]" "," "[" slide-items? "]" "]"
 
 # `master`/`layout`/`🎞️slide`/`shape`/`frame`/`point2`/`image`/`placeholder-kind`/`row`/`cell`/`block`
 # — the same full-VALUE codecs `../📸️snapshot/📖️.grammar.semio` declares
@@ -39,9 +37,6 @@ snapshot-lit = "[" hex "," "[" master-items? "]" "," "[" layout-items? "]" "," "
 master = "[" hex "," "[" shape-items? "]" "]"
 layout = "[" hex "," hex "," "[" shape-items? "]" "]"
 slide = "[" hex "," option-hex "," "[" shape-items? "]" "," "[" block-items? "]" "]"
-master-items = master {"," master}*
-layout-items = layout {"," layout}*
-slide-items = slide {"," slide}*
 shape-items = shape {"," shape}*
 shape = "X" "[" frame "," "[" block-items? "]" "]" | "P" "[" frame "," image "]" | "T" "[" frame "," "[" row-items? "]" "]" | "H" "[" frame "," placeholder-kind "]"
 frame = "[" point2 "," INT "," INT "]"

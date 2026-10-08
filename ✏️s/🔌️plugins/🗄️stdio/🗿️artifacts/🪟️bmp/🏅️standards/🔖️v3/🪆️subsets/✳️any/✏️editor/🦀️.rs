@@ -5,7 +5,7 @@
 
 use crate::editor::bmp::modes::edit;
 use crate::editor::bmp::modes::edit::windows::main;
-use crate::standards::v_v3::subsets::any::schema::mutations::{patch_snapshot,set_snapshot as snapshot_edit_set_snapshot,BmpMutation};
+use crate::standards::v_v3::subsets::any::schema::mutations::BmpMutation;
 
 use crate::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
 use crate::{BMP_DIALECT, STDIO_BMP_DOCUMENT_SCHEMA};
@@ -265,7 +265,7 @@ impl ArtifactEditor for BmpEditor {
     }
 
     fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(BmpMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot }))
+        Some(BmpMutation::ReplaceImage(crate::schema::mutations::ReplaceImage { image:snapshot.image }))
     }
 
     fn bounded_first_step_tool_proofs() -> Vec<ArtifactBoundedFirstStepProof> {
@@ -422,7 +422,7 @@ impl editing::SnapshotEditingEditor for BmpEditor {
         }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_patch(event, snapshot, |patch| BmpMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| BmpMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot })))
+        editing::snapshot_edit_net_exact(event,snapshot,|before,after|if before.image==after.image{Vec::new()}else{vec![BmpMutation::ReplaceImage(crate::schema::mutations::ReplaceImage{image:after.image.clone()})]})
     }
 }
 

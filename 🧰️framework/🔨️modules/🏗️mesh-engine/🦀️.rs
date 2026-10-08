@@ -93,6 +93,87 @@ pub struct PolygonMeshSource {
 impl PolygonMeshSource {
     /// 🎒️ Serializes the same source shape consumed by the named geometry inference.
     pub fn encode(&self)->String {json::from_dsl_value(&pack::value::ToValue::to_value(self)).to_string()}
+
+    /// 📜️ Polygon-preserving OBJ reader: `v` and `f` lines only (`i`, `i/t`, `i//n`, `i/t/n`, negative indices), no fan triangulation.
+    pub fn from_obj(text:&str)->Result<Self,String> {
+        let mut cursor=ObjSourceCursor::new();
+        loop {if let Some(source)=cursor.step(text,4096)? {return Ok(source);}}
+    }
+
+    /// 🌐️ Closed latitude-longitude sphere around the Y axis: pole fans plus quad bands, wound outward, with shared vertices.
+    pub fn uv_sphere(radius:f32,segments:u32,rings:u32)->Result<Self,String> {
+        if !radius.is_finite() || radius<=0.0 || !(3..=1024).contains(&segments) || !(2..=1024).contains(&rings) || segments as usize*rings as usize>PARAMETRIC_FACE_LIMIT {return Err("invalid uv sphere dimensions".into());}
+        let (segments,rings)=(segments as usize,rings as usize);
+        let mut vertices=vec![[0.0,radius,0.0]];
+        for ring in 1..rings {let phi=ring as f64/rings as f64*std::f64::consts::PI;for segment in 0..segments {let theta=segment as f64/segments as f64*std::f64::consts::TAU;let r=radius as f64;vertices.push([(r*phi.sin()*theta.cos()) as f32,(r*phi.cos()) as f32,(r*phi.sin()*theta.sin()) as f32]);}}
+        vertices.push([0.0,-radius,0.0]);
+        let at=|ring:usize,segment:usize|(1+(ring-1)*segments+segment%segments) as u32;
+        let south=(vertices.len()-1) as u32;
+        let mut faces=Vec::with_capacity(segments*rings);
+        for segment in 0..segments {faces.push(vec![0,at(1,segment+1),at(1,segment)]);}
+        for ring in 1..rings-1 {for segment in 0..segments {faces.push(vec![at(ring,segment),at(ring,segment+1),at(ring+1,segment+1),at(ring+1,segment)]);}}
+        for segment in 0..segments {faces.push(vec![south,at(rings-1,segment),at(rings-1,segment+1)]);}
+        Ok(Self {vertices,faces,attributes:BTreeMap::new(),materials:BTreeMap::new(),textures:BTreeMap::new()})
+    }
+
+    /// 🍩️ Closed torus around the Y axis from quads wound outward: `segments` around the ring, `rings` around the tube.
+    pub fn torus(major:f32,minor:f32,segments:u32,rings:u32)->Result<Self,String> {
+        if !major.is_finite() || !minor.is_finite() || minor<=0.0 || major<=minor || !(3..=1024).contains(&segments) || !(3..=1024).contains(&rings) || segments as usize*rings as usize>PARAMETRIC_FACE_LIMIT {return Err("invalid torus dimensions".into());}
+        let (segments,rings)=(segments as usize,rings as usize);
+        let mut vertices=Vec::with_capacity(segments*rings);
+        for ring in 0..rings {let phi=ring as f64/rings as f64*std::f64::consts::TAU;for segment in 0..segments {let theta=segment as f64/segments as f64*std::f64::consts::TAU;let distance=major as f64+minor as f64*phi.cos();vertices.push([(distance*theta.cos()) as f32,(minor as f64*phi.sin()) as f32,(distance*theta.sin()) as f32]);}}
+        let at=|ring:usize,segment:usize|((ring%rings)*segments+segment%segments) as u32;
+        let mut faces=Vec::with_capacity(segments*rings);
+        for ring in 0..rings {for segment in 0..segments {faces.push(vec![at(ring,segment),at(ring+1,segment),at(ring+1,segment+1),at(ring,segment+1)]);}}
+        Ok(Self {vertices,faces,attributes:BTreeMap::new(),materials:BTreeMap::new(),textures:BTreeMap::new()})
+    }
+}
+
+const PARAMETRIC_FACE_LIMIT:usize=100_000;
+
+/// 📜️ Incremental form of [`PolygonMeshSource::from_obj`]: reads at most the granted number of lines per step so a host can stay inside an interactive step ceiling.
+pub struct ObjSourceCursor {offset:usize,lines:usize,vertices:Vec<[f32;3]>,faces:Vec<Vec<u32>>}
+
+impl Default for ObjSourceCursor {fn default()->Self {Self::new()}}
+
+impl ObjSourceCursor {
+    pub fn new()->Self {Self {offset:0,lines:0,vertices:Vec::new(),faces:Vec::new()}}
+
+    /// 📊 Bytes consumed and the byte length of `text`.
+    pub fn progress(&self,text:&str)->(usize,usize) {(self.offset,text.len())}
+
+    /// ⏱️ Reads up to `maximum_lines` lines of `text`; the source once the whole text is read and every face index is checked.
+    pub fn step(&mut self,text:&str,maximum_lines:usize)->Result<Option<PolygonMeshSource>,String> {
+        if text.len()>16_000_000 {return Err("obj: input exceeds 16 MB".into());}
+        for _ in 0..maximum_lines.max(1) {
+            if self.offset>=text.len() {
+                if self.faces.iter().flatten().any(|index|*index as usize>=self.vertices.len()) {return Err("obj: face index out of range".into());}
+                return Ok(Some(PolygonMeshSource {vertices:std::mem::take(&mut self.vertices),faces:std::mem::take(&mut self.faces),attributes:BTreeMap::new(),materials:BTreeMap::new(),textures:BTreeMap::new()}));
+            }
+            let rest=&text[self.offset..];
+            let end=rest.find('\n').unwrap_or(rest.len());
+            let line=&rest[..end];
+            self.offset+=end+1;
+            self.lines+=1;
+            let mut parts=line.split_whitespace();
+            match parts.next() {
+                Some("v")=>{
+                    let coordinates=parts.take(3).map(|value|value.parse::<f32>().ok().filter(|number|number.is_finite())).collect::<Option<Vec<_>>>().filter(|coordinates|coordinates.len()==3).ok_or_else(||format!("obj: malformed v line {}",self.lines))?;
+                    self.vertices.push([coordinates[0],coordinates[1],coordinates[2]]);
+                }
+                Some("f")=>{
+                    let mut face=Vec::new();
+                    for token in parts {
+                        let raw:i64=token.split('/').next().unwrap_or_default().parse().map_err(|_|format!("obj: malformed face index on line {}",self.lines))?;
+                        face.push(obj_resolve_index(raw,self.vertices.len())? as u32);
+                    }
+                    if face.len()>=3 {self.faces.push(face);}
+                }
+                _=>{}
+            }
+        }
+        Ok(None)
+    }
 }
 
 /// 🔎️ Parses bounded indexed polygon source without reconstructing geometry.

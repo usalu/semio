@@ -1,5 +1,5 @@
 //! 🧹️ Removes an exact topology sibling and preserves its ordered inverse authority.
-use crate::{CadSnapshot, mutations::CadMutation, diff::{CadDiff, CadBrepChildList}};
+use crate::{CadSnapshot, mutations::CadMutation, diff::{CadDiff, CadBrepsDelta}};
 use protocol::MutationKind;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value_derive::RetireOwned)]
@@ -16,8 +16,7 @@ impl MutationKind<CadSnapshot, CadMutation> for DeleteBrep {
         if !base.breps.iter().any(|child| child.child_id == self.child_id) {
             return protocol::MutationOutcome::fatal("mutation.missing-id", "topology sibling is absent", [self.child_id.clone()]);
         }
-        let values = base.breps.iter().filter(|child| child.child_id != self.child_id).cloned().collect();
-        protocol::MutationOutcome::new(CadDiff { breps: Some(CadBrepChildList { values }), ..Default::default() })
+        protocol::MutationOutcome::new(CadDiff { breps: Some(CadBrepsDelta { removed: vec![self.child_id.clone()], ..Default::default() }), ..Default::default() })
     }
     fn inverse(&self, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
         let Some((index, child)) = base.breps.iter().enumerate().find(|(_, child)| child.child_id == self.child_id) else { return Ok(Vec::new()) };

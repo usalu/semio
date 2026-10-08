@@ -1,0 +1,9 @@
+# Whole Current Caller Successor
+
+The complete actual epoch-10 run remains red and retained. The successor joins six guarded current caller proposals: two original missing vector loops restored with every expectation retained, explicit async controlled Cargo operations in three inventory laws and the original native profile law, plus fixture-root TSV assertions corrected to their unchanged actual root authority. Portable fixture data and case/control rosters remain intact. The pattern compiler law's typed shape now matches its unchanged portable fixture.
+
+Two existing closed Readme schemas are now admitted as canonical proposal inputs before their original test imports. The fresh stage also captures the whole runner's closed execution schema and six portable run identity vectors. Schema rejects the actual invalid prior flattened identity. Its independent Node oracle consumes the unchanged original transaction test's actual grammar. Whole execution uses the original process ID/RFC UUID and exact run-root ancestry, and caller output is under the original required generated boundary within this ticket's generated snapshot.
+
+Fresh whole physical capture unions present actual indexed inputs with fresh hidden source plus read-only Git metadata for current indexed queries. Tracked current ticket/Storybook/root-toolchain inputs are now included. Git objects, LFS bodies, logs and generated outputs are excluded from blanket capture; any actual additional required authority remains a concrete refusal. No historical ledger reconstruction or shared Git mutations occur.
+
+Current command registrations requested in gui-additions-12.json cover fresh stage, model14, original Cargo/direction/budget28, core, inspection and full whole46 roster. Their execution has not yet occurred. No source publication or accepted whole closure is claimed.

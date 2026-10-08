@@ -1,0 +1,11 @@
+# Current General Scene Fixture Ownership
+
+Actual products-absent corpus3 reached Cargo metadata and all-target compilation, then failed because the General Scene original ray-to-segment math law source-included a product World fixture. General check3 with products present had compiled, illustrating why manifest and ordinary build closure are insufficient.
+
+Both complete original neutral scene datasets (component-selection-merges and analytic-wire-picking) now reside at defining General UI Scene fixtures. Every byte, case, expected result, opaque reference and camera/gesture vector was conserved. Seventeen source reader positions in three actual files were rebound: General Scene math, General3D TypeScript Three/Lodash oracles, and Specific OS World original integration laws. There is one defining resource copy; old product paths/files and empty owning fixture directories were retired, with no alias or redirect. Exact before/after bodies and fixture hashes are journaled with sequential publication; no atomic-source claim. The completed successors and remaining runtime qualification appear below.
+
+## Complete General Scene Runtime Successor
+
+Registered full General UI Scene native1 closed with Nx 0/Cargo 0, all 190 current original owning laws passing and zero failed, ignored or filtered. This includes the unchanged ray-segment neutral Three fixture law and every original Scene math, model and payload law. The runner captured the complete actual Scene Rust/JSON/Cargo source owner plus selected shared source controls: 65 bodies, producer and Root Cargo lock all joined exactly. Runtime `[DEBUG]` progress and complete original assertion output are retained under ticket generated/umbrella-native/native-scene-1. The three-law General Manifest integer-carrier roster was separately run by Native and remains a genuine exact-byte failure; it was not selected into or claimed by this Scene success.
+
+The separate complete General3D TypeScript fourteen-law successor also passed after rebinding the Scene datasets, with exact sampled owner/fixture authorities in CURRENT-GENERAL-JS-API-EXECUTION.md. Specific OS World runtime after its 14 reader-coordinate moves remains unexecuted here. The source/resource isolation acceptance remains independently qualified in CURRENT-GENERAL-DELETION-CORPUS.md.

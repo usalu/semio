@@ -900,29 +900,5 @@ use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use crate::standards::v_r12::subsets::any::io::text::diff::{dec_block, dec_dxf_entities, dec_dxf_tables, dec_header_var, dec_list, dec_other_table, dec_str, enc_block, enc_dxf_entities, enc_dxf_tables, enc_header_var, enc_list, enc_other_table, enc_str, split_top_level, strip_brackets};
-/// 🧬️ Whole `DxfSnapshot` — needed by `🧬️mutations::DxfMutation::SetSnapshot`'s `OpText`/
-/// `OpBinary` payload (§3a's mutation-side blocker: `SetSnapshot` always carries the whole
-/// snapshot, so this grammar is exercised by the mutation codec even though `DxfDiff` never
-/// embeds a full snapshot itself).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_dxf_snapshot(s: &DxfSnapshot) -> String {
-    format!("[{},{},{},{},{},{}]", enc_str(&s.schema), enc_list(&s.header_vars, enc_header_var), enc_dxf_tables(&s.tables), enc_list(&s.other_tables, enc_other_table), enc_list(&s.blocks, enc_block), enc_dxf_entities(&s.entities),)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_dxf_snapshot(s: &str) -> Result<DxfSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, header_vars, tables, other_tables, blocks, entities] = parts.as_slice() else {
-        return Err(format!("snapshot: expected 6 fields, got {}", parts.len()));
-    };
-    Ok(DxfSnapshot {
-        schema: dec_str(schema)?,
-        header_vars: dec_list(header_vars, dec_header_var)?,
-        tables: dec_dxf_tables(tables)?,
-        other_tables: dec_list(other_tables, dec_other_table)?,
-        blocks: dec_list(blocks, dec_block)?,
-        entities: dec_dxf_entities(entities)?,
-    })
-}
 }
 pub use diff_codec::*;

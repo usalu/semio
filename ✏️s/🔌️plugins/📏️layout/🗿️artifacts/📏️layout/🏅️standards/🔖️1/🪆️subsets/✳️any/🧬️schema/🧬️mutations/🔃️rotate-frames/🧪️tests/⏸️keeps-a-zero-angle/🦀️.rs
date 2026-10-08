@@ -29,7 +29,7 @@ fn outcome() -> serde_json::Value {
 }
 fn applied() -> LayoutSnapshot {
     let base = before();
-    mutation().diff(&base).diff().apply(&base).expect("rotate-frames/keeps-a-zero-angle: the diff applies to its committed before-snapshot")
+    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("rotate-frames/keeps-a-zero-angle: the diff applies to its committed before-snapshot")
 }
 
 /// 🗣️ `(level, code, target)` of every message `rotate-frames` raises on the committed base.
@@ -95,7 +95,7 @@ fn committed_diff_is_canonical_and_complete() {
     let decoded: crate::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
     assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(DIFF).expect("committed diff reparses"), "rotate-frames/keeps-a-zero-angle: committed diff JSON is not canonical");
-    assert_eq!(decoded.apply(&before()).expect("committed diff applies"), expected_after(), "rotate-frames/keeps-a-zero-angle: committed diff did not carry before to after");
+    assert_eq!(protocol::apply_diff(&decoded, &before()).expect("committed diff applies"), expected_after(), "rotate-frames/keeps-a-zero-angle: committed diff did not carry before to after");
 }
 
 /// 🧾️ A vector that moves nothing leaves the committed `after` equal to `before` and has nothing to undo.

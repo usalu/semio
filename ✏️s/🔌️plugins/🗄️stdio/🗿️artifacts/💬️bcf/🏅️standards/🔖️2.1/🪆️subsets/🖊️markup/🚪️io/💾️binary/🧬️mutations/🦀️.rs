@@ -7,8 +7,6 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod mutations_codec {
 use super::*;
 use crate::standards::v2_1::subsets::any::schema::mutations::*;
-use crate::standards::v2_1::subsets::any::io::binary::snapshot::{dec_bcf_snapshot_bin};
-use crate::standards::v2_1::subsets::any::io::binary::snapshot::{enc_bcf_snapshot_bin};
 use crate::standards::v2_1::subsets::any::io::binary::diff::{dec_components_bin};
 use crate::standards::v2_1::subsets::any::io::binary::diff::{enc_components_bin};
 use crate::standards::v2_1::subsets::any::io::binary::diff::{dec_camera_bin};
@@ -45,7 +43,7 @@ use crate::standards::v2_1::subsets::any::io::text::diff::{dec_topic};
 use crate::standards::v2_1::subsets::any::io::text::diff::{enc_topic};
 use crate::standards::v2_1::subsets::any::io::text::diff::{dec_str};
 use crate::standards::v2_1::subsets::any::io::text::diff::{enc_str};
-use crate::schema::diff::{diff_set_snapshot, wrap_comment_diff, wrap_topic_diff, wrap_viewpoint_diff, BcfCommentDiff, BcfCommentsDiff, BcfDiff, BcfTopicDiff, BcfTopicsDiff, BcfViewpointDiff, BcfViewpointsDiff};
+use crate::schema::diff::{wrap_comment_diff, wrap_topic_diff, wrap_viewpoint_diff, BcfCommentDiff, BcfCommentsDiff, BcfDiff, BcfTopicDiff, BcfTopicsDiff, BcfViewpointDiff, BcfViewpointsDiff};
 use crate::schema::snapshot::{BcfCamera, BcfComment, BcfComponents, BcfTopic, BcfViewpoint};
 use crate::BcfSnapshot;
 use protocol::Mutation;
@@ -92,11 +90,25 @@ pub(crate) fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Ve
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
 /// `BcfMutation` variant ordinal; tag 0 (formerly `NoMutation`) is retired rather than reused, so a
 /// stray zero tag on the wire fails `decode_op` instead of silently resurrecting a dropped variant.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_opt_index_bin(out: &mut Vec<u8>, index: &Option<usize>) {
+    out.push(if index.is_some() { 1 } else { 0 });
+    if let Some(index) = index {
+        store::pack_rt::write_varint_u64(out, *index as u64);
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn read_opt_index_bin(reader: &mut store::ByteReader<'_>) -> Result<Option<usize>, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => Ok(None),
+        _ => Ok(Some(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)),
+    }
+}
+
 impl protocol::OpBinary for BcfMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            BcfMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
-            BcfMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
             BcfMutation::SetVersion(_) => TAG_SET_VERSION,
             BcfMutation::InsertTopic(_) => TAG_INSERT_TOPIC,
             BcfMutation::RemoveTopic(_) => TAG_REMOVE_TOPIC,
@@ -112,10 +124,11 @@ impl protocol::OpBinary for BcfMutation {
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
-            BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_bcf_snapshot_bin(snapshot, &mut out),
-            BcfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => out.extend(protocol::OpBinary::encode_op(patch)?),
             BcfMutation::SetVersion(set_version::SetVersion { version }) => write_str_lp(&mut out, version),
-            BcfMutation::InsertTopic(insert_topic::InsertTopic { topic }) => enc_topic_bin(topic, &mut out),
+            BcfMutation::InsertTopic(insert_topic::InsertTopic { topic, index }) => {
+                enc_topic_bin(topic, &mut out);
+                write_opt_index_bin(&mut out, index);
+            }
             BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid }) => write_str_lp(&mut out, guid),
             BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup { guid, title, description, status, priority, labels, creation_date, creation_author }) => {
                 write_str_lp(&mut out, guid);
@@ -130,9 +143,10 @@ impl protocol::OpBinary for BcfMutation {
                 write_opt_str_bin(&mut out, creation_date);
                 write_opt_str_bin(&mut out, creation_author);
             }
-            BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid, comment }) => {
+            BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid, comment, index }) => {
                 write_str_lp(&mut out, topic_guid);
                 enc_comment_bin(comment, &mut out);
+                write_opt_index_bin(&mut out, index);
             }
             BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid, guid }) => {
                 write_str_lp(&mut out, topic_guid);
@@ -149,9 +163,10 @@ impl protocol::OpBinary for BcfMutation {
                     write_opt_str_bin(&mut out, inner);
                 }
             }
-            BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid, viewpoint }) => {
+            BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid, viewpoint, index }) => {
                 write_str_lp(&mut out, topic_guid);
                 enc_viewpoint_bin(viewpoint, &mut out);
+                write_opt_index_bin(&mut out, index);
             }
             BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid, guid }) => {
                 write_str_lp(&mut out, topic_guid);
@@ -191,10 +206,12 @@ impl protocol::OpBinary for BcfMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            TAG_PATCH_SNAPSHOT => Ok(BcfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(reader.read_bytes(reader.remaining()).map_err(|e| protocol::ProtocolError::Malformed { what: "patch-snapshot payload", offset: reader.position() as u64, detail: e.to_string() })?)? })),
-            TAG_SET_SNAPSHOT => Ok(BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_bcf_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))? })),
             TAG_SET_VERSION => Ok(BcfMutation::SetVersion(set_version::SetVersion { version: read_str_lp(&mut reader).map_err(|e| malformed("op version", reader.position(), e))? })),
-            TAG_INSERT_TOPIC => Ok(BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: dec_topic_bin(&mut reader).map_err(|e| malformed("op topic", reader.position(), e))? })),
+            TAG_INSERT_TOPIC => {
+                let topic = dec_topic_bin(&mut reader).map_err(|e| malformed("op topic", reader.position(), e))?;
+                let index = read_opt_index_bin(&mut reader).map_err(|e| malformed("op index", reader.position(), e))?;
+                Ok(BcfMutation::InsertTopic(insert_topic::InsertTopic { topic, index }))
+            }
             TAG_REMOVE_TOPIC => Ok(BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))? })),
             TAG_SET_TOPIC_MARKUP => {
                 let guid = read_str_lp(&mut reader).map_err(|e| malformed("op guid", reader.position(), e))?;
@@ -210,7 +227,8 @@ impl protocol::OpBinary for BcfMutation {
             TAG_INSERT_COMMENT => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
                 let comment = dec_comment_bin(&mut reader).map_err(|e| malformed("op comment", reader.position(), e))?;
-                Ok(BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid, comment }))
+                let index = read_opt_index_bin(&mut reader).map_err(|e| malformed("op index", reader.position(), e))?;
+                Ok(BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid, comment, index }))
             }
             TAG_REMOVE_COMMENT => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
@@ -233,7 +251,8 @@ impl protocol::OpBinary for BcfMutation {
             TAG_INSERT_VIEWPOINT => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
                 let viewpoint = dec_viewpoint_bin(&mut reader).map_err(|e| malformed("op viewpoint", reader.position(), e))?;
-                Ok(BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid, viewpoint }))
+                let index = read_opt_index_bin(&mut reader).map_err(|e| malformed("op index", reader.position(), e))?;
+                Ok(BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid, viewpoint, index }))
             }
             TAG_REMOVE_VIEWPOINT => {
                 let topic_guid = read_str_lp(&mut reader).map_err(|e| malformed("op topic_guid", reader.position(), e))?;
@@ -269,8 +288,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `BcfMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_SET_VERSION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-version");
 const TAG_INSERT_TOPIC: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-topic");
 const TAG_REMOVE_TOPIC: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-topic");

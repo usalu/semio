@@ -22,7 +22,7 @@
       "productionReachable": false,
       "networkDuringExecution": false,
       "homepage": "https://github.com/frabert/riff",
-      "rationale": "📖️ The RIFF/WAVE oracle this subset's mutation case runs. `riff` 2.0.0 is a from-scratch generic RIFF container reader and writer used nowhere in this repository's WAV path: `riff::Chunk::read` + `.iter()` walk every top-level chunk by id and length, and `riff::ChunkContents::write` frames and pads every chunk this oracle emits. This subset's oracle module composes it with its own reading of the 16-byte PCM `fmt ` layout and the little-endian PCM16 `data` words — the same shape as the AVI oracle's riff composition — so every declared kind (`set-snapshot`, `patch-snapshot`, `set-fmt`, `set-data`, `patch-data`, `set-other-chunks`) is performed and re-serialized without any subject codec code. Verified against this subset's own committed `shared://🎙️bauen-mit-bestand-ausschnitt/🔊️.wav`: the walker reports the real top-level `fmt ` (16 bytes) / `data` (192000 bytes) sequence, and the identity round trip reproduces the canonical 44-byte-header layout byte for byte.",
+      "rationale": "📖️ The RIFF/WAVE oracle this subset's mutation case runs. `riff` 2.0.0 is a from-scratch generic RIFF container reader and writer used nowhere in this repository's WAV path: `riff::Chunk::read` + `.iter()` walk every top-level chunk by id and length, and `riff::ChunkContents::write` frames and pads every chunk this oracle emits. This subset's oracle module composes it with its own reading of the 16-byte PCM `fmt ` layout and the little-endian PCM16 `data` words — the same shape as the AVI oracle's riff composition — so every declared kind (`set-fmt`, `set-data`, `patch-data`, `set-other-chunks`) is performed and re-serialized without any subject codec code. Verified against this subset's own committed `shared://🎙️bauen-mit-bestand-ausschnitt/🔊️.wav`: the walker reports the real top-level `fmt ` (16 bytes) / `data` (192000 bytes) sequence, and the identity round trip reproduces the canonical 44-byte-header layout byte for byte.",
       "comparisonProfiles": [
         "semantic-audio-v1"
       ]
@@ -34,22 +34,8 @@
       "capability": "wav-riff-pcm-mutate",
       "standardDirectoryName": "🔖️riff-pcm",
       "subsetDirectoryName": "✳️any",
-      "vectors": [
-        {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
-          "scenarios": [
-            {
-              "id": "resamples-to-16-khz-and-doubles-the-pcm16-amplitude",
-              "directoryName": "🔊️resamples"
-            }
-          ]
-        }
-      ],
+      "vectors": [],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "set-fmt",
         "set-data",
         "patch-data",
@@ -78,27 +64,6 @@
             "operation": "patch-data",
             "bridgeVersion": 1,
             "variant": "PatchData"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "wav-riff-pcm-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "riff-wav-riff-pcm-mutate-chunk-reader"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "wav-riff-pcm-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {
@@ -159,28 +124,6 @@
             "operation": "set-other-chunks",
             "bridgeVersion": 1,
             "variant": "SetOtherChunks"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "wav-riff-pcm-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "riff-wav-riff-pcm-mutate-chunk-reader"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "wav-riff-pcm-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
           },
           "oracleRequirements": [
             {
@@ -361,48 +304,6 @@
       "reproducible": true,
       "family": "wav-carrier",
       "notes": "PatchData{index:1,removeCount:2,data:pcm16[7,-7,9]} splices three PCM16 samples over the two at indices 1..3 — the recording grows by one sample while fmt, otherChunks and chunkOrder stay untouched."
-    },
-    {
-      "id": "patch-snapshot-applied",
-      "class": "handcrafted",
-      "target": {
-        "artifact": "s.stdio.wav",
-        "standard": "riff-pcm",
-        "subset": "any"
-      },
-      "mutation": "patch-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before",
-          "path": "../🧫️fixtures/🩹️patch-snapshot/⬅️before.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:faaacdde3704896c053afd2f0772529bd233372c7b1c1900022ec22f6c754f1a",
-          "bytes": 394
-        },
-        {
-          "role": "expected-after",
-          "path": "../🧫️fixtures/🩹️patch-snapshot/➡️after.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:60cc522c1c9f70750c450497e7181ea19b6961556dc6e7c946f58506f7f77a44",
-          "bytes": 394
-        }
-      ],
-      "provenance": {
-        "source": "authored",
-        "license": "public-domain (handcrafted by this repository)",
-        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "ordered-json-v1",
-      "reproducible": true,
-      "family": "wav-carrier",
-      "notes": "PatchSnapshot{set /data/value/2 = 300} is the editor's compact path-addressed patch: one sample changes in place and every other member of the snapshot stays byte-identical."
     }
   ],
   "oracleHostPackages": []

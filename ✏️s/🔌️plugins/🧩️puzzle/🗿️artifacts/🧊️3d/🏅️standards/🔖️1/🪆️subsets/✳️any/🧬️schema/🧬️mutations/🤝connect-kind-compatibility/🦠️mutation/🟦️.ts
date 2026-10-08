@@ -8,4 +8,5 @@ export interface ConnectKindCompatibility {
   bidirectional: boolean;
   important: boolean;
   specificity: Puzzle3dCompatSpecificity;
+  index?: number | null;
 }

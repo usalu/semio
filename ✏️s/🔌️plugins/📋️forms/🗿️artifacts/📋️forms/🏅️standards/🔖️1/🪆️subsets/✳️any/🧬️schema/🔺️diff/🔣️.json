@@ -18,10 +18,15 @@
       "x-semio-state": "artifact"
     },
     "title": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "$ref": "#/$defs/FormsOptionalText",
+      "x-semio-state": "artifact"
+    },
+    "steps": {
+      "$ref": "#/$defs/FormsStepsDelta",
+      "x-semio-state": "artifact"
+    },
+    "responses": {
+      "$ref": "#/$defs/FormsResponsesDelta",
       "x-semio-state": "artifact"
     },
     "structure": {
@@ -33,17 +38,231 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/base/child.json#/$defs/table",
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
+    }
+  },
+  "$defs": {
+    "FormsOptionalText": {
+      "title": "FormsOptionalText",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
     },
-    "definition": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/definition.json",
-      "x-semio-state": "artifact"
-    },
-    "responses": {
-      "type": "array",
-      "items": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/response.json"
+    "FormsBlockField": {
+      "title": "FormsBlockField",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "value": {}
       },
-      "x-semio-state": "artifact"
+      "required": [
+        "field",
+        "value"
+      ]
+    },
+    "FormsQuestionPatch": {
+      "title": "FormsQuestionPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormsBlockField"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "changes"
+      ]
+    },
+    "FormsQuestionsDelta": {
+      "title": "FormsQuestionsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/definition.json#/$defs/Question"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormsQuestionPatch"
+          }
+        },
+        "reordered": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ]
+    },
+    "FormsStepPatch": {
+      "title": "FormsStepPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/FormsOptionalText"
+            }
+          ]
+        },
+        "blocks": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/FormsQuestionsDelta"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "FormsStepsDelta": {
+      "title": "FormsStepsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/definition.json#/$defs/Step"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormsStepPatch"
+          }
+        },
+        "reordered": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ]
+    },
+    "FormsResponsePatch": {
+      "title": "FormsResponsePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "FormsResponsesDelta": {
+      "title": "FormsResponsesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/response.json"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FormsResponsePatch"
+          }
+        },
+        "reordered": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ]
     }
   }
 }

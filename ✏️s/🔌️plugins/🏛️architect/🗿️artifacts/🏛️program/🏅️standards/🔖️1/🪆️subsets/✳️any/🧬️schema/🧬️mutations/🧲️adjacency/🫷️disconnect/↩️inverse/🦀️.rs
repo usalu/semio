@@ -8,8 +8,8 @@ use crate::ProgramSnapshot;
 /// ↩️ Undo by reconnecting the captured edge. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::DisconnectAdjacency, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    match base.adjacencies.iter().find(|row| row.header.id == payload.id) {
-        Some(existing) => vec![ProgramMutation::ConnectAdjacency(super::super::connect_adjacency::ConnectAdjacency { adjacency: existing.clone() })],
+    match base.adjacencies.iter().position(|row| row.header.id == payload.id) {
+        Some(position) => vec![ProgramMutation::ConnectAdjacency(super::super::connect_adjacency::ConnectAdjacency { adjacency: base.adjacencies[position].clone(), index: Some(position) })],
         None => Vec::new(),
     }
 

@@ -13,7 +13,7 @@ export default defineConfig({
     ...rendererConfig.test,
     root,
     name: "puzzle-renderer-contract",
-    include: ["🧪️tests/🪪️session-factory/🟦️.ts", "🧪️tests/🥽️brush-mesh-upload/🟦️.ts"],
+    include: ["🧪️tests/🪪️session-factory/🟦️.ts", "🧪️tests/🥽️brush-mesh-upload/🟦️.ts", "🧪️tests/🚀️renderer-boot-variants/🟦️.ts"],
     includeSource: [],
     passWithNoTests: false,
     testNamePattern: undefined,

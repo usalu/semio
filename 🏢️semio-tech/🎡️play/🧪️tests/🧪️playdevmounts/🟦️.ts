@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { staticDirMountVitePlugins } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { MODULE_PLUGIN_ROUTE, MODULE_VENDOR_DIRECTORY } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { FONT_ASSET } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/🟦️.ts";
+import { FONT_ASSET } from "../../../../🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts";
 import type { playDevStaticDirMounts } from "../../🔨️modules/🧩️runtime/📦️assets/🟦️.ts";
 
 type Middleware = (request: IncomingMessage, response: ServerResponse, next: () => void) => void;

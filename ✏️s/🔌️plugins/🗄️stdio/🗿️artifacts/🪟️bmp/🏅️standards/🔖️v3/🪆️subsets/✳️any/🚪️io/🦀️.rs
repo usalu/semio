@@ -4,7 +4,7 @@
 pub mod derived_composition {
     use crate::standards::v_v3::subsets::any::io::BmpAnalyzer;
     use crate::BmpSnapshot;
-    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
@@ -284,7 +284,7 @@ mod tests;
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v_v3::subsets::any::io::BmpComposer as BmpRawAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -338,7 +338,7 @@ pub mod derived_construction {
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <BmpDiff as protocol::MutationDiff<BmpSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
@@ -355,7 +355,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::BmpSnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.bmp` parts.
@@ -373,14 +373,14 @@ pub mod derived_analysis {
         type Parts = BmpParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.bmp", standard: StandardId("v3"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             const SIG: [u8; 2] = *b"BM";
             match source {
                 AnalyzeSource::Binary(bytes) => {
                     if bytes.len() >= 2 && bytes[0..2] == SIG {
-                        IoConfidence::High
+                        semio_framework_plugin::io::Confidence::High
                     } else {
-                        IoConfidence::Low
+                        semio_framework_plugin::io::Confidence::Low
                     }
                 }
                 AnalyzeSource::Text(text) => {
@@ -392,19 +392,19 @@ pub mod derived_analysis {
                     };
                     let hex: String = body.chars().filter(|c| !c.is_whitespace()).take(4).collect();
                     if hex.len() < 4 {
-                        return IoConfidence::Low;
+                        return semio_framework_plugin::io::Confidence::Low;
                     }
                     let mut decoded = [0u8; 2];
                     for (i, byte) in decoded.iter_mut().enumerate() {
                         match u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16) {
                             Ok(b) => *byte = b,
-                            Err(_) => return IoConfidence::Low,
+                            Err(_) => return semio_framework_plugin::io::Confidence::Low,
                         }
                     }
                     if decoded == SIG {
-                        IoConfidence::High
+                        semio_framework_plugin::io::Confidence::High
                     } else {
-                        IoConfidence::Low
+                        semio_framework_plugin::io::Confidence::Low
                     }
                 }
             }
@@ -413,20 +413,20 @@ pub mod derived_analysis {
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = BmpParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
+            let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <BmpSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <BmpSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },

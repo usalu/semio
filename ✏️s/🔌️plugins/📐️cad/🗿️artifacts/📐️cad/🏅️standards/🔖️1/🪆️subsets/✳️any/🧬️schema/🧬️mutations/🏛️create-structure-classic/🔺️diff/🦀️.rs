@@ -1,7 +1,7 @@
 //! 🔺️ `️create-structure-classic-model ` — sparse diff construction from an exact composed model child handle.
 
 use super::CreateStructureClassicModel;
-use crate::diff::CadDiff;
+use crate::diff::{CadDiff, CadModelSlot};
 use crate::CadSnapshot;
 
 //#region 🔖️Diff
@@ -13,6 +13,6 @@ pub fn diff(payload: &CreateStructureClassicModel, base: &CadSnapshot) -> protoc
     if base.structure_classic_model.as_ref() == Some(&candidate) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Structure-classic-model child is already {}.", payload.child_id));
     }
-    protocol::MutationOutcome::new(CadDiff { structure_classic_model: Some(Some(candidate)), ..Default::default() })
+    protocol::MutationOutcome::new(CadDiff { structure_classic_model: Some(CadModelSlot { child: Some(candidate) }), ..Default::default() })
 }
 //#endregion 🔖️Diff

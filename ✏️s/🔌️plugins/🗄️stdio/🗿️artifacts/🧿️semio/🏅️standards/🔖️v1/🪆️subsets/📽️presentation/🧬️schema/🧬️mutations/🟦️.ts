@@ -11,8 +11,8 @@ export type SemioPresentationMutation =
   | { mutation: "removeShape"; slideIndex: number; shapeIndex: number }
   | { mutation: "setShapeFrame"; slideIndex: number; shapeIndex: number; frame: SlideFrame }
   | { mutation: "setTextBoxBlocks"; slideIndex: number; shapeIndex: number; blocks: DocBlock[] }
-  | { mutation: "insertMaster"; master: SlideMaster }
+  | { mutation: "insertMaster"; master: SlideMaster; at?: number }
   | { mutation: "removeMaster"; id: string }
-  | { mutation: "insertLayout"; layout: SlideLayout }
+  | { mutation: "insertLayout"; layout: SlideLayout; at?: number }
   | { mutation: "removeLayout"; id: string }
   | { mutation: "setLayoutMaster"; id: string; masterId: string };

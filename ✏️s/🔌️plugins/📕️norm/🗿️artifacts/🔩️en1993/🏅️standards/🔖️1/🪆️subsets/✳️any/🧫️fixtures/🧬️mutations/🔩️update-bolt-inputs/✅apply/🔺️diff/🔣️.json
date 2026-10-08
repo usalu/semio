@@ -1,56 +1,122 @@
 {
-  "artifact": null,
   "annex": null,
-  "materials": null,
-  "sections": null,
-  "members": null,
-  "loadCases": null,
-  "memberActions": null,
-  "joints": {
-    "values": [
-      {
-        "id": "joint-j1",
-        "kind": "bolted",
-        "memberId": "member-b1",
-        "boltClass": "10.9",
-        "boltDiameter": 0.024,
-        "boltRows": 2,
-        "boltsPerRow": 2,
-        "pitch": 0.06,
-        "gauge": 0.06,
-        "endDistance": 0.04,
-        "edgeDistance": 0.04,
-        "shearPlanes": 1,
-        "plateThickness": 0.01,
-        "plateFu": 510000000.0,
-        "weldThroat": 0.0,
-        "weldLength": 0.0,
-        "weldFu": 510000000.0,
-        "weldGrade": "S355",
-        "actions": [
-          {
-            "id": "jf-1",
-            "loadCaseId": "g-permanent",
-            "shear": 80000.0,
-            "tension": 0.0
-          }
-        ],
-        "category": "A",
-        "frictionMu": 0.5,
-        "preloadForce": 0.0,
-        "slipFactorKs": 1.0,
-        "frictionSurfaces": 1
-      }
-    ]
+  "materials": {
+    "removed": [],
+    "added": [],
+    "modified": []
   },
-  "fatigueDetails": null,
-  "fireExposures": null,
-  "coldFormedMembers": null,
-  "platedPanels": null,
-  "siloShells": null,
-  "tensionComponents": null,
-  "bridgeFatigue": null,
-  "towerLegs": null,
-  "piles": null,
-  "craneRunways": null
+  "sections": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "loadCases": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "memberActions": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "joints": {
+    "removed": [
+      "joint-j1"
+    ],
+    "added": [
+      {
+        "after": null,
+        "row": {
+          "id": "joint-j1",
+          "kind": "bolted",
+          "memberId": "member-b1",
+          "boltClass": "10.9",
+          "boltDiameter": 0.024,
+          "boltRows": 2,
+          "boltsPerRow": 2,
+          "pitch": 0.06,
+          "gauge": 0.06,
+          "endDistance": 0.04,
+          "edgeDistance": 0.04,
+          "shearPlanes": 1,
+          "plateThickness": 0.01,
+          "plateFu": 510000000.0,
+          "weldThroat": 0.0,
+          "weldLength": 0.0,
+          "weldFu": 510000000.0,
+          "weldGrade": "S355",
+          "actions": [
+            {
+              "id": "jf-1",
+              "loadCaseId": "g-permanent",
+              "shear": 80000.0,
+              "tension": 0.0
+            }
+          ],
+          "category": "A",
+          "frictionMu": 0.5,
+          "preloadForce": 0.0,
+          "slipFactorKs": 1.0,
+          "frictionSurfaces": 1
+        }
+      }
+    ],
+    "modified": []
+  },
+  "fatigueDetails": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "fireExposures": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "coldFormedMembers": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "platedPanels": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "siloShells": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "tensionComponents": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "bridgeFatigue": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "towerLegs": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "piles": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "craneRunways": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

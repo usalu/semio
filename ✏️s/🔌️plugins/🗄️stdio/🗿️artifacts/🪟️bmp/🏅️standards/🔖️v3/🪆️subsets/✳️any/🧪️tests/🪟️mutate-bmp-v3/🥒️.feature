@@ -7,8 +7,7 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
   Its complete owned image has native channel masks and profile, palette entries with reserved bytes,
   top-relative indices or precise direct samples, row order, resolution, header controls, gap and trailer.
 
-  The four mutation kinds operate on this image. Set-snapshot installs an owned snapshot;
-  patch-snapshot targets an owned field; region paints preserve the native profile and unpainted fields.
+  The mutation kinds operate on this image. Replace-image imports an exact typed image; region paints preserve the native profile and unpainted fields.
   Paint revisions are FNV-1a over the canonical owned field sequence with counted strings and arrays,
   native component scalars, palette and metadata. Encoded BMP octets are absent from that sequence.
   Each inverse restores the complete owned base image.
@@ -35,7 +34,6 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
     Examples:
       | id | params |
       | paint-indexed-region | {"revision":"998e58b33016549e","x":0,"y":0,"width":64,"height":64,"paletteIndex":239} |
-      | set-snapshot | {"snapshot":{"schema":"stdio.bmp","image":{"width":4,"height":4,"rowOrder":"bottomUp","profile":"indexedRgb8","masks":[0,0,0,0],"palette":[{"b":0,"g":0,"r":255,"reserved":0},{"b":0,"g":255,"r":0,"reserved":0},{"b":255,"g":0,"r":0,"reserved":0},{"b":0,"g":255,"r":255,"reserved":0},{"b":255,"g":0,"r":255,"reserved":0},{"b":0,"g":0,"r":0,"reserved":0},{"b":30,"g":20,"r":10,"reserved":0}],"pixels":{"storage":"indexed","indices":[0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0]},"xPixelsPerMeter":0,"yPixelsPerMeter":0,"colorsUsed":7,"colorsImportant":0,"reserved1":0,"reserved2":0,"opaqueGap":[],"opaqueTrailer":[]}}} |
 
   @id-mutate
   @level-exhaustive
@@ -49,7 +47,6 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id | params |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/image/pixels/indices/12", "value": 5}} |
 
   @id-mutate
   @level-exhaustive
@@ -80,7 +77,6 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
     Examples:
       | id | params |
       | paint-indexed-region | {"revision":"998e58b33016549e","x":0,"y":0,"width":64,"height":64,"paletteIndex":239} |
-      | set-snapshot | {"snapshot":{"schema":"stdio.bmp","image":{"width":4,"height":4,"rowOrder":"bottomUp","profile":"indexedRgb8","masks":[0,0,0,0],"palette":[{"b":0,"g":0,"r":255,"reserved":0},{"b":0,"g":255,"r":0,"reserved":0},{"b":255,"g":0,"r":0,"reserved":0},{"b":0,"g":255,"r":255,"reserved":0},{"b":255,"g":0,"r":255,"reserved":0},{"b":0,"g":0,"r":0,"reserved":0},{"b":30,"g":20,"r":10,"reserved":0}],"pixels":{"storage":"indexed","indices":[0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0]},"xPixelsPerMeter":0,"yPixelsPerMeter":0,"colorsUsed":7,"colorsImportant":0,"reserved1":0,"reserved2":0,"opaqueGap":[],"opaqueTrailer":[]}}} |
 
   @id-inverse
   @level-exhaustive
@@ -96,7 +92,6 @@ Feature: Apply every typed BMP v3 mutation to a real-world document
     And that projection matches the untouched original document
     Examples:
       | id | params |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/image/pixels/indices/12", "value": 5}} |
 
   @id-inverse
   @level-exhaustive

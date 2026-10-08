@@ -2,9 +2,11 @@ type WavDiffFmt { audioFormat: Int!, channels: Int!, sampleRate: Int!, byteRate:
 type WavDiffData { kind: String!, value: [Float!]! }
 type WavDiffRiffChunk { fourcc: String!, data: [Int!]!, padByte: Int }
 type WavDiffChunkRef { kind: String!, value: Int }
+type WavDiffSplice { index: Int!, remove: Int!, insert: WavDiffData! }
 type WavDiff {
   fmt: WavDiffFmt
   data: WavDiffData
+  dataSplices: [WavDiffSplice!]
   fmtPadByte: Int
   dataPadByte: Int
   otherChunks: [WavDiffRiffChunk!]

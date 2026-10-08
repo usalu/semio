@@ -1,5 +1,5 @@
 /** 🪪️ Lossless JSON fields expose numeric words and octets without an opaque dictionary source. */
-import{parseFormDictionary,type FormDictionary}from"../../../../../🧬️schema/🧾️dictionary/🟦️.ts";
+import{parseFormDictionary,type FormDictionary,type FormDictionaryEntry}from"../../../../../🧬️schema/🧾️dictionary/🟦️.ts";
 import type{IntrinsicValue}from"../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🟦️.ts";
 import{parseSchemaRecord}from"../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
 const limbs=(value:bigint)=>({high:Number(value>>32n),low:Number(value&0xffffffffn)});
@@ -31,6 +31,11 @@ function owned(source:unknown):IntrinsicValue{
  }
 }
 /** 📤️ Encode the actual typed dictionary as explicit lossless JSON records. */
-export function formDictionaryNativeJson(dictionary:FormDictionary):unknown{return{entries:dictionary.entries.map(entry=>({questionId:entry.questionId,value:literal(entry.value)}))};}
+export function formDictionaryNativeJson(dictionary:FormDictionary):unknown{return{entries:dictionary.entries.map(formDictionaryEntryNativeJson)};}
 /** 📥️ Bind strict numeric words and byte values into their first-party owned domains. */
-export function formDictionaryFromNativeJson(source:unknown):FormDictionary{const row=parseSchemaRecord(source,["entries"]);if(!Array.isArray(row.entries))throw Error("dictionary entries required");return parseFormDictionary({entries:row.entries.map(source=>{const row=parseSchemaRecord(source,["questionId","value"]);return{questionId:row.questionId,value:owned(row.value)};})});}
+export function formDictionaryFromNativeJson(source:unknown):FormDictionary{const row=parseSchemaRecord(source,["entries"]);if(!Array.isArray(row.entries))throw Error("dictionary entries required");return parseFormDictionary({entries:row.entries.map(formDictionaryEntryFromNativeJson)});}
+
+/** 🧮️ Emits one canonical dictionary entry in its lossless native JSON representation. */
+export function formDictionaryEntryNativeJson(entry:FormDictionaryEntry):unknown{return{questionId:entry.questionId,value:literal(entry.value)};}
+/** 🧷️ Binds one dictionary entry while retaining its typed intrinsic value. */
+export function formDictionaryEntryFromNativeJson(source:unknown):FormDictionaryEntry{const row=parseSchemaRecord(source,["questionId","value"]);if(typeof row.questionId!=="string")throw Error("dictionary question identity required");return{questionId:row.questionId,value:owned(row.value)};}

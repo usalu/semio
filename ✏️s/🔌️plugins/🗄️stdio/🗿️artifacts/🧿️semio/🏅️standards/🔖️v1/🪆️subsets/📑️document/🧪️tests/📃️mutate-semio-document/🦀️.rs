@@ -35,9 +35,10 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
+    use semio_s_artifact_stdio_semio::apply_diff;
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::mutations::{apply_semio_document_mutation, inverse_semio_document_mutation, set_snapshot, SemioDocumentMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::mutations::{diff_semio_document_mutation, inverse_semio_document_mutation, SemioDocumentMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::document::io::text::mutations::{decode_semio_document_mutation_json};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::{SemioDocumentSnapshot};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::document::io::binary::snapshot::{encode_semio_document_pack};
@@ -84,22 +85,15 @@ mod subject {
         decode_semio_document_mutation_json(ctx.doc_string()?)
     }
 
-    /// 🧭️ `declared(ctx)`, except for the `no-mutation` scenario id. `NoMutation` was dropped from
-    /// `SemioDocumentMutation` (`no` is not an APPROVED_VERB), so the committed doc string
-    /// `{"mutation":"noMutation"}` no longer decodes; this maps that scenario onto
-    /// `SetSnapshot(base.clone())` instead of failing, keeping the "nothing changes" law alive
-    /// rather than deleting the scenario.
     fn declared_for(ctx: &Context, base: &SemioDocumentSnapshot) -> Result<SemioDocumentMutation, String> {
-        if ctx.scenario.id.starts_with("no-mutation-baseline-") {
-            return Ok(SemioDocumentMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }));
-        }
         declared(ctx)
     }
 
     fn run(current: &mut SemioDocumentSnapshot, mutation: &SemioDocumentMutation, what: &str) -> Result<(), String> {
-        let outcome = apply_semio_document_mutation(current, mutation);
+        let outcome = diff_semio_document_mutation(mutation, current);
         let refusals = semio_mutation_refusals(&outcome);
         if refusals.is_empty() {
+            *current = apply_diff(outcome.diff(), current).map_err(|error| format!("the diff could not be applied: {error:?}"))?;
             return Ok(());
         }
         Err(format!("{what}: mutation rejected: {refusals:?}"))
@@ -130,7 +124,7 @@ mod subject {
         let mut current = base.clone();
         run(&mut current, &mutation, ctx.scenario.id.as_str())?;
         let mutated = projection(&current)?;
-        for step in inverse_semio_document_mutation(&mutation, &base).expect("valid retained mutation inverse fixture") {
+        for step in inverse_semio_document_mutation(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             run(&mut current, &step, ctx.scenario.id.as_str())?;
         }
         if current != base {
@@ -167,7 +161,7 @@ mod subject {
     /// derived from the committed bytes, and the two sides' digests of what each emitted are
     /// compared.
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
-        let expected = snapshot_of(&vector(ctx, "no-mutation")?, "before")?;
+        let expected = snapshot_of(&vector(ctx, "set-run-style")?, "before")?;
         let text = String::from_utf8(ctx.input_bytes(DSL_ASSET)?).map_err(|error| format!("identity-round-trip: the committed artifact is not UTF-8: {error}"))?;
         let parsed = parse_semio_document_dsl(&text)?;
         if parsed != expected {
@@ -214,9 +208,9 @@ pub fn adapter() -> Adapter {
     {
         built = built
             .subject("mutate", subject::mutate)
-            .subject("no-mutation-baseline-mutate", subject::mutate)
+            
             .subject("inverse", subject::inverse)
-            .subject("no-mutation-baseline-inverse", subject::inverse)
+            
             .subject("spec-vector", subject::spec_vector)
             .subject("identity-round-trip", subject::identity_round_trip);
     }

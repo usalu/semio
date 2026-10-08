@@ -1,14 +1,10 @@
 use super::*;
+use protocol::DiffAlgebra;
 
-/// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: selection moved off this config
-/// backwards-restores-snapshot contract.
-#[semio_framework_async_macros::async_test]
-async fn config_operation_backwards_restores_the_pre_operation_snapshot() {
+#[test]
+fn an_empty_config_has_only_the_empty_diff() {
     let base = Block5dConfig::default();
-    let operation = Block5dConfigMutation::Snapshot { config: base.clone() };
-    let next = operation.diff(&base).into_parts().0;
-    assert_eq!(next, base);
-    let inverse = operation.inverse(&base).expect("valid retained mutation inverse fixture");
-    assert_eq!(inverse, vec![Block5dConfigMutation::Snapshot { config: base.clone() }]);
-    assert_eq!(inverse[0].diff(&next).into_parts().0, base);
+    let diff = Block5dConfigDiff::between(&base, &base);
+    assert!(diff.is_empty());
+    assert_eq!(diff.inverse(&base), Block5dConfigDiff::default());
 }

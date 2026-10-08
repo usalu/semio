@@ -1,4 +1,5 @@
 //! 🧬️ Direct reorder-cameras mutation owner: payload, validation, typed diff, inverse, and outcomes.
+use crate::schema::diff::*;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::GltfSnapshot;
@@ -20,11 +21,25 @@ pub fn validate(payload: &GltfReorderCamerasPayload, base: &GltfSnapshot) -> Res
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfReorderCamerasPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
-    let mut next = base.clone();
-    cameras_op(&mut next, GltfTopLevelFamily::Cameras, payload.order[0], None, Some(&payload.order))?;
-    Ok(next)
+pub fn plan(p: &GltfReorderCamerasPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
+    validate(p, base)?;
+    let mut diff = rewire(base, GltfTopLevelFamily::Cameras, &mut after_reorder(&p.order));
+    let slot = diff.cameras.get_or_insert_with(Default::default);
+    for (new, old) in p.order.iter().enumerate() {
+        if new != *old {
+            slot.removed.push(*old);
+            slot.added.push(GltfAdded { index: new, item: base.document.cameras[*old].clone() });
+        }
+    }
+    slot.removed.sort_unstable();
+    Ok(diff)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(p: &GltfReorderCamerasPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    if validate(p, base).is_err() {
+        return Vec::new();
+    }
+    vec![super::reorder_cameras::mutation(super::reorder_cameras::GltfReorderCamerasPayload { order: inverse_order(&p.order) })]
 }
 
 //#region 🧬️DirectMutation
@@ -33,7 +48,11 @@ pub fn apply(payload: &GltfReorderCamerasPayload, base: &GltfSnapshot) -> Result
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ReorderCamerasMutation {
     Apply(GltfReorderCamerasPayload),
-    Restore(Box<crate::schema::diff::GltfDiff>),
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutation(payload: GltfReorderCamerasPayload) -> super::GltfMutation {
+    super::GltfMutation::ReorderCameras(ReorderCamerasMutation::Apply(payload))
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderCamerasMutation {
@@ -41,28 +60,18 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ReorderCamera
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => match apply(payload, base) {
-                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Self::Apply(payload) => match plan(payload, base) {
+                Ok(diff) => protocol::MutationOutcome::new(diff),
                 Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
-            },
-            Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
-                Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-                Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
             },
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
-            return Vec::new();
+        match self {
+            Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::GltfMutation::ReorderCameras(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Reorder Cameras", "Kameras umordnen")

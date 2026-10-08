@@ -29,11 +29,6 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   "Secondary" swatch row's first cell, both exercising the full `Table -> rows -> cells -> blocks`
   path-segment traversal against real, pre-existing structure rather than a synthetic one-level tree.
 
-  `SetSnapshot` replaces `document.body` + `document.styles` only (the typed semantic view this
-  subset's own `DocxDocument` models) -- real OPC parts outside that typed view are exercised
-  separately by `SetPart`/`RemovePart` and are deliberately left untouched by `SetSnapshot` here, per
-  `../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🔮️oracles/🔣️.json`'s own comparison-profile note.
-
   `set-part` overwrites the real, pre-existing `docProps/app.xml` (exercising the "replace" branch of
   "inserting or replacing"); `remove-part` deletes the real, pre-existing `docProps/core.xml` --
   both real parts this derivation's own builder wrote, restored exactly by their own inverse.
@@ -54,20 +49,6 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   returning an undo that does not undo, and the Examples row removes TableCell — the LAST style,
   which append genuinely restores. Widening the vocabulary (an insert-style that carries a position)
   is the fix, and it belongs to whoever owns that enum.
-
-  THE FIRST DIFFERENTIAL RUN OF THIS CASE FOUND A REAL DIVERGENCE, AND IT WAS FIXED IN OUR CODE.
-  `inverse-set-snapshot` came back 12 differences apart from the oracle: `$.styles[1..6]` — every
-  interior style — sat in the wrong place. `DocxMutation::SetSnapshot`'s inverse is
-  `SetSnapshot{snapshot: base}`, which is correct; what was wrong is that `DocxDiff::between` routed
-  the style list through a name-keyed collection triple that transported no ORDER, so applying it
-  kept the survivors in their base order and APPENDED the four re-added styles. `set-snapshot` is a
-  total replacement, so `apply(base, between(base, next))` has to land on `next` exactly — the
-  ordered style list `semantic-docx-ecma-376-mutate-v1` projects by index included. The triple now
-  carries the exact final key sequence, populated only when the survivors-then-additions default
-  would not reproduce it, and `inverse_named` restores the base's own sequence. No comparison
-  profile was touched, no `ignoreKeys` added, no Examples row changed; the oracle was already right.
-  This does NOT widen the vocabulary: `InsertStyle` still appends by definition, so the
-  interior-`remove-style` gap described above is exactly as non-invertible as it was.
 
   THE JUDGE. `jszip-docx-ecma-376-mutate-reader` is a third-party READER (jszip + fast-xml-parser): each mutation
   row's expected package is not computed, it is the COMMITTED `➡️after.docx` under
@@ -113,13 +94,6 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
   than restating it, so the two can never drift apart — and the same module pins the
   remove-style-of-an-interior-style refusal described above.
 
-  The `patch-snapshot` row is one RFC 6901 pointer operation on the subject's own `DocxSnapshot` reading — the logical XML
-  parts in archive order, each a retained arena whose `attributes` list every element's attributes in pre-order — and sets
-  the first body paragraph's `w:pStyle` `w:val` from Heading1 to Heading2. Its committed after-document was written by
-  python-docx through its own package/part/oxml model from that row, and re-read against the patched reading before it was
-  committed (this ticket's `🧪️s4-stdio-docx-patch-after.py`); the zip+quick-xml oracle applies the same pointer to its own
-  reading of the package.
-
   @id-mutate
   @level-exhaustive
   @mode-differential
@@ -144,7 +118,6 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
       | set-style-based-on | {"id": "Heading3", "based_on": "Heading1"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | 🌳️set-style-based-on |
       | set-part           | {"path":"docProps/app.xml","content_type":"application/vnd.openxmlformats-officedocument.extended-properties+xml","payload":{"kind":"xml","document":{"root":{"kind":"element","name":"Properties","attrs":[{"name":"xmlns","value":"http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"}],"children":[{"kind":"element","name":"Application","attrs":[],"children":[{"kind":"text","text":"semio-wave7-mutation-test"}]}]}}}} | 🧩️set-part           |
       | remove-part        | {"path": "docProps/core.xml"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | 🧹️remove-part        |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/xmlParts/0/document/attributes/1/value", "value": "Heading2"}} | 🩹️patch-snapshot |
 
   @id-inverse
   @level-exhaustive
@@ -169,25 +142,6 @@ Feature: Apply every typed DOCX ECMA-376 mutation to a real-world document
       | set-style-based-on | {"id": "Heading3", "based_on": "Heading1"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
       | set-part           | {"path":"docProps/app.xml","content_type":"application/vnd.openxmlformats-officedocument.extended-properties+xml","payload":{"kind":"xml","document":{"root":{"kind":"element","name":"Properties","attrs":[{"name":"xmlns","value":"http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"}],"children":[{"kind":"element","name":"Application","attrs":[],"children":[{"kind":"text","text":"semio-wave7-mutation-test"}]}]}}}} |
       | remove-part        | {"path": "docProps/core.xml"}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/xmlParts/0/document/attributes/1/value", "value": "Heading2"}} |
-
-  @id-mutate-set-snapshot
-  @level-exhaustive
-  @mode-differential
-  Scenario: Replace the real document with the committed after-document's whole snapshot
-    Given the real input document shared://📜️example-readme.docx
-    And the committed after-document shared://🧾️readme-afters/📸️set-snapshot/➡️after.docx
-    When the whole document is replaced by the snapshot decoded from the committed after-document
-    Then the jszip reader reads the subject's package and the committed after-document as the same DOCX
-
-  @id-inverse-set-snapshot
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing the whole-document replacement restores the document
-    Given the real input document shared://📜️example-readme.docx
-    And the committed after-document shared://🧾️readme-afters/📸️set-snapshot/➡️after.docx
-    When the whole document is replaced by the committed after-document's snapshot and then undone
-    Then the jszip reader reads the restored package and the real README as the same DOCX
 
   @id-identity-round-trip
   @level-long

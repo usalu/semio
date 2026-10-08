@@ -405,7 +405,7 @@ pub fn layout_transform_dispatch(verb: &str, phase: LayoutTransformPhase, record
 /// to `document` — a preview only this window sees, never history.
 pub fn layout_transform_tool_preview(document: &LayoutSnapshot, state: &LayoutTransformToolState) -> LayoutSnapshot {
     use protocol::{Mutation, MutationDiff};
-    state.entries.iter().filter_map(|entry| semio_framework_value::FromValue::from_value(entry.mutation.clone()).ok()).fold(document.clone(), |preview, mutation: LayoutMutation| mutation.diff(&preview).diff().apply(&preview).unwrap_or(preview))
+    state.entries.iter().filter_map(|entry| semio_framework_value::FromValue::from_value(entry.mutation.clone()).ok()).fold(document.clone(), |preview, mutation: LayoutMutation| protocol::apply_diff(mutation.diff(&preview).diff(), &preview).unwrap_or(preview))
 }
 //#endregion 🛠️TransformTool
 

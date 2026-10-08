@@ -391,6 +391,30 @@ function patchedIds(before: Json, after: Json, member: string): Set<string> {
 }
 
 /** 🔺 fast-json-patch reproduces every committed after-snapshot and holds the typed diff to its ops. */
+/** 🩹 Applies one sparse typed patch to a copy of `record`: an absent key is untouched, `null` clears the member, any other value sets it, and `handles` carries its own id-keyed delta. */
+function applyRecordPatch(record: Json, patch: Json): Json {
+  const result: Json = JSON.parse(JSON.stringify(record));
+  for (const [key, value] of Object.entries(patch)) {
+    if (key === "handles") result.handles = applyKeyedDelta((result.handles ?? []) as Json[], value as Json);
+    else if (value === null) delete result[key];
+    else result[key] = JSON.parse(JSON.stringify(value));
+  }
+  return result;
+}
+
+/** 🧩 Applies one id-keyed collection delta in the order the typed diff declares: removals, additions, patches, then the explicit order. */
+function applyKeyedDelta(items: Json[], delta: Json): Json[] {
+  const removed = new Set((delta.removed ?? []) as string[]);
+  const patches = new Map(((delta.patched ?? []) as Json[]).map((entry) => [entry.id as string, entry.patch as Json]));
+  let next = [...items.filter((item) => !removed.has(item.id as string)), ...JSON.parse(JSON.stringify(delta.added ?? []))] as Json[];
+  next = next.map((item) => (patches.has(item.id as string) ? applyRecordPatch(item, patches.get(item.id as string)!) : item));
+  if (delta.reordered !== undefined && delta.reordered !== null) {
+    const byId = new Map(next.map((item) => [item.id as string, item]));
+    next = (delta.reordered as string[]).map((id) => byId.get(id)!);
+  }
+  return next;
+}
+
 function diffReproduction(ctx: AdapterContext): AdapterOutcome {
   const rows: Json[] = [];
   const failures: string[] = [];
@@ -426,11 +450,10 @@ function diffReproduction(ctx: AdapterContext): AdapterOutcome {
       const reached = sorted(patchedIds(vector.before, vector.after, member));
       if (JSON.stringify(sorted(((delta.patched ?? []) as Json[]).map((entry) => entry.id as string))) !== JSON.stringify(reached)) failures.push(`${vector.id}: the typed diff patches ${JSON.stringify(sorted(((delta.patched ?? []) as Json[]).map((entry) => entry.id as string)))} in ${member}, fast-json-patch needs operations for ${JSON.stringify(reached)}`);
       for (const entry of (delta.patched ?? []) as Json[]) {
-        const replacement = entry.patch?.replacement;
-        if (replacement === undefined || replacement === null) continue;
         checks += 1;
+        const original = ((vector.before[member] ?? []) as Json[]).find((record) => record.id === entry.id);
         const committed = ((vector.after[member] ?? []) as Json[]).find((record) => record.id === entry.id);
-        if (committed === undefined || compare(replacement, committed).length > 0) failures.push(`${vector.id}: the typed diff's replacement for ${member} ${JSON.stringify(entry.id)} does not equal the committed after-snapshot's record`);
+        if (original === undefined || committed === undefined || compare(applyRecordPatch(original, entry.patch ?? {}), committed).length > 0) failures.push(`${vector.id}: the typed diff's sparse patch for ${member} ${JSON.stringify(entry.id)} does not carry the committed before-snapshot's record to the after-snapshot's record`);
       }
     }
     rows.push({ id: vector.id, kind: vector.kind, checks, ops: patch.length, members: declared });

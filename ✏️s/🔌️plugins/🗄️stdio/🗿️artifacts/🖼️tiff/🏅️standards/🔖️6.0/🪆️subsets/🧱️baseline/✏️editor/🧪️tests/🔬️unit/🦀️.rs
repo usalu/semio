@@ -33,7 +33,7 @@ fn payload_detail_edits_publish_the_exact_requested_value() {
         let emitted = <TiffBaselineEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).unwrap_or_else(|error| panic!("{}: {error:?}", row["id"]));
         let mut next = snapshot.clone();
         for mutation in emitted.artifact_mutations {
-            next = protocol::MutationDiff::apply(<TiffBaselineMutation as protocol::Mutation<TiffSnapshot>>::diff(&mutation, &next).diff(), &next).unwrap();
+            next = protocol::apply_diff(<TiffBaselineMutation as protocol::Mutation<TiffSnapshot>>::diff(&mutation, &next).diff(), &next).unwrap();
         }
         let mut expected = base.clone();
         *expected.pointer_mut("/ifds/0/storage/chunks/0").unwrap() = row["expected"].clone();

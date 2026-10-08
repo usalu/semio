@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::onboarding_example_s
 async fn xlsx_is_a_real_workbook_of_the_question_grid_a_third_party_reader_agrees() {
     use calamine::Reader;
     let spec = onboarding_example_spec();
-    let IoOutcome { value: IoPayload::Binary(pack), .. } = FormsIntoXlsx::serialize(&spec, &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("xlsx") else { panic!("binary") };
+    let IoOutcome { value: IoPayload::Binary(pack), .. } = FormsIntoXlsx::serialize(&spec, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("xlsx") else { panic!("binary") };
     let snapshot = <semio_s_artifact_stdio_xlsx::XlsxSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("xlsx pack");
     let bytes = semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_xlsx(&snapshot).expect("xlsx bytes");
     let mut reference: calamine::Xlsx<_> = calamine::open_workbook_from_rs(std::io::Cursor::new(bytes)).expect("calamine opens the workbook");

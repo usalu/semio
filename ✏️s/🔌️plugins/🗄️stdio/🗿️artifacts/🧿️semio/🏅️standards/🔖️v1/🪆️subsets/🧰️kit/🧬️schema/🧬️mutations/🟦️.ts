@@ -4,19 +4,19 @@ import { parseLinkPin, type LinkPin } from "../../../../../../../../../../../�
 import { parseSemioChild } from "../../../✉️base/🧬️schema/🪆️child/🟦️.ts";
 import { parseSemioKitConnection, parseSemioKitPiece, type SemioKitConnection, type SemioKitPiece } from "../📸️snapshot/🟦️.ts";
 
-export interface CreateObject { child_id: string; target: ArtifactRef }
+export interface CreateObject { child_id: string; target: ArtifactRef; at?: number }
 export interface DeleteObject { child_id: string }
-export interface CreateModel { child_id: string; target: ArtifactRef }
+export interface CreateModel { child_id: string; target: ArtifactRef; at?: number }
 export interface DeleteModel { child_id: string }
 export interface CreateProperties { child_id: string; target: ArtifactRef }
 export interface DeleteProperties {}
-export interface BindRepresentation { target: ArtifactRef; pin: LinkPin; role: string }
+export interface BindRepresentation { target: ArtifactRef; pin: LinkPin; role: string; at?: number }
 export interface UnbindRepresentation { index: number }
 export interface ChangeRepresentationPin { index: number; pin: LinkPin }
-export interface AddType { id: string; name: string; category: string }
+export interface AddType { id: string; name: string; category: string; at?: number }
 export interface RemoveType { id: string }
 export interface RenameType { id: string; new_name: string }
-export interface AddDesign { id: string; name: string }
+export interface AddDesign { id: string; name: string; at?: number }
 export interface RemoveDesign { id: string }
 export interface EditDesign { id: string; pieces: SemioKitPiece[]; connections: SemioKitConnection[] }
 
@@ -41,17 +41,23 @@ function stringField(row: Record<string, unknown>, field: string, at: string): s
   return row[field];
 }
 
+function optionalAt(row: Record<string, unknown>, at: string): { at?: number } {
+  if (row.at === undefined) return {};
+  if (!Number.isSafeInteger(row.at) || (row.at as number) < 0) throw new Error(at + ".at: non-negative integer required");
+  return { at: row.at as number };
+}
+
 function indexField(row: Record<string, unknown>, at: string): number {
   if (!Number.isSafeInteger(row.index) || (row.index as number) < 0) throw new Error(at + ".index: non-negative integer required");
   return row.index as number;
 }
 
 function createChild(value: unknown, subset: "object" | "model" | "value", at: string): CreateObject {
-  const row = parseSchemaRecord(value, ["child_id", "target"], at);
+  const row = parseSchemaRecord(value, ["child_id", "target", "at"], at);
   const child_id = stringField(row, "child_id", at);
   const target = parseArtifactRef(row.target);
   parseSemioChild({ childId: child_id, target }, subset, at);
-  return { child_id, target };
+  return { child_id, target, ...optionalAt(row, at) };
 }
 
 function deleteChild(value: unknown, at: string): DeleteObject {
@@ -94,8 +100,8 @@ export function parseSemioKitMutation(value: unknown, at = "$"): SemioKitMutatio
   if (variant === "CreateProperties") return { CreateProperties: createChild(payload, "value", payloadAt) };
   if (variant === "DeleteProperties") return { DeleteProperties: empty(payload, payloadAt) };
   if (variant === "BindRepresentation") {
-    const entry = parseSchemaRecord(payload, ["target", "pin", "role"], payloadAt);
-    return { BindRepresentation: { target: parseArtifactRef(entry.target), pin: parseLinkPin(entry.pin), role: stringField(entry, "role", payloadAt) } };
+    const entry = parseSchemaRecord(payload, ["target", "pin", "role", "at"], payloadAt);
+    return { BindRepresentation: { target: parseArtifactRef(entry.target), pin: parseLinkPin(entry.pin), role: stringField(entry, "role", payloadAt), ...optionalAt(entry, payloadAt) } };
   }
   if (variant === "UnbindRepresentation") {
     const entry = parseSchemaRecord(payload, ["index"], payloadAt);
@@ -106,8 +112,8 @@ export function parseSemioKitMutation(value: unknown, at = "$"): SemioKitMutatio
     return { ChangeRepresentationPin: { index: indexField(entry, payloadAt), pin: parseLinkPin(entry.pin) } };
   }
   if (variant === "AddType") {
-    const entry = parseSchemaRecord(payload, ["id", "name", "category"], payloadAt);
-    return { AddType: { id: stringField(entry, "id", payloadAt), name: stringField(entry, "name", payloadAt), category: stringField(entry, "category", payloadAt) } };
+    const entry = parseSchemaRecord(payload, ["id", "name", "category", "at"], payloadAt);
+    return { AddType: { id: stringField(entry, "id", payloadAt), name: stringField(entry, "name", payloadAt), category: stringField(entry, "category", payloadAt), ...optionalAt(entry, payloadAt) } };
   }
   if (variant === "RemoveType") return { RemoveType: id(payload, payloadAt) };
   if (variant === "RenameType") {
@@ -115,8 +121,8 @@ export function parseSemioKitMutation(value: unknown, at = "$"): SemioKitMutatio
     return { RenameType: { id: stringField(entry, "id", payloadAt), new_name: stringField(entry, "new_name", payloadAt) } };
   }
   if (variant === "AddDesign") {
-    const entry = parseSchemaRecord(payload, ["id", "name"], payloadAt);
-    return { AddDesign: { id: stringField(entry, "id", payloadAt), name: stringField(entry, "name", payloadAt) } };
+    const entry = parseSchemaRecord(payload, ["id", "name", "at"], payloadAt);
+    return { AddDesign: { id: stringField(entry, "id", payloadAt), name: stringField(entry, "name", payloadAt), ...optionalAt(entry, payloadAt) } };
   }
   if (variant === "RemoveDesign") return { RemoveDesign: id(payload, payloadAt) };
   return { EditDesign: parseEditDesign(payload, payloadAt) };

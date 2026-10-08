@@ -3,7 +3,6 @@ package semio.s_stdio_csv.mutation;
 
 import "s_stdio_csv/snapshot.proto";
 
-message SetSnapshot { semio.s_stdio_csv.snapshot.CsvSnapshot snapshot = 1; }
 message SetHasHeader { bool has_header = 1; }
 message InsertRecord { uint64 index = 1; semio.s_stdio_csv.snapshot.CsvRecord record = 2; }
 message RemoveRecord { uint64 index = 1; }
@@ -14,15 +13,12 @@ message SetField {
   bool quoted = 4;
 }
 
-message PatchSnapshot { bytes patch = 1; }
 
 message CsvMutation {
   oneof mutation {
-    SetSnapshot set_snapshot = 1;
     SetHasHeader set_has_header = 2;
     InsertRecord insert_record = 3;
     RemoveRecord remove_record = 4;
     SetField set_field = 5;
-    PatchSnapshot patch_snapshot = 6;
   }
 }

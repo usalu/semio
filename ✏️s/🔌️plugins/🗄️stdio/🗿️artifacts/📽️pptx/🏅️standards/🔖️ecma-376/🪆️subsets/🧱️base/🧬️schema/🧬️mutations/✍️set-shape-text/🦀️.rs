@@ -1,6 +1,4 @@
-//! ✍️ `set-shape-text` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! ✍️ `set-shape-text` -- builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,15 +14,14 @@ pub struct SetShapeText {
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for SetShapeText {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "shape-text", kind: "set-shape-text", record: "SetShapeText" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxMutation as Mutation<PptxSnapshot>>::Diff> {
-        agg_diff(&PptxMutation::SetShapeText(self.clone()), base)
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
+        plan_outcome(xml_address::set_shape_text_plan(base, &self.address, &self.text))
     }
+
     fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&PptxMutation::SetShapeText(self.clone()), base)?
-    
-    })
-}
+        Ok(plan_inverse(xml_address::set_shape_text_plan(base, &self.address, &self.text)))
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set shape text", "Text der Form setzen")
     }

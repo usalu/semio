@@ -487,8 +487,7 @@
         "replace-tag",
         "remove-tag",
         "paint-region",
-        "set-snapshot",
-        "patch-snapshot"
+        "replace-samples"
       ]
     }
   ],
@@ -564,27 +563,6 @@
           ]
         },
         {
-          "id": "patch-snapshot",
-          "capability": "tiff-6-0-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "tiff-6-0-mutate-byte-order",
-              "qualifyingKind": "third-party-library",
-              "oracle": "tiff-6-0-byte-order-reader"
-            }
-          ]
-        },
-        {
           "id": "remove-ifd",
           "capability": "tiff-6-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
@@ -648,16 +626,17 @@
           ]
         },
         {
-          "id": "set-snapshot",
+          "id": "replace-samples",
           "capability": "tiff-6-0-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
-            "operation": "set-snapshot",
+            "operation": "replace-samples",
             "bridgeVersion": 1,
-            "variant": "SetSnapshot"
+            "variant": "ReplaceSamples"
           },
           "oracleRequirements": [
             {
@@ -918,90 +897,6 @@
       "reproducible": true,
       "family": "structural",
       "notes": "IFD 0 keeps its dimensions/tags; the raster bytes are wholly different."
-    },
-    {
-      "id": "set-snapshot-applied",
-      "class": "handcrafted",
-      "target": {
-        "artifact": "s.stdio.tiff",
-        "standard": "6.0",
-        "subset": "document"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:75b54452bd92b92257be5282c120888b67628335a5c93a6f91385a4e3483ab01",
-          "bytes": 1630
-        },
-        {
-          "role": "expected-after",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:abf9575d51bdaedd87d7a9dff1320d2612290470d0d4737075d01372eb503cbd",
-          "bytes": 1630
-        }
-      ],
-      "provenance": {
-        "source": "authored",
-        "license": "public-domain (handcrafted by this repository)",
-        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "ordered-json-v1",
-      "reproducible": true,
-      "family": "tiff-carrier",
-      "notes": "SetSnapshot replaces the whole document: the 2x2 RGBA raster of IFD 0 is reversed while its tags stay as the replacement states them."
-    },
-    {
-      "id": "patch-snapshot-applied",
-      "class": "handcrafted",
-      "target": {
-        "artifact": "s.stdio.tiff",
-        "standard": "6.0",
-        "subset": "document"
-      },
-      "mutation": "patch-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before",
-          "path": "../🧫️fixtures/🩹️patch-snapshot-applied/⬅️before.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:75b54452bd92b92257be5282c120888b67628335a5c93a6f91385a4e3483ab01",
-          "bytes": 1630
-        },
-        {
-          "role": "expected-after",
-          "path": "../🧫️fixtures/🩹️patch-snapshot-applied/➡️after.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:01e99497541e747f031bfc7691d6cdb2d87db91b5b936796857c8772e6e5607d",
-          "bytes": 1627
-        }
-      ],
-      "provenance": {
-        "source": "authored",
-        "license": "public-domain (handcrafted by this repository)",
-        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "ordered-json-v1",
-      "reproducible": true,
-      "family": "tiff-carrier",
-      "notes": "PatchSnapshot{set /byteOrder = bigEndian} is the editor's compact path-addressed patch: the file header's byte order flips and every IFD keeps its typed values."
     }
   ],
   "comparisonProfiles": [

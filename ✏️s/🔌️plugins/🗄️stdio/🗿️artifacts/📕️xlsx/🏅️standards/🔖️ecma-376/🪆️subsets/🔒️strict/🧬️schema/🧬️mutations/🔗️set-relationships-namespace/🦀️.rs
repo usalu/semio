@@ -1,6 +1,4 @@
-//! ⚙️ `set-relationships-namespace` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! ⚙️ `set-relationships-namespace` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -14,15 +12,14 @@ pub struct SetRelationshipsNamespace {
 impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for SetRelationshipsNamespace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "relationships-namespace", kind: "set-relationships-namespace", record: "SetRelationshipsNamespace" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxStrictMutation as Mutation<XlsxSnapshot>>::Diff> {
-        agg_diff(&XlsxStrictMutation::SetRelationshipsNamespace(self.clone()), base)
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
+        protocol::MutationOutcome::new(diff_retarget_namespace(base, RELATIONSHIP_NAMESPACES, &self.namespace))
     }
+
     fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxStrictMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&XlsxStrictMutation::SetRelationshipsNamespace(self.clone()), base)?
-    
-    })
-}
+        Ok(relationships_namespace_inverse(base))
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set relationships namespace", "Beziehungsnamensraum setzen")
     }

@@ -43,7 +43,7 @@ pub enum RemodelingModelWindowConfigMutation {
 }
 
 impl protocol::Mutation<RemodelingModelWindowConfig> for RemodelingModelWindowConfigMutation {
-    type Diff = RemodelingModelWindowConfig;
+    type Diff = RemodelingModelWindowConfigDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧊️model/🪟️windows/🧊️model/🎚️config",
@@ -61,12 +61,22 @@ impl protocol::Mutation<RemodelingModelWindowConfig> for RemodelingModelWindowCo
         required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
     }];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, _base: &RemodelingModelWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
-        match self { Self::Snapshot { config } => protocol::MutationOutcome::new(config.clone()) }
+    fn diff(&self, base: &RemodelingModelWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+        match self {
+            Self::Snapshot { config } => {
+                let diff = RemodelingModelWindowConfigDiff {
+            camera: (base.camera != config.camera).then(|| config.camera.clone()),
+            layers: (base.layers != config.layers).then(|| config.layers.clone()),
+                };
+                match protocol::DiffAlgebra::<RemodelingModelWindowConfig>::is_empty(&diff) {
+                    true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Window configuration is unchanged."),
+                    false => protocol::MutationOutcome::new(diff),
+                }
+            }
+        }
     }
     fn inverse(&self, base: &RemodelingModelWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| { vec![Self::Snapshot { config: base.clone() }] 
-    })())
+    Ok(vec![Self::Snapshot { config: base.clone() }])
 }
 }
 
@@ -111,7 +121,7 @@ impl store::ArtifactPack for RemodelingModelWindowConfig {
     }
 }
 
-store::impl_whole_record_config!(RemodelingModelWindowConfig);
+impl store::ConfigRecord for RemodelingModelWindowConfig {}
 impl protocol::OpText for RemodelingModelWindowConfigMutation {
     fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) }
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> { semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1))) }
@@ -149,3 +159,55 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, config: RemodelingMod
 #[cfg(test)]
 #[path = "🧪️tests/🔬️window-ownership/🦀️.rs"]
 mod window_ownership_tests;
+
+//#region 🔺️Diff
+/// 🔺️ Sparse field delta for the window configuration; an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct RemodelingModelWindowConfigDiff {
+    pub camera: Option<store::Viewport3dOrbit>,
+    pub layers: Option<RemodelingLayerVisibility>,
+}
+
+impl protocol::MutationDiff<RemodelingModelWindowConfig> for RemodelingModelWindowConfigDiff {
+    fn apply(&self, base: &RemodelingModelWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RemodelingModelWindowConfig> {
+        let mut next = base.clone();
+        if let Some(camera) = &self.camera {
+            next.camera = camera.clone();
+        }
+        if let Some(layers) = &self.layers {
+            next.layers = layers.clone();
+        }
+        Ok(next)
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.camera.is_some() {
+            self.camera = other.camera;
+        }
+        if other.layers.is_some() {
+            self.layers = other.layers;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<RemodelingModelWindowConfig> for RemodelingModelWindowConfigDiff {
+    fn inverse(&self, base: &RemodelingModelWindowConfig) -> Self {
+        Self {
+            camera: self.camera.as_ref().map(|_| base.camera.clone()),
+            layers: self.layers.as_ref().map(|_| base.layers.clone()),
+        }
+    }
+
+    fn between(base: &RemodelingModelWindowConfig, other: &RemodelingModelWindowConfig) -> Self {
+        Self {
+            camera: (base.camera != other.camera).then(|| other.camera.clone()),
+            layers: (base.layers != other.layers).then(|| other.layers.clone()),
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+//#endregion 🔺️Diff

@@ -1,6 +1,4 @@
-//! 🔲 `set-cell` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🔲 `set-cell` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -18,14 +16,22 @@ impl protocol::MutationKind<TsvSnapshot, TsvMutation> for SetCell {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "cell", kind: "set-cell", record: "SetCell" };
 
     fn diff(&self, base: &TsvSnapshot) -> protocol::MutationOutcome<<TsvMutation as Mutation<TsvSnapshot>>::Diff> {
-        agg_diff(&TsvMutation::SetCell(self.clone()), base)
+        let Self { row_index, field_index, value } = self;
+        protocol::MutationOutcome::new({
+            let mut fields = vec![None; field_index + 1];
+            fields[*field_index] = Some(value.clone());
+            TsvDiff { records: Some(TsvRowsDiff { removed: Vec::new(), modified: vec![TsvRowModified { index: *row_index, diff: TsvRowDiff { fields: Some(fields) } }], added: Vec::new() }), ..TsvDiff::default() }
+        })
     }
     fn inverse(&self, base: &TsvSnapshot) -> Result<Vec<TsvMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&TsvMutation::SetCell(self.clone()), base)?
-    
-    })
-}
+        let Self { row_index, field_index, .. } = self;
+        Ok({
+            match base.records.get(*row_index).and_then(|r| r.get(*field_index)) {
+                Some(cell) => vec![TsvMutation::SetCell(set_cell::SetCell { row_index: *row_index, field_index: *field_index, value: cell.clone() })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set cell", "Zelle setzen")
     }

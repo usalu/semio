@@ -605,14 +605,6 @@ fn base_drawing() -> Drawing {
 fn after_drawing(recipe: &str) -> Option<Drawing> {
     let mut d = base_drawing();
     match recipe {
-        "no-mutation-identity" => {}
-        "set-snapshot-replaces-drawing" => {
-            d = Drawing::new();
-            d.header.version = dxf::enums::AcadVersion::R12;
-            d.add_layer(layer("GRID", 4, "CONTINUOUS", true));
-            d.add_entity(line((0.0, 0.0), (10.0, 0.0), "GRID"));
-            d.add_entity(circle((5.0, 5.0), 2.5, "GRID"));
-        }
         "add-layer-hidden-services" => {
             d.add_layer(layer("SERVICES", 3, "DASHED", false));
         }
@@ -779,10 +771,6 @@ fn step_entities(recipe: &str, after: bool) -> Option<Vec<(String, Vec<f64>)>> {
         return Some(e);
     }
     match recipe {
-        "step-no-mutation-identity" => {}
-        "step-set-snapshot-replaces-entities" => {
-            e = vec![("line".to_string(), vec![0.0, 0.0, 10.0, 0.0]), ("circle".to_string(), vec![5.0, 5.0, 2.5])];
-        }
         "step-add-entity-circle" => {
             e.push(("circle".to_string(), vec![8.0, 1.0, 0.75]));
         }
@@ -851,8 +839,6 @@ fn write_step(entities: &[(String, Vec<f64>)]) -> String {
 }
 
 const DXF_RECIPES: &[&str] = &[
-    "no-mutation-identity",
-    "set-snapshot-replaces-drawing",
     "add-layer-hidden-services",
     "remove-layer-scratch",
     "set-layer-walls-color",
@@ -869,14 +855,13 @@ const DXF_RECIPES: &[&str] = &[
     "set-block-entity-geometry-window-pane",
 ];
 
-const STEP_RECIPES: &[&str] = &["step-no-mutation-identity", "step-set-snapshot-replaces-entities", "step-add-entity-circle", "step-remove-entity-line", "step-set-entity-geometry-circle-radius"];
+const STEP_RECIPES: &[&str] = &["step-add-entity-circle", "step-remove-entity-line", "step-set-entity-geometry-circle-radius"];
 
 const FIXTURE_DIRECTORY_BY_RECIPE: &[(&str, &str)] = &[
     ("add-block-door", "🚪️add-block-door"),
     ("add-block-entity-door-swing", "🌀️add-block-entity-door-swing"),
     ("add-entity-arc-fillet", "🌙️add-entity-arc-fillet"),
     ("add-layer-hidden-services", "🫥️add-layer-hidden-services"),
-    ("no-mutation-identity", "⏸️no-mutation-identity"),
     ("remove-block-entity-window-mullion", "🪟️remove-block-entity-window-mullion"),
     ("remove-block-window", "🏚️remove-block-window"),
     ("remove-entity-middle-polyline", "〰️remove-entity-middle-polyline"),
@@ -887,12 +872,9 @@ const FIXTURE_DIRECTORY_BY_RECIPE: &[(&str, &str)] = &[
     ("set-entity-geometry-circle-radius", "⭕️set-entity-geometry-circle-radius"),
     ("set-entity-layer-text-to-annotations", "🏷️set-entity-layer-text-to-annotations"),
     ("set-layer-walls-color", "🎨️set-layer-walls-color"),
-    ("set-snapshot-replaces-drawing", "🖼️set-snapshot-replaces-drawing"),
     ("step-add-entity-circle", "➕️step-add-entity-circle"),
-    ("step-no-mutation-identity", "🪞️step-no-mutation-identity"),
     ("step-remove-entity-line", "➖️step-remove-entity-line"),
     ("step-set-entity-geometry-circle-radius", "📏️step-set-entity-geometry-circle-radius"),
-    ("step-set-snapshot-replaces-entities", "🔄️step-set-snapshot-replaces-entities"),
 ];
 
 fn fixture_directory(recipe: &str) -> Option<&'static str> {
@@ -993,7 +975,7 @@ fn values(args: &[String], flag: &str) -> Vec<String> {
 /// gate in both directions, which is the whole reason that is mandatory.
 // 🚫️async: pure predicate helper.
 fn unwitnessed(mutation: &str, before: &Reading, after: &Reading) -> bool {
-    mutation != "no-mutation" && !mutation.is_empty() && before == after
+    !mutation.is_empty() && before == after
 }
 
 fn main() {

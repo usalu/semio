@@ -33,7 +33,7 @@ fn mutation() -> SemioBrepMutation {
 #[semio_framework_async_macros::async_test]
 async fn replaces_the_surface_without_rebounding_the_face() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("replace-surface applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("replace-surface applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "replace-surface/swaps-the-faces-plane-for-a-cylinder: applied state differs from the committed after-snapshot");
     let edited = &produced.faces[0];
     assert_ne!(edited.surface, base.faces[0].surface, "the surface really must have changed");
@@ -47,13 +47,14 @@ async fn replaces_the_surface_without_rebounding_the_face() {
 async fn the_undo_replace_surface_restores_the_original_plane() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "replace-surface of an existing face undoes as exactly one replace-surface");
     let SemioBrepMutation::ReplaceSurface(restore) = &undo[0] else { panic!("replace-surface must undo as replace-surface") };
     assert_eq!(restore.new_surface, base.faces[0].surface, "the undo must recapture BASE's own surface");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward replace-surface applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo replace-surface applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward replace-surface applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo replace-surface applies");
     }
     assert_eq!(current, base, "replace-surface/swaps-the-faces-plane-for-a-cylinder: the undo did not restore the before-snapshot");
 }
@@ -112,6 +113,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded = decode_semio_brep_diff_json(DIFF).expect("committed replace-surface diff decodes");
-    let produced = decoded.apply(&before()).expect("committed replace-surface diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed replace-surface diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-surface/swaps-the-faces-plane-for-a-cylinder: committed diff did not carry before to after");
 }

@@ -1,13 +1,13 @@
 /** 🗑️ `delete-buffer` wire twin: the flat `Apply` payload `GltfDeleteBufferPayload` and the phase wire `DeleteBufferMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { type GltfApplyPhase, gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfDeleteBufferPayload {
   index: bigint;
 }
 
-export type DeleteBufferMutation = GltfPhase<GltfDeleteBufferPayload, GltfDiff>;
+export type DeleteBufferMutation = GltfApplyPhase<GltfDeleteBufferPayload>;
 
 export const parseGltfDeleteBufferPayload = gltfWireObject<GltfDeleteBufferPayload>({ index: gltfWireRequired(gltfWireIndex) });
-export const parseDeleteBufferMutation = gltfWirePhase(parseGltfDeleteBufferPayload, parseGltfDiff);
+export const parseDeleteBufferMutation = gltfWireApplyPhase(parseGltfDeleteBufferPayload);

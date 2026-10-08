@@ -10,16 +10,28 @@
   "periodicX": null,
   "periodicY": null,
   "periodicZ": null,
-  "tilesRemoved": [
-    "air"
-  ],
-  "tilesUpserted": [],
-  "rulesRemoved": [
-    "r-right-air-air"
-  ],
-  "rulesUpserted": [],
-  "pinnedRemoved": [],
-  "pinnedUpserted": [],
-  "maskedRemoved": [],
-  "maskedUpserted": []
+  "tiles": {
+    "removed": [
+      "air"
+    ],
+    "added": [],
+    "patched": []
+  },
+  "rules": {
+    "removed": [
+      "r-right-air-air"
+    ],
+    "added": [],
+    "patched": []
+  },
+  "pinned": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "masked": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  }
 }

@@ -1,6 +1,4 @@
-//! 🔢️ `set-version` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🔢️ `set-version` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,14 +13,12 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetVersion {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "version", kind: "set-version", record: "SetVersion" };
 
     fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
-        agg_diff(&BcfMutation::SetVersion(self.clone()), base)
+        let Self { version } = self;
+        protocol::MutationOutcome::new(BcfDiff { version: Some(version.clone()), topics: None, parts: None })
     }
     fn inverse(&self, base: &BcfSnapshot) -> Result<Vec<BcfMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&BcfMutation::SetVersion(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![BcfMutation::SetVersion(set_version::SetVersion { version: base.version.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set version", "Version setzen")
     }

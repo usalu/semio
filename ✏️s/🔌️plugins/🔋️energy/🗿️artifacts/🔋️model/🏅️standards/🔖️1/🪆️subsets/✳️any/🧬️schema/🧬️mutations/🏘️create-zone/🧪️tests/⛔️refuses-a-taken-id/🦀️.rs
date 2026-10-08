@@ -19,7 +19,7 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     let mut model = crate::model::Model { name: "BESTEST 600".into(), ..crate::model::Model::default() };
     model.zones.push(zone(1, "ZONE ONE"));
-    (snapshot(model), super::create_zone(crate::model::EntityId(1), "ZONE TWO".into(), 129.6, 1, true, true))
+    (snapshot(model), super::create_zone(crate::model::EntityId(1), "ZONE TWO".into(), 129.6, 1, true, true, None))
 }
 
 fn case() -> Case {

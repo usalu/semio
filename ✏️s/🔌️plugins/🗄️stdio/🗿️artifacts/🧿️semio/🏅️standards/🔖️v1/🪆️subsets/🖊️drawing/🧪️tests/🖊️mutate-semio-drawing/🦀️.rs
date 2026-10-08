@@ -41,9 +41,10 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
+    use semio_s_artifact_stdio_semio::apply_diff;
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::{apply_semio_drawing_mutation, inverse_semio_drawing_mutation, SemioDrawingMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::{diff_semio_drawing_mutation, inverse_semio_drawing_mutation, SemioDrawingMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::text::mutations::{decode_semio_drawing_mutation_json};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{SemioDrawingSnapshot};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::binary::snapshot::{decode_semio_drawing_pack};
@@ -87,9 +88,10 @@ mod subject {
     }
 
     fn apply(current: &mut SemioDrawingSnapshot, step: &SemioDrawingMutation, what: &str) -> Result<(), String> {
-        let outcome = apply_semio_drawing_mutation(current, step);
+        let outcome = diff_semio_drawing_mutation(step, current);
         let refusals = semio_mutation_refusals(&outcome);
         if refusals.is_empty() {
+            *current = apply_diff(outcome.diff(), current).map_err(|error| format!("the diff could not be applied: {error:?}"))?;
             return Ok(());
         }
         Err(format!("{what}: the mutation was rejected: {refusals:?}"))
@@ -183,7 +185,7 @@ mod subject {
         let mut current = base.clone();
         apply(&mut current, &step, &ctx.scenario.id)?;
         let mutated = snapshot_json(&current)?;
-        for undo in &inverse_semio_drawing_mutation(&step, &base).expect("valid retained mutation inverse fixture") {
+        for undo in inverse_semio_drawing_mutation(&step, &base).expect("valid retained mutation inverse fixture").iter().rev() {
             apply(&mut current, undo, &ctx.scenario.id)?;
         }
         if current != base {

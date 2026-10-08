@@ -4,7 +4,7 @@ export type * from "../../../../../🧬️schema/🧬️mutations/🌳️node/�
 /** 🔀️ `reorder-nodes` wire twin: the flat `Apply` payload `GltfReorderNodesPayload` and the phase wire `ReorderNodesMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { gltfWireArray, gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
 export const parseGltfReorderNodesPayload = gltfWireObject<GltfReorderNodesPayload>({ order: gltfWireRequired(gltfWireArray(gltfWireIndex)) });
-export const parseReorderNodesMutation = gltfWirePhase(parseGltfReorderNodesPayload, parseGltfDiff);
+export const parseReorderNodesMutation = gltfWireApplyPhase(parseGltfReorderNodesPayload);

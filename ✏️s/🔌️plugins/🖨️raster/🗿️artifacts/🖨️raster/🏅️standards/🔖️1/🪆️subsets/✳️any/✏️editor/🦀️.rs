@@ -763,8 +763,8 @@ impl store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for 
 
 /// 📬️ The config lane's twin of {@link RasterStorePreparationFactory} — raster's seven session verbs
 /// (`setBrushSize`/`setBrushOpacity`/`setCompositeViewport`/`setCamera`/`setCameraZoom`/
-/// publication contract outright when this factory is absent. `RasterConfig` is a whole-record config
-/// (`store::impl_whole_record_config!`), so its `Diff` is the config value itself.
+/// publication contract outright when this factory is absent. `RasterConfig`'s `Diff` is its own sparse
+/// per-field diff.
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct RasterConfigStorePreparationFactory;
 
@@ -822,7 +822,7 @@ impl store::ArtifactStoreOneItemPreparation<RasterConfig, RasterConfigMutation> 
         let base = self.base.as_ref().ok_or_else(|| "Raster config preparation lost its exact base root".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "Raster config preparation lost its mutation owner".to_string())?;
         let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
+        let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "Raster config preparation lost its Store authority".to_string())?;
         let edit = authority.next_edit(mutation, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;

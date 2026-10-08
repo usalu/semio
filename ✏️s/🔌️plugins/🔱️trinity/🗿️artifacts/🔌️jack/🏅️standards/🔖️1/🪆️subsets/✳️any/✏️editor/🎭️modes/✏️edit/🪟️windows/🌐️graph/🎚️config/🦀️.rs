@@ -2,7 +2,7 @@
 
 #[path = "🧬️schema/🦀️.rs"]
 mod schema;
-pub use schema::JackGraphWindowConfig;
+pub use schema::{JackGraphWindowConfig, JackGraphWindowConfigDiff};
 
 impl store::ArtifactDsl for JackGraphWindowConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
@@ -40,7 +40,7 @@ impl store::ArtifactPack for JackGraphWindowConfig {
     }
 }
 
-store::impl_whole_record_config!(JackGraphWindowConfig);
+impl store::ConfigRecord for JackGraphWindowConfig {}
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;

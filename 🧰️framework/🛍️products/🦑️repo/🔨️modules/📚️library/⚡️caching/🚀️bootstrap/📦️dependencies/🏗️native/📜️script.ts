@@ -8,7 +8,7 @@ import { discoverCargoWorkspaces } from "../../../../🗂️workspaces/🦀️ca
 import { getWorkspaceRoot } from "../../../../🗂️workspaces/🟦️.ts";
 import { repoToolCacheEnv } from "../../../../🏃️process/🌿️environment/🟦️.ts";
 import { wasmBindgenVersion } from "../../../🦀️cargo/🟦️.ts";
-import { runTool } from "../📜️script.ts";
+import { runTool,runPreparedCargoDependencyPairV1 } from "../📜️script.ts";
 
 export type DependencyToolRunner = (command: string, args: string[], cwd: string, signal: AbortSignal, capture?: boolean | "ignore", environment?: NodeJS.ProcessEnv) => Promise<string>;
 
@@ -34,7 +34,7 @@ export async function prepareDependencies(kind: string, workspace: string, signa
       await run("rustup", ["target", "add", name]);
   };
   if (kind === "python") await run("uv", ["sync", "--locked", "--all-packages", "--all-groups"]);
-  else if (kind === "cargo") { for (const owner of discoverCargoWorkspaces(workspace)) await run("cargo", ["fetch", "--locked", "--manifest-path", owner.manifest]); }
+  else if (kind === "cargo") { for (const owner of discoverCargoWorkspaces(workspace)) { await runPreparedCargoDependencyPairV1(workspace,owner.manifest,signal,runner===runTool?undefined:runner); } }
   else if (kind === "cargo-lock") { for (const owner of discoverCargoWorkspaces(workspace)) await run("cargo", ["update", "--workspace", "--manifest-path", owner.manifest]); }
   else if (kind === "go") await run("go", ["mod", "download"], false, { ...process.env, GOWORK: join(workspace, "go.work") });
   else if (kind === "dotnet") console.log("[deps-dotnet] Nx project restores completed");

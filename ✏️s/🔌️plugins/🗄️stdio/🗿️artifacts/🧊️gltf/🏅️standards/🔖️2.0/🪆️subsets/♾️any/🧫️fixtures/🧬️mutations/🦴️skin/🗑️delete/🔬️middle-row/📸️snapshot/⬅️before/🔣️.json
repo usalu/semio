@@ -1,0 +1,21 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "skins": [
+      {
+        "name": "skin0"
+      },
+      {
+        "name": "skin1"
+      },
+      {
+        "name": "skin2"
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

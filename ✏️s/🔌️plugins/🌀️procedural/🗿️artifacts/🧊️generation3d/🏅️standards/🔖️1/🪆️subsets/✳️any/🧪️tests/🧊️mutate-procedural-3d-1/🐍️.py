@@ -217,13 +217,15 @@ def compose_rotation(current, delta):
 
 
 def input_literal(payload):
-    """🔣️ The typed literal a `change-widget-input` payload states. Scalar types only: a list rebuilds a neural list
+    """🔣️ The typed literal a `change-widget-input` payload states. Scalar types and the plane only: a list rebuilds a neural list
     literal this oracle declines to restate."""
     kind, value = payload["type"], payload["value"]
     if kind in ("number", "text", "boolean"):
         return {"$schema": kind, "value": value}
     if kind in ("point", "vector"):
         return vector_literal(kind, value)
+    if kind == "plane":
+        return {"$schema": "plane", "origin": vector_literal("point", value["origin"]), "normal": vector_literal("vector", value["normal"])}
     raise AssertionError("mutate-change-widget-input: the type %r is a list, which this oracle declines to adjudicate" % kind)
 
 

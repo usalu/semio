@@ -7,22 +7,10 @@
       {
         "id": "edge-1",
         "patch": {
-          "replacement": {
-            "edgeKind": "edge-kind-a",
-            "gap": 2.0,
-            "id": "edge-1",
-            "rise": 0.0,
-            "rotation": 0.0,
-            "shift": 1.0,
-            "source": "handle-1",
-            "sourceTip": "none",
-            "target": "handle-2",
-            "targetTip": "arrow",
-            "tilt": 0.0,
-            "turn": 0.0,
-            "x": 3.0,
-            "y": 4.0
-          }
+          "gap": 2.0,
+          "shift": 1.0,
+          "x": 3.0,
+          "y": 4.0
         }
       }
     ],

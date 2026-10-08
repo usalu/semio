@@ -695,11 +695,12 @@ pub enum NormEdit {
     RemoveItem { path: String, index: usize },
 }
 
-/// 🔑 How one path selector (`[index]` / `[id=…]`) is spelled in a leaf payload: its position or its row id.
+/// 🔑 How one path selector (`[index]` / `[id=…]`) is spelled in a leaf payload: its position, its row id, or not at all when the kind implies it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SelectorKey {
     Index(&'static str),
     Id(&'static str),
+    Implied,
 }
 
 /// ✏️ One settable leaf: the `path` template (`walls[].lengthM`), the semantic `kind` it raises and where its selectors and value go in the payload.
@@ -783,9 +784,10 @@ fn selector_entries(selectors: &[SelectorKey], selected: &[(usize, Option<String
     selectors
         .iter()
         .zip(selected)
-        .map(|(key, (index, id))| match key {
-            SelectorKey::Index(name) => Ok(((*name).to_string(), semio_framework_value::DslValue::uint(*index as u64))),
-            SelectorKey::Id(name) => id.clone().map(|id| ((*name).to_string(), semio_framework_value::DslValue::String(id))).ok_or_else(|| format!("path '{path}' selects a row without an id")),
+        .filter_map(|(key, (index, id))| match key {
+            SelectorKey::Index(name) => Some(Ok(((*name).to_string(), semio_framework_value::DslValue::uint(*index as u64)))),
+            SelectorKey::Id(name) => Some(id.clone().map(|id| ((*name).to_string(), semio_framework_value::DslValue::String(id))).ok_or_else(|| format!("path '{path}' selects a row without an id"))),
+            SelectorKey::Implied => None,
         })
         .collect()
 }
@@ -936,7 +938,7 @@ pub fn apply_remedy_edit(report: &CheckReport, check_id: &str, remedy_index: usi
 pub fn handle_apply_remedy<F, Map>(document: &F::Document, check_id: &str, remedy_index: usize, resolve: Map) -> Result<Emit<F::Mutation, NoConfigMutation>, Fault>
 where
     F: NormFamily,
-    F::Document: semio_framework_value::ToValue,
+    F::Document: Clone + semio_framework_value::ToValue,
     Map: FnOnce(&F::Document, &NormEdit) -> Result<Vec<F::Mutation>, String>,
 {
     handle_apply_remedy_with_option::<F, Map>(document, check_id, remedy_index, 0, resolve)
@@ -946,7 +948,7 @@ where
 pub fn handle_apply_remedy_with_option<F, Map>(document: &F::Document, check_id: &str, remedy_index: usize, option_index: usize, resolve: Map) -> Result<Emit<F::Mutation, NoConfigMutation>, Fault>
 where
     F: NormFamily,
-    F::Document: semio_framework_value::ToValue,
+    F::Document: Clone + semio_framework_value::ToValue,
     Map: FnOnce(&F::Document, &NormEdit) -> Result<Vec<F::Mutation>, String>,
 {
     let report = cached_report_for::<F>(document).unwrap_or_else(|| F::evaluate(document));
@@ -1739,43 +1741,20 @@ where
     Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: artifact_schema.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
 }
 
-/// 🎞️ `"model:in"` is an honest generic pass-through: a payload that happens to decode as this family's
-/// own `Document` shape becomes a bundle of targeted `change-<field>` mutations (one per persistent
-/// field, via each migrated facet's `XMutation::from_snapshot`) rather than a single whole-document
-/// replace mutation — the banned whole-document-replace escape hatch has no 1:1 replacement, so `wrap` now
-/// decomposes the imported document into the closed semantic vocabulary instead. Bundling them into one
-/// `Emit::mutations` call keeps the import atomic (one edit, one undo entry), matching the old
-/// single-mutation commit's history shape. Anything that doesn't decode is accepted but inert (no norm
-/// family document has a generic "raw model" field to stash a foreign shape into yet). `"artifact:in"`
-/// replicates the SDK default (decodes the base64 pack).
-pub fn import_media<D, M, F>(port: &str, media: &Media, wrap: F) -> Result<Emit<M, NoConfigMutation>, MediaError>
-where
-    D: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + store::ArtifactPack,
-    F: Fn(D) -> Vec<M>,
-{
-    if port == "model:in" {
-        if let MediaPayload::Structured { json, .. } = &media.payload {
-            if let Ok(document) = semio_framework_pack_json::from_json_str::<D>(json, semio_framework_pack_json::JsonMemberPolicy::Reject) {
-                return Ok(Emit::mutations(wrap(document)));
-            }
-        }
-        return Ok(Emit::default());
+/// 🎞️ `"model:in"` is an honest generic pass-through: no family `Document` has a generic "raw model" field to receive one, so the
+/// payload is accepted but inert. A whole document never arrives as a mutation: `"artifact:in"` is refused because importing a
+/// whole document is the shell's document load path (genesis/load, not a history row).
+pub fn import_media<M>(port: &str, _media: &Media) -> Result<Emit<M, NoConfigMutation>, MediaError> {
+    match port {
+        "model:in" => Ok(Emit::default()),
+        "artifact:in" => Err(MediaError::Payload(port.to_string(), "a whole document is loaded by the shell's document load path, never imported as mutations".into())),
+        _ => Err(MediaError::NotImplemented),
     }
-    if port != "artifact:in" {
-        return Err(MediaError::NotImplemented);
-    }
-    let MediaPayload::Structured { json, .. } = &media.payload else {
-        return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
-    };
-    let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-    let document = <D as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-    Ok(Emit::mutations(wrap(document)))
 }
 //#endregion 🔖️MediaPorts
 
 //#region 🔖️Commands
-/// 📤️ Commits a bundle of targeted semantic mutations as one edit: a `set-snapshot` command payload decomposes into concrete kinds via
-/// the family's `replacement` plan and a value-tree edit resolves to its one kind via [`NormEditRules::resolve`], bundled here
+/// 📤️ Commits a bundle of targeted semantic mutations as one edit: a value-tree edit resolves to its one kind via [`NormEditRules::resolve`], bundled here
 /// into a single undo entry whose history row is labelled by its leaves' `SemanticMutation::label` (design §20.4, §20.6).
 pub fn commit_snapshot_fields<M>(mutations: Vec<M>) -> Result<Emit<M, NoConfigMutation>, Fault> {
     Ok(Emit::mutations(mutations))
@@ -1851,7 +1830,7 @@ where
 pub fn dispatch_apply_remedy<Fam, Map>(document: &Fam::Document, check_id: &str, remedy_index: usize, resolve: Map) -> Result<Emit<Fam::Mutation, NoConfigMutation>, Fault>
 where
     Fam: NormFamily,
-    Fam::Document: semio_framework_value::ToValue,
+    Fam::Document: Clone + semio_framework_value::ToValue,
     Map: FnOnce(&Fam::Document, &NormEdit) -> Result<Vec<Fam::Mutation>, String>,
 {
     handle_apply_remedy::<Fam, Map>(document, check_id, remedy_index, resolve)
@@ -1859,7 +1838,9 @@ where
 
 
 /// 🌉️ Installs the `{action, args}` → typed-`Command` bridge every norm editor needs, for the eight
-/// verbs all fifteen declare (`setSnapshot`/`evaluate`/`setSelectedCheckIndex`/`setActiveExample`/`setField`/`insertItem`/`removeItem`/`applyRemedy`).
+/// verbs all fifteen declare (`evaluate`/`setSelectedCheckIndex`/`setField`/`insertItem`/`removeItem`/`applyRemedy`). A whole-document
+/// replacement (`setSnapshot`) and an example load (`setActiveExample`) are not mutations: the shell's document load path and the
+/// framework's catalogue route own them.
 ///
 /// 🩹️ `ArtifactEditor::command_from_action`'s default refuses EVERY id — `app.command.unsupported:
 /// action '…' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand)`
@@ -1892,13 +1873,6 @@ macro_rules! norm_command_from_action {
             match action {
                 "evaluate" => Ok($command::Evaluate(evaluate::Evaluate {})),
                 "setSelectedCheckIndex" => Ok($command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: $crate::app_surface::selected_check_index_arg(args) })),
-                "setActiveExample" => {
-                    let example_id = args
-                        .and_then(|value| value.get("exampleId").or_else(|| value.get("example_id")).or_else(|| value.get("value")))
-                        .and_then(|value| if let semio_framework_value::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(semio_framework_pack_json::to_json_string(value)) })
-                        .unwrap_or_default();
-                    Ok($command::SetActiveExample(set_active_example::SetActiveExample { example_id }))
-                }
                 "setField" => Ok($command::SetField(set_field::SetField {
                     path: $crate::app_surface::path_arg(args),
                     value_json: $crate::app_surface::value_arg_json(args),
@@ -1919,18 +1893,10 @@ macro_rules! norm_command_from_action {
                     check_id: $crate::app_surface::check_id_arg(args),
                     remedy_index: $crate::app_surface::index_arg(args, "remedyIndex") as u32,
                 })),
-                "setSnapshot" => {
-                    let json = args
-                        .and_then(|value| value.get("snapshot"))
-                        .and_then(|value| if let semio_framework_value::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(semio_framework_pack_json::to_json_string(value)) })
-                        .ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-missing"), "setSnapshot needs a 'snapshot' argument carrying the document's camelCase JSON"))?;
-                    let snapshot = $decode(&json).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-invalid"), error))?;
-                    Ok($command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { text: $crate::document::escape_op_text_field(&store::ArtifactDsl::print_dsl(&snapshot)) }))
-                }
                 other => Err(semio_framework_plugin::Fault::new(
                     semio_framework_plugin::FaultOrigin::App,
                     semio_framework_plugin::FaultCode::new("norm.unhandled-action"),
-                    format!("action '{other}' is not one of this app's declared verbs (setSnapshot/evaluate/setSelectedCheckIndex/setActiveExample/setField/insertItem/removeItem/applyRemedy)"),
+                    format!("action '{other}' is not one of this app's declared verbs (evaluate/setSelectedCheckIndex/setField/insertItem/removeItem/applyRemedy)"),
                 )),
             }
         }
@@ -1943,13 +1909,6 @@ macro_rules! norm_command_from_action {
             match action {
                 "evaluate" => Ok($command::Evaluate(evaluate::Evaluate {})),
                 "setSelectedCheckIndex" => Ok($command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: $crate::app_surface::selected_check_index_arg(args) })),
-                "setActiveExample" => {
-                    let example_id = args
-                        .and_then(|value| value.get("exampleId").or_else(|| value.get("example_id")).or_else(|| value.get("value")))
-                        .and_then(|value| if let semio_framework_value::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(semio_framework_pack_json::to_json_string(value)) })
-                        .unwrap_or_default();
-                    Ok($command::SetActiveExample(set_active_example::SetActiveExample { example_id }))
-                }
                 "setField" => Ok($command::SetField(set_field::SetField {
                     path: $crate::app_surface::path_arg(args),
                     value_json: $crate::app_surface::value_arg_json(args),
@@ -1970,18 +1929,10 @@ macro_rules! norm_command_from_action {
                     check_id: $crate::app_surface::check_id_arg(args),
                     remedy_index: $crate::app_surface::index_arg(args, "remedyIndex") as u32,
                 })),
-                "setSnapshot" => {
-                    let text = args
-                        .and_then(|value| value.get("snapshot"))
-                        .and_then(|value| if let semio_framework_value::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(semio_framework_pack_json::to_json_string(value)) })
-                        .ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-missing"), "setSnapshot needs a 'snapshot' argument carrying the document's camelCase JSON"))?;
-                    let snapshot = $decode(&text).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-invalid"), error))?;
-                    Ok($command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot }))
-                }
                 other => Err(semio_framework_plugin::Fault::new(
                     semio_framework_plugin::FaultOrigin::App,
                     semio_framework_plugin::FaultCode::new("norm.unhandled-action"),
-                    format!("action '{other}' is not one of this app's declared verbs (setSnapshot/evaluate/setSelectedCheckIndex/setActiveExample/setField/insertItem/removeItem/applyRemedy)"),
+                    format!("action '{other}' is not one of this app's declared verbs (evaluate/setSelectedCheckIndex/setField/insertItem/removeItem/applyRemedy)"),
                 )),
             }
         }
@@ -2000,24 +1951,21 @@ pub fn snapshot<'a, D>(doc: &'a ArtifactView<'_, D>) -> &'a D {
 //#region 🧵️RetainedCommands
 /// 🧾️ Every norm tool id, in `app_commands!` row order. All fifteen apps declare exactly this set, so
 /// the list, [`NORM_PUBLICATION_CONTRACTS`], every factory key set and every `bounded_first_step_tool_proofs!`
-/// block are driven from this one constant (including `setActiveExample`).
-pub const NORM_RETAINED_TOOL_IDS: &[&str] = &["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample", "setField", "insertItem", "removeItem", "applyRemedy"];
+/// block are driven from this one constant.
+pub const NORM_RETAINED_TOOL_IDS: &[&str] = &["evaluate", "setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy"];
 /// 🧬️ The payload schema id every norm retained command job is admitted under.
 pub const NORM_RETAINED_PAYLOAD_SCHEMA: &str = "norm.tool-command.v1";
-/// 🎒️ Wire ceiling for one norm tool dispatch: the largest payload is `setSnapshot`'s whole compliance
-/// document, a few dozen scalar quantities plus an ordered layer list — kilobytes, never megabytes.
+/// 🎒️ Wire ceiling for one norm tool dispatch: the largest payload is an inserted row, a few dozen scalar quantities — kilobytes, never megabytes.
 pub const NORM_RETAINED_RAW_BYTES: usize = 524_288;
 /// 🎒️ Real bound for one Artifact-lane edit: a single `change-<field>`/`insert-layer`/`remove-layer`
 /// leaf, the only artifact mutations any norm command emits.
 pub const NORM_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 2_097_152;
-/// 🚦️ Per-tool publication lanes, read straight off the three command bodies: `set-snapshot` commits
+/// 🚦️ Per-tool publication lanes, read straight off the command bodies: `set-field`/`insert-item`/`remove-item`/`apply-remedy` commit
 /// artifact mutations, `evaluate` emits nothing at all (the report is derived on every read), and
 /// `selected-check` writes persisted-local state through the exact Results-window config lane.
 pub const NORM_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
-    ArtifactToolPublicationContract { tool_id: "setSnapshot", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "evaluate", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "setSelectedCheckIndex", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
-    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setField", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "insertItem", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "removeItem", lanes: &[ArtifactToolPublicationLane::Artifact] },

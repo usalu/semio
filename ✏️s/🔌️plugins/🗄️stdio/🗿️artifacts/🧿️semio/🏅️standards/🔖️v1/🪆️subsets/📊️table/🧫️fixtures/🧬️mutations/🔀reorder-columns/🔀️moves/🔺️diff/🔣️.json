@@ -1,53 +1,57 @@
 {
   "columns": {
-    "values": [
+    "removed": [
+      2
+    ],
+    "added": [
       {
-        "name": "area",
-        "kind": "float"
-      },
-      {
-        "name": "id",
-        "kind": "int"
-      },
-      {
-        "name": "city",
-        "kind": "str"
+        "index": 0,
+        "item": {
+          "name": "area",
+          "kind": "float"
+        }
       }
     ]
   },
   "rows": {
-    "values": [
+    "modified": [
       {
-        "cells": [
-          {
-            "kind": "float",
-            "lexeme": "204.0"
-          },
-          {
-            "kind": "int",
-            "lexeme": "1"
-          },
-          {
-            "kind": "str",
-            "value": "Hannover"
+        "index": 0,
+        "diff": {
+          "cells": {
+            "removed": [
+              2
+            ],
+            "added": [
+              {
+                "index": 0,
+                "item": {
+                  "kind": "float",
+                  "lexeme": "204.0"
+                }
+              }
+            ]
           }
-        ]
+        }
       },
       {
-        "cells": [
-          {
-            "kind": "float",
-            "lexeme": "891.0"
-          },
-          {
-            "kind": "int",
-            "lexeme": "2"
-          },
-          {
-            "kind": "str",
-            "value": "Berlin"
+        "index": 1,
+        "diff": {
+          "cells": {
+            "removed": [
+              2
+            ],
+            "added": [
+              {
+                "index": 0,
+                "item": {
+                  "kind": "float",
+                  "lexeme": "891.0"
+                }
+              }
+            ]
           }
-        ]
+        }
       }
     ]
   }

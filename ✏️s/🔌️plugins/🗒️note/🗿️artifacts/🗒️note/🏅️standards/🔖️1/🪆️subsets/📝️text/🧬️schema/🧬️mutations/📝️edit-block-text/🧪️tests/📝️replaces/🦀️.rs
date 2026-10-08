@@ -100,7 +100,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "edit-block-text/replaces-the-intro-paragraphs: committed diff did not carry before to after");
 }
 
@@ -119,4 +119,10 @@ async fn content_child_id_is_reminted_while_the_target_slot_is_stable() {
     assert_eq!(content.handle.target, before_content.handle.target, "the child SLOT is keyed by block id, so it must not move when the content changes");
     assert_eq!(*font_size, 16.0, "editing the text must not restyle the block");
     assert_eq!(block_bounds(find_block(&applied.blocks, "blk-text").expect("the text block exists")), (0.0, 0.0, 280.0, 120.0), "editing the text must not reflow the block's box");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

@@ -1,7 +1,4 @@
-//! 🧱️ `set-viewpoint-components` — authored as its own mutation leaf. The aggregate's original
-//! `diff`/`inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf
-//! reconstructs its aggregate value and delegates, so the semantics are preserved by construction
-//! rather than re-derived.
+//! 🧱️ `set-viewpoint-components` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -19,14 +16,18 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetViewpointComponents
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "viewpoint-components", kind: "set-viewpoint-components", record: "SetViewpointComponents" };
 
     fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
-        agg_diff(&BcfMutation::SetViewpointComponents(self.clone()), base)
+        let Self { topic_guid, guid, components } = self;
+        protocol::MutationOutcome::new({ wrap_viewpoint_diff(base, topic_guid, guid, BcfViewpointDiff { camera: None, components: Some(components.clone()), snapshot: None }) })
     }
     fn inverse(&self, base: &BcfSnapshot) -> Result<Vec<BcfMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&BcfMutation::SetViewpointComponents(self.clone()), base)?
-    
-    })
-}
+        let Self { topic_guid, guid, .. } = self;
+        Ok({
+            match find_viewpoint(base, topic_guid, guid) {
+                Some(v) => vec![BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid: topic_guid.clone(), guid: guid.clone(), components: v.components.clone() })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set viewpoint components", "Blickpunktkomponenten setzen")
     }

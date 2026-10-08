@@ -2,7 +2,7 @@
 
 use super::remove_signature_field::RemoveSignatureField;
 use super::PdfHMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -11,13 +11,19 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[value(rename_all = "camelCase")]
 pub struct InsertSignatureField {
     pub name: String,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub placements: Vec<support::ObjectPlacement>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub field_index: Option<usize>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub entry_index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfHMutation> for InsertSignatureField {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "signature-field", kind: "insert-signature-field", record: "Insert" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::graph_edit(support::insert_signature_field_rows(base, &self.name)))
+        MutationOutcome::new(diff::graph_edit(support::insert_signature_field_rows(base, &self.name, &self.placements, self.field_index, self.entry_index)))
     }
 
     fn inverse(&self, _base: &PdfSnapshot) -> Result<Vec<PdfHMutation>, semio_framework_value::ValueError> {

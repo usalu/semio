@@ -908,6 +908,355 @@ impl FromValue for World3dModellingOptions {
 }
 //#endregion 🔖️Interaction
 
+//#region 🔖️Overlay
+/// 📏️ Arrowhead length of a dimension, in screen pixels; it never scales with zoom or distance.
+pub const WORLD3D_ANNOTATION_ARROW_PX: f64 = 9.0;
+/// 📍️ Edge length of a point marker, in screen pixels.
+pub const WORLD3D_ANNOTATION_MARKER_PX: f64 = 10.0;
+/// 🏷️ Distance of a dimension or angle label from its geometry, in screen pixels.
+pub const WORLD3D_ANNOTATION_LABEL_GAP_PX: f64 = 14.0;
+/// ✒️ Stroke width of annotation geometry, in screen pixels.
+pub const WORLD3D_ANNOTATION_STROKE_PX: f64 = 1.5;
+
+/// 🧱️ An arrowhead tip at a screen point, pointing along `angle` (radians, `y` down).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct World3dProjectedArrow {
+    pub x: f64,
+    pub y: f64,
+    pub angle: f64,
+}
+
+/// 🌙️ The arc of an angle annotation: centre, radius in pixels, start angle and signed sweep in radians.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct World3dProjectedArc {
+    pub cx: f64,
+    pub cy: f64,
+    pub radius: f64,
+    pub start: f64,
+    pub sweep: f64,
+}
+
+/// 📍️ A point mark at a screen position.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct World3dProjectedMarker {
+    pub x: f64,
+    pub y: f64,
+    pub shape: World3dMarkerShape,
+}
+
+/// ↔️ How a label hangs off its anchor.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum World3dLabelAlign {
+    Middle,
+    Start,
+    End,
+}
+
+/// 🏷️ The screen anchor of an annotation's text.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct World3dProjectedLabel {
+    pub x: f64,
+    pub y: f64,
+    pub align: World3dLabelAlign,
+}
+
+/// 🖼️ One annotation resolved to screen pixels (`x` right, `y` down, origin top-left). An annotation with any anchor behind the camera or outside the depth range is not visible.
+#[derive(Clone, Debug, PartialEq)]
+pub struct World3dProjectedAnnotation {
+    pub id: String,
+    pub kind: &'static str,
+    pub tone: World3dTone,
+    pub visible: bool,
+    pub lines: Vec<[f64; 4]>,
+    pub arrows: Vec<World3dProjectedArrow>,
+    pub arc: Option<World3dProjectedArc>,
+    pub marker: Option<World3dProjectedMarker>,
+    pub label: Option<World3dProjectedLabel>,
+}
+
+impl World3dAnnotation {
+    /// 🔖️ The wire discriminator of the annotation.
+    pub fn kind(&self) -> &'static str {
+        match self {
+            Self::Dimension(_) => "dimension",
+            Self::Angle(_) => "angle",
+            Self::Marker(_) => "marker",
+            Self::Leader(_) => "leader",
+        }
+    }
+
+    /// ♿️ The text alternative a screen reader gets: the kind, a colon and the caller's text in the active language.
+    pub fn accessible_name(&self, locale: &str) -> String {
+        let strings = world3d_modelling_strings(locale);
+        let kind = match self {
+            Self::Dimension(_) => strings.dimension,
+            Self::Angle(_) => strings.angle,
+            Self::Marker(_) => strings.marker,
+            Self::Leader(_) => strings.leader,
+        };
+        format!("{kind}: {}", self.text().resolve(locale))
+    }
+
+    fn tone(&self) -> World3dTone {
+        match self {
+            Self::Dimension(item) => item.tone,
+            Self::Angle(item) => item.tone,
+            Self::Marker(item) => item.tone,
+            Self::Leader(item) => item.tone,
+        }
+    }
+}
+
+/// 📐️ Projects an annotation layer through a column-major view-projection matrix whose depth runs `0..1` (the engine's clip convention) onto a `width` x `height` pixel viewport.
+/// Pure: the same matrix, size and layer always give the same geometry, and it is pinned against the three.js-produced `annotationProjection` fixture. Occlusion by the model is not tested, as in CAD dimensioning.
+pub fn project_world3d_annotations(layer: &World3dAnnotationLayer, view_proj: &[f32; 16], width: f32, height: f32) -> Vec<World3dProjectedAnnotation> {
+    let matrix: [f64; 16] = view_proj.map(f64::from);
+    let (width, height) = (f64::from(width), f64::from(height));
+    let point = |position: World3dVec3| -> Option<[f64; 2]> {
+        let clip = |row: usize| matrix[row] * position[0] + matrix[4 + row] * position[1] + matrix[8 + row] * position[2] + matrix[12 + row];
+        let w = clip(3);
+        if !(w > 1e-12) {
+            return None;
+        }
+        let (x, y, z) = (clip(0) / w, clip(1) / w, clip(2) / w);
+        if !(x.is_finite() && y.is_finite() && (0.0..=1.0).contains(&z)) {
+            return None;
+        }
+        Some([(x + 1.0) / 2.0 * width, (1.0 - y) / 2.0 * height])
+    };
+    let shifted = |position: World3dVec3, offset: World3dVec3| [position[0] + offset[0], position[1] + offset[1], position[2] + offset[2]];
+    layer
+        .items
+        .iter()
+        .map(|item| {
+            let hidden = || World3dProjectedAnnotation { id: item.id().to_string(), kind: item.kind(), tone: item.tone(), visible: false, lines: Vec::new(), arrows: Vec::new(), arc: None, marker: None, label: None };
+            let shown = |lines, arrows, arc, marker, label| World3dProjectedAnnotation { id: item.id().to_string(), kind: item.kind(), tone: item.tone(), visible: true, lines, arrows, arc, marker, label };
+            match item {
+                World3dAnnotation::Dimension(item) => {
+                    let (Some(from), Some(to), Some(a), Some(b)) = (point(item.from), point(item.to), point(shifted(item.from, item.offset)), point(shifted(item.to, item.offset))) else { return hidden() };
+                    let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
+                    let length = dx.hypot(dy);
+                    let normal = if length > 1e-9 { [-dy / length, dx / length] } else { [0.0, -1.0] };
+                    let up = if normal[1] <= 0.0 { 1.0 } else { -1.0 };
+                    let heading = dy.atan2(dx);
+                    shown(
+                        vec![[from[0], from[1], a[0], a[1]], [to[0], to[1], b[0], b[1]], [a[0], a[1], b[0], b[1]]],
+                        vec![World3dProjectedArrow { x: a[0], y: a[1], angle: heading + std::f64::consts::PI }, World3dProjectedArrow { x: b[0], y: b[1], angle: heading }],
+                        None,
+                        None,
+                        Some(World3dProjectedLabel { x: (a[0] + b[0]) / 2.0 + up * normal[0] * WORLD3D_ANNOTATION_LABEL_GAP_PX, y: (a[1] + b[1]) / 2.0 + up * normal[1] * WORLD3D_ANNOTATION_LABEL_GAP_PX, align: World3dLabelAlign::Middle }),
+                    )
+                }
+                World3dAnnotation::Angle(item) => {
+                    let (Some(vertex), Some(ta), Some(tb)) = (point(item.vertex), point(shifted(item.vertex, item.direction_a)), point(shifted(item.vertex, item.direction_b))) else { return hidden() };
+                    let (ax, ay, bx, by) = (ta[0] - vertex[0], ta[1] - vertex[1], tb[0] - vertex[0], tb[1] - vertex[1]);
+                    if ax.hypot(ay) < 1e-6 || bx.hypot(by) < 1e-6 {
+                        return hidden();
+                    }
+                    let start = ay.atan2(ax);
+                    let mut sweep = by.atan2(bx) - start;
+                    while sweep > std::f64::consts::PI {
+                        sweep -= std::f64::consts::TAU;
+                    }
+                    while sweep <= -std::f64::consts::PI {
+                        sweep += std::f64::consts::TAU;
+                    }
+                    let middle = start + sweep / 2.0;
+                    let label_radius = item.radius_px + WORLD3D_ANNOTATION_LABEL_GAP_PX;
+                    shown(
+                        vec![
+                            [vertex[0], vertex[1], vertex[0] + start.cos() * item.radius_px, vertex[1] + start.sin() * item.radius_px],
+                            [vertex[0], vertex[1], vertex[0] + (start + sweep).cos() * item.radius_px, vertex[1] + (start + sweep).sin() * item.radius_px],
+                        ],
+                        Vec::new(),
+                        Some(World3dProjectedArc { cx: vertex[0], cy: vertex[1], radius: item.radius_px, start, sweep }),
+                        None,
+                        Some(World3dProjectedLabel { x: vertex[0] + middle.cos() * label_radius, y: vertex[1] + middle.sin() * label_radius, align: World3dLabelAlign::Middle }),
+                    )
+                }
+                World3dAnnotation::Marker(item) => match point(item.position) {
+                    Some(position) => shown(Vec::new(), Vec::new(), None, Some(World3dProjectedMarker { x: position[0], y: position[1], shape: item.shape }), None),
+                    None => hidden(),
+                },
+                World3dAnnotation::Leader(item) => {
+                    let Some(anchor) = point(item.anchor) else { return hidden() };
+                    let label = [anchor[0] + item.label_offset_px[0], anchor[1] + item.label_offset_px[1]];
+                    shown(
+                        vec![[anchor[0], anchor[1], label[0], label[1]]],
+                        Vec::new(),
+                        None,
+                        Some(World3dProjectedMarker { x: anchor[0], y: anchor[1], shape: World3dMarkerShape::Dot }),
+                        Some(World3dProjectedLabel { x: label[0], y: label[1], align: if item.label_offset_px[0] >= 0.0 { World3dLabelAlign::Start } else { World3dLabelAlign::End } }),
+                    )
+                }
+            }
+        })
+        .collect()
+}
+
+/// 🏷️ The fixed strings of the modelling layer in one language.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct World3dModellingStrings {
+    pub annotations: &'static str,
+    pub dimension: &'static str,
+    pub angle: &'static str,
+    pub marker: &'static str,
+    pub leader: &'static str,
+    pub legend: &'static str,
+    pub scale: &'static str,
+    pub no_data: &'static str,
+    pub mismatch: &'static str,
+}
+
+/// 🏷️ The fixed strings for a locale (German for `de*`, English otherwise); the React twin is `world3dModellingStrings`.
+pub fn world3d_modelling_strings(locale: &str) -> World3dModellingStrings {
+    if is_german(locale) {
+        World3dModellingStrings { annotations: "Anmerkungen", dimension: "Bemaßung", angle: "Winkel", marker: "Markierung", leader: "Beschriftung", legend: "Legende", scale: "Skalenwerte", no_data: "Keine Daten", mismatch: "Das Skalarfeld passt nicht zum Netz" }
+    } else {
+        World3dModellingStrings { annotations: "Annotations", dimension: "Dimension", angle: "Angle", marker: "Marker", leader: "Label", legend: "Legend", scale: "Scale values", no_data: "No data", mismatch: "The scalar field does not match the mesh" }
+    }
+}
+
+fn is_german(locale: &str) -> bool {
+    locale.to_ascii_lowercase().split(['-', '_']).next() == Some("de")
+}
+
+/// 🧮️ A legend value with at most four significant digits, grouped and separated for the `en` or `de` language family — the same text as `Intl.NumberFormat(locale, { maximumSignificantDigits: 4 })`,
+/// which pins it through the `legendValues` fixture. Rounding is half away from zero on the shortest decimal form of the double, as ICU does.
+pub fn format_world3d_legend_value(value: f64, locale: &str) -> String {
+    if !value.is_finite() {
+        return value.to_string();
+    }
+    let (decimal, group) = if is_german(locale) { (',', '.') } else { ('.', ',') };
+    if value == 0.0 {
+        return "0".to_string();
+    }
+    let scientific = format!("{:e}", value.abs());
+    let (mantissa, exponent) = scientific.split_once('e').unwrap_or((scientific.as_str(), "0"));
+    let mut digits: Vec<u8> = mantissa.bytes().filter(u8::is_ascii_digit).map(|digit| digit - b'0').collect();
+    let mut exponent: i32 = exponent.parse().unwrap_or(0);
+    if digits.len() > 4 {
+        let round_up = digits[4] >= 5;
+        digits.truncate(4);
+        if round_up {
+            let mut index = 4;
+            loop {
+                if index == 0 {
+                    digits.insert(0, 1);
+                    digits.truncate(4);
+                    exponent += 1;
+                    break;
+                }
+                index -= 1;
+                if digits[index] == 9 {
+                    digits[index] = 0;
+                } else {
+                    digits[index] += 1;
+                    break;
+                }
+            }
+        }
+    }
+    while digits.len() > 1 && digits.last() == Some(&0) {
+        digits.pop();
+    }
+    let text: String = digits.iter().map(|digit| char::from(b'0' + digit)).collect();
+    let integer_digits = exponent + 1;
+    let (integer, fraction) = if integer_digits <= 0 {
+        ("0".to_string(), format!("{}{text}", "0".repeat(integer_digits.unsigned_abs() as usize)))
+    } else if integer_digits as usize >= text.len() {
+        (format!("{text}{}", "0".repeat(integer_digits as usize - text.len())), String::new())
+    } else {
+        (text[..integer_digits as usize].to_string(), text[integer_digits as usize..].to_string())
+    };
+    let mut grouped = String::with_capacity(integer.len() + integer.len() / 3);
+    for (index, digit) in integer.chars().enumerate() {
+        if index > 0 && (integer.len() - index) % 3 == 0 {
+            grouped.push(group);
+        }
+        grouped.push(digit);
+    }
+    let sign = if value < 0.0 { "-" } else { "" };
+    if fraction.is_empty() { format!("{sign}{grouped}") } else { format!("{sign}{grouped}{decimal}{fraction}") }
+}
+
+/// 🌡️ One legend tick line: its text and the ramp colour it names.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct World3dLegendLine {
+    pub text: String,
+    pub rgb: [u8; 3],
+}
+
+/// 🌡️ The text of a scalar-field legend in one language: the title with its unit, one line per tick bottom to top, and the no-data caption when a value is missing.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct World3dLegendLines {
+    pub title: String,
+    pub ticks: Vec<World3dLegendLine>,
+    pub no_data: Option<&'static str>,
+}
+
+impl World3dScalarField {
+    /// 🌡️ The legend text for a locale; the React twin is `world3dLegendLines`, pinned against the same `legendLines` fixture.
+    pub fn legend_lines(&self, locale: &str) -> World3dLegendLines {
+        let title = self.legend.title.resolve(locale);
+        let unit = self.legend.unit.as_deref();
+        World3dLegendLines {
+            title: unit.map_or_else(|| title.to_string(), |unit| format!("{title} ({unit})")),
+            ticks: self.legend_ticks().into_iter().map(|tick| World3dLegendLine { text: format!("{}{}", format_world3d_legend_value(tick.value, locale), unit.map_or_else(String::new, |unit| format!(" {unit}"))), rgb: tick.rgb }).collect(),
+            no_data: self.values.iter().any(Option::is_none).then(|| world3d_modelling_strings(locale).no_data),
+        }
+    }
+}
+
+impl World3dSection {
+    /// ✂️ The unit normal of the removed side.
+    pub fn unit_normal(&self) -> World3dVec3 {
+        let length = self.normal.iter().map(|component| component * component).sum::<f64>().sqrt();
+        [self.normal[0] / length, self.normal[1] / length, self.normal[2] / length]
+    }
+}
+
+/// 🖍️ The theme defaults of sub-element hover and selection that a highlight token overrides.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct World3dSubElementDefaults<T> {
+    pub select: T,
+    pub hover: T,
+    pub edge_hover: T,
+    pub edge_width: f64,
+    pub vertex_mark_px: f64,
+}
+
+/// 🖍️ The one paint table of sub-element hover and selection per granularity.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct World3dSubElementPaint<T> {
+    pub face_select: T,
+    pub face_hover: T,
+    pub edge_select: T,
+    pub edge_hover: T,
+    pub vertex_select: T,
+    pub vertex_hover: T,
+    pub edge_width: f64,
+    pub vertex_mark_px: f64,
+}
+
+/// 🖍️ Resolves the highlight tokens through `tone` over the theme defaults: a token overrides exactly its granularity, an absent token keeps the default (secondary hover, primary selection in the engine theme);
+/// the React twin is `world3dSubElementPaint` and both are pinned against the `subElementPaint` fixture.
+pub fn world3d_sub_element_paint<T: Copy>(highlight: Option<&World3dHighlight>, tone: impl Fn(World3dTone) -> T, defaults: World3dSubElementDefaults<T>) -> World3dSubElementPaint<T> {
+    let style = |pick: fn(&World3dHighlight) -> Option<World3dSubElementStyle>| highlight.and_then(pick);
+    let (face, edge, vertex) = (style(|highlight| highlight.face), style(|highlight| highlight.edge), style(|highlight| highlight.vertex));
+    World3dSubElementPaint {
+        face_select: face.and_then(|style| style.selected).map_or(defaults.select, &tone),
+        face_hover: face.and_then(|style| style.hover).map_or(defaults.hover, &tone),
+        edge_select: edge.and_then(|style| style.selected).map_or(defaults.select, &tone),
+        edge_hover: edge.and_then(|style| style.hover).map_or(defaults.edge_hover, &tone),
+        vertex_select: vertex.and_then(|style| style.selected).map_or(defaults.select, &tone),
+        vertex_hover: vertex.and_then(|style| style.hover).map_or(defaults.hover, &tone),
+        edge_width: edge.and_then(|style| style.width_px).unwrap_or(defaults.edge_width),
+        vertex_mark_px: vertex.and_then(|style| style.width_px).unwrap_or(defaults.vertex_mark_px),
+    }
+}
+//#endregion 🔖️Overlay
+
 //#region 🔖️Lanes
 /// 🚚️ Encodes one modelling payload as its lane text.
 pub fn world3d_modelling_lane_text<T: ToValue>(value: &T) -> String {

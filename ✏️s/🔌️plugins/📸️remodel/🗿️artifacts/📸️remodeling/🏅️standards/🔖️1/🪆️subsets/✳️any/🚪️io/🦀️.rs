@@ -23,7 +23,7 @@ use crate::{
     default_remodeling_scene, image_asset_child_handle, remodeling_asset, remodeling_mesh_content_handle, resolve_bounded_remodeling_mesh, FrameRef, ImageAsset, MediaKind, MediaStream, MeshSource, Float32Buffer, ByteBuffer, RemodelingDurableArtifact,
     RemodelingMesh, RemodelingSnapshot, SparseCloud,
 };
-use {semio_framework::io_dispatch,semio_framework_artifact_reference::Dialect,semio_framework::ErasedComposeSource,semio_framework::IoDirection,semio_framework::IoKey,semio_framework::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+use {semio_framework_os_kernel::io::io_dispatch,semio_framework_artifact_reference::Dialect,semio_framework_os_kernel::io::ErasedComposeSource,semio_framework_os_kernel::io::IoDirection,semio_framework_os_kernel::io::IoKey,semio_framework_os_kernel::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
 use semio_s_artifact_stdio_las::standards::v1_0::engine as las_engine;
 use semio_s_artifact_stdio_ply::standards::v1_0::engine as ply_engine;
@@ -443,7 +443,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::{RemodelingMutation, RemodelingSnapshot, REMODELING_DIALECT, REMODELING_DOCUMENT_SCHEMA};
-    use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+    use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
@@ -592,7 +592,7 @@ pub mod derived_construction {
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::MutationDiff::apply(outcome.diff(), &self.snapshot) {
+            match protocol::apply_diff(outcome.diff(), &self.snapshot) {
                 Ok(snapshot) => self.snapshot = snapshot,
                 Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
@@ -616,7 +616,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::RemodelingSnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct RemodelingParts {
@@ -629,27 +629,27 @@ pub mod derived_analysis {
         type Parts = RemodelingParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.remodel.remodeling", standard: StandardId("1"), subset: SubsetId("*") };
 
-        fn sniff(_source: &AnalyzeSource<'_>) -> IoConfidence {
-            IoConfidence::Medium
+        fn sniff(_source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
+            semio_framework_plugin::io::Confidence::Medium
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = RemodelingParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
+            let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <RemodelingSnapshot as store::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },

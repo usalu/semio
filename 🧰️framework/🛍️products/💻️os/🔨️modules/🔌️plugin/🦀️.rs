@@ -1,5 +1,7 @@
 //! 🔌️ Declarative app plugin SDK — build fully declarative Rust apps bundled into hot-swappable WASM plugins.
 
+pub use semio_framework_os_kernel::io;
+
 use semio_framework_ui_locale::{Label, LabelText, Locale, LocalizedLabel, Terminology};
 
 /// 🗣️ `#[derive(dsl::DslRecord)]` expands to `::dsl::…` paths, so the crate root must bind that name
@@ -389,7 +391,7 @@ pub mod app {
         bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners, RejectedWindowConfigEmission, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack,
         WindowConfigPackLoad, WindowConfigPackLoadDiagnostic, WindowConfigPackLoadGrant, WindowConfigPackLoadPhase, WindowConfigPackLoadProgress, WindowConfigPackLoadStep, WindowConfigSnapshot,
     };
-    pub use super::window_transient::{TransientDiff, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry, WindowTransientSnapshot};
+    pub use super::window_transient::{WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry, WindowTransientSnapshot};
     use semio_framework_value::DslValue;
     use protocol::{OpBinary, OpText};
     use semio_framework::kernel::{FixedCommandPage, UiDirtyScope};
@@ -442,10 +444,10 @@ pub mod app {
     /// unused while `--all-targets` needs it — do not remove on the strength of that warning.
     #[allow(unused_imports)]
     use std::pin::Pin;
-    /// 🚪️ `os_io`'s `ArtifactRef`/`ArtifactKindId` vocabulary is not glob-re-exported at the
+    /// 🚪️ `io`'s `ArtifactRef`/`ArtifactKindId` vocabulary is not glob-re-exported at the
     /// `semio-framework-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
-    /// the `os_io` mount), so it is named through the `store::os_io::` path everywhere in this file,
-    /// exactly like the sibling `🎞️gif` migration leaf (`store::os_io::ArtifactDialect`) already does.
+    /// the `io` mount), so it is named through the `store::io::` path everywhere in this file,
+    /// exactly like the sibling `🎞️gif` migration leaf (`semio_framework_artifact_reference::ArtifactDialect`) already does.
     use {semio_framework_artifact_reference::ArtifactKindId,semio_framework_artifact_reference::ArtifactRef};
     use store::{
         build_history_columns, create_config_envelope, create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactPack, ArtifactStore, ChildDispatch, CompositionCoordinator, ConfigStore, GroupMeta, HistoryColumn, HistoryLane,
@@ -986,7 +988,7 @@ pub mod app {
     /// 🏅️🪆️🎯️ Standards/subsets dialect vocabulary (ticket 26/08/10/STDIO-ARTIFACTS-AND-IO phase
     /// 2). Defined in `semio_framework` so plugins and the OS product
     /// share one definition without an inverted dependency; re-exported here verbatim.
-    pub use {semio_framework::io_compose_via,semio_framework::io_dialects_for,semio_framework::io_dispatch,semio_framework::io_keys_for,semio_framework::io_resolve,semio_framework::list_composer_entries,semio_framework::register_composer_entries,semio_framework::register_subset_validator,semio_framework::set_io_fallback_dispatcher,semio_framework::subset_validator_entry_of,semio_framework::wire_artifact_compose,semio_framework::wire_decode_composed_artifact,semio_framework::wire_list_composer_entries,semio_framework::Analysis,semio_framework::AnalyzeSource,semio_framework_artifact_reference::ArtifactDialect,semio_framework::AsyncComposeFn,semio_framework::ComposeError,semio_framework::ComposeFuture,semio_framework::ComposeSource,semio_framework::ComposedArtifact,semio_framework::ComposerEntry,semio_framework::Composition,semio_framework_artifact_reference::Dialect,semio_framework::ErasedComposeSource,semio_framework::IoConfidence,semio_framework::IoDirection,semio_framework::IoFallback,semio_framework::IoFallbackDispatcher,semio_framework::IoKey,semio_framework::IoPayload,semio_framework::IoResolveError,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework::SubsetValidator,semio_framework::SubsetValidatorEntry,semio_framework::WireComposeSource,semio_framework::WireComposedArtifact};
+    pub use {semio_framework_os_kernel::io::io_compose_via,semio_framework_os_kernel::io::dialects_for,semio_framework_os_kernel::io::io_dispatch,semio_framework_os_kernel::io::io_keys_for,semio_framework_os_kernel::io::resolve,semio_framework_os_kernel::io::list_composer_entries,semio_framework_os_kernel::io::register_composer_entries,semio_framework_os_kernel::io::register_subset_validator,semio_framework_os_kernel::io::set_io_fallback_dispatcher,semio_framework_os_kernel::io::subset_validator_entry_of,semio_framework_os_kernel::io::wire_artifact_compose,semio_framework_os_kernel::io::wire_decode_composed_artifact,semio_framework_os_kernel::io::wire_list_composer_entries,semio_framework_os_kernel::io::Analysis,semio_framework_os_kernel::io::AnalyzeSource,semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::AsyncComposeFn,semio_framework_os_kernel::io::ComposeError,semio_framework_os_kernel::io::ComposeFuture,semio_framework_os_kernel::io::ComposeSource,semio_framework_os_kernel::io::ComposedArtifact,semio_framework_os_kernel::io::ComposerEntry,semio_framework_os_kernel::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_os_kernel::io::ErasedComposeSource,semio_framework_os_kernel::io::IoDirection,semio_framework_os_kernel::io::IoFallback,semio_framework_os_kernel::io::IoFallbackDispatcher,semio_framework_os_kernel::io::IoKey,semio_framework_os_kernel::io::IoPayload,semio_framework_os_kernel::io::IoResolveError,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_os_kernel::io::SubsetValidator,semio_framework_os_kernel::io::SubsetValidatorEntry,semio_framework_os_kernel::io::WireComposeSource,semio_framework_os_kernel::io::WireComposedArtifact};
 
     /// 🧵️ Directed snapshot conversion out of this dialect into a foreign dialect. One unit
     /// struct per `🚪️io/📤️export/🧵️serializers/…` leaf.
@@ -1110,7 +1112,7 @@ pub mod app {
                 let into =
                     ::semio_framework_async::poll::resolve_ready(D::deserialize(&from)).map_err(|e| ComposeError { message: format!("deserializer {}->{} failed: {e:?}", D::FROM.artifact_kind, D::INTO.artifact_kind), diagnostics: Vec::new() })?;
                 let bytes = <D::Into as ArtifactPack>::encode_pack(&into);
-                Ok(ComposedArtifact { dialect: D::INTO, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::High })
+                Ok(ComposedArtifact { dialect: D::INTO, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: crate::io::Confidence::High })
             })
         }
         ComposerEntry { writes: D::INTO, reads: &[D::FROM], compose: erased_compose::<D> }
@@ -1150,7 +1152,7 @@ pub mod app {
                 let from = <S::From as ArtifactPack>::decode_pack(bytes).map_err(|e| ComposeError { message: format!("serializer {}->{} failed to decode source: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() })?;
                 let into = ::semio_framework_async::poll::resolve_ready(S::serialize(&from)).map_err(|e| ComposeError { message: format!("serializer {}->{} failed: {e:?}", S::FROM.artifact_kind, S::INTO.artifact_kind), diagnostics: Vec::new() })?;
                 let bytes = <S::Into as ArtifactPack>::encode_pack(&into);
-                Ok(ComposedArtifact { dialect: S::INTO, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: IoConfidence::High })
+                Ok(ComposedArtifact { dialect: S::INTO, payload: IoPayload::Binary(bytes), diagnostics: Vec::new(), confidence: crate::io::Confidence::High })
             })
         }
         ComposerEntry { writes: S::INTO, reads: &[S::FROM], compose: erased_compose::<S> }
@@ -1215,7 +1217,7 @@ pub mod app {
         type Parts;
         const DIALECT: Dialect;
         /// 👃️ Cheap recognizability probe -- no allocation, no full parse.
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence;
+        fn sniff(source: &AnalyzeSource<'_>) -> crate::io::Confidence;
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts>;
     }
 
@@ -1226,7 +1228,7 @@ pub mod app {
 
         const DIALECT: Dialect;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence;
+        fn sniff(source: &AnalyzeSource<'_>) -> crate::io::Confidence;
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts>;
     }
@@ -1398,7 +1400,7 @@ pub mod app {
         type Parts = <Spec::Analysis as ArtifactAnalysis>::Parts;
         const DIALECT: Dialect = <Spec::Analysis as ArtifactAnalysis>::DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> crate::io::Confidence {
             <Spec::Analysis as ArtifactAnalysis>::sniff(source)
         }
 
@@ -1483,7 +1485,7 @@ pub mod app {
                     })
                     .collect();
                 let snapshot = <Spec::Children as ArtifactChildren>::compose_from_children(&parts)?;
-                return Ok(Composition { snapshot, confidence: IoConfidence::High, diagnostics: Vec::new() });
+                return Ok(Composition { snapshot, confidence: crate::io::Confidence::High, diagnostics: Vec::new() });
             }
             <Spec::Composition as ArtifactComposition>::compose(sources)
         }
@@ -3114,7 +3116,7 @@ pub mod app {
         inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
         inference_services: Vec<ArtifactInferenceService>,
         composers: Vec<&'static ComposerEntry>,
-        formats: Vec<semio_framework::FormatDescriptor>,
+        formats: Vec<semio_framework_os_kernel::io::FormatDescriptor>,
         subset_validators: Vec<&'static SubsetValidatorEntry>,
         languages: Vec<&'static semio_framework_dsl::LanguageSpec>,
         document_codecs: Vec<DocumentCodecSpec>,
@@ -3173,7 +3175,7 @@ pub mod app {
         inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
         inference_services: Vec<ArtifactInferenceService>,
         composers: Vec<&'static ComposerEntry>,
-        formats: Vec<semio_framework::FormatDescriptor>,
+        formats: Vec<semio_framework_os_kernel::io::FormatDescriptor>,
         subset_validators: Vec<&'static SubsetValidatorEntry>,
         languages: Vec<&'static semio_framework_dsl::LanguageSpec>,
         document_codecs: Vec<DocumentCodecSpec>,
@@ -3328,11 +3330,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
 
         /// 🗂️ Appends format rows (`register_format_descriptors`).
-        pub fn formats(self, rows: impl IntoIterator<Item = semio_framework::FormatDescriptor>) -> Self {
+        pub fn formats(self, rows: impl IntoIterator<Item = semio_framework_os_kernel::io::FormatDescriptor>) -> Self {
             ::semio_framework_async::poll::resolve_ready(self.formats_async(rows))
         }
 
-        async fn formats_async(mut self, rows: impl IntoIterator<Item = semio_framework::FormatDescriptor>) -> Self {
+        async fn formats_async(mut self, rows: impl IntoIterator<Item = semio_framework_os_kernel::io::FormatDescriptor>) -> Self {
             for row in rows {
                 let mut claims = Vec::with_capacity(row.mimes.len() + row.extensions.len());
                 let mut claim_error = None;
@@ -3605,7 +3607,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             if !document_app_ids.contains(self.app_id) {
                 return Err(PluginAssemblyError::new("plugin-assembly.foreign-document-codec-owner", format!("foreign document codec for app {:?} requires that app to be declared by this plugin", self.app_id)));
             }
-            semio_framework::io::io_mechanism::preflight_native_snapshots(&semio_framework::io::io_mechanism::NativeSnapshotRegistration::from_capability(self.dialect.into(), self.codec()).into_iter().collect::<Vec<_>>())
+            semio_framework_os_kernel::io::io_mechanism::preflight_native_snapshots(&semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(self.dialect.into(), self.codec()).into_iter().collect::<Vec<_>>())
                 .map_err(|error| PluginAssemblyError::new("plugin-assembly.foreign-snapshot", error.to_string()))?;
             Ok(())
         }
@@ -3618,7 +3620,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         inferences: &'a [::semio_framework_schema_registry::ArtifactInferenceDescriptor],
         inference_services: &'a [ArtifactInferenceService],
         composers: &'a [&'static ComposerEntry],
-        formats: &'a [semio_framework::FormatDescriptor],
+        formats: &'a [semio_framework_os_kernel::io::FormatDescriptor],
         subset_validators: &'a [&'static SubsetValidatorEntry],
         languages: &'a [&'static semio_framework_dsl::LanguageSpec],
         document_codecs: &'a [DocumentCodecSpec],
@@ -3761,8 +3763,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     return Err(PluginAssemblyError::new("plugin-assembly.snapshot-owner", format!("snapshot codec {:?} requires an exact dialect of artifact {:?}", spec.schema, self.kind)));
                 }
             }
-            let snapshots: Vec<_> = self.document_codecs.iter().filter_map(|spec| semio_framework::io::io_mechanism::NativeSnapshotRegistration::from_capability(spec.dialect.into(), spec.codec())).collect();
-            semio_framework::io::io_mechanism::preflight_native_snapshots(&snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.snapshot", error.to_string()))?;
+            let snapshots: Vec<_> = self.document_codecs.iter().filter_map(|spec| semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(spec.dialect.into(), spec.codec())).collect();
+            semio_framework_os_kernel::io::io_mechanism::preflight_native_snapshots(&snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.snapshot", error.to_string()))?;
             for entry in &self.composers {
                 if entry.writes.artifact_kind != self.kind && !entry.reads.iter().any(|dialect| dialect.artifact_kind == self.kind) {
                     return Err(PluginAssemblyError::new("plugin-assembly.composer-owner", format!("composer for {:?} neither reads nor writes that artifact", self.kind)));
@@ -4265,12 +4267,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         inferences: Vec<::semio_framework_schema_registry::ArtifactInferenceDescriptor>,
         inference_services: Vec<ArtifactInferenceService>,
         routed_inferences: Vec<ArtifactInferenceServiceMetadata>,
-        formats: Vec<semio_framework::FormatDescriptor>,
+        formats: Vec<semio_framework_os_kernel::io::FormatDescriptor>,
         subset_validators: Vec<&'static SubsetValidatorEntry>,
         composers: Vec<&'static ComposerEntry>,
         languages: Vec<semio_framework_dsl::LanguageSpec>,
         document_codecs: Vec<store::ArtifactCodec>,
-        native_snapshots: Vec<semio_framework::io::io_mechanism::NativeSnapshotRegistration>,
+        native_snapshots: Vec<semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration>,
         migrations: Vec<store::DialectMigration>,
         schema_documents: Vec<::semio_framework_schema_registry::ScopeSchemaExports>,
         app_schemas: Vec<::semio_framework_schema_registry::AppSchemaDescriptor>,
@@ -4322,20 +4324,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 plan.languages.extend(declaration.languages.iter().map(|spec| **spec));
                 for spec in declaration.document_codecs.iter() {
                     plan.document_codecs.push(spec.codec());
-                    plan.native_snapshots.extend(semio_framework::io::io_mechanism::NativeSnapshotRegistration::from_capability(spec.dialect.into(), spec.codec()));
+                    plan.native_snapshots.extend(semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(spec.dialect.into(), spec.codec()));
                 }
                 plan.migrations.extend(declaration.migrations.iter().cloned());
                 plan.schema_documents.extend(declaration.schema_documents.iter().copied());
             }
             for spec in foreign_document_codecs.iter() {
                 plan.document_codecs.push(spec.codec());
-                plan.native_snapshots.extend(semio_framework::io::io_mechanism::NativeSnapshotRegistration::from_capability(spec.dialect.into(), spec.codec()));
+                plan.native_snapshots.extend(semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(spec.dialect.into(), spec.codec()));
             }
             plan
         }
 
         /// 🧬️ Freezes every definition, schema, app, language, and inference before external state changes.
-        pub(crate) fn into_runtime(self, definitions: ArtifactDefinitionRegistry) -> Result<(PluginRuntimeRegistry, semio_framework::io::ArtifactAssemblyRegistryPlan), PluginAssemblyError> {
+        pub(crate) fn into_runtime(self, definitions: ArtifactDefinitionRegistry) -> Result<(PluginRuntimeRegistry, semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan), PluginAssemblyError> {
             let Self {
                 schemas,
                 inferences,
@@ -4374,7 +4376,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
             let host_media_handlers = HostMediaHandlerRegistry::from_declarations(&owner, &host_media_handlers)?;
             let flow_extensions = FlowExtensionRegistry::from_declarations(&owner, &flow_extensions)?;
-            semio_framework::io::io_mechanism::preflight_native_snapshots(&native_snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.snapshot", error.to_string()))?;
+            semio_framework_os_kernel::io::io_mechanism::preflight_native_snapshots(&native_snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.snapshot", error.to_string()))?;
             Ok((
                 PluginRuntimeRegistry {
                     definitions,
@@ -4390,7 +4392,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     owner_mutations: BTreeMap::new(),
                     contributed_mutations: BTreeMap::new(),
                 },
-                semio_framework::io::ArtifactAssemblyRegistryPlan { composer_entries: composers, subset_validators, format_descriptors: formats, document_codecs, dialect_migrations: migrations, native_snapshots },
+                semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan { composer_entries: composers, subset_validators, format_descriptors: formats, document_codecs, dialect_migrations: migrations, native_snapshots },
             ))
         }
     }
@@ -4535,8 +4537,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     /// 📌️ Atomically commits all external IO/store registry rows after the local runtime is frozen.
-    pub(crate) fn commit_artifact_registration_plan(assembly: &semio_framework_schema_registry::assembly::Transaction, plan: semio_framework::io::ArtifactAssemblyRegistryPlan) -> Result<(), PluginAssemblyError> {
-        semio_framework::io::commit_artifact_assembly_registry_plan(assembly, plan).map_err(|error| PluginAssemblyError::new("plugin-assembly.registry", error.to_string()))
+    pub(crate) fn commit_artifact_registration_plan(assembly: &semio_framework_schema_registry::assembly::Transaction, plan: semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan) -> Result<(), PluginAssemblyError> {
+        semio_framework_os_kernel::io::commit_artifact_assembly_registry_plan(assembly, plan).map_err(|error| PluginAssemblyError::new("plugin-assembly.registry", error.to_string()))
     }
     //#endregion 🔖️ArtifactDeclaration
 
@@ -9530,7 +9532,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             for id in &expected_schema_ids {
                 assert!(::semio_framework_schema_registry::artifact_schema_descriptor_registered(id), "schema descriptor {id:?} must be registered");
             }
-            let live_io_entries = semio_framework::io::io_mechanism::io_entries();
+            let live_io_entries = semio_framework_os_kernel::io::io_mechanism::io_entries();
             for (from, into) in &expected_io_pairs {
                 let mut found = false;
                 for entry in live_io_entries.iter() {
@@ -9553,11 +9555,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         /// rows behind (Task 4, law 2/3).
         pub async fn assert_declaration_registration_is_atomic<PA: PluginApp>(plugin_id: &str, invalid: declarations::ArtifactDeclaration<PA>) {
             let schema_count_before = ::semio_framework_schema_registry::with_artifact_schema_registry(|registry| registry.len());
-            let io_count_before = semio_framework::io::io_mechanism::io_entries().len();
+            let io_count_before = semio_framework_os_kernel::io::io_mechanism::io_entries().len();
             let result = super::Plugin::builder(plugin_id).label(plugin_id).version("0.0.1").package_id(format!("semio:{plugin_id}")).declare_artifact(invalid).try_build();
             assert!(result.is_err(), "a declaration that fails preflight must not build a plugin");
             assert_eq!(::semio_framework_schema_registry::with_artifact_schema_registry(|registry| registry.len()), schema_count_before, "schema registry must be unchanged after a rejected declaration");
-            assert_eq!(semio_framework::io::io_mechanism::io_entries().len(), io_count_before, "io registry must be unchanged after a rejected declaration");
+            assert_eq!(semio_framework_os_kernel::io::io_mechanism::io_entries().len(), io_count_before, "io registry must be unchanged after a rejected declaration");
         }
 
         /// 🌳️ Every subset's editor/viewer surface id must equal `surface_app_id(&dialect, role)` —
@@ -15393,6 +15395,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         fn advance(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<NaturalFileDecodeStep<T>, MediaError>;
         fn begin_close(&mut self);
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;
+        fn next_close_byte_demand(&self) -> usize;
         fn terminal_is_empty(&self) -> bool;
     }
 
@@ -20331,8 +20334,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
         }
 
-        fn take_key(&mut self) -> Option<std::sync::Arc<String>> {
-            (self.part > 4).then(|| self.key.take()).flatten().map(std::sync::Arc::new)
+        fn take_key(&mut self, maximum_capacity_bytes: usize) -> Option<semio_framework_value::ordered::SharedOwner<String>> {
+            use semio_framework_value::{ordered::SharedOwner, retained_clone::RetainedCloneGrant};
+            if self.part <= 4 || maximum_capacity_bytes < SharedOwner::<String>::allocation_bytes() { return None; }
+            self.key.take().map(|key| match SharedOwner::admit(key, RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes,maximum_release_bytes:0,maximum_depth:1}) {Ok((owner,_))=>owner,Err((error,_))=>panic!("latest-wins key admission refused: {error}")})
         }
 
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
@@ -20351,7 +20356,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     struct ToolLatestWinsScope {
-        key: std::sync::Arc<String>,
+        key: semio_framework_value::ordered::SharedOwner<String>,
         operation: u64,
         token: semio_framework_job::CancelToken,
         claim: std::sync::Weak<ToolPublicationClaim>,
@@ -20371,6 +20376,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         update: Option<semio_framework_value::ordered::UpdateCursor<ToolLatestWinsScope>>,
         retirement: Option<semio_framework_value::ordered::Retirement<ToolLatestWinsScope>>,
         retired_key: Option<String>,
+        retired_shared_key: Option<semio_framework_value::ordered::SharedOwner<String>>,
+        removed_scope: Option<semio_framework_value::ordered::SharedOwner<ToolLatestWinsScope>>,
         active_operation: Option<u64>,
         outcome: Option<(u64, bool)>,
         scan: usize,
@@ -20381,15 +20388,15 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     impl ToolLatestWinsRegistry {
         fn new() -> Self {
-            Self { map: Some(semio_framework_value::ordered::OrderedMap::new()), update: None, retirement: None, retired_key: None, active_operation: None, outcome: None, scan: 0, admission_scan: None, update_closing: false, closing: false }
+            Self { map: Some(semio_framework_value::ordered::OrderedMap::new()), update: None, retirement: None, retired_key: None, retired_shared_key: None, removed_scope: None, active_operation: None, outcome: None, scan: 0, admission_scan: None, update_closing: false, closing: false }
         }
 
         fn can_begin(&self) -> bool {
-            !self.closing && self.update.is_none() && self.retirement.is_none() && self.retired_key.is_none() && self.outcome.is_none()
+            !self.closing && self.update.is_none() && self.retirement.is_none() && self.retired_key.is_none() && self.retired_shared_key.is_none() && self.removed_scope.is_none() && self.outcome.is_none()
         }
 
-        fn begin(&mut self, operation: u64, key: std::sync::Arc<String>, lease: &ToolCancellationLease) -> bool {
-            if !self.can_begin() {
+        fn begin(&mut self, operation: u64, key: &semio_framework_value::ordered::SharedOwner<String>, lease: &ToolCancellationLease, maximum_capacity_bytes: usize) -> bool {
+            if !self.can_begin() || maximum_capacity_bytes < semio_framework_value::ordered::SharedOwner::<ToolLatestWinsScope>::allocation_bytes() {
                 return false;
             }
             if self.map.as_ref().expect("live key map").len() >= ARTIFACT_LIVE_OUTPUT_SLOTS {
@@ -20403,7 +20410,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 }
             }
             let scope = ToolLatestWinsScope { key: key.clone(), operation, token: lease.token.clone(), claim: std::sync::Arc::downgrade(&lease.publication_claim) };
-            self.update = Some(self.map.as_ref().expect("live key map").begin_set_shared(key, std::sync::Arc::new(scope)));
+            let scope = match semio_framework_value::ordered::SharedOwner::admit(scope, semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes,maximum_release_bytes:0,maximum_depth:1}) {Ok((owner,_))=>owner,Err((error,_))=>panic!("latest-wins scope admission refused: {error}")};
+            self.update = Some(self.map.as_ref().expect("live key map").begin_set_shared(key.clone(), scope));
             self.active_operation = Some(operation);
             self.update_closing = false;
             true
@@ -20428,11 +20436,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
 
         fn retire_scope(&mut self, scope: ToolLatestWinsScope) {
-            self.retired_key = std::sync::Arc::into_inner(scope.key);
+            assert!(self.retired_shared_key.is_none(), "latest-wins scope retirement retains one shared key");
+            self.retired_shared_key = Some(scope.key);
         }
 
-        fn retirement_step(&mut self, step: semio_framework_value::ordered::RetirementStep<ToolLatestWinsScope>) -> PluginCloseStep {
-            match step {
+        fn retirement_step(&mut self, step: semio_framework_value::ordered::RetirementStep<ToolLatestWinsScope>) -> Result<PluginCloseStep, Fault> {
+            Ok(match step {
                 semio_framework_value::ordered::RetirementStep::Blocked => PluginCloseStep::Blocked { reason: "latest-wins key retirement has no grant" },
                 semio_framework_value::ordered::RetirementStep::Progress { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
                 semio_framework_value::ordered::RetirementStep::OwnedValue(scope) => {
@@ -20440,20 +20449,34 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
                 }
                 semio_framework_value::ordered::RetirementStep::Complete => PluginCloseStep::Complete,
-            }
+                semio_framework_value::ordered::RetirementStep::ProcessedBytes(_) => PluginCloseStep::Pending {released_items:0,released_bytes:0},
+                semio_framework_value::ordered::RetirementStep::Failure(error) => return Err(plugin_sdk_fault(&format!("latest-wins retirement refused: {error}"))),
+            })
         }
 
-        fn advance(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+        fn advance(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             if maximum_items == 0 || maximum_bytes == 0 {
-                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
-            let grant = semio_framework_value::ordered::Grant { maximum_items: maximum_items.min(1), maximum_bytes };
+            let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: maximum_items.min(1), maximum_copy_bytes: maximum_bytes, maximum_capacity_bytes: maximum_bytes, maximum_release_bytes: maximum_bytes, maximum_depth: semio_framework_value::ordered::MAX_AVL_HEIGHT * 5 + 16 };
+            if let Some(scope) = self.removed_scope.as_mut() {
+                let step=scope.release_step(grant).map_err(|error|plugin_sdk_fault(&format!("latest-wins displaced scope release refused: {error}")))?;
+                if scope.terminal_is_empty() {self.removed_scope=None;}
+                if let Some(scope)=step.value {self.retire_scope(scope);}
+                return Ok(PluginCloseStep::Pending {released_items:step.progress.copied_items,released_bytes:step.progress.released_bytes});
+            }
+            if let Some(key) = self.retired_shared_key.as_mut() {
+                let step=key.release_step(grant).map_err(|error|plugin_sdk_fault(&format!("latest-wins scope key release refused: {error}")))?;
+                if key.terminal_is_empty() {self.retired_shared_key=None;}
+                self.retired_key=step.value;
+                return Ok(PluginCloseStep::Pending {released_items:step.progress.copied_items,released_bytes:step.progress.released_bytes});
+            }
             if let Some(key) = self.retired_key.as_mut() {
                 if key.pop().is_some() {
-                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 1 };
+                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 1 });
                 }
                 self.retired_key = None;
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if let Some(retirement) = self.retirement.as_mut() {
                 let step = retirement.advance(grant);
@@ -20474,11 +20497,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     return self.retirement_step(step);
                 }
                 if !update.is_complete() {
-                    return match update.advance(grant) {
-                        semio_framework_value::ordered::Step::Blocked => PluginCloseStep::Blocked { reason: "latest-wins exact comparison has no grant" },
-                        semio_framework_value::ordered::Step::Progress { completed_items, completed_bytes } => PluginCloseStep::Pending { released_items: completed_items, released_bytes: completed_bytes },
-                        semio_framework_value::ordered::Step::Complete => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
-                    };
+                    return update.advance(grant).map(|step| {let progress=match step {semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)|semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)=>progress};PluginCloseStep::Pending {released_items:progress.copied_items,released_bytes:progress.released_bytes}}).map_err(|error|plugin_sdk_fault(&format!("latest-wins update refused: {error}")));
                 }
                 let candidate = update.take_result().expect("complete exact key update retains its candidate");
                 self.admission_scan = None;
@@ -20494,6 +20513,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                         if self.active_operation.is_some_and(|operation| operation != scope.operation) {
                             scope.cancel();
                         }
+                        self.removed_scope=Some(scope);
                     }
                     if let Some(operation) = self.active_operation {
                         self.outcome = Some((operation, true));
@@ -20501,19 +20521,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 }
                 update.begin_close();
                 self.update_closing = true;
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if self.closing {
                 if let Some(map) = self.map.take() {
                     self.retirement = Some(map.retire());
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
-                return PluginCloseStep::Complete;
+                return Ok(PluginCloseStep::Complete);
             }
             let map = self.map.as_ref().expect("live exact key map");
             if map.is_empty() {
                 self.scan = 0;
-                return PluginCloseStep::Complete;
+                return Ok(PluginCloseStep::Complete);
             }
             self.scan %= map.len();
             let (_, scope) = map.entry_at_rank(self.scan).expect("fixed metadata rank within key map");
@@ -20525,7 +20545,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 self.update = Some(map.begin_remove_shared(scope.key.clone()));
                 self.update_closing = false;
             }
-            PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }
+            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
         }
 
         fn begin_close(&mut self) {
@@ -20537,7 +20557,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
 
         fn terminal_is_empty(&self) -> bool {
-            self.closing && self.map.is_none() && self.update.is_none() && self.retirement.is_none() && self.retired_key.is_none()
+            self.closing && self.map.is_none() && self.update.is_none() && self.retirement.is_none() && self.retired_key.is_none() && self.retired_shared_key.is_none() && self.removed_scope.is_none()
         }
     }
     //#endregion 🗝️RetainedLatestWinsKeys
@@ -21341,7 +21361,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         revision: [u8; 32],
         lease: Option<ToolCancellationLease>,
         key_copy: Option<ToolLatestWinsKeyCopy>,
-        key: Option<std::sync::Arc<String>>,
+        key: Option<semio_framework_value::ordered::SharedOwner<String>>,
         retired_key: Option<String>,
         lookup_started: bool,
         accepted: bool,
@@ -21364,7 +21384,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 }
                 return Ok(step);
             }
-            let step = self.close_key_step(maximum_items, maximum_bytes);
+            let step = self.close_key_step(maximum_items, maximum_bytes)?;
             if step != PluginCloseStep::Complete {
                 return Ok(step);
             }
@@ -21394,30 +21414,32 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             Ok(PluginCloseStep::Complete)
         }
 
-        fn close_key_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
+        fn close_key_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             if maximum_items == 0 {
-                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
             if let Some(copy) = self.key_copy.as_mut() {
                 let step = copy.close_step(maximum_items, maximum_bytes);
                 if step == PluginCloseStep::Complete {
                     self.key_copy = None;
-                    return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
-                return step;
+                return Ok(step);
             }
-            if let Some(key) = self.key.take() {
-                self.retired_key = std::sync::Arc::into_inner(key);
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            if let Some(key) = self.key.as_mut() {
+                let step=key.release_step(semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:maximum_bytes,maximum_depth:1}).map_err(|error|plugin_sdk_fault(&format!("latest-wins pending key release refused: {error}")))?;
+                if key.terminal_is_empty() {self.key=None;}
+                self.retired_key=step.value;
+                return Ok(PluginCloseStep::Pending {released_items:step.progress.copied_items,released_bytes:step.progress.released_bytes});
             }
             if let Some(key) = self.retired_key.as_mut() {
                 if let Some(step) = MountedTypedCommandFullOperation::<A>::retire_string_scalar(key, maximum_bytes) {
-                    return step;
+                    return Ok(step);
                 }
                 self.retired_key = None;
-                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
-            PluginCloseStep::Complete
+            Ok(PluginCloseStep::Complete)
         }
 
         fn command_owners_are_empty(&self) -> bool {
@@ -22597,16 +22619,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let copy = pending.key_copy.take();
             let key = pending.key.take();
             pending.retired_key = Some(fixture["keyRetirement"]["text"].as_str().unwrap().into());
-            assert_eq!(pending.close_key_step(0, 4_096), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            assert_eq!(pending.close_key_step(0, 4_096).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             let mut retired_bytes = 0;
             for bytes in fixture["keyRetirement"]["scalarBytes"].as_array().unwrap() {
                 let bytes = bytes.as_u64().unwrap() as usize;
-                assert_eq!(pending.close_key_step(1, bytes - 1), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
-                assert_eq!(pending.close_key_step(1, bytes), PluginCloseStep::Pending { released_items: 0, released_bytes: bytes });
+                assert_eq!(pending.close_key_step(1, bytes - 1).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                assert_eq!(pending.close_key_step(1, bytes).unwrap(), PluginCloseStep::Pending { released_items: 0, released_bytes: bytes });
                 retired_bytes += bytes;
             }
             assert_eq!(serde_json::json!(retired_bytes), fixture["keyRetirement"]["utf8Bytes"]);
-            assert_eq!(pending.close_key_step(1, 0), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            assert_eq!(pending.close_key_step(1, 0).unwrap(), PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             pending.key_copy = copy;
             pending.key = key;
             let slot = id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS;
@@ -25039,6 +25061,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         segmented_closures: ArtifactFixedRegistry<ArtifactDownloadOutput>,
         pub(crate) close_started: bool,
         pub(crate) close_cancellation_cursor: usize,
+        pub(crate) close_typed_operation_cursor: usize,
         pub(crate) close_media_cursor: usize,
         pub(crate) close_media_cleanup_cursor: usize,
         close_segment_cursor: usize,
@@ -26428,6 +26451,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 segmented_closures: ArtifactFixedRegistry::new(),
                 close_started: false,
                 close_cancellation_cursor: 0,
+                close_typed_operation_cursor: 0,
                 close_media_cursor: 0,
                 close_media_cleanup_cursor: 0,
                 close_segment_cursor: 0,
@@ -33023,7 +33047,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 self.latest_wins_keys.cancel(operation);
                 self.latest_wins_keys.take_outcome(operation);
                 if self.latest_wins_keys.active_operation == Some(operation) {
-                    self.latest_wins_keys.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
+                    self.latest_wins_keys.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES)?;
                 } else {
                     pending.close_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES)?;
                 }
@@ -33037,7 +33061,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 self.latest_wins_keys.cancel(operation);
                 self.latest_wins_keys.take_outcome(operation);
                 if !self.latest_wins_keys.can_begin() {
-                    self.latest_wins_keys.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
+                    self.latest_wins_keys.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES)?;
                     return Ok(false);
                 }
                 let base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(live_revision[..8].try_into().expect("revision lane width")));
@@ -33054,7 +33078,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 return Ok(false);
             }
             if pending.accepted {
-                return Ok(pending.close_key_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES) == PluginCloseStep::Complete);
+                return Ok(pending.close_key_step(1, TYPED_OPERATION_RESULT_PAGE_BYTES)? == PluginCloseStep::Complete);
             }
             if pending.lookup_started {
                 if let Some(accepted) = self.latest_wins_keys.take_outcome(operation) {
@@ -33064,15 +33088,15 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                         pending.lease.as_ref().expect("live pending lease").cancel();
                     }
                 } else {
-                    self.latest_wins_keys.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
+                    self.latest_wins_keys.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES)?;
                 }
                 return Ok(false);
             }
             if let Some(key) = pending.key.as_ref() {
-                if self.latest_wins_keys.begin(operation, key.clone(), pending.lease.as_ref().expect("live pending lease")) {
+                if self.latest_wins_keys.begin(operation, key, pending.lease.as_ref().expect("live pending lease"), TYPED_OPERATION_RESULT_PAGE_BYTES) {
                     pending.lookup_started = true;
                 } else {
-                    self.latest_wins_keys.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
+                    self.latest_wins_keys.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES)?;
                 }
                 return Ok(false);
             }
@@ -33089,7 +33113,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
             let copy = pending.key_copy.as_mut().expect("retained exact key byte cursor");
             if copy.advance(parts, 1, TYPED_OPERATION_RESULT_PAGE_BYTES) == PluginCloseStep::Complete {
-                pending.key = copy.take_key();
+                pending.key = copy.take_key(TYPED_OPERATION_RESULT_PAGE_BYTES);
             }
             Ok(false)
         }
@@ -34882,7 +34906,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     None => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
                 },
                 16 => self.instance_operation_owner.maintenance_step(maximum_items.min(1), maximum_bytes),
-                17 => Ok(self.latest_wins_keys.advance(maximum_items.min(1), maximum_bytes)),
+                17 => self.latest_wins_keys.advance(maximum_items.min(1), maximum_bytes),
                 18 => {
                     if self.tool_cancellations.cleanup_finished_slot(self.maintenance_cancellation_cursor)?.is_none() {
                         return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
@@ -35401,7 +35425,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
             if !self.latest_wins_keys.terminal_is_empty() {
                 self.latest_wins_keys.begin_close();
-                let step = self.latest_wins_keys.advance(maximum_items.min(1), maximum_bytes);
+                let step = self.latest_wins_keys.advance(maximum_items.min(1), maximum_bytes)?;
                 return Ok(if step == PluginCloseStep::Complete { PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } } else { step });
             }
             if let Some(operation_id) = self.latest_wins_order.items.front().copied() {
@@ -40446,6 +40470,27 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }
         }
 
+        fn next_close_byte_demand(&self) -> usize {
+            if let Some(decoder) = self.decoder.as_ref() {
+                return match decoder {
+                    NaturalFileDecodeOwner::Controlled(cursor) if cursor.terminal_is_empty() => std::mem::size_of_val(cursor.as_ref()),
+                    NaturalFileDecodeOwner::Controlled(cursor) => cursor.next_close_byte_demand(),
+                    NaturalFileDecodeOwner::Synchronous(_) => semio_framework_value::retirement::owned_retirement_birth_bytes::<Vec<u8>>(),
+                };
+            }
+            if self.pending_completion_rejection.is_some() || self.emit.is_some() { return 0; }
+            if let Some(close) = self.retirement.as_ref() { return if close.terminal_is_empty() { std::mem::size_of_val(close.as_ref()) } else { close.next_close_byte_demand() }; }
+            if let Some(media) = self.media.as_ref() {
+                return match &media.payload {
+                    MediaPayload::Intrinsic { .. } => semio_framework_value::retirement::owned_retirement_birth_bytes::<(String, semio_framework_value::DslValue)>(),
+                    MediaPayload::Structured { .. } => semio_framework_value::retirement::owned_retirement_birth_bytes::<(String, String)>(),
+                    MediaPayload::Binary { .. } => semio_framework_value::retirement::owned_retirement_birth_bytes::<(String, String)>(),
+                };
+            }
+            if self.port.capacity() > 0 { return semio_framework_value::retirement::owned_retirement_birth_bytes::<String>(); }
+            0
+        }
+
         fn terminal_is_empty(&self) -> bool {
             ArtifactReservedJob::terminal_is_empty(self)
         }
@@ -40454,19 +40499,23 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     impl<E: ArtifactEditor> ArtifactReservedJob for NaturalFileImportJob<E> {
         fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
             self.closing = true;
-            if maximum_items == 0 || maximum_bytes == 0 {
+            if maximum_items == 0 || maximum_bytes == 0 || maximum_bytes < semio_framework_job::InteractiveJob::next_close_byte_demand(self) {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
             if let Some(decoder) = self.decoder.as_mut() {
                 match decoder {
                     NaturalFileDecodeOwner::Controlled(cursor) => {
                         cursor.begin_close();
+                        if cursor.terminal_is_empty() {
+                            let bytes = std::mem::size_of_val(cursor.as_ref());
+                            self.decoder = None;
+                            return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+                        }
                         let step = cursor.close_step(maximum_items, maximum_bytes)?;
                         if matches!(step, PluginCloseStep::Complete) {
                             if !cursor.terminal_is_empty() {
                                 return Err(Fault::new(FaultOrigin::App, FaultCode::new("media.natural-import-close"), "natural-file decoder reported complete close with a live owner"));
                             }
-                            self.decoder = None;
                             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                         }
                         return Ok(step);
@@ -40498,10 +40547,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if let Some(close) = self.retirement.as_mut() {
-                let step = close.close_step(maximum_items, maximum_bytes).map_err(|error| Fault::from(error.message))?;
                 if close.terminal_is_empty() {
+                    let bytes = std::mem::size_of_val(close.as_ref());
                     self.retirement = None;
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
                 }
+                let step = close.close_step(maximum_items, maximum_bytes).map_err(|error| Fault::from(error.into_message()))?;
                 return Ok(match step {
                     store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 } => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
                     store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
@@ -41416,7 +41467,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         //! `ArtifactEditor`/`ArtifactViewer`/`EditorApp`/`ViewerApp`/`VcsArtifactApp`/`PluginApp`/
         //! `App`/`ExampleSource`/`ExampleDefinition`/`ArtifactInferenceService`/`AppActionRegistry`/
         //! `PluginAssemblyError`. Every NEW io-mechanism type (`IoEntry`/`IoPayload`/io_schema's
-        //! wire types) is instead referenced by its FULL path (`semio_framework::io::io_mechanism::…`
+        //! wire types) is instead referenced by its FULL path (`semio_framework_os_kernel::io::io_mechanism::…`
         //! / `semio_framework::io_schema::…`) everywhere below, deliberately never `use`d bare, so it
         //! can never collide with the OLD same-named `IoPayload`/`Confidence` this glob import also
         //! carries in from `app`'s own `🔖️Dialect` region.
@@ -41454,7 +41505,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         //#region 🔖️IoDeclaration
         /// 🚪️ A subset's complete io surface: its native codecs plus every foreign-dialect hop it
-        /// contributes to the process-wide `semio_framework::io::io_mechanism` registry (`IoEntry`
+        /// contributes to the process-wide `semio_framework_os_kernel::io::io_mechanism` registry (`IoEntry`
         /// rows built by the subset's own `serializer_entry`/`deserializer_entry`/`_text` calls —
         /// `📓️w1-a-report.md`).
         ///
@@ -41465,7 +41516,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         /// so it does not exist — see `📓️w1-c-report.md` "conformance decision".
         pub struct IoDeclaration {
             pub native: NativeCodecs,
-            pub entries: &'static [semio_framework::io::io_mechanism::IoEntry],
+            pub entries: &'static [semio_framework_os_kernel::io::io_mechanism::IoEntry],
         }
         //#endregion 🔖️IoDeclaration
 
@@ -41603,7 +41654,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         //#region 🔖️MediaDeclaration
         /// 🗂️ One standard's file-format identity — mimes/extensions only (design.md §2); the commit
-        /// walk synthesizes the remaining `semio_framework::FormatDescriptor` fields (`kind_id`/
+        /// walk synthesizes the remaining `semio_framework_os_kernel::io::FormatDescriptor` fields (`kind_id`/
         /// `short_id`/`name`/`full_name`/`dir_name`) from the owning `ArtifactDeclaration.kind` +
         /// `StandardDeclaration.id`, since a standard never needs a SEPARATE identity from its own
         /// dialect coordinate.
@@ -41654,9 +41705,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             pub capabilities: Vec<CapabilityRequirement>,
         }
 
-        fn format_descriptor_of<PA: PluginApp>(artifact: &ArtifactDeclaration<PA>, standard: &StandardDeclaration<PA>) -> semio_framework::FormatDescriptor {
+        fn format_descriptor_of<PA: PluginApp>(artifact: &ArtifactDeclaration<PA>, standard: &StandardDeclaration<PA>) -> semio_framework_os_kernel::io::FormatDescriptor {
             let kind_id = format!("{}@{}", artifact.kind.as_str(), standard.id.0);
-            semio_framework::FormatDescriptor {
+            semio_framework_os_kernel::io::FormatDescriptor {
                 kind_id: kind_id.clone(),
                 short_id: kind_id.clone(),
                 aliases: Vec::new(),
@@ -41710,7 +41761,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         /// each own their independent lock (safe to call freely); document-codec and format-descriptor
         /// preflights share ONE `semio_framework_schema_registry::assembly::begin()` guard (dropped before returning);
         /// io entries get a hand-rolled coordinate-level duplicate check against `io_entries()` since
-        /// `semio_framework::io::io_mechanism` exposes no standalone dry-run (its own `io_register`
+        /// `semio_framework_os_kernel::io::io_mechanism` exposes no standalone dry-run (its own `io_register`
         /// preflights+commits in one call — see the W1-C report's "atomicity" section for why holding
         /// an outer guard across THAT call would deadlock the process-wide assembly mutex, and why this
         /// function therefore never holds one while any io call could happen).
@@ -41739,7 +41790,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                             languages.extend(pair.binary.copied());
                         }
                         codecs.push(subset.io.native.codec.clone());
-                        native_snapshots.extend(semio_framework::io::io_mechanism::NativeSnapshotRegistration::from_capability(subset.dialect.into(), subset.io.native.codec.clone()));
+                        native_snapshots.extend(semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(subset.dialect.into(), subset.io.native.codec.clone()));
                         check_surface_id(subset, &subset.editor, AppRole::Editor)?;
                         check_surface_id(subset, &subset.viewer, AppRole::Viewer)?;
                         check_surface_document_schema(subset, &subset.editor)?;
@@ -41747,7 +41798,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     }
                 }
             }
-            semio_framework::io::io_mechanism::preflight_native_snapshots(&native_snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-snapshot", error.to_string()))?;
+            semio_framework_os_kernel::io::io_mechanism::preflight_native_snapshots(&native_snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-snapshot", error.to_string()))?;
             ::semio_framework_schema_registry::preflight_artifact_schema_descriptors(&schemas).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-schema", error.to_string()))?;
             ::semio_framework_schema_registry::preflight_artifact_inference_descriptors(&inferences).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))?;
             preflight_artifact_inference_services(&inference_services).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference-service", error.to_string()))?;
@@ -41755,7 +41806,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             {
                 let assembly = semio_framework_schema_registry::assembly::begin().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
                 store::preflight_document_codecs_in_assembly(&assembly, &codecs).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-codec", error.to_string()))?;
-                semio_framework::io::preflight_format_descriptors_in_assembly(&assembly, &format_rows).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-media", error.to_string()))?;
+                semio_framework_os_kernel::io::preflight_format_descriptors_in_assembly(&assembly, &format_rows).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-media", error.to_string()))?;
             }
             preflight_io_entries(declarations)
         }
@@ -41780,7 +41831,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     }
                 }
             }
-            let existing = semio_framework::io::io_mechanism::io_entries();
+            let existing = semio_framework_os_kernel::io::io_mechanism::io_entries();
             for ((from, into), fidelity) in &proposed {
                 let mut current_fidelity = None;
                 for descriptor in existing.iter() {
@@ -41825,7 +41876,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let mut languages: Vec<semio_framework_dsl::LanguageSpec> = Vec::new();
             let mut codecs: Vec<store::ArtifactCodec> = Vec::new();
             let mut format_rows = Vec::new();
-            let mut io_batches: Vec<&'static [semio_framework::io::io_mechanism::IoEntry]> = Vec::new();
+            let mut io_batches: Vec<&'static [semio_framework_os_kernel::io::io_mechanism::IoEntry]> = Vec::new();
             let mut native_snapshots = Vec::new();
 
             for artifact in declarations {
@@ -41840,13 +41891,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                             languages.extend(pair.binary.copied());
                         }
                         codecs.push(subset.io.native.codec.clone());
-                        native_snapshots.extend(semio_framework::io::io_mechanism::NativeSnapshotRegistration::from_capability(subset.dialect.into(), subset.io.native.codec.clone()));
+                        native_snapshots.extend(semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(subset.dialect.into(), subset.io.native.codec.clone()));
                         io_batches.push(subset.io.entries);
                     }
                 }
             }
 
-            semio_framework::io::io_mechanism::preflight_native_snapshots(&native_snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-snapshot", error.to_string()))?;
+            semio_framework_os_kernel::io::io_mechanism::preflight_native_snapshots(&native_snapshots).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-snapshot", error.to_string()))?;
             register_boot_scope_schema_exports();
             ::semio_framework_schema_registry::register_artifact_schema_descriptors(schemas).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-schema", error.to_string()))?;
             ::semio_framework_schema_registry::register_artifact_inference_descriptors(inferences).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-inference", error.to_string()))?;
@@ -41854,11 +41905,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             semio_framework_dsl::register_languages(languages).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-language", error.to_string()))?;
             {
                 let assembly = semio_framework_schema_registry::assembly::begin().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
-                let plan = semio_framework::io::ArtifactAssemblyRegistryPlan { document_codecs: codecs, format_descriptors: format_rows, native_snapshots, ..Default::default() };
-                semio_framework::io::commit_artifact_assembly_registry_plan(&assembly, plan).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-registry", error.to_string()))?;
+                let plan = semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan { document_codecs: codecs, format_descriptors: format_rows, native_snapshots, ..Default::default() };
+                semio_framework_os_kernel::io::commit_artifact_assembly_registry_plan(&assembly, plan).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-registry", error.to_string()))?;
             }
             for batch in io_batches {
-                semio_framework::io::io_mechanism::io_register(batch).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-io", error.to_string()))?;
+                semio_framework_os_kernel::io::io_mechanism::io_register(batch).map_err(|error| PluginAssemblyError::new("plugin-assembly.declaration-io", error.to_string()))?;
             }
 
             Ok(())
@@ -44527,7 +44578,7 @@ use semio_framework_value::ToValue;
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
         let dialect = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(dialect).map_err(|error| plugin_internal_fault(&error))?;
-        semio_framework::io::io_mechanism::native_snapshot_sqlite_schema(&dialect).map_err(|error| plugin_internal_fault(&error.to_string()))
+        semio_framework_os_kernel::io::io_mechanism::native_snapshot_sqlite_schema(&dialect).map_err(|error| plugin_internal_fault(&error.to_string()))
     }
 
     /// 📤️ `codec.sqlite-export` executes the exact declared native snapshot provider.
@@ -44542,8 +44593,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             semio_framework::sqlite_snapshot::SnapshotEncoding::Binary => IoPayload::Binary(input.payload),
             semio_framework::sqlite_snapshot::SnapshotEncoding::Text => IoPayload::Text(String::from_utf8(input.payload).map_err(|error| plugin_internal_fault(&error.to_string()))?),
         };
-        let route = semio_framework::io::io_mechanism::io_route(&dialect, &ArtifactDialect::from(SQLITE_SNAPSHOT), 1).await.map_err(|error| plugin_internal_fault(&error.cause.message))?.value;
-        let output = match semio_framework::io::io_mechanism::io_run_with_snapshot_control(&route, payload, limits, &mut |_| true).await {
+        let route = semio_framework_os_kernel::io::io_mechanism::io_route(&dialect, &ArtifactDialect::from(SQLITE_SNAPSHOT), 1).await.map_err(|error| plugin_internal_fault(error.cause.message.as_ref()))?.value;
+        let output = match semio_framework_os_kernel::io::io_mechanism::io_run_with_snapshot_control(&route, payload, limits, &mut |_| true).await {
             Ok(output) => output,
             Err(error) => return Ok(crate::sqlite_wire::SnapshotFileResult::Rejected(crate::sqlite_wire::SnapshotRejection { kind: error.cause.kind, message: error.cause.into_message(), diagnostics: crate::sqlite_wire::encode_diagnostics(&error.diagnostics) })),
         };
@@ -44560,8 +44611,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         use {semio_framework_artifact_reference::ArtifactDialect,semio_framework::io_schema::IoPayload,semio_framework::io_schema::SQLITE_SNAPSHOT};
         let limits = input.limits.native().map_err(|error| plugin_internal_fault(&error))?;
         let dialect = ArtifactDialect::parse_coordinate(&input.dialect).map_err(|error| plugin_internal_fault(&error))?;
-        let route = semio_framework::io::io_mechanism::io_route(&ArtifactDialect::from(SQLITE_SNAPSHOT), &dialect, 1).await.map_err(|error| plugin_internal_fault(&error.cause.message))?.value;
-        let output = match semio_framework::io::io_mechanism::io_run_with_snapshot_control(&route, IoPayload::Binary(input.payload), limits, &mut |_| true).await {
+        let route = semio_framework_os_kernel::io::io_mechanism::io_route(&ArtifactDialect::from(SQLITE_SNAPSHOT), &dialect, 1).await.map_err(|error| plugin_internal_fault(error.cause.message.as_ref()))?.value;
+        let output = match semio_framework_os_kernel::io::io_mechanism::io_run_with_snapshot_control(&route, IoPayload::Binary(input.payload), limits, &mut |_| true).await {
             Ok(output) => output,
             Err(error) => return Ok(crate::sqlite_wire::SnapshotPayloadResult::Rejected(crate::sqlite_wire::SnapshotRejection { kind: error.cause.kind, message: error.cause.into_message(), diagnostics: crate::sqlite_wire::encode_diagnostics(&error.diagnostics) })),
         };
@@ -44805,13 +44856,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         A::Mutation: Sync,
     {
         let codec = store::ArtifactCodec::bare::<A::Snapshot, A::Mutation>(schema);
-        let plan = semio_framework::io::ArtifactAssemblyRegistryPlan {
+        let plan = semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan {
             document_codecs: vec![codec.clone()],
-            native_snapshots: semio_framework::io::io_mechanism::NativeSnapshotRegistration::from_capability(A::DIALECT.into(), codec).into_iter().collect(),
+            native_snapshots: semio_framework_os_kernel::io::io_mechanism::NativeSnapshotRegistration::from_capability(A::DIALECT.into(), codec).into_iter().collect(),
             ..Default::default()
         };
         let assembly = semio_framework_schema_registry::assembly::begin().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
-        semio_framework::io::commit_artifact_assembly_registry_plan(&assembly, plan).map_err(|error| PluginAssemblyError::new("plugin-assembly.snapshot", error.to_string()))
+        semio_framework_os_kernel::io::commit_artifact_assembly_registry_plan(&assembly, plan).map_err(|error| PluginAssemblyError::new("plugin-assembly.snapshot", error.to_string()))
     }
 
     /// 🔗️ Attaches a backbone channel by URI. The URI is resolved to a `store::PortBackbone`
@@ -49242,14 +49293,14 @@ macro_rules! derive_artifact_facets {
         impl $crate::ArtifactAnalyzer for $analyzer {
             type Parts = <$analysis as $crate::ArtifactAnalysis>::Parts;
             const DIALECT: $crate::Dialect = <$analysis as $crate::ArtifactAnalysis>::DIALECT;
-            fn sniff(source: &$crate::AnalyzeSource<'_>) -> $crate::IoConfidence { <$analysis as $crate::ArtifactAnalysis>::sniff(source) }
-            fn analyze(sources: &[$crate::AnalyzeSource<'_>]) -> $crate::Analysis<Self::Parts> { <$analysis as $crate::ArtifactAnalysis>::analyze(sources) }
+            fn sniff(source: &$crate::io::AnalyzeSource<'_>) -> $crate::io::Confidence { <$analysis as $crate::ArtifactAnalysis>::sniff(source) }
+            fn analyze(sources: &[$crate::io::AnalyzeSource<'_>]) -> $crate::io::Analysis<Self::Parts> { <$analysis as $crate::ArtifactAnalysis>::analyze(sources) }
         }
 
         #[allow(dead_code, reason = "grammar-smoke-test invocations never call the inherent duplicates — see comment above $builder")]
         impl $analyzer {
-            pub fn sniff(source: &$crate::AnalyzeSource<'_>) -> $crate::IoConfidence { <Self as $crate::ArtifactAnalyzer>::sniff(source) }
-            pub fn analyze(sources: &[$crate::AnalyzeSource<'_>]) -> $crate::Analysis<<Self as $crate::ArtifactAnalyzer>::Parts> { <Self as $crate::ArtifactAnalyzer>::analyze(sources) }
+            pub fn sniff(source: &$crate::io::AnalyzeSource<'_>) -> $crate::io::Confidence { <Self as $crate::ArtifactAnalyzer>::sniff(source) }
+            pub fn analyze(sources: &[$crate::io::AnalyzeSource<'_>]) -> $crate::io::Analysis<<Self as $crate::ArtifactAnalyzer>::Parts> { <Self as $crate::ArtifactAnalyzer>::analyze(sources) }
         }
 
         $visibility struct $composer;
@@ -49263,12 +49314,12 @@ macro_rules! derive_artifact_facets {
             type Snapshot = <$spec as $crate::DerivedArtifactSpec>::Snapshot;
             const WRITES: $crate::Dialect = <$composition as $crate::ArtifactComposition>::WRITES;
             fn reads() -> &'static [$crate::Dialect] { <$crate::DerivedArtifactComposer<$spec> as $crate::ArtifactComposer>::reads() }
-            fn compose(sources: &[$crate::ComposeSource<'_>]) -> Result<$crate::Composition<Self::Snapshot>, $crate::ComposeError> { <$crate::DerivedArtifactComposer<$spec> as $crate::ArtifactComposer>::compose(sources) }
+            fn compose(sources: &[$crate::io::ComposeSource<'_>]) -> Result<$crate::io::Composition<Self::Snapshot>, $crate::io::ComposeError> { <$crate::DerivedArtifactComposer<$spec> as $crate::ArtifactComposer>::compose(sources) }
         }
 
         #[allow(dead_code, reason = "grammar-smoke-test invocations never call the inherent duplicate — see comment above $builder")]
         impl $composer {
-            pub fn compose(sources: &[$crate::ComposeSource<'_>]) -> Result<$crate::Composition<<Self as $crate::ArtifactComposer>::Snapshot>, $crate::ComposeError> { <Self as $crate::ArtifactComposer>::compose(sources) }
+            pub fn compose(sources: &[$crate::io::ComposeSource<'_>]) -> Result<$crate::io::Composition<<Self as $crate::ArtifactComposer>::Snapshot>, $crate::io::ComposeError> { <Self as $crate::ArtifactComposer>::compose(sources) }
         }
     };
     // 🧩️ Internal dispatch arm (Task 5): resolves `DerivedArtifactSpec::Children` — `$children` if
@@ -49334,21 +49385,21 @@ macro_rules! subset {
             };
             pub const KIND: $crate::SubsetKind = $crate::SubsetKind::Owning;
             static REGISTERED: Once = Once::new();
-            $(static VALIDATOR_ENTRY: OnceLock<$crate::SubsetValidatorEntry> = OnceLock::new();)?
+            $(static VALIDATOR_ENTRY: OnceLock<$crate::io::SubsetValidatorEntry> = OnceLock::new();)?
 
             // 🚫️async: E5 executor bridge — `Once::call_once`'s closure is std-fixed sync, so the
             // (pure, in-memory) registry calls it drives are resolved through `resolve_ready`
             // rather than forcing this whole registration path async (R9/R2).
-            $(fn validator_entry() -> &'static $crate::SubsetValidatorEntry {
-                VALIDATOR_ENTRY.get_or_init($crate::subset_validator_entry_of::<$validator>)
+            $(fn validator_entry() -> &'static $crate::io::SubsetValidatorEntry {
+                VALIDATOR_ENTRY.get_or_init($crate::io::subset_validator_entry_of::<$validator>)
             })?
 
             pub async fn register() {
                 REGISTERED.call_once(|| {
                     let mut entries = vec![$crate::composer_entry_of::<$composer>()];
                     $(entries.extend([$($io_entry),+]);)?
-                    $crate::register_composer_entries(&entries).expect("subset registration is Once-guarded — a failure here means a dialect collision, a real programmer error");
-                    $($crate::register_subset_validator(validator_entry()).expect("subset registration is Once-guarded — a failure here means a dialect collision, a real programmer error");)?
+                    $crate::io::register_composer_entries(&entries).expect("subset registration is Once-guarded — a failure here means a dialect collision, a real programmer error");
+                    $($crate::io::register_subset_validator(validator_entry()).expect("subset registration is Once-guarded — a failure here means a dialect collision, a real programmer error");)?
                 });
             }
 
@@ -49380,19 +49431,19 @@ macro_rules! subset {
             };
             pub const KIND: $crate::SubsetKind = $crate::SubsetKind::Derived;
             static REGISTERED: Once = Once::new();
-            static VALIDATOR_ENTRY: OnceLock<$crate::SubsetValidatorEntry> = OnceLock::new();
+            static VALIDATOR_ENTRY: OnceLock<$crate::io::SubsetValidatorEntry> = OnceLock::new();
 
             // 🚫️async: E5 executor bridge — `Once::call_once`'s closure is std-fixed sync, so the
             // (pure, in-memory) registry calls it drives are resolved through `resolve_ready`
             // rather than forcing this whole registration path async (R9/R2).
-            fn validator_entry() -> &'static $crate::SubsetValidatorEntry {
-                VALIDATOR_ENTRY.get_or_init($crate::subset_validator_entry_of::<$validator>)
+            fn validator_entry() -> &'static $crate::io::SubsetValidatorEntry {
+                VALIDATOR_ENTRY.get_or_init($crate::io::subset_validator_entry_of::<$validator>)
             }
 
             pub async fn register() {
                 REGISTERED.call_once(|| {
-                    $crate::register_subset_validator(validator_entry()).expect("subset registration is Once-guarded — a failure here means a dialect collision, a real programmer error");
-                    $( $crate::register_composer_entries(&[$($io_entry),+]).expect("subset registration is Once-guarded — a failure here means a dialect collision, a real programmer error"); )?
+                    $crate::io::register_subset_validator(validator_entry()).expect("subset registration is Once-guarded — a failure here means a dialect collision, a real programmer error");
+                    $( $crate::io::register_composer_entries(&[$($io_entry),+]).expect("subset registration is Once-guarded — a failure here means a dialect collision, a real programmer error"); )?
                 });
             }
 

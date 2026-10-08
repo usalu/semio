@@ -1,14 +1,13 @@
 {
-  "artifact": null,
   "objects": {
     "added": [],
     "patched": [
       {
         "id": "obj-hull",
         "paintLayers": {
-          "added": [],
-          "patched": [
+          "edits": [
             {
+              "op": "patch",
               "index": 0,
               "patch": {
                 "blendMode": null,
@@ -17,18 +16,19 @@
                 "visible": false
               }
             }
-          ],
-          "removed": [],
-          "strokes": []
+          ]
         },
         "patch": {
           "mesh": null,
           "meshContent": null,
           "name": null,
           "smoothShading": null,
-          "transform": null,
-          "meshState": null
-        }
+          "meshState": null,
+          "position": null,
+          "rotation": null,
+          "scale": null
+        },
+        "meshMotions": []
       }
     ],
     "removed": [],

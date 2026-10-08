@@ -78,7 +78,7 @@ mod oracles {
     /// this subset's own: the eleven-verb Part-21 GRAMMAR vocabulary and its projection.
     use semio_s_plugin_stdio_part21_test_oracle::decode_string_literal;
     use crate::standards::v_ap214::reference::part21::{
-        args, args_mut, entity_from_wire, entity_id, file_description_record, file_name_record, file_schema_record, header_record, primary_record, primary_record_mut, replace_with_snapshot, set_header_record, snapshot_payload as document_snapshot_payload, str_field, u64_field, value_from_wire, write as write_exchange_bytes,
+        args, args_mut, entity_from_wire, entity_id, file_description_record, file_name_record, file_schema_record, header_record, primary_record, primary_record_mut, set_header_record, str_field, u64_field, value_from_wire, write as write_exchange_bytes,
     };
 
     fn write_exchange(exchange: &Exchange) -> String {
@@ -90,17 +90,11 @@ mod oracles {
     /// 🦠️ Applies one declared `StepMutation::KINDS` kind to a real, independently-parsed
     /// `ruststep::ast::Exchange` — one arm per variant, matched by its kebab-case spelling, each reading the leaf
     /// wire payload through the standard's own `🧾️Wire` grammar. An unrecognised kind is an error, never a
-    /// silent no-op. `set-snapshot` replaces the whole document with the snapshot record.
+    /// silent no-op.
     fn apply(exchange: &mut Exchange, kind: &str, params: &Json) -> Result<(), String> {
         let member = |key: &str| params.get(key).ok_or_else(|| format!("{kind} carries `{key}`"));
         let index = |key: &str| u64_field(params, key).map(|index| index as usize);
         match kind {
-            "set-snapshot" => replace_with_snapshot(exchange, member("snapshot")?),
-            "patch-snapshot" => {
-                let payload = document_snapshot_payload(exchange)?;
-                let patched = semio_repo_test_host::law::patched_snapshot(payload.get("snapshot").ok_or("the reading carries no snapshot")?, member("patch")?)?;
-                replace_with_snapshot(exchange, &patched)
-            }
             "set-file-description" => file_description_record(member("fileDescription")?).map(|record| set_header_record(exchange, record)),
             "set-file-name" => file_name_record(member("fileName")?).map(|record| set_header_record(exchange, record)),
             "set-file-schema" => file_schema_record(member("fileSchema")?).map(|record| set_header_record(exchange, record)),
@@ -196,10 +190,6 @@ mod oracles {
         Ok(write_exchange(&read(input)?).into_bytes())
     }
 
-    /// 📸️ The untouched document as the `set-snapshot` payload that restores it.
-    pub fn snapshot_payload(input: &[u8]) -> Result<Json, String> {
-        document_snapshot_payload(&read(input)?)
-    }
     //#endregion 🔖️Dispatch
 
     //#region 🔖️HeaderProjection
@@ -300,12 +290,6 @@ pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     oracles::round_trip(input)
 }
 
-/// 📸️ The untouched artifact as the `set-snapshot` wire payload that restores it — the inverse of `set-snapshot`.
-#[cfg(feature = "oracles")]
-pub fn oracle_snapshot_payload(input: &[u8]) -> Result<Json, String> {
-    oracles::snapshot_payload(input)
-}
-
 /// 👁️ This subset's own semantic projection, re-exported at the module's public surface so the
 /// case adapter can reach it as `oracle_apply_mutation`'s sibling.
 #[cfg(feature = "oracles")]
@@ -321,11 +305,6 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
-
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_snapshot_payload(_input: &[u8]) -> Result<Json, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

@@ -199,5 +199,52 @@
       ],
       "expectedRevision": "04e2c62489e89c18"
     }
+  ],
+  "replacementCases": [
+    {
+      "name": "bitfields32-ten-bit-513-exact-image-replacement",
+      "snapshot": {
+        "schema": "stdio.bmp",
+        "image": {
+          "width": 1,
+          "height": 1,
+          "rowOrder": "topDown",
+          "profile": "directBitfields32",
+          "masks": [
+            1072693248,
+            1047552,
+            1023,
+            0
+          ],
+          "palette": [],
+          "pixels": {
+            "storage": "direct",
+            "samples": [
+              {
+                "red": 513,
+                "green": 777,
+                "blue": 9,
+                "alpha": 0,
+                "reserved": 2147483648
+              }
+            ]
+          },
+          "xPixelsPerMeter": 2835,
+          "yPixelsPerMeter": 2835,
+          "colorsUsed": 0,
+          "colorsImportant": 0,
+          "reserved1": 7,
+          "reserved2": 11,
+          "opaqueGap": [
+            13,
+            47
+          ],
+          "opaqueTrailer": [
+            222,
+            173
+          ]
+        }
+      }
+    }
   ]
 }

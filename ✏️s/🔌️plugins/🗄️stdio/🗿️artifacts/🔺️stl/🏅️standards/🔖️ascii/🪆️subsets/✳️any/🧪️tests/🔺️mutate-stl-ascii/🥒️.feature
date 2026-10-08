@@ -33,8 +33,7 @@ Feature: Apply every typed STL ascii mutation to a real-world mesh
   `encode_stl_ascii`. Byte-identical output stays impossible: `stl_io` resolves every coordinate
   through `f32` while the committed fixture carries the `f64` decimals its GLB derivation produced.
 
-  Every row's `params` is the leaf wire payload — `set-snapshot` carries the whole `StlSnapshot`
-  (`schema`, `solidName`, `triangles`) — decoded by the subject through `StlMutation`'s own payload
+  Every row's `params` is the leaf wire payload, decoded by the subject through `StlMutation`'s own payload
   constructor and read by the oracle from the same keys.
 
   @id-mutate
@@ -49,13 +48,11 @@ Feature: Apply every typed STL ascii mutation to a real-world mesh
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                    | params |
-      | set-snapshot           | {"snapshot": {"schema": "stdio.stl", "solidName": "replacement-triangle", "triangles": [{"normal": [0.0, 0.0, 1.0], "vertices": [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]}]}} |
       | set-solid-name         | {"name": "renamed-hexagonal-forest"} |
       | insert-triangle        | {"index": 500, "triangle": {"normal": [0.0, 0.0, 1.0], "vertices": [[100.0, 100.0, 50.0], [101.0, 100.0, 50.0], [100.0, 101.0, 50.0]]}} |
       | remove-triangle        | {"index": 500} |
       | set-triangle-normal    | {"index": 500, "normal": [0.0, 1.0, 0.0]} |
       | set-triangle-vertices  | {"index": 500, "vertices": [[1.0, 1.0, 1.0], [2.0, 1.0, 1.0], [1.0, 2.0, 1.0]]} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/solidName", "value": "patched-hexagonal-forest"}} |
 
   @id-inverse
   @level-exhaustive
@@ -70,13 +67,11 @@ Feature: Apply every typed STL ascii mutation to a real-world mesh
     Then the oracle and the subject agree on the semantic projection of the original mesh
     Examples:
       | id                    | params |
-      | set-snapshot           | {"snapshot": {"schema": "stdio.stl", "solidName": "replacement-triangle", "triangles": [{"normal": [0.0, 0.0, 1.0], "vertices": [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]}]}} |
       | set-solid-name         | {"name": "renamed-hexagonal-forest"} |
       | insert-triangle        | {"index": 500, "triangle": {"normal": [0.0, 0.0, 1.0], "vertices": [[100.0, 100.0, 50.0], [101.0, 100.0, 50.0], [100.0, 101.0, 50.0]]}} |
       | remove-triangle        | {"index": 500} |
       | set-triangle-normal    | {"index": 500, "normal": [0.0, 1.0, 0.0]} |
       | set-triangle-vertices  | {"index": 500, "vertices": [[1.0, 1.0, 1.0], [2.0, 1.0, 1.0], [1.0, 2.0, 1.0]]} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/solidName", "value": "patched-hexagonal-forest"}} |
 
   @id-identity-round-trip
   @level-long

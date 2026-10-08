@@ -165,6 +165,6 @@ async fn mutation_inverse_sum_law_holds_for_every_leaf() {
         GifMutation::SetImagePixels(set_image_pixels::SetImagePixels { index: 0, indices: vec![1, 1, 1, 1] }),
         GifMutation::SetImageInterlace(set_image_interlace::SetImageInterlace { index: 2, interlace: true }),
     ] {
-        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     }
 }

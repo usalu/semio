@@ -30,8 +30,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
         "set-data" => reference::mutate_set_data(input, &params),
         "patch-data" => reference::mutate_patch_data(input, &params),
         "set-other-chunks" => reference::mutate_set_other_chunks(input, &params),
-        "set-snapshot" => reference::mutate_set_snapshot(input, &params),
-        "patch-snapshot" => reference::mutate_patch_snapshot(input, &params),
         "" => Err("mutation spec carries no `kind`".to_string()),
         kind => Err(format!("mutation kind {:?} has no oracle implementation ({} input byte(s))", kind, input.len())),
     }
@@ -245,54 +243,6 @@ mod reference {
         wav.other_chunks = chunk_list(params, "chunks");
         write(&wav)
     }
-
-    /// 🔁️ `SetSnapshot` — full replace: `fmt`, `data` and `otherChunks` all come from the `snapshot` wire value.
-    pub fn mutate_set_snapshot(_input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
-        let snapshot = params.get("snapshot").ok_or_else(|| "set-snapshot carries no snapshot".to_string())?;
-        write(&PcmWav { format: fmt_spec_of(snapshot.get("fmt"))?, samples: samples(snapshot.get("data"))?, other_chunks: chunk_list(snapshot, "otherChunks") })
-    }
-
-    /// 🩹️ `PatchSnapshot` — the one `SnapshotPatch` operation interpreted independently over the owned PCM model: `set` of a
-    /// `fmt` field or of one `data.value` sample, `insert`/`remove` of one `data.value` sample, and `remove` of one `otherChunks`
-    /// entry. A path this model has no member for is refused, never skipped.
-    pub fn mutate_patch_snapshot(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
-        let mut wav = read(input)?;
-        if let Some(operation) = params.get("patch").cloned() {
-            let path: Vec<String> = operation.str("path").split('/').skip(1).map(|segment| segment.replace("~1", "/").replace("~0", "~")).collect();
-            let value = operation.get("value").cloned();
-            let index = |segment: &str| segment.parse::<usize>().map_err(|_| format!("patch-snapshot index {segment:?} is not a number"));
-            match (path.iter().map(String::as_str).collect::<Vec<_>>().as_slice(), operation.str("operation").as_str()) {
-                (["fmt", "channels"], "set") => wav.format.channels = number(&operation, "value", 0.0) as u16,
-                (["fmt", "sampleRate"], "set") => wav.format.sample_rate = number(&operation, "value", 0.0) as u32,
-                (["data", "value", at], "set") => *wav.samples.get_mut(index(at)?).ok_or_else(|| format!("patch-snapshot sample {at} is outside the sample lane"))? = sample_of(value)?,
-                (["data", "value", at], "remove") => {
-                    let at = index(at)?;
-                    if at >= wav.samples.len() { return Err(format!("patch-snapshot sample {at} is outside the sample lane")); }
-                    wav.samples.remove(at);
-                }
-                (["data", "value", at], "insert") => {
-                    let at = index(at)?;
-                    if at > wav.samples.len() { return Err(format!("patch-snapshot insert {at} is outside the sample lane")); }
-                    wav.samples.insert(at, sample_of(value)?);
-                }
-                (["otherChunks", at], "remove") => {
-                    let at = index(at)?;
-                    if at >= wav.other_chunks.len() { return Err(format!("patch-snapshot chunk {at} is outside the chunk list")); }
-                    wav.other_chunks.remove(at);
-                }
-                (other, operation) => return Err(format!("patch-snapshot {operation} at {other:?} has no oracle implementation")),
-            }
-        }
-        write(&wav)
-    }
-
-    /// 🔎️ One PCM16 sample of a `SnapshotPatch` edit value.
-    fn sample_of(value: Option<Json>) -> Result<i16, String> {
-        match value {
-            Some(Json::Number(sample)) if (i16::MIN as f64..=i16::MAX as f64).contains(&sample) && sample.fract() == 0.0 => Ok(sample as i16),
-            other => Err(format!("patch-snapshot sample value {other:?} is not a PCM16 integer")),
-        }
-    }
     //#endregion 🔖️Mutate
 
     //#region 🔖️Inverse
@@ -303,27 +253,15 @@ mod reference {
 
     /// ↩️ The real inverse of `kind`, computed from the PRE-mutation recording and applied on top
     /// of `mutated`: each variant restores exactly the facet it replaced, leaving the others as the
-    /// forward mutation left them — for `patch-snapshot`, every facet one of its edit paths starts in.
+    /// forward mutation left them.
     pub fn apply_inverse(original_input: &[u8], kind: &str, params: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
         let original = read(original_input)?;
-        if kind == "set-snapshot" {
-            return write(&original);
-        }
         let mut restored = read(mutated)?;
         match kind {
             "set-fmt" => restored.format = original.format,
             "set-data" => restored.samples = original.samples,
             "patch-data" => restored.samples = original.samples,
             "set-other-chunks" => restored.other_chunks = original.other_chunks,
-            "patch-snapshot" => {
-                let path = params.get("patch").map(|patch| patch.str("path")).unwrap_or_default();
-                match path.split('/').nth(1) {
-                    Some("fmt") => restored.format = original.format,
-                    Some("data") => restored.samples = original.samples.clone(),
-                    Some("otherChunks") => restored.other_chunks = original.other_chunks.clone(),
-                    other => return Err(format!("patch-snapshot edit facet {other:?} has no oracle inverse")),
-                }
-            }
             other => return Err(format!("mutation kind {other:?} has no oracle inverse ({} mutated byte(s))", mutated.len())),
         }
         write(&restored)

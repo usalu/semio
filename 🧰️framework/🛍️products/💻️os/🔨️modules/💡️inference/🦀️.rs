@@ -161,7 +161,7 @@ pub trait InferredField<P>: Send + Sync + 'static {
     /// ⚖️ The bytes a cached `value` is accounted with against the cache budget; the default is the value's inline size.
     fn value_bytes(value: &Self::Value) -> usize {
         let _ = value;
-        std::mem::size_of::<Self::Value>()
+        size_of::<Self::Value>()
     }
 
     /// 🪜 Resumable, fallible variant of [`compute`](Self::compute): consumes at most `fuel` units and either finishes or parks its progress in `pending`
@@ -422,7 +422,7 @@ pub struct InferenceStepReport {
 //#endregion 🔖️Cursor
 
 //#region 🔖️Driver
-use crate::os_io::text::inferences::encode;
+use crate::io::text::inferences::encode;
 
 fn key_text<K: ToValue>(key: &K) -> String {
     String::from_utf8_lossy(&encode(key)).into_owned()

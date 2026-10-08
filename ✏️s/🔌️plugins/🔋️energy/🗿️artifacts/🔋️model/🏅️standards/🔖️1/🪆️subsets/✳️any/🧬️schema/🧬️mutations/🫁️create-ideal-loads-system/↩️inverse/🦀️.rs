@@ -21,6 +21,9 @@ pub fn inverse(payload: &super::CreateIdealLoadsSystem, base: &EnergyModelSnapsh
     {
         return Vec::new();
     }
+    if payload.index.is_some_and(|index| index as usize > base.model.ideal_loads.len()) {
+        return Vec::new();
+    }
     vec![vocabulary::delete_ideal_loads_system(payload.id)]
 
     })())

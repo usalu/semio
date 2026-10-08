@@ -31,7 +31,7 @@ fn mutation() -> SemioDrawingMutation {
 #[semio_framework_async_macros::async_test]
 async fn wraps_the_two_leading_children_in_a_new_group() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("group applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("group applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "group/groups-the-two-leading-children-into-a-new-group: applied state differs from the committed after-snapshot");
     let DrawNode::Group { children, .. } = &produced.layers[0].root else { panic!("the layer root is a group") };
     let DrawNode::Group { children: base_children, .. } = &base.layers[0].root else { panic!("the layer root is a group") };
@@ -48,13 +48,14 @@ async fn wraps_the_two_leading_children_in_a_new_group() {
 async fn the_undo_ungroup_dissolves_the_new_group_again() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "group undoes as exactly one ungroup");
     let SemioDrawingMutation::UngroupNode(dissolve) = &undo[0] else { panic!("group must undo as ungroup") };
     assert_eq!(dissolve.at.path, vec![0usize], "the undo path is the parent path plus the FIRST grouped index");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward group applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo ungroup applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward group applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo ungroup applies");
     }
     assert_eq!(current, base, "group/groups-the-two-leading-children-into-a-new-group: the undo did not restore the before-snapshot");
 }
@@ -120,6 +121,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed group diff decodes");
-    let produced = decoded.apply(&before()).expect("committed group diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed group diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "group/groups-the-two-leading-children-into-a-new-group: committed diff did not carry before to after");
 }

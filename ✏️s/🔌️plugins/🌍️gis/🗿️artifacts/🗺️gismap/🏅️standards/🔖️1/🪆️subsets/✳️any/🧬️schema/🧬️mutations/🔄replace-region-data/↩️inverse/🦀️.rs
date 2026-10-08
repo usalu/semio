@@ -6,12 +6,9 @@ use crate::GisMapSnapshot;
 //#region 🔹Inverse
 /// ↩️ Undo restores `base`'s prior `data` payload for this id — missing target returns `Vec::new()`.
 pub fn inverse(payload: &ReplaceRegionData, base: &GisMapSnapshot) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
     let Some(feature) = base.regions.iter().find(|feature| feature.id == payload.id) else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
-    vec![GisMapMutation::ReplaceRegionData(ReplaceRegionData { id: payload.id.clone(), new_data: feature.data.clone() })]
-
-    })())
+    Ok(vec![GisMapMutation::ReplaceRegionData(ReplaceRegionData { id: payload.id.clone(), new_data: feature.data.clone() })])
 }
 //#endregion 🔹Inverse

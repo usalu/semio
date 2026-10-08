@@ -12,7 +12,7 @@ fn canonical_vectors_execute_direct_mutation_and_codec_laws() {
         let payload: mutation::GltfBindNodeChildPayload = decode(&vector["mutation"]);
         let base: GltfSnapshot = decode(&vector["base"]);
         let expected: GltfSnapshot = decode(&vector["after"]);
-        assert_eq!(mutation::apply(&payload, &base).unwrap(), expected);
+        assert_eq!(protocol::apply_diff(&mutation::plan(&payload, &base).unwrap(), &base).unwrap(), expected);
         assert_laws(&mutation::BindNodeChildMutation::Apply(payload.clone()), &base, &expected);
         let wire = &vector["wire"];
         let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&payload)).unwrap();

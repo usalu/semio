@@ -44,39 +44,6 @@ use crate::BcfSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
-use crate::standards::v2_1::subsets::any::io::binary::diff::{write_str_lp,read_str_lp,enc_topic_bin,enc_part_bin,dec_topic_bin,dec_part_bin};
 
-/// 🌱 Full (non-diff) `BcfSnapshot` binary codec -- only `SetSnapshot`'s whole-payload encoding
-/// needs this, mirroring `enc_bcf_snapshot`'s text form above.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_bcf_snapshot_bin(s: &BcfSnapshot, out: &mut Vec<u8>) {
-    write_str_lp(out, &s.schema);
-    write_str_lp(out, &s.version);
-    store::pack_rt::write_varint_u64(out, s.topics.len() as u64);
-    for t in &s.topics {
-        enc_topic_bin(t, out);
-    }
-    store::pack_rt::write_varint_u64(out, s.parts.len() as u64);
-    for p in &s.parts {
-        enc_part_bin(p, out);
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_bcf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfSnapshot, String> {
-    let schema = read_str_lp(reader)?;
-    let version = read_str_lp(reader)?;
-    let topic_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut topics = Vec::with_capacity(topic_count as usize);
-    for _ in 0..topic_count {
-        topics.push(dec_topic_bin(reader)?);
-    }
-    let part_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut parts = Vec::with_capacity(part_count as usize);
-    for _ in 0..part_count {
-        parts.push(dec_part_bin(reader)?);
-    }
-    Ok(BcfSnapshot { schema, version, topics, parts })
-}
 }
 pub use diff_codec::*;

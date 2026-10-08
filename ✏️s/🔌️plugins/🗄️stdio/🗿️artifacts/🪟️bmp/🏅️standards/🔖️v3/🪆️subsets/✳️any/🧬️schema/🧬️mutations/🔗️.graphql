@@ -19,6 +19,6 @@ input PaintDirectRegion {
   alpha: Int!
 }
 
-input SetSnapshotMutation { snapshot: BmpSnapshotInput! }
-input PatchSnapshotMutation { patch: SnapshotPatchInput! }
-input BmpMutation @oneOf { setSnapshot: SetSnapshotMutation patchSnapshot: PatchSnapshotMutation paintIndexedRegion: PaintIndexedRegion paintDirectRegion: PaintDirectRegion }
+input BmpMutation @oneOf { replaceImage: ReplaceImage  paintIndexedRegion: PaintIndexedRegion paintDirectRegion: PaintDirectRegion }
+
+input ReplaceImage { image: BmpImageInput! }

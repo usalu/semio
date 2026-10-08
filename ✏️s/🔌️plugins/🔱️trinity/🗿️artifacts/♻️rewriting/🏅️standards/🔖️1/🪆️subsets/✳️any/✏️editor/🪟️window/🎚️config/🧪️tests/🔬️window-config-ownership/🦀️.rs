@@ -163,8 +163,8 @@ fn rewriting_window_config_mutations_match_the_independent_patch_trace() {
         let id = row["windowId"].as_str().unwrap();
         let (_, mutation) = witness(row);
         let before = windows[id].clone();
-        let after = mutation.diff(&before).diff().apply(&before).unwrap();
-        let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+        let after = protocol::apply_diff(mutation.diff(&before).diff(), &before).unwrap();
+        let restored = mutation.inverse(&before).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
         assert_eq!(restored, before);
         assert_eq!(RewritingWindowConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         let wire = mutation.encode_op().unwrap();
@@ -207,4 +207,19 @@ fn rewriting_window_config_commands_use_the_trusted_concrete_window() {
     assert_eq!(emit.window_config_mutations[0].window_kind_id(), BeforeWindowConfigOwner::WINDOW_KIND_ID);
     assert!(crate::editor::rewriting::commands::set_lod_mode("compact", None).is_err());
     assert!(crate::editor::rewriting::commands::set_lod_mode(&"x".repeat(65), Some(&view)).is_err());
+}
+
+/// ➕️ Every committed window-config mutation's concrete inverse rows sum to the negative of its diff (law L3).
+#[semio_framework_async_macros::async_test]
+async fn rewriting_window_config_inverses_sum_to_the_negative_diff() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
+    let base: RewritingWindowConfig = semio_framework_pack_json::from_json_str(&fixture["base"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let mut windows = std::collections::BTreeMap::from([(fixture["leftWindowId"].as_str().unwrap().to_string(), base.clone()), (fixture["rightWindowId"].as_str().unwrap().to_string(), base)]);
+    for row in fixture["cases"].as_array().unwrap() {
+        let id = row["windowId"].as_str().unwrap();
+        let (_, mutation) = witness(row);
+        let before = windows[id].clone();
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
+        windows.insert(id.into(), protocol::apply_diff(mutation.diff(&before).diff(), &before).unwrap());
+    }
 }

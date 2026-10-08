@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "nodes": null,
   "elements": null,
   "regions": null,
@@ -10,7 +9,7 @@
   "combinations": null,
   "analysis": {
     "modalCount": 6,
-    "bucklingCount": 3,
+    "bucklingCount": null,
     "deformationScale": 25.0
   }
 }

@@ -6,7 +6,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::{WiresMutation, WiresSnapshot, MINDMAP_WIRES_SCHEMA, WIRES_DIALECT};
-    use semio_framework::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
+    use semio_framework_os_kernel::io::io_mechanism::{deserializer_entry, serializer_entry, IoEntry};
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 

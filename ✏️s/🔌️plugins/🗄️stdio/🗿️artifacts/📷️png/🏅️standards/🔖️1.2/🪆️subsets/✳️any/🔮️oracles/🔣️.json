@@ -149,8 +149,6 @@
         }
       ],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "change-gamma",
         "patch-pixels",
         "paint-native-samples"
@@ -537,47 +535,6 @@
             "operation": "patch-pixels",
             "bridgeVersion": 1,
             "variant": "PatchPixels"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "png-1-2-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "png-png-1-2-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "png-1-2-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "png-1-2-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "png-png-1-2-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "png-1-2-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
           },
           "oracleRequirements": [
             {
@@ -1450,90 +1407,6 @@
       "family": "mechanical",
       "notes": "A Pillow-written PNG pair differing only in the chunk this kind touches. The png crate, this subset's other reader, has no tIME field and skips unrecognised ancillary chunks, so it cannot witness either. Observability was checked through the Pillow ChunkStream reader before the pair was written.",
       "comparisonPipeline": "png-1-2-chunk-compare-v1"
-    },
-    {
-      "id": "set-snapshot-applied",
-      "class": "handcrafted",
-      "target": {
-        "artifact": "s.stdio.png",
-        "standard": "1.2",
-        "subset": "any"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:e2041bee5abc5dc4044f9d57eefc2064dd19fa817812db7ae90aca3575a60864",
-          "bytes": 657
-        },
-        {
-          "role": "expected-after",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:b8669a301443dcbbe20b466d8fa2da445be4f97e53dba6a47fa32f09ea1e2882",
-          "bytes": 657
-        }
-      ],
-      "provenance": {
-        "source": "authored",
-        "license": "public-domain (handcrafted by this repository)",
-        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "ordered-json-v1",
-      "reproducible": true,
-      "family": "png-carrier",
-      "notes": "SetSnapshot replaces the whole document: the 2x1 RGBA swatch's two pixels trade places while its gAMA and tEXt chunks stay as the replacement states them."
-    },
-    {
-      "id": "patch-snapshot-applied",
-      "class": "handcrafted",
-      "target": {
-        "artifact": "s.stdio.png",
-        "standard": "1.2",
-        "subset": "any"
-      },
-      "mutation": "patch-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before",
-          "path": "../🧫️fixtures/🩹️patch-snapshot-applied/⬅️before.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:e2041bee5abc5dc4044f9d57eefc2064dd19fa817812db7ae90aca3575a60864",
-          "bytes": 657
-        },
-        {
-          "role": "expected-after",
-          "path": "../🧫️fixtures/🩹️patch-snapshot-applied/➡️after.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:328182e662b3f0f9918bb423b8d09cead0b4ac64c899b8d079c1c735e2d88d63",
-          "bytes": 656
-        }
-      ],
-      "provenance": {
-        "source": "authored",
-        "license": "public-domain (handcrafted by this repository)",
-        "attribution": "Handcrafted before/after vector authored directly against this subset's own documented schema — Law 2's handcrafted-vector category.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "ordered-json-v1",
-      "reproducible": true,
-      "family": "png-carrier",
-      "notes": "PatchSnapshot{set /gama = 45455} is the editor's compact path-addressed patch: the gAMA chunk changes in place and every other member stays untouched."
     },
     {
       "id": "patch-pixels-applied",

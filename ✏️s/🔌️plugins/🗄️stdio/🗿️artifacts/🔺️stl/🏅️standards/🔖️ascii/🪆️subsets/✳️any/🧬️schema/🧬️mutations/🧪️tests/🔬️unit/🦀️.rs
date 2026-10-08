@@ -19,15 +19,12 @@ async fn assert_mutation_diff_law(base: &StlSnapshot, mutation: StlMutation) {
     let mut applied_snapshot = base.clone();
     let returned_diff = apply_stl_mutation(&mut applied_snapshot, &mutation);
     assert_eq!(returned_diff, expected_diff, "apply_stl_mutation must return mutation.diff(base) for {mutation:?}");
-    assert_eq!(expected_diff.diff().apply(base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
+    assert_eq!(protocol::apply_diff(expected_diff.diff(), base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn mutation_diff_law() {
     let base = base_snapshot().await;
-    let mut alt = base.clone();
-    alt.solid_name = "different".into();
-    assert_mutation_diff_law(&base, StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: alt })).await;
     assert_mutation_diff_law(&base, StlMutation::SetSolidName(set_solid_name::SetSolidName { name: "renamed".into() })).await;
     assert_mutation_diff_law(&base, StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 1, triangle: tri(1.0, 0.0, 0.0, 99.0).await })).await;
     assert_mutation_diff_law(&base, StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 1 })).await;
@@ -58,9 +55,9 @@ async fn inverse_law() {
 
         // Diff-level round trip.
         let d = m.diff(&base);
-        let mutated = d.diff().apply(&base).expect("valid forward diff");
+        let mutated = protocol::apply_diff(d.diff(), &base).expect("valid forward diff");
         let inv_d = d.diff().inverse(&base);
-        assert_eq!(inv_d.apply(&mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
+        assert_eq!(protocol::apply_diff(&inv_d, &mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
     }
 }
 //#endregion 🔖️inverse_law
@@ -68,13 +65,13 @@ async fn inverse_law() {
 //#region 🔖️absorb_law
 async fn assert_absorb_law(base: &StlSnapshot, m1: StlMutation, m2: StlMutation) {
     let d1 = m1.diff(base);
-    let mid = d1.diff().apply(base).expect("valid first diff");
+    let mid = protocol::apply_diff(d1.diff(), base).expect("valid first diff");
     let d2 = m2.diff(&mid);
-    let sequential = d2.diff().apply(&mid).expect("valid second diff");
+    let sequential = protocol::apply_diff(d2.diff(), &mid).expect("valid second diff");
 
     let mut merged = d1.diff().clone();
     merged.absorb(d2.diff().clone());
-    assert_eq!(merged.apply(base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
+    assert_eq!(protocol::apply_diff(&merged, base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -123,9 +120,9 @@ async fn absorb_law() {
 async fn absorb_law_associativity() {
     let base = base_snapshot().await;
     let d1 = StlMutation::SetSolidName(set_solid_name::SetSolidName { name: "one".into() }).diff(&base);
-    let mid1 = d1.diff().apply(&base).expect("valid first diff");
+    let mid1 = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
     let d2 = StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 0, triangle: tri(1.0, 0.0, 0.0, 50.0).await }).diff(&mid1);
-    let mid2 = d2.diff().apply(&mid1).expect("valid second diff");
+    let mid2 = protocol::apply_diff(d2.diff(), &mid1).expect("valid second diff");
     let d3 = StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: 0, normal: [0.0, 1.0, 0.0] }).diff(&mid2);
 
     // (d1∘d2)∘d3
@@ -139,8 +136,8 @@ async fn absorb_law_associativity() {
     let mut right = d1.diff().clone();
     right.absorb(d23);
 
-    assert_eq!(left.apply(&base).expect("valid left diff"), right.apply(&base).expect("valid right diff"), "absorb must associate");
-    assert_eq!(left.apply(&base).expect("valid associated diff"), d3.diff().apply(&mid2).expect("valid third diff"), "associated absorb must match full sequential application");
+    assert_eq!(protocol::apply_diff(&left, &base).expect("valid left diff"), protocol::apply_diff(&right, &base).expect("valid right diff"), "absorb must associate");
+    assert_eq!(protocol::apply_diff(&left, &base).expect("valid associated diff"), protocol::apply_diff(d3.diff(), &mid2).expect("valid third diff"), "associated absorb must match full sequential application");
 }
 //#endregion 🔖️absorb_law
 
@@ -155,9 +152,9 @@ async fn between_roundtrip_law() {
     b.triangles.push(tri(0.0, 0.0, -1.0, 30.0).await); // add a triangle
 
     let d = <StlDiff as DiffAlgebra<StlSnapshot>>::between(&a, &b);
-    assert_eq!(d.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
+    assert_eq!(protocol::apply_diff(&d, &a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
     let d_rev = <StlDiff as DiffAlgebra<StlSnapshot>>::between(&b, &a);
-    assert_eq!(d_rev.apply(&b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
+    assert_eq!(protocol::apply_diff(&d_rev, &b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
     assert!(<StlDiff as DiffAlgebra<StlSnapshot>>::between(&a, &a).is_empty(), "between(a,a) must be empty");
 }
 //#endregion 🔖️between_roundtrip_law
@@ -209,9 +206,9 @@ async fn field_sweep_covers_every_mutable_field() {
     let b = sweep_b().await;
 
     let forward = <StlDiff as DiffAlgebra<StlSnapshot>>::between(&a, &b);
-    assert_eq!(forward.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
+    assert_eq!(protocol::apply_diff(&forward, &a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
     let backward = <StlDiff as DiffAlgebra<StlSnapshot>>::between(&b, &a);
-    assert_eq!(backward.apply(&b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
+    assert_eq!(protocol::apply_diff(&backward, &b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
     assert!(<StlDiff as DiffAlgebra<StlSnapshot>>::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
     // solid_name: exercised in both directions (LWW scalar).
@@ -256,10 +253,10 @@ async fn insert_then_remove_before_matches_canonical_shape() {
 
     let base = base_snapshot().await;
     let sequential = {
-        let mid = d1.apply(&base).expect("valid first diff");
-        d2.apply(&mid).expect("valid second diff")
+        let mid = protocol::apply_diff(&d1, &base).expect("valid first diff");
+        protocol::apply_diff(&d2, &mid).expect("valid second diff")
     };
-    assert_eq!(merged.apply(&base).expect("valid absorbed diff"), sequential);
+    assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), sequential);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -270,10 +267,10 @@ async fn insert_insert_same_index_both_survive() {
     merged.absorb(d2.clone());
     let base = base_snapshot().await;
     let sequential = {
-        let mid = d1.apply(&base).expect("valid first diff");
-        d2.apply(&mid).expect("valid second diff")
+        let mid = protocol::apply_diff(&d1, &base).expect("valid first diff");
+        protocol::apply_diff(&d2, &mid).expect("valid second diff")
     };
-    assert_eq!(merged.apply(&base).expect("valid absorbed diff"), sequential);
+    assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), sequential);
     assert_eq!(sequential.triangles.len(), base.triangles.len() + 2);
 }
 
@@ -290,10 +287,10 @@ async fn add_then_set_field_patches_into_added() {
 
     let base = base_snapshot().await;
     let sequential = {
-        let mid = d1.apply(&base).expect("valid first diff");
-        d2.apply(&mid).expect("valid second diff")
+        let mid = protocol::apply_diff(&d1, &base).expect("valid first diff");
+        protocol::apply_diff(&d2, &mid).expect("valid second diff")
     };
-    assert_eq!(merged.apply(&base).expect("valid absorbed diff"), sequential);
+    assert_eq!(protocol::apply_diff(&merged, &base).expect("valid absorbed diff"), sequential);
 }
 //#endregion 🔖️CanonicalCases
 
@@ -311,8 +308,7 @@ async fn out_of_range_triangle_mutation_is_rejected_without_mutating() {
 
 //#region 🔖️F6RoundtripLaws
 /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws (hand-rolled grammar, see this file's `OpCodecs`
-/// region) — every variant, incl. the two struct-valued payloads (`SetSnapshot`,
-/// `InsertTriangle`) and the fixed-size-array payloads (`SetTriangleNormal`,
+/// region) — every variant, incl. the struct-valued payload (`InsertTriangle`) and the fixed-size-array payloads (`SetTriangleNormal`,
 /// `SetTriangleVertices`) that carry the doubly-nested `[[f64; 3]; 3]` the `dsl`-derive bug
 /// blocks.
 #[semio_framework_async_macros::async_test]
@@ -364,8 +360,6 @@ async fn diff_codec_text_binary_roundtrip_law() {
 async fn kinds_match_enum_and_catalog() {
     fn kind_of(mutation: &StlMutation) -> &'static str {
         match mutation {
-            StlMutation::SetSnapshot(_) => "set-snapshot",
-            StlMutation::PatchSnapshot(_) => "patch-snapshot",
             StlMutation::SetSolidName(_) => "set-solid-name",
             StlMutation::InsertTriangle(_) => "insert-triangle",
             StlMutation::RemoveTriangle(_) => "remove-triangle",
@@ -374,8 +368,6 @@ async fn kinds_match_enum_and_catalog() {
         }
     }
     let samples = [
-        StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: StlSnapshot::default() }),
-        StlMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         StlMutation::SetSolidName(set_solid_name::SetSolidName { name: String::new() }),
         StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 0, triangle: StlTriangle::default() }),
         StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 0 }),
@@ -393,3 +385,21 @@ async fn kinds_match_enum_and_catalog() {
     assert_eq!(declared, KINDS, "the oracle manifest's kinds must match StlMutation exactly");
 }
 //#endregion 🔖️KindsConformanceLaw
+
+/// ⚖️ `stl_mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff; the triangle list is
+/// exercised with a MIDDLE row so the inverse must restore the original position.
+#[semio_framework_async_macros::async_test]
+async fn stl_mutation_inverse_sum_law_holds_for_every_leaf() {
+    let mut base = base_snapshot().await;
+    base.triangles = vec![tri(1.0, 0.0, 0.0, 1.0).await, tri(0.0, 1.0, 0.0, 2.0).await, tri(0.0, 0.0, 1.0, 3.0).await];
+    for mutation in [
+        StlMutation::SetSolidName(set_solid_name::SetSolidName { name: "renamed".into() }),
+        StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 1, triangle: tri(1.0, 1.0, 0.0, 99.0).await }),
+        StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: 3, triangle: tri(1.0, 1.0, 0.0, 98.0).await }),
+        StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: 1 }),
+        StlMutation::SetTriangleNormal(set_triangle_normal::SetTriangleNormal { index: 1, normal: [0.0, 0.0, -1.0] }),
+        StlMutation::SetTriangleVertices(set_triangle_vertices::SetTriangleVertices { index: 1, vertices: [[9.0, 9.0, 9.0], [8.0, 8.0, 8.0], [7.0, 7.0, 7.0]] }),
+    ] {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+}

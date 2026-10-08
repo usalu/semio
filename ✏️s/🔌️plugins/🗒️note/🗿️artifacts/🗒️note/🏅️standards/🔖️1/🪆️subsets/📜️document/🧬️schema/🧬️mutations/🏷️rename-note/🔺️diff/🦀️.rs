@@ -8,6 +8,6 @@ pub fn diff(payload: &RenameNote, base: &NoteSnapshot) -> protocol::MutationOutc
     if base.title == payload.new_title {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Note title is already {:?}.", payload.new_title));
     }
-    protocol::MutationOutcome::new(NoteDiff { title: Some(payload.new_title.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(NoteDiff { title: Some(crate::schema::diff::NoteAssigned::new(payload.new_title.clone())), ..Default::default() })
 }
 //#endregion 🔖️Diff

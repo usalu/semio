@@ -9,7 +9,6 @@ use super::*;
 use crate::standards::v1::subsets::value::schema::mutations::*;
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, NamedModified, NamedTripleDiff};
 use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::value::schema::diff::diff_set_snapshot;
 use crate::standards::v1::subsets::value::schema::diff::{value_diff_between, NamedAdded, SemioValueDiff, SemioValueTreeDiff};
 use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value};
 use crate::standards::v1::subsets::value::io::text::diff::{enc_semio_value};
@@ -77,18 +76,28 @@ pub(crate) fn dec_semio_snapshot(s: &str) -> Result<SemioValueSnapshot, String> 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_at(at: Option<usize>) -> String {
+    at.map(|at| format!(" at={at}")).unwrap_or_default()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_at(args: &std::collections::BTreeMap<&str, &str>) -> Result<Option<usize>, String> {
+    args.get("at").map(|at| at.parse::<usize>().map_err(|error| error.to_string())).transpose()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_value_mutation(m: &SemioValueMutation) -> String {
     match m {
         SemioValueMutation::SetValue(set_value::SetValue { path, value }) => format!("set-value path={} value={}", enc_path(path), enc_semio_value(value)),
-        SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path, key, value }) => {
-            format!("set-map-entry path={} key={} value={}", enc_path(path), enc_str(key), enc_semio_value(value))
+        SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path, key, value, at }) => {
+            format!("set-map-entry path={} key={} value={}{}", enc_path(path), enc_str(key), enc_semio_value(value), enc_at(*at))
         }
         SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path, key }) => format!("remove-map-entry path={} key={}", enc_path(path), enc_str(key)),
         SemioValueMutation::InsertListItem(insert_list_item::InsertListItem { path, index, value }) => {
             format!("insert-list-item path={} index={index} value={}", enc_path(path), enc_semio_value(value))
         }
         SemioValueMutation::RemoveListItem(remove_list_item::RemoveListItem { path, index }) => format!("remove-list-item path={} index={index}", enc_path(path)),
-        SemioValueMutation::SetNode(set_node::SetNode { id, value }) => format!("set-node id={} value={}", enc_value_id(id), enc_semio_value(value)),
+        SemioValueMutation::SetNode(set_node::SetNode { id, value, at }) => format!("set-node id={} value={}{}", enc_value_id(id), enc_semio_value(value), enc_at(*at)),
         SemioValueMutation::RemoveNode(remove_node::RemoveNode { id }) => format!("remove-node id={}", enc_value_id(id)),
     }
 }
@@ -102,11 +111,11 @@ pub(crate) fn parse_value_mutation(line: &str) -> Result<SemioValueMutation, Str
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
         "set-value" => Ok(SemioValueMutation::SetValue(set_value::SetValue { path: dec_path(arg("path")?)?, value: dec_semio_value(arg("value")?)? })),
-        "set-map-entry" => Ok(SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: dec_path(arg("path")?)?, key: dec_str(arg("key")?)?, value: dec_semio_value(arg("value")?)? })),
+        "set-map-entry" => Ok(SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: dec_path(arg("path")?)?, key: dec_str(arg("key")?)?, value: dec_semio_value(arg("value")?)?, at: dec_at(&args)? })),
         "remove-map-entry" => Ok(SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path: dec_path(arg("path")?)?, key: dec_str(arg("key")?)? })),
         "insert-list-item" => Ok(SemioValueMutation::InsertListItem(insert_list_item::InsertListItem { path: dec_path(arg("path")?)?, index: usize_arg("index")?, value: dec_semio_value(arg("value")?)? })),
         "remove-list-item" => Ok(SemioValueMutation::RemoveListItem(remove_list_item::RemoveListItem { path: dec_path(arg("path")?)?, index: usize_arg("index")? })),
-        "set-node" => Ok(SemioValueMutation::SetNode(set_node::SetNode { id: dec_value_id(arg("id")?)?, value: dec_semio_value(arg("value")?)? })),
+        "set-node" => Ok(SemioValueMutation::SetNode(set_node::SetNode { id: dec_value_id(arg("id")?)?, value: dec_semio_value(arg("value")?)?, at: dec_at(&args)? })),
         "remove-node" => Ok(SemioValueMutation::RemoveNode(remove_node::RemoveNode { id: dec_value_id(arg("id")?)? })),
         other => Err(format!("semio value mutation: unknown keyword {other:?}")),
     }

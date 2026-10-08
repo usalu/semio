@@ -1,14 +1,53 @@
-# 🧬️ Process3d diff schema — sparse field delta over the artifact.
+# 🧬️ Process3d diff schema — sparse field delta over the artifact: id-keyed machine, step and tool-solid row deltas plus the scalar stock slots.
 
 type Process3dDiff {
-  artifact: Process3dArtifact @state(class: ARTIFACT)
-  workshop: Workshop @state(class: ARTIFACT)
+  workshop: Process3dMachinesDelta @state(class: ARTIFACT)
   stockId: String @state(class: ARTIFACT)
   stockLabel: String @state(class: ARTIFACT)
   stockPose: Pose @state(class: ARTIFACT)
   stockPayload: Stock @state(class: ARTIFACT)
   stockSolid: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
   steps: ArtifactLink @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
-  stepPayloads: [ProcessStep!] @state(class: ARTIFACT)
-  toolSolids: [ArtifactLink!] @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
+  stepPayloads: Process3dStepsDelta @state(class: ARTIFACT)
+  toolSolids: Process3dToolSolidsDelta @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
 }
+
+type Process3dMachinesDelta {
+  added: [WorkshopMachine!]!
+  removed: [String!]!
+  patched: [Process3dMachinePatch!]!
+  reordered: [String!]
+}
+
+type Process3dMachinePatch {
+  id: String!
+  label: String
+  iconId: String
+  capabilities: [Capability!]
+}
+
+type Process3dStepsDelta {
+  added: [ProcessStep!]!
+  removed: [String!]!
+  patched: [Process3dStepPatch!]!
+  reordered: [String!]
+}
+
+type Process3dStepPatch {
+  id: String!
+  label: String
+  enabled: Boolean
+  measure: ProcessMeasure
+  origin: Process3dOptionalOrigin
+}
+
+type Process3dOptionalOrigin { value: StepOrigin }
+
+type Process3dToolSolidsDelta {
+  added: [ArtifactLink!]!
+  removed: [String!]!
+  patched: [Process3dToolSolidPatch!]!
+  reordered: [String!]
+}
+
+type Process3dToolSolidPatch { childId: String! }

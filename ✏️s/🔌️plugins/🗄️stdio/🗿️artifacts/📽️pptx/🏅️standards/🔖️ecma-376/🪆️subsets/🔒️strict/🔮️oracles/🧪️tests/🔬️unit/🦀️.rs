@@ -62,7 +62,7 @@ fn unknown_kind_is_an_error_never_a_silent_no_op() {
 
 #[test]
 fn a_kind_this_subset_does_not_declare_is_refused_even_when_the_engine_could_perform_it() {
-    let undeclared = ["set-snapshot", "set-main-namespace", "set-drawing-namespace", "set-relationships-namespace", "set-relationship-base", "insert-vml-part", "insert-alternate-content", "set-worksheet-content-type"]
+    let undeclared = ["set-main-namespace", "set-drawing-namespace", "set-relationships-namespace", "set-relationship-base", "insert-vml-part", "insert-alternate-content", "set-worksheet-content-type"]
         .into_iter()
         .find(|kind| !KINDS.contains(kind));
     let Some(kind) = undeclared else { return };

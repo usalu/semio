@@ -1,3 +1,4 @@
+use crate::Puzzle5dSnapshot;
 
 use crate::standards::v1::subsets::any::io::binary::snapshot::*;
 

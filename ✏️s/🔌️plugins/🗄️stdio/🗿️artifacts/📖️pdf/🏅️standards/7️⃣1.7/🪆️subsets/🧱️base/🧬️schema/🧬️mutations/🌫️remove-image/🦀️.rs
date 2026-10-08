@@ -26,7 +26,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveImage {
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.images.iter().find(|item| item.id == self.id).map(|item| PdfMutation::SetImage(super::set_image::SetImage { image: item.clone() })).into_iter().collect()
+        base.images.iter().position(|item| item.id == self.id).map(|index| PdfMutation::SetImage(super::set_image::SetImage { image: base.images[index].clone(), index: Some(index) })).into_iter().collect()
     
     })())
 }

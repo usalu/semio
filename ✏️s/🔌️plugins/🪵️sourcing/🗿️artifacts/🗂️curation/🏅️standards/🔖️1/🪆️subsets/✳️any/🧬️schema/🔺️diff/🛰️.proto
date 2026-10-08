@@ -32,12 +32,10 @@ message CurationCuratedDelta {
 }
 
 message CurationDiff {
-  // @state artifact
-  optional semio.s.sourcing.curation.artifact.CurationArtifact artifact = 1;
   // @state artifact @child kind=s.stdio.semio
-  optional semio.os.store.ArtifactChild catalog = 2;
+  optional semio.os.store.ArtifactChild catalog = 1;
   // @state artifact
-  optional CurationStockExtraDelta stock_extra = 3;
+  optional CurationStockExtraDelta stock_extra = 2;
   // @state artifact
-  optional CurationCuratedDelta curated = 4;
+  optional CurationCuratedDelta curated = 3;
 }

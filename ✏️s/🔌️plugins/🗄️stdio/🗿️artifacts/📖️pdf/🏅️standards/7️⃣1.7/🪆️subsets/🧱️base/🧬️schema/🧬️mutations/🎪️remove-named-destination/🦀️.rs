@@ -26,7 +26,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveNamedDestination {
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.named_destinations.iter().find(|item| item.name == self.name).map(|item| PdfMutation::SetNamedDestination(super::set_named_destination::SetNamedDestination { destination: item.clone() })).into_iter().collect()
+        base.named_destinations.iter().position(|item| item.name == self.name).map(|index| PdfMutation::SetNamedDestination(super::set_named_destination::SetNamedDestination { destination: base.named_destinations[index].clone(), index: Some(index) })).into_iter().collect()
     
     })())
 }

@@ -44,6 +44,35 @@ impl ZipEntriesDiff {
     fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty() && self.order.is_none()
     }
+
+    /// 🔁️ The negative rows against the base entries: added members are removed again, removed members return with their base
+    /// content, every modified member restores its base fields under the name it carries afterwards, and an explicit `order`
+    /// is emitted exactly when the natural order of those rows would not land on the base order.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base: &[ZipEntry]) -> Self {
+        let find = |name: &str| base.iter().find(|entry| entry.name == name);
+        let removed: Vec<String> = self.added.iter().map(|entry| entry.name.clone()).collect();
+        let modified = self
+            .modified
+            .iter()
+            .filter_map(|item| {
+                let entry = find(&item.name)?;
+                let diff = ZipEntryDiff { name: item.diff.name.as_ref().map(|_| entry.name.clone()), data: item.diff.data.as_ref().map(|_| entry.data.clone()), metadata: item.diff.metadata.as_ref().map(|_| entry.metadata.clone()) };
+                Some(ZipEntryModified { name: item.diff.name.clone().unwrap_or_else(|| item.name.clone()), diff })
+            })
+            .collect();
+        let added: Vec<ZipEntry> = self.removed.iter().filter_map(|name| find(name).cloned()).collect();
+        let renamed: HashMap<&str, &str> = self.modified.iter().filter_map(|item| item.diff.name.as_deref().map(|name| (name, item.name.as_str()))).collect();
+        let dropped: HashSet<&str> = self.removed.iter().map(String::as_str).collect();
+        let after_names: Vec<&str> = match &self.order {
+            Some(order) => order.iter().map(String::as_str).collect(),
+            None => base.iter().filter(|entry| !dropped.contains(entry.name.as_str())).map(|entry| self.modified.iter().find(|item| item.name == entry.name).and_then(|item| item.diff.name.as_deref()).unwrap_or(entry.name.as_str())).chain(self.added.iter().map(|entry| entry.name.as_str())).collect(),
+        };
+        let added_names: HashSet<&str> = removed.iter().map(String::as_str).collect();
+        let natural: Vec<&str> = after_names.into_iter().filter(|name| !added_names.contains(name)).map(|name| renamed.get(name).copied().unwrap_or(name)).chain(added.iter().map(|entry| entry.name.as_str())).collect();
+        let order = (!natural.iter().copied().eq(base.iter().map(|entry| entry.name.as_str()))).then(|| base.iter().map(|entry| entry.name.clone()).collect());
+        Self { removed, modified, added, order }
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -242,7 +271,7 @@ fn validate_zip_entries(base: &[ZipEntry], diff: &ZipEntriesDiff) -> MutationApp
 
 impl DiffAlgebra<ZipSnapshot> for ZipDiff {
     fn inverse(&self, base: &ZipSnapshot) -> Self {
-        Self::between(&self.apply(base).unwrap(), base)
+        Self { comment: self.comment.as_ref().map(|_| base.comment.clone()), comment_utf8: self.comment_utf8.map(|_| base.comment_utf8), entries: self.entries.as_ref().map(|entries| entries.inverse(&base.entries)) }
     }
 
     fn between(base: &ZipSnapshot, other: &ZipSnapshot) -> Self {
@@ -272,12 +301,6 @@ impl DiffAlgebra<ZipSnapshot> for ZipDiff {
     }
 }
 //#endregion 🔖️Algebra
-
-//#region 🔖️Builders
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &ZipSnapshot, next: &ZipSnapshot) -> ZipDiff {
-    ZipDiff::between(base, next)
-}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_archive_comment(comment: &str, comment_utf8: bool) -> ZipDiff {
@@ -345,7 +368,7 @@ fn logical_diff_does_not_require_native_comment_encoding(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🚪️logical-diff-independence/🔣️.json")).unwrap();
     let base=ZipSnapshot{comment_utf8:fixture["before"]["commentUtf8"].as_bool().unwrap(),..ZipSnapshot::default()};
     let diff=ZipDiff{comment:Some(fixture["mutation"]["comment"].as_str().unwrap().into()),..ZipDiff::default()};
-    let after=diff.apply(&base).expect("logical comment edit must not materialize native ZIP");
+    let after=protocol::apply_diff(&diff,&base).expect("logical comment edit must not materialize native ZIP");
     let actual=serde_json::json!({"comment":after.comment,"commentUtf8":after.comment_utf8});
     let mut reference=fixture["before"].clone();reference["comment"]=fixture["mutation"]["comment"].clone();
     assert_eq!(reference,fixture["after"]);assert_eq!(actual,reference);

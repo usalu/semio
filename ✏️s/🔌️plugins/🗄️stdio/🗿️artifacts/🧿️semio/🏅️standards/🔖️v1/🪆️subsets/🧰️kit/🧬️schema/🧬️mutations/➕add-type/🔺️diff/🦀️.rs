@@ -1,6 +1,7 @@
 //! 🔺️ Diff for `AddType`.
 
-use crate::standards::v1::subsets::kit::schema::diff::{SemioKitDiff, SemioKitTypeList};
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexedTripleDiff};
+use crate::standards::v1::subsets::kit::schema::diff::{SemioKitDiff};
 use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
 
 //#region 🔖️Diff
@@ -9,8 +10,7 @@ pub fn diff(payload: &super::AddType, base: &SemioKitSnapshot) -> protocol::Muta
     if base.types.iter().any(|t| t.id == payload.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A type with id \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
-    let mut types = base.types.clone();
-    types.push(SemioKitType { id: payload.id.clone(), name: payload.name.clone(), category: payload.category.clone() });
-    protocol::MutationOutcome::new(SemioKitDiff { types: Some(SemioKitTypeList { values: types }), ..Default::default() })
+    let item = SemioKitType { id: payload.id.clone(), name: payload.name.clone(), category: payload.category.clone() };
+    protocol::MutationOutcome::new(SemioKitDiff { types: Some(IndexedTripleDiff { added: vec![IndexAdded { index: payload.at.map_or(base.types.len(), |at| at.min(base.types.len())), item }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

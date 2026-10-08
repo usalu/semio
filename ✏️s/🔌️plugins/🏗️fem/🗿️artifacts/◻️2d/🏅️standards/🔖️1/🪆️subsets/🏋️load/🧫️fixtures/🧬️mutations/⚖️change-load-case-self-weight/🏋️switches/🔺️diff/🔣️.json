@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "nodes": null,
   "elements": null,
   "regions": null,
@@ -12,19 +11,10 @@
     "patched": [
       {
         "id": "live",
-        "item": {
-          "id": "live",
-          "name": "Imposed",
-          "loads": [
-            {
-              "kind": "memberUdl",
-              "id": "ll1",
-              "elementId": "b1",
-              "wx": 0.0,
-              "wy": -15000.0
-            }
-          ],
-          "selfWeight": true
+        "patch": {
+          "name": null,
+          "selfWeight": true,
+          "loads": null
         }
       }
     ],

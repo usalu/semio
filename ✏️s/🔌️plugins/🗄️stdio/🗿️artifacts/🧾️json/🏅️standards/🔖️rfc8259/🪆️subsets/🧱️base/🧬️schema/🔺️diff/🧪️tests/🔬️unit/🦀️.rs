@@ -32,8 +32,8 @@ fn between_roundtrip_law_scalars_and_kind_change() {
     let cases = [(JsonValue::Null, JsonValue::Bool { value: true }), (JsonValue::Bool { value: true }, JsonValue::Bool { value: false }), (num("1"), num("2.5e10")), (str_("a"), str_("b")), (num("1"), str_("1"))];
     for (a, b) in cases {
         let (sa, sb) = (snap(a.clone()), snap(b.clone()));
-        assert_eq!(JsonDiff::between(&sa, &sb).apply(&sa).unwrap(), sb, "a={a:?} b={b:?}");
-        assert_eq!(JsonDiff::between(&sb, &sa).apply(&sb).unwrap(), sa);
+        assert_eq!(protocol::apply_diff(&JsonDiff::between(&sa, &sb), &sa).unwrap(), sb, "a={a:?} b={b:?}");
+        assert_eq!(protocol::apply_diff(&JsonDiff::between(&sb, &sa), &sb).unwrap(), sa);
     }
 }
 
@@ -42,8 +42,8 @@ fn between_roundtrip_law_nested_collections() {
     let a = objv(vec![("tags", arr(vec![str_("x"), str_("y")])), ("n", num("1"))]);
     let b = objv(vec![("tags", arr(vec![str_("x"), str_("z"), str_("w")])), ("n", num("2")), ("extra", JsonValue::Bool { value: true })]);
     let (sa, sb) = (snap(a.clone()), snap(b.clone()));
-    assert_eq!(JsonDiff::between(&sa, &sb).apply(&sa).unwrap(), sb);
-    assert_eq!(JsonDiff::between(&sb, &sa).apply(&sb).unwrap(), sa);
+    assert_eq!(protocol::apply_diff(&JsonDiff::between(&sa, &sb), &sa).unwrap(), sb);
+    assert_eq!(protocol::apply_diff(&JsonDiff::between(&sb, &sa), &sb).unwrap(), sa);
 }
 
 #[test]
@@ -61,10 +61,10 @@ fn inverse_law_diff_level() {
     let b = objv(vec![("x", num("2")), ("z", str_("new"))]);
     let (sa, sb) = (snap(a), snap(b));
     let d = JsonDiff::between(&sa, &sb);
-    let mid = d.apply(&sa).unwrap();
+    let mid = protocol::apply_diff(&d, &sa).unwrap();
     assert_eq!(mid, sb);
     let inv = d.inverse(&sa);
-    assert_eq!(inv.apply(&mid).unwrap(), sa);
+    assert_eq!(protocol::apply_diff(&inv, &mid).unwrap(), sa);
 }
 //#endregion inverse_law
 
@@ -87,10 +87,10 @@ fn absorb_array_insert_then_remove_before() {
     let base = snap(arr(vec![str_("a"), str_("b"), str_("c")]));
     let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("f") }], ..Default::default() });
     let d2 = array_diff(JsonArrayDiff { removed: vec![0], ..Default::default() });
-    let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
+    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).unwrap()).unwrap();
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&base).unwrap(), sequential);
+    assert_eq!(protocol::apply_diff(&combined, &base).unwrap(), sequential);
     assert_eq!(sequential.value, arr(vec![str_("b"), str_("f"), str_("c")]));
     match &combined.value {
         Some(JsonValueDiff::Array { diff }) => {
@@ -107,10 +107,10 @@ fn absorb_array_insert_insert_same_index_both_survive() {
     let base = snap(arr(vec![str_("a"), str_("b")]));
     let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("f") }], ..Default::default() });
     let d2 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 2, item: str_("g") }], ..Default::default() });
-    let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
+    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).unwrap()).unwrap();
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&base).unwrap(), sequential);
+    assert_eq!(protocol::apply_diff(&combined, &base).unwrap(), sequential);
     assert_eq!(sequential.value, arr(vec![str_("a"), str_("b"), str_("g"), str_("f")]));
     match &combined.value {
         Some(JsonValueDiff::Array { diff }) => assert_eq!(diff.added.len(), 2, "both inserts must survive"),
@@ -124,10 +124,10 @@ fn absorb_array_insert_then_remove_of_same_added_item_cancels() {
     let base = snap(arr(vec![str_("a")]));
     let d1 = array_diff(JsonArrayDiff { added: vec![JsonArrayAdded { index: 1, item: str_("f") }], ..Default::default() });
     let d2 = array_diff(JsonArrayDiff { removed: vec![1], ..Default::default() });
-    let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
+    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).unwrap()).unwrap();
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&base).unwrap(), sequential);
+    assert_eq!(protocol::apply_diff(&combined, &base).unwrap(), sequential);
     assert_eq!(sequential, base);
     assert!(combined.is_empty(), "cancelling insert+remove must coalesce to an empty diff");
 }
@@ -141,10 +141,10 @@ fn absorb_array_add_then_setfield_patches_added_payload() {
         modified: vec![JsonArrayModified { index: 0, diff: JsonValueDiff::Object { diff: JsonObjectDiff { added: vec![JsonObjectAdded { index: 1, key: "y".into(), item: num("2") }], ..Default::default() } } }],
         ..Default::default()
     });
-    let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
+    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).unwrap()).unwrap();
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&base).unwrap(), sequential);
+    assert_eq!(protocol::apply_diff(&combined, &base).unwrap(), sequential);
     assert_eq!(sequential.value, arr(vec![objv(vec![("x", num("1")), ("y", num("2"))])]));
     match &combined.value {
         Some(JsonValueDiff::Array { diff }) => {
@@ -162,10 +162,10 @@ fn absorb_array_modify_then_remove_drops_pending_patch() {
     let base = snap(arr(vec![num("1"), num("2")]));
     let d1 = array_diff(JsonArrayDiff { modified: vec![JsonArrayModified { index: 0, diff: JsonValueDiff::Number { lexeme: "9".into() } }], ..Default::default() });
     let d2 = array_diff(JsonArrayDiff { removed: vec![0], ..Default::default() });
-    let sequential = d2.apply(&d1.apply(&base).unwrap()).unwrap();
+    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).unwrap()).unwrap();
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&base).unwrap(), sequential);
+    assert_eq!(protocol::apply_diff(&combined, &base).unwrap(), sequential);
     assert_eq!(sequential.value, arr(vec![num("2")]));
     match &combined.value {
         Some(JsonValueDiff::Array { diff }) => {
@@ -195,8 +195,8 @@ fn absorb_array_associativity() {
     let mut right = d1.clone();
     right.absorb(right_tail);
 
-    assert_eq!(left.apply(&s0).unwrap(), s3);
-    assert_eq!(right.apply(&s0).unwrap(), s3);
+    assert_eq!(protocol::apply_diff(&left, &s0).unwrap(), s3);
+    assert_eq!(protocol::apply_diff(&right, &s0).unwrap(), s3);
     assert_eq!(left, right);
 }
 //#endregion absorb_law canonical cases (array/index-keyed)
@@ -212,7 +212,7 @@ fn absorb_object_add_then_setfield_patches_added_payload() {
     let d2 = JsonDiff::between(&smid, &safter);
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&sbase).unwrap(), snap(after));
+    assert_eq!(protocol::apply_diff(&combined, &sbase).unwrap(), snap(after));
     match &combined.value {
         Some(JsonValueDiff::Object { diff }) => {
             assert!(diff.modified.is_empty());
@@ -233,7 +233,7 @@ fn absorb_object_modify_then_remove_drops_pending_patch() {
     let d2 = JsonDiff::between(&smid, &safter);
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&sbase).unwrap(), safter);
+    assert_eq!(protocol::apply_diff(&combined, &sbase).unwrap(), safter);
     match &combined.value {
         Some(JsonValueDiff::Object { diff }) => {
             assert_eq!(diff.removed, vec!["a".to_string()]);
@@ -253,7 +253,7 @@ fn absorb_object_insert_insert_both_survive() {
     let d2 = JsonDiff::between(&smid, &safter);
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&sbase).unwrap(), snap(after));
+    assert_eq!(protocol::apply_diff(&combined, &sbase).unwrap(), snap(after));
     match &combined.value {
         Some(JsonValueDiff::Object { diff }) => assert_eq!(diff.added.len(), 2),
         other => panic!("expected object diff, got {other:?}"),
@@ -270,7 +270,7 @@ fn absorb_object_insert_then_remove_of_same_added_item_cancels() {
     let d2 = JsonDiff::between(&smid, &safter);
     let mut combined = d1.clone();
     combined.absorb(d2.clone());
-    assert_eq!(combined.apply(&sbase).unwrap(), snap(base));
+    assert_eq!(protocol::apply_diff(&combined, &sbase).unwrap(), snap(base));
     assert!(combined.is_empty());
 }
 
@@ -293,8 +293,8 @@ fn absorb_object_associativity() {
     let mut right = d1.clone();
     right.absorb(right_tail);
 
-    assert_eq!(left.apply(&s0).unwrap(), s3);
-    assert_eq!(right.apply(&s0).unwrap(), s3);
+    assert_eq!(protocol::apply_diff(&left, &s0).unwrap(), s3);
+    assert_eq!(protocol::apply_diff(&right, &s0).unwrap(), s3);
     assert_eq!(left, right);
 }
 //#endregion absorb_law canonical cases (object/name-keyed)
@@ -333,8 +333,8 @@ fn sweep_b() -> JsonSnapshot {
 #[test]
 fn field_sweep_between_roundtrips_both_directions() {
     let (a, b) = (sweep_a(), sweep_b());
-    assert_eq!(JsonDiff::between(&a, &b).apply(&a).unwrap(), b);
-    assert_eq!(JsonDiff::between(&b, &a).apply(&b).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&JsonDiff::between(&a, &b), &a).unwrap(), b);
+    assert_eq!(protocol::apply_diff(&JsonDiff::between(&b, &a), &b).unwrap(), a);
     assert!(JsonDiff::between(&a, &a).is_empty());
 }
 

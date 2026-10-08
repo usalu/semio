@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "nodes": null,
   "elements": null,
   "materials": null,
@@ -12,18 +11,22 @@
     "patched": [
       {
         "id": "dead",
-        "item": {
-          "id": "dead",
-          "name": "Dead",
-          "loads": [
-            {
-              "kind": "area",
-              "id": "p1",
-              "solidId": "slab",
-              "pressure": -2500.0
-            }
-          ],
-          "selfWeight": true
+        "patch": {
+          "name": null,
+          "selfWeight": null,
+          "loads": {
+            "added": [
+              {
+                "kind": "area",
+                "id": "p1",
+                "solidId": "slab",
+                "pressure": -2500.0
+              }
+            ],
+            "removed": [],
+            "patched": [],
+            "reordered": null
+          }
         }
       }
     ],

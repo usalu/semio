@@ -1,6 +1,4 @@
-//! 🧩️ `set-bits-per-sample` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🧩️ `set-bits-per-sample` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,14 +13,14 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetBitsPerSa
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "bits-per-sample", kind: "set-bits-per-sample", record: "SetBitsPerSample" };
 
     fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<<TiffBaselineMutation as Mutation<TiffSnapshot>>::Diff> {
-        agg_diff(&TiffBaselineMutation::SetBitsPerSample(self.clone()), base)
+        set_first_page_shorts(base, TAG_BITS_PER_SAMPLE, self.bits.clone())
     }
     fn inverse(&self, base: &TiffSnapshot) -> Result<Vec<TiffBaselineMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&TiffBaselineMutation::SetBitsPerSample(self.clone()), base)?
-    
-    })
-}
+        Ok(match first_page_shorts(base, TAG_BITS_PER_SAMPLE) {
+            Some(old) if old != self.bits.as_slice() => vec![TiffBaselineMutation::SetBitsPerSample(Self { bits: old.to_vec() })],
+            _ => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set bits per sample", "Bits pro Abtastwert setzen")
     }

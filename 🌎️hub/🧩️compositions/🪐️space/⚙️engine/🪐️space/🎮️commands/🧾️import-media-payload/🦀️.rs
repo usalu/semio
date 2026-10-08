@@ -18,7 +18,7 @@ pub fn handle(payload: &ImportMediaPayload, doc: &ArtifactView<'_, WorkflowSnaps
     if let (Some(node_id), Some(format_name)) = (config.pending_import_node_id.as_ref(), config.pending_import_format.as_ref()) {
         let node_id = node_id.clone();
         let format_name = format_name.clone();
-        let format_kind = semio_framework::format_descriptor(&format_name)
+        let format_kind = directory::io::format_descriptor(&format_name)
             .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), error.to_string()))?
             .map(|descriptor| descriptor.short_id)
             .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), format!("unknown media format `{format_name}`")))?;

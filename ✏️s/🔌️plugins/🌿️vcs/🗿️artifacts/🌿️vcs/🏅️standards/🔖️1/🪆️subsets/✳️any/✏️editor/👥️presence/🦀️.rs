@@ -13,11 +13,28 @@ use store::ArtifactPack;
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct VcsDemoPresence {}
 
-impl protocol::MutationDiff<VcsDemoPresence> for VcsDemoPresence {
-    fn apply(&self, base: &VcsDemoPresence) -> protocol::MutationApplyResult<VcsDemoPresence> {
+/// 🔺️ Sparse delta over [`VcsDemoPresence`]: the presence record carries no field, so its delta names nothing.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct VcsDemoPresenceDiff {}
+
+impl protocol::MutationDiff<VcsDemoPresence> for VcsDemoPresenceDiff {
+    fn apply(&self, base: &VcsDemoPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<VcsDemoPresence> {
         Ok(base.clone())
     }
     fn absorb(&mut self, _other: Self) {}
+}
+
+impl protocol::DiffAlgebra<VcsDemoPresence> for VcsDemoPresenceDiff {
+    fn inverse(&self, _base: &VcsDemoPresence) -> Self {
+        Self {}
+    }
+    fn between(_base: &VcsDemoPresence, _other: &VcsDemoPresence) -> Self {
+        Self {}
+    }
+    fn is_empty(&self) -> bool {
+        true
+    }
 }
 
 impl store::ArtifactDsl for VcsDemoPresence {
@@ -66,7 +83,7 @@ pub enum VcsDemoPresenceMutation {
 }
 
 impl Mutation<VcsDemoPresence> for VcsDemoPresenceMutation {
-    type Diff = VcsDemoPresence;
+    type Diff = VcsDemoPresenceDiff;
 
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
@@ -91,8 +108,8 @@ impl Mutation<VcsDemoPresence> for VcsDemoPresenceMutation {
         }
     }
 
-    fn diff(&self, _base: &VcsDemoPresence) -> protocol::MutationOutcome<VcsDemoPresence> {
-        protocol::MutationOutcome::new(VcsDemoPresence::default())
+    fn diff(&self, _base: &VcsDemoPresence) -> protocol::MutationOutcome<VcsDemoPresenceDiff> {
+        protocol::MutationOutcome::new(VcsDemoPresenceDiff {})
     }
 
     fn inverse(&self, _base: &VcsDemoPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {

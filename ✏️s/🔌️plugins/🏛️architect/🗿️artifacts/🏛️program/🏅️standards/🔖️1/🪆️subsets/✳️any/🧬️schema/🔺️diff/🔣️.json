@@ -5,7 +5,6 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "artifact",
     "schema",
     "meta",
     "project",
@@ -72,25 +71,12 @@
     "issues",
     "auditEvents",
     "templates",
-    "knowledgePayload",
     "knowledge",
-    "benchmarksPayload",
     "benchmarks",
     "traces",
     "governance"
   ],
   "properties": {
-    "artifact": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "schema": {
       "anyOf": [
         {
@@ -105,7 +91,7 @@
     "meta": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ProgramMeta"
+          "$ref": "#/$defs/ProgramMetaEdit"
         },
         {
           "type": "null"
@@ -116,7 +102,7 @@
     "project": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ProjectDefinition"
+          "$ref": "#/$defs/ProjectDefinitionEdit"
         },
         {
           "type": "null"
@@ -817,41 +803,10 @@
       ],
       "x-semio-state": "artifact"
     },
-    "knowledgePayload": {
-      "anyOf": [
-        {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/KnowledgeRecord"
-          }
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "knowledge": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio",
-      "x-semio-child-standard": "v1",
-      "x-semio-child-subset": "table"
-    },
-    "benchmarksPayload": {
-      "anyOf": [
-        {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/BenchmarkRecord"
-          }
+          "$ref": "#/$defs/ProgramKnowledgeDelta"
         },
         {
           "type": "null"
@@ -862,16 +817,13 @@
     "benchmarks": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json"
+          "$ref": "#/$defs/ProgramBenchmarksDelta"
         },
         {
           "type": "null"
         }
       ],
-      "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio",
-      "x-semio-child-standard": "v1",
-      "x-semio-child-subset": "table"
+      "x-semio-state": "artifact"
     },
     "traces": {
       "anyOf": [
@@ -887,7 +839,7 @@
     "governance": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Governance"
+          "$ref": "#/$defs/GovernanceEdit"
         },
         {
           "type": "null"
@@ -5651,6 +5603,246 @@
         "waived",
         "deferred"
       ]
+    },
+    "ProgramKnowledgeDelta": {
+      "title": "ProgramKnowledgeDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched",
+        "reordered"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KnowledgeRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramKnowledgePatchEntry"
+          }
+        },
+        "reordered": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ProgramKnowledgePatchEntry": {
+      "title": "ProgramKnowledgePatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/KnowledgeRecordPatch"
+        }
+      }
+    },
+    "KnowledgeRecordPatch": {
+      "title": "KnowledgeRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramBenchmarksDelta": {
+      "title": "ProgramBenchmarksDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched",
+        "reordered"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BenchmarkRecord"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProgramBenchmarksPatchEntry"
+          }
+        },
+        "reordered": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ProgramBenchmarksPatchEntry": {
+      "title": "ProgramBenchmarksPatchEntry",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/BenchmarkRecordPatch"
+        }
+      }
+    },
+    "BenchmarkRecordPatch": {
+      "title": "BenchmarkRecordPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProgramMetaEdit": {
+      "title": "ProgramMetaEdit",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "set",
+        "patch"
+      ],
+      "properties": {
+        "set": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ProgramMeta"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "patch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProgramMetaPatch"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ProgramMetaPatch": {
+      "title": "ProgramMetaPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ProjectDefinitionEdit": {
+      "title": "ProjectDefinitionEdit",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "set",
+        "patch"
+      ],
+      "properties": {
+        "set": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/ProjectDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "patch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProjectDefinitionPatch"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ProjectDefinitionPatch": {
+      "title": "ProjectDefinitionPatch",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "GovernanceEdit": {
+      "title": "GovernanceEdit",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "set",
+        "patch"
+      ],
+      "properties": {
+        "set": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/architect/program/artifact.json#/$defs/Governance"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "patch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GovernancePatch"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "GovernancePatch": {
+      "title": "GovernancePatch",
+      "type": "object",
+      "additionalProperties": true
     }
   }
 }

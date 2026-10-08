@@ -15,6 +15,8 @@ pub struct AddLoad {
     pub case_id: String,
     #[dsl(statements)]
     pub load: Box<FemLoad>,
+    /// 📍 Zero-based insertion position among the case's loads; `None` or past the end appends.
+    pub index: Option<usize>,
 }
 
 impl MutationKind<Fem3dSnapshot, Fem3dMutation> for AddLoad {

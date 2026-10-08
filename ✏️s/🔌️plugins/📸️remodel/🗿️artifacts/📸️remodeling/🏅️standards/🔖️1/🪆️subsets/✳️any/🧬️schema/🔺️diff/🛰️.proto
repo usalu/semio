@@ -5,27 +5,76 @@ package semio.s.remodel.remodeling.diff;
 
 message RemodelingDiff {
   // @state artifact
-  optional RemodelingArtifact artifact = 1;
+  optional string schema = 1;
   // @state artifact
-  optional string schema = 2;
+  optional string id = 2;
   // @state artifact
-  optional string id = 3;
+  optional RemodelingStreamsDelta streams = 3;
   // @state artifact
-  optional RemodelingMediaStreamList streams = 4;
+  optional RemodelingAssetsDelta assets = 4;
   // @state artifact
-  map<string, RemodelingAssetChild> assets = 5;
+  optional RemodelingContentDelta durable_artifacts = 5;
   // @state artifact
-  map<string, RemodelingDurableArtifact> durable_artifacts = 6;
+  optional RemodelingCalibrationDelta calibration = 6;
   // @state artifact
-  optional CalibrationState calibration = 7;
+  optional RemodelingParamsDiff params = 7;
   // @state artifact
-  optional ReconstructionParams params = 8;
+  optional RemodelingGcpsDelta gcps = 8;
   // @state artifact
-  optional RemodelingGcpList gcps = 9;
-  // @state artifact
-  optional ReconstructionResults results = 10;
-  // @state presence
-  // @state config
+  optional RemodelingResultsDiff results = 9;
+}
+
+enum RemodelingRowKind { REMODELING_ROW_KIND_INSERT = 0; REMODELING_ROW_KIND_REPLACE = 1; REMODELING_ROW_KIND_REMOVE = 2; REMODELING_ROW_KIND_PATCH = 3; }
+
+message RemodelingStreamRow { RemodelingRowKind row = 1; optional MediaStream entity = 2; optional string key = 3; optional MediaStreamPatch patch = 4; }
+message RemodelingGcpRow { RemodelingRowKind row = 1; optional GroundControlPoint entity = 2; optional string key = 3; optional GroundControlPointPatch patch = 4; }
+message RemodelingCameraRow { RemodelingRowKind row = 1; optional CameraCalibration entity = 2; optional string key = 3; }
+message RemodelingRigRow { RemodelingRowKind row = 1; optional RigExtrinsic entity = 2; optional string key = 3; }
+message RemodelingAssetRow { RemodelingRowKind row = 1; optional RemodelingAssetEntry entity = 2; optional string key = 3; }
+message RemodelingStreamsDelta { repeated RemodelingStreamRow rows = 1; }
+message RemodelingGcpsDelta { repeated RemodelingGcpRow rows = 1; }
+message RemodelingCamerasDelta { repeated RemodelingCameraRow rows = 1; }
+message RemodelingRigDelta { repeated RemodelingRigRow rows = 1; }
+message RemodelingAssetsDelta { repeated RemodelingAssetRow rows = 1; }
+message RemodelingAssetEntry { string key = 1; RemodelingAssetChild child = 2; }
+message RemodelingCalibrationDelta { RemodelingCamerasDelta cameras = 1; RemodelingRigDelta rig = 2; }
+
+message FrameRefMembers { repeated FrameRef removed = 1; repeated FrameRef added = 2; }
+message GcpObservationMembers { repeated GcpObservation removed = 1; repeated GcpObservation added = 2; }
+message RemodelingAssignedVideoSource { optional VideoSource value = 1; }
+message MediaStreamPatch { optional double sync_offset_ms = 1; optional RemodelingAssignedVideoSource source = 2; optional FrameRefMembers frames = 3; }
+message GroundControlPointPatch { optional GcpObservationMembers observations = 1; }
+
+enum RemodelingContentRowKind { REMODELING_CONTENT_ROW_KIND_APPEND = 0; REMODELING_CONTENT_ROW_KIND_TRUNCATE = 1; }
+message RemodelingContentHeader { string kind = 1; optional string mime = 2; uint32 width = 3; uint32 height = 4; }
+message RemodelingContentRow { RemodelingContentRowKind row = 1; string id = 2; optional RemodelingContentHeader header = 3; repeated ByteBuffer chunks = 4; optional uint64 from = 5; }
+message RemodelingContentDelta { repeated RemodelingContentRow rows = 1; }
+
+message RemodelingParamsDiff {
+  optional IngestParams ingest = 1;
+  optional FeatureParams feature = 2;
+  optional MatchParams matching = 3;
+  optional SfmParams sfm = 4;
+  optional DenseParams dense = 5;
+  optional MeshParams mesh = 6;
+  optional MotionParams motion = 7;
+  optional GeoParams geo = 8;
+}
+
+message RemodelingAssignedSparseCloud { optional SparseCloud value = 1; }
+message RemodelingAssignedDenseCloud { optional DenseCloud value = 1; }
+message RemodelingAssignedCameraTrajectory { optional CameraTrajectory value = 1; }
+message RemodelingAssignedGeoProducts { optional GeoProducts value = 1; }
+message RemodelingAssignedQcReport { optional QcReportSnapshot value = 1; }
+message RemodelingTracks { repeated MotionTrackSummary values = 1; }
+message RemodelingResultsDiff {
+  optional RemodelingAssignedSparseCloud sparse = 1;
+  optional RemodelingAssignedDenseCloud dense = 2;
+  optional RemodelingMesh mesh = 3;
+  optional RemodelingAssignedCameraTrajectory trajectory = 4;
+  optional RemodelingTracks tracks = 5;
+  optional RemodelingAssignedGeoProducts geo = 6;
+  optional RemodelingAssignedQcReport qc = 7;
 }
 
 message ArtifactDialect {
@@ -37,11 +86,6 @@ message ArtifactDialect {
 message ArtifactRef {
   string artifact_id = 1;
   ArtifactDialect dialect = 2;
-}
-
-message CalibrationState {
-  repeated CameraCalibration cameras = 1;
-  repeated RigExtrinsic rig = 2;
 }
 
 message CameraCalibration {
@@ -218,58 +262,9 @@ message QcReportSnapshot {
   repeated string warnings = 7;
 }
 
-message ReconstructionParams {
-  IngestParams ingest = 1;
-  FeatureParams feature = 2;
-  MatchParams matching = 3;
-  SfmParams sfm = 4;
-  DenseParams dense = 5;
-  MeshParams mesh = 6;
-  MotionParams motion = 7;
-  GeoParams geo = 8;
-}
-
-message ReconstructionResults {
-  optional SparseCloud sparse = 1;
-  optional DenseCloud dense = 2;
-  RemodelingMesh mesh = 3;
-  optional CameraTrajectory trajectory = 4;
-  repeated MotionTrackSummary tracks = 5;
-  optional GeoProducts geo = 6;
-  optional QcReportSnapshot qc = 7;
-}
-
-message RemodelingArtifact {
-  string schema = 1;
-  string id = 2;
-  repeated MediaStream streams = 3;
-  map<string, RemodelingAssetChild> assets = 4;
-  map<string, RemodelingDurableArtifact> durable_artifacts = 5;
-  CalibrationState calibration = 6;
-  ReconstructionParams params = 7;
-  repeated GroundControlPoint gcps = 8;
-  ReconstructionResults results = 9;
-}
-
 message RemodelingAssetChild {
   string child_id = 1;
   ArtifactRef target = 2;
-}
-
-message RemodelingDurableArtifact {
-  string kind = 1;
-  optional string mime = 2;
-  uint32 width = 3;
-  uint32 height = 4;
-  repeated ByteBuffer chunks = 5;
-}
-
-message RemodelingGcpList {
-  repeated GroundControlPoint values = 1;
-}
-
-message RemodelingMediaStreamList {
-  repeated MediaStream values = 1;
 }
 
 message RemodelingMesh {

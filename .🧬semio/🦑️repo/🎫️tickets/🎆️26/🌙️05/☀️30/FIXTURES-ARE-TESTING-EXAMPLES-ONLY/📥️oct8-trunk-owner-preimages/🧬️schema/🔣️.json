@@ -1,0 +1,388 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/discovery/runtime/graph.json",
+  "title": "Runtime Graph",
+  "$defs": {
+    "RuntimeGraphEdgeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to",
+        "kind"
+      ],
+      "properties": {
+        "from": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "module",
+            "import",
+            "resource",
+            "dependency",
+            "generated"
+          ]
+        }
+      }
+    },
+    "RuntimeGraphFindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "path",
+        "detail"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "runtime-fixture-edge",
+            "runtime-unresolved-edge",
+            "runtime-input-mismatch"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        }
+      }
+    },
+    "RuntimeGraphEvidenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "roots",
+        "nodes",
+        "edges",
+        "findings"
+      ],
+      "properties": {
+        "roots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nodes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeGraphEdgeV1"
+          }
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeGraphFindingV1"
+          }
+        }
+      }
+    },
+    "RuntimeDynamicImportOwnerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "RuntimeCargoInputDigestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "RuntimeCargoBuildScriptV1": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "reason",
+        "package_id",
+        "cfgs",
+        "env",
+        "out_dir"
+      ],
+      "properties": {
+        "reason": {
+          "const": "build-script-executed"
+        },
+        "package_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cfgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "env": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "out_dir": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "RuntimeBuildResourceObservationV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "entries"
+          ],
+          "properties": {
+            "kind": {
+              "const": "directory"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "output"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "copy",
+                "read"
+              ]
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "output": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "RuntimeCargoBuildResourceSnapshotV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "sha256",
+        "outputSha256"
+      ],
+      "properties": {
+        "input": {
+          "$ref": "#/$defs/RuntimeBuildResourceObservationV1"
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "outputSha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "observedEntries": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "RuntimeCargoBuildResourcesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package_id",
+        "out_dir",
+        "path",
+        "text",
+        "sha256",
+        "observedAtMs",
+        "resources"
+      ],
+      "properties": {
+        "package_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "out_dir": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "observedAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeCargoBuildResourceSnapshotV1"
+          }
+        }
+      }
+    },
+    "RuntimeCargoInvocationInputV1": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "RuntimeCargoDepInfoV1": {
+      "type": "object",
+      "required": [
+        "path",
+        "text",
+        "baseDirectory"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "baseDirectory": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "RuntimeBrowserArtifactV1": {
+      "type": "object",
+      "required": [
+        "path",
+        "compiledSha256",
+        "mountedSha256",
+        "current"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "compiledSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "mountedSha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "current": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

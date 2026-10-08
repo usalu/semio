@@ -1,4 +1,0 @@
-syntax = "proto3";
-package stdio.jpg.mutation;
-// 🧬️ change-restart-interval/ChangeRestartInterval; complex fields follow the direct payload schema.
-message ChangeRestartIntervalMutation { bytes restart_interval = 1; }

@@ -60,10 +60,16 @@ export interface PlyElementsDiff {
   added?: PlyElementAdded[];
 }
 
+export interface PlyCommentsDiff {
+  removed?: number[];
+  modified?: { index: number; diff: string }[];
+  added?: { index: number; item: string }[];
+}
+
 /** 🔺️ Diff for `stdio.ply`. `schema` is an identity field and never appears here. */
 export interface PlyDiff {
   format?: PlyFormat;
-  comments?: string[];
+  comments?: PlyCommentsDiff;
   elements?: PlyElementsDiff;
 }
 
@@ -114,11 +120,22 @@ export const stdioPly10AnyDiffGuardConstant = <T extends string | number | boole
   value === expected ? expected : stdioPly10AnyDiffGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
 
+export function parsePlyCommentsDiff(value: unknown, at = "$"): PlyCommentsDiff {
+  const row = stdioPly10AnyDiffGuardObject(value, at);
+  const indexed = <T>(entries: unknown, key: string, read: (entry: Record<string, unknown>, where: string) => T): T[] | undefined =>
+    entries === undefined ? undefined : stdioPly10AnyDiffGuardArray(entries, `${at}.${key}`).map((entry, position) => read(stdioPly10AnyDiffGuardObject(entry, `${at}.${key}[${position}]`), `${at}.${key}[${position}]`));
+  return {
+    removed: row["removed"] === undefined ? undefined : stdioPly10AnyDiffGuardArray(row["removed"], `${at}.removed`).map((item, index) => stdioPly10AnyDiffGuardInteger(item, `${at}.removed[${index}]`, { minimum: 0 })),
+    modified: indexed(row["modified"], "modified", (entry, where) => ({ index: stdioPly10AnyDiffGuardInteger(entry["index"], `${where}.index`, { minimum: 0 }), diff: stdioPly10AnyDiffGuardString(entry["diff"], `${where}.diff`) })),
+    added: indexed(row["added"], "added", (entry, where) => ({ index: stdioPly10AnyDiffGuardInteger(entry["index"], `${where}.index`, { minimum: 0 }), item: stdioPly10AnyDiffGuardString(entry["item"], `${where}.item`) })),
+  };
+}
+
 export function parsePlyDiff(value: unknown, at = "$"): PlyDiff {
   const row = stdioPly10AnyDiffGuardObject(value, at);
   return {
     format: row["format"] === undefined ? undefined : stdioPly10AnyDiffGuardMember(row["format"], `${at}.format`, ["ascii", "binaryLittleEndian", "binaryBigEndian"] as const),
-    comments: row["comments"] === undefined ? undefined : stdioPly10AnyDiffGuardArray(row["comments"], `${at}.comments`).map((item, index) => stdioPly10AnyDiffGuardString(item, `${at}.comments[${index}]`)),
+    comments: row["comments"] === undefined ? undefined : parsePlyCommentsDiff(row["comments"], `${at}.comments`),
     elements: row["elements"] === undefined ? undefined : parsePlyElementsDiff(row["elements"], `${at}.elements`),
   };
 }

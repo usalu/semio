@@ -1,5 +1,5 @@
-//! 🔺️ `connect-nodes` — sparse diff construction.
-
+//! 🔺️ `connect-nodes` — sparse diff construction: one added edge (and the order when it is not appended).
+use crate::diff::EquationEdgesDelta;
 use crate::{EquationDiff, EquationEdge, EquationSnapshot};
 
 //#region 🔖️Diff
@@ -7,7 +7,7 @@ use crate::{EquationDiff, EquationEdge, EquationSnapshot};
 /// endpoint node is Error `target-missing`. A parallel edge (same source/target as an existing
 /// edge, under a fresh id) is Warning `no-op` — parallel edges are forbidden in this graph model.
 pub fn diff(payload: &super::ConnectNodes, base: &EquationSnapshot) -> protocol::MutationOutcome<EquationDiff> {
-    let mut graph = base.graph.clone();
+    let graph = &base.graph;
     if graph.edges.iter().any(|edge| edge.id == payload.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An edge with id \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
@@ -18,7 +18,13 @@ pub fn diff(payload: &super::ConnectNodes, base: &EquationSnapshot) -> protocol:
     if graph.edges.iter().any(|edge| edge.source == payload.source && edge.target == payload.target) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("An edge from \"{}\" to \"{}\" already exists; parallel edges are not allowed.", payload.source, payload.target));
     }
-    graph.edges.insert(payload.index.map_or(graph.edges.len(), |index| index.min(graph.edges.len())), EquationEdge { id: payload.id.clone(), source: payload.source.clone(), target: payload.target.clone() });
-    protocol::MutationOutcome::new(crate::equation_state_diff(graph, base.geometry.clone()))
+    let reordered = payload.index.filter(|index| *index < graph.edges.len()).map(|index| {
+        let mut order: Vec<String> = graph.edges.iter().map(|edge| edge.id.clone()).collect();
+        order.insert(index, payload.id.clone());
+        order
+    });
+    let edge = EquationEdge { id: payload.id.clone(), source: payload.source.clone(), target: payload.target.clone() };
+    let diff = EquationDiff { edges: Some(EquationEdgesDelta { added: vec![edge], reordered, ..Default::default() }), ..Default::default() };
+    protocol::MutationOutcome::new(crate::equation_state_diff(diff, base))
 }
 //#endregion 🔖️Diff

@@ -1742,7 +1742,7 @@ impl Generation3dRetainedMutationOwner {
                     7 => Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: first }),
                     8 => Generation3dMutation::UpdateCamera(UpdateCamera { camera: self.camera.take().ok_or("generation3d-mutation.update-camera")? }),
                     9 => Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: first }),
-                    10 => Generation3dMutation::CreateGeneration(CreateGeneration { generation: self.generation.take().ok_or("generation3d-mutation.create-generation")? }),
+                    10 => Generation3dMutation::CreateGeneration(CreateGeneration { generation: self.generation.take().ok_or("generation3d-mutation.create-generation")?, index: None }),
                     11 => Generation3dMutation::DeleteGeneration(DeleteGeneration { id: first }),
                     12 => Generation3dMutation::RenameGeneration(RenameGeneration { id: first, new_name: second }),
                     13 => Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue { id: first, question_id: second, new_value: std::mem::replace(&mut self.json, semio_framework_value::DslValue::Null) }),
@@ -3518,7 +3518,7 @@ pub fn generation3d_all_retained_mutation_fixtures_for_test() -> Vec<Generation3
         Generation3dMutation::DeleteWidgetPosition(DeleteWidgetPosition { id: "retained-a".into() }),
         Generation3dMutation::UpdateCamera(UpdateCamera { camera: semio_framework_artifact_flow_flow::CameraJson { x: 3.0, y: 4.0, zoom: 1.5 } }),
         Generation3dMutation::ChangeSchema(ChangeSchema { new_schema: "flow.host_snapshot.retained".into() }),
-        Generation3dMutation::CreateGeneration(CreateGeneration { generation: semio_framework_artifact_playbook_playbook::FormGeneration { id: "retained-generation".into(), name: "Retained Generation".into(), values } }),
+        Generation3dMutation::CreateGeneration(CreateGeneration { generation: semio_framework_artifact_playbook_playbook::FormGeneration { id: "retained-generation".into(), name: "Retained Generation".into(), values }, index: None }),
         Generation3dMutation::DeleteGeneration(DeleteGeneration { id: "retained-generation".into() }),
         Generation3dMutation::RenameGeneration(RenameGeneration { id: "retained-generation".into(), new_name: "Renamed Generation".into() }),
         Generation3dMutation::ChangeGenerationValue(ChangeGenerationValue {
@@ -3563,3 +3563,6 @@ pub fn generation3d_apply_retained_mutations_for_test(snapshot: &mut Generation3
 #[cfg(test)]
 #[path = "🧪️tests/🔬️retained-authority-laws/🦀️.rs"]
 mod retained_authority_laws;
+
+#[path = "📐️geometry-service/🦀️.rs"]
+pub mod geometry_service;

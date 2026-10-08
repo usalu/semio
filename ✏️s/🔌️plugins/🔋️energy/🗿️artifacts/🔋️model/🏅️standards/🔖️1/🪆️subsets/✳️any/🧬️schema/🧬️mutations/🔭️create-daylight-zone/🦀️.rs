@@ -17,11 +17,12 @@ pub struct CreateDaylightZone {
     pub illuminance_target_lux: f64,
     pub glare_limit: f64,
     pub window_transmittance: f64,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_daylight_zone(id: crate::model::EntityId, zone_id: crate::model::EntityId, illuminance_target_lux: f64, glare_limit: f64, window_transmittance: f64) -> EnergyModelMutation {
-    EnergyModelMutation::CreateDaylightZone(CreateDaylightZone { id, zone_id, illuminance_target_lux, glare_limit, window_transmittance })
+pub fn create_daylight_zone(id: crate::model::EntityId, zone_id: crate::model::EntityId, illuminance_target_lux: f64, glare_limit: f64, window_transmittance: f64, index: Option<u32>) -> EnergyModelMutation {
+    EnergyModelMutation::CreateDaylightZone(CreateDaylightZone { id, zone_id, illuminance_target_lux, glare_limit, window_transmittance, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateDaylightZone {

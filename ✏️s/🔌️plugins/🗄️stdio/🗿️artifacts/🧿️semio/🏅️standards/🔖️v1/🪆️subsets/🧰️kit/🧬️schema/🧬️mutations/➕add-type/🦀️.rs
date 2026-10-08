@@ -10,6 +10,8 @@ pub struct AddType {
     pub id: String,
     pub name: String,
     pub category: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl protocol::MutationKind<SemioKitSnapshot, SemioKitMutation> for AddType {

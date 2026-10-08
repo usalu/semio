@@ -28,6 +28,25 @@
         "group": "value",
         "order": 10
       }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Position the sheet takes among the sheets; the last position when absent.",
+          "de": "Position, die das Arbeitsblatt unter den Arbeitsblättern einnimmt; ohne Angabe die letzte."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "value",
+        "order": 30
+      }
     }
   },
   "$defs": {

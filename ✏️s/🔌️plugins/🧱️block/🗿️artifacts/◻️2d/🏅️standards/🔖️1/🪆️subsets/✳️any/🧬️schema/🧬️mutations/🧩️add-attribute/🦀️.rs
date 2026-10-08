@@ -16,11 +16,17 @@ use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
 pub struct AddAttribute {
     #[dsl(block)]
     pub attribute: BlockAttribute,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 pub fn add_attribute(attribute: BlockAttribute) -> Block2dMutation {
-    Block2dMutation::AddAttribute(AddAttribute { attribute })
+    Block2dMutation::AddAttribute(AddAttribute { attribute, index: None })
+}
+
+/// 📍️ Builder — like [`add_attribute`] but inserts the row at `index`.
+pub fn add_attribute_at(attribute: BlockAttribute, index: u32) -> Block2dMutation {
+    Block2dMutation::AddAttribute(AddAttribute { attribute, index: Some(index) })
 }
 
 impl protocol::MutationKind<Block2dSnapshot, Block2dMutation> for AddAttribute {

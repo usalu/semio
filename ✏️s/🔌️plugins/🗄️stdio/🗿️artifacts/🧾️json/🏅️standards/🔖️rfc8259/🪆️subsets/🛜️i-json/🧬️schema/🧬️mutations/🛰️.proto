@@ -17,7 +17,6 @@ message JsonIJsonRoot {
 
 message JsonIJsonMutation {
   enum Kind {
-    SET_SNAPSHOT = 0;
     SET_TOP_LEVEL = 2;
     UPSERT_MEMBER = 3;
     REMOVE_MEMBER = 4;

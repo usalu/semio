@@ -1,13 +1,46 @@
 {
-  "artifact": null,
   "annex": null,
   "site": null,
-  "buildings": null,
-  "bridges": null,
-  "assessments": null,
-  "silos": null,
-  "tanks": [],
-  "foundations": null,
-  "retainingWalls": null,
-  "towers": null
+  "buildings": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "bridges": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "assessments": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "silos": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "tanks": {
+    "removed": [
+      "tk-1"
+    ],
+    "added": [],
+    "modified": []
+  },
+  "foundations": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "retainingWalls": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "towers": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

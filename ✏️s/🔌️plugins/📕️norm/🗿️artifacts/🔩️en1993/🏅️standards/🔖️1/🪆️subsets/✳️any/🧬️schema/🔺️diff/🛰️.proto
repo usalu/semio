@@ -2,157 +2,470 @@
 syntax = "proto3";
 package semio.s.norm.en1993.diff;
 
-enum En1993RowOp {
-  EN1993_ROW_OP_INSERT = 0;
-  EN1993_ROW_OP_REMOVE = 1;
-  EN1993_ROW_OP_REPLACE = 2;
+message En1993MaterialAddition {
+  optional string after = 1;
+  bytes row = 2;
 }
 
-message En1993MaterialEdit {
-  En1993RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
+message En1993MaterialModification {
+  string key = 1;
+  En1993MaterialPatch patch = 2;
 }
 
-message En1993SectionEdit {
-  En1993RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
+message En1993MaterialDelta {
+  repeated string removed = 1;
+  repeated En1993MaterialAddition added = 2;
+  repeated En1993MaterialModification modified = 3;
 }
 
-message En1993MemberEdit {
-  En1993RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
+message En1993MaterialPatch {
+  optional string grade = 1;
+  optional double fy = 2;
+  optional double fu = 3;
+  optional double e_modulus = 4;
+  optional double g_modulus = 5;
+  optional string subgrade = 6;
+  optional string kind = 7;
 }
 
-message En1993LoadCaseEdit {
-  En1993RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
+message En1993SectionAddition {
+  optional string after = 1;
+  bytes row = 2;
 }
 
-message En1993MemberActionEdit {
-  En1993RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
+message En1993SectionModification {
+  string key = 1;
+  En1993SectionPatch patch = 2;
 }
 
-message En1993JointEdit {
-  En1993RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
+message En1993SectionDelta {
+  repeated string removed = 1;
+  repeated En1993SectionAddition added = 2;
+  repeated En1993SectionModification modified = 3;
 }
 
-message En1993FatigueDetailEdit {
-  En1993RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
+message En1993SectionPatch {
+  optional string designation = 1;
+  optional string kind = 2;
+  optional double h = 3;
+  optional double b = 4;
+  optional double tw = 5;
+  optional double tf = 6;
+  optional double r = 7;
+  optional double area = 8;
+  optional double shear_area_y = 9;
+  optional double shear_area_z = 10;
+  optional double iy = 11;
+  optional double iz = 12;
+  optional double it = 13;
+  optional double iw = 14;
+  optional double w_el_y = 15;
+  optional double w_el_z = 16;
+  optional double w_pl_y = 17;
+  optional double w_pl_z = 18;
+  optional double area_net = 19;
 }
 
-message En1993FireExposureEdit {
-  En1993RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
+message En1993MemberAddition {
+  optional string after = 1;
+  bytes row = 2;
 }
 
-message En1993ColdFormedMemberEdit {
-  En1993RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
+message En1993MemberModification {
+  string key = 1;
+  En1993MemberPatch patch = 2;
 }
 
-message En1993PlatedPanelEdit {
-  En1993RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
+message En1993MemberDelta {
+  repeated string removed = 1;
+  repeated En1993MemberAddition added = 2;
+  repeated En1993MemberModification modified = 3;
 }
 
-message En1993SiloShellEdit {
-  En1993RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
+message En1993MemberPatch {
+  optional string label = 1;
+  optional string member_type = 2;
+  optional string section_id = 3;
+  optional string material_id = 4;
+  optional double length = 5;
+  optional double buckling_length_y = 6;
+  optional double buckling_length_z = 7;
+  optional double ltb_length = 8;
+  optional double ltb_restraint_spacing = 9;
+  optional string load_application = 10;
+  optional double end_moment_ratio_psi = 11;
+  optional string moment_diagram = 12;
+  optional double deflection_limit_ratio = 13;
+  optional string analysis = 14;
 }
 
-message En1993TensionComponentEdit {
-  En1993RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
+message En1993LoadCaseAddition {
+  optional string after = 1;
+  bytes row = 2;
 }
 
-message En1993BridgeFatigueEdit {
-  En1993RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
+message En1993LoadCaseModification {
+  string key = 1;
+  En1993LoadCasePatch patch = 2;
 }
 
-message En1993TowerLegEdit {
-  En1993RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
+message En1993LoadCaseDelta {
+  repeated string removed = 1;
+  repeated En1993LoadCaseAddition added = 2;
+  repeated En1993LoadCaseModification modified = 3;
 }
 
-message En1993PileEdit {
-  En1993RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
+message En1993LoadCasePatch {
+  optional string name = 1;
+  optional string kind = 2;
+  optional string category = 3;
 }
 
-message En1993CraneRunwayEdit {
-  En1993RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
+message En1993MemberActionAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1993MemberActionModification {
+  string key = 1;
+  En1993MemberActionPatch patch = 2;
+}
+
+message En1993MemberActionDelta {
+  repeated string removed = 1;
+  repeated En1993MemberActionAddition added = 2;
+  repeated En1993MemberActionModification modified = 3;
+}
+
+message En1993MemberActionPatch {
+  optional string member_id = 1;
+  optional string load_case_id = 2;
+  optional bytes action = 3;
+}
+
+message En1993JointAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1993JointModification {
+  string key = 1;
+  En1993JointPatch patch = 2;
+}
+
+message En1993JointDelta {
+  repeated string removed = 1;
+  repeated En1993JointAddition added = 2;
+  repeated En1993JointModification modified = 3;
+}
+
+message En1993JointPatch {
+  optional string kind = 1;
+  optional string member_id = 2;
+  optional string bolt_class = 3;
+  optional double bolt_diameter = 4;
+  optional uint32 bolt_rows = 5;
+  optional uint32 bolts_per_row = 6;
+  optional double pitch = 7;
+  optional double gauge = 8;
+  optional double end_distance = 9;
+  optional double edge_distance = 10;
+  optional uint32 shear_planes = 11;
+  optional double plate_thickness = 12;
+  optional double plate_fu = 13;
+  optional double weld_throat = 14;
+  optional double weld_length = 15;
+  optional double weld_fu = 16;
+  optional string weld_grade = 17;
+  optional bytes actions = 18;
+  optional string category = 19;
+  optional double friction_mu = 20;
+  optional double preload_force = 21;
+  optional double slip_factor_ks = 22;
+  optional uint32 friction_surfaces = 23;
+}
+
+message En1993FatigueDetailAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1993FatigueDetailModification {
+  string key = 1;
+  En1993FatigueDetailPatch patch = 2;
+}
+
+message En1993FatigueDetailDelta {
+  repeated string removed = 1;
+  repeated En1993FatigueDetailAddition added = 2;
+  repeated En1993FatigueDetailModification modified = 3;
+}
+
+message En1993FatigueDetailPatch {
+  optional string member_id = 1;
+  optional uint32 category = 2;
+  optional string method = 3;
+  optional bytes spectrum = 4;
+}
+
+message En1993FireExposureAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1993FireExposureModification {
+  string key = 1;
+  En1993FireExposurePatch patch = 2;
+}
+
+message En1993FireExposureDelta {
+  repeated string removed = 1;
+  repeated En1993FireExposureAddition added = 2;
+  repeated En1993FireExposureModification modified = 3;
+}
+
+message En1993FireExposurePatch {
+  optional string member_id = 1;
+  optional string rating = 2;
+  optional double protection_thickness = 3;
+  optional double section_factor = 4;
+  optional double mu0 = 5;
+  optional double design_temperature = 6;
+  optional double protection_conductivity = 7;
+  optional double protection_density = 8;
+  optional double protection_specific_heat = 9;
+}
+
+message En1993ColdFormedMemberAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1993ColdFormedMemberModification {
+  string key = 1;
+  En1993ColdFormedMemberPatch patch = 2;
+}
+
+message En1993ColdFormedMemberDelta {
+  repeated string removed = 1;
+  repeated En1993ColdFormedMemberAddition added = 2;
+  repeated En1993ColdFormedMemberModification modified = 3;
+}
+
+message En1993ColdFormedMemberPatch {
+  optional double b_bar = 1;
+  optional double thickness = 2;
+  optional double k_sigma = 3;
+  optional double psi = 4;
+  optional double fy = 5;
+  optional double gross_resistance = 6;
+  optional bytes actions = 7;
+}
+
+message En1993PlatedPanelAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1993PlatedPanelModification {
+  string key = 1;
+  En1993PlatedPanelPatch patch = 2;
+}
+
+message En1993PlatedPanelDelta {
+  repeated string removed = 1;
+  repeated En1993PlatedPanelAddition added = 2;
+  repeated En1993PlatedPanelModification modified = 3;
+}
+
+message En1993PlatedPanelPatch {
+  optional double a = 1;
+  optional double b = 2;
+  optional double thickness = 3;
+  optional double fy = 4;
+  optional double k_sigma = 5;
+  optional bytes actions = 6;
+}
+
+message En1993SiloShellAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1993SiloShellModification {
+  string key = 1;
+  En1993SiloShellPatch patch = 2;
+}
+
+message En1993SiloShellDelta {
+  repeated string removed = 1;
+  repeated En1993SiloShellAddition added = 2;
+  repeated En1993SiloShellModification modified = 3;
+}
+
+message En1993SiloShellPatch {
+  optional double thickness = 1;
+  optional double radius = 2;
+  optional double depth = 3;
+  optional double k = 4;
+  optional double gamma = 5;
+  optional double fy = 6;
+}
+
+message En1993TensionComponentAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1993TensionComponentModification {
+  string key = 1;
+  En1993TensionComponentPatch patch = 2;
+}
+
+message En1993TensionComponentDelta {
+  repeated string removed = 1;
+  repeated En1993TensionComponentAddition added = 2;
+  repeated En1993TensionComponentModification modified = 3;
+}
+
+message En1993TensionComponentPatch {
+  optional double f_uk = 1;
+  optional double f_k = 2;
+  optional bytes actions = 3;
+}
+
+message En1993BridgeFatigueAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1993BridgeFatigueModification {
+  string key = 1;
+  En1993BridgeFatiguePatch patch = 2;
+}
+
+message En1993BridgeFatigueDelta {
+  repeated string removed = 1;
+  repeated En1993BridgeFatigueAddition added = 2;
+  repeated En1993BridgeFatigueModification modified = 3;
+}
+
+message En1993BridgeFatiguePatch {
+  optional string member_id = 1;
+  optional double lambda = 2;
+  optional double phi2 = 3;
+  optional double delta_sigma_p = 4;
+  optional uint32 category = 5;
+  optional string method = 6;
+}
+
+message En1993TowerLegAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1993TowerLegModification {
+  string key = 1;
+  En1993TowerLegPatch patch = 2;
+}
+
+message En1993TowerLegDelta {
+  repeated string removed = 1;
+  repeated En1993TowerLegAddition added = 2;
+  repeated En1993TowerLegModification modified = 3;
+}
+
+message En1993TowerLegPatch {
+  optional string member_id = 1;
+  optional double force_coefficient = 2;
+  optional double dynamic_factor = 3;
+  optional bytes actions = 4;
+}
+
+message En1993PileAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1993PileModification {
+  string key = 1;
+  En1993PilePatch patch = 2;
+}
+
+message En1993PileDelta {
+  repeated string removed = 1;
+  repeated En1993PileAddition added = 2;
+  repeated En1993PileModification modified = 3;
+}
+
+message En1993PilePatch {
+  optional string section_id = 1;
+  optional string material_id = 2;
+  optional double driving_stress = 3;
+  optional double embedded_length = 4;
+  optional double shaft_perimeter = 5;
+  optional bytes actions = 6;
+}
+
+message En1993CraneRunwayAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1993CraneRunwayModification {
+  string key = 1;
+  En1993CraneRunwayPatch patch = 2;
+}
+
+message En1993CraneRunwayDelta {
+  repeated string removed = 1;
+  repeated En1993CraneRunwayAddition added = 2;
+  repeated En1993CraneRunwayModification modified = 3;
+}
+
+message En1993CraneRunwayPatch {
+  optional string member_id = 1;
+  optional double wheel_contact_length = 2;
+  optional double dispersion = 3;
+  optional double web_thickness = 4;
+  optional double fy = 5;
+  optional double phi = 6;
+  optional bytes actions = 7;
 }
 
 message En1993Diff {
   // @state artifact
   optional string annex = 1;
   // @state artifact
-  repeated En1993MaterialEdit materials = 2;
+  En1993MaterialDelta materials = 2;
   // @state artifact
-  repeated En1993SectionEdit sections = 3;
+  En1993SectionDelta sections = 3;
   // @state artifact
-  repeated En1993MemberEdit members = 4;
+  En1993MemberDelta members = 4;
   // @state artifact
-  repeated En1993LoadCaseEdit load_cases = 5;
+  En1993LoadCaseDelta load_cases = 5;
   // @state artifact
-  repeated En1993MemberActionEdit member_actions = 6;
+  En1993MemberActionDelta member_actions = 6;
   // @state artifact
-  repeated En1993JointEdit joints = 7;
+  En1993JointDelta joints = 7;
   // @state artifact
-  repeated En1993FatigueDetailEdit fatigue_details = 8;
+  En1993FatigueDetailDelta fatigue_details = 8;
   // @state artifact
-  repeated En1993FireExposureEdit fire_exposures = 9;
+  En1993FireExposureDelta fire_exposures = 9;
   // @state artifact
-  repeated En1993ColdFormedMemberEdit cold_formed_members = 10;
+  En1993ColdFormedMemberDelta cold_formed_members = 10;
   // @state artifact
-  repeated En1993PlatedPanelEdit plated_panels = 11;
+  En1993PlatedPanelDelta plated_panels = 11;
   // @state artifact
-  repeated En1993SiloShellEdit silo_shells = 12;
+  En1993SiloShellDelta silo_shells = 12;
   // @state artifact
-  repeated En1993TensionComponentEdit tension_components = 13;
+  En1993TensionComponentDelta tension_components = 13;
   // @state artifact
-  repeated En1993BridgeFatigueEdit bridge_fatigue = 14;
+  En1993BridgeFatigueDelta bridge_fatigue = 14;
   // @state artifact
-  repeated En1993TowerLegEdit tower_legs = 15;
+  En1993TowerLegDelta tower_legs = 15;
   // @state artifact
-  repeated En1993PileEdit piles = 16;
+  En1993PileDelta piles = 16;
   // @state artifact
-  repeated En1993CraneRunwayEdit crane_runways = 17;
+  En1993CraneRunwayDelta crane_runways = 17;
 }

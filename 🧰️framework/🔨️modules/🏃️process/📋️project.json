@@ -161,7 +161,9 @@
       "executor": "nx:run-commands",
       "cache": false,
       "dependsOn": [],
-      "inputs": ["{projectRoot}/**/*"],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
@@ -205,6 +207,45 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🏃️process",
         "command": "bun ./📜️script.ts test wasm-build"
+      }
+    },
+    "test-command-owner": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/⚙️configuration/🏃️process/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🏃️process -- bun ./📜️script.ts test command"
+      }
+    },
+    "test-command-boundary": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/⚙️configuration/🏃️process/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🏃️process -- bun ./📜️script.ts test command-boundary"
+      }
+    },
+    "test-command-cold": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "inputs": [
+        "{projectRoot}/**/*",
+        "{workspaceRoot}/🧰️framework/⚙️configuration/🏃️process/**/*"
+      ],
+      "options": {
+        "cwd": "🧰️framework",
+        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 🔨️modules/🏃️process -- bun ./📜️script.ts test command-cold"
       }
     }
   },

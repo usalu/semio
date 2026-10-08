@@ -70,9 +70,9 @@
       "subsetDirectoryName": "🧱️base",
       "vectors": [
         {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
+          "mutationId": "set-cell",
+          "sourceMutationDirectoryName": "✍️set-cell",
+          "mutationDirectoryName": "✍️set-cell",
           "scenarios": [
             {
               "id": "widens-the-total-formula-to-a-third-row",
@@ -82,8 +82,6 @@
         }
       ],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "insert-sheet",
         "remove-sheet",
         "rename-sheet",
@@ -293,49 +291,6 @@
             "operation": "set-shared-string",
             "bridgeVersion": 1,
             "variant": "SetSharedString"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "xlsx-ecma-376-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "openpyxl-xlsx-ecma-376-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "xlsx-ecma-376-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "xlsx-ecma-376-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "openpyxl-xlsx-ecma-376-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "xlsx-ecma-376-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

@@ -7,7 +7,7 @@ use crate::editor::xlsx::standards::v_ecma_376::subsets::base::modes::edit;
 use crate::editor::xlsx::standards::v_ecma_376::subsets::base::modes::edit::windows::main;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::{
     cell_address::{xlsx_cell_address, xlsx_cell_target_revision, xlsx_cell_vacancy_address},
-    insert_cell, patch_snapshot, set_cell, set_snapshot,
+    insert_cell, net_mutations, set_cell,
 };
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
 use crate::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
@@ -191,10 +191,6 @@ impl ArtifactEditor for XlsxEditor {
             .map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
-    }
-
     semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
         controller: "s.stdio.xlsx@ecma-376/*#editor",
@@ -326,7 +322,9 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XlsxEdi
     }
 
     fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| XlsxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))
+        let next = semio_s_artifact_stdio_contract::editing::apply_snapshot_edit(snapshot, event).map_err(|error| Fault::from(error.to_string()))?;
+        let leaves = net_mutations(snapshot, &next).ok_or_else(|| Fault::from("xlsx: the edit changes something the cell and shared-string mutations do not address (sheets, parts or the OPC layer)"))?;
+        Ok(Emit { artifact_mutations: leaves, ..Default::default() })
     }
 }
 

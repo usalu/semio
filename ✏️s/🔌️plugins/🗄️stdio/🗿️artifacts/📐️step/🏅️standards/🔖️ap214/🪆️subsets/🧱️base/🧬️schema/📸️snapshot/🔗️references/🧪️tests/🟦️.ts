@@ -1,13 +1,10 @@
 /** 🔗️ Internal STEP references agree with independent SQLite identity and deferred foreign-key constraints. */
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv from "ajv";
 import {readFileSync,existsSync} from "node:fs";
-import schema from "../🧬️schema/🔣️.json";
 import corpus from "../🧫️fixtures/🔣️.json";
 
 test("STEP closed internal references preserve forward and cyclic edges while refusing missing or duplicated identities",async()=>{
- const validate=new Ajv({strict:false}).compile(schema);expect(validate(corpus),JSON.stringify(validate.errors)).toBe(true);
  for(const row of corpus.cases){
   const db=new Database(":memory:");db.exec("PRAGMA foreign_keys=ON; CREATE TABLE entity(id INTEGER PRIMARY KEY); CREATE TABLE edge(target INTEGER NOT NULL REFERENCES entity(id) DEFERRABLE INITIALLY DEFERRED);");let refusal=false;
   const references=(value:any):number[]=>typeof value!=="object"||value===null?[]:"reference" in value?[value.reference]:"aggregate" in value?value.aggregate.flatMap(references):"typedValue" in value?references(value.typedValue.value):[];

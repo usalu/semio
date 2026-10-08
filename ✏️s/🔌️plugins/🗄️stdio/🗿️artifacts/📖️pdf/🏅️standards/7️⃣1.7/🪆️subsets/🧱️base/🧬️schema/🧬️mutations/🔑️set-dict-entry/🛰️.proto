@@ -10,4 +10,5 @@ message SetDictEntryMutation {
   repeated PdfPathSegment path = 2;
   string key = 3;
   PdfObject value = 4;
+  optional uint64 index = 5;
 }

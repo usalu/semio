@@ -11,7 +11,7 @@
 //! `NoMutation` is dropped: the derive requires every variant to wrap exactly one leaf payload, and
 //! `no` is not an approved semantic verb.
 
-use crate::standards::v1::subsets::animation::schema::diff::{diff_set_snapshot, AnimChannelDiff, AnimKeyframeDiff, AnimTimelineDiff, SemioAnimationDiff};
+use crate::standards::v1::subsets::animation::schema::diff::{AnimChannelDiff, AnimKeyframeDiff, AnimTimelineDiff, SemioAnimationDiff};
 use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 use protocol::Mutation;
@@ -74,7 +74,7 @@ pub enum SemioAnimationMutation {
 /// tables are related only by position; `kinds_match_the_enum_and_the_catalog` below asserts that
 /// positional agreement rather than string equality.
 pub const KINDS: &[&str] =
-    &["insert-timeline", "remove-timeline", "set-timeline-name", "insert-channel", "remove-channel", "set-channel-target", "set-channel-interpolation", "insert-keyframe", "remove-keyframe", "set-keyframe-time", "set-keyframe-value", "patch-snapshot"];
+    &["insert-timeline", "remove-timeline", "set-timeline-name", "insert-channel", "remove-channel", "set-channel-target", "set-channel-interpolation", "insert-keyframe", "remove-keyframe", "set-keyframe-time", "set-keyframe-value"];
 //#endregion 🔖️Mutation
 
 //#region 🔖️DiffBuilders

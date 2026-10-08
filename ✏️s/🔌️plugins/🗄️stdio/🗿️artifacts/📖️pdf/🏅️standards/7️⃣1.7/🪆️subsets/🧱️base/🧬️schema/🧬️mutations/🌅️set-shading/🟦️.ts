@@ -3,4 +3,5 @@ import type { ObjRef, PdfCcittParameters, PdfColorSpace, PdfDecimal, PdfDictEntr
 export interface SetShadingMutation {
   mutation: 'setShading';
   shading: PdfShading;
+  index?: number | null;
 }

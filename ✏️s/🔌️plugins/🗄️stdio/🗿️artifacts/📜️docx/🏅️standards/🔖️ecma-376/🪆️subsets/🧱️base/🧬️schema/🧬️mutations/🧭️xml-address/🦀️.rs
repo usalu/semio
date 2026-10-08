@@ -480,6 +480,65 @@ pub(crate) fn empty_paragraph_text_mutation(snapshot: &DocxSnapshot, address: &D
 }
 
 /// 🧭️ Resolves a projected block/run selection to its canonical XML address without projecting the document.
+/// 🧭️ The container (body or table cell) a block path names, together with the XML child index of block `path.index` inside it.
+/// An existing block resolves to its own slot; with `insert`, the one-past-the-last ordinal resolves to the slot after the last block
+/// (before trailing non-block nodes such as `w:sectPr`).
+pub fn docx_block_slot(snapshot: &DocxSnapshot, path: &DocxBlockPath, insert: bool) -> Result<(DocxXmlAddress, usize), ValueError> {
+    let (part_path, body_path) = main_body_path(snapshot)?;
+    let mut container = body_path;
+    for segment in &path.segments {
+        let table_path = word_child_path(snapshot, &part_path, &container, &["p", "tbl"], segment.block_index)?;
+        let document = materialized_document(snapshot, &part_path)?;
+        let root = document.root.as_ref().ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,format!("DOCX XML part {part_path} has no root")))?;
+        let (table, bindings) = scoped_node_at_path(root, &table_path)?;
+        if !is_word_name(table, "tbl", &bindings) {
+            return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("DOCX block {} is not a table", segment.block_index)));
+        }
+        let row_path = word_child_path(snapshot, &part_path, &table_path, &["tr"], segment.row)?;
+        container = word_child_path(snapshot, &part_path, &row_path, &["tc"], segment.cell)?;
+    }
+    let document = materialized_document(snapshot, &part_path)?;
+    let root = document.root.as_ref().ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,format!("DOCX XML part {part_path} has no root")))?;
+    let (node, _) = scoped_node_at_path(root, &container)?;
+    let XmlNode::Element { children, .. } = node else { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DOCX block container is not an element")) };
+    let mut slots = Vec::new();
+    for index in 0..children.len() {
+        let mut child_path = container.clone();
+        child_path.push(index);
+        let (child, bindings) = scoped_node_at_path(root, &child_path)?;
+        if is_word_name(child, "p", &bindings) || is_word_name(child, "tbl", &bindings) {
+            slots.push(index);
+        }
+    }
+    let slot = match slots.get(path.index) {
+        Some(slot) => *slot,
+        None if insert && path.index == slots.len() => slots.last().map_or(0, |last| last + 1),
+        None => return Err(ValueError::new(ValueRefusalKind::InvalidValue,format!("DOCX block index {} is outside {} blocks", path.index, slots.len()))),
+    };
+    Ok((address_from_root(&part_path, root, container)?, slot))
+}
+
+/// 🧭️ Addresses the styles part's `w:styles` root and lists the `w:styleId` of each of its children (`None` for a non-style child).
+pub fn docx_styles_root(snapshot: &DocxSnapshot) -> Result<(DocxXmlAddress, Vec<Option<String>>), ValueError> {
+    let part_path = styles_part_path(snapshot)?;
+    let document = materialized_document(snapshot, &part_path)?;
+    let root = document.root.as_ref().ok_or_else(|| ValueError::new(ValueRefusalKind::InvalidValue,format!("DOCX styles XML part {part_path} has no root")))?;
+    let (_, root_bindings) = scoped_node_at_path(root, &[])?;
+    if !is_word_name(root, "styles", &root_bindings) {
+        return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DOCX styles root is not WordprocessingML styles"));
+    }
+    let XmlNode::Element { children, .. } = root else { return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DOCX styles root is not an element")) };
+    let ids = children
+        .iter()
+        .map(|child| {
+            let mut bindings = root_bindings.clone();
+            apply_bindings(child, &mut bindings);
+            if is_word_name(child, "style", &bindings) { word_attr(child, "styleId", &bindings).map(str::to_string) } else { None }
+        })
+        .collect();
+    Ok((address_from_root(&part_path, root, Vec::new())?, ids))
+}
+
 pub fn docx_block_run_address(snapshot: &DocxSnapshot, path: &DocxBlockPath, run_index: usize) -> Result<DocxXmlAddress, ValueError> {
     let (part_path, body_path) = main_body_path(snapshot)?;
     let mut blocks_path = body_path;

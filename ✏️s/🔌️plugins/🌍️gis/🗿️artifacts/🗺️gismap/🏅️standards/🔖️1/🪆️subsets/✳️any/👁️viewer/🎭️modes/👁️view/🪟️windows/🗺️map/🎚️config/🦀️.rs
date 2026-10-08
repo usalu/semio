@@ -47,7 +47,7 @@ impl store::ArtifactPack for GisMapViewerWindowConfig {
     }
 }
 
-store::impl_whole_record_config!(GisMapViewerWindowConfig);
+impl store::ConfigRecord for GisMapViewerWindowConfig {}
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;

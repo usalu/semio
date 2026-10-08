@@ -8,6 +8,7 @@ export type {FemNode,FemDof,FemElement,FemMaterial,FemSection,FemSupport,FemLoad
 /** 🌱⚪️ Brings a new structural node into existence. */
 export interface CreateNode {
   node: FemNode;
+  index?: number | null;
 }
 
 /** 🗑⚪️ Removes an existing structural node by id. */
@@ -18,6 +19,7 @@ export interface DeleteNode {
 /** 🌱🧩️ Brings a new structural member (bar/beam) into existence. */
 export interface CreateElement {
   element: FemElement;
+  index?: number | null;
 }
 
 /** 🗑🧩️ Removes an existing element by id. */
@@ -34,6 +36,7 @@ export interface ReplaceElement {
 /** 🌱🧱️ Brings a new material into existence. */
 export interface CreateMaterial {
   material: FemMaterial;
+  index?: number | null;
 }
 
 /** 🗑🧱️ Removes an existing material by id. */
@@ -50,6 +53,7 @@ export interface ReplaceMaterial {
 /** 🌱️ Brings a new cross-section into existence. */
 export interface CreateSection {
   section: FemSection;
+  index?: number | null;
 }
 
 /** 🗑📐️ Removes an existing cross-section by id. */
@@ -66,6 +70,7 @@ export interface ReplaceSection {
 /** 🌱🛡️ Brings a new support into existence. */
 export interface CreateSupport {
   support: FemSupport;
+  index?: number | null;
 }
 
 /** 🗑️ Removes an existing support by id. */
@@ -82,6 +87,7 @@ export interface ReplaceSupport {
 /** 🌱🗺️ Brings a new meshed continuum region into existence. */
 export interface CreateRegion {
   region: FemRegion;
+  index?: number | null;
 }
 
 /** 🗑🗺️ Removes an existing meshed region by id. */
@@ -98,6 +104,7 @@ export interface ReplaceRegion {
 /** 🌱📋️ Brings a new load case into existence. */
 export interface CreateLoadCase {
   loadCase: FemLoadCase;
+  index?: number | null;
 }
 
 /** 🗑📋️ Removes an existing load case by id. */
@@ -109,6 +116,7 @@ export interface DeleteLoadCase {
 export interface AddLoad {
   caseId: string;
   load: FemLoad;
+  index?: number | null;
 }
 
 /** ➖️ Detaches a load from an existing load case's `loads` member collection by id. */
@@ -126,6 +134,7 @@ export interface ChangeLoadCaseSelfWeight {
 /** 🌱🔗️ Brings a new load combination into existence. */
 export interface CreateCombination {
   combination: FemCombination;
+  index?: number | null;
 }
 
 /** 🗑🔗️ Removes an existing load combination by id. */

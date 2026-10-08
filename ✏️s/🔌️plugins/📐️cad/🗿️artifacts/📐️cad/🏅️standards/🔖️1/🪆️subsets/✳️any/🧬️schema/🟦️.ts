@@ -134,3 +134,6 @@ export const cadContractObject = object;
 export const cadContractExact = exact;
 export const cadContractString = string;
 export const cadContractArray = array;
+export const cadContractNumber = number;
+export const cadContractBoolean = boolean;
+export const cadContractFixedNumbers = fixedNumbers;

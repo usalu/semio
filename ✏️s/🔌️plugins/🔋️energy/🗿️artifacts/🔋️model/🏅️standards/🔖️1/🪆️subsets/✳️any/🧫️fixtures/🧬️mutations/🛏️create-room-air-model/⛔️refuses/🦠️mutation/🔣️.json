@@ -1,5 +1,6 @@
 {
   "mutation": "createRoomAirModelAssignment",
   "zoneId": 1,
-  "model": "WellMixed"
+  "model": "WellMixed",
+  "index": null
 }

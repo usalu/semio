@@ -1,27 +1,25 @@
 {
   "artifact": null,
-  "schema": null,
+  "attractions": null,
   "domain": null,
   "meta": {
-    "kindCompatibility": [
-      {
-        "source": "vortex-kind-a",
-        "target": "vortex-kind-b",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "vortex"
-      },
-      {
-        "source": "vortex-kind-b",
-        "target": "vortex-kind-c",
-        "bidirectional": false,
-        "important": true,
-        "specificity": "cable"
-      }
-    ]
+    "kindCompatibility": {
+      "added": [
+        {
+          "bidirectional": false,
+          "important": true,
+          "source": "vortex-kind-b",
+          "specificity": "cable",
+          "target": "vortex-kind-c"
+        }
+      ],
+      "patched": [],
+      "removed": [],
+      "reordered": null
+    }
   },
   "objects": null,
-  "attractions": null,
-  "targetVolumes": null,
-  "references": null
+  "references": null,
+  "schema": null,
+  "targetVolumes": null
 }

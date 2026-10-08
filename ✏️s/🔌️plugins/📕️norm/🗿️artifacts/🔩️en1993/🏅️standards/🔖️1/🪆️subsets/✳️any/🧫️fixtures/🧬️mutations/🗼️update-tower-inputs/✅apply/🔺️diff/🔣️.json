@@ -1,36 +1,102 @@
 {
-  "artifact": null,
   "annex": null,
-  "materials": null,
-  "sections": null,
-  "members": null,
-  "loadCases": null,
-  "memberActions": null,
-  "joints": null,
-  "fatigueDetails": null,
-  "fireExposures": null,
-  "coldFormedMembers": null,
-  "platedPanels": null,
-  "siloShells": null,
-  "tensionComponents": null,
-  "bridgeFatigue": null,
-  "towerLegs": {
-    "values": [
-      {
-        "id": "tower-1",
-        "memberId": "member-b1",
-        "forceCoefficient": 1.5,
-        "dynamicFactor": 1.0,
-        "actions": [
-          {
-            "id": "fa-1",
-            "loadCaseId": "w-wind",
-            "force": 450000.0
-          }
-        ]
-      }
-    ]
+  "materials": {
+    "removed": [],
+    "added": [],
+    "modified": []
   },
-  "piles": null,
-  "craneRunways": null
+  "sections": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "loadCases": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "memberActions": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "joints": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "fatigueDetails": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "fireExposures": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "coldFormedMembers": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "platedPanels": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "siloShells": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "tensionComponents": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "bridgeFatigue": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "towerLegs": {
+    "removed": [
+      "tower-1"
+    ],
+    "added": [
+      {
+        "after": null,
+        "row": {
+          "id": "tower-1",
+          "memberId": "member-b1",
+          "forceCoefficient": 1.5,
+          "dynamicFactor": 1.0,
+          "actions": [
+            {
+              "id": "fa-1",
+              "loadCaseId": "w-wind",
+              "force": 450000.0
+            }
+          ]
+        }
+      }
+    ],
+    "modified": []
+  },
+  "piles": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "craneRunways": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

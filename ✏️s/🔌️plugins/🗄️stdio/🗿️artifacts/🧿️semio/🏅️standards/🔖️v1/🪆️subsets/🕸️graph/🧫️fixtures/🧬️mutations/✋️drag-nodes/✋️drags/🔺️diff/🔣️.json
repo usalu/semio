@@ -1,35 +1,23 @@
 {
   "nodes": {
-    "values": [
+    "modified": [
       {
-        "id": {
-          "value": "a"
-        },
-        "kind": "source",
-        "label": "Source",
-        "position": {
-          "x": 2.5,
-          "y": -1.5
-        },
-        "ports": [],
-        "properties": [],
-        "width": 0.0,
-        "height": 0.0
+        "index": 0,
+        "diff": {
+          "position": {
+            "x": 2.5,
+            "y": -1.5
+          }
+        }
       },
       {
-        "id": {
-          "value": "b"
-        },
-        "kind": "sink",
-        "label": "Sink",
-        "position": {
-          "x": 6.5,
-          "y": -1.5
-        },
-        "ports": [],
-        "properties": [],
-        "width": 0.0,
-        "height": 0.0
+        "index": 1,
+        "diff": {
+          "position": {
+            "x": 6.5,
+            "y": -1.5
+          }
+        }
       }
     ]
   }

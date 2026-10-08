@@ -12,11 +12,6 @@ fn spec(kind: &str, params: Json) -> Json {
     Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), params)])
 }
 
-/// 📸️ `set-snapshot`'s params: the `DwgSnapshot` wire under `snapshot`.
-fn snapshot(entries: Vec<(&str, Json)>) -> Json {
-    object(vec![("snapshot", object(entries))])
-}
-
 fn object(entries: Vec<(&str, Json)>) -> Json {
     Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
 }
@@ -45,16 +40,6 @@ fn the_whole_published_header_prefix_reads_the_values_the_fixture_carries() {
     assert_eq!(preamble.application_version, 0x1d, "application (DWG) version at 0x11");
     assert_eq!(preamble.maintenance_version, 0x02);
     assert_eq!(preamble.codepage, 30);
-}
-
-/// 🌱 `set-snapshot`'s stub is byte-identical to this artifact's own committed 22-byte demo
-/// example when it carries that file's own fields — the shape is read off a real committed file
-/// rather than invented, and the non-addressable fields are reset rather than inherited.
-#[test]
-fn the_whole_document_replacement_matches_the_committed_preamble_only_example() {
-    let demo = include_bytes!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🖊️.dwg").to_vec();
-    let built = oracle_apply_mutation(&fixture(), &spec("set-snapshot", snapshot(vec![("schema", Json::String("stdio.dwg".to_string())), ("version", Json::String("AC1024".to_string())), ("maintenanceVersion", Json::Number(0.0)), ("codepage", Json::Number(0.0))]))).unwrap();
-    assert_eq!(built, demo, "the stub must reproduce the committed preamble-only example, including the fields no mutation kind addresses");
 }
 
 /// 🚧 WHERE the shared-layout claim stops, pinned as bytes rather than left as prose. The two
@@ -94,7 +79,6 @@ fn every_kind_is_observable_and_its_own_inverse_restores_the_projection() {
     let original = project_dwg(&input).unwrap();
     let cases = vec![
         spec("set-version-info", object(vec![("version", Json::String("AC1024".to_string())), ("maintenanceVersion", Json::Number(7.0)), ("codepage", Json::Number(29.0))])),
-        spec("set-snapshot", snapshot(vec![("schema", Json::String("stdio.dwg".to_string())), ("version", Json::String("AC1018".to_string())), ("maintenanceVersion", Json::Number(0.0)), ("codepage", Json::Number(0.0))])),
     ];
     for case in cases {
         let kind = case.str("kind");
@@ -104,16 +88,6 @@ fn every_kind_is_observable_and_its_own_inverse_restores_the_projection() {
         let restored = oracle_restore(&input, &mutated, &case).unwrap_or_else(|error| panic!("{kind} inverse failed: {error}"));
         assert_eq!(project_dwg(&restored).unwrap(), original, "applying {kind} and then its own inverse must restore the original projection");
     }
-}
-
-#[test]
-fn set_snapshot_is_a_whole_document_replacement_and_set_version_info_is_not() {
-    let input = fixture();
-    let replaced = oracle_apply_mutation(&input, &spec("set-snapshot", snapshot(vec![("schema", Json::String("stdio.dwg".to_string())), ("version", Json::String("AC1018".to_string()))]))).unwrap();
-    let version_info = oracle_apply_mutation(&input, &spec("set-version-info", object(vec![("maintenanceVersion", Json::Number(7.0))]))).unwrap();
-    assert_eq!(replaced.len(), 22, "set-snapshot replaces the container outright");
-    assert_eq!(version_info.len(), input.len(), "set-version-info leaves the section map exactly where it was");
-    assert_ne!(project_dwg(&replaced).unwrap(), project_dwg(&version_info).unwrap(), "the two verbs must be distinguishable in the projection, not two names for one edit");
 }
 
 /// 🚫️ The writer contract, read off the bytes: a container that is more than its preamble carries R2010 object streams, so
@@ -127,7 +101,7 @@ fn a_container_is_refused_every_stamp_but_the_one_its_object_streams_are_written
         assert!(oracle_apply_mutation(&input, &row).is_err(), "a refused {version} row must not produce a document");
     }
     assert_eq!(oracle_refusal(&input, &spec("set-version-info", object(vec![("version", Json::String("AC1024".to_string()))]))).unwrap(), None);
-    let empty = oracle_apply_mutation(&input, &spec("set-snapshot", snapshot(vec![("schema", Json::String("stdio.dwg".to_string())), ("version", Json::String("AC1024".to_string()))]))).unwrap();
+    let empty = include_bytes!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🧪️example/🖊️.dwg").to_vec();
     assert_eq!(oracle_refusal(&empty, &spec("set-version-info", object(vec![("version", Json::String("AC1032".to_string()))]))).unwrap(), None, "the preamble-only document carries no object stream a stamp could contradict");
 }
 
@@ -152,7 +126,7 @@ fn an_unknown_kind_is_an_error_not_a_silent_no_op() {
 #[test]
 fn kinds_match_both_catalogs_and_the_vocabulary() {
     let vocabulary = include_str!("../../../🧬️schema/🧬️mutations/🦀️.rs");
-    let variants = ["SetSnapshot", "SetVersionInfo"];
+    let variants = ["SetVersionInfo"];
     assert_eq!(KINDS.len(), variants.len());
     for manifest in [include_str!("../../🔣️.json"), include_str!("../../../../../../4️⃣ac1018/🪆️subsets/✳️any/🔮️oracles/🔣️.json")] {
         for kind in KINDS {

@@ -27,7 +27,6 @@ fn aggregate_denies_unknown_outer_key_via_first_party_from_value() {
 #[test]
 fn aggregate_roster_is_exact() {
     let roster = [
-        ("set-snapshot", "SetSnapshot", <SetSnapshotMutation as protocol::MutationLeaf>::DESCRIPTOR),
         ("set-trailing-newline", "SetTrailingNewline", <SetTrailingNewlineMutation as protocol::MutationLeaf>::DESCRIPTOR),
         ("set-line-ending", "SetLineEnding", <SetLineEndingMutation as protocol::MutationLeaf>::DESCRIPTOR),
         ("insert-line", "InsertLine", <InsertLineMutation as protocol::MutationLeaf>::DESCRIPTOR),
@@ -38,5 +37,21 @@ fn aggregate_roster_is_exact() {
     for (kind, variant, descriptor) in roster {
         assert_eq!(descriptor.semantic_kind, kind);
         assert_eq!(descriptor.aggregate_variant, variant);
+    }
+}
+
+/// ⚖️ `mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff.
+#[semio_framework_async_macros::async_test]
+async fn mutation_inverse_sum_law_holds_for_every_leaf() {
+    let base = crate::TxtSnapshot::from_body("alpha\nbeta\ngamma\n");
+    for mutation in [
+        TxtMutation::SetTrailingNewline(SetTrailingNewlineMutation { value: false }),
+        TxtMutation::SetLineEnding(SetLineEndingMutation { value: crate::schema::snapshot::LineEnding::CrLf }),
+        TxtMutation::InsertLine(InsertLineMutation { index: 1, text: "inserted".into() }),
+        TxtMutation::InsertLine(InsertLineMutation { index: 3, text: "appended".into() }),
+        TxtMutation::RemoveLine(RemoveLineMutation { index: 0 }),
+        TxtMutation::SetLine(SetLineMutation { index: 2, text: "changed".into() }),
+    ] {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     }
 }

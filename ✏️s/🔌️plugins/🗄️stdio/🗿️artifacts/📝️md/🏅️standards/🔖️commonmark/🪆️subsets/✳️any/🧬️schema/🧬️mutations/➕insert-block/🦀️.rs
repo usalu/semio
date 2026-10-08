@@ -1,6 +1,4 @@
-//! ➕️ `insert-block` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! ➕️ `insert-block` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -17,14 +15,13 @@ impl protocol::MutationKind<MdSnapshot, MdMutation> for InsertBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "block", kind: "insert-block", record: "InsertBlock" };
 
     fn diff(&self, base: &MdSnapshot) -> protocol::MutationOutcome<<MdMutation as Mutation<MdSnapshot>>::Diff> {
-        agg_diff(&MdMutation::InsertBlock(self.clone()), base)
+        let Self { path, index, block } = self;
+        protocol::MutationOutcome::new(diff_at_path(path, *index, MdBlocksLeafDiff::Added(block.clone())))
     }
     fn inverse(&self, base: &MdSnapshot) -> Result<Vec<MdMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&MdMutation::InsertBlock(self.clone()), base)?
-    
-    })
-}
+        let Self { path, index, .. } = self;
+        Ok(vec![MdMutation::RemoveBlock(remove_block::RemoveBlock { path: path.clone(), index: *index })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert block", "Block einfügen")
     }

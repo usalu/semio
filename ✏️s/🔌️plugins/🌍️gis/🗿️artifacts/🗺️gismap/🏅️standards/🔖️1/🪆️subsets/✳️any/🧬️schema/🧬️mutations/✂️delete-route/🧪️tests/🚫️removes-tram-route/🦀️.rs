@@ -114,7 +114,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: GisMapDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <GisMapDiff as protocol::MutationDiff<GisMapSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-route/removes-tram-route: committed diff did not carry before to after");
 }
 
@@ -140,4 +140,10 @@ async fn removes_exactly_one_route_without_cascading_and_inverts_from_base() {
     assert_eq!(undo.item, base.routes[1], "delete-route/removes-tram-route: the inverse re-creates the whole BASE feature, payload included");
     let semantics = <GisMapMutation as protocol::SemanticMutation<GisMapSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("delete", "route", "delete-route", "DeletedRoute"), "delete-route/removes-tram-route: the fixture must be bound to delete-route's own descriptor");
+}
+
+/// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

@@ -16,7 +16,7 @@ pub fn inverse(payload: &super::RemovePartGrip, base: &Puzzle5dSnapshot) -> Resu
     let index = part.grips.iter().position(|g| g.id == payload.grip_id);
     let full_id = format!("{}:{}", payload.part_id, payload.grip_id);
     let mut mutations = vec![crate::standards::v1::subsets::any::schema::mutations::add_part_grip::add_part_grip(payload.part_id.clone(), grip.clone(), index)];
-    for fastener in base.fasteners.iter().filter(|fastener| fastener.source == full_id || fastener.target == full_id) {
+    for (at, fastener) in base.fasteners.iter().enumerate().filter(|(_, fastener)| fastener.source == full_id || fastener.target == full_id) {
         mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips::connect_grips(
             fastener.id.clone(),
             fastener.source.clone(),
@@ -29,7 +29,7 @@ pub fn inverse(payload: &super::RemovePartGrip, base: &Puzzle5dSnapshot) -> Resu
             fastener.turn,
             fastener.tilt,
             fastener.x,
-            fastener.y,
+            fastener.y, Some(at),
         ));
     }
     mutations

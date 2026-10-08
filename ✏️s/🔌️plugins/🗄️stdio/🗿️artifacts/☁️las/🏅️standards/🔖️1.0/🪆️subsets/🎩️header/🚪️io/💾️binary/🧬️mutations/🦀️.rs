@@ -15,10 +15,10 @@ use protocol::Mutation;
 /// 🧪️ Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION: REAL binary
 /// twins backing the upgraded `OpBinary::encode_op`/`decode_op` below — replaces the old F6
 /// `print_las_mutation(self).into_bytes()` text-as-binary shortcut. Reuses the diff facet's own
-/// `write_bytes_lp`/`write_str_lp`/`enc_header_bin`/`enc_vlr_bin`/`enc_point_bin` primitives
+/// `write_bytes_lp`/`write_str_lp`/`enc_vlr_bin`/`enc_point_bin` primitives
 /// (`../🔺️diff/🦀️.rs`'s `#region 🔖️BinaryDiffCodec`, `pub(crate)`) — `LasHeader`/
 /// `LasVlr`/`LasPoint` are the SAME real records whether embedded in a sparse diff-patch or (here)
-/// a whole `SetSnapshot`/`InsertVlr`/`InsertPoint`/`SetPoint` payload, so one binary encoder per
+/// an `InsertVlr`/`InsertPoint`/`SetPoint` payload, so one binary encoder per
 /// record type, shared across both facets, is the correct de-duplication (not a second,
 /// independently-drifting copy).
 pub(crate) fn enc_f64x3_bin(t: (f64, f64, f64), out: &mut Vec<u8>) {
@@ -31,31 +31,6 @@ pub(crate) fn dec_f64x3_bin(reader: &mut store::ByteReader<'_>) -> Result<(f64, 
     Ok((reader.read_f64_le().map_err(|e| e.to_string())?, reader.read_f64_le().map_err(|e| e.to_string())?, reader.read_f64_le().map_err(|e| e.to_string())?))
 }
 
-/// 🧭️ A whole `LasSnapshot` — `schema` (real, genuinely round-tripped identity field) + the full
-/// `LasHeader` record + runtime-counted `vlrs`/`points` lists, each item a full record.
-pub(crate) fn enc_snapshot_bin(s: &LasSnapshot, out: &mut Vec<u8>) {
-    crate::standards::v1_0::subsets::any::io::binary::diff::write_str_lp(out, &s.schema);
-    crate::standards::v1_0::subsets::any::io::binary::diff::enc_header_bin(&s.header, out);
-    store::pack_rt::write_varint_u64(out, s.vlrs.len() as u64);
-    for v in &s.vlrs {
-        crate::standards::v1_0::subsets::any::io::binary::diff::enc_vlr_bin(v, out);
-    }
-    store::pack_rt::write_varint_u64(out, s.points.len() as u64);
-    for p in &s.points {
-        crate::standards::v1_0::subsets::any::io::binary::diff::enc_point_bin(p, out);
-    }
-}
-
-pub(crate) fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<LasSnapshot, String> {
-    let schema = crate::standards::v1_0::subsets::any::io::binary::diff::read_str_lp(reader)?;
-    let header = crate::standards::v1_0::subsets::any::io::binary::diff::dec_header_bin(reader)?;
-    let vlr_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let vlrs = (0..vlr_count).map(|_| crate::standards::v1_0::subsets::any::io::binary::diff::dec_vlr_bin(reader)).collect::<Result<Vec<_>, String>>()?;
-    let point_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let points = (0..point_count).map(|_| crate::standards::v1_0::subsets::any::io::binary::diff::dec_point_bin(reader)).collect::<Result<Vec<_>, String>>()?;
-    Ok(LasSnapshot { schema, header, vlrs, points })
-}
-
 impl protocol::OpBinary for LasMutation {
     /// ⚡️ REAL binary frame (`format u8 | tag u8 | <variant-specific fields>`), matching
     /// `../💾️binary/📡️.protocol.semio`'s `format`/`tag` leading fields exactly —
@@ -65,14 +40,6 @@ impl protocol::OpBinary for LasMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT];
         match self {
-            LasMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => {
-                out.push(TAG_PATCH_SNAPSHOT);
-                out.extend(protocol::OpBinary::encode_op(patch)?);
-            }
-            LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
-                out.push(TAG_SET_SNAPSHOT);
-                enc_snapshot_bin(snapshot, &mut out);
-            }
             LasMutation::SetVersion(set_version::SetVersion { major, minor }) => {
                 out.push(TAG_SET_VERSION);
                 out.push(*major);
@@ -147,8 +114,6 @@ impl protocol::OpBinary for LasMutation {
             }
             let tag = reader.read_u8().map_err(|e| e.to_string())?;
             Ok(match tag {
-                TAG_PATCH_SNAPSHOT => LasMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::snapshot_patch_from_bytes(reader.read_bytes(reader.remaining()).map_err(|e| e.to_string())?)? }),
-                TAG_SET_SNAPSHOT => LasMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_snapshot_bin(&mut reader)? }),
                 TAG_SET_VERSION => LasMutation::SetVersion(set_version::SetVersion { major: reader.read_u8().map_err(|e| e.to_string())?, minor: reader.read_u8().map_err(|e| e.to_string())? }),
                 TAG_SET_SYSTEM_IDENTIFIER => LasMutation::SetSystemIdentifier(set_system_identifier::SetSystemIdentifier { system_identifier: crate::standards::v1_0::subsets::any::io::binary::diff::read_str_lp(&mut reader)? }),
                 TAG_SET_SOFTWARE_INFO => LasMutation::SetSoftwareInfo(set_software_info::SetSoftwareInfo { generating_software: crate::standards::v1_0::subsets::any::io::binary::diff::read_str_lp(&mut reader)? }),
@@ -184,8 +149,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `LasMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_SET_VERSION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-version");
 const TAG_SET_SYSTEM_IDENTIFIER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-system-identifier");
 const TAG_SET_SOFTWARE_INFO: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-software-info");

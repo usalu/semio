@@ -1131,12 +1131,15 @@ fn canvas_action_args(action: &ActionDescriptor) -> Value {
 }
 #[test]
 fn standalone_multi_app_variants_resolve_their_declared_app() {
-    assert_eq!(resolve_playground_app_id("puzzle2d"), Some("s.puzzle.puzzle2d@1/*#editor"));
-    assert_eq!(resolve_playground_app_id("puzzle3d"), Some("s.puzzle.puzzle3d@1/*#editor"));
-    assert_eq!(resolve_playground_app_id("3d"), Some("s.puzzle.puzzle3d@1/*#editor"));
-    assert_eq!(resolve_playground_app_id("puzzle5d"), Some("s.puzzle.puzzle5d@1/*#editor"));
-    assert_eq!(resolve_registry_plugin_id("generation3d"), "procedural");
-    assert_eq!(resolve_playground_app_id("generation3d"), Some("s.procedural.generation3d@1/*#editor"));
+    let corpus: Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json")).unwrap();
+    for row in corpus["catalog"]["playgrounds"].as_array().unwrap() {
+        let plugin = row["pluginId"].as_str().unwrap();
+        let app = row["app"].as_str().unwrap();
+        let manifest = super::shell_boot_isolation_tests::boot_manifest(plugin, &[app]);
+        let request = BootSelectionRequest { plugin_id: plugin, app_id: Some(app) };
+        let (_, selected) = select_boot_program(&[(plugin, &manifest)], request, semio_framework::AppRole::Editor, None).expect("an injected standalone declaration resolves");
+        assert_eq!(selected.id, app);
+    }
 }
 
 //#region SilhouetteContentTests

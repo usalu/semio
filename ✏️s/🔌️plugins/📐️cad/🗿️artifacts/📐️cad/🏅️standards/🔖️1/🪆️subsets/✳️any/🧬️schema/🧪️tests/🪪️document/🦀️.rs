@@ -28,9 +28,6 @@ fn cad_document_contract_round_trips_exact_child_identities() {
     assert_eq!(observed, fixture["diff"]);
     assert_eq!(CadDiff::parse_diff(&diff.print_diff()).unwrap(), diff);
     assert_eq!(CadDiff::decode_diff(&diff.encode_diff().unwrap()).unwrap(), diff);
-    let replacement = CadDiff { artifact: Some(Box::new(artifact.clone())), ..Default::default() };
-    assert_eq!(CadDiff::parse_diff(&replacement.print_diff()).unwrap(), replacement);
-    assert_eq!(CadDiff::decode_diff(&replacement.encode_diff().unwrap()).unwrap(), replacement);
 
     for row in fixture["invalidDocuments"].as_array().unwrap().iter().filter(|row| row["kind"] == "field") {
         let mut input = fixture["document"].clone();
@@ -52,7 +49,7 @@ fn cad_document_contract_round_trips_exact_child_identities() {
 
 #[test]
 fn cad_brep_events_preserve_ordered_geometry_ownership_and_exact_inverse() {
-    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use protocol::{Mutation, OpBinary, OpText};
     let cases = [
         (
             include_str!("../../../🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json"),
@@ -78,10 +75,30 @@ fn cad_brep_events_preserve_ordered_geometry_ownership_and_exact_inverse() {
         assert_eq!(crate::CadMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
         let outcome = mutation.diff(&before);
         assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).unwrap(), serde_json::from_str::<serde_json::Value>(diff).unwrap());
-        assert_eq!(outcome.diff().apply(&before).unwrap(), after);
+        assert_eq!(protocol::apply_diff(outcome.diff(), &before).unwrap(), after);
         let mut restored = after;
-        for inverse in mutation.inverse(&before).unwrap() { restored = inverse.diff(&restored).diff().apply(&restored).unwrap(); }
+        for inverse in mutation.inverse(&before).unwrap() { restored = protocol::apply_diff(inverse.diff(&restored).diff(), &restored).unwrap(); }
         assert_eq!(restored, before);
         eprintln!("[DEBUG] Cad topology event preserves exact middle-position inverse and native text/binary against the independent serde_json corpus");
+    }
+}
+
+/// ⚖️ The topology events' concrete inverses sum to exactly the negative of their forward diffs, middle position included.
+#[semio_framework_async_macros::async_test]
+async fn cad_brep_events_invert_to_the_negative_diff() {
+    let cases = [
+        (
+            include_str!("../../../🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🧫️fixtures/🧬️mutations/🧊️create-brep/🧊️inserts-topology-at-middle/🦠️mutation/🔣️.json"),
+        ),
+        (
+            include_str!("../../../🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🧫️fixtures/🧬️mutations/🧹delete-brep/🧹️removes-middle-topology/🦠️mutation/🔣️.json"),
+        ),
+    ];
+    for (before, input) in cases {
+        let before: CadSnapshot = semio_framework_pack_json::from_json_str(before, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        let mutation: crate::CadMutation = semio_framework_pack_json::from_json_str(input, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
     }
 }

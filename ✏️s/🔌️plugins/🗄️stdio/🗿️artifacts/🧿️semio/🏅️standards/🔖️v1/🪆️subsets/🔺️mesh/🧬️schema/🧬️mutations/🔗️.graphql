@@ -32,6 +32,7 @@ type SemioMeshMutation {
   primitive: SemioPrimitive
   material: SemioMaterial
   texture: SemioTexture
+  at: Int
   topology: SemioTopology
   positions: [SemioPoint3!]
   normals: [SemioPoint3!]

@@ -5,17 +5,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "artifact": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/artifact.json"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "structureId": {
       "anyOf": [
         {
@@ -96,16 +85,7 @@
     "layers": {
       "anyOf": [
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/layers"
-            }
-          }
+          "$ref": "#/$defs/En1997LayersRows"
         },
         {
           "type": "null"
@@ -116,16 +96,7 @@
     "footings": {
       "anyOf": [
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/footings"
-            }
-          }
+          "$ref": "#/$defs/En1997FootingsRows"
         },
         {
           "type": "null"
@@ -136,16 +107,7 @@
     "piles": {
       "anyOf": [
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/piles"
-            }
-          }
+          "$ref": "#/$defs/En1997PilesRows"
         },
         {
           "type": "null"
@@ -156,16 +118,7 @@
     "retainingWalls": {
       "anyOf": [
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/retainingWalls"
-            }
-          }
+          "$ref": "#/$defs/En1997RetainingWallsRows"
         },
         {
           "type": "null"
@@ -176,16 +129,7 @@
     "slopes": {
       "anyOf": [
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/slopes"
-            }
-          }
+          "$ref": "#/$defs/En1997SlopesRows"
         },
         {
           "type": "null"
@@ -196,22 +140,414 @@
     "upliftCases": {
       "anyOf": [
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/properties/upliftCases"
-            }
-          }
+          "$ref": "#/$defs/En1997UpliftCasesRows"
         },
         {
           "type": "null"
         }
       ],
       "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "En1997FootingsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "width",
+        "embedment"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "width": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/SpreadFoundation/properties/width"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "embedment": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/SpreadFoundation/properties/embedment"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1997FootingsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "modified",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/SpreadFoundation"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1997FootingsPatch"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1997LayersPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "oedometricModulus",
+        "phiPrimeDeg"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "oedometricModulus": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/SoilLayer/properties/oedometricModulus"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "phiPrimeDeg": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/SoilLayer/properties/phiPrimeDeg"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1997LayersRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "modified",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/SoilLayer"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1997LayersPatch"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1997PilesPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "length",
+        "count"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "length": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/Pile/properties/length"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/Pile/properties/count"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1997PilesRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "modified",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/Pile"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1997PilesPatch"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1997RetainingWallsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "baseWidth"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "baseWidth": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/RetainingWall/properties/baseWidth"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1997RetainingWallsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "modified",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/RetainingWall"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1997RetainingWallsPatch"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1997SlopesPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "angleDeg"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "angleDeg": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/Slope/properties/angleDeg"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1997SlopesRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "modified",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/Slope"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1997SlopesPatch"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1997UpliftCasesRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/UpliftCase"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
     }
   }
 }

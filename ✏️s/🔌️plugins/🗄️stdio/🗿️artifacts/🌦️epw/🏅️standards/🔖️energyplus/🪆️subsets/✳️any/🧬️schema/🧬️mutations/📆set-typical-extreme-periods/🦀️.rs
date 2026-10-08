@@ -1,7 +1,4 @@
-//! 📆️ `set-typical-extreme-periods` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 📆️ `set-typical-extreme-periods` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -17,14 +14,12 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetTypicalExtremePerio
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "typical-extreme-periods", kind: "set-typical-extreme-periods", record: "SetTypicalExtremePeriods" };
 
     fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
-        agg_diff(&EpwMutation::SetTypicalExtremePeriods(self.clone()), base)
+        let Self { value } = self;
+        protocol::MutationOutcome::new(EpwDiff { typical_extreme_periods: Some(value.clone()), ..EpwDiff::default() })
     }
     fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&EpwMutation::SetTypicalExtremePeriods(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![EpwMutation::SetTypicalExtremePeriods(set_typical_extreme_periods::SetTypicalExtremePeriods { value: base.typical_extreme_periods.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set typical extreme periods", "Typische und extreme Perioden setzen")
     }

@@ -16,11 +16,17 @@ use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
 pub struct CreateRepresentation {
     #[dsl(block)]
     pub representation: BlockRepresentation,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 pub fn create_representation(representation: BlockRepresentation) -> Block5dMutation {
-    Block5dMutation::CreateRepresentation(CreateRepresentation { representation })
+    Block5dMutation::CreateRepresentation(CreateRepresentation { representation, index: None })
+}
+
+/// 📍️ Builder — like [`create_representation`] but inserts the row at `index`.
+pub fn create_representation_at(representation: BlockRepresentation, index: u32) -> Block5dMutation {
+    Block5dMutation::CreateRepresentation(CreateRepresentation { representation, index: Some(index) })
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for CreateRepresentation {

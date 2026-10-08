@@ -1,6 +1,6 @@
-import {architectProgramArtifactGuardExactObject,architectProgramArtifactGuardArray,PROGRAM_ARTIFACT_FIELDS} from "../../../../🧬️schema/🟦️.ts";
-import {parseProgramDiff,type ProgramDiff} from "../../../../🧬️schema/🔺️diff/🟦️.ts";
-import {header,rows,accessibilityRequirement,adjacency,benchmarkRecord,changeRecord,conflict,costRequirement,decision,environmentalRequirement,equipment,flexibilityRequirement,flowRequirement,growthPlan,infrastructureRequirement,operationalRequirement,optionEvaluation,performanceCriterion,priorityRecord,quantityRequirement,relationship,requirement,resource,risk,scenario,siteContext,statusRecord,storageRequirement,survey,sustainabilityRequirement,wayfindingRequirement,workshop,activity,functionRow,programElement,organizationalRequirement,serviceRequirement,analysisRecord,searchFilter,templateRecord,knowledgeRecord,program} from "../../📸️snapshot/🔣️json/🟦️.ts";
+import {architectProgramArtifactGuardExactObject,architectProgramArtifactGuardArray} from "../../../../🧬️schema/🟦️.ts";
+import {parseProgramDiff,PROGRAM_DIFF_FIELDS,type ProgramDiff} from "../../../../🧬️schema/🔺️diff/🟦️.ts";
+import {header,rows,accessibilityRequirement,adjacency,benchmarkRecord,changeRecord,conflict,costRequirement,decision,environmentalRequirement,equipment,flexibilityRequirement,flowRequirement,growthPlan,infrastructureRequirement,operationalRequirement,optionEvaluation,performanceCriterion,priorityRecord,quantityRequirement,relationship,requirement,resource,risk,scenario,siteContext,statusRecord,storageRequirement,survey,sustainabilityRequirement,wayfindingRequirement,workshop,activity,functionRow,programElement,organizationalRequirement,serviceRequirement,analysisRecord,searchFilter,templateRecord,knowledgeRecord} from "../../📸️snapshot/🔣️json/🟦️.ts";
 
 
 function delta(value:unknown,convert:(value:unknown,decode:boolean)=>unknown,decode:boolean):unknown{
@@ -9,11 +9,10 @@ function delta(value:unknown,convert:(value:unknown,decode:boolean)=>unknown,dec
 }
 
 function diff(value:unknown,decode:boolean):Record<string,unknown>{
- const row=architectProgramArtifactGuardExactObject(value,"Program JSON diff",["artifact",...PROGRAM_ARTIFACT_FIELDS]),out={...row};
- if(row.artifact!==null)out.artifact=program(row.artifact,decode);
+ const row=architectProgramArtifactGuardExactObject(value,"Program JSON diff",PROGRAM_DIFF_FIELDS),out={...row};
  if(row.accessibility!==null)out.accessibility=delta(row.accessibility,accessibilityRequirement,decode);
  if(row.adjacencies!==null)out.adjacencies=delta(row.adjacencies,adjacency,decode);
- if(row.benchmarksPayload!==null)out.benchmarksPayload=rows(row.benchmarksPayload,benchmarkRecord,decode);
+ if(row.benchmarks!==null)out.benchmarks=delta(row.benchmarks,benchmarkRecord,decode);
  if(row.changes!==null)out.changes=delta(row.changes,changeRecord,decode);
  if(row.conflicts!==null)out.conflicts=delta(row.conflicts,conflict,decode);
  if(row.costs!==null)out.costs=delta(row.costs,costRequirement,decode);
@@ -49,7 +48,7 @@ function diff(value:unknown,decode:boolean):Record<string,unknown>{
  if(row.analyses!==null)out.analyses=delta(row.analyses,analysisRecord,decode);
  if(row.searchFilters!==null)out.searchFilters=delta(row.searchFilters,searchFilter,decode);
  if(row.templates!==null)out.templates=delta(row.templates,templateRecord,decode);
- if(row.knowledgePayload!==null)out.knowledgePayload=rows(row.knowledgePayload,knowledgeRecord,decode);
+ if(row.knowledge!==null)out.knowledge=delta(row.knowledge,knowledgeRecord,decode);
  if(row.approvals!==null)out.approvals=delta(row.approvals,header,decode);
  if(row.meetings!==null)out.meetings=delta(row.meetings,header,decode);
  if(row.assumptions!==null)out.assumptions=delta(row.assumptions,header,decode);

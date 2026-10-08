@@ -1,59 +1,105 @@
 {
-  "artifact": null,
   "annex": null,
-  "materials": null,
-  "sections": null,
-  "members": null,
-  "loadCases": null,
-  "memberActions": null,
-  "joints": null,
-  "fatigueDetails": null,
-  "fireExposures": null,
-  "coldFormedMembers": null,
-  "platedPanels": null,
-  "siloShells": null,
-  "tensionComponents": null,
-  "bridgeFatigue": null,
-  "towerLegs": {
-    "values": [
-      {
-        "id": "tw-1",
-        "memberId": "member-b1",
-        "forceCoefficient": 1.0,
-        "dynamicFactor": 1.0,
-        "actions": [
-          {
-            "id": "tw-g",
-            "loadCaseId": "g-permanent",
-            "force": 500000.0
-          },
-          {
-            "id": "tw-w",
-            "loadCaseId": "w-wind",
-            "force": 200000.0
-          }
-        ]
-      },
-      {
-        "id": "tw-1-2",
-        "memberId": "member-b1",
-        "forceCoefficient": 1.0,
-        "dynamicFactor": 1.0,
-        "actions": [
-          {
-            "id": "tw-g",
-            "loadCaseId": "g-permanent",
-            "force": 500000.0
-          },
-          {
-            "id": "tw-w",
-            "loadCaseId": "w-wind",
-            "force": 200000.0
-          }
-        ]
-      }
-    ]
+  "materials": {
+    "removed": [],
+    "added": [],
+    "modified": []
   },
-  "piles": null,
-  "craneRunways": null
+  "sections": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "loadCases": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "memberActions": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "joints": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "fatigueDetails": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "fireExposures": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "coldFormedMembers": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "platedPanels": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "siloShells": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "tensionComponents": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "bridgeFatigue": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "towerLegs": {
+    "removed": [],
+    "added": [
+      {
+        "after": "tw-1",
+        "row": {
+          "id": "tw-1-2",
+          "memberId": "member-b1",
+          "forceCoefficient": 1.0,
+          "dynamicFactor": 1.0,
+          "actions": [
+            {
+              "id": "tw-g",
+              "loadCaseId": "g-permanent",
+              "force": 500000.0
+            },
+            {
+              "id": "tw-w",
+              "loadCaseId": "w-wind",
+              "force": 200000.0
+            }
+          ]
+        }
+      }
+    ],
+    "modified": []
+  },
+  "piles": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "craneRunways": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

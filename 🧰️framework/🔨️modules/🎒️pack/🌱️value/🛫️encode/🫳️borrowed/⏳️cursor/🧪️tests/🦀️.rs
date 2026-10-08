@@ -92,3 +92,44 @@ fn borrowed_projected_pack_cursor_matches_neutral_buffer_oracle_and_exact_physic
         eprintln!("[DEBUG] original borrowed Pack case{index} exact{}bytes five output grants/cancellation stops; copy<=64 one item, actual births/releases equal queried whole symbol owners",bytes.len());
     }
 }
+
+fn intrinsic_node(node:&serde_json::Value)->DslValue {
+    match node["kind"].as_str().unwrap() {
+        "null"=>DslValue::Null,
+        "bool"=>DslValue::Bool(node["value"].as_bool().unwrap()),
+        "int"=>DslValue::Number(Number::Int(node["value"].as_str().unwrap().parse().unwrap())),
+        "uint"=>DslValue::Number(Number::UInt(node["value"].as_str().unwrap().parse().unwrap())),
+        "float"=>DslValue::Number(Number::Float(f64::from_bits(u64::from_str_radix(node["bits"].as_str().unwrap(),16).unwrap()))),
+        "text"=>DslValue::String(node["value"].as_str().unwrap().into()),
+        "bytes"=>DslValue::Bytes(node["value"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect()),
+        "array"=>DslValue::Array(node["items"].as_array().unwrap().iter().map(intrinsic_node).collect()),
+        "object"=>DslValue::Object(node["members"].as_array().unwrap().iter().map(|member|(member["key"].as_str().unwrap().into(),intrinsic_node(&member["node"]))).collect()),
+        _=>panic!("intrinsic corpus has no authored node authority"),
+    }
+}
+
+#[test]
+fn borrowed_projected_pack_cursor_intrinsic_order_duplicates_and_exact_grants() {
+    let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🌱️intrinsic/🔣️.json")).unwrap();
+    for row in corpus["cases"].as_array().unwrap() {
+        let source=intrinsic_node(&row["node"]);let field=row["fieldId"].as_u64().unwrap()as u16;let bytes=expected(row["expectedHex"].as_str().unwrap());
+        for copy in corpus["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize) {
+            for width in corpus["outputGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize) {
+                let(mut cursor,birth,free)=crate::test_allocation::observe_backing(BorrowedProjectedPackCursor::default);assert_eq!((birth,free),(0,0));
+                let mut output=[0;256];let mut actual=Vec::new();let mut complete=false;
+                for _ in 0..20000 {
+                    let demand=cursor.next_capacity_byte_demand().unwrap();let minimum=cursor.next_minimum_copy_bytes();let admitted=RetainedCloneGrant{maximum_copy_bytes:copy,..grant(demand,0)};
+                    let(zero,birth,free)=crate::test_allocation::observe_backing(||cursor.advance_intrinsic(&source,field,&mut output[..width],RetainedCloneGrant{maximum_items:0,..admitted}).unwrap());assert_eq!(zero.progress,Default::default());assert_eq!((birth,free),(0,0));
+                    if minimum!=0 {let(denied,birth,free)=crate::test_allocation::observe_backing(||cursor.advance_intrinsic(&source,field,&mut output[..width],RetainedCloneGrant{maximum_copy_bytes:minimum-1,..admitted}).unwrap());assert_eq!(denied.progress,Default::default());assert_eq!((birth,free),(0,0));}
+                    if demand!=0 {let(denied,birth,free)=crate::test_allocation::observe_backing(||cursor.advance_intrinsic(&source,field,&mut output[..width],RetainedCloneGrant{maximum_capacity_bytes:demand-1,..admitted}).unwrap());assert_eq!(denied.progress,Default::default());assert_eq!((birth,free),(0,0));assert_eq!(cursor.next_capacity_byte_demand().unwrap(),demand);}
+                    let(step,birth,free)=crate::test_allocation::observe_backing(||cursor.advance_intrinsic(&source,field,&mut output[..width],admitted).unwrap());assert!(step.progress.fits(admitted));assert_eq!(birth,step.progress.retained_capacity_bytes);assert_eq!(free,0);assert!(step.written_bytes<=copy.min(64).min(width));actual.extend_from_slice(&output[..step.written_bytes]);
+                    if step.complete{complete=true;break;}
+                }
+                if complete {let(step,birth,free)=crate::test_allocation::observe_backing(||cursor.advance_intrinsic(&source,field,&mut output,RetainedCloneGrant::default()).unwrap());assert!(step.complete);assert_eq!(step.progress,Default::default());assert_eq!((birth,free),(0,0));}close(&mut cursor);assert!(complete,"intrinsic case {} did not complete",row["name"].as_str().unwrap());assert_eq!(actual,bytes);
+                let(_,birth,free)=crate::test_allocation::observe_backing(||drop(cursor));assert_eq!((birth,free),(0,0));
+            }
+        }
+        for stop in corpus["cancelStops"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){let mut cursor=BorrowedProjectedPackCursor::default();let mut output=[0;64];let mut actual=Vec::new();for _ in 0..stop{let demand=cursor.next_capacity_byte_demand().unwrap();let step=cursor.advance_intrinsic(&source,field,&mut output,grant(demand,0)).unwrap();actual.extend_from_slice(&output[..step.written_bytes]);if step.complete{break;}}assert!(bytes.starts_with(&actual));close(&mut cursor);}
+        eprintln!("[DEBUG] intrinsic Pack {} {} bytes; original ordered source, 15 finite copy/output controls and five explicit cancellation-close positions",row["name"].as_str().unwrap(),bytes.len());
+    }
+}

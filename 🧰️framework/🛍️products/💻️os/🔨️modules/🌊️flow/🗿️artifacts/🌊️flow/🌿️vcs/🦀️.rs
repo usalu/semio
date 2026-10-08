@@ -353,32 +353,52 @@ impl ArtifactOwnedValueRetirementFactory<FlowMutation> for FlowMutationRetiremen
     }
 }
 
-/// ♻️ One owned `FlowHostSnapshot` as the framework's own incremental owner cursor, so a flow document
-/// can be opened as an owned MEMBER of a composed document. A heap allocation is freed WHOLE or not
-/// at all, so this cursor READS the demand flow's frontier publishes and grants it out of its own
-/// allocation currency, then charges the caller's payload page only what fits in it — a bridge that
-/// grants only a fixed page stalls on the first owner whose backing is larger.
+/// ♻️ Drives one owned Flow snapshot with admitted logical work and continuation capacity.
+/// The defining frontier's portable payload census maps to ProcessedBytes, and failures retain their typed cause.
 struct FlowOwnedSnapshotCursor {
     retirement: FlowRetirement,
 }
 
 impl semio_framework_value::retirement::RetirementCursor for FlowOwnedSnapshotCursor {
-    fn close_step(&mut self, maximum_bytes: usize) -> semio_framework_value::retirement::RetirementStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
         if self.retirement.terminal_is_empty() {
             return semio_framework_value::retirement::RetirementStep::Complete;
         }
-        if maximum_bytes == 0 {
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes == 0 {
             return semio_framework_value::retirement::RetirementStep::BudgetExhausted;
         }
-        let Ok(demand) = self.retirement.next_close_byte_demand() else {
-            return semio_framework_value::retirement::RetirementStep::BudgetExhausted;
-        };
-        match self.retirement.close_page(1, maximum_bytes.max(demand)) {
+        if grant.maximum_depth == 0 {
+            return semio_framework_value::retirement::RetirementStep::Failure(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::DepthLimit, "Flow retirement has no admitted structural depth"));
+        }
+        match self.retirement.next_allocation_bytes() {
+            Err(error) => return semio_framework_value::retirement::RetirementStep::Failure(semio_framework_value::ValueError::from(error)),
+            Ok(Some(bytes)) => {
+                if bytes > grant.maximum_capacity_bytes { return semio_framework_value::retirement::RetirementStep::BudgetExhausted; }
+                return match self.retirement.reserve_allocation(grant.maximum_capacity_bytes) {
+                    Ok(step) if step.allocated_bytes <= grant.maximum_capacity_bytes && step.progressed => semio_framework_value::retirement::RetirementStep::Advanced,
+                    Ok(step) if step.allocated_bytes <= grant.maximum_capacity_bytes => semio_framework_value::retirement::RetirementStep::BudgetExhausted,
+                    Ok(_) => semio_framework_value::retirement::RetirementStep::Failure(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Flow retirement exceeded its admitted frontier capacity grant")),
+                    Err(error) => semio_framework_value::retirement::RetirementStep::Failure(semio_framework_value::ValueError::from(error.refusal())),
+                };
+            }
+            Ok(None) => {}
+        }
+        match self.retirement.close_page(1, grant.maximum_copy_bytes) {
             Ok(SnapshotRetirementStep::Complete) => semio_framework_value::retirement::RetirementStep::Complete,
-            Ok(SnapshotRetirementStep::Pending { released_bytes, .. }) => semio_framework_value::retirement::RetirementStep::Bytes(released_bytes.min(maximum_bytes)),
-            Ok(SnapshotRetirementStep::Blocked) | Err(_) => semio_framework_value::retirement::RetirementStep::BudgetExhausted,
+            Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= grant.maximum_copy_bytes => {
+                if released_bytes != 0 { semio_framework_value::retirement::RetirementStep::ProcessedBytes(released_bytes) }
+                else if released_items != 0 { semio_framework_value::retirement::RetirementStep::Advanced }
+                else { semio_framework_value::retirement::RetirementStep::BudgetExhausted }
+            }
+            Ok(SnapshotRetirementStep::Pending { .. }) => semio_framework_value::retirement::RetirementStep::Failure(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "Flow retirement exceeded its admitted logical work grant")),
+            Ok(SnapshotRetirementStep::Blocked) => semio_framework_value::retirement::RetirementStep::BudgetExhausted,
+            Err(error) => semio_framework_value::retirement::RetirementStep::Failure(error),
         }
     }
+
+    fn next_work_byte_demand(&self) -> usize { usize::from(!self.retirement.terminal_is_empty()) }
+
+    fn next_birth_bytes(&self, _: usize) -> Option<usize> { self.retirement.next_allocation_bytes().ok().map(|bytes| bytes.unwrap_or(0)) }
 
     fn terminal_is_empty(&self) -> bool {
         self.retirement.terminal_is_empty()

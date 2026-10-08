@@ -42,7 +42,7 @@ impl store::ArtifactPack for TiffEditorConfig {
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Self::__dsl_spec()) }
 }
 
-store::impl_whole_record_config!(TiffEditorConfig);
+store::config_diff! { record: TiffEditorConfig, diff: TiffEditorConfigDiff, fields: { selected_ifd: usize } }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
@@ -51,7 +51,7 @@ pub enum TiffEditorConfigMutation {
 }
 
 impl Mutation<TiffEditorConfig> for TiffEditorConfigMutation {
-    type Diff = TiffEditorConfig;
+    type Diff = TiffEditorConfigDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/✏️editor/🎚️config/🧭️select-ifd",
@@ -71,8 +71,10 @@ impl Mutation<TiffEditorConfig> for TiffEditorConfigMutation {
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
     fn diff(&self, base: &TiffEditorConfig) -> protocol::MutationOutcome<Self::Diff> {
         let Self::SetSelectedIfd { selected_ifd } = self;
-        let next = TiffEditorConfig { selected_ifd: *selected_ifd };
-        if &next == base { protocol::MutationOutcome::new(next).warning("mutation.no-op", "TIFF image page is already selected.") } else { protocol::MutationOutcome::new(next) }
+        if base.selected_ifd == *selected_ifd {
+            return protocol::MutationOutcome::new(TiffEditorConfigDiff::default()).warning("mutation.no-op", "TIFF image page is already selected.");
+        }
+        protocol::MutationOutcome::new(TiffEditorConfigDiff { selected_ifd: Some(*selected_ifd) })
     }
     fn inverse(&self, base: &TiffEditorConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
         Ok(vec![Self::SetSelectedIfd { selected_ifd: base.selected_ifd }])

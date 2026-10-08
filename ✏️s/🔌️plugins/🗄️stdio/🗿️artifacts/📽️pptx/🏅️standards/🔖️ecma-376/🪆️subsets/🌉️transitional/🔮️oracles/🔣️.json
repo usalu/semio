@@ -61,7 +61,6 @@
       "subsetDirectoryName": "🌉️transitional",
       "vectors": [],
       "kinds": [
-        "set-snapshot",
         "set-main-namespace",
         "set-drawing-namespace",
         "set-relationship-base",
@@ -188,81 +187,11 @@
               "oracle": "python-pptx-pptx-ecma-376-transitional-mutate-reader"
             }
           ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "pptx-ecma-376-transitional-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "pptx-ecma-376-transitional-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "python-pptx-pptx-ecma-376-transitional-mutate-reader"
-            }
-          ]
         }
       ]
     }
   ],
   "testEvidence": [
-    {
-      "id": "set-snapshot-applied",
-      "class": "third-party-generated",
-      "target": {
-        "artifact": "s.stdio.pptx",
-        "standard": "ecma-376",
-        "subset": "transitional"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before-pptx",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.pptx",
-          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-          "sha256": "sha256:a0f9a19b621291fe8751afbe99fa539dffd779576f29f64f2097b0a234815d22",
-          "bytes": 28104
-        },
-        {
-          "role": "expected-after-pptx",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.pptx",
-          "mediaType": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-          "sha256": "sha256:8b30cd5faddb9ba3c0354bfef790343d04ec1d0f0e48fa25375572e0fb7c78cb",
-          "bytes": 28811
-        }
-      ],
-      "provenance": {
-        "source": "generated",
-        "license": "MIT (python-pptx)",
-        "attribution": "Written by python-pptx 1.0.2's own Presentation.save()",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "exact-bytes-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": "Whole-presentation snapshot replace: an unrelated valid presentation (two slides instead of one) substituted wholesale.",
-      "generator": {
-        "oracle": "python-pptx-pptx-ecma-376-transitional-mutate-reader",
-        "packageVersion": "1.0.2",
-        "engineFamily": "python-pptx",
-        "engineVersion": "1.0.2",
-        "command": "uv run python3 🔨️f2-gen-pptx-structural-fixtures.py (python-pptx Presentation object model + .save())",
-        "platform": "darwin-arm64"
-      }
-    },
     {
       "id": "set-conformance-attribute-applied",
       "class": "handcrafted",

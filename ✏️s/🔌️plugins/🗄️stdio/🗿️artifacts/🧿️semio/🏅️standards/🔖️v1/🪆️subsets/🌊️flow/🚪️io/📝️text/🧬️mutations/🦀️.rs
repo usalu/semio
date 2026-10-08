@@ -8,7 +8,7 @@ use super::*;
 use crate::standards::v1::subsets::flow::schema::mutations::*;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::flow::schema::diff::{diff_insert_edge, diff_insert_node, diff_remove_edge, diff_remove_node, diff_remove_node_param, diff_set_edge_endpoints, diff_set_edge_kind, diff_set_node_kind, diff_set_node_label, diff_set_node_param, diff_set_node_position, diff_set_snapshot, SemioFlowDiff};
+use crate::standards::v1::subsets::flow::schema::diff::{diff_insert_edge, diff_insert_node, diff_remove_edge, diff_remove_node, diff_remove_node_param, diff_set_edge_endpoints, diff_set_edge_kind, diff_set_node_kind, diff_set_node_label, diff_set_node_param, diff_set_node_position, SemioFlowDiff};
 use crate::standards::v1::subsets::flow::io::text::snapshot::{dec_edge};
 use crate::standards::v1::subsets::flow::io::text::snapshot::{enc_edge};
 use crate::standards::v1::subsets::flow::io::text::snapshot::{dec_node};
@@ -62,16 +62,26 @@ pub(crate) fn dec_semio_flow_snapshot(s: &str) -> Result<SemioFlowSnapshot, Stri
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_at(at: Option<usize>) -> String {
+    at.map(|at| format!(" at={at}")).unwrap_or_default()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_at(args: &std::collections::BTreeMap<&str, &str>) -> Result<Option<usize>, String> {
+    args.get("at").map(|at| at.parse::<usize>().map_err(|error| error.to_string())).transpose()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_flow_mutation(m: &SemioFlowMutation) -> String {
     match m {
-        SemioFlowMutation::InsertNode(insert_node::InsertNode { node }) => format!("insert-node node={}", enc_node(node)),
+        SemioFlowMutation::InsertNode(insert_node::InsertNode { node, at }) => format!("insert-node node={}{}", enc_node(node), enc_at(*at)),
         SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id }) => format!("remove-node id={}", enc_str(id)),
         SemioFlowMutation::SetNodeKind(set_node_kind::SetNodeKind { id, kind }) => format!("set-node-kind id={} kind={}", enc_str(id), enc_str(kind)),
         SemioFlowMutation::SetNodeLabel(set_node_label::SetNodeLabel { id, label }) => format!("set-node-label id={} label={}", enc_str(id), enc_str(label)),
         SemioFlowMutation::SetNodePosition(set_node_position::SetNodePosition { id, position }) => format!("set-node-position id={} position={}", enc_str(id), enc_point2(position)),
-        SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id, key, value }) => format!("set-node-param id={} key={} value={}", enc_str(id), enc_str(key), enc_str(value)),
+        SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id, key, value, at }) => format!("set-node-param id={} key={} value={}{}", enc_str(id), enc_str(key), enc_str(value), enc_at(*at)),
         SemioFlowMutation::RemoveNodeParam(remove_node_param::RemoveNodeParam { id, key }) => format!("remove-node-param id={} key={}", enc_str(id), enc_str(key)),
-        SemioFlowMutation::InsertEdge(insert_edge::InsertEdge { edge }) => format!("insert-edge edge={}", enc_edge(edge)),
+        SemioFlowMutation::InsertEdge(insert_edge::InsertEdge { edge, at }) => format!("insert-edge edge={}{}", enc_edge(edge), enc_at(*at)),
         SemioFlowMutation::RemoveEdge(remove_edge::RemoveEdge { id }) => format!("remove-edge id={}", enc_str(id)),
         SemioFlowMutation::SetEdgeEndpoints(set_edge_endpoints::SetEdgeEndpoints { id, from, to }) => format!("set-edge-endpoints id={} from={} to={}", enc_str(id), enc_port_ref(from), enc_port_ref(to)),
         SemioFlowMutation::SetEdgeKind(set_edge_kind::SetEdgeKind { id, kind }) => format!("set-edge-kind id={} kind={}", enc_str(id), enc_str(kind)),
@@ -85,14 +95,14 @@ pub(crate) fn parse_flow_mutation(line: &str) -> Result<SemioFlowMutation, Strin
     let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("flow mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("flow mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
-        "insert-node" => Ok(SemioFlowMutation::InsertNode(insert_node::InsertNode { node: dec_node(arg("node")?)? })),
+        "insert-node" => Ok(SemioFlowMutation::InsertNode(insert_node::InsertNode { node: dec_node(arg("node")?)?, at: dec_at(&args)? })),
         "remove-node" => Ok(SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id: dec_str(arg("id")?)? })),
         "set-node-kind" => Ok(SemioFlowMutation::SetNodeKind(set_node_kind::SetNodeKind { id: dec_str(arg("id")?)?, kind: dec_str(arg("kind")?)? })),
         "set-node-label" => Ok(SemioFlowMutation::SetNodeLabel(set_node_label::SetNodeLabel { id: dec_str(arg("id")?)?, label: dec_str(arg("label")?)? })),
         "set-node-position" => Ok(SemioFlowMutation::SetNodePosition(set_node_position::SetNodePosition { id: dec_str(arg("id")?)?, position: dec_point2(arg("position")?)? })),
-        "set-node-param" => Ok(SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id: dec_str(arg("id")?)?, key: dec_str(arg("key")?)?, value: dec_str(arg("value")?)? })),
+        "set-node-param" => Ok(SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id: dec_str(arg("id")?)?, key: dec_str(arg("key")?)?, value: dec_str(arg("value")?)?, at: dec_at(&args)? })),
         "remove-node-param" => Ok(SemioFlowMutation::RemoveNodeParam(remove_node_param::RemoveNodeParam { id: dec_str(arg("id")?)?, key: dec_str(arg("key")?)? })),
-        "insert-edge" => Ok(SemioFlowMutation::InsertEdge(insert_edge::InsertEdge { edge: dec_edge(arg("edge")?)? })),
+        "insert-edge" => Ok(SemioFlowMutation::InsertEdge(insert_edge::InsertEdge { edge: dec_edge(arg("edge")?)?, at: dec_at(&args)? })),
         "remove-edge" => Ok(SemioFlowMutation::RemoveEdge(remove_edge::RemoveEdge { id: dec_str(arg("id")?)? })),
         "set-edge-endpoints" => Ok(SemioFlowMutation::SetEdgeEndpoints(set_edge_endpoints::SetEdgeEndpoints { id: dec_str(arg("id")?)?, from: dec_port_ref(arg("from")?)?, to: dec_port_ref(arg("to")?)? })),
         "set-edge-kind" => Ok(SemioFlowMutation::SetEdgeKind(set_edge_kind::SetEdgeKind { id: dec_str(arg("id")?)?, kind: dec_str(arg("kind")?)? })),

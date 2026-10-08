@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../.."
 name = "semio-s-plugin-cad-aec-building"
 version.workspace = true
 edition.workspace = true
@@ -54,6 +54,7 @@ semio-framework-value-derive = { path = "../../../../../../../🧰️framework/�
 pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 
 [dev-dependencies]
+semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
 serde.workspace = true
 serde_json.workspace = true
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

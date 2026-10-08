@@ -287,7 +287,7 @@ fn paste_completion_rejection_retains_original_flattened_mutation_vector_until_b
         ..Default::default()
     };
     let emit =
-        Emit::mutations(vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None), crate::standards::v1::subsets::any::schema::mutations::connect_grips("fastener".repeat(64), "part:source".repeat(32), "part:target".repeat(32), Some("fixed".repeat(32)), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)]);
+        Emit::mutations(vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None), crate::standards::v1::subsets::any::schema::mutations::connect_grips("fastener".repeat(64), "part:source".repeat(32), "part:target".repeat(32), Some("fixed".repeat(32)), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None)]);
     let original = emit.artifact_mutations.as_ptr();
     let mut owner = completion_rejection(Puzzle5dCompletionOwnerKind::Paste, emit);
     let retained = owner.owner.as_ref().and_then(|rejected| rejected.emit.as_ref().ok()).expect("retained paste emit");
@@ -299,7 +299,7 @@ fn paste_completion_rejection_retains_original_flattened_mutation_vector_until_b
 #[test]
 fn import_completion_rejection_never_repages_and_closes_catalog_mutations_incrementally() {
     let emit = Emit::mutations(vec![
-        crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility("source".repeat(64), "target".repeat(64), true, true, crate::Puzzle5dCompatSpecificity::General),
+        crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility("source".repeat(64), "target".repeat(64), true, true, crate::Puzzle5dCompatSpecificity::General, None),
         crate::standards::v1::subsets::any::schema::mutations::replace_kind_catalogs(Some(crate::Puzzle5dKindCatalogs { parts: vec![crate::Puzzle5dCatalogPartKind { id: "catalog-part".repeat(64), ..Default::default() }], ..Default::default() })),
     ]);
     let original = emit.artifact_mutations.as_ptr();

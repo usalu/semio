@@ -10,7 +10,7 @@ mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::animation::io::text::mutations::TEXT_KEYWORDS;
 use crate::standards::v1::subsets::animation::schema::mutations::*;
-use crate::standards::v1::subsets::animation::schema::diff::{diff_set_snapshot, AnimChannelDiff, AnimKeyframeDiff, AnimTimelineDiff, SemioAnimationDiff};
+use crate::standards::v1::subsets::animation::schema::diff::{AnimChannelDiff, AnimKeyframeDiff, AnimTimelineDiff, SemioAnimationDiff};
 use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 use protocol::Mutation;

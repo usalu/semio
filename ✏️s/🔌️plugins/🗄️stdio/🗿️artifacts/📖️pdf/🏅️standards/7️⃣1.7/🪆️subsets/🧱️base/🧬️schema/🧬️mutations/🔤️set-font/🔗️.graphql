@@ -1,4 +1,5 @@
 # 🔤️ Direct set-font GraphQL payload.
 input SetFontMutationInput {
   font: PdfFontInput
+  index: Int
 }

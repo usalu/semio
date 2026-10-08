@@ -391,11 +391,7 @@ impl DiffAlgebra<SemioAudioSnapshot> for SemioAudioDiff {
     }
 }
 
-/// 🧩️ Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &SemioAudioSnapshot, snapshot: &SemioAudioSnapshot) -> SemioAudioDiff {
-    <SemioAudioDiff as DiffAlgebra<SemioAudioSnapshot>>::between(base, snapshot)
-}
+
 //#endregion 🔖️Diff
 
 //#region 🔖️HandcraftedDiffCodec

@@ -12,26 +12,27 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 pub struct SetAfRelationship {
     pub file_name: String,
     pub relationship: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub entry_index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfAMutation> for SetAfRelationship {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "af-relationship", kind: "set-af-relationship", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let rows = support::file_spec_named(base, &self.file_name).map_or_else(PdfDiff::default, |id| support::set_entry_rows(base, id, "AFRelationship", PdfObject::Name(self.relationship.clone())));
+        let rows = support::file_spec_named(base, &self.file_name).map_or_else(PdfDiff::default, |id| support::set_entry_rows(base, id, "AFRelationship", PdfObject::Name(self.relationship.clone()), self.entry_index));
         MutationOutcome::new(diff::graph_edit(rows))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let Some(id) = support::file_spec_named(base, &self.file_name) else { return Vec::new() };
-        match support::object(base, id).and_then(|value| support::dict_name(value, "AFRelationship")) {
-            Some(previous) => vec![PdfAMutation::SetAfRelationship(SetAfRelationship { file_name: self.file_name.clone(), relationship: previous.to_string() })],
-            None => vec![PdfAMutation::RemoveAfRelationship(RemoveAfRelationship { file_name: self.file_name.clone() })],
-        }
-    
-    })())
-}
+        Ok({
+            let Some(id) = support::file_spec_named(base, &self.file_name) else { return Ok(Vec::new()) };
+            match support::object(base, id).and_then(|value| support::dict_name(value, "AFRelationship")) {
+                Some(previous) => vec![PdfAMutation::SetAfRelationship(SetAfRelationship { file_name: self.file_name.clone(), relationship: previous.to_string(), entry_index: None })],
+                None => vec![PdfAMutation::RemoveAfRelationship(RemoveAfRelationship { file_name: self.file_name.clone() })],
+            }
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set AF relationship for \"{}\"", self.file_name), &format!("AF-Beziehung für \"{}\" setzen", self.file_name))

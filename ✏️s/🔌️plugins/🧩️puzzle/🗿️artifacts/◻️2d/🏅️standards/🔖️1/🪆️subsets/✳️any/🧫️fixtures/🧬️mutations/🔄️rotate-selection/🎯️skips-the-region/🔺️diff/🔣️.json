@@ -9,23 +9,21 @@
       {
         "id": "node-b",
         "patch": {
-          "replacement": {
-            "anchor": "fixed",
-            "handles": [
+          "handles": {
+            "added": [],
+            "patched": [
               {
-                "angle": 4.570796326794897,
-                "handleKind": "handle-kind-b",
-                "id": "handle-2"
+                "id": "handle-2",
+                "patch": {
+                  "angle": 4.570796326794897
+                }
               }
             ],
-            "height": 12.0,
-            "id": "node-b",
-            "nodeKind": "node-kind-b",
-            "shape": "rectangle",
-            "width": 30.0,
-            "x": 10.0,
-            "y": 30.0
-          }
+            "removed": [],
+            "reordered": null
+          },
+          "x": 10.0,
+          "y": 30.0
         }
       }
     ],

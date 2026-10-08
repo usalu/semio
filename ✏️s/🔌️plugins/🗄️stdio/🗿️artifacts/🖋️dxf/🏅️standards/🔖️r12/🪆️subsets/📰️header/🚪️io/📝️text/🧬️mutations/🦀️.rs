@@ -11,11 +11,7 @@ use crate::standards::v_r12::subsets::any::io::binary::diff::dec_block_bin;
 use crate::standards::v_r12::subsets::any::schema::mutations::*;
 use crate::schema::diff::{block_diff_between, // 🧪️ P2-FG1: real recursive binary twins backing the upgraded `OpBinary` impl below (see
     // `🔺️diff/🦀️.rs`'s `#region 🔖️ItemBinaryCodecs`/`#region 🔖️BinaryPrimitives`).
-    diff_insert_block, diff_insert_entity, diff_insert_layer, diff_insert_linetype, diff_insert_style, diff_remove_block, diff_remove_entity, diff_remove_header_var, diff_remove_layer, diff_remove_linetype, diff_remove_style, diff_set_block, diff_set_entity, diff_set_header_var, diff_set_layer, diff_set_linetype, diff_set_snapshot, diff_set_style, entity_diff_between_pub, layer_diff_between, linetype_diff_between, style_diff_between, DxfDiff};
-use crate::standards::v_r12::subsets::any::io::binary::snapshot::{dec_dxf_snapshot_bin};
-use crate::standards::v_r12::subsets::any::io::binary::snapshot::{enc_dxf_snapshot_bin};
-use crate::standards::v_r12::subsets::any::io::text::snapshot::{dec_dxf_snapshot};
-use crate::standards::v_r12::subsets::any::io::text::snapshot::{enc_dxf_snapshot};
+    diff_insert_block, diff_insert_entity, diff_insert_layer, diff_insert_linetype, diff_insert_style, diff_remove_block, diff_remove_entity, diff_remove_header_var, diff_remove_layer, diff_remove_linetype, diff_remove_style, diff_set_block, diff_set_entity, diff_set_header_var, diff_set_layer, diff_set_linetype, diff_set_style, entity_diff_between_pub, layer_diff_between, linetype_diff_between, style_diff_between, DxfDiff};
 use crate::standards::v_r12::subsets::any::io::text::diff::{dec_linetype};
 use crate::standards::v_r12::subsets::any::io::text::diff::{enc_linetype};
 use crate::standards::v_r12::subsets::any::io::text::diff::{dec_style};
@@ -55,10 +51,11 @@ use protocol::{Mutation, MutationDiff, OpText};
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_dxf_mutation(m: &DxfMutation) -> String {
     match m {
-        DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_dxf_snapshot(snapshot)),
-        DxfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
 
-        DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name, header_var }) => format!("set-header-var name={} header-var={}", enc_str(name), enc_header_var(header_var)),
+        DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name, header_var, index }) => {
+            let tail = index.map(|index| format!(" index={index}")).unwrap_or_default();
+            format!("set-header-var name={} header-var={}{tail}", enc_str(name), enc_header_var(header_var))
+        }
         DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name }) => format!("remove-header-var name={}", enc_str(name)),
 
         DxfMutation::InsertLayer(insert_layer::InsertLayer { index, layer }) => format!("insert-layer index={index} layer={}", enc_layer(layer)),
@@ -90,10 +87,8 @@ pub(crate) fn parse_dxf_mutation(line: &str) -> Result<DxfMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("dxf mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| DxfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
-        "set-snapshot" => Ok(DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_dxf_snapshot(arg("snapshot")?)? })),
 
-        "set-header-var" => Ok(DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: dec_str(arg("name")?)?, header_var: dec_header_var(arg("header-var")?)? })),
+        "set-header-var" => Ok(DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: dec_str(arg("name")?)?, header_var: dec_header_var(arg("header-var")?)?, index: args.get("index").map(|_| usize_arg("index")).transpose()? })),
         "remove-header-var" => Ok(DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name: dec_str(arg("name")?)? })),
 
         "insert-layer" => Ok(DxfMutation::InsertLayer(insert_layer::InsertLayer { index: usize_arg("index")?, layer: dec_layer(arg("layer")?)? })),

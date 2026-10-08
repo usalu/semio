@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "nextest": false,
+  "configPath": "/Users/ueli/Documents/semio/.config/nextest.toml",
+  "level": "long",
+  "buildBudgetMs": 600000,
+  "assertionThreads": 1,
+  "artifactDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/general-base64-permanent-native-artifacts",
+  "retainArtifacts": false,
+  "coveragePath": null,
+  "rustMinStack": "134217728",
+  "manifestPath": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust/Cargo.toml",
+  "assertionBudgets": {
+    "fundamental": 15000,
+    "quick": 300000,
+    "long": 600000,
+    "exhaustive": 600000
+  },
+  "coverageEnabled": false,
+  "targetDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/current-native-canonical-6/target"
+}

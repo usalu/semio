@@ -882,6 +882,23 @@
         "group": "record",
         "order": 10
       }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Position the new entry takes in its list; absent appends it at the end.",
+          "de": "Position des neuen Eintrags in der Liste; ohne Angabe wird am Ende angehängt."
+        },
+        "group": "record",
+        "order": 20
+      }
     }
   }
 }

@@ -11,7 +11,7 @@ pub(crate) fn expand(path: &LitStr) -> syn::Result<TokenStream> {
     let absolute = std::path::PathBuf::from(manifest).join(&relative);
     let metadata = std::fs::metadata(&absolute).map_err(|error| syn::Error::new(path.span(), error))?;
     if metadata.len() > 8 * 1024 * 1024 { return Err(syn::Error::new(path.span(), "source asset exceeds 8 MiB")); }
-    let source = std::fs::read_to_string(absolute).map_err(|error| syn::Error::new(path.span(), error))?;
+    let source = crate::compiler_resources::read_to_string(absolute).map_err(|error| syn::Error::new(path.span(), error))?;
     let mut parser = Parser { source: &source, offset: 0, span: path.span() };
     let value = parser.value(0)?;
     parser.whitespace();

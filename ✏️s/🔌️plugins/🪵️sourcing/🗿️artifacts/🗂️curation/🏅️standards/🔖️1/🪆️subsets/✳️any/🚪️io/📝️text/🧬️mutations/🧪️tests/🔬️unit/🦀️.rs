@@ -4,7 +4,7 @@ use crate::schema::mutations::{CreateCuratedItem, DeleteCuratedItem, ChangeCurat
 
 fn every_mutation() -> Vec<SourcingMutation> {
     vec![
-        SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 } }),
+        SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 }, index: None }),
         SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }),
         SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 5 }),
     ]
@@ -12,7 +12,7 @@ fn every_mutation() -> Vec<SourcingMutation> {
 
 #[semio_framework_async_macros::async_test]
 async fn op_text_round_trips_create_curated_item() {
-    store::os_store::test_support::assert_op_line_round_trip(&SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 } }));
+    store::os_store::test_support::assert_op_line_round_trip(&SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 3 }, index: None }));
 }
 
 #[semio_framework_async_macros::async_test]

@@ -1,7 +1,7 @@
 /** 🔀️ `reorder-morph-targets` wire twin: the flat `Apply` payload `GltfReorderMorphTargetsPayload` and the phase wire `ReorderMorphTargetsMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { gltfWireArray, gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { type GltfApplyPhase, gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfReorderMorphTargetsPayload {
   mesh: bigint;
@@ -9,7 +9,7 @@ export interface GltfReorderMorphTargetsPayload {
   order: bigint[];
 }
 
-export type ReorderMorphTargetsMutation = GltfPhase<GltfReorderMorphTargetsPayload, GltfDiff>;
+export type ReorderMorphTargetsMutation = GltfApplyPhase<GltfReorderMorphTargetsPayload>;
 
 export const parseGltfReorderMorphTargetsPayload = gltfWireObject<GltfReorderMorphTargetsPayload>({ mesh: gltfWireRequired(gltfWireIndex), primitive: gltfWireRequired(gltfWireIndex), order: gltfWireRequired(gltfWireArray(gltfWireIndex)) });
-export const parseReorderMorphTargetsMutation = gltfWirePhase(parseGltfReorderMorphTargetsPayload, parseGltfDiff);
+export const parseReorderMorphTargetsMutation = gltfWireApplyPhase(parseGltfReorderMorphTargetsPayload);

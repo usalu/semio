@@ -1,6 +1,20 @@
 use super::*;
 use crate::schema::demo_jpg_snapshot;
 
+#[test]fn neutral_diff_framing_refuses_noncanonical_domains_without_allocation_panics(){
+ use protocol::DiffBinary;let fixture:serde_json::Value=serde_json::from_str(include_str!("../../💾️binary/🔺️diff/🧫️fixtures/🛡️framing/🔣️.json")).unwrap();for vector in fixture["reject"].as_array().unwrap(){let bytes:Vec<u8>=serde_json::from_value(vector["bytes"].clone()).unwrap();let refusal=std::panic::catch_unwind(||crate::JpgDiff::decode_diff(&bytes));assert!(refusal.is_ok(),"{} allocated from an unadmitted count",vector["name"]);assert!(refusal.unwrap().is_err(),"{}",vector["name"]);}eprintln!("[DEBUG] JPEG neutral sparse framing rejects seven unadmitted native/domain/extent forms");
+}
+
+#[test]
+fn independently_encoded_file_reopens_all_imported_semantic_metadata(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️schema/🧬️mutations/🖼️replace-image/🧫️fixtures/🔣️.json")).unwrap();let image:crate::JpgImage=semio_framework_pack_json::from_json_str(&fixture["importedImage"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+ let independent=semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::oracle_encode_rgba(image.width,image.height,&image.pixels,90).unwrap();assert_eq!(&independent[..4],&[255,216,255,224]);let old_end=4+usize::from(u16::from_be_bytes([independent[4],independent[5]]));
+ let thumbnail=image.jfif_thumbnail.as_ref().unwrap();let mut payload=b"JFIF\0".to_vec();payload.extend_from_slice(&[image.jfif_version.0,image.jfif_version.1,2]);payload.extend_from_slice(&image.jfif_x_density.to_be_bytes());payload.extend_from_slice(&image.jfif_y_density.to_be_bytes());payload.extend_from_slice(&[thumbnail.width,thumbnail.height]);payload.extend_from_slice(&thumbnail.rgb_data);
+ let mut native=vec![255,216,255,224];native.extend_from_slice(&u16::try_from(payload.len()+2).unwrap().to_be_bytes());native.extend(payload);for segment in &image.other_segments{native.extend_from_slice(&[255,segment.marker]);native.extend_from_slice(&u16::try_from(segment.data.len()+2).unwrap().to_be_bytes());native.extend_from_slice(&segment.data);}native.extend_from_slice(&independent[old_end..]);
+ let reopened=decode_jpg(&native).unwrap();assert_eq!((reopened.image.width,reopened.image.height),(image.width,image.height));assert_eq!(reopened.image.jfif_version,image.jfif_version);assert_eq!(reopened.image.jfif_density_units,image.jfif_density_units);assert_eq!((reopened.image.jfif_x_density,reopened.image.jfif_y_density),(image.jfif_x_density,image.jfif_y_density));assert_eq!(reopened.image.jfif_thumbnail,image.jfif_thumbnail);assert_eq!(reopened.image.other_segments,image.other_segments);
+ let restored=decode_jpg(&encode_jpg(&reopened,&JpgEncodeOptions::default()).unwrap()).unwrap();assert_eq!(restored.image.jfif_thumbnail,image.jfif_thumbnail);assert_eq!(restored.image.other_segments,image.other_segments);assert_eq!(restored.image.jfif_x_density,image.jfif_x_density);eprintln!("[DEBUG] independent image JPEG reopened exact density, thumbnail and ordered duplicate APP/COM metadata");
+}
+
 #[test]
 fn controlled_components_preserve_gray_and_ycbcr_samples_before_color_conversion() {
     use super::binary::snapshot::decoded_components::JpgComponentDecoder;
@@ -8,9 +22,10 @@ fn controlled_components_preserve_gray_and_ycbcr_samples_before_color_conversion
     let (width,height,sample) = (fixture["width"].as_u64().unwrap() as u32,fixture["height"].as_u64().unwrap() as u32,fixture["sample"].as_u64().unwrap() as u8);
     for case in fixture["cases"].as_array().unwrap() {
         let ids = case["componentIds"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u8).collect::<Vec<_>>();
-        let mut snapshot = JpgSnapshot { width,height,pixels:vec![sample;(width*height*4) as usize],..Default::default() };
-        snapshot.frame = Some(JpgFrameHeader { precision:8,width:width as u16,height:height as u16,components:ids.iter().map(|id|JpgFrameComponent { id:*id,h_sampling:1,v_sampling:1,quant_table_id:0 }).collect() });
-        let bytes=encode_jpg(&snapshot, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snapshot.frame.as_ref())).unwrap();
+        let mut snapshot = JpgSnapshot { schema: crate::STDIO_JPG_DOCUMENT_SCHEMA.into(), image: crate::schema::snapshot::JpgImage { width,height,pixels:vec![sample;(width*height*4) as usize],..Default::default() } };
+        for pixel in snapshot.image.pixels.chunks_exact_mut(4){pixel[3]=255;}
+        let options=JpgEncodeOptions{quality:90,components:ids.iter().map(|id|JpgEncodeComponent{id:*id,h_sampling:1,v_sampling:1}).collect()};
+        let bytes=encode_jpg(&snapshot, &options).unwrap();
         let mut decoder=JpgComponentDecoder::new(&bytes.as_slice(),1024*1024,&mut ||false).unwrap();
         let before=decoder.progress();assert!(decoder.step(&bytes.as_slice(),0,&mut ||false).unwrap().is_none());assert_eq!(decoder.progress(),before);
         let projected=loop {let before=decoder.progress().0;if let Some(value)=decoder.step(&bytes.as_slice(),1,&mut ||false).unwrap(){break value;}assert!(decoder.progress().0<=before+1);};
@@ -59,11 +74,11 @@ fn export_quality_is_physical_policy_with_independent_quantization_witness() {
     let mut encoded=Vec::new();
     for case in fixture["cases"].as_array().unwrap() {
         let quality=case["quality"].as_u64().unwrap() as u8;
-        let options=JpgEncodeOptions{quality,..JpgEncodeOptions::from_frame(snapshot.frame.as_ref())};
+        let options=JpgEncodeOptions{quality,..JpgEncodeOptions::default()};
         let bytes=encode_jpg(&snapshot,&options).unwrap();
-        let header=parse_jpg_header(&bytes.as_slice()).unwrap();
-        let reference=semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::oracle_encode_rgba(snapshot.width,snapshot.height,&snapshot.pixels,quality).unwrap();
-        let reference_header=parse_jpg_header(&reference.as_slice()).unwrap();
+        let header=parse_jpg_header(&bytes.as_slice(),false).unwrap();
+        let reference=semio_s_artifact_stdio_jpg_test_oracle::standards::v_jfif_1_01::subsets::document::oracle_encode_rgba(snapshot.image.width,snapshot.image.height,&snapshot.image.pixels,quality).unwrap();
+        let reference_header=parse_jpg_header(&reference.as_slice(),false).unwrap();
         let expected=case["firstLumaQuantizer"].as_u64().unwrap() as u16;
         assert_eq!(header.quant_tables.iter().find(|table|table.id==0).unwrap().values[0],expected);
         assert_eq!(reference_header.quant_tables.iter().find(|table|table.id==0).unwrap().values[0],expected);
@@ -177,14 +192,14 @@ async fn single_block_round_trips_through_huffman() {
 async fn gradient_round_trip_under_mae_threshold() {
     let (w, h) = (48u32, 40u32);
     let img = gradient_image(w, h);
-    let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), width: w, height: h, pixels: img.clone(), ..JpgSnapshot::default() };
-    let bytes = encode_jpg(&snap, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snap.frame.as_ref())).expect("encode");
+    let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), image: crate::schema::snapshot::JpgImage { width: w,height: h,pixels: img.clone(),..crate::schema::snapshot::JpgImage::default() } };
+    let bytes = encode_jpg(&snap, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).expect("encode");
     assert!(bytes.starts_with(&[0xFF, 0xD8]));
     assert!(bytes.ends_with(&[0xFF, 0xD9]));
     let decoded = decode_jpg(&bytes).expect("decode");
-    assert_eq!(decoded.width, w);
-    assert_eq!(decoded.height, h);
-    let err = mae(&img, &decoded.pixels);
+    assert_eq!(decoded.image.width, w);
+    assert_eq!(decoded.image.height, h);
+    let err = mae(&img, &decoded.image.pixels);
     println!("gradient round-trip MAE = {err}");
     assert!(err < 10.0, "gradient MAE too high: {err}");
 }
@@ -195,10 +210,10 @@ async fn gradient_round_trip_under_mae_threshold() {
 async fn checkerboard_round_trip_under_mae_threshold() {
     let (w, h) = (32u32, 32u32);
     let img = checkerboard_image(w, h);
-    let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), width: w, height: h, pixels: img.clone(), ..JpgSnapshot::default() };
-    let bytes = encode_jpg(&snap, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snap.frame.as_ref())).expect("encode");
+    let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), image: crate::schema::snapshot::JpgImage { width: w,height: h,pixels: img.clone(),..crate::schema::snapshot::JpgImage::default() } };
+    let bytes = encode_jpg(&snap, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).expect("encode");
     let decoded = decode_jpg(&bytes).expect("decode");
-    let err = mae(&img, &decoded.pixels);
+    let err = mae(&img, &decoded.image.pixels);
     println!("checkerboard round-trip MAE = {err}");
     assert!(err < 10.0, "checkerboard MAE too high: {err}");
 }
@@ -213,10 +228,10 @@ async fn solid_color_still_round_trips() {
         px[2] = 50;
         px[3] = 255;
     }
-    let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), width: w, height: h, pixels: img.clone(), ..JpgSnapshot::default() };
-    let bytes = encode_jpg(&snap, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snap.frame.as_ref())).expect("encode");
+    let snap = JpgSnapshot { schema: STDIO_JPG_DOCUMENT_SCHEMA.into(), image: crate::schema::snapshot::JpgImage { width: w,height: h,pixels: img.clone(),..crate::schema::snapshot::JpgImage::default() } };
+    let bytes = encode_jpg(&snap, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).expect("encode");
     let decoded = decode_jpg(&bytes).expect("decode");
-    let err = mae(&img, &decoded.pixels);
+    let err = mae(&img, &decoded.image.pixels);
     assert!(err < 5.0, "solid MAE too high: {err}");
 }
 
@@ -259,16 +274,9 @@ mod conformance_laws {
         let event = editing::SnapshotEditEvent::SetValue { path: "/jfifXDensity".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(73)) };
         let patch = editing::prepare_snapshot_patch(&base, &event).expect("prepare committed quality case");
         let mut cases = vec![
-            JpgMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot: base }),
-            JpgMutation::PatchSnapshot(crate::schema::mutations::patch_snapshot::PatchSnapshot { patch }),
         ];
         for text in [
             include_str!("../../../🧫️fixtures/🧬️mutations/🪪️change-jfif/🎯️direct/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/📊️replace-quant/🎯️direct/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/🧹️remove-quant/🎯️direct/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/🌳️replace-huffman/🎯️direct/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/🪓️remove-huffman/🎯️direct/🦠️mutation/🔣️.json"),
-            include_str!("../../../🧫️fixtures/🧬️mutations/🔁️change-restart/🎯️direct/🦠️mutation/🔣️.json"),
             include_str!("../../../🧫️fixtures/🧬️mutations/📥️insert-other/🎯️direct/🦠️mutation/🔣️.json"),
             include_str!("../../../🧫️fixtures/🧬️mutations/🗑️remove-other/🎯️direct/🦠️mutation/🔣️.json"),
             include_str!("../../../🧫️fixtures/🧬️mutations/🔲️replace-pixels/🎯️direct/🦠️mutation/🔣️.json"),

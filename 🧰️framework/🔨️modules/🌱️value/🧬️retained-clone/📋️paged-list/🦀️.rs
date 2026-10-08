@@ -17,7 +17,9 @@ pub struct PagedListRetirement<T: RetireOwned, const N: usize> {
 }
 
 impl<T: RetireOwned, const N: usize> RetirementCursor for PagedListRetirement<T, N> {
-    fn close_step(&mut self, maximum_bytes: usize) -> RetirementStep {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
+        if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
+        let maximum_bytes = if self.owner.is_empty() { grant.maximum_release_bytes } else { grant.maximum_copy_bytes };
         if self.released {
             return RetirementStep::Complete;
         }

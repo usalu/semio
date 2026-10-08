@@ -10,12 +10,10 @@ fn base_snapshot() -> WavSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn variants(base: &WavSnapshot) -> Vec<WavMutation> {
     vec![
-        WavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: WavSnapshot { fmt: WavFmt { sample_rate: 48000, ..base.fmt.clone() }, ..base.clone() } }),
-        WavMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::prepare_snapshot_patch(base, &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/fmt/sampleRate".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(48_000)) }).unwrap() }),
         WavMutation::SetFmt(set_fmt::SetFmt { fmt: WavFmt { channels: 2, ..WavFmt::default() } }),
         WavMutation::SetData(set_data::SetData { data: WavData::Float32(vec![0.25, -0.25]) }),
         WavMutation::PatchData(patch_data::PatchData { index: 1, remove_count: 1, data: WavData::Pcm16(vec![42]), move_to: None }),
-        WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: vec![RiffChunk { fourcc: "fact".into(), data: vec![1, 2], pad_byte: 0 }] }),
+        WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: vec![RiffChunk { fourcc: "fact".into(), data: vec![1, 2], pad_byte: 0 }], chunk_order: None }),
     ]
 }
 
@@ -29,7 +27,7 @@ async fn mutation_diff_law_every_variant() {
         let returned = apply_wav_mutation(&mut via_apply, &m);
         let direct = m.diff(&base);
         assert_eq!(direct, returned, "diff mismatch for {m:?}");
-        assert_eq!(direct.diff().apply(&base).unwrap(), via_apply, "apply mismatch for {m:?}");
+        assert_eq!(protocol::apply_diff(direct.diff(), &base).unwrap(), via_apply, "apply mismatch for {m:?}");
     }
 }
 //#endregion mutation_diff_law
@@ -48,8 +46,8 @@ async fn inverse_law_mutation_and_diff_level() {
         assert_eq!(round, base, "mutation-level inverse failed for {m:?}");
 
         let d = m.diff(&base);
-        let applied = d.diff().apply(&base).unwrap();
-        let undone = d.diff().inverse(&base).apply(&applied).unwrap();
+        let applied = protocol::apply_diff(d.diff(), &base).unwrap();
+        let undone = protocol::apply_diff(d.diff().inverse(&base), &applied).unwrap();
         assert_eq!(undone, base, "diff-level inverse failed for {m:?}");
     }
 }
@@ -59,8 +57,6 @@ async fn inverse_law_mutation_and_diff_level() {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn kind_of(m: &WavMutation) -> &'static str {
     match m {
-        WavMutation::SetSnapshot(_) => "set-snapshot",
-        WavMutation::PatchSnapshot(_) => "patch-snapshot",
         WavMutation::SetFmt(_) => "set-fmt",
         WavMutation::SetData(_) => "set-data",
         WavMutation::PatchData(_) => "patch-data",
@@ -129,24 +125,67 @@ async fn mutations_reject_states_that_cannot_round_trip_through_riff() {
     let overflow_ext = fixture["overflowFmtExtensionBytes"].as_u64().expect("overflowFmtExtensionBytes") as usize;
     let valid_fourcc = fixture["validFourcc"].as_str().expect("validFourcc");
     let invalid_fourcc = fixture["invalidFourcc"].as_str().expect("invalidFourcc");
-    let invalid_snapshots = [
-        WavSnapshot { fmt_pad_byte: invalid_even_pad, ..base_snapshot() },
-        WavSnapshot { data_pad_byte: invalid_even_pad, ..base_snapshot() },
-        WavSnapshot {
-            other_chunks: vec![RiffChunk { fourcc: valid_fourcc.into(), data: vec![1, 2], pad_byte: invalid_even_pad }],
-            ..base_snapshot()
-        },
-        WavSnapshot { fmt: WavFmt { ext: Some(vec![0; overflow_ext]), ..WavFmt::default() }, ..base_snapshot() },
-        WavSnapshot {
-            other_chunks: vec![RiffChunk { fourcc: invalid_fourcc.into(), data: vec![1], pad_byte: 0 }],
-            ..base_snapshot()
-        },
+    let invalid_mutations = [
+        WavMutation::SetFmt(set_fmt::SetFmt { fmt: WavFmt { ext: Some(vec![0; overflow_ext]), ..WavFmt::default() } }),
+        WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: vec![RiffChunk { fourcc: valid_fourcc.into(), data: vec![1, 2], pad_byte: invalid_even_pad }], chunk_order: None }),
+        WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: vec![RiffChunk { fourcc: invalid_fourcc.into(), data: vec![1], pad_byte: 0 }], chunk_order: None }),
     ];
-    for invalid in invalid_snapshots {
+    for invalid in invalid_mutations {
         let mut current = base_snapshot();
-        let outcome = apply_wav_mutation(&mut current, &WavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: invalid }));
+        let outcome = apply_wav_mutation(&mut current, &invalid);
         assert!(!outcome.messages().is_empty(), "unrepresentable mutation must report a diagnostic");
         assert!(outcome.diff().is_empty(), "unrepresentable mutation must carry an empty diff");
         assert_eq!(current, base_snapshot(), "unrepresentable mutation must leave the document unchanged");
     }
+}
+
+/// ⚖️ `wav_mutation_inverse_sum_law`: every leaf sums its inverse diffs to the negative forward diff on a base whose sample lane and chunk list have MIDDLE
+/// entries to cut, insert at, move and reorder.
+#[semio_framework_async_macros::async_test]
+async fn wav_mutation_inverse_sum_law_holds_for_every_leaf() {
+    let chunk = |fourcc: &str, data: Vec<u8>| RiffChunk { fourcc: fourcc.into(), data, pad_byte: 0 };
+    let base = WavSnapshot {
+        data: WavData::Pcm16(vec![1, 2, 3, 4, 5, 6]),
+        other_chunks: vec![chunk("fact", vec![1, 2, 3, 4]), chunk("LIST", vec![9, 9])],
+        chunk_order: vec![WavChunkRef::Other(0), WavChunkRef::Format, WavChunkRef::Other(1), WavChunkRef::Samples],
+        ..WavSnapshot::default()
+    };
+    let patch = |index: u64, remove_count: u64, data: WavData, move_to: Option<u64>| WavMutation::PatchData(patch_data::PatchData { index, remove_count, data, move_to });
+    for mutation in [
+        patch(2, 2, WavData::Pcm16(vec![9, 9, 9]), None),
+        patch(3, 0, WavData::Pcm16(vec![7]), None),
+        patch(1, 1, WavData::Pcm16(Vec::new()), None),
+        patch(1, 0, WavData::Pcm16(Vec::new()), Some(4)),
+        WavMutation::SetData(set_data::SetData { data: WavData::Float32(vec![0.25, -0.25]) }),
+        WavMutation::SetFmt(set_fmt::SetFmt { fmt: WavFmt { channels: 2, ..WavFmt::default() } }),
+        WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: vec![chunk("LIST", vec![9, 9])], chunk_order: None }),
+        WavMutation::SetOtherChunks(set_other_chunks::SetOtherChunks { chunks: vec![chunk("fact", vec![1, 2, 3, 4]), chunk("LIST", vec![9, 9])], chunk_order: Some(vec![WavChunkRef::Format, WavChunkRef::Other(1), WavChunkRef::Samples, WavChunkRef::Other(0)]) }),
+    ] {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn net_mutations_replay_exactly_onto_the_edited_snapshot() {
+    let base = WavSnapshot {
+        data: WavData::Pcm16(vec![1, 2, 3, 4, 5, 6]),
+        other_chunks: vec![RiffChunk { fourcc: "fact".into(), data: vec![1, 2, 3, 4], pad_byte: 0 }],
+        chunk_order: vec![WavChunkRef::Other(0), WavChunkRef::Format, WavChunkRef::Samples],
+        ..WavSnapshot::default()
+    };
+    let next = WavSnapshot {
+        fmt: WavFmt { channels: 2, ..base.fmt.clone() },
+        data: WavData::Pcm16(vec![1, 2, 9, 9, 9, 5, 6]),
+        other_chunks: vec![],
+        chunk_order: vec![WavChunkRef::Format, WavChunkRef::Samples],
+        ..base.clone()
+    };
+    let leaves = net_mutations(&base, &next);
+    assert!(!leaves.is_empty());
+    let mut state = base.clone();
+    for leaf in &leaves {
+        apply_wav_mutation(&mut state, leaf);
+    }
+    assert_eq!(state, next);
+    assert!(net_mutations(&base, &base).is_empty());
 }

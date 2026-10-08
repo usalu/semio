@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio-tech/canvas-react-renderer",
+  "version": "0.1.0",
+  "description": "infinite · canvas react renderer",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./🟦️.tsx"
+  },
+  "scripts": {
+    "test": "bun nx run @semio-tech/canvas-react-renderer:test"
+  },
+  "dependencies": {
+    "@semio-tech/framework": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.8",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  },
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  }
+}

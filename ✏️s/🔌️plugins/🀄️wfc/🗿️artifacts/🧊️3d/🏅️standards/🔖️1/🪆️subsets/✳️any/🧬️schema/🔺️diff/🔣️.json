@@ -3,43 +3,475 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/wfc/wfc3d/1/any/diff.json",
   "title": "Wfc3dDiff",
   "type": "object",
-  "additionalProperties": true,
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "seed",
+    "slots",
+    "edges",
+    "tiles",
+    "rules"
+  ],
   "properties": {
     "schema": {
-      "type": "string",
-      "x-semio-state": "artifact"
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "seed": {
-      "type": "integer",
-      "x-semio-state": "artifact"
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
-    "slotsRemoved": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "artifact"
+    "slots": {
+      "title": "SlotsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "patched"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "title": "Slot3d",
+            "type": "object"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "patch": {
+                "title": "SlotsPatch",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "x",
+                  "y",
+                  "z",
+                  "width",
+                  "height",
+                  "depth",
+                  "pinnedTileId"
+                ],
+                "properties": {
+                  "x": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "y": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "z": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "width": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "height": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "depth": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "pinnedTileId": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "value"
+                        ],
+                        "properties": {
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     },
-    "edgesRemoved": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "artifact"
+    "edges": {
+      "title": "EdgesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "patched"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "title": "SlotEdge",
+            "type": "object"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "patch": {
+                "title": "EdgesPatch",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "fromSlotId",
+                  "toSlotId",
+                  "relation"
+                ],
+                "properties": {
+                  "fromSlotId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "toSlotId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relation": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     },
-    "tilesRemoved": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "artifact"
+    "tiles": {
+      "title": "TilesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "patched"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "title": "Tile",
+            "type": "object"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "patch": {
+                "title": "TilesPatch",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "weight",
+                  "media",
+                  "label"
+                ],
+                "properties": {
+                  "weight": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "media": {
+                    "anyOf": [
+                      {
+                        "title": "Media",
+                        "type": [
+                          "object",
+                          "string"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "label": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "value"
+                        ],
+                        "properties": {
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     },
-    "rulesRemoved": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "artifact"
+    "rules": {
+      "title": "RulesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "patched"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "title": "GraphRule",
+            "type": "object"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "patch": {
+                "title": "RulesPatch",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "tileAId",
+                  "tileBId",
+                  "allowed",
+                  "relation"
+                ],
+                "properties": {
+                  "tileAId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "tileBId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "allowed": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relation": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "value"
+                        ],
+                        "properties": {
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

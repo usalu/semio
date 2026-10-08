@@ -6,9 +6,6 @@ use crate::CadSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &CreateDrawing, _base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    vec![CadMutation::DeleteDrawing(delete_drawing::DeleteDrawing { child_id: payload.child_id.clone() })]
-
-    })())
+    Ok(vec![CadMutation::DeleteDrawing(delete_drawing::DeleteDrawing { child_id: payload.child_id.clone() })])
 }
 //#endregion 🔖️Inverse

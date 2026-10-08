@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "streams": null,
@@ -9,71 +8,8 @@
   "params": null,
   "gcps": null,
   "results": {
-    "sparse": {
-      "points": {
-        "kind": "inline",
-        "values": [
-          {
-            "bits": "00000000"
-          },
-          {
-            "bits": "00000000"
-          },
-          {
-            "bits": "00000000"
-          },
-          {
-            "bits": "3f800000"
-          },
-          {
-            "bits": "3f800000"
-          },
-          {
-            "bits": "3f800000"
-          }
-        ]
-      },
-      "colors": [
-        255,
-        0,
-        0,
-        0,
-        255,
-        0
-      ]
-    },
-    "dense": {
-      "positions": {
-        "kind": "inline",
-        "values": [
-          {
-            "bits": "00000000"
-          },
-          {
-            "bits": "00000000"
-          },
-          {
-            "bits": "00000000"
-          }
-        ]
-      },
-      "colors": [
-        0,
-        0,
-        255
-      ],
-      "confidence": {
-        "kind": "inline",
-        "values": [
-          {
-            "bits": "3f000000"
-          }
-        ]
-      },
-      "classification": [
-        2
-      ]
-    },
+    "sparse": null,
+    "dense": null,
     "mesh": {
       "mesh": {
         "childId": "remodeling-mesh-2f6c81b0d4a37e59",
@@ -90,61 +26,9 @@
       "textureAssetId": null,
       "watertight": null
     },
-    "trajectory": {
-      "poses": [
-        {
-          "cameraId": "cam-a",
-          "rotationWxyz": [
-            1.0,
-            0.0,
-            0.0,
-            0.0
-          ],
-          "translation": [
-            0.0,
-            0.0,
-            0.0
-          ]
-        },
-        {
-          "cameraId": "cam-a",
-          "rotationWxyz": [
-            0.75,
-            0.25,
-            0.0,
-            0.0
-          ],
-          "translation": [
-            0.5,
-            0.0,
-            0.0
-          ]
-        }
-      ]
-    },
-    "tracks": [
-      {
-        "id": "track-a",
-        "length": 42,
-        "class": "moving",
-        "meanSpeedMS": 1.5
-      }
-    ],
-    "geo": {
-      "dsmAssetId": "asset-dsm",
-      "dtmAssetId": null,
-      "orthoAssetId": null
-    },
-    "qc": {
-      "reprojectionRmsPx": 0.5,
-      "gcpCheckpointRmse": 0.25,
-      "watertight": null,
-      "meanTrackLength": 6.0,
-      "registeredFrameRatio": 1.0,
-      "denseCoverageRatio": 0.75,
-      "warnings": [
-        "low overlap on frame 12"
-      ]
-    }
+    "trajectory": null,
+    "tracks": null,
+    "geo": null,
+    "qc": null
   }
 }

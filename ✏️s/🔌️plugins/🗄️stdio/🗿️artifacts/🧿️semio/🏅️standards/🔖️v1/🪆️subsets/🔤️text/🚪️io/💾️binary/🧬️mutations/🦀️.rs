@@ -13,8 +13,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 /// 🧾️ Each record kind's text-grammar keyword, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
-const TEXT_KEYWORDS: [(&str, &str); 8] = [
-    ("set-snapshot", "setSnapshot"),
+const TEXT_KEYWORDS: [(&str, &str); 7] = [
     ("insert-run", "insertRun"),
     ("remove-run", "removeRun"),
     ("edit-run", "editRun"),

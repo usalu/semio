@@ -439,7 +439,8 @@ impl DiffAlgebra<MdSnapshot> for MdDiff {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_blocks_diff(base_blocks: &[MdBlock], diff: &MdBlocksDiff) -> MdBlocksDiff {
-    let removed: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
+    let mut removed: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
+    removed.sort_unstable();
     let mut modified = Vec::new();
     for m in &diff.modified {
         if let Some(original) = base_blocks.get(m.index) {
@@ -454,6 +455,7 @@ fn inverse_blocks_diff(base_blocks: &[MdBlock], diff: &MdBlocksDiff) -> MdBlocks
         }
     }
     added.sort_by_key(|a| a.index);
+    modified.sort_by_key(|m| m.index);
     MdBlocksDiff { removed, modified, added }
 }
 
@@ -500,7 +502,8 @@ fn inverse_block_diff(current: Option<&MdBlock>, diff: &MdBlockDiff) -> MdBlockD
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn inverse_list_items_diff(base_items: &[Vec<MdBlock>], diff: &MdListItemsDiff) -> MdListItemsDiff {
-    let removed: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
+    let mut removed: Vec<usize> = diff.added.iter().map(|a| a.index).collect();
+    removed.sort_unstable();
     let mut modified = Vec::new();
     for m in &diff.modified {
         if let Some(original) = base_items.get(m.index) {
@@ -515,6 +518,7 @@ fn inverse_list_items_diff(base_items: &[Vec<MdBlock>], diff: &MdListItemsDiff) 
         }
     }
     added.sort_by_key(|a| a.index);
+    modified.sort_by_key(|m| m.index);
     MdListItemsDiff { removed, modified, added }
 }
 
@@ -856,15 +860,6 @@ fn absorb_list_items_diff(d1: MdListItemsDiff, d2: &MdListItemsDiff) -> MdListIt
     MdListItemsDiff { removed, modified, added }
 }
 //#endregion 🔖️Absorb
-
-//#region 🔖️SetSnapshot
-/// 🧩️ Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
-/// Option<MdSnapshot>` full-replace slot -- this IS `MdDiff::between`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &MdSnapshot, next: &MdSnapshot) -> MdDiff {
-    MdDiff::between(base, next)
-}
-//#endregion 🔖️SetSnapshot
 
 //#region 🔖️HandcraftedDiffCodec
 /// 🧪️ F6: hand-rolled `protocol::DiffCodec` for `MdDiff` (real blocker citations on `MdDiff`'s own

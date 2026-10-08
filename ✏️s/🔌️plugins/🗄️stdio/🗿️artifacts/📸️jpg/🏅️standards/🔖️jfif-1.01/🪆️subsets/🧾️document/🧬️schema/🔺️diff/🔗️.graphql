@@ -1,25 +1,23 @@
 # 🔺️ JpgDiff schema facet — mirrors 🦀️.rs field-for-field. No full-replace slot.
 
-type JpgComponentDiff { hSampling: Int, vSampling: Int, quantTableId: Int }
-type JpgComponentModified { id: Int!, diff: JpgComponentDiff! }
-type JpgComponentAdded { index: Int!, item: JpgFrameComponent! }
-type JpgComponentsDiff { removed: [Int!], modified: [JpgComponentModified!], added: [JpgComponentAdded!] }
 
-type JpgFrameFieldsDiff { precision: Int, width: Int, height: Int, components: JpgComponentsDiff }
-"frame's change shape: MODIFY (field patch) or REPLACE (decode-status kind change)."
-type JpgFrameChange { change: String!, precision: Int, width: Int, height: Int, components: JpgComponentsDiff, frame: JpgFrameHeader }
 
-type JpgQuantTableDiff { precision: Int, values: [Int!] }
-type JpgQuantTableModified { id: Int!, diff: JpgQuantTableDiff! }
-type JpgQuantTableAdded { index: Int!, item: JpgQuantTable! }
-type JpgQuantTablesDiff { removed: [Int!], modified: [JpgQuantTableModified!], added: [JpgQuantTableAdded!] }
 
-"Compound identity for huffmanTables — DC id=0 and AC id=0 are different tables."
-type JpgHuffmanTableKey { class: JpgHuffmanClass!, id: Int! }
-type JpgHuffmanTableDiff { bits: [Int!], values: [Int!] }
-type JpgHuffmanTableModified { key: JpgHuffmanTableKey!, diff: JpgHuffmanTableDiff! }
-type JpgHuffmanTableAdded { index: Int!, item: JpgHuffmanTable! }
-type JpgHuffmanTablesDiff { removed: [JpgHuffmanTableKey!], modified: [JpgHuffmanTableModified!], added: [JpgHuffmanTableAdded!] }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 type JpgSegmentDiff { marker: Int, data: [Int!] }
 type JpgSegmentModified { index: Int!, diff: JpgSegmentDiff! }
@@ -36,11 +34,5 @@ type JpgDiff {
   jfifXDensity: Int @state(class: ARTIFACT)
   jfifYDensity: Int @state(class: ARTIFACT)
   jfifThumbnail: JfifThumbnail @state(class: ARTIFACT)
-  frame: JpgFrameChange @state(class: ARTIFACT)
-  sofMarker: Int @state(class: ARTIFACT)
-  arithmetic: Boolean @state(class: ARTIFACT)
-  quantTables: JpgQuantTablesDiff @state(class: ARTIFACT)
-  huffmanTables: JpgHuffmanTablesDiff @state(class: ARTIFACT)
-  restartInterval: Int @state(class: ARTIFACT)
   otherSegments: JpgOtherSegmentsDiff @state(class: ARTIFACT)
 }

@@ -13,8 +13,6 @@ use framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.playbook.playbook")]
 pub struct PlaybookDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::schema::PlaybookArtifact>>,
-    #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]
     pub id: Option<String>,
@@ -45,7 +43,6 @@ pub struct PlaybookStringList {
 impl semio_framework_value::ToValue for PlaybookDiff {
     fn to_value(&self) -> semio_framework_value::DslValue {
         semio_framework_value::DslValue::object([
-            ("artifact".to_string(), semio_framework_value::ToValue::to_value(&self.artifact)),
             ("schema".to_string(), semio_framework_value::ToValue::to_value(&self.schema)),
             ("id".to_string(), semio_framework_value::ToValue::to_value(&self.id)),
             ("version".to_string(), semio_framework_value::ToValue::to_value(&self.version)),
@@ -65,7 +62,6 @@ impl semio_framework_value::FromValue for PlaybookDiff {
             }
         };
         Ok(Self {
-            artifact: get("artifact").map_or(Ok(None), semio_framework_value::FromValue::from_value)?,
             schema: get("schema").map_or(Ok(None), semio_framework_value::FromValue::from_value)?,
             id: get("id").map_or(Ok(None), semio_framework_value::FromValue::from_value)?,
             version: get("version").map_or(Ok(None), semio_framework_value::FromValue::from_value)?,
@@ -77,67 +73,29 @@ impl semio_framework_value::FromValue for PlaybookDiff {
 //#endregion 🔖️ValueCodec
 
 use crate::schema::snapshot::PlaybookSnapshot;
-use crate::schema::PlaybookArtifact;
 use protocol::MutationDiff;
 
-impl PlaybookDiff {
-    /// 🧬️ Applies sparse document changes to the artifact.
-    pub fn apply_to_artifact(&self, artifact: &PlaybookArtifact) -> protocol::MutationApplyResult<PlaybookArtifact> {
-        Ok({
-            if let Some(replacement) = &self.artifact {
-                return Ok((**replacement).clone());
-            }
-            let mut next = artifact.clone();
-            if let Some(schema) = &self.schema {
-                next.schema = schema.clone();
-            }
-            if let Some(id) = &self.id {
-                next.id = id.clone();
-            }
-            if let Some(version) = &self.version {
-                next.version = version.clone();
-            }
-            if let Some(title) = &self.title {
-                next.title = title.clone();
-            }
-            if let Some(flow) = &self.flow {
-                next.flow = flow.clone();
-            }
-            next
-        })
-    }
-}
-
 impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
-    fn apply(&self, snapshot: &PlaybookSnapshot) -> protocol::MutationApplyResult<PlaybookSnapshot> {
-        Ok({
-            if let Some(replacement) = &self.artifact {
-                return Ok(replacement.to_snapshot());
-            }
-            let mut next = snapshot.clone();
-            if let Some(schema) = &self.schema {
-                next.schema = schema.clone();
-            }
-            if let Some(id) = &self.id {
-                next.id = id.clone();
-            }
-            if let Some(version) = &self.version {
-                next.version = version.clone();
-            }
-            if let Some(title) = &self.title {
-                next.title = title.clone();
-            }
-            if let Some(flow) = &self.flow {
-                next.flow = flow.clone();
-            }
-            next
-        })
+    fn apply(&self, snapshot: &PlaybookSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<PlaybookSnapshot> {
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(id) = &self.id {
+            next.id = id.clone();
+        }
+        if let Some(version) = &self.version {
+            next.version = version.clone();
+        }
+        if let Some(title) = &self.title {
+            next.title = title.clone();
+        }
+        if let Some(flow) = &self.flow {
+            next.flow = flow.clone();
+        }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
-        if other.artifact.is_some() {
-            *self = other;
-            return;
-        }
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {
@@ -153,7 +111,26 @@ impl MutationDiff<PlaybookSnapshot> for PlaybookDiff {
     }
 }
 
-/// 📸️ Whole-snapshot replacement diff.
-pub fn diff_set_snapshot(snapshot: &PlaybookSnapshot) -> PlaybookDiff {
-    PlaybookDiff { artifact: Some(Box::new(PlaybookArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
+impl protocol::DiffAlgebra<PlaybookSnapshot> for PlaybookDiff {
+    fn inverse(&self, base: &PlaybookSnapshot) -> Self {
+        Self {
+            schema: self.schema.as_ref().map(|_| base.schema.clone()),
+            id: self.id.as_ref().map(|_| base.id.clone()),
+            version: self.version.as_ref().map(|_| base.version.clone()),
+            title: self.title.as_ref().map(|_| base.title.clone()),
+            flow: self.flow.as_ref().map(|_| base.flow.clone()),
+        }
+    }
+    fn between(base: &PlaybookSnapshot, other: &PlaybookSnapshot) -> Self {
+        Self {
+            schema: (base.schema != other.schema).then(|| other.schema.clone()),
+            id: (base.id != other.id).then(|| other.id.clone()),
+            version: (base.version != other.version).then(|| other.version.clone()),
+            title: (base.title != other.title).then(|| other.title.clone()),
+            flow: (base.flow != other.flow).then(|| other.flow.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.schema.is_none() && self.id.is_none() && self.version.is_none() && self.title.is_none() && self.flow.is_none()
+    }
 }

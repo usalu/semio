@@ -37,5 +37,5 @@ pub struct AddCombination {
 pub fn handle(payload: &AddCombination, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.combinations.iter().map(|c| c.id.clone()), "c");
-    Ok(Emit::mutations(vec![Fem2dMutation::CreateCombination(create_combination::CreateCombination { combination: FemCombination { id, name: payload.name.clone(), terms: payload.terms.clone() } })]))
+    Ok(Emit::mutations(vec![Fem2dMutation::CreateCombination(create_combination::CreateCombination { combination: FemCombination { id, name: payload.name.clone(), terms: payload.terms.clone() }, index: None })]))
 }

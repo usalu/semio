@@ -1,0 +1,26 @@
+{
+  "schema": null,
+  "name": null,
+  "grid": null,
+  "paragraphStyles": null,
+  "characterStyles": null,
+  "stories": null,
+  "links": null,
+  "parentPages": null,
+  "spreads": null,
+  "pages": {
+    "added": [],
+    "removed": [],
+    "patched": [],
+    "reordered": [
+      "page-0",
+      "page-2",
+      "page-1"
+    ]
+  },
+  "printTarget": null,
+  "backgroundDrawing": null,
+  "drawingTexts": [],
+  "referencedModel": null,
+  "dataFields": null
+}

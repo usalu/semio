@@ -6,7 +6,7 @@ use {semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialec
 /// `select_boot_program`'s role projection resolves a sibling by `(dialect, role)` and a table of
 /// apps that all claimed one synthetic dialect could never exercise it.
 fn boot_app(app_id: &str) -> AppDefinition {
-    let (dialect, role) = semio_framework::parse_surface_app_id(app_id).unwrap_or_else(|_| (ArtifactDialect { artifact_kind: "s.test.boot".into(), standard: "1".into(), subset: "*".into() }, AppRole::Editor));
+    let (dialect, role) = semio_framework::parse_surface_app_id(app_id).expect("the neutral boot corpus names an explicit dialect and role");
     AppDefinition {
         id: app_id.into(),
         role,
@@ -59,7 +59,7 @@ fn boot_app(app_id: &str) -> AppDefinition {
     }
 }
 
-fn boot_manifest(plugin_id: &str, app_ids: &[&str]) -> PluginManifest {
+pub(super) fn boot_manifest(plugin_id: &str, app_ids: &[&str]) -> PluginManifest {
     PluginManifest {
         plugin_id: plugin_id.into(),
         label: plugin_id.into(),
@@ -96,7 +96,9 @@ fn boot_selection_opens_the_requested_variant_across_the_fixture_table() {
             .collect();
         let programs: Vec<(&str, &PluginManifest)> = manifests.iter().map(|(plugin_id, manifest)| (plugin_id.as_str(), manifest)).collect();
         let requested_role = case["role"].as_str().map_or(semio_framework::manifest::AppRole::Editor, |role| if role == "viewer" { semio_framework::manifest::AppRole::Viewer } else { semio_framework::manifest::AppRole::Editor });
-        let selected = select_boot_program(&programs, variant, requested_role, case["appId"].as_str());
+        let declaration = fixture["catalog"]["playgrounds"].as_array().unwrap().iter().find(|row| row["variant"].as_str() == Some(variant)).expect("the neutral catalog declares each variant");
+        let request = BootSelectionRequest { plugin_id: declaration["pluginId"].as_str().unwrap(), app_id: declaration["app"].as_str() };
+        let selected = select_boot_program(&programs, request, requested_role, case["appId"].as_str());
         match case["expected"].as_object() {
             None => assert!(selected.is_none(), "case {} must not open a foreign plugin's app", case["id"]),
             Some(expected) => {
@@ -112,12 +114,12 @@ fn boot_selection_opens_the_requested_variant_across_the_fixture_table() {
 /// settles (chrome + first refresh) and reports the plugin by name instead of rejecting `bootShell`.
 #[test]
 fn boot_without_the_requested_plugin_settles_with_a_per_plugin_status() {
-    let mut shell = ShellState::new(Vec::new(), "generation3d".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
+    let mut shell = ShellState::new(Vec::new(), "missing-plugin".into(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     semio_framework_async::block_on(shell.boot()).expect("a missing plugin never fails the shell boot");
     assert!(shell.session.is_none());
     assert_eq!(shell.plugin_faults.len(), 1);
-    assert_eq!(shell.plugin_faults[0].plugin_id, "procedural");
-    assert_eq!(shell.plugin_faults[0].app_id, "s.procedural.generation3d@1/*#editor");
+    assert_eq!(shell.plugin_faults[0].plugin_id, "missing-plugin");
+    assert_eq!(shell.plugin_faults[0].app_id, "");
     assert_eq!(shell.error, shell.plugin_fault_status());
 }
 

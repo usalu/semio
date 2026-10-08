@@ -1,3 +1,5 @@
 {
-  "previewEvalText": "{\"meshes\":1}"
+  "previewEvalText": {
+    "text": "{\"meshes\":1}"
+  }
 }

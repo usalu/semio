@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../../../../.."
 name = "semio-framework-value-resident"
 version.workspace = true
 edition.workspace = true

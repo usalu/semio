@@ -1,7 +1,7 @@
 use super::*;
-use crate::mutations::{add_tag, change_counter, change_notes, register_vcs_demo_mutation_descriptors, remove_tag, rename_vcs, AddTag, RemoveTag};
+use crate::mutations::{add_tag, add_tag_at, change_counter, change_notes, register_vcs_demo_mutation_descriptors, remove_tag, rename_vcs, AddTag, RemoveTag};
 use crate::standards::v1::subsets::any::schema::empty_vcs_snapshot;
-use protocol::{Mutation, MutationDiff, MutationKind, SemanticMutation};
+use protocol::{Mutation, MutationKind, SemanticMutation};
 use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
 
 #[semio_framework_async_macros::async_test]
@@ -16,6 +16,7 @@ async fn rename_vcs_inverse_law_holds() {
     let base = empty_vcs_snapshot();
     let mutation = rename_vcs("Renamed".into());
     assert_mutation_inverse_law(&base, &mutation).await;
+    assert_mutation_inverse_sum_law(&mutation, &base).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -23,22 +24,35 @@ async fn change_counter_inverse_law_holds() {
     let base = empty_vcs_snapshot();
     let mutation = change_counter(42);
     assert_mutation_inverse_law(&base, &mutation).await;
+    assert_mutation_inverse_sum_law(&mutation, &base).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn add_tag_then_remove_tag_inverse_laws_hold() {
     let base = empty_vcs_snapshot();
     assert_mutation_inverse_law(&base, &add_tag("wip".into())).await;
+    assert_mutation_inverse_sum_law(&add_tag("wip".into()), &base).await;
     let mut with_tag = base.clone();
     with_tag.tags.push("wip".into());
     assert_mutation_inverse_law(&with_tag, &remove_tag("wip".into())).await;
+    assert_mutation_inverse_sum_law(&remove_tag("wip".into()), &with_tag).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn tag_edits_in_the_middle_of_the_list_restore_their_original_index() {
+    let mut base = empty_vcs_snapshot();
+    base.tags = vec!["a".into(), "b".into(), "c".into(), "d".into()];
+    for mutation in [remove_tag("b".into()), remove_tag("a".into()), remove_tag("d".into()), add_tag_at("x".into(), 0), add_tag_at("x".into(), 2), add_tag_at("x".into(), 9), add_tag("x".into())] {
+        assert_mutation_inverse_law(&base, &mutation).await;
+        assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn change_notes_diff_absorb_law_holds() {
     let base = empty_vcs_snapshot();
     let d1 = change_notes("first".into()).diff(&base).into_parts().0;
-    let mid = d1.apply(&base).expect("valid mutation diff");
+    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
     let d2 = change_notes("second".into()).diff(&mid).into_parts().0;
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
@@ -47,7 +61,7 @@ async fn change_notes_diff_absorb_law_holds() {
 async fn add_tag_is_a_noop_when_base_already_has_the_tag() {
     let mut base = empty_vcs_snapshot();
     base.tags.push("wip".into());
-    let payload = AddTag { tag: "wip".into() };
+    let payload = AddTag { tag: "wip".into(), index: None };
     let outcome = MutationKind::diff(&payload, &base);
     assert_eq!(outcome.diff(), &crate::VcsDiff::default());
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"), "a duplicate add must carry a no-op message");
@@ -100,10 +114,10 @@ async fn dispatch_registers_semantic_descriptors() {
 async fn txt_dsl_carrier_round_trips_exactly() {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use semio_framework::io::io_mechanism::{Deserializer, Serializer};
+    use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
     use semio_framework::io_schema::IoPayload;
     let snapshot = crate::standards::v1::subsets::any::schema::empty_vcs_snapshot();
-    let exported = export::txt::v_utf_8::any::VcsIntoTxt::serialize(&snapshot, &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl txt export");
+    let exported = export::txt::v_utf_8::any::VcsIntoTxt::serialize(&snapshot, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl txt export");
     let IoPayload::Text(text) = exported.value else { panic!("txt is a text payload") };
     let back = import::txt::v_utf_8::any::TxtIntoVcs::deserialize(&IoPayload::Text(text)).await.expect("dsl txt import");
     assert_eq!(back.value, snapshot);

@@ -1,9 +1,9 @@
 {
   "artifact": null,
-  "schema": null,
   "camera": null,
-  "nodes": null,
   "edges": null,
-  "targetRegions": null,
-  "meta": null
+  "meta": null,
+  "nodes": null,
+  "schema": null,
+  "targetRegions": null
 }

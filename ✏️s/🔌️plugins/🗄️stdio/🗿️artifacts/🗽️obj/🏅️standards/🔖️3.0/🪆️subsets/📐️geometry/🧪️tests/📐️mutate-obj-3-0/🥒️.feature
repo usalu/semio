@@ -95,7 +95,6 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                    | params                                                                                       |
-      | set-snapshot          | {"snapshot": {"schema": "stdio.obj", "vertices": [{"x": 0, "y": 0, "z": 0}, {"x": 1, "y": 0, "z": 0}, {"x": 0, "y": 1, "z": 0}], "texcoords": [], "normals": [], "faces": [{"vertices": [{"vertex": 0}, {"vertex": 1}, {"vertex": 2}]}], "groups": [], "objects": [], "usemtl": [], "smoothingGroups": [], "unknownStatements": []}} |
       | insert-vertex         | {"index":8449,"vertex":{"x":0.5,"y":0.5,"z":0.5}}                                            |
       | remove-vertex         | {"index":8448}                                                                               |
       | set-vertex            | {"index":0,"vertex":{"x":1,"y":2,"z":3}}                                                     |
@@ -114,7 +113,6 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
       | remove-object         | {"name":"pattern-sphere"}                                                                    |
       | set-smoothing-groups  | {"smoothingGroups": [{"faceIndexFrom": 0, "group": 1}]} |
       | set-unknown-statements | {"unknownStatements": [{"lineIndex": 0, "raw": "# replaced by mutation"}]} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/vertices/0/x", "value": 1.5}} |
 
   @id-inverse
   @level-exhaustive
@@ -129,7 +127,6 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
     Then the mesh matches its pre-mutation semantic projection
     Examples:
       | id                    | params                                                                                       |
-      | set-snapshot          | {"snapshot": {"schema": "stdio.obj", "vertices": [{"x": 0, "y": 0, "z": 0}, {"x": 1, "y": 0, "z": 0}, {"x": 0, "y": 1, "z": 0}], "texcoords": [], "normals": [], "faces": [{"vertices": [{"vertex": 0}, {"vertex": 1}, {"vertex": 2}]}], "groups": [], "objects": [], "usemtl": [], "smoothingGroups": [], "unknownStatements": []}} |
       | insert-vertex         | {"index":8449,"vertex":{"x":0.5,"y":0.5,"z":0.5}}                                            |
       | remove-vertex         | {"index":8448}                                                                               |
       | set-vertex            | {"index":0,"vertex":{"x":1,"y":2,"z":3}}                                                     |
@@ -148,7 +145,6 @@ Feature: Apply every typed OBJ 3.0 mutation to a real-world mesh
       | remove-object         | {"name":"pattern-sphere"}                                                                    |
       | set-smoothing-groups  | {"smoothingGroups": [{"faceIndexFrom": 0, "group": 1}]} |
       | set-unknown-statements | {"unknownStatements": [{"lineIndex": 0, "raw": "# replaced by mutation"}]} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/vertices/0/x", "value": 1.5}} |
 
   @id-identity-round-trip
   @level-long

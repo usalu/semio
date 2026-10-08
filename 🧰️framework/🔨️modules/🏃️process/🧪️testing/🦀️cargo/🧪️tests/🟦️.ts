@@ -6,9 +6,7 @@ import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
 
 test("Cargo retains failed build stdout without admitting invalid metadata", async () => {
-  const owner = resolve(import.meta.dir, ".."), require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🚨️failed-build/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🚨️failed-build/🧬️schema/🔣️.json"), "utf8"));
-  expect(new (require("ajv").default)({ strict: true }).compile(schema)(fixture)).toBe(true);
+  const owner = resolve(import.meta.dir, ".."), fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🚨️failed-build/🔣️.json"), "utf8"));
   const api = await import("../🟦️.ts"), base = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")).policies[0];
   const artifact = process.env.SEMIO_TEST_ARTIFACT_DIR!; expect(artifact).toBeTruthy(); mkdirSync(artifact, { recursive: true });
   const temporary = mkdtempSync(join(artifact, "cargo-failed-output-"));

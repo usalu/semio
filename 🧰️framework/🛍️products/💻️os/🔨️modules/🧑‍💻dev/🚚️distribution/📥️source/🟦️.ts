@@ -1,3 +1,4 @@
+import { runtimeFixturePathV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts";
 /** 🧩️ Semantic distribution source owner. */
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
@@ -46,6 +47,7 @@ async function distributionStaticSourcePaths(workspace: string, entries: readonl
   const coordinate = (absolute: string) => {
     const path = relative(root, absolute).replaceAll("\\", "/");
     if (!path || path === ".." || path.startsWith("..") || path.startsWith("/")) throw new Error(`Compiler source escapes its workspace: ${absolute}`);
+    if (runtimeFixturePathV1(path)) throw new Error("Production compiler source belongs to a testing fixture collection: " + path);
     return path.normalize("NFC");
   };
   const visit = (absolute: string) => {
@@ -67,7 +69,9 @@ async function distributionStaticSourcePaths(workspace: string, entries: readonl
       return;
     }
     if (!/\.[cm]?[jt]sx?$/u.test(path)) return;
-    for (const specifier of registryStaticImports(readFileSync(canonical, "utf8"), path)) {
+    const loader = path.endsWith("tsx") ? "tsx" : /\.[mc]?ts$/u.test(path) ? "ts" : path.endsWith("jsx") ? "jsx" : "js";
+    const source = new Bun.Transpiler({ loader, define: { "import.meta.vitest": "undefined" }, deadCodeElimination: true, minifySyntax: true }).transformSync(readFileSync(canonical, "utf8"));
+    for (const specifier of registryStaticImports(source, path)) {
       if (specifier.startsWith("node:") || specifier.startsWith("bun:") || builtinModules.includes(specifier)) continue;
       const resolved = Bun.resolveSync(specifier, dirname(canonical));
       if (!specifier.startsWith(".")) {

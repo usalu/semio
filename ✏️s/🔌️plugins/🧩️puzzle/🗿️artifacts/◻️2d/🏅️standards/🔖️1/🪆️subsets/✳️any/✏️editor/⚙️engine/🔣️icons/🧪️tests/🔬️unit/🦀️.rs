@@ -14,9 +14,9 @@ fn svg_icon_append_smoke() {
 
 #[test]
 fn board_icon_codec_resolves_catalog_key_via_themed_lookup() {
-    let r = canvas::icon_codec::board_resolve_icon_kind("capsule_J", puzzle_themed_icon_lookup);
+    let r = canvas::icon_codec::resolve_icon_kind("capsule_J", puzzle_themed_icon_lookup);
     match r {
-        canvas::icon_codec::BoardResolvedIcon::SvgThemed(s) => {
+        canvas::icon_codec::ResolvedIcon::SvgThemed(s) => {
             assert!(s.contains("<svg"), "catalog metabolism key should resolve via themed lookup");
         }
         other => panic!("unexpected resolution for catalog capsule_J: {other:?}"),
@@ -25,9 +25,9 @@ fn board_icon_codec_resolves_catalog_key_via_themed_lookup() {
 
 #[test]
 fn board_icon_codec_resolves_typst_math_to_svg_plain() {
-    let r = canvas::icon_codec::board_resolve_icon_kind("typst:$x^2$", puzzle_themed_icon_lookup);
+    let r = canvas::icon_codec::resolve_icon_kind("typst:$x^2$", puzzle_themed_icon_lookup);
     match r {
-        canvas::icon_codec::BoardResolvedIcon::SvgPlain(s) => {
+        canvas::icon_codec::ResolvedIcon::SvgPlain(s) => {
             assert!(s.contains("<svg"), "{}", &s[..s.len().min(240)]);
         }
         other => panic!("unexpected resolution: {other:?}"),
@@ -36,9 +36,9 @@ fn board_icon_codec_resolves_typst_math_to_svg_plain() {
 
 #[test]
 fn board_icon_codec_resolves_emoji_prefix_without_tofu() {
-    let r = canvas::icon_codec::board_resolve_icon_kind("emoji:☺️", puzzle_themed_icon_lookup);
+    let r = canvas::icon_codec::resolve_icon_kind("emoji:☺️", puzzle_themed_icon_lookup);
     match r {
-        canvas::icon_codec::BoardResolvedIcon::SvgPlain(s) => {
+        canvas::icon_codec::ResolvedIcon::SvgPlain(s) => {
             assert!(s.contains("<svg"), "{}", &s[..s.len().min(240)]);
             assert!(!s.contains('\u{fffd}'), "expected no U+FFFD replacement in emoji SVG, got {}", &s[..s.len().min(400)]);
         }

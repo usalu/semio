@@ -1,5 +1,5 @@
 //! 🦀️ IFC2X3 / 🤝️cv20 mutation case — Rust adapter. Exhaustive: every declared
-//! `Ifc2x3Cv20Mutation` kind (`ifc-2x3-cv20`, 5 kinds) gets a `mutate-<kind>` and an
+//! `Ifc2x3Cv20Mutation` kind (`ifc-2x3-cv20`, 4 kinds) gets a `mutate-<kind>` and an
 //! `inverse-<kind>` scenario, plus one identity round trip. Every row's `params` IS the leaf wire payload,
 //! which the subject decodes through the derive-generated `from_payload_value`. `ruststep` 0.4 can only READ Part-21
 //! text, so the oracle dispatcher
@@ -11,7 +11,7 @@
 //! compares them — real third-party evidence about structure, never a byte-level differential claim.
 
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
-use semio_s_artifact_stdio_ifc_test_oracle::standards::v2x3::subsets::cv20::{oracle_apply_mutation, oracle_round_trip, oracle_snapshot_payload, project_ifc_2x3_cv20};
+use semio_s_artifact_stdio_ifc_test_oracle::standards::v2x3::subsets::cv20::{oracle_apply_mutation, oracle_round_trip, project_ifc_2x3_cv20};
 
 
 //#region 🔖️Input
@@ -48,7 +48,6 @@ fn json_spec(kind: &str, params: Json) -> Json {
 /// than read from production because neither the oracle nor this adapter links the subject crate.
 fn inverse_spec(kind: &str, input: &[u8]) -> Result<Json, String> {
     Ok(match kind {
-        "set-snapshot" => json_spec("set-snapshot", oracle_snapshot_payload(input)?),
         "set-view-definition" => json_spec("set-view-definition", json_obj(vec![("view", json_str("CoordinationView_V2.0"))])),
         "set-structural-entity" => json_spec("set-structural-entity", json_obj(vec![("id", json_num(9_000_001.0)), ("entity", Json::Null)])),
         "set-project-units" => json_spec("set-project-units", json_obj(vec![("project", json_num(120.0)), ("units", json_num(107.0))])),

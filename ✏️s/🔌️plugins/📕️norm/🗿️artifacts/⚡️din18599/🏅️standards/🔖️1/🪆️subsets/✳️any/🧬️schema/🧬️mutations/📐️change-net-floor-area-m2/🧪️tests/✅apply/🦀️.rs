@@ -15,7 +15,7 @@ fn expected_diff() -> Din18599Diff { serde_json::from_str(DIFF).unwrap() }
 #[semio_framework_async_macros::async_test]
 async fn applies_to_committed_after() {
     let raised = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::diff(&mutation(), &before());
-    let after = <Din18599Diff as protocol::MutationDiff<Din18599Snapshot>>::apply(raised.diff(), &before()).unwrap();
+    let after = protocol::apply_diff(raised.diff(), &before()).unwrap();
     assert_eq!(after, expected_after());
 }
 
@@ -30,10 +30,10 @@ async fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
     let raised = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::diff(&mutation, &base);
-    let mut snapshot = <Din18599Diff as protocol::MutationDiff<Din18599Snapshot>>::apply(raised.diff(), &base).unwrap();
+    let mut snapshot = protocol::apply_diff(raised.diff(), &base).unwrap();
     for step in &<Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
         let raised = <Din18599Mutation as protocol::Mutation<Din18599Snapshot>>::diff(step, &snapshot);
-        snapshot = <Din18599Diff as protocol::MutationDiff<Din18599Snapshot>>::apply(raised.diff(), &snapshot).unwrap();
+        snapshot = protocol::apply_diff(raised.diff(), &snapshot).unwrap();
     }
     assert_eq!(snapshot, base);
 }
@@ -51,4 +51,9 @@ async fn committed_json_is_canonical() {
         assert_eq!(serde_json::to_value(&decoded).unwrap(), serde_json::from_str::<serde_json::Value>(text).unwrap(), "{side}");
     }
     assert_eq!(serde_json::to_value(mutation()).unwrap(), serde_json::from_str::<serde_json::Value>(MUTATION).unwrap());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

@@ -31,7 +31,7 @@ changeEdgeTips: 'change-edge-tips' SP id SP textOpt SP textOpt ;
 changeEdgeVisible: 'change-edge-visible' SP id SP booleanOpt ;
 changeEdgeLocked: 'change-edge-locked' SP id SP booleanOpt ;
 changeManifestId: 'change-manifest-id' SP textOpt ;
-connectKindCompatibility: 'connect-kind-compatibility' SP id SP id SP boolean SP boolean SP specificity ;
+connectKindCompatibility: 'connect-kind-compatibility' SP id SP id SP boolean SP boolean SP specificity SP indexOpt ;
 disconnectKindCompatibility: 'disconnect-kind-compatibility' SP id SP id ;
 replaceKindCatalogs: 'replace-kind-catalogs' SP catalogsBlockOpt ;
 createTargetRegion: 'create-target-region' SP regionBlock SP indexOpt ;

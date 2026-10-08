@@ -1,38 +1,60 @@
 {
-  "artifact": null,
   "annex": null,
   "site": null,
-  "buildings": null,
-  "bridges": null,
-  "assessments": null,
-  "silos": [
-    {
-      "id": "si-1",
-      "heightM": 12.0,
-      "radiusM": 4.0,
-      "permanentGkN": 1200000.0,
-      "contentQkN": 4000000.0,
-      "contentCategory": "E",
-      "fillingRatio": 0.85,
-      "nRdN": 2000000.0,
-      "vRdN": 1500000.0,
-      "qNominal": 1.2
-    },
-    {
-      "id": "si-2",
-      "heightM": 16.0,
-      "radiusM": 3.0,
-      "permanentGkN": 1200000.0,
-      "contentQkN": 4000000.0,
-      "contentCategory": "E",
-      "fillingRatio": 0.85,
-      "nRdN": 2000000.0,
-      "vRdN": 1500000.0,
-      "qNominal": 1.2
-    }
-  ],
-  "tanks": null,
-  "foundations": null,
-  "retainingWalls": null,
-  "towers": null
+  "buildings": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "bridges": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "assessments": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "silos": {
+    "removed": [],
+    "added": [
+      {
+        "after": "si-1",
+        "row": {
+          "id": "si-2",
+          "heightM": 16.0,
+          "radiusM": 3.0,
+          "permanentGkN": 1200000.0,
+          "contentQkN": 4000000.0,
+          "contentCategory": "E",
+          "fillingRatio": 0.85,
+          "nRdN": 2000000.0,
+          "vRdN": 1500000.0,
+          "qNominal": 1.2
+        }
+      }
+    ],
+    "modified": []
+  },
+  "tanks": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "foundations": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "retainingWalls": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "towers": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

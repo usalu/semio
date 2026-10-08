@@ -4,7 +4,7 @@
 //! the sole runtime adapter, so this file can never structurally emit an artifact or draft mutation.
 //! MUST NOT import anything from the sibling `editor` module (`policyViewerPurityBreaches`).
 
-use crate::standards::v_jfif_1_01::subsets::baseline::schema::mutations::JpgBaselineMutation;
+use crate::standards::v_jfif_1_01::subsets::baseline::schema::mutations::JpgMutation;
 use crate::standards::v_jfif_1_01::subsets::baseline::schema::snapshot::JpgSnapshot;
 use crate::viewer::jpg_baseline::modes::view;
 use crate::viewer::jpg_baseline::modes::view::windows::main;
@@ -48,7 +48,7 @@ pub struct JpgBaselineViewer;
 
 impl ArtifactViewer for JpgBaselineViewer {
     type Snapshot = JpgSnapshot;
-    type Mutation = JpgBaselineMutation;
+    type Mutation = JpgMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;

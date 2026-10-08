@@ -17,7 +17,9 @@
  * @see ../🧮️program-matrix/🟦️.ts — verb pins and the round-trip witness
  */
 
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { ProtectedActorResponseCaptureV1, executeProtectedActorChildV1, type ProtectedActorSelectionV1, protectedActorChildUrlV1, observeNormalDevHubPublicationOwnerV1 } from "../../🔎️verification/🧾️publication/🟦️.ts";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { BrowserContext, Page } from "playwright";
@@ -173,6 +175,7 @@ export type HubDocumentSweepOptions = Readonly<{
   profileDir: string;
   outDir: string;
   signal: AbortSignal;
+  publicationProof?: Readonly<{root:string;hubUrl:string}>;
 }>;
 
 /** 🧾️ One kind's row. */
@@ -323,8 +326,14 @@ async function sweepKind(page: Page, kind: { kindId: string; plugin: string; val
 export async function runHubDocumentSweep(options: HubDocumentSweepOptions): Promise<{ rows: HubSweepRow[]; kinds: string[]; cancelled: boolean; fatal?: string }> {
   mkdirSync(options.outDir, { recursive: true });
   ensureParityPlaywrightBrowsersPath();
+  if(options.publicationProof&&(options.kinds.length||options.cancel!==null||!options.reopen))throw Error("publication proof requires the normal complete selected actor sweep with reopen and active child cancellation");
+  const selected=options.publicationProof?await (await import("../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts")).loadCurrentDevelopmentActorsV1(options.publicationProof.root,()=>{if(options.signal.aborted)throw Error("normal publication sweep cancelled");}):undefined;
+  const hubOwner=selected?await observeNormalDevHubPublicationOwnerV1(options.publicationProof!.root,selected.dataRoot,options.publicationProof!.hubUrl):undefined;
   const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-  const context = await chromium.launchPersistentContext(options.profileDir, { headless: true, args: ["--use-angle=metal"], viewport: { width: 1600, height: 1000 }, locale: options.locale === "de" ? "de-DE" : "en-US" });
+  const context = await chromium.launchPersistentContext(options.profileDir, { headless: true, args: process.platform === "darwin" ? ["--use-angle=metal"] : [], viewport: { width: 1600, height: 1000 }, locale: options.locale === "de" ? "de-DE" : "en-US" });
+  const closeCancelled=():void=>{void context.close().catch(()=>{});};
+  options.signal.addEventListener("abort",closeCancelled,{once:true});
+  if(options.signal.aborted)closeCancelled();
   await installNoticeRecorder(context);
   const page = context.pages()[0] ?? (await context.newPage());
   page.setDefaultNavigationTimeout(180_000);
@@ -344,7 +353,9 @@ export async function runHubDocumentSweep(options: HubDocumentSweepOptions): Pro
     await click(page, '[data-slot="window-action-pane"] [id="action.createArtifact"]');
     await page.waitForTimeout(2_000);
     const offered = await stagedKinds(page);
-    const kinds = offered.filter((kind) => options.kinds.length === 0 || options.kinds.includes(kind.kindId));
+    const witnesses=selected?.witnesses as readonly {pluginId:string;packageId:string;actor:ProtectedActorSelectionV1["actor"]}[]|undefined;
+    const wanted=witnesses?.map(witness=>witness.pluginId);
+    const kinds = wanted? wanted.map((pluginId:string)=>{const kind=offered.find(kind=>kind.plugin===pluginId);if(!kind)throw Error("normal selected actor has no actual Hub creation kind: "+pluginId);return kind;}):offered.filter((kind) => options.kinds.length === 0 || options.kinds.includes(kind.kindId));
     report.kinds = kinds.map((kind) => kind.kindId);
     console.log(`[hub-sweep] space ${String(probe.spaceId)}; ${offered.length} creatable kinds, ${kinds.length} selected: ${report.kinds.join(", ")}`);
     flush();
@@ -353,7 +364,24 @@ export async function runHubDocumentSweep(options: HubDocumentSweepOptions): Pro
         report.cancelled = true;
         break;
       }
+      const witness=witnesses?.find(value=>value.pluginId===kind.plugin),producer=selected?.published.generation.packages.find((value:{pluginId:string})=>value.pluginId===kind.plugin);
+      if(selected&&(!witness||!producer))throw Error("normal selected actor generation producer absent");
+      const expected=selected&&witness&&producer?{generationId:selected.published.record.generationId,pluginId:witness.pluginId,packageId:witness.packageId,component:producer.component,descriptor:producer.descriptor,actor:witness.actor}:undefined;
+      const capture=selected?new ProtectedActorResponseCaptureV1(context,options.publicationProof!.hubUrl,{selection:expected!,kindId:kind.kindId}):undefined;
       const row = await sweepKind(page, kind, options, faults).catch((error: unknown) => ({ kindId: kind.kindId, plugin: kind.plugin, pass: false, faults: [], notices: [], detail: `probe error: ${String(error).split("\n")[0]!.slice(0, 200)}` }) as HubSweepRow);
+      try{
+        if(selected&&capture){
+          if(!row.pass)throw Error("normal native document activation/edit/reopen did not pass");
+          selected.recheck();
+          const joined=await capture.take(expected!,kind.kindId,String(row.spaceId),{signal:options.signal,deadlineAtMs:Date.now()+Math.min(options.sagaMs,30_000)});
+          const child=await executeProtectedActorChildV1(page,protectedActorChildUrlV1(options.publicationProof!.root,options.baseUrl),joined,{root:options.publicationProof!.root,baseUrl:options.baseUrl});
+          selected.recheck();
+          if(JSON.stringify(await observeNormalDevHubPublicationOwnerV1(options.publicationProof!.root,selected.dataRoot,options.publicationProof!.hubUrl))!==JSON.stringify(hubOwner))throw Error("normal Dev Hub owner changed during protected execution");
+          const record=selected.published.record;
+          row.publicationExecution={schema:"semio.dev.protected-actor-execution/v1",hubOwner,actorProducer:producer!.browserActor,cargoInvocations:producer!.cargoInvocations,publication:{path:selected.published.path,sha256:createHash("sha256").update(readFileSync(selected.published.path)).digest("hex"),dataRoot:selected.dataRoot,profileId:selected.profile,generationId:record.generationId,publicationRevision:record.publicationRevision},pluginId:witness!.pluginId,packageId:witness!.packageId,scope:joined.fields.scope,responses:joined.responses,child};
+          console.log(`[hub-sweep] protected ${witness!.pluginId} ${record.generationId} describe ${child.describe.sha256} cancellation/capacity restored`);
+        }
+      }catch(error){row.pass=false;row.detail="publication execution: "+String(error instanceof Error?error.message:error).slice(0,200);}finally{capture?.close();}
       report.rows.push(row);
       flush();
       console.log(`[hub-sweep] ${index + 1}/${kinds.length} ${row.pass ? "PASS" : "FAIL"} ${kind.kindId} (${kind.plugin}) created=${String(row.created ?? "-")} opened=${((row.openedWindows as string[] | undefined) ?? []).length} verb=${String(row.verb ?? "-")} edits=${JSON.stringify(row.edits ?? null)} faults=${row.faults.length} ${String(row.detail ?? row.verbDetail ?? "")} ${Math.round(Number(row.totalMs ?? 0) / 1000)}s`);
@@ -362,8 +390,10 @@ export async function runHubDocumentSweep(options: HubDocumentSweepOptions): Pro
     report.fatal = String(error instanceof Error ? error.message : error).split("\n")[0]!.slice(0, 400);
     console.log(`[hub-sweep] FATAL ${report.fatal}`);
   } finally {
+    if(options.signal.aborted)report.cancelled=true;
     report.finished = new Date().toISOString();
     flush();
+    options.signal.removeEventListener("abort",closeCancelled);
     await context.close();
   }
   return report;
@@ -376,7 +406,7 @@ function flagValue(segments: readonly string[], flag: string): string | undefine
 }
 
 /** 🚪️ `verify hub-sweep --serve <url> --hub <url> [--locale en|de] [--space <name>] [--kinds <kindId,…>] [--saga-ms <n>]
- * [--puzzle-saga-ms <n>] [--reopen] [--cancel install|open] [--profile <dir>] [--tag <t>] [--out <dir>]` — runs against the
+ * [--puzzle-saga-ms <n>] [--reopen] [--publication-proof] [--cancel install|open] [--profile <dir>] [--tag <t>] [--out <dir>]` — runs against the
  * serve `--serve` names, joined to the hub `--hub` names (reused, or started and stopped by `withDevServe`; a scratch browser
  * profile is used and removed unless `--profile` names one to keep, e.g. to measure a later session);
  * credentials `OS_HUB_PROBE_EMAIL` / `OS_HUB_PROBE_PASSWORD` (default the development hub's first user). Writes
@@ -385,7 +415,7 @@ function flagValue(segments: readonly string[], flag: string): string | undefine
 export async function runHubDocumentSweepCli(repoRoot: string, defaultOutDir: string, segments: readonly string[]): Promise<void> {
   const serveUrl = flagValue(segments, "--serve");
   const hubUrl = flagValue(segments, "--hub");
-  if (!serveUrl || !hubUrl) throw new Error("usage: verify hub-sweep --serve <url> --hub <url> [--locale en|de] [--space <name>] [--kinds …] [--saga-ms <n>] [--puzzle-saga-ms <n>] [--reopen] [--cancel install|open] [--profile <dir>] [--tag <t>] [--out <dir>]");
+  if (!serveUrl || !hubUrl) throw new Error("usage: verify hub-sweep --serve <url> --hub <url> [--locale en|de] [--space <name>] [--kinds …] [--saga-ms <n>] [--puzzle-saga-ms <n>] [--reopen] [--publication-proof] [--cancel install|open] [--profile <dir>] [--tag <t>] [--out <dir>]");
   const locale = flagValue(segments, "--locale") === "de" ? "de" : "en";
   const tag = flagValue(segments, "--tag") ?? `hub-sweep-${locale}`;
   const cancelMode = flagValue(segments, "--cancel");
@@ -397,6 +427,7 @@ export async function runHubDocumentSweepCli(repoRoot: string, defaultOutDir: st
   const startedAt = new Date();
   const profile = flagValue(segments, "--profile");
   const scratchProfile = profile === undefined ? mkdtempSync(join(tmpdir(), "semio-hub-sweep-profile-")) : undefined;
+  try{
   await withAcceptanceRecord(repoRoot, "hub-document-sweep", () => withDevServe(repoRoot, "hub-document-sweep", { serveUrl, hubUrl, locale, signal: controller.signal, startedAt }, async (baseUrl) => {
     const outDir = join(resolve(flagValue(segments, "--out") ?? defaultOutDir), tag);
     const report = await runHubDocumentSweep({
@@ -413,6 +444,7 @@ export async function runHubDocumentSweepCli(repoRoot: string, defaultOutDir: st
       profileDir: profile ?? scratchProfile!,
       outDir,
       signal: controller.signal,
+      publicationProof:segments.includes("--publication-proof")?{root:repoRoot,hubUrl}:undefined,
     });
     const passed = report.rows.filter((row) => row.pass).length;
     const total = report.rows.length;
@@ -433,11 +465,13 @@ export async function runHubDocumentSweepCli(repoRoot: string, defaultOutDir: st
         evidence: [join(outDir, "hub-sweep.json")],
       }),
     );
-    console.log(`[hub-sweep] === ${tag}: PASS ${passed}/${total} → ${outDir} ===`);
+    console.log(`[hub-sweep] === ${tag}: ${status.toUpperCase()} ${passed}/${total} → ${outDir} ===`);
     if (status !== "pass") process.exitCode = 1;
   }));
+  }finally{
   if (scratchProfile) rmSync(scratchProfile, { recursive: true, force: true });
   process.removeListener("SIGINT", abort);
   process.removeListener("SIGTERM", abort);
+  }
 }
 //#endregion 🔖️Sweep

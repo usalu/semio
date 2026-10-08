@@ -8,11 +8,14 @@ import { terminateOwnedProcessTree } from "../../../../../🔨️modules/🏃️
  * extension store and `⚙️vite.config.ts`) never drags the repository library's `🔍️discovery` taxonomy
  * walk into its module graph. */
 import { spawn, spawnSync } from "node:child_process";
+import { createInterface } from "node:readline";
+import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve, isAbsolute } from "node:path";
 import { fileURLToPath } from "node:url";
-import { prepareCargoWorkspaceInvocation } from "../🗂️workspaces/🦀️cargo/🟦️.ts";
+import { cargoInvocationManifestV1, prepareCargoWorkspaceInvocation } from "../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
+import { cargoDirectories } from "../⚡️caching/🦀️cargo/🟦️.ts";
 import { devToolingEnv } from "./🌿️environment/🟦️.ts";
 
 /** 🧭️Selects the opt-in build budget for Cargo and command budget for other executables; both default to unlimited. */
@@ -54,6 +57,8 @@ export const CARGO_RELAY_SCRIPT = join(dirname(fileURLToPath(import.meta.url)), 
 /** 🌊️ Carries a relayed cargo's wall-clock budget (ms, `0` = unlimited) from [[runCmd]] into the relay. */
 export const CARGO_RELAY_BUDGET_ENV = "SEMIO_CARGO_RELAY_BUDGET_MS";
 
+const observesCargoInvocation = (args: readonly string[], env: NodeJS.ProcessEnv): boolean => Boolean(env.SEMIO_TEST_ARTIFACT_DIR) || args.some((arg, index) => /^--message-format=json/u.test(arg) || arg === "--message-format" && args[index + 1]?.startsWith("json"));
+
 /** 🌊️ Runs `cargo` with its stdout/stderr piped and forwarded, never inherited: Bun marks its own stdio `O_NONBLOCK` once
  * written and an inherited pipe shares that flag, so a cargo burst (the replayed warnings of fresh units) fails with
  * `EAGAIN` — output cut mid-line, exit 101 — as soon as a slow reader lets the 64 KiB pipe fill (ticket 26/09/23 W4: flaky
@@ -61,10 +66,12 @@ export const CARGO_RELAY_BUDGET_ENV = "SEMIO_CARGO_RELAY_BUDGET_MS";
  * status; `budgetMs` (> 0) elapsing or a SIGINT/SIGTERM of this process ends the whole cargo tree and throws. */
 export async function cargoStreamingStatus(args: readonly string[], cwd: string, env: NodeJS.ProcessEnv, budgetMs: number): Promise<number> {
   prepareCargoWorkspaceInvocation(getWorkspaceRoot(), args, cwd);
-  const child = spawn("cargo", [...args], { cwd, env, stdio: ["inherit", "pipe", "pipe"], detached: process.platform !== "win32" });
+  const observes = observesCargoInvocation(args, env), buildDirectory = observes ? cargoDirectories(getWorkspaceRoot(), env).build : undefined, provenanceRoot = env.SEMIO_TEST_ARTIFACT_DIR ?? (buildDirectory ? join(buildDirectory, "semio-cargo-provenance") : undefined), builtAtMs = Date.now(), units: any[] = [], buildScripts: any[] = [];
+  const child = spawn("cargo", [...args], { cwd, env: buildDirectory ? { ...env, SEMIO_COMPILER_RESOURCE_ROOT: join(buildDirectory, "semio-compiler-resources") } : env, stdio: ["inherit", "pipe", "pipe"], detached: process.platform !== "win32" });
+  const observation = provenanceRoot ? (async () => { for await (const line of createInterface({ input: child.stdout!, crlfDelay: Infinity })) { let message; try { message = JSON.parse(line); } catch { continue; } if (message.reason === "compiler-artifact") units.push({ message }); else if (message.reason === "build-script-executed") buildScripts.push(message); } })() : Promise.resolve();
   child.stdout!.pipe(process.stdout, { end: false });
   child.stderr!.pipe(process.stderr, { end: false });
-  let stopped: string | undefined;
+  let stopped: string | undefined, status = 1;
   const stop = (reason: string): void => {
     stopped ??= reason;
     if (child.exitCode === null && child.signalCode === null && child.pid) terminateOwnedProcessTree(child.pid);
@@ -81,12 +88,19 @@ export async function cargoStreamingStatus(args: readonly string[], cwd: string,
       child.once("error", reject);
       child.once("close", (exitCode, exitSignal) => accept([exitCode, exitSignal]));
     });
+    status = code ?? 1;
     if (stopped || signal) throw new Error(`cargo ${args.join(" ")} ${stopped ?? `killed by signal ${signal}`}`);
-    return code ?? 1;
+    return status;
   } finally {
     if (budget) clearTimeout(budget);
     process.removeListener("SIGINT", onSignal);
     process.removeListener("SIGTERM", onSignal);
+    await observation;
+    if (provenanceRoot) {
+      const { writeCompletedCargoInvocationProvenanceV1 } = await import("../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts");
+      const manifest = cargoInvocationManifestV1(args, cwd);
+      writeCompletedCargoInvocationProvenanceV1(join(provenanceRoot, `cargo-unit-provenance-cargo-relay-${randomUUID()}.json`), { manifest, cwd, command: "cargo", args: [...args], buildDirectory: buildDirectory!, builtAtMs, status, cancelled: Boolean(stopped), units, buildScripts }, undefined, env.CARGO_HOME);
+    }
   }
 }
 
@@ -104,7 +118,7 @@ function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
       }
     }
   }
-  const relayed = cmd === "cargo" && process.platform !== "win32";
+  const relayed = cmd === "cargo" && (process.platform !== "win32" || observesCargoInvocation(formattedArgs, opts.env ?? process.env));
   const result = relayed
     ? spawnSync(process.versions.bun ? process.execPath : "bun", [CARGO_RELAY_SCRIPT, "relay", ...formattedArgs], {
         stdio: "inherit",

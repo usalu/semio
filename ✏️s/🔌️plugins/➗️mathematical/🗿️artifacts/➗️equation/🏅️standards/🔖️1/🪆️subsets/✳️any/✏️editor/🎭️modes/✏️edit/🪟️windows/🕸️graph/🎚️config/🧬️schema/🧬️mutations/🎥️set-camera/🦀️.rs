@@ -1,6 +1,6 @@
 //! 🎥️ SetCamera changes only the addressed configuration field.
 
-use super::{EquationCamera, EquationGraphWindowConfig, EquationGraphWindowConfigMutation};
+use super::{EquationCamera, EquationGraphWindowConfig, EquationGraphWindowConfigDiff, EquationGraphWindowConfigMutation};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -13,11 +13,11 @@ pub struct SetCamera {
 
 impl protocol::MutationKind<EquationGraphWindowConfig, EquationGraphWindowConfigMutation> for SetCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "camera", kind: "set-camera", record: "SetCamera" };
-    fn diff(&self, base: &EquationGraphWindowConfig) -> protocol::MutationOutcome<EquationGraphWindowConfig> {
+    fn diff(&self, base: &EquationGraphWindowConfig) -> protocol::MutationOutcome<EquationGraphWindowConfigDiff> {
         if base.camera == self.camera {
-            return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "Configuration field is unchanged.");
+            return protocol::MutationOutcome::new(EquationGraphWindowConfigDiff::default()).warning("mutation.no-op", "Configuration field is unchanged.");
         }
-        protocol::MutationOutcome::new(EquationGraphWindowConfig { camera: self.camera.clone() })
+        protocol::MutationOutcome::new(EquationGraphWindowConfigDiff { camera: Some(self.camera.clone()) })
     }
     fn inverse(&self, base: &EquationGraphWindowConfig) -> Result<Vec<EquationGraphWindowConfigMutation>, semio_framework_value::ValueError> {
     Ok((|| {

@@ -12,6 +12,7 @@ import type { SemioMesh, SemioMaterial, SemioTexture, SemioPrimitive, SemioTopol
 
 export interface CreateMesh {
   mesh: SemioMesh;
+  at?: number;
 }
 
 export interface DeleteMesh {
@@ -21,6 +22,7 @@ export interface DeleteMesh {
 export interface CreatePrimitive {
   mesh_id: string;
   primitive: SemioPrimitive;
+  at?: number;
 }
 
 export interface DeletePrimitive {
@@ -52,6 +54,7 @@ export interface SetPrimitiveMaterial {
 
 export interface CreateMaterial {
   material: SemioMaterial;
+  at?: number;
 }
 
 export interface DeleteMaterial {
@@ -75,6 +78,7 @@ export interface ChangeMaterialRoughness {
 
 export interface CreateTexture {
   texture: SemioTexture;
+  at?: number;
 }
 
 export interface DeleteTexture {

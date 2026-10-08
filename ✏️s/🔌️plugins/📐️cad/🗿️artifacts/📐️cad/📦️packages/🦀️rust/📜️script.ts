@@ -12,6 +12,11 @@ import { runRepositoryCommand } from "../../../../../../../🧰️framework/🛍
 /** 🧪️ Executes the contracts owned by this component. */
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments.length === 1 && segments[0] === "activation-source") {
+      const tests = resolve(this.root, "../../🧪️tests/🚀️activation/🟦️.ts");
+      await runRepositoryCommand(process.execPath, ["test", tests], this.repoRoot, "cad-owned-activation-source");
+      return;
+    }
     if (segments.length === 1 && segments[0] === "reference-owner-syntax") {
       const tests = resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🧪️tests/🟦️.ts");
       await runRepositoryCommand(process.execPath, ["test", tests], this.repoRoot, "cad-unmounted-reference-owner-syntax");

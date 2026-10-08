@@ -11,11 +11,11 @@ start document
 document = set-value | set-map-entry | remove-map-entry | insert-list-item | remove-list-item | set-node | remove-node
 
 set-value = "set-value" "path" "=" path "value" "=" value
-set-map-entry = "set-map-entry" "path" "=" path "key" "=" hex "value" "=" value
+set-map-entry = "set-map-entry" "path" "=" path "key" "=" hex "value" "=" value ("at" "=" INT)?
 remove-map-entry = "remove-map-entry" "path" "=" path "key" "=" hex
 insert-list-item = "insert-list-item" "path" "=" path "index" "=" INT "value" "=" value
 remove-list-item = "remove-list-item" "path" "=" path "index" "=" INT
-set-node = "set-node" "id" "=" hex "value" "=" value
+set-node = "set-node" "id" "=" hex "value" "=" value ("at" "=" INT)?
 remove-node = "remove-node" "id" "=" hex
 
 # `enc_path`/`dec_path` — a bracketed, comma-separated list of tagged segments: `K[hex(key)]`

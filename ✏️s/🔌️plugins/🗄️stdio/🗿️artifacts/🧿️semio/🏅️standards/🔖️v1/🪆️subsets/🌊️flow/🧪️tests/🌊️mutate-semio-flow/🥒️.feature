@@ -78,7 +78,6 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
     Then the independent implementation and the subject agree on the resulting flow
     Examples:
       | id                 | mutation |
-      | set-snapshot       | {"mutation":"setSnapshot","snapshot":{"schema":"stdio.semio.flow","nodes":[{"id":"0POPlhUSnC1REPvcqnensi","kind":"IfcElementAssembly","label":"Kernrest","params":[{"key":"ComposeConnectionParams.rotation","value":"270.0"}],"position":{"x":0.0,"y":0.0}}],"edges":[]}} |
       | insert-node        | {"mutation":"insertNode","node":{"id":"1RSTKAPSEL0000000000AA","kind":"IfcBuildingElementProxy","label":"Ersatzkapsel A1101","params":[{"key":"ComposePieceAttributes.name","value":"Ersatzkapsel A1101"},{"key":"ComposeConnectionParams.shift","value":"-12.5"}],"position":{"x":-2650.0,"y":42283.33}}} |
       | remove-node        | {"mutation":"removeNode","id":"1tZkmTaMP4R8yLkBdfebfl"} |
       | set-node-kind      | {"mutation":"setNodeKind","id":"0POPlhUSnC1REPvcqnensi","kind":"IfcElementAssembly"} |
@@ -91,18 +90,6 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
       | set-edge-endpoints | {"mutation":"setEdgeEndpoints","id":"2jGlFQA9H2mvmjiNpnYG5Q","from":{"node":"0IEifuk9T5eR2vbWao4vJp","port":"0DFWl3CFjFrhgWeoJyVitG"},"to":{"node":"0POPlhUSnC1REPvcqnensi","port":"28MKF16un8NBtKsWfORP5Y"}} |
       | set-edge-kind      | {"mutation":"setEdgeKind","id":"2jGlFQA9H2mvmjiNpnYG5Q","kind":"Die Mitte des östlichen Rechteckkerns."} |
       | drag-nodes         | {"mutation":"dragNodes","targets":["1OS4$rPqz9cOn2s4ojb1k3","3GOXMcqS9E287ioto$RIXo"],"dx":12.5,"dy":-40.25} |
-      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/nodes/0/label", "value": "Kapselträger, Ostkern"}} |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real 180-node capsule network
-    Given the real capsule network shared://🌊️mutate-semio-flow/📝️nakagin-capsule-tower.dsl.semio
-    When the no-mutation mutation is applied to the flow parsed from it
-      """
-      {"mutation":"noMutation"}
-      """
-    Then the independent implementation and the subject agree on the resulting flow
 
   @id-inverse
   @level-exhaustive
@@ -116,7 +103,6 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
     Then both sides restore the capsule network and agree on the mutated and the restored flow
     Examples:
       | id                 | mutation |
-      | set-snapshot       | {"mutation":"setSnapshot","snapshot":{"schema":"stdio.semio.flow","nodes":[{"id":"0POPlhUSnC1REPvcqnensi","kind":"IfcElementAssembly","label":"Kernrest","params":[{"key":"ComposeConnectionParams.rotation","value":"270.0"}],"position":{"x":0.0,"y":0.0}}],"edges":[]}} |
       | insert-node        | {"mutation":"insertNode","node":{"id":"1RSTKAPSEL0000000000AA","kind":"IfcBuildingElementProxy","label":"Ersatzkapsel A1101","params":[{"key":"ComposePieceAttributes.name","value":"Ersatzkapsel A1101"},{"key":"ComposeConnectionParams.shift","value":"-12.5"}],"position":{"x":-2650.0,"y":42283.33}}} |
       | remove-node        | {"mutation":"removeNode","id":"1tZkmTaMP4R8yLkBdfebfl"} |
       | set-node-kind      | {"mutation":"setNodeKind","id":"0POPlhUSnC1REPvcqnensi","kind":"IfcElementAssembly"} |
@@ -129,18 +115,6 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
       | set-edge-endpoints | {"mutation":"setEdgeEndpoints","id":"2jGlFQA9H2mvmjiNpnYG5Q","from":{"node":"0IEifuk9T5eR2vbWao4vJp","port":"0DFWl3CFjFrhgWeoJyVitG"},"to":{"node":"0POPlhUSnC1REPvcqnensi","port":"28MKF16un8NBtKsWfORP5Y"}} |
       | set-edge-kind      | {"mutation":"setEdgeKind","id":"2jGlFQA9H2mvmjiNpnYG5Q","kind":"Die Mitte des östlichen Rechteckkerns."} |
       | drag-nodes         | {"mutation":"dragNodes","targets":["1OS4$rPqz9cOn2s4ojb1k3","3GOXMcqS9E287ioto$RIXo"],"dx":12.5,"dy":-40.25} |
-      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/nodes/0/label", "value": "Kapselträger, Ostkern"}} |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing no-mutation restores the real 180-node capsule network
-    Given the real capsule network shared://🌊️mutate-semio-flow/📝️nakagin-capsule-tower.dsl.semio
-    When the no-mutation mutation is applied to the flow parsed from it and each side undoes it with its own computed inverse
-      """
-      {"mutation":"noMutation"}
-      """
-    Then both sides restore the capsule network and agree on the mutated and the restored flow
 
   @id-spec-vector
   @level-exhaustive
@@ -151,8 +125,6 @@ Feature: Apply every typed semio FLOW mutation to the Nakagin Capsule Tower's 18
     Then each reaches the vector's after-snapshot, each returns to its before-snapshot, and the two agree
     Examples:
       | id | fixture |
-      | no-mutation | ⏸️no-mutation |
-      | set-snapshot | 📸️set-snapshot |
       | insert-node | ➕️insert-node |
       | remove-node | 🗑️remove-node |
       | set-node-kind | 🏷️set-node-kind |

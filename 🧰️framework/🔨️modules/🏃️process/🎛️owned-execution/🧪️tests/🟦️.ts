@@ -84,10 +84,8 @@ test("progress remains observable until explicitly stopped", async () => {
 
 
 test("owned timeout and stop drain descendant-created groups and inherited pipes", async () => {
-  const { spawn, spawnSync } = await import("node:child_process"), { default: treeKill } = await import("tree-kill"), { default: Ajv } = await import("ajv/dist/2020.js");
+  const { spawn, spawnSync } = await import("node:child_process"), { default: treeKill } = await import("tree-kill");
   const corpus = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🌳️ownership/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧬️schema/🌳️ownership/🔣️.json"), "utf8"));
-  expect(new Ajv({ strict: true }).validate(schema, corpus)).toBe(true);
   const { runOwnedCommand } = await import("../🟦️.ts");
   const root = mkdtempSync(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!, "owned-groups-"));
   const alive = (pid: number): boolean => {

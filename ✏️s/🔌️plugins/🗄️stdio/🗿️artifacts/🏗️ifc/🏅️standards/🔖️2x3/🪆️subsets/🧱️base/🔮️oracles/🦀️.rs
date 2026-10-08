@@ -40,7 +40,7 @@ use semio_repo_test_host::Json;
 #[cfg(feature = "oracles")]
 mod oracles {
     use super::Json;
-    use crate::standards::v2x3::reference::part21::{header_from_wire, instance_from_wire, replace_with_snapshot, snapshot_payload as document_snapshot_payload, u64_field};
+    use crate::standards::v2x3::reference::part21::{header_from_wire, instance_from_wire, u64_field};
     use ruststep::ast::{DataSection, EntityInstance, Exchange, Name, Parameter, Record};
     use std::str::FromStr;
 
@@ -198,31 +198,30 @@ mod oracles {
     /// 🦠️ Applies one declared `Ifc2x3Mutation::KINDS` kind to a real, independently-parsed
     /// `ruststep::ast::Exchange` — one arm per variant, matched by its kebab-case spelling, each reading
     /// the leaf wire payload through the standard's own `🧾️Wire` grammar. An unrecognised kind is an
-    /// error, never a silent no-op. `set-snapshot` replaces the whole document with the snapshot record.
+    /// error, never a silent no-op.
     ///
     /// `upsert-instance`/`remove-instance` operate on the real entity graph exactly like
     /// `Ifc2x3Mutation::{UpsertInstance,RemoveInstance}` do in production: upsert replaces an
-    /// existing id's whole instance or appends a brand-new one at the end (never a positional
-    /// insert), remove deletes an id with NO cascading reference-integrity check — mechanical,
+    /// existing id's whole instance or places a brand-new one at the optional `index` (last by default), remove deletes an id with NO cascading reference-integrity check — mechanical,
     /// matching production's own bare `retain`. See the feature file's own description for the
     /// deliberate real-reference-removal case this exercises (`remove-instance` on `#270549`, a
     /// real wall referenced by 8 other real entities in the source, 7 of which are carried into
     /// this fixture's own forward-reference closure).
     fn apply(exchange: &mut Exchange, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "set-snapshot" => replace_with_snapshot(exchange, params.get("snapshot").ok_or("set-snapshot carries `snapshot`")?),
-            "patch-snapshot" => {
-                let payload = document_snapshot_payload(exchange);
-                let patched = semio_repo_test_host::law::patched_snapshot(payload.get("snapshot").ok_or("the reading carries no snapshot")?, params.get("patch").ok_or("patch-snapshot carries `patch`")?)?;
-                replace_with_snapshot(exchange, &patched)
-            }
             "set-header" => header_from_wire(exchange, params.get("header").ok_or("set-header carries `header`")?),
             "upsert-instance" => {
                 let instance = instance_from_wire(params.get("instance").ok_or("upsert-instance carries `instance`")?)?;
                 let section = exchange.data.first_mut().ok_or("input carries no DATA section")?;
                 match section.entities.iter_mut().find(|entity| entity_id(entity) == entity_id(&instance)) {
                     Some(existing) => *existing = instance,
-                    None => section.entities.push(instance),
+                    None => {
+                        let at = match params.get("index") {
+                            Some(Json::Number(number)) => (*number as usize).min(section.entities.len()),
+                            _ => section.entities.len(),
+                        };
+                        section.entities.insert(at, instance);
+                    }
                 }
                 Ok(())
             }
@@ -262,10 +261,6 @@ mod oracles {
         Ok(write_exchange(&read(input)?).into_bytes())
     }
 
-    /// 📸️ The untouched document as the `set-snapshot` payload that restores it.
-    pub fn snapshot_payload(input: &[u8]) -> Result<Json, String> {
-        Ok(document_snapshot_payload(&read(input)?))
-    }
     //#endregion 🔖️Dispatch
 
     //#region 🔖️HeaderProjection
@@ -386,12 +381,6 @@ pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     oracles::round_trip(input)
 }
 
-/// 📸️ The untouched artifact as the `set-snapshot` wire payload that restores it — the inverse of `set-snapshot`.
-#[cfg(feature = "oracles")]
-pub fn oracle_snapshot_payload(input: &[u8]) -> Result<Json, String> {
-    oracles::snapshot_payload(input)
-}
-
 /// 👁️ This subset's own semantic projection, re-exported at the module's public surface so the
 /// case adapter can reach it as `oracle_apply_mutation`'s sibling.
 #[cfg(feature = "oracles")]
@@ -407,11 +396,6 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
-
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_snapshot_payload(_input: &[u8]) -> Result<Json, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

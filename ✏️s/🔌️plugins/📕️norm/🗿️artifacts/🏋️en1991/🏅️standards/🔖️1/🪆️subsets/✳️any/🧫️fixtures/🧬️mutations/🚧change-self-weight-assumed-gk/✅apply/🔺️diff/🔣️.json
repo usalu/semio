@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "annex": null,
   "snowZone": null,
   "altitude": null,
@@ -65,18 +64,38 @@
   "assumedSiloPressure": null,
   "assumedSiloPatch": null,
   "assumedSiloWallFriction": null,
-  "floors": null,
+  "floors": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
   "selfWeightElements": {
-    "values": [
+    "removed": [],
+    "added": [],
+    "modified": [
       {
-        "id": "slab-rc",
-        "material": "reinforced_concrete",
-        "thickness": 0.2,
-        "assumedGk": 5000.0
+        "key": "slab-rc",
+        "patch": {
+          "material": null,
+          "thickness": null,
+          "assumedGk": 5000.0
+        }
       }
     ]
   },
-  "roofs": null,
-  "windFaces": null,
-  "accidentalCases": null
+  "roofs": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "windFaces": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "accidentalCases": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

@@ -15,6 +15,9 @@ use protocol::{MutationKind, SemanticDescriptor};
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CreateAuditEvent {
     pub audit_event: AuditEvent,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    pub index: Option<usize>,
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateAuditEvent {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "audit-event", kind: "create-audit-event", record: "CreatedAuditEvent" };

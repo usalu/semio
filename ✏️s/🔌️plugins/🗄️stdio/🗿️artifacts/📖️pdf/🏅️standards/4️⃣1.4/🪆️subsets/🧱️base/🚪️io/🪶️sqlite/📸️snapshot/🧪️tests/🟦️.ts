@@ -71,30 +71,6 @@ test("PDF1.4 rejects noncontiguous pages, weakened schema and bounded cancellati
 });
 
 import { Buffer } from "node:buffer";
-test("PDF14 own Set literal frame independently retains all accepted page words",async()=>{
-  const fixture=await Bun.file(new URL("../../../../🧬️schema/🧬️mutations/🧫️fixtures/📸️set-patch-exact-words/🔣️.json",import.meta.url)).json();
-  expect(fixture).toEqual({"schema":"stdio.pdf","binaryPayload":"u64-le schema UTF8 length + schema bytes + u64-le page count; each page width u64 word + height u64 word + u64-le text UTF8 length + text bytes","textPayload":"original own14 snapshot DSL with exact binary64 token spelling","pages":[{"widthBits":"0","heightBits":"4607182418800017408","text":"positive zero"},{"widthBits":"9223372036854775808","heightBits":"4607182418800017408","text":"negative zero"},{"widthBits":"9218868437227405312","heightBits":"4607182418800017408","text":"positive infinity"},{"widthBits":"18442240474082181120","heightBits":"4607182418800017408","text":"negative infinity"},{"widthBits":"9221120237041090626","heightBits":"4607182418800017408","text":"quiet payload Ω\u0000"},{"widthBits":"9218868437227405313","heightBits":"4607182418800017408","text":"signaling payload"},{"widthBits":"1","heightBits":"4607182418800017408","text":"least subnormal"},{"widthBits":"9218868437227405311","heightBits":"4607182418800017408","text":"maximum finite"}],"identityRefusal":{"nextSchema":"foreign\u0000schema","path":"/schema","originalBaseSchemaPreserved":true},"patch":{"pointer":"/pages/0/text","before":"positive zero","after":"edited Ω\u0000","inverseRestoresAllWords":true},"preservedOriginalTags":[0,1,2,3,4],"newTags":{"set-snapshot":5,"patch-snapshot":6},"binaryFrameHex":"01050900000000000000737464696f2e70646608000000000000000000000000000000000000000000f03f0d00000000000000706f736974697665207a65726f0000000000000080000000000000f03f0d000000000000006e65676174697665207a65726f000000000000f07f000000000000f03f1100000000000000706f73697469766520696e66696e697479000000000000f0ff000000000000f03f11000000000000006e6567617469766520696e66696e697479420000000000f87f000000000000f03f11000000000000007175696574207061796c6f616420cea900010000000000f07f000000000000f03f11000000000000007369676e616c696e67207061796c6f61640100000000000000000000000000f03f0f000000000000006c65617374207375626e6f726d616cffffffffffffef7f000000000000f03f0e000000000000006d6178696d756d2066696e697465"});
-  const pieces:Buffer[]=[Buffer.from([1,5])],word=(value:bigint)=>{const bytes=Buffer.alloc(8);bytes.writeBigUInt64LE(value);pieces.push(bytes);},text=(value:string)=>{const bytes=Buffer.from(value,"utf8");word(BigInt(bytes.length));pieces.push(bytes);};
-  text(fixture.schema);word(BigInt(fixture.pages.length));for(const page of fixture.pages){word(BigInt(page.widthBits));word(BigInt(page.heightBits));text(page.text);}expect(Buffer.concat(pieces).toString("hex")).toBe(fixture.binaryFrameHex);
-  const owner={schema:fixture.schema,pages:fixture.pages.map((page:{widthBits:string;heightBits:string;text:string})=>({width:{bits:BigInt(page.widthBits)},height:{bits:BigInt(page.heightBits)},text:page.text}))};
-  const bytes=await exportSqliteDatabase(await pdf14SnapshotToSqliteDatabase(owner)),sql=Database.deserialize(bytes);expect(sql.query("PRAGMA integrity_check").get()).toEqual({integrity_check:"ok"});expect(sql.query("PRAGMA foreign_key_check").all()).toEqual([]);
-  const restored=await pdf14SnapshotFromSqliteDatabase(await importSqliteDatabase(bytes));expect(restored).toEqual(owner);sql.close();
-});
-
-import { applySnapshotPatch, inverseSnapshotPatches } from "../../../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts";
-
-test("PDF14 snapshot path contract independently agrees with fast-json-patch and exact owner words",async()=>{
-  const {applyPatch}=await import("fast-json-patch");
-  const fixture=await Bun.file(new URL("../../../../🧬️schema/🧬️mutations/🧫️fixtures/📸️set-patch-exact-words/🔣️.json",import.meta.url)).json();
-  const base={schema:fixture.schema,pages:fixture.pages.map((page:{widthBits:string;heightBits:string;text:string})=>({width:{bits:BigInt(page.widthBits)},height:{bits:BigInt(page.heightBits)},text:page.text}))};
-  const original=structuredClone(base),replacement="independent Ω\0patch";
-  const independent=applyPatch(structuredClone(base),[{op:"replace",path:"/pages/0/text",value:replacement}],true,true).newDocument;
-  const patch={operation:"set" as const,path:"/pages/0/text",value:replacement};const subject=applySnapshotPatch(base,patch);expect(subject).toEqual(independent);expect(base).toEqual(original);
-  let restored=subject;for(const inverse of inverseSnapshotPatches(base,patch))restored=applySnapshotPatch(restored,inverse);expect(restored).toEqual(original);
-  const frame=Buffer.from(fixture.binaryFrameHex,"hex");expect(frame.subarray(0,2)).toEqual(Buffer.from([1,5]));let at=2;const word=()=>{const value=frame.readBigUInt64LE(at);at+=8;return value;},text=()=>{const count=Number(word()),value=frame.subarray(at,at+count).toString("utf8");at+=count;return value;};expect(text()).toBe(base.schema);expect(word()).toBe(BigInt(base.pages.length));for(const page of base.pages){expect(word()).toBe(page.width.bits);expect(word()).toBe(page.height.bits);expect(text()).toBe(page.text);}expect(at).toBe(frame.length);
-  const sql=Database.deserialize(await exportSqliteDatabase(await pdf14SnapshotToSqliteDatabase(base)),{safeIntegers:true});try{expect(sql.query("SELECT CAST(width_bits AS TEXT) AS widthBits,CAST(height_bits AS TEXT) AS heightBits,text FROM pdf14_page ORDER BY ordinal").all()).toEqual(base.pages.map((p:{width:{bits:bigint};height:{bits:bigint};text:string})=>({widthBits:BigInt.asIntN(64,p.width.bits).toString(),heightBits:BigInt.asIntN(64,p.height.bits).toString(),text:p.text})));}finally{sql.close();}
-});
-
 test("PDF14 populated page UI corpus is closed and independently SQL editable",async()=>{
   const fixture=await Bun.file(new URL("../../../../✏️editor/\u{1f9eb}️fixtures/\u{1f4c4}️resolved-page-domain/\u{1f523}️.json",import.meta.url)).json();
   

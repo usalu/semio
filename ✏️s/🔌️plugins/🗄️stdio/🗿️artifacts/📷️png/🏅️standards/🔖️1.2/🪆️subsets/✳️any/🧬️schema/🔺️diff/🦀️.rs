@@ -4,7 +4,7 @@ use crate::PngSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::{DiffAlgebra, MutationApplyResult, MutationDiff};
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.png.diff")]
 pub struct PngDiff {
@@ -43,10 +43,6 @@ impl DiffAlgebra<PngSnapshot> for PngDiff {
     fn is_empty(&self) -> bool {
         self.image.is_none()
     }
-}
-
-pub fn diff_set_snapshot(base: &PngSnapshot, next: &PngSnapshot) -> PngDiff {
-    PngDiff::between(base, next)
 }
 
 #[cfg(test)]

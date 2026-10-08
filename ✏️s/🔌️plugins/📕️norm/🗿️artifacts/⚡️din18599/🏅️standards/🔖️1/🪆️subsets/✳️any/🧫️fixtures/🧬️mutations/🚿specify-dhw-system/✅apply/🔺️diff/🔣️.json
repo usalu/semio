@@ -13,9 +13,9 @@
   "heating": null,
   "dhw": {
     "specificDemandKwhPersonA": 550.0,
-    "storageLossKwhA": 200.0,
-    "distributionLossKwhA": 150.0,
-    "energyCarrier": "natural_gas"
+    "storageLossKwhA": null,
+    "distributionLossKwhA": null,
+    "energyCarrier": null
   },
   "ventilation": null,
   "cooling": null,

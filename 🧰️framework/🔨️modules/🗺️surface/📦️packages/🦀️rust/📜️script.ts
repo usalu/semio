@@ -5,7 +5,7 @@ import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/
 import { cmdBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
 import { resolve } from "node:path";
 import { runCargoTestsV1, readCargoTestPolicyV1 } from "../../../🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
-/** 🦀️ `@semio-tech/framework-surface-rs` router: `bun ./📜️script.ts <wasm|test>` — one wasm-bindgen crate for the paint/terrain/node-graph/tiled-map surface family (puzzle's `board-2d` surface now lives in the puzzle plugin crate itself). */
+/** 🦀️ General Surface routes own Paint, Terrain and TiledMap browser sessions plus neutral graph scene materialization. */
 import { join } from "node:path";
 
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
@@ -30,6 +30,7 @@ class WasmScript extends BundleScript {
         types: "framework_surface.d.ts",
       },
     }, readWasmBuildPolicyV1(process.env,this.root));
+    await runOwnedCommand("bun",["test",join(this.root,"../../🧪️tests/🕸️browser/🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
   }
 }
 
@@ -40,6 +41,23 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("test", TestScript);
+class SceneWireSourceScript extends BundleScript {
+  async run(): Promise<void> {
+    await runOwnedCommand("bun", ["test", join(this.root, "../../🕸️node-graph/📡️scene/🧪️tests/🟦️.ts")], this.repoRoot, "tool:owner", cmdBudgetMs(), {env: process.env});
+  }
+}
+
+class SourceScript extends BundleScript{
+  async run():Promise<void>{await runOwnedCommand("bun",["test",join(this.root,"../../🧪️tests/🧩️suite/🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});}
+}
+
+class SceneWireNativeScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{
+    if(segments.length)throw Error("test-scene-wire-native accepts no arguments");
+    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-surface"],cwd:this.root,extraArgs:["--lib","retained_scene_","--no-fail-fast","--success-output","immediate"]},readCargoTestPolicyV1(process.env));
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("test", TestScript).register("test-source",SourceScript).register("test-scene-wire-source", SceneWireSourceScript).register("test-scene-wire-native",SceneWireNativeScript);
 
 await runScriptMain(router, { defaultCommand: "wasm" });

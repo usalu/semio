@@ -125,11 +125,24 @@ impl MutationDiff<DwgSnapshot> for DwgDiff {
 }
 
 impl DiffAlgebra<DwgSnapshot> for DwgDiff {
-    /// 🔁️ Diff-level undo, derived generically (correct by construction): the state delta from
-    /// `self.apply(base)` back to `base`.
+    /// 🔁️ Concrete diff-level undo: every field this diff replaces is replaced back by the value `base` carries, and a field it leaves alone stays untouched.
     fn inverse(&self, base: &DwgSnapshot) -> Self {
-        let mutated = self.apply(base).unwrap();
-        Self::between(&mutated, base)
+        DwgDiff {
+            version: restore(&self.version, &base.version),
+            maintenance_version: restore(&self.maintenance_version, &base.maintenance_version),
+            codepage: restore(&self.codepage, &base.codepage),
+            drawing: restore(&self.drawing, &base.drawing),
+            header: restore(&self.header, &base.header),
+            classes: restore(&self.classes, &base.classes),
+            dependencies: restore(&self.dependencies, &base.dependencies),
+            summary: restore(&self.summary, &base.summary),
+            application: restore(&self.application, &base.application),
+            template: restore(&self.template, &base.template),
+            auxiliary_header: restore(&self.auxiliary_header, &base.auxiliary_header),
+            revision_history: restore(&self.revision_history, &base.revision_history),
+            preview: restore(&self.preview, &base.preview),
+            application_history: restore(&self.application_history, &base.application_history),
+        }
     }
 
     /// 🧭️ Computes a field-by-field logical state delta.
@@ -170,14 +183,6 @@ impl DiffAlgebra<DwgSnapshot> for DwgDiff {
 }
 //#endregion 🔖️Diff
 
-//#region 🔖️MutationDiffBuilders
-/// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
-/// slot exists on `DwgDiff` to short-circuit into.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &DwgSnapshot, next: &DwgSnapshot) -> DwgDiff {
-    DwgDiff::between(base, next)
-}
-
 /// 🏷️ `SetVersionInfo`'s next state: `base` with the preamble triple replaced and every other field untouched.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn version_info_next(base: &DwgSnapshot, version: &str, maintenance_version: u8, codepage: u16) -> DwgSnapshot {
@@ -186,7 +191,18 @@ pub fn version_info_next(base: &DwgSnapshot, version: &str, maintenance_version:
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_version_info(base: &DwgSnapshot, version: &str, maintenance_version: u8, codepage: u16) -> DwgDiff {
-    DwgDiff::between(base, &version_info_next(base, version, maintenance_version, codepage))
+    DwgDiff {
+        version: (base.version != version).then(|| version.to_string()),
+        maintenance_version: (base.maintenance_version != maintenance_version).then_some(maintenance_version),
+        codepage: (base.codepage != codepage).then_some(codepage),
+        ..DwgDiff::default()
+    }
+}
+
+/// ↩️ The field value that undoes a replacement: `base`'s own value when the diff really changes it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn restore<T: Clone + PartialEq>(change: &Option<T>, base: &T) -> Option<T> {
+    change.as_ref().filter(|value| *value != base).map(|_| base.clone())
 }
 
 //#endregion 🔖️MutationDiffBuilders

@@ -10,7 +10,7 @@ async fn diff_set_snapshot_carries_whole_replacement() {
     let base = CurationSnapshot::default();
     let next = CurationSnapshot::default();
     let diff = diff_set_snapshot(&next);
-    assert_eq!(diff.apply(&base).expect("valid mutation diff"), next);
+    assert_eq!(protocol::apply_diff(&diff, &base).expect("valid mutation diff"), next);
 }
 
 #[semio_framework_async_macros::async_test]

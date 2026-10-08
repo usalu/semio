@@ -62,9 +62,9 @@
       "subsetDirectoryName": "🧱️base",
       "vectors": [
         {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
+          "mutationId": "upsert-instance",
+          "sourceMutationDirectoryName": "🧱upsert-instance",
+          "mutationDirectoryName": "🧱upsert-instance",
           "scenarios": [
             {
               "id": "renames-the-ifcproject-instance",
@@ -74,8 +74,6 @@
         }
       ],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "upsert-instance",
         "remove-instance",
         "set-header"
@@ -140,47 +138,6 @@
             "operation": "set-header",
             "bridgeVersion": 1,
             "variant": "SetHeader"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "ifc-2x3-base-mutate",
-              "qualifyingKind": "third-party-library"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "ifc-2x3-base-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "ifc-2x3-base-mutate",
-              "qualifyingKind": "third-party-library"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "ifc-2x3-base-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

@@ -1,6 +1,7 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+import { testCacheDirectoryV1 } from "../../../../../../../../../🔨️modules/🏃️process/🧪️testing/🧪️vitest/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
 const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
@@ -10,7 +11,7 @@ const repoRoot = resolve(configDir, "../../../../../../../../../..");
 
 export default defineConfig({
   root: testRoot,
-  cacheDir: repoCacheDirectory(repoRoot, "vite", "renderer-wgpu"),
+  cacheDir: process.env.SEMIO_VITEST_POLICY ? testCacheDirectoryV1(process.env, "renderer-wgpu") : repoCacheDirectory(repoRoot, "vite", "renderer-wgpu"),
   test: {
     root: testRoot,
     name: "@semio-tech/framework-renderer-wgpu",

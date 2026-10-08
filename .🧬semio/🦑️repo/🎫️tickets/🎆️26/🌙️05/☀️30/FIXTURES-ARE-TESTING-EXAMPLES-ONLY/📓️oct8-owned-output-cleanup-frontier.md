@@ -1,0 +1,3 @@
+# Owned Output Cleanup Frontier
+
+This read-only interim census excludes ticket generated outputs and dependencies, and lists possible compiler/log/.nx outputs still beneath preserved private verification inputs. 313possible outputs were found, grouped by suffix {".json": 4, "": 305, ".lock": 2, ".db": 1, ".nxt": 1}. They are not source attribution. Active guest/Trunk/runtime/registry/session/Dev consumers must settle and durable Markdown receipts must retain relevant byte/hash/result evidence before cleanup. No files were deleted by this census. Normal producer durable provenance, foreign caches/locks/processes and all inputs/configs/scripts/preimages/Markdown remain preserved. Exact output inventory is generated data under 🗑️generated.

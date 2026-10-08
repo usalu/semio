@@ -54,6 +54,27 @@
         "group": "source",
         "order": 20
       }
+    },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Index",
+          "de": "Index"
+        },
+        "description": {
+          "en": "Ordered insertion position; absent appends.",
+          "de": "Geordnete Einfügeposition; fehlend hängt an."
+        },
+        "group": "identity",
+        "order": 30
+      }
     }
   }
 }

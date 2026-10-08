@@ -28,7 +28,7 @@ fn mutation() -> LayoutMutation {
 }
 fn applied() -> LayoutSnapshot {
     let base = before();
-    mutation().diff(&base).diff().apply(&base).expect("change-data-fields applies to its committed before-snapshot")
+    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("change-data-fields applies to its committed before-snapshot")
 }
 
 /// ▶️ `change-data-fields` stores the complete typed dictionary.
@@ -53,7 +53,7 @@ async fn inverse_clears_the_data_fields_payload() {
     }
     let mut snapshot = applied();
     for step in &inverse {
-        snapshot = step.diff(&snapshot).diff().apply(&snapshot).expect("change-data-fields/attaches-a-data-fields-payload: inverse step applies");
+        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("change-data-fields/attaches-a-data-fields-payload: inverse step applies");
     }
     assert_eq!(snapshot, base, "change-data-fields/attaches-a-data-fields-payload: inverse did not restore the before-snapshot");
 }
@@ -80,7 +80,7 @@ async fn declared_outcome_holds() {
     let base = before();
     let produced = mutation().diff(&base);
     assert!(produced.messages().is_empty(), "change-data-fields/attaches-a-data-fields-payload: declared clean-applied but the diff builder reported {:?}", produced.messages());
-    assert_eq!(produced.diff().data_fields, Some(crate::diff::FormDictionaryChange{dictionary:Some(crate::FormDictionary{entries:vec![crate::FormDictionaryEntry{question_id:"client".into(),value:semio_framework_value::DslValue::String("acme".into())}]})}), "change-data-fields replaces the optional dictionary");
+    assert_eq!(produced.diff().data_fields, Some(crate::diff::LayoutDataFieldsDelta { presence: Some(crate::diff::DataFieldsPresence::Created), entries: Some(crate::diff::LayoutDataEntriesDelta { added: vec![crate::FormDictionaryEntry { question_id: "client".into(), value: semio_framework_value::DslValue::String("acme".into()) }], ..Default::default() }) }), "change-data-fields replaces the optional dictionary");
     assert!(produced.diff().print_target.is_none(), "change-data-fields leaves `print_target` untouched in the diff");
 }
 
@@ -112,6 +112,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-data-fields/attaches-a-data-fields-payload: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse steps' diffs sum, by `absorb`, to the negative of the forward diff.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

@@ -10,6 +10,6 @@ pub fn diff(payload: &super::CreateSolid, base: &SemioBrepSnapshot) -> protocol:
     if base.solids.iter().any(|x| x.id == payload.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A solid with id \"{}\" already exists.", payload.id), [payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(SemioBrepDiff { solids: Some(NamedTripleDiff { removed: vec![], modified: vec![], added: vec![BrepSolid { id: payload.id.clone(), shells: payload.shells.clone() }] }), ..Default::default() })
+    protocol::MutationOutcome::new(SemioBrepDiff { solids: Some(NamedTripleDiff { removed: vec![], modified: vec![], added: vec![crate::standards::v1::subsets::base::schema::triples::NamedAdded { index: payload.at.map_or(base.solids.len(), |at| at.min(base.solids.len())), item: BrepSolid { id: payload.id.clone(), shells: payload.shells.clone() } }] }), ..Default::default() })
 }
 //#endregion 🔖️Diff

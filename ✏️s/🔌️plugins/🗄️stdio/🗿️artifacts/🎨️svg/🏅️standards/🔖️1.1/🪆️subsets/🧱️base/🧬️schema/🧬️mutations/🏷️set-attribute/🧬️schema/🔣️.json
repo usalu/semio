@@ -55,45 +55,25 @@
           "type": "null"
         }
       ]
-    }
-  },
-  "$defs": {
-    "SetAttributeMutation": {
-      "description": "The whole wire of SetAttributeMutation: the editable apply payload (this document's root) or the inert restore.",
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "phase",
-            "value"
-          ],
-          "properties": {
-            "phase": {
-              "const": "apply"
-            },
-            "value": {
-              "$ref": "#"
-            }
-          }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Attribute position",
+          "de": "Attributposition"
         },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "phase",
-            "value"
-          ],
-          "properties": {
-            "phase": {
-              "const": "restore"
-            },
-            "value": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/base/diff.json"
-            }
-          }
-        }
-      ]
+        "description": {
+          "en": "Position the attribute takes among the element's attributes when it is added; the last position when absent.",
+          "de": "Position, die das Attribut beim Hinzufügen unter den Attributen des Elements einnimmt; ohne Angabe die letzte."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "value",
+        "order": 40
+      }
     }
   }
 }

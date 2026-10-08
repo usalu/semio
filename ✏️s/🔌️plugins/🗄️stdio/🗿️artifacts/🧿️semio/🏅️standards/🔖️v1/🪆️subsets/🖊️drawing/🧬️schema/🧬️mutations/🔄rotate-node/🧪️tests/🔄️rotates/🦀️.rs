@@ -32,7 +32,7 @@ fn mutation() -> SemioDrawingMutation {
 #[semio_framework_async_macros::async_test]
 async fn rotates_the_group_and_keeps_translation_scale_and_children() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("rotate applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("rotate applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "rotate/rotates-the-nested-group-a-half-turn-about-z: applied state differs from the committed after-snapshot");
     let DrawNode::Group { children, .. } = &produced.layers[0].root else { panic!("the layer root is a group") };
     let DrawNode::Group { transform, children: nested } = &children[2] else { panic!("child #2 is the nested group") };
@@ -47,13 +47,14 @@ async fn rotates_the_group_and_keeps_translation_scale_and_children() {
 async fn the_undo_rotate_restores_the_identity_rotation() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "rotate of a group undoes as exactly one rotate");
     let SemioDrawingMutation::RotateNode(restore) = &undo[0] else { panic!("rotate must undo as rotate") };
     assert_eq!(restore.new_rotation.w, 1.0, "the undo must recapture BASE's own identity rotation");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward rotate applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo rotate applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward rotate applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo rotate applies");
     }
     assert_eq!(current, base, "rotate/rotates-the-nested-group-a-half-turn-about-z: the undo did not restore the before-snapshot");
 }
@@ -119,6 +120,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rotate diff decodes");
-    let produced = decoded.apply(&before()).expect("committed rotate diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed rotate diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rotate/rotates-the-nested-group-a-half-turn-about-z: committed diff did not carry before to after");
 }

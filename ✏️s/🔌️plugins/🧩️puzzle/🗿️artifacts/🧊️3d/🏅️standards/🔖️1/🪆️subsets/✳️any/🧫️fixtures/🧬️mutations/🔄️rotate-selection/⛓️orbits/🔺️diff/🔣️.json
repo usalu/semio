@@ -6,19 +6,11 @@
       {
         "id": "attraction-bc",
         "patch": {
-          "replacement": {
-            "attracted": "object-c:vortex-4",
-            "attracting": "object-b:vortex-3",
-            "gap": -2.999999999999999,
-            "id": "attraction-bc",
-            "rise": 6.661338147750937e-16,
-            "rotation": -90.00000000000001,
-            "shift": -2.999999999999999,
-            "tilt": -89.99999809090409,
-            "turn": 0.0,
-            "x": 0.0,
-            "y": 0.0
-          }
+          "gap": -2.999999999999999,
+          "rise": 6.661338147750937e-16,
+          "rotation": -90.00000000000001,
+          "shift": -2.999999999999999,
+          "tilt": -89.99999809090409
         }
       }
     ],
@@ -33,140 +25,39 @@
       {
         "id": "object-a",
         "patch": {
-          "replacement": {
-            "anchor": "fixed",
-            "hidden": false,
-            "id": "object-a",
-            "locked": false,
-            "objectKind": "object-kind-a",
-            "orientation": [
-              0.0,
-              0.0,
-              0.7071067811865475,
-              0.7071067811865476
-            ],
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "vortices": [
-              {
-                "direction": [
-                  1.0,
-                  0.0,
-                  0.0
-                ],
-                "hidden": false,
-                "id": "vortex-1",
-                "locked": false,
-                "position": [
-                  1.0,
-                  0.0,
-                  0.0
-                ],
-                "vortexKind": "vortex-kind-a"
-              }
-            ]
-          }
+          "orientation": [
+            0.0,
+            0.0,
+            0.7071067811865475,
+            0.7071067811865476
+          ]
         }
       },
       {
         "id": "object-b",
         "patch": {
-          "replacement": {
-            "anchor": "fixed",
-            "hidden": false,
-            "id": "object-b",
-            "locked": false,
-            "objectKind": "object-kind-b",
-            "orientation": [
-              7.850462293418877e-17,
-              -7.850462293418876e-17,
-              0.7071067811865475,
-              0.7071067811865476
-            ],
-            "origin": [
-              2.0,
-              0.0,
-              0.0
-            ],
-            "vortices": [
-              {
-                "direction": [
-                  -1.0,
-                  0.0,
-                  0.0
-                ],
-                "hidden": false,
-                "id": "vortex-2",
-                "locked": false,
-                "position": [
-                  -1.0,
-                  0.0,
-                  0.0
-                ],
-                "vortexKind": "vortex-kind-a"
-              },
-              {
-                "direction": [
-                  1.0,
-                  0.0,
-                  0.0
-                ],
-                "hidden": false,
-                "id": "vortex-3",
-                "locked": false,
-                "position": [
-                  1.0,
-                  0.0,
-                  0.0
-                ],
-                "vortexKind": "vortex-kind-a"
-              }
-            ]
-          }
+          "orientation": [
+            7.850462293418877e-17,
+            -7.850462293418876e-17,
+            0.7071067811865475,
+            0.7071067811865476
+          ]
         }
       },
       {
         "id": "object-d",
         "patch": {
-          "replacement": {
-            "anchor": "fixed",
-            "hidden": false,
-            "id": "object-d",
-            "locked": false,
-            "objectKind": "object-kind-b",
-            "orientation": [
-              7.850462293418878e-17,
-              -7.850462293418875e-17,
-              0.7071067811865476,
-              0.7071067811865475
-            ],
-            "origin": [
-              2.0000000000000004,
-              2.0,
-              0.0
-            ],
-            "vortices": [
-              {
-                "direction": [
-                  0.0,
-                  -1.0,
-                  0.0
-                ],
-                "hidden": false,
-                "id": "vortex-5",
-                "locked": false,
-                "position": [
-                  0.0,
-                  -1.0,
-                  0.0
-                ],
-                "vortexKind": "vortex-kind-a"
-              }
-            ]
-          }
+          "orientation": [
+            7.850462293418878e-17,
+            -7.850462293418875e-17,
+            0.7071067811865476,
+            0.7071067811865475
+          ],
+          "origin": [
+            2.0000000000000004,
+            2.0,
+            0.0
+          ]
         }
       }
     ],

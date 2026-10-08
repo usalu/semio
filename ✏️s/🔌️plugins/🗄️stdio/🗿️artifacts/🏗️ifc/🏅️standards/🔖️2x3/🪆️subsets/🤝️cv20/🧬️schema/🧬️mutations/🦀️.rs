@@ -9,8 +9,7 @@
 //!
 //! | kind | rule |
 //! |---|---|
-//! | `set-snapshot` | `CODE_FILE_SCHEMA` — the document must declare `IFC2X3` |
-//! | `set-view-definition` | `CODE_VIEW_DEFINITION` — `FILE_DESCRIPTION` must name `CoordinationView` |
+//! //! | `set-view-definition` | `CODE_VIEW_DEFINITION` — `FILE_DESCRIPTION` must name `CoordinationView` |
 //! | `set-structural-entity` | `CODE_STRUCTURAL_ENTITY` — CV2.0's architectural scope excludes structural-analysis entities |
 //! | `set-project-units` | `CODE_PROJECT_UNITS` — `IfcProject.UnitsInContext` must resolve |
 //! | `set-product-placement` | `CODE_PRODUCT_PLACEMENT` — a geometry-bearing product places through `IfcLocalPlacement` |
@@ -31,7 +30,6 @@
 use crate::standards::v2x3::mvd;
 use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
 use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-use protocol::os_spr::command::DiffAlgebra;
 use protocol::Mutation;
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 
@@ -62,8 +60,6 @@ pub mod set_product_placement;
 pub mod set_project_units;
 /// 📐️ Typed Coordination View 2.0 mutation for `stdio.ifc.2x3`.
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "🏗️set-structural-entity/🦀️.rs"]
 pub mod set_structural_entity;
 #[path = "👁️set-view-definition/🦀️.rs"]
@@ -75,7 +71,6 @@ pub mod set_view_definition;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = Ifc2x3Snapshot, diff = Ifc2x3Diff, schema = "Ifc2x3Cv20Mutation")]
 pub enum Ifc2x3Cv20Mutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
     SetViewDefinition(set_view_definition::SetViewDefinition),
     SetStructuralEntity(set_structural_entity::SetStructuralEntity),
     SetProjectUnits(set_project_units::SetProjectUnits),
@@ -86,14 +81,13 @@ pub enum Ifc2x3Cv20Mutation {
 /// `ifc-2x3-cv20` catalog in `../../🔣️oracle.json` is required to match verbatim, and
 /// `kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest (the
 /// framework never parses Rust to check it itself).
-pub const KINDS: &[&str] = &["set-snapshot", "set-view-definition", "set-structural-entity", "set-project-units", "set-product-placement"];
+pub const KINDS: &[&str] = &["set-view-definition", "set-structural-entity", "set-project-units", "set-product-placement"];
 
 impl Ifc2x3Cv20Mutation {
     /// 🏷️ This mutation's own kebab-case kind — the single spelling `KINDS`, the `ifc-2x3-cv20`
     /// catalog and the feature file's `Examples` row ids are all measured against.
     pub fn kind(&self) -> &'static str {
         match self {
-            Ifc2x3Cv20Mutation::SetSnapshot(_) => "set-snapshot",
             Ifc2x3Cv20Mutation::SetViewDefinition(_) => "set-view-definition",
             Ifc2x3Cv20Mutation::SetStructuralEntity(_) => "set-structural-entity",
             Ifc2x3Cv20Mutation::SetProjectUnits(_) => "set-project-units",
@@ -109,7 +103,7 @@ impl Ifc2x3Cv20Mutation {
 /// an error message with an empty diff — never applied partially and never silently skipped.
 pub fn apply_ifc2x3_cv20_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc2x3Cv20Mutation) -> protocol::MutationOutcome<Ifc2x3Diff> {
     let outcome = <Ifc2x3Cv20Mutation as Mutation<Ifc2x3Snapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -122,83 +116,15 @@ fn rejected(message: String) -> protocol::MutationOutcome<Ifc2x3Diff> {
     protocol::MutationOutcome::error("mutation.target-mismatch", message, Vec::<String>::new())
 }
 
-fn edit(base: &Ifc2x3Snapshot, mutation: &Ifc2x3Cv20Mutation) -> Result<Ifc2x3Snapshot, String> {
-    let mut next = base.clone();
-    match mutation {
-        Ifc2x3Cv20Mutation::SetSnapshot(_) => {}
-        Ifc2x3Cv20Mutation::SetViewDefinition(set_view_definition::SetViewDefinition { view }) => mvd::set_view_definition(&mut next, view),
-        Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id, entity }) => match entity {
-            None => mvd::remove_instance(&mut next, *id, FORBIDDEN_STRUCTURAL_TYPES)?,
-            Some(entity) => {
-                if !FORBIDDEN_STRUCTURAL_TYPES.iter().any(|forbidden| entity.type_name.eq_ignore_ascii_case(forbidden)) {
-                    return Err(format!("{} is not one of the structural types Coordination View 2.0 excludes ({FORBIDDEN_STRUCTURAL_TYPES:?})", entity.type_name));
-                }
-                let args = vec![Part21Value::Str(entity.global_id.clone()), Part21Value::Unset, Part21Value::Str(entity.name.clone())];
-                mvd::upsert_instance(&mut next, mvd::simple_instance(*id, &entity.type_name, args));
-            }
-        },
-        Ifc2x3Cv20Mutation::SetProjectUnits(set_project_units::SetProjectUnits { project, units }) => {
-            if let Some(id) = units {
-                if next.document.instance(*id).is_none() {
-                    return Err(format!("no instance #{id} to serve as the project's IfcUnitAssignment"));
-                }
-            }
-            mvd::set_argument(&mut next, *project, &["IFCPROJECT"], PROJECT_UNITS_INDEX, mvd::optional(units.map(Part21Value::Ref)))?;
-        }
-        Ifc2x3Cv20Mutation::SetProductPlacement(set_product_placement::SetProductPlacement { product, placement }) => {
-            if let Some(id) = placement {
-                let resolved = mvd::instance_type(&next, *id).unwrap_or("");
-                if !resolved.eq_ignore_ascii_case("IFCLOCALPLACEMENT") {
-                    return Err(format!("#{id} is {resolved:?}, not an IFCLOCALPLACEMENT -- Coordination View 2.0 places products through IfcLocalPlacement"));
-                }
-            }
-            mvd::set_argument(&mut next, *product, GEOMETRY_BEARING_PRODUCT_TYPES, PRODUCT_PLACEMENT_INDEX, mvd::optional(placement.map(Part21Value::Ref)))?;
-        }
-    }
-    Ok(next)
+fn structural_entity_row(base: &Ifc2x3Snapshot, id: u64) -> Option<Cv20StructuralEntity> {
+    base.document.instance(id).and_then(|instance| instance.primary()).map(|(name, args)| Cv20StructuralEntity {
+        type_name: name.to_string(),
+        global_id: args.first().and_then(Part21Value::as_str).unwrap_or_default().to_string(),
+        name: args.get(2).and_then(Part21Value::as_str).unwrap_or_default().to_string(),
+    })
 }
 //#endregion 🔖️Apply
 
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &Ifc2x3Cv20Mutation, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
-    match this {
-        Ifc2x3Cv20Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => match crate::standards::v2x3::subsets::base::schema::snapshot::validate_ifc2x3_snapshot(snapshot) {
-            Ok(()) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, snapshot)),
-            Err(message) => rejected(message),
-        },
-        _ => match edit(base, this) {
-            Ok(next) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, &next)),
-            Err(message) => rejected(message),
-        },
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &Ifc2x3Cv20Mutation, base: &Ifc2x3Snapshot) -> Result<Vec<Ifc2x3Cv20Mutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    match this {
-        Ifc2x3Cv20Mutation::SetSnapshot(_) => vec![Ifc2x3Cv20Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(base.clone()) })],
-        Ifc2x3Cv20Mutation::SetViewDefinition(_) => vec![Ifc2x3Cv20Mutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: mvd::view_definition_name(base).unwrap_or_default() })],
-        Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id, .. }) => {
-            let entity = base.document.instance(*id).and_then(|instance| instance.primary()).map(|(name, args)| Cv20StructuralEntity {
-                type_name: name.to_string(),
-                global_id: args.first().and_then(Part21Value::as_str).unwrap_or_default().to_string(),
-                name: args.get(2).and_then(Part21Value::as_str).unwrap_or_default().to_string(),
-            });
-            vec![Ifc2x3Cv20Mutation::SetStructuralEntity(set_structural_entity::SetStructuralEntity { id: *id, entity })]
-        }
-        Ifc2x3Cv20Mutation::SetProjectUnits(set_project_units::SetProjectUnits { project, .. }) => {
-            vec![Ifc2x3Cv20Mutation::SetProjectUnits(set_project_units::SetProjectUnits { project: *project, units: mvd::reference_argument(base, *project, PROJECT_UNITS_INDEX) })]
-        }
-        Ifc2x3Cv20Mutation::SetProductPlacement(set_product_placement::SetProductPlacement { product, .. }) => {
-            vec![Ifc2x3Cv20Mutation::SetProductPlacement(set_product_placement::SetProductPlacement { product: *product, placement: mvd::reference_argument(base, *product, PRODUCT_PLACEMENT_INDEX) })]
-        }
-    }
-
-    })())
-}
-//#endregion 🔖️MutationTrait
 
 //#region 🧪️Tests
 #[cfg(test)]

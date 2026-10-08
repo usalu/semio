@@ -602,7 +602,7 @@ impl ItemPatch<Puzzle3dObject> for Puzzle3dObjectPatch {
             item.orientation = *value;
         }
         if let Some(value) = &self.scale {
-            item.scale = value.clone();
+            item.scale = *value;
         }
         if let Some(value) = &self.mesh_url {
             item.mesh_url = value.clone();
@@ -659,7 +659,7 @@ impl ItemPatch<Puzzle3dObject> for Puzzle3dObjectPatch {
             anchor: self.anchor.as_ref().map(|_| base.anchor),
             origin: self.origin.as_ref().map(|_| base.origin),
             orientation: self.orientation.as_ref().map(|_| base.orientation),
-            scale: self.scale.as_ref().map(|_| base.scale.clone()),
+            scale: self.scale.as_ref().map(|_| base.scale),
             mesh_url: self.mesh_url.as_ref().map(|_| base.mesh_url.clone()),
             vortices: self.vortices.as_ref().map(|delta| delta.inverse(&base.vortices)),
             hidden: self.hidden.as_ref().map(|_| base.hidden),
@@ -673,7 +673,7 @@ impl ItemPatch<Puzzle3dObject> for Puzzle3dObjectPatch {
             anchor: (base.anchor != other.anchor).then(|| other.anchor),
             origin: (base.origin != other.origin).then(|| other.origin),
             orientation: (base.orientation != other.orientation).then(|| other.orientation),
-            scale: (base.scale != other.scale).then(|| other.scale.clone()),
+            scale: (base.scale != other.scale).then(|| other.scale),
             mesh_url: (base.mesh_url != other.mesh_url).then(|| other.mesh_url.clone()),
             vortices: Some(Puzzle3dVorticesDelta::between(&base.vortices, &other.vortices)).filter(|delta| !delta.is_empty()),
             hidden: (base.hidden != other.hidden).then(|| other.hidden),
@@ -795,7 +795,7 @@ impl ItemPatch<Puzzle3dTargetVolume> for Puzzle3dTargetVolumePatch {
             item.orientation = *value;
         }
         if let Some(value) = &self.scale {
-            item.scale = value.clone();
+            item.scale = *value;
         }
         if let Some(value) = &self.hidden {
             item.hidden = *value;
@@ -826,7 +826,7 @@ impl ItemPatch<Puzzle3dTargetVolume> for Puzzle3dTargetVolumePatch {
         Self {
             origin: self.origin.as_ref().map(|_| base.origin),
             orientation: self.orientation.as_ref().map(|_| base.orientation),
-            scale: self.scale.as_ref().map(|_| base.scale.clone()),
+            scale: self.scale.as_ref().map(|_| base.scale),
             hidden: self.hidden.as_ref().map(|_| base.hidden),
             locked: self.locked.as_ref().map(|_| base.locked),
         }
@@ -835,7 +835,7 @@ impl ItemPatch<Puzzle3dTargetVolume> for Puzzle3dTargetVolumePatch {
         Self {
             origin: (base.origin != other.origin).then(|| other.origin),
             orientation: (base.orientation != other.orientation).then(|| other.orientation),
-            scale: (base.scale != other.scale).then(|| other.scale.clone()),
+            scale: (base.scale != other.scale).then(|| other.scale),
             hidden: (base.hidden != other.hidden).then(|| other.hidden),
             locked: (base.locked != other.locked).then(|| other.locked),
         }

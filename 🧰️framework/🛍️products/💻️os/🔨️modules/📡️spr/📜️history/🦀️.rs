@@ -1787,7 +1787,7 @@ impl<'a> Iterator for EditIter<'a> {
     // 🚫️async: E1 — `Iterator::next` is an externally-declared trait method, so it must stay a
     // plain sync `fn`. Its callees (`next_frame`/`payload`/`apply_dict_record`/`decode_edit`) are
     // pure in-memory byte-buffer parsing with no real suspension point, so they are resolved via
-    // the crate's one sanctioned E5 bridge (`os_io::resolve_ready`) rather than awaited.
+    // the crate's one sanctioned E5 bridge (`io::resolve_ready`) rather than awaited.
     fn next(&mut self) -> Option<Self::Item> {
         loop {
             match ::semio_framework_async::poll::resolve_ready(self.cursor.next_frame()) {
@@ -1838,7 +1838,7 @@ impl<'a> Iterator for RevEditIter<'a> {
     type Item = Result<HistoryEdit, ProtocolError>;
 
     // 🚫️async: E1 — same rationale as `EditIter::next` above: `Iterator::next` must stay sync, its
-    // callees are pure in-memory parsing, resolved via the crate's one `os_io::resolve_ready` bridge.
+    // callees are pure in-memory parsing, resolved via the crate's one `io::resolve_ready` bridge.
     fn next(&mut self) -> Option<Self::Item> {
         match &mut self.state {
             Err(pending) => pending.take().map(Err),

@@ -26,15 +26,6 @@ impl Default for NotePresence {
     }
 }
 
-impl protocol::MutationDiff<NotePresence> for NotePresence {
-    fn apply(&self, _base: &NotePresence) -> protocol::MutationApplyResult<NotePresence> {
-        Ok(self.clone())
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
-
 impl store::ArtifactDsl for NotePresence {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
@@ -81,6 +72,9 @@ impl ArtifactPack for NotePresence {
 }
 //#endregion 🔖️Presence
 
+#[path = "🧬️schema/🔺️diff/🦀️.rs"]
+mod diff;
+pub use diff::NotePresenceDiff;
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::*;

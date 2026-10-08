@@ -1,0 +1,18 @@
+{
+  "observedSources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "sha256": "7dad10262f8ad30b42a67da3104fdaeea78e5e9a0ad3c35eee2fc327c611e71b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs",
+      "sha256": "5f53270f1b5f7967a639c77f8024c919e4b41ee12a603ba258a045c8349e3552"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧫️fixtures/📄️natural-file-lifecycle/🔣️.json",
+      "sha256": "583869b7bc2cc5a8b450acb7196864dadb8d0b62e225e727d640e6d411fde7ff"
+    }
+  ],
+  "nativeReceipt": "exact-cargo-laws-SBNVdV/00/receipt.json",
+  "nativeExecutableSha256": "10b0df55c1b097923f572142c0ad1504db181f5d206eddc97a3163f4199b9804"
+}

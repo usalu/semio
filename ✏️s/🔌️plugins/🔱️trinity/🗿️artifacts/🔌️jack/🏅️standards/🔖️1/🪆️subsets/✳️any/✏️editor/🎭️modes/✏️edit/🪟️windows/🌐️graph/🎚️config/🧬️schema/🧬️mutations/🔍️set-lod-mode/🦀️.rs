@@ -1,6 +1,6 @@
 //! 🧬️ Sets lod mode on the addressed Jack graph window.
 
-use super::{JackGraphWindowConfig, JackGraphWindowConfigMutation};
+use super::{JackGraphWindowConfig, JackGraphWindowConfigDiff, JackGraphWindowConfigMutation};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "set-lod-mode")]
@@ -12,10 +12,11 @@ pub struct SetLodMode {
 impl protocol::MutationKind<JackGraphWindowConfig, JackGraphWindowConfigMutation> for SetLodMode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "window-lod-mode", kind: "set-lod-mode", record: "SetLodMode" };
 
-    fn diff(&self, base: &JackGraphWindowConfig) -> protocol::MutationOutcome<JackGraphWindowConfig> {
-        let mut next = base.clone();
-        next.lod_mode.clone_from(&self.value);
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, base: &JackGraphWindowConfig) -> protocol::MutationOutcome<JackGraphWindowConfigDiff> {
+        if self.value == base.lod_mode {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The window lod mode is unchanged.");
+        }
+        protocol::MutationOutcome::new(JackGraphWindowConfigDiff { lod_mode: Some(self.value.clone()), ..Default::default() })
     }
 
     fn inverse(&self, base: &JackGraphWindowConfig) -> Result<Vec<JackGraphWindowConfigMutation>, semio_framework_value::ValueError> {

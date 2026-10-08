@@ -12,7 +12,7 @@
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, NamedModified};
 
 
-use crate::standards::v1::subsets::image::schema::diff::{diff_set_snapshot, SemioImageDiff, SemioImageFrameDiff, SemioImageFramesDiff, SemioImageMetadataDiff};
+use crate::standards::v1::subsets::image::schema::diff::{SemioImageDiff, SemioImageFrameDiff, SemioImageFramesDiff, SemioImageMetadataDiff};
 
 
 
@@ -164,8 +164,8 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioImageMutation> {
         SemioImageMutation::MoveFrame(move_frame::MoveFrame { from: 0, to: 1 }),
         SemioImageMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index: 0, delay_ms: 250 }),
         SemioImageMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index: 1, rgba8: vec![7; 16] }),
-        SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Title".into(), value: "new".into() }),
-        SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Author".into(), value: "someone".into() }),
+        SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Title".into(), value: "new".into(), at: None }),
+        SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Author".into(), value: "someone".into(), at: None }),
         SemioImageMutation::RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry { key: "Title".into() }),
     ]
 }

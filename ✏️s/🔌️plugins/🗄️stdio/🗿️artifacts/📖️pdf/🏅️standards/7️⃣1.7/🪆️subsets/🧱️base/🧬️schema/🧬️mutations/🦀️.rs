@@ -7,7 +7,7 @@
 //! form, optional content, viewer settings, metadata, identity and encryption, catalog extras —
 //! with the retained COS lanes' object/dict/trailer edits kept as they were.
 
-use crate::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::{PdfPage, PdfSnapshot}};
 
 //#region 🔖️Leaves
 #[path = "📥️insert-page/🦀️.rs"]
@@ -130,10 +130,8 @@ pub mod set_encryption;
 pub mod set_catalog_entry;
 #[path = "🧺️remove-catalog-entry/🦀️.rs"]
 pub mod remove_catalog_entry;
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
+#[path = "🪄️replace-page/🦀️.rs"]
+pub mod replace_page;
 
 pub use insert_page::InsertPage;
 pub use remove_page::RemovePage;
@@ -195,7 +193,7 @@ pub use set_document_id::SetDocumentId;
 pub use set_encryption::SetEncryption;
 pub use set_catalog_entry::SetCatalogEntry;
 pub use remove_catalog_entry::RemoveCatalogEntry;
-pub use set_snapshot::SetSnapshot;
+pub use replace_page::ReplacePage;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Aggregate
@@ -263,10 +261,134 @@ pub enum PdfMutation {
     SetEncryption(SetEncryption),
     SetCatalogEntry(SetCatalogEntry),
     RemoveCatalogEntry(RemoveCatalogEntry),
-    SetSnapshot(SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
+    ReplacePage(ReplacePage),
 }
 //#endregion 🔖️Aggregate
+
+//#region 🔖️Net
+/// 🧮️ The keyed upsert/remove script carrying `before` to `after` for a lane whose items are addressed by key: removals first,
+/// then each changed survivor in place and each new item at its final position, ascending. A lane whose surviving keys changed
+/// relative order is rebuilt whole, so the replayed result is always the lane `after` holds.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn keyed_script<T: PartialEq, K: PartialEq>(before: &[T], after: &[T], key: impl Fn(&T) -> K, remove: impl Fn(K) -> PdfMutation, set: impl Fn(&T, Option<usize>) -> PdfMutation, leaves: &mut Vec<PdfMutation>) {
+    let kept_before: Vec<K> = before.iter().map(&key).filter(|candidate| after.iter().any(|item| key(item) == *candidate)).collect();
+    let kept_after: Vec<K> = after.iter().map(&key).filter(|candidate| before.iter().any(|item| key(item) == *candidate)).collect();
+    let rebuilt = kept_before != kept_after;
+    for item in before {
+        let name = key(item);
+        if rebuilt || !after.iter().any(|candidate| key(candidate) == name) {
+            leaves.push(remove(name));
+        }
+    }
+    for (index, item) in after.iter().enumerate() {
+        let name = key(item);
+        match before.iter().find(|candidate| key(candidate) == name).filter(|_| !rebuilt) {
+            Some(previous) if previous == item => {}
+            Some(_) => leaves.push(set(item, None)),
+            None => leaves.push(set(item, Some(index))),
+        }
+    }
+}
+
+/// 📄️ The page leaves carrying `before` to `after`: a single moved page as one move, otherwise the pages that changed in place as
+/// replacements, then the surplus pages removed from the end or inserted at their final positions.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn pages_script(before: &[PdfPage], after: &[PdfPage], leaves: &mut Vec<PdfMutation>) {
+    let prefix = before.iter().zip(after).take_while(|(left, right)| left == right).count();
+    let suffix = before[prefix..].iter().rev().zip(after[prefix..].iter().rev()).take_while(|(left, right)| left == right).count();
+    let (old, new) = (&before[prefix..before.len() - suffix], &after[prefix..after.len() - suffix]);
+    if old.len() == new.len() && old.len() >= 2 {
+        let last = old.len() - 1;
+        if old[1..] == new[..last] && old[0] == new[last] {
+            leaves.push(PdfMutation::MovePage(MovePage { from: prefix, to: prefix + last }));
+            return;
+        }
+        if old[..last] == new[1..] && old[last] == new[0] {
+            leaves.push(PdfMutation::MovePage(MovePage { from: prefix + last, to: prefix }));
+            return;
+        }
+    }
+    let paired = old.len().min(new.len());
+    for offset in (0..paired).filter(|offset| old[*offset] != new[*offset]) {
+        leaves.push(PdfMutation::ReplacePage(ReplacePage { index: prefix + offset, page: new[offset].clone() }));
+    }
+    for index in (prefix + paired..prefix + old.len()).rev() {
+        leaves.push(PdfMutation::RemovePage(RemovePage { index }));
+    }
+    for offset in paired..new.len() {
+        leaves.push(PdfMutation::InsertPage(InsertPage { index: prefix + offset, page: new[offset].clone() }));
+    }
+}
+
+/// 🧮️ The concrete leaves carrying `base` to `next`, one per changed lane: the retained COS graph first (a graph edit re-reads the
+/// typed lanes it touches), then the keyed document collections, the page list and every whole-value lane. Replaying them through
+/// the central applier is the proof the net is exact; a change in a lane no leaf addresses (the schema and version markers) is
+/// left out, so the replay then refuses the edit.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn net_mutations(base: &PdfSnapshot, next: &PdfSnapshot) -> Vec<PdfMutation> {
+    let mut leaves = Vec::new();
+    keyed_script(&base.objects, &next.objects, |item| item.id, |id| PdfMutation::RemoveObject(RemoveObject { id }), |item, index| PdfMutation::SetObjectValue(SetObjectValue { id: item.id, value: item.value.clone(), index }), &mut leaves);
+    keyed_script(&base.trailer, &next.trailer, |item| item.key.clone(), |key| PdfMutation::RemoveTrailerEntry(RemoveTrailerEntry { key }), |item, index| PdfMutation::SetTrailerEntry(SetTrailerEntry { key: item.key.clone(), value: item.value.clone(), index }), &mut leaves);
+    keyed_script(&base.catalog_extra, &next.catalog_extra, |item| item.key.clone(), |key| PdfMutation::RemoveCatalogEntry(RemoveCatalogEntry { key }), |item, index| PdfMutation::SetCatalogEntry(SetCatalogEntry { key: item.key.clone(), value: item.value.clone(), index }), &mut leaves);
+    keyed_script(&base.fonts, &next.fonts, |item| item.id.clone(), |id| PdfMutation::RemoveFont(RemoveFont { id }), |item, index| PdfMutation::SetFont(SetFont { font: item.clone(), index }), &mut leaves);
+    keyed_script(&base.images, &next.images, |item| item.id.clone(), |id| PdfMutation::RemoveImage(RemoveImage { id }), |item, index| PdfMutation::SetImage(SetImage { image: item.clone(), index }), &mut leaves);
+    keyed_script(&base.forms, &next.forms, |item| item.id.clone(), |id| PdfMutation::RemoveForm(RemoveForm { id }), |item, index| PdfMutation::SetForm(SetForm { form: item.clone(), index }), &mut leaves);
+    keyed_script(&base.ext_g_states, &next.ext_g_states, |item| item.id.clone(), |id| PdfMutation::RemoveExtGState(RemoveExtGState { id }), |item, index| PdfMutation::SetExtGState(SetExtGState { state: item.clone(), index }), &mut leaves);
+    keyed_script(&base.shadings, &next.shadings, |item| item.id.clone(), |id| PdfMutation::RemoveShading(RemoveShading { id }), |item, index| PdfMutation::SetShading(SetShading { shading: item.clone(), index }), &mut leaves);
+    keyed_script(&base.patterns, &next.patterns, |item| item.id.clone(), |id| PdfMutation::RemovePattern(RemovePattern { id }), |item, index| PdfMutation::SetPattern(SetPattern { pattern: item.clone(), index }), &mut leaves);
+    keyed_script(&base.color_spaces, &next.color_spaces, |item| item.name.clone(), |name| PdfMutation::RemoveColorSpace(RemoveColorSpace { name }), |item, index| PdfMutation::SetColorSpace(SetColorSpace { color_space: item.clone(), index }), &mut leaves);
+    keyed_script(&base.properties, &next.properties, |item| item.name.clone(), |name| PdfMutation::RemoveProperties(RemoveProperties { name }), |item, index| PdfMutation::SetProperties(SetProperties { properties: item.clone(), index }), &mut leaves);
+    keyed_script(&base.embedded_files, &next.embedded_files, |item| item.id.clone(), |id| PdfMutation::RemoveEmbeddedFile(RemoveEmbeddedFile { id }), |item, index| PdfMutation::SetEmbeddedFile(SetEmbeddedFile { file: item.clone(), index }), &mut leaves);
+    keyed_script(&base.named_destinations, &next.named_destinations, |item| item.name.clone(), |name| PdfMutation::RemoveNamedDestination(RemoveNamedDestination { name }), |item, index| PdfMutation::SetNamedDestination(SetNamedDestination { destination: item.clone(), index }), &mut leaves);
+    pages_script(&base.pages, &next.pages, &mut leaves);
+    if base.info != next.info {
+        leaves.push(PdfMutation::SetInfo(SetInfo { info: next.info.clone() }));
+    }
+    if base.outlines != next.outlines {
+        leaves.push(PdfMutation::SetOutlines(SetOutlines { outlines: next.outlines.clone() }));
+    }
+    if base.page_labels != next.page_labels {
+        leaves.push(PdfMutation::SetPageLabels(SetPageLabels { labels: next.page_labels.clone() }));
+    }
+    if base.output_intents != next.output_intents {
+        leaves.push(PdfMutation::SetOutputIntents(SetOutputIntents { intents: next.output_intents.clone() }));
+    }
+    if base.acro_form != next.acro_form {
+        leaves.push(PdfMutation::SetAcroForm(SetAcroForm { form: next.acro_form.clone() }));
+    }
+    if base.optional_content != next.optional_content {
+        leaves.push(PdfMutation::SetOptionalContent(SetOptionalContent { content: next.optional_content.clone() }));
+    }
+    if base.page_layout != next.page_layout {
+        leaves.push(PdfMutation::SetPageLayout(SetPageLayout { layout: next.page_layout.clone() }));
+    }
+    if base.page_mode != next.page_mode {
+        leaves.push(PdfMutation::SetPageMode(SetPageMode { mode: next.page_mode.clone() }));
+    }
+    if base.viewer_preferences != next.viewer_preferences {
+        leaves.push(PdfMutation::SetViewerPreferences(SetViewerPreferences { preferences: next.viewer_preferences.clone() }));
+    }
+    if base.open_action != next.open_action {
+        leaves.push(PdfMutation::SetOpenAction(SetOpenAction { action: next.open_action.clone() }));
+    }
+    if base.language != next.language {
+        leaves.push(PdfMutation::SetLanguage(SetLanguage { language: next.language.clone() }));
+    }
+    if base.mark_info != next.mark_info {
+        leaves.push(PdfMutation::SetMarkInfo(SetMarkInfo { info: next.mark_info.clone() }));
+    }
+    if base.metadata != next.metadata {
+        leaves.push(PdfMutation::SetMetadata(SetMetadata { xmp: next.metadata.clone() }));
+    }
+    if base.document_id != next.document_id {
+        leaves.push(PdfMutation::SetDocumentId(SetDocumentId { id: next.document_id.clone() }));
+    }
+    if base.encryption != next.encryption {
+        leaves.push(PdfMutation::SetEncryption(SetEncryption { encryption: next.encryption.clone() }));
+    }
+    leaves
+}
+//#endregion 🔖️Net
 
 //#region 🔖️Delegation
 /// 🛡️ Applies `outcome` to `snapshot` atomically through the central applier and converts an apply rejection into a fatal outcome.

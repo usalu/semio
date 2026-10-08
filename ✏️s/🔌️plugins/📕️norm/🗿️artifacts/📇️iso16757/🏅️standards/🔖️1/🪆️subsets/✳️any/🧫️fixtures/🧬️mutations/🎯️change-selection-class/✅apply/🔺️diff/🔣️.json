@@ -1,32 +1,17 @@
 {
-  "artifact": null,
-  "catalogue": null,
-  "dictionary": null,
-  "geometry": null,
-  "selection": {
-    "classId": "class-towel-radiator",
-    "constraints": [
-      {
-        "id": "constraint-prop.height-0",
-        "propertyId": "prop.height",
-        "operator": "Equal",
-        "value": {
-          "kind": "decimal",
-          "value": 600.0
-        }
-      },
-      {
-        "id": "constraint-prop.length-1",
-        "propertyId": "prop.length",
-        "operator": "GreaterThan",
-        "value": {
-          "kind": "decimal",
-          "value": 1000.0
-        }
-      }
-    ],
-    "seriesId": "series-pr"
-  },
+  "catalogueName": null,
+  "manufacturerName": null,
+  "productGroups": null,
+  "productClasses": null,
+  "productSeries": null,
+  "products": null,
+  "productIndexes": null,
+  "propertyDefinitions": null,
+  "subjects": null,
+  "geometryObjects": null,
+  "selectionClassId": "class-towel-radiator",
+  "selectionSeriesId": null,
+  "selectionConstraints": null,
   "partNumberRule": null,
   "partNumberInputs": null,
   "scriptLimits": null,

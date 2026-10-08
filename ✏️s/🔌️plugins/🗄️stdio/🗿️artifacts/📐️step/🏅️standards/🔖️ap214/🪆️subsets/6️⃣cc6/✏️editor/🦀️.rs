@@ -43,7 +43,7 @@ use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::InteractiveJobClassification;
 use semio_framework_2d::compute::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
-use crate::standards::v_ap214::subsets::cc6::schema::mutations::set_snapshot as snapshot_edit_set_snapshot;
+use crate::standards::v_ap214::subsets::cc6::schema::mutations::net_mutations;
 
 //#region 🔖️Dialect
 pub const STEP_CC6_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("cc6") };
@@ -289,7 +289,9 @@ impl editing::SnapshotEditingEditor for StepCc6Editor {
         match command { StepCc6EditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_net(event, snapshot, |base, next| if base == next { Vec::new() } else { vec![StepCc6Mutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: next.clone() })] })
+        let next = editing::apply_snapshot_edit(snapshot, event).map_err(|error| Fault::from(error.to_string()))?;
+        let leaves = net_mutations(snapshot, &next).ok_or_else(|| Fault::from("step: the edit changes the document schema, the file description or the file name, which this conformance class has no mutation for"))?;
+        Ok(Emit { artifact_mutations: leaves, ..Default::default() })
     }
 }
 

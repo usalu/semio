@@ -1,5 +1,6 @@
 {
   "mutation": "addPlantLoopEquipment",
   "id": 18,
-  "equipmentId": 0
+  "equipmentId": 0,
+  "index": null
 }

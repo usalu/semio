@@ -3,4 +3,5 @@ import type { ObjRef, PdfCcittParameters, PdfColorSpace, PdfDecimal, PdfDictEntr
 export interface SetPatternMutation {
   mutation: 'setPattern';
   pattern: PdfPattern;
+  index?: number | null;
 }

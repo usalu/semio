@@ -1,11 +1,10 @@
 use super::ChangePhiInfinity;
-use crate::diff::En1996WallList;
 use crate::{En1996Diff, En1996Snapshot};
+use crate::diff::{En1996WallDelta, En1996WallPatch};
 pub fn diff(payload: &ChangePhiInfinity, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
     if payload.index >= base.walls.len() {
         return protocol::MutationOutcome::fatal("mutation.invariant", String::from("Invalid wall index."), Vec::<String>::new());
     }
-    let mut walls = base.walls.clone();
-    walls[payload.index].phi_infinity = payload.new_phi_infinity;
-    protocol::MutationOutcome::new(En1996Diff { walls: Some(En1996WallList { values: walls }), ..Default::default() })
+    let wall = &base.walls[payload.index];
+    protocol::MutationOutcome::new(En1996Diff { walls: En1996WallDelta::modification(&wall.id, En1996WallPatch { phi_infinity: Some(payload.new_phi_infinity), ..Default::default() }), ..Default::default() })
 }

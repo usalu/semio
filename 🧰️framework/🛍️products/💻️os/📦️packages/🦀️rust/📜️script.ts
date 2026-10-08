@@ -1879,7 +1879,7 @@ class CanonicalArchitectureScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-os-kernel"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-os-kernel"], cwd: this.root, extraArgs: ["--features", "mutation-testing", ...rest] }, readCargoTestPolicyV1(process.env));
   }
 }
 

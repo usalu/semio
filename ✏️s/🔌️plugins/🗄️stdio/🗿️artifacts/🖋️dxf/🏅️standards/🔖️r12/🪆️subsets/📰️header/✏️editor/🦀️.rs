@@ -4,7 +4,7 @@
 
 use crate::editor::dxf::modes::edit;
 use crate::editor::dxf::modes::edit::windows::main;
-use crate::standards::v_r12::subsets::any::schema::mutations::{patch_snapshot,set_snapshot as snapshot_edit_set_snapshot,DxfMutation};
+use crate::standards::v_r12::subsets::any::schema::mutations::{DxfMutation};
 
 use crate::standards::v_r12::subsets::any::schema::snapshot::DxfSnapshot;
 use semio_framework_plugin::app::InteractionView;
@@ -289,7 +289,7 @@ impl editing::SnapshotEditingEditor for DxfAnyEditor {
         match command { DxfAnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_patch(event, snapshot, |patch| DxfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| DxfMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot })))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::v_r12::subsets::any::schema::mutations::net_mutations)
     }
 }
 

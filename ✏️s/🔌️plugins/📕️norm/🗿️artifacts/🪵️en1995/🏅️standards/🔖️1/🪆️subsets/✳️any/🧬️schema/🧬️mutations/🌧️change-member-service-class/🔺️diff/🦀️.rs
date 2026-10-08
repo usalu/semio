@@ -1,11 +1,10 @@
 use super::ChangeMemberServiceClass;
-use crate::diff::En1995MemberList;
 use crate::{En1995Diff, En1995Snapshot};
+use crate::diff::{En1995MemberDelta, En1995MemberPatch};
 pub fn diff(payload: &ChangeMemberServiceClass, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
     let Some(idx) = base.members.iter().position(|item| item.id == payload.member_id) else {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Unknown member id.", vec![payload.member_id.clone()]);
     };
-    let mut members = base.members.clone();
-    members[idx].service_class = payload.new_value;
-    protocol::MutationOutcome::new(En1995Diff { members: Some(En1995MemberList { values: members }), ..Default::default() })
+    let member = &base.members[idx];
+    protocol::MutationOutcome::new(En1995Diff { members: En1995MemberDelta::modification(&member.id, En1995MemberPatch { service_class: Some(payload.new_value), ..Default::default() }), ..Default::default() })
 }

@@ -104,7 +104,7 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
     }
 }
 
-/// 📋️ Bracketed comma-joined list -- the un-keyed sibling of `NamedTripleDiff`'s codec below, for
+/// 📋️ Bracketed comma-joined list -- the un-keyed sibling of `IndexedDiff`'s codec below, for
 /// plain `Vec<T>` fields (`labels`, `exceptions`, `selection`, `coloring`, ...) that are
 /// whole-value replaced rather than key-diffed.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -117,34 +117,42 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 
-/// 🏷️ Generic codec for the `NamedTripleDiff<K,D,T>` engine (this file's own §GenericNamedEngine
-/// region) -- `[removed];[modified];[added]`, semicolon-separated sections, each a comma-separated
-/// list; `modified` entries are `key:diff` (colon-separated, unambiguous because every key here is
-/// hex-encoded and hex never contains `:`). Written once, generically, and instantiated per
-/// collection (`topics`/`comments`/`viewpoints`/`parts`) below.
+/// 🏷️ Generic codec for the `IndexedDiff<T,D>` engine (this file's own §IndexedTriple region) --
+/// `[removed];[modified];[added]`, semicolon-separated sections, each a comma-separated list;
+/// `removed` entries are base indices, `modified` entries `index:diff` and `added` entries
+/// `index:item` (colon-separated, unambiguous because the index is decimal digits). Written once,
+/// generically, and instantiated per collection (`topics`/`comments`/`viewpoints`/`parts`) below.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_named_triple<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K) -> String, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
-    let removed = triple.removed.iter().map(&enc_k).collect::<Vec<_>>().join(",");
-    let modified = triple.modified.iter().map(|m| format!("{}:{}", enc_k(&m.key), enc_d(&m.diff))).collect::<Vec<_>>().join(",");
-    let added = triple.added.iter().map(enc_t).collect::<Vec<_>>().join(",");
+pub(crate) fn enc_indexed_triple<T, D>(triple: &IndexedDiff<T, D>, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
+    let removed = triple.removed.iter().map(|index| index.to_string()).collect::<Vec<_>>().join(",");
+    let modified = triple.modified.iter().map(|m| format!("{}:{}", m.index, enc_d(&m.diff))).collect::<Vec<_>>().join(",");
+    let added = triple.added.iter().map(|a| format!("{}:{}", a.index, enc_t(&a.item))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
+pub(crate) fn dec_indexed_triple<T, D>(s: &str, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<IndexedDiff<T, D>, String> {
     let three = split_top_level(s, ';');
-    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(&dec_k).collect::<Result<Vec<_>, String>>()?;
+    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("indexed triple: expected 3 sections, got {}", three.len())) };
+    let index_of = |text: &str| text.parse::<usize>().map_err(|e| format!("indexed triple: bad index {text:?}: {e}"));
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|text| index_of(&text)).collect::<Result<Vec<_>, String>>()?;
     let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())
         .map(|entry| {
-            let (k, rest) = entry.split_once(':').ok_or_else(|| format!("named triple modified: bad entry {entry:?}"))?;
-            Ok(NamedModified { key: dec_k(k)?, diff: dec_d(rest)? })
+            let (index, rest) = entry.split_once(':').ok_or_else(|| format!("indexed triple modified: bad entry {entry:?}"))?;
+            Ok(IndexedModified { index: index_of(index)?, diff: dec_d(rest)? })
         })
         .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_t).collect::<Result<Vec<_>, String>>()?;
-    Ok(NamedTripleDiff { removed, modified, added })
+    let added = split_top_level(strip_brackets(added_s)?, ',')
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .map(|entry| {
+            let (index, rest) = entry.split_once(':').ok_or_else(|| format!("indexed triple added: bad entry {entry:?}"))?;
+            Ok(IndexedAdded { index: index_of(index)?, item: dec_t(rest)? })
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    Ok(IndexedDiff { removed, modified, added })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -353,8 +361,8 @@ pub(crate) fn enc_topic_diff(d: &BcfTopicDiff) -> String {
         encode_option(&d.labels, |v: &Vec<String>| enc_list(v, |s| enc_str(s))),
         encode_option(&d.creation_date, |v: &String| enc_str(v)),
         encode_option(&d.creation_author, |v: &String| enc_str(v)),
-        encode_option(&d.comments, |v: &BcfCommentsDiff| enc_named_triple(v, |k: &String| enc_str(k), enc_comment_diff, enc_comment)),
-        encode_option(&d.viewpoints, |v: &BcfViewpointsDiff| enc_named_triple(v, |k: &String| enc_str(k), enc_viewpoint_diff, enc_viewpoint)),
+        encode_option(&d.comments, |v: &BcfCommentsDiff| enc_indexed_triple(v, enc_comment_diff, enc_comment)),
+        encode_option(&d.viewpoints, |v: &BcfViewpointsDiff| enc_indexed_triple(v, enc_viewpoint_diff, enc_viewpoint)),
     )
 }
 
@@ -372,8 +380,8 @@ pub(crate) fn dec_topic_diff(s: &str) -> Result<BcfTopicDiff, String> {
         labels: decode_option(labels, |s| dec_list(s, dec_str))?,
         creation_date: decode_option(creation_date, dec_str)?,
         creation_author: decode_option(creation_author, dec_str)?,
-        comments: decode_option(comments, |s| dec_named_triple(s, dec_str, dec_comment_diff, dec_comment))?,
-        viewpoints: decode_option(viewpoints, |s| dec_named_triple(s, dec_str, dec_viewpoint_diff, dec_viewpoint))?,
+        comments: decode_option(comments, |s| dec_indexed_triple(s, dec_comment_diff, dec_comment))?,
+        viewpoints: decode_option(viewpoints, |s| dec_indexed_triple(s, dec_viewpoint_diff, dec_viewpoint))?,
     })
 }
 
@@ -384,10 +392,10 @@ pub(crate) fn print_bcf_diff(d: &BcfDiff) -> String {
         tokens.push(format!("version={}", enc_str(v)));
     }
     if let Some(t) = &d.topics {
-        tokens.push(format!("topics={}", enc_named_triple(t, |k: &String| enc_str(k), enc_topic_diff, enc_topic)));
+        tokens.push(format!("topics={}", enc_indexed_triple(t, enc_topic_diff, enc_topic)));
     }
     if let Some(p) = &d.parts {
-        tokens.push(format!("parts={}", enc_named_triple(p, |k: &String| enc_str(k), enc_part_diff, enc_part)));
+        tokens.push(format!("parts={}", enc_indexed_triple(p, enc_part_diff, enc_part)));
     }
     tokens.join(" ")
 }
@@ -402,9 +410,9 @@ pub(crate) fn parse_bcf_diff(line: &str) -> Result<BcfDiff, String> {
         if let Some(rest) = token.strip_prefix("version=") {
             d.version = Some(dec_str(rest)?);
         } else if let Some(rest) = token.strip_prefix("topics=") {
-            d.topics = Some(dec_named_triple(rest, dec_str, dec_topic_diff, dec_topic)?);
+            d.topics = Some(dec_indexed_triple(rest, dec_topic_diff, dec_topic)?);
         } else if let Some(rest) = token.strip_prefix("parts=") {
-            d.parts = Some(dec_named_triple(rest, dec_str, dec_part_diff, dec_part)?);
+            d.parts = Some(dec_indexed_triple(rest, dec_part_diff, dec_part)?);
         } else {
             return Err(format!("bcf diff: unknown token {token:?}"));
         }

@@ -1,117 +1,61 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "streams": null,
   "assets": null,
   "durableArtifacts": {
-    "remodeling-asset-3583f57e5be8856bdf3e1db4318032b0f9a3abdfa3847e14e81208e3dbd6f80b-0000000000000024": {
-      "kind": "sparse",
-      "mime": null,
-      "width": 0,
-      "height": 0,
-      "chunks": [
-        [
-          0,
-          0,
-          0,
-          63,
-          0,
-          0,
-          128,
-          63,
-          0,
-          0,
-          128,
-          190,
-          0,
-          0,
-          192,
-          63,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          64,
-          0,
-          0,
-          128,
-          191,
-          0,
-          0,
-          128,
-          62,
-          0,
-          0,
-          64,
-          63
+    "rows": [
+      {
+        "row": "append",
+        "id": "remodeling-asset-3583f57e5be8856bdf3e1db4318032b0f9a3abdfa3847e14e81208e3dbd6f80b-0000000000000024",
+        "header": {
+          "kind": "sparse",
+          "mime": null,
+          "width": 0,
+          "height": 0
+        },
+        "chunks": [
+          [
+            0,
+            0,
+            0,
+            63,
+            0,
+            0,
+            128,
+            63,
+            0,
+            0,
+            128,
+            190,
+            0,
+            0,
+            192,
+            63,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            64,
+            0,
+            0,
+            128,
+            191,
+            0,
+            0,
+            128,
+            62,
+            0,
+            0,
+            64,
+            63
+          ]
         ]
-      ]
-    },
-    "remodeling-asset-45070beb0101de64": {
-      "kind": "image",
-      "mime": "image/jpeg",
-      "width": 640,
-      "height": 480,
-      "chunks": [
-        [
-          102,
-          114,
-          97,
-          109,
-          101,
-          45,
-          97
-        ]
-      ]
-    },
-    "remodeling-asset-a462ec9257d3fccf": {
-      "kind": "image",
-      "mime": "image/tiff",
-      "width": 128,
-      "height": 128,
-      "chunks": [
-        [
-          116,
-          111,
-          121,
-          45,
-          100,
-          115,
-          109,
-          45,
-          116,
-          105,
-          108,
-          101
-        ]
-      ]
-    },
-    "remodeling-asset-a6becb587255f206": {
-      "kind": "image",
-      "mime": "image/png",
-      "width": 64,
-      "height": 64,
-      "chunks": [
-        [
-          115,
-          112,
-          97,
-          114,
-          101,
-          45,
-          114,
-          97,
-          115,
-          116,
-          101,
-          114
-        ]
-      ]
-    }
+      }
+    ]
   },
   "calibration": null,
   "params": null,

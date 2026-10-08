@@ -1,6 +1,4 @@
-//! 📏️ `set-worksheet-content-type` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 📏️ `set-worksheet-content-type` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,15 +13,14 @@ pub struct SetWorksheetContentType {
 impl protocol::MutationKind<XlsxSnapshot, XlsxStrictMutation> for SetWorksheetContentType {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "worksheet-content-type", kind: "set-worksheet-content-type", record: "SetWorksheetContentType" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxStrictMutation as Mutation<XlsxSnapshot>>::Diff> {
-        agg_diff(&XlsxStrictMutation::SetWorksheetContentType(self.clone()), base)
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
+        protocol::MutationOutcome::new(diff_set_content_type(base, &self.path, &self.content_type))
     }
+
     fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxStrictMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&XlsxStrictMutation::SetWorksheetContentType(self.clone()), base)?
-    
-    })
-}
+        Ok(if base.xml_part(&self.path).is_some() { worksheet_content_type_inverse(base, &self.path) } else { Vec::new() })
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set worksheet content type", "Inhaltstyp des Arbeitsblatts setzen")
     }

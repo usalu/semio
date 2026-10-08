@@ -1,7 +1,7 @@
 mod tests {
     use super::*;
     use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance};
-    use semio_framework_plugin::AnalyzeSource;
+    use semio_framework_plugin::io::AnalyzeSource;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn clean_bytes() -> Vec<u8> {

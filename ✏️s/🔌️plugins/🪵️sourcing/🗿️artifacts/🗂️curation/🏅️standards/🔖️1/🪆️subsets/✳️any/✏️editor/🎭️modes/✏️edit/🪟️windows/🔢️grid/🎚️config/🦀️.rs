@@ -61,29 +61,59 @@ impl store::ArtifactPack for GridWindowConfig {
 
 impl store::ConfigRecord for GridWindowConfig {}
 
-impl protocol::MutationDiff<GridWindowConfig> for GridWindowConfig {
-    fn apply(&self, _base: &GridWindowConfig) -> protocol::MutationApplyResult<GridWindowConfig> {
-        Ok(self.clone())
+/// 🔺️ Sparse field delta over [`GridWindowConfig`]: every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct GridWindowConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub instance_display: Option<String>,
+}
+
+impl protocol::MutationDiff<GridWindowConfig> for GridWindowConfigDiff {
+    fn apply(&self, base: &GridWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GridWindowConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.instance_display {
+            next.instance_display = value.clone();
+        }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if other.instance_display.is_some() {
+            self.instance_display = other.instance_display;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<GridWindowConfig> for GridWindowConfigDiff {
+    fn inverse(&self, base: &GridWindowConfig) -> Self {
+        Self {
+            instance_display: self.instance_display.as_ref().map(|_| base.instance_display.clone()),
+        }
+    }
+    fn between(base: &GridWindowConfig, other: &GridWindowConfig) -> Self {
+        Self {
+            instance_display: (base.instance_display != other.instance_display).then(|| other.instance_display.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.instance_display.is_none()
     }
 }
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 pub enum GridWindowConfigMutation {
-    Snapshot { config: GridWindowConfig },
+    SetInstanceDisplay { instance_display: String },
 }
 
 impl protocol::Mutation<GridWindowConfig> for GridWindowConfigMutation {
-    type Diff = GridWindowConfig;
+    type Diff = GridWindowConfigDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔢️grid/⚙️config",
-        semantic_kind: "set-grid-window-config",
-        display_name: "Set Sourcing Grid Window Configuration",
+        semantic_kind: "set-instance-display",
+        display_name: "Set Sourcing Grid Instance Display",
         emoji: "🔢️",
-        aggregate_variant: "Snapshot",
+        aggregate_variant: "SetInstanceDisplay",
         payload_schema: "s.sourcing.curation.gridwindowconfig",
         text_opcode: None,
         binary_tag: None,
@@ -96,17 +126,14 @@ impl protocol::Mutation<GridWindowConfig> for GridWindowConfigMutation {
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         &Self::DESCRIPTORS[0]
     }
-    fn diff(&self, _base: &GridWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+    fn diff(&self, base: &GridWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
         match self {
-            Self::Snapshot { config } => protocol::MutationOutcome::new(config.clone()),
+            Self::SetInstanceDisplay { instance_display } => protocol::MutationOutcome::new(GridWindowConfigDiff { instance_display: (base.instance_display != *instance_display).then(|| instance_display.clone()) }),
         }
     }
     fn inverse(&self, base: &GridWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { config: base.clone() }]
-    
-    })())
-}
+        Ok(vec![Self::SetInstanceDisplay { instance_display: base.instance_display.clone() }])
+    }
 }
 
 impl protocol::OpText for GridWindowConfigMutation {
@@ -177,6 +204,15 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, mutation: GridWindowC
     Ok(semio_framework_plugin::WindowConfigMutation::of::<GridWindowConfigOwner>(id, mutation))
 }
 
-pub fn next_config(_base: &GridWindowConfig, instance_display: &str) -> GridWindowConfig {
-    GridWindowConfig { instance_display: instance_display.to_string() }
+#[cfg(test)]
+mod law_tests {
+    use super::*;
+
+    /// ⚖️ The inverse diffs sum to the negative of the forward diff (L3).
+    #[semio_framework_async_macros::async_test]
+    async fn inverse_diffs_sum_to_the_negative_diff() {
+        let base = GridWindowConfig::default();
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&GridWindowConfigMutation::SetInstanceDisplay { instance_display: GRID_INSTANCE_DISPLAY_REPRESENTATIVE.into() }, &base).await;
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&GridWindowConfigMutation::SetInstanceDisplay { instance_display: GRID_INSTANCE_DISPLAY_LINE_BEHIND.into() }, &base).await;
+    }
 }

@@ -9,8 +9,6 @@
     "declaration-conflicts-with-utf8-transport"
   ],
   "mutationKinds": [
-    "set-snapshot",
-    "patch-snapshot",
     "set-declaration",
     "set-doctype",
     "insert-element",

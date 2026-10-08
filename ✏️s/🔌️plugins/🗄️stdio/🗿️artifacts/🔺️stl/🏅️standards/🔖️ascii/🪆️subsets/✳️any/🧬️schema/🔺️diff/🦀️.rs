@@ -60,6 +60,12 @@ fn triangle_diff_is_empty(d: &StlTriangleDiff) -> bool {
     d.normal.is_none() && d.vertices.is_none()
 }
 
+/// ↩️ The patch restoring exactly the fields `diff` sets back to their `base` values.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_triangle_diff(diff: &StlTriangleDiff, base: &StlTriangle) -> StlTriangleDiff {
+    StlTriangleDiff { normal: diff.normal.map(|_| base.normal), vertices: diff.vertices.map(|_| base.vertices) }
+}
+
 /// ➕️ LWW field-by-field absorb of one triangle patch into another.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn absorb_triangle_diff(base: &mut StlTriangleDiff, other: &StlTriangleDiff) {
@@ -354,14 +360,31 @@ impl MutationDiff<StlSnapshot> for StlDiff {
     }
 }
 
+/// ↩️ Negative rows for the triangles triple against its BASE triangles; every list comes back ascending, the normal form
+/// [`absorb_triangles`] emits.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_triangles(diff: &StlTrianglesDiff, base: &[StlTriangle]) -> StlTrianglesDiff {
+    let mut removed_sorted = diff.removed.clone();
+    removed_sorted.sort_unstable();
+    removed_sorted.dedup();
+    let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
+    added_final.sort_unstable();
+    let after_index = |index: usize| {
+        let survivor = index - removed_sorted.iter().filter(|dropped| **dropped < index).count();
+        added_final.iter().fold(survivor, |position, inserted| if *inserted <= position { position + 1 } else { position })
+    };
+    let mut modified: Vec<StlTriangleModified> = diff.modified.iter().filter_map(|row| base.get(row.index).map(|triangle| StlTriangleModified { index: after_index(row.index), diff: inverse_triangle_diff(&row.diff, triangle) })).collect();
+    modified.sort_by_key(|row| row.index);
+    let added = removed_sorted.iter().filter_map(|index| base.get(*index).map(|triangle| StlTriangleAdded { index: *index, triangle: *triangle })).collect();
+    StlTrianglesDiff { removed: added_final, modified, added }
+}
+
 impl DiffAlgebra<StlSnapshot> for StlDiff {
-    /// 🔁️ Diff-level undo, derived generically (correct by construction): the state delta from
-    /// `self.apply(base)` back to `base` — `between` is the single source of truth for turning a
-    /// state pair into a diff, so `inverse` doesn't duplicate its per-field logic (same pattern
-    /// as this ticket's zip/xml precedent).
+    /// ↩️ Concrete diff-level undo: the name returns to the base name and the triangles triple turns into its negative rows (added
+    /// rows become removals at their final index, removed rows return at their base index, modified rows restore their base fields
+    /// at the index the row has after the diff).
     fn inverse(&self, base: &StlSnapshot) -> Self {
-        let mutated = apply_stl_diff_unchecked(self, base);
-        <Self as DiffAlgebra<StlSnapshot>>::between(&mutated, base)
+        StlDiff { solid_name: self.solid_name.as_ref().map(|_| base.solid_name.clone()), triangles: self.triangles.as_ref().map(|triangles| inverse_triangles(triangles, &base.triangles)).filter(|triangles| !triangles.is_empty()) }
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): `triangles` uses index-pairwise matching (see
@@ -379,13 +402,6 @@ impl DiffAlgebra<StlSnapshot> for StlDiff {
 }
 //#endregion 🔖️Diff
 
-//#region 🔖️MutationDiffBuilders
-/// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
-/// slot exists on `StlDiff` to short-circuit into.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &StlSnapshot, next: &StlSnapshot) -> StlDiff {
-    <StlDiff as DiffAlgebra<StlSnapshot>>::between(base, next)
-}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_solid_name(name: &str) -> StlDiff {
     StlDiff { solid_name: Some(name.to_string()), triangles: None }

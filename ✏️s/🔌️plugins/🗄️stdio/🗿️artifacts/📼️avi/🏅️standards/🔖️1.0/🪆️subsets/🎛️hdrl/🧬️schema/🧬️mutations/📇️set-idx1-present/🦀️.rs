@@ -1,6 +1,4 @@
-//! 🗂️ `set-idx1-present` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🗂️ `set-idx1-present` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,14 +14,12 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for SetIdx1Present {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "idx1-present", kind: "set-idx1-present", record: "SetIdx1Present" };
 
     fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
-        agg_diff(&AviMutation::SetIdx1Present(self.clone()), base)
+        let Self { idx1_present } = self;
+        protocol::MutationOutcome::new(AviDiff { idx1_present: Some(*idx1_present), ..AviDiff::default() })
     }
     fn inverse(&self, base: &AviSnapshot) -> Result<Vec<AviMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&AviMutation::SetIdx1Present(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![AviMutation::SetIdx1Present(set_idx1_present::SetIdx1Present { idx1_present: base.idx1_present })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set idx1 present", "idx1-Index vorhanden setzen")
     }

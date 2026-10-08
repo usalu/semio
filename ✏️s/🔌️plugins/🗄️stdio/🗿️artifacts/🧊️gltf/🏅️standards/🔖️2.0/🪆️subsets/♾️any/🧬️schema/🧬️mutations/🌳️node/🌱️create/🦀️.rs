@@ -1,4 +1,5 @@
 //! 🧬️ Direct create-node mutation owner: payload, validation, typed diff, inverse, and outcomes.
+use crate::schema::diff::*;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::snapshot::*;
@@ -9,21 +10,33 @@ pub const TOUCHED_PATHS: &[&str] = &["document/nodes"];
 #[value(rename_all = "camelCase")]
 pub struct GltfCreateNodePayload {
     pub position: usize,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub node: Option<Box<GltfNode>>,
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate(payload: &GltfCreateNodePayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
     if payload.position > base.document.nodes.len() {
         return Err(reject("gltf.mutation.insert-out-of-range", "document/nodes", "position must be within the collection"));
     }
+    let lengths = GltfLengths::after_insert(base, GltfTopLevelFamily::Nodes);
+    if let Some(record) = &payload.node {
+        check_node(record, payload.position, &lengths)?;
+    }
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfCreateNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
-    let mut next = base.clone();
-    repair(&mut next.document, GltfTopLevelFamily::Nodes, &Change::Insert(payload.position))?;
-    next.document.nodes.insert(payload.position, GltfNode::default());
-    Ok(next)
+pub fn plan(p: &GltfCreateNodePayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
+    validate(p, base)?;
+    let mut diff = rewire(base, GltfTopLevelFamily::Nodes, &mut after_insert(p.position));
+    diff.nodes.get_or_insert_with(Default::default).added.push(GltfAdded { index: p.position, item: p.node.as_deref().cloned().unwrap_or_else(|| GltfNode::default()) });
+    Ok(diff)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(p: &GltfCreateNodePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    if validate(p, base).is_err() {
+        return Vec::new();
+    }
+    vec![super::delete_node::mutation(super::delete_node::GltfDeleteNodePayload { index: p.position })]
 }
 
 //#region 🧬️DirectMutation
@@ -32,7 +45,11 @@ pub fn apply(payload: &GltfCreateNodePayload, base: &GltfSnapshot) -> Result<Glt
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum CreateNodeMutation {
     Apply(GltfCreateNodePayload),
-    Restore(Box<crate::schema::diff::GltfDiff>),
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutation(payload: GltfCreateNodePayload) -> super::GltfMutation {
+    super::GltfMutation::CreateNode(CreateNodeMutation::Apply(payload))
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateNodeMutation {
@@ -40,28 +57,18 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateNodeMut
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => match apply(payload, base) {
-                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Self::Apply(payload) => match plan(payload, base) {
+                Ok(diff) => protocol::MutationOutcome::new(diff),
                 Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
-            },
-            Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
-                Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-                Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
             },
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
-            return Vec::new();
+        match self {
+            Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::GltfMutation::CreateNode(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Create Node", "Knoten erstellen")

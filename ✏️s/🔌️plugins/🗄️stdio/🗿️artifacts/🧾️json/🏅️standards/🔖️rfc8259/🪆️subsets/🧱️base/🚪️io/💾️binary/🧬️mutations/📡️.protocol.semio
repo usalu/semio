@@ -21,5 +21,3 @@ record remove-array-element tag=4
 field payload bytes
 record set-scalar tag=5
 field payload bytes
-record patch-snapshot tag=6
-field payload bytes

@@ -1,0 +1,6 @@
+{
+  "RemoveGeometryConnection": {
+    "id": "geom-valve-50",
+    "connectionId": "out"
+  }
+}

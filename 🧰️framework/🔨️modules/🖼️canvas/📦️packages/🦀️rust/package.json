@@ -1,0 +1,10 @@
+{
+  "name": "semio-framework-canvas",
+  "private": true,
+  "scripts": {
+    "test": "nx run semio-framework-canvas:test"
+  },
+  "nx": {
+    "includedScripts": []
+  }
+}

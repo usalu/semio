@@ -20,7 +20,9 @@ pub fn projection_path_error()->ValueError{ValueError::new(semio_framework_value
 
 struct FieldProjectionFrame{value:FieldValue,kind:u8,length:usize,next:usize,position:usize,ids:&'static [u16],key:Option<String>,key_length:usize}
 impl semio_framework_value::retirement::RetireOwned for FieldProjectionFrame{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::artifact_retirement_sequence!(self.value,self.key)}
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::{sequence,deferred};sequence(vec![deferred(self.value),deferred(self.key)])}
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.value),deferred_birth_bytes_for(&self.key)])}
+    fn controlled_retirement_supported()->bool{true}
 }
 
 #[derive(Clone,Copy,Default)]
@@ -142,7 +144,9 @@ impl<T:FieldProjectionSource> RetainedFieldProjection<T>{
     }
 }
 impl<T:FieldProjectionSource+'static> semio_framework_value::retirement::RetireOwned for RetainedFieldProjection<T>{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::artifact_retirement_sequence!(self.frames,self.path,self.complete,self.fault_value)}
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::{sequence,deferred};sequence(vec![deferred(self.frames),crate::retirement::RecordPlanningRetirement::new(self.path),deferred(self.complete),deferred(self.fault_value)])}
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.frames),crate::retirement::RecordPlanningRetirement::<usize>::birth_bytes(),deferred_birth_bytes_for(&self.complete),deferred_birth_bytes_for(&self.fault_value)])}
+    fn controlled_retirement_supported()->bool{true}
 }
 
 /// ♻️ Retires intermediate native fields without recursive container drops.
@@ -191,41 +195,6 @@ pub fn project_map<T:DslField>(values:&std::collections::BTreeMap<String,T>,cont
 /// 🌿️ Projects tagged records with literal owner keywords and known collection progress.
 pub fn project_statements<T:DslVariants,C:super::DslSequenceView<T>+?Sized>(values:&C,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{
     control.scoped_stage(|control|{control.begin_stage(values.field_items().len())?;let mut output=super::__rt::DecodedFieldOwner::new(control.allocate_vec(values.field_items().len())?,|items:Vec<(String,RecordValue)>|{for(_,record)in items{for value in record.fields.into_values(){retire_field(value);}}});for value in values.field_items(){output.as_mut().push(control.scoped_stage(|control|{control.begin_stage(0)?;value.to_named_record_controlled(control)})?);control.step()?;}Ok(FieldValue::Statements(output.take()))})
-}
-
-impl semio_framework_value::retirement::RetireOwned for RecordFields {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.into_iter())}
-}
-impl semio_framework_value::retirement::RetireOwned for RecordValue {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.fields)}
-}
-impl semio_framework_value::retirement::RetireOwned for FieldValue {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;match self{
-        Self::Text(value)=>value.retirement(),Self::Bytes64(value)=>value.retirement(),Self::Tuple(value)|Self::List(value)=>value.retirement(),Self::Record(value)=>value.retirement(),Self::Block(value)=>value.retirement(),Self::Statements(value)=>value.retirement(),Self::Map(value)=>value.retirement(),Self::Value(value)=>value.retirement(),Self::Wire(value)=>value.retirement(),Self::Expr(value)=>value.retirement(),
-        Self::Bool(_)|Self::Int(_)|Self::UInt(_)|Self::Float(_)|Self::Enum(_)|Self::Absent=>semio_framework_value::retirement::leaf(()),
-    }}
-}
-impl semio_framework_value::retirement::RetireOwned for super::ExprValue {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;match self{Self::Var(value)=>value.retirement(),Self::Neg(value)=>value.retirement(),Self::Binary(_,left,right)=>semio_framework_value::artifact_retirement_sequence!(left,right),Self::Call(name,items)=>semio_framework_value::artifact_retirement_sequence!(name,items),Self::Num(_)=>semio_framework_value::retirement::leaf(())}}
-}
-impl semio_framework_value::retirement::RetireOwned for super::WireNode {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::artifact_retirement_sequence!(self.id,self.kind,self.port)}
-}
-impl semio_framework_value::retirement::RetireOwned for super::WireEdgeLabel {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::artifact_retirement_sequence!(self.id,self.kind)}
-}
-impl semio_framework_value::retirement::RetireOwned for super::WireValue {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::artifact_retirement_sequence!(self.from,self.edge,self.edge_label,self.properties)}
-}
-semio_framework_value::artifact_retire_leaf!(super::RecordSpecProducer);
-impl semio_framework_value::retirement::RetireOwned for super::Shape {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;match self{Self::Enum(items)=>items.retirement(),Self::Tuple(shape,_)|Self::List(shape)|Self::Block(shape)|Self::Map(shape)=>shape.retirement(),Self::Record(make)|Self::Table(make)=>make.retirement(),Self::Statements(items)=>items.retirement(),_=>semio_framework_value::retirement::leaf(())}}
-}
-impl semio_framework_value::retirement::RetireOwned for super::FieldSpec {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::artifact_retirement_sequence!(self.key,self.shape)}
-}
-impl semio_framework_value::retirement::RetireOwned for super::RecordSpec {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::artifact_retirement_sequence!(self.keyword,self.fields)}
 }
 
 /// 🫳️ Borrows a declared original operation variant without owning a Record payload mirror.

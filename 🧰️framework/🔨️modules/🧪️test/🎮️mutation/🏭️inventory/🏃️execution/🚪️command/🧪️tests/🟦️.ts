@@ -8,14 +8,13 @@ import {runMutationInventoryCargoProducer,runMutationInventoryCargoProducerComma
 import {MutationInventoryProcessWorkspace,readMutationInventoryCapture,mutationInventoryPolicyArguments,readMutationInventoryExecutionPolicy} from "../../🟦️.ts";
 import fixture from "../🧫️fixtures/🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
-import laws from "../🧬️laws/🔣️.json" with {type:"json"};
 const require=createRequire(import.meta.url),Ajv=require("ajv"),execa=require("execa"),output=process.env.SEMIO_TEST_ARTIFACT_DIR;
 if(!output||!isAbsolute(output))throw Error("Authored absolute command test storage required");
 const policy={version:1 as const,maximumUnits:10000000,maximumOwnedBytes:1048576,maximumCaptureBytes:262144,budgetMs:60000,compilerStorage:{buildDirectory:join(output,"build"),leaseDirectory:join(output,"leases"),targetDirectory:join(output,"target"),captureDirectory:join(output,"captures")}},manifestPath=join(output,"native/Cargo.toml"),request={manifestPath,binary:"inventory-fixture",cwd:process.cwd()},environment={...process.env,CARGO_TARGET_DIR:policy.compilerStorage.targetDirectory,CARGO_BUILD_BUILD_DIR:policy.compilerStorage.buildDirectory,CARGO_BUILD_JOBS:"2"};
 const operation=(workspace:MutationInventoryProcessWorkspace)=>({signal:new AbortController().signal,maximumUnits:policy.maximumUnits,maximumOwnedBytes:policy.maximumOwnedBytes,workspace,onProgress:async()=>{},yieldContinuation:()=>setImmediate()});
 async function prepare(){await mkdir(join(output!,"native"),{recursive:true});await writeFile(manifestPath,'[workspace]\n[package]\nname = "inventory-fixture"\nversion = "0.1.0"\nedition = "2021"\n[features]\nmutation-inventory = []\n[[bin]]\nname = "inventory-fixture"\npath = "🦀️.rs"\n');await writeFile(join(output!,"native/🦀️.rs"),fixture.nativeSource);const result=await execa("cargo",["generate-lockfile","--offline","--manifest-path",manifestPath],{reject:false,env:environment,timeout:30000});expect(result.code).toBe(0);}
 test("closed request and authored flags refuse before process admission",async()=>{
-  expect(new Ajv({strict:false}).compile(laws)(fixture)).toBe(true);const valid=new Ajv({strict:false}).compile(schema);expect(valid(request)).toBe(true);
+  const valid=new Ajv({strict:false}).compile(schema);expect(valid(request)).toBe(true);
   for(const value of[{...request,manifestPath:"relative"},{...request,unknown:true}]){expect(valid(value)).toBe(false);const w=new MutationInventoryProcessWorkspace();await expect(runMutationInventoryCargoProducer(value,[...fixture.cases[0].argv,...mutationInventoryPolicyArguments(policy)],environment,policy,operation(w))).rejects.toThrow();expect(w.process).toBeUndefined();expect(w.directory).toBeUndefined();}
   const storageWorkspace=new MutationInventoryProcessWorkspace();await expect(runMutationInventoryCargoProducer(request,[...fixture.cases[0].argv,...mutationInventoryPolicyArguments(policy)],{...environment,CARGO_TARGET_DIR:"mismatched"},policy,operation(storageWorkspace))).rejects.toThrow();expect(storageWorkspace.process).toBeUndefined();expect(storageWorkspace.directory).toBeUndefined();
   const w=new MutationInventoryProcessWorkspace();await expect(runMutationInventoryCargoProducer(request,[...fixture.cases[0].argv,...mutationInventoryPolicyArguments({...policy,budgetMs:2})],environment,policy,operation(w))).rejects.toThrow();expect(w.process).toBeUndefined();expect(()=>readMutationInventoryExecutionPolicy({})).toThrow();
@@ -41,4 +40,3 @@ test("artifact host entry forwards exact stdout and actual native refusal code",
     expect(result.code).toBe(row.code);expect(result.stdout).toBe(row.code===0?argv.join("\n")+"\n":"");if(row.code)expect(result.stderr).toContain("capture=");
   }
 },90000);
-

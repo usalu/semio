@@ -1,6 +1,6 @@
 //! 🎥️ Sets the retained camera of ONE addressed `gis2d-view-map` viewer window.
 
-use super::{GisMapViewerCamera, GisMapViewerWindowConfig, GisMapViewerWindowConfigMutation};
+use super::{GisMapViewerCamera, GisMapViewerWindowConfig, GisMapViewerWindowConfigDiff, GisMapViewerWindowConfigMutation};
 
 #[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -13,18 +13,15 @@ pub struct SetCamera {
 
 impl protocol::MutationKind<GisMapViewerWindowConfig, GisMapViewerWindowConfigMutation> for SetCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "camera", kind: "set-camera", record: "SetCamera" };
-    fn diff(&self, base: &GisMapViewerWindowConfig) -> protocol::MutationOutcome<GisMapViewerWindowConfig> {
+    fn diff(&self, base: &GisMapViewerWindowConfig) -> protocol::MutationOutcome<GisMapViewerWindowConfigDiff> {
         if base.camera == self.camera {
-            return protocol::MutationOutcome::new(*base).warning("mutation.no-op", "The map window already holds this camera.");
+            return protocol::MutationOutcome::new(GisMapViewerWindowConfigDiff::default()).warning("mutation.no-op", "The map window already holds this camera.");
         }
-        protocol::MutationOutcome::new(GisMapViewerWindowConfig { camera: self.camera })
+        protocol::MutationOutcome::new(GisMapViewerWindowConfigDiff { camera: Some(self.camera) })
     }
     fn inverse(&self, base: &GisMapViewerWindowConfig) -> Result<Vec<GisMapViewerWindowConfigMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        (base.camera != self.camera).then(|| GisMapViewerWindowConfigMutation::SetCamera(SetCamera { camera: base.camera })).into_iter().collect()
-    
-    })())
-}
+        Ok((base.camera != self.camera).then(|| GisMapViewerWindowConfigMutation::SetCamera(SetCamera { camera: base.camera })).into_iter().collect())
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set camera", "Kamera setzen")
     }

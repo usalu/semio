@@ -15,7 +15,7 @@ pub mod patch;
 pub mod splice;
 
 pub use entities::*;
-pub use patch::{ArrayShape, FieldPatch, ListEdit, OptionChange, Row, RowPatch, Rows, Slot, Slots, Unchanged};
+pub use patch::{Field, FieldPatch, ListEdit, OptionChange, Row, RowPatch, Rows, Slot, Slots, Unchanged};
 pub use splice::Splice;
 
 //#region 🔖️LinkSlotDelta

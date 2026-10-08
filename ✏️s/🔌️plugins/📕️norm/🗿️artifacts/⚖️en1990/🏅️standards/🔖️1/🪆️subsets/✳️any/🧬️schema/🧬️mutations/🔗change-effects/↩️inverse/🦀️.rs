@@ -1,4 +1,4 @@
-//! 🔗 `change-effects` inverse — removes the collection's new rows back to front, then inserts the base rows in order; the rows are stored in reverse, as the store replays inverses reversed.
+//! 🔗 `change-effects` inverse — removes the collection's new rows, then inserts the base rows in order; the rows are stored in reverse, as the store replays inverses reversed.
 
 use super::ChangeEffects;
 use crate::mutations::insert_effect::InsertEffect;

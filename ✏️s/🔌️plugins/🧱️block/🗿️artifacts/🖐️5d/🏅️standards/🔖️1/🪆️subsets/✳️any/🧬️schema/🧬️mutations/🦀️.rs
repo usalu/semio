@@ -123,11 +123,11 @@ pub const KINDS: &[&str] = &[
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
-pub use super::add_attribute::{add_attribute, AddAttribute};
-pub use super::add_author::{add_author, AddAuthor};
-pub use super::add_compatibility_rule::{add_compatibility_rule, AddCompatibilityRule};
-pub use super::add_representation_attribute::{add_representation_attribute, AddRepresentationAttribute};
-pub use super::add_representation_tag::{add_representation_tag, AddRepresentationTag};
+pub use super::add_attribute::{add_attribute, add_attribute_at, AddAttribute};
+pub use super::add_author::{add_author, add_author_at, AddAuthor};
+pub use super::add_compatibility_rule::{add_compatibility_rule, add_compatibility_rule_at, AddCompatibilityRule};
+pub use super::add_representation_attribute::{add_representation_attribute, add_representation_attribute_at, AddRepresentationAttribute};
+pub use super::add_representation_tag::{add_representation_tag, add_representation_tag_at, AddRepresentationTag};
 pub use super::change_grip_grip_kind::{change_grip_grip_kind, ChangeGripGripKind};
 pub use super::change_grip_kind_color::{change_grip_kind_color, ChangeGripKindColor};
 pub use super::change_grip_kind_default_rope_kind::{change_grip_kind_default_rope_kind, ChangeGripKindDefaultRopeKind};
@@ -141,9 +141,9 @@ pub use super::change_part_kind_variant::{change_part_kind_variant, ChangePartKi
 pub use super::change_representation_description::{change_representation_description, ChangeRepresentationDescription};
 pub use super::change_representation_lod::{change_representation_lod, ChangeRepresentationLod};
 pub use super::change_representation_mesh_url::{change_representation_mesh_url, ChangeRepresentationMeshUrl};
-pub use super::create_grip::{create_grip, CreateGrip};
-pub use super::create_grip_kind::{create_grip_kind, CreateGripKind};
-pub use super::create_representation::{create_representation, CreateRepresentation};
+pub use super::create_grip::{create_grip, create_grip_at, CreateGrip};
+pub use super::create_grip_kind::{create_grip_kind, create_grip_kind_at, CreateGripKind};
+pub use super::create_representation::{create_representation, create_representation_at, CreateRepresentation};
 pub use super::delete_grip::{delete_grip, DeleteGrip};
 pub use super::delete_grip_kind::{delete_grip_kind, DeleteGripKind};
 pub use super::delete_representation::{delete_representation, DeleteRepresentation};

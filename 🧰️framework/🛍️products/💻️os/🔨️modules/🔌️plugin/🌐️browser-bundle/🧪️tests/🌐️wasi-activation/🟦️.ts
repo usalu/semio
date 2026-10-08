@@ -7,6 +7,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
+import type { GuestLogLine } from "../../🌐️wasi/🟦️.ts";
 
 
 /** 🗣️ Exercises installed and vendored CLI streams against the neutral fragmented-line trace. */
@@ -17,15 +18,15 @@ export async function testPreview2GuestLogVendoring(repoRoot: string): Promise<v
   assert(artifactBase !== undefined && artifactBase.includes("🗑️generated"));
   mkdirSync(artifactBase, { recursive: true });
   const vendor = mkdtempSync(join(artifactBase, "preview2-log-vendor-"));
-  const observe = async (path: string, isolated: boolean, flushed = false) => {
+  const observe = async (path: string, isolated: boolean, flushed = false, chunks: readonly string[] = fixture.lineBuffer.chunks, channel: "stdout" | "stderr" = "stderr") => {
     const module = await import(pathToFileURL(path).href);
     const cli = isolated ? module.createCli() : module;
     const calls: { channel: string; text: string; level: string }[] = [];
     const original = { log: console.log, debug: console.debug, error: console.error };
     try {
-      for (const level of ["log", "debug", "error"] as const) console[level] = (text: string) => calls.push({ channel: "stderr", text, level });
-      const stream = cli.stderr.getStderr();
-      for (const chunk of fixture.lineBuffer.chunks) {
+      for (const level of ["log", "debug", "error"] as const) console[level] = (text: string) => calls.push({ channel, text, level });
+      const stream = channel === "stderr" ? cli.stderr.getStderr() : cli.stdout.getStdout();
+      for (const chunk of chunks) {
         const bytes = new TextEncoder().encode(chunk);
         assert(stream.checkWrite() >= BigInt(bytes.byteLength));
         if (flushed) stream.blockingWriteAndFlush(bytes); else stream.write(bytes);
@@ -52,6 +53,11 @@ export async function testPreview2GuestLogVendoring(repoRoot: string): Promise<v
   for (const isolated of [false, true]) {
     assert.deepEqual(await observe(path, isolated), fixture.lineBuffer.hostCalls);
     assert.deepEqual(await observe(path, isolated, true), fixture.lineBuffer.hostCalls);
+    for (const row of fixture.classificationCases) {
+      const original = await observe(join(repoRoot, "node_modules/@bytecodealliance/preview2-shim/dist/browser/cli.js"), isolated, true, [row.text + "\n"], row.channel);
+      assert.deepEqual(original.map(({ text }) => text), [row.text]);
+      assert.deepEqual(await observe(path, isolated, true, [row.text + "\n"], row.channel), [row]);
+    }
   }
   const drift = join(vendor, "drift.js");
   writeFileSync(drift, "export const stderr = {};\n");
@@ -68,6 +74,13 @@ export async function testBrowserWasiActivation(repoRoot: string): Promise<void>
   
   
   const { browserWasiInterfaces, createBrowserWasiActivation, createGuestLogLineSink, classifyGuestLogLine } = await import("../../🌐️wasi/🟦️.ts");
+  const validateLog = ajv.compile<GuestLogLine>({ $ref: schemaDocument.$id + "#/$defs/GuestLogLine" });
+  const validateMaintenance = ajv.compile({ $ref: schemaDocument.$id + "#/$defs/GuestMaintenanceDiagnostic" });
+  for (const row of fixture.classificationCases) {
+    assert(validateLog(row), JSON.stringify(validateLog.errors));
+    assert.equal(classifyGuestLogLine(row.channel, row.text), row.level);
+    assert.equal(Boolean(validateMaintenance(row.text)), row.channel === "stderr" && row.level === "debug" && !row.text.startsWith("[TRACE]"));
+  }
   const { DOCUMENT_BROWSER_ACTOR_INTERFACES } = await import("../../../../📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts");
   const program = ts.createProgram([join(testSourceDirectory, "../../🌐️wasi/🟦️.ts")], { noEmit: true, strict: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, lib: ["lib.es2023.d.ts", "lib.esnext.disposable.d.ts", "lib.dom.d.ts"], types: [], skipLibCheck: true });
   const diagnostics = ts.getPreEmitDiagnostics(program);

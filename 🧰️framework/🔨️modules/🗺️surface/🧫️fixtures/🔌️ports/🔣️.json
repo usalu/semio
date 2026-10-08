@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "ports": [
+    {"name": "DomainHover", "providerPackage": "semio-framework-replication"},
+    {"name": "DomainSelection", "providerPackage": "semio-framework-replication"},
+    {"name": "SelectionMethod", "providerPackage": "semio-framework-replication"},
+    {"name": "Viewport2d", "providerPackage": "semio-framework-ui-viewport"}
+  ],
+  "selection": {"granularity": "node", "ids": ["α", "🧬"], "anchorId": "α"},
+  "hover": {"channel": "pointer", "ids": ["🧬"]},
+  "methods": ["pick", "rectangle", "lasso"],
+  "viewport": {"x": -12.5, "y": 8.0, "zoom": 1.25}
+}

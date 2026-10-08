@@ -2,6 +2,10 @@
 
 use crate::{Din4108Diff, Din4108Snapshot};
 
+#[path = "🧭️edit-rules/🦀️.rs"]
+mod edit_rules;
+pub use edit_rules::EDIT_RULES;
+
 use super::change_climate_zone;
 use super::change_usage;
 use super::change_t_int_c;

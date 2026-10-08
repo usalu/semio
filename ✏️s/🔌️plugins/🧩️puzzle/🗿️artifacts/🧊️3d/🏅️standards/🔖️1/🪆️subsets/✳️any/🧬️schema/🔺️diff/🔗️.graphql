@@ -1,20 +1,37 @@
-# 🧬️ Puzzle3d diff schema — sparse field delta.
+# 🧬️ Puzzle3d diff schema — sparse typed delta.
 
 type Puzzle3dDiff {
   artifact: Puzzle3dArtifact @state(class: ARTIFACT)
   schema: String @state(class: ARTIFACT)
   domain: String @state(class: ARTIFACT)
-  meta: Puzzle3dMeta @state(class: ARTIFACT)
+  meta: Puzzle3dMetaPatch @state(class: ARTIFACT)
   objects: Puzzle3dObjectsDelta @state(class: ARTIFACT)
   attractions: Puzzle3dAttractionsDelta @state(class: ARTIFACT)
   targetVolumes: Puzzle3dTargetVolumesDelta @state(class: ARTIFACT)
   references: Puzzle3dReferencesDelta @state(class: ARTIFACT)
 }
 
-type Puzzle3dStringList { values: [String!]! }
+type Puzzle3dKindCompatibilityKey { source: String! target: String! }
+type Puzzle3dVortexPatch { vortexKind: String label: String position: [Float!] direction: [Float!] radius: Float hidden: Boolean locked: Boolean }
+type Puzzle3dObjectPatch { label: String objectKind: String anchor: Puzzle3dObjectAnchor origin: [Float!] orientation: [Float!] scale: Puzzle3dScale meshUrl: String vortices: Puzzle3dVorticesDelta hidden: Boolean locked: Boolean }
+type Puzzle3dAttractionPatch { attracting: String attracted: String gap: Float shift: Float rise: Float rotation: Float turn: Float tilt: Float x: Float y: Float }
+type Puzzle3dTargetVolumePatch { origin: [Float!] orientation: [Float!] scale: Puzzle3dScale hidden: Boolean locked: Boolean }
+type Puzzle3dReferencePatch { source: Puzzle3dReferenceSource origin: [Float!] widthWorld: Float locked: Boolean hidden: Boolean }
+type Puzzle3dKindCompatibilityPatch { bidirectional: Boolean important: Boolean specificity: Puzzle3dCompatSpecificity }
+type Puzzle3dMetaPatch { kindCatalogs: Puzzle3dKindCatalogs kindCompatibility: Puzzle3dKindCompatibilityDelta }
+type Puzzle3dVorticesDelta { added: [Puzzle3dVortex!]! removed: [String!]! patched: [Puzzle3dVortexPatchEntry!]! reordered: [String!] }
+type Puzzle3dVortexPatchEntry { id: String! patch: Puzzle3dVortexPatch! }
 type Puzzle3dObjectsDelta { added: [Puzzle3dObject!]! removed: [String!]! patched: [Puzzle3dObjectPatchEntry!]! reordered: [String!] }
 type Puzzle3dObjectPatchEntry { id: String! patch: Puzzle3dObjectPatch! }
-type Puzzle3dObjectPatch { replacement: Puzzle3dObject }
+type Puzzle3dAttractionsDelta { added: [Puzzle3dAttraction!]! removed: [String!]! patched: [Puzzle3dAttractionPatchEntry!]! reordered: [String!] }
+type Puzzle3dAttractionPatchEntry { id: String! patch: Puzzle3dAttractionPatch! }
+type Puzzle3dTargetVolumesDelta { added: [Puzzle3dTargetVolume!]! removed: [String!]! patched: [Puzzle3dTargetVolumePatchEntry!]! reordered: [String!] }
+type Puzzle3dTargetVolumePatchEntry { id: String! patch: Puzzle3dTargetVolumePatch! }
+type Puzzle3dReferencesDelta { added: [Puzzle3dReference!]! removed: [String!]! patched: [Puzzle3dReferencePatchEntry!]! reordered: [String!] }
+type Puzzle3dReferencePatchEntry { id: String! patch: Puzzle3dReferencePatch! }
+type Puzzle3dKindCompatibilityDelta { added: [Puzzle3dKindCompatibility!]! removed: [Puzzle3dKindCompatibilityKey!]! patched: [Puzzle3dKindCompatibilityPatchEntry!]! reordered: [Puzzle3dKindCompatibilityKey!] }
+type Puzzle3dKindCompatibilityPatchEntry { id: Puzzle3dKindCompatibilityKey! patch: Puzzle3dKindCompatibilityPatch! }
+
 enum Puzzle3dObjectAnchor { Fixed Derived }
 type Puzzle3dObject {
   id: String!
@@ -49,9 +66,6 @@ type Puzzle3dKindCompatibility {
 type Puzzle3dMeta {
   kindCompatibility: [Puzzle3dKindCompatibility!]!
 }
-type Puzzle3dAttractionsDelta { added: [Puzzle3dAttraction!]! removed: [String!]! patched: [Puzzle3dAttractionPatchEntry!]! reordered: [String!] }
-type Puzzle3dAttractionPatchEntry { id: String! patch: Puzzle3dAttractionPatch! }
-type Puzzle3dAttractionPatch { replacement: Puzzle3dAttraction }
 type Puzzle3dAttraction {
   id: String!
   attracting: String!
@@ -65,14 +79,6 @@ type Puzzle3dAttraction {
   x: Float!
   y: Float!
 }
-type Puzzle3dTargetVolumesDelta { added: [Puzzle3dTargetVolume!]! removed: [String!]! patched: [Puzzle3dTargetVolumePatchEntry!]! reordered: [String!] }
-type Puzzle3dTargetVolumePatchEntry { id: String! patch: Puzzle3dTargetVolumePatch! }
-type Puzzle3dTargetVolumePatch { replacement: Puzzle3dTargetVolume }
 type Puzzle3dTargetVolume { id: String! }
-type Puzzle3dReferencesDelta { added: [Puzzle3dReference!]! removed: [String!]! patched: [Puzzle3dReferencePatchEntry!]! reordered: [String!] }
-type Puzzle3dReferencePatchEntry { id: String! patch: Puzzle3dReferencePatch! }
-type Puzzle3dReferencePatch { replacement: Puzzle3dReference }
 type Puzzle3dReference { id: String! }
-type Puzzle3dArtifact { schema: String! }
 type Puzzle3dMeta { _placeholder: Boolean }
-

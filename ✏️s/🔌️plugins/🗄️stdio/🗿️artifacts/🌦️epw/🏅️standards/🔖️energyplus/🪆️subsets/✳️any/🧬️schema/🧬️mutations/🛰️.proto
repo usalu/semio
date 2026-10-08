@@ -3,7 +3,6 @@ package semio.s_stdio_epw.mutation;
 
 import "s_stdio_epw/snapshot.proto";
 
-message SetSnapshot { semio.s_stdio_epw.snapshot.EpwSnapshot snapshot = 1; }
 message SetLocation { semio.s_stdio_epw.snapshot.EpwLocation location = 1; }
 message SetDesignConditions { string value = 1; }
 message SetTypicalExtremePeriods { string value = 1; }
@@ -19,7 +18,6 @@ message SetRecordField { uint64 record_index = 1; uint64 field_index = 2; string
 message EpwMutation {
   oneof mutation {
     bool no_mutation = 1;
-    SetSnapshot set_snapshot = 2;
     SetLocation set_location = 3;
     SetDesignConditions set_design_conditions = 4;
     SetTypicalExtremePeriods set_typical_extreme_periods = 5;

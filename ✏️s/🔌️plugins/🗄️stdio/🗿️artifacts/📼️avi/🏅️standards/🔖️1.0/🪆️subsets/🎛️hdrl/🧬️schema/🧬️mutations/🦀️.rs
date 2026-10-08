@@ -26,10 +26,6 @@ pub mod set_chunk_keyframe;
 pub mod set_idx1_present;
 #[path = "🎬set-main-header/🦀️.rs"]
 pub mod set_main_header;
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "🎨set-stream-format/🦀️.rs"]
 pub mod set_stream_format;
 #[path = "🎞️set-stream-header/🦀️.rs"]
@@ -43,8 +39,6 @@ pub mod set_stream_header;
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = AviSnapshot, diff = AviDiff, schema = "AviMutation")]
 pub enum AviMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetMainHeader(set_main_header::SetMainHeader),
     SetIdx1Present(set_idx1_present::SetIdx1Present),
     InsertStream(insert_stream::InsertStream),
@@ -63,7 +57,7 @@ pub enum AviMutation {
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself).
 pub const KINDS: &[&str] =
-    &["set-snapshot", "patch-snapshot", "set-main-header", "set-idx1-present", "insert-stream", "remove-stream", "set-stream-header", "set-stream-format", "insert-chunk", "remove-chunk", "set-chunk-keyframe", "add-unknown-chunk", "remove-unknown-chunk"];
+    &["set-main-header", "set-idx1-present", "insert-stream", "remove-stream", "set-stream-header", "set-stream-format", "insert-chunk", "remove-chunk", "set-chunk-keyframe", "add-unknown-chunk", "remove-unknown-chunk"];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn stream_diff_for(stream_index: usize, inner: AviStreamDiff) -> AviDiff {
@@ -75,76 +69,64 @@ fn chunk_diff_for(stream_index: usize, chunks: IndexedDiff<AviChunk, AviChunkDif
     stream_diff_for(stream_index, AviStreamDiff { chunks: Some(chunks), ..AviStreamDiff::default() })
 }
 
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &AviMutation, base: &AviSnapshot) -> protocol::MutationOutcome<AviDiff> {
-    protocol::MutationOutcome::new(match this {
-        AviMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <AviDiff as protocol::command::DiffAlgebra<AviSnapshot>>::between(base, snapshot),
-        AviMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<AviSnapshot, AviMutation>>::diff(patch, base),
-        AviMutation::SetMainHeader(set_main_header::SetMainHeader { main_header }) => AviDiff { main_header: Some(main_header.clone()), ..AviDiff::default() },
-        AviMutation::SetIdx1Present(set_idx1_present::SetIdx1Present { idx1_present }) => AviDiff { idx1_present: Some(*idx1_present), ..AviDiff::default() },
-        AviMutation::InsertStream(insert_stream::InsertStream { index, stream }) => AviDiff { streams: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: stream.clone() }] }), ..AviDiff::default() },
-        AviMutation::RemoveStream(remove_stream::RemoveStream { index }) => AviDiff { streams: Some(IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }), ..AviDiff::default() },
-        AviMutation::SetStreamHeader(set_stream_header::SetStreamHeader { stream_index, strh }) => stream_diff_for(*stream_index, AviStreamDiff { strh: Some(strh.clone()), ..AviStreamDiff::default() }),
-        AviMutation::SetStreamFormat(set_stream_format::SetStreamFormat { stream_index, strf }) => stream_diff_for(*stream_index, AviStreamDiff { strf: Some(strf.clone()), ..AviStreamDiff::default() }),
-        AviMutation::InsertChunk(insert_chunk::InsertChunk { stream_index, index, chunk }) => chunk_diff_for(*stream_index, IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: chunk.clone() }] }),
-        AviMutation::RemoveChunk(remove_chunk::RemoveChunk { stream_index, index }) => chunk_diff_for(*stream_index, IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }),
-        AviMutation::SetChunkKeyframe(set_chunk_keyframe::SetChunkKeyframe { stream_index, index, keyframe }) => {
-            chunk_diff_for(*stream_index, IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: *index, diff: AviChunkDiff { data: None, keyframe: Some(*keyframe) } }], added: vec![] })
-        }
-        AviMutation::AddUnknownChunk(add_unknown_chunk::AddUnknownChunk { index, item }) => {
-            AviDiff { unknown_chunks: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: item.clone() }] }), ..AviDiff::default() }
-        }
-        AviMutation::RemoveUnknownChunk(remove_unknown_chunk::RemoveUnknownChunk { index }) => AviDiff { unknown_chunks: Some(IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }), ..AviDiff::default() },
-    })
-}
-
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &AviMutation, base: &AviSnapshot) -> Result<Vec<AviMutation>, semio_framework_value::ValueError> {
-    Ok({
-    match this {
-        AviMutation::SetSnapshot(_) => vec![AviMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        AviMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<AviSnapshot, AviMutation>>::inverse(patch, base)?),
-        AviMutation::SetMainHeader(_) => vec![AviMutation::SetMainHeader(set_main_header::SetMainHeader { main_header: base.main_header.clone() })],
-        AviMutation::SetIdx1Present(_) => vec![AviMutation::SetIdx1Present(set_idx1_present::SetIdx1Present { idx1_present: base.idx1_present })],
-        AviMutation::InsertStream(insert_stream::InsertStream { index, .. }) => vec![AviMutation::RemoveStream(remove_stream::RemoveStream { index: *index })],
-        AviMutation::RemoveStream(remove_stream::RemoveStream { index }) => match base.streams.get(*index) {
-            Some(stream) => vec![AviMutation::InsertStream(insert_stream::InsertStream { index: *index, stream: stream.clone() })],
-            None => Vec::new(),
-        },
-        AviMutation::SetStreamHeader(set_stream_header::SetStreamHeader { stream_index, .. }) => match base.streams.get(*stream_index) {
-            Some(stream) => vec![AviMutation::SetStreamHeader(set_stream_header::SetStreamHeader { stream_index: *stream_index, strh: stream.strh.clone() })],
-            None => Vec::new(),
-        },
-        AviMutation::SetStreamFormat(set_stream_format::SetStreamFormat { stream_index, .. }) => match base.streams.get(*stream_index) {
-            Some(stream) => vec![AviMutation::SetStreamFormat(set_stream_format::SetStreamFormat { stream_index: *stream_index, strf: stream.strf.clone() })],
-            None => Vec::new(),
-        },
-        AviMutation::InsertChunk(insert_chunk::InsertChunk { stream_index, index, .. }) => vec![AviMutation::RemoveChunk(remove_chunk::RemoveChunk { stream_index: *stream_index, index: *index })],
-        AviMutation::RemoveChunk(remove_chunk::RemoveChunk { stream_index, index }) => match base.streams.get(*stream_index).and_then(|s| s.chunks.get(*index)) {
-            Some(chunk) => vec![AviMutation::InsertChunk(insert_chunk::InsertChunk { stream_index: *stream_index, index: *index, chunk: chunk.clone() })],
-            None => Vec::new(),
-        },
-        AviMutation::SetChunkKeyframe(set_chunk_keyframe::SetChunkKeyframe { stream_index, index, .. }) => match base.streams.get(*stream_index).and_then(|s| s.chunks.get(*index)) {
-            Some(chunk) => vec![AviMutation::SetChunkKeyframe(set_chunk_keyframe::SetChunkKeyframe { stream_index: *stream_index, index: *index, keyframe: chunk.keyframe })],
-            None => Vec::new(),
-        },
-        AviMutation::AddUnknownChunk(add_unknown_chunk::AddUnknownChunk { index, .. }) => vec![AviMutation::RemoveUnknownChunk(remove_unknown_chunk::RemoveUnknownChunk { index: *index })],
-        AviMutation::RemoveUnknownChunk(remove_unknown_chunk::RemoveUnknownChunk { index }) => match base.unknown_chunks.get(*index) {
-            Some(item) => vec![AviMutation::AddUnknownChunk(add_unknown_chunk::AddUnknownChunk { index: *index, item: item.clone() })],
-            None => Vec::new(),
-        },
-    }
-
-    })
-}
 //#endregion 🔖️MutationTrait
+
+//#region 🔖️Net
+/// 🧮️ The leaves that carry `base` to exactly `next`: the main header and `idx1` flag if they moved, each stream in place (its
+/// header, its format, its chunks; a stream whose retained auxiliaries differ is removed and inserted anew), the diverging stream
+/// tail, and the unknown chunks (replaced in place by remove-then-add). A chunk differing only in its keyframe flag is re-flagged;
+/// any other chunk change is remove-then-insert. The `hdrl` auxiliaries have no leaf, so a change to them is left unaddressed.
+pub fn net_mutations(base: &AviSnapshot, next: &AviSnapshot) -> Vec<AviMutation> {
+    let mut leaves = Vec::new();
+    if base.main_header != next.main_header {
+        leaves.push(AviMutation::SetMainHeader(set_main_header::SetMainHeader { main_header: next.main_header.clone() }));
+    }
+    if base.idx1_present != next.idx1_present {
+        leaves.push(AviMutation::SetIdx1Present(set_idx1_present::SetIdx1Present { idx1_present: next.idx1_present }));
+    }
+    let paired = base.streams.len().min(next.streams.len());
+    for (stream_index, (before, after)) in base.streams.iter().zip(&next.streams).enumerate().filter(|(_, (before, after))| before != after) {
+        if before.strl_extra != after.strl_extra {
+            leaves.push(AviMutation::RemoveStream(remove_stream::RemoveStream { index: stream_index }));
+            leaves.push(AviMutation::InsertStream(insert_stream::InsertStream { index: stream_index, stream: after.clone() }));
+            continue;
+        }
+        if before.strh != after.strh {
+            leaves.push(AviMutation::SetStreamHeader(set_stream_header::SetStreamHeader { stream_index, strh: after.strh.clone() }));
+        }
+        if before.strf != after.strf {
+            leaves.push(AviMutation::SetStreamFormat(set_stream_format::SetStreamFormat { stream_index, strf: after.strf.clone() }));
+        }
+        let chunks_paired = before.chunks.len().min(after.chunks.len());
+        for (index, (old, new)) in before.chunks.iter().zip(&after.chunks).enumerate().filter(|(_, (old, new))| old != new) {
+            if (&old.fourcc, &old.data) == (&new.fourcc, &new.data) {
+                leaves.push(AviMutation::SetChunkKeyframe(set_chunk_keyframe::SetChunkKeyframe { stream_index, index, keyframe: new.keyframe }));
+            } else {
+                leaves.push(AviMutation::RemoveChunk(remove_chunk::RemoveChunk { stream_index, index }));
+                leaves.push(AviMutation::InsertChunk(insert_chunk::InsertChunk { stream_index, index, chunk: new.clone() }));
+            }
+        }
+        leaves.extend((chunks_paired..before.chunks.len()).rev().map(|index| AviMutation::RemoveChunk(remove_chunk::RemoveChunk { stream_index, index })));
+        leaves.extend(after.chunks.iter().enumerate().skip(chunks_paired).map(|(index, chunk)| AviMutation::InsertChunk(insert_chunk::InsertChunk { stream_index, index, chunk: chunk.clone() })));
+    }
+    leaves.extend((paired..base.streams.len()).rev().map(|index| AviMutation::RemoveStream(remove_stream::RemoveStream { index })));
+    leaves.extend(next.streams.iter().enumerate().skip(paired).map(|(index, stream)| AviMutation::InsertStream(insert_stream::InsertStream { index, stream: stream.clone() })));
+    let unknown_paired = base.unknown_chunks.len().min(next.unknown_chunks.len());
+    for (index, (_, new)) in base.unknown_chunks.iter().zip(&next.unknown_chunks).enumerate().filter(|(_, (old, new))| old != new) {
+        leaves.push(AviMutation::RemoveUnknownChunk(remove_unknown_chunk::RemoveUnknownChunk { index }));
+        leaves.push(AviMutation::AddUnknownChunk(add_unknown_chunk::AddUnknownChunk { index, item: new.clone() }));
+    }
+    leaves.extend((unknown_paired..base.unknown_chunks.len()).rev().map(|index| AviMutation::RemoveUnknownChunk(remove_unknown_chunk::RemoveUnknownChunk { index })));
+    leaves.extend(next.unknown_chunks.iter().enumerate().skip(unknown_paired).map(|(index, item)| AviMutation::AddUnknownChunk(add_unknown_chunk::AddUnknownChunk { index, item: item.clone() })));
+    leaves
+}
+//#endregion 🔖️Net
 
 /// ▶️ Applies a mutation to `snapshot` in place, returning the diff.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_avi_mutation(snapshot: &mut AviSnapshot, mutation: &AviMutation) -> protocol::MutationOutcome<AviDiff> {
     let outcome = <AviMutation as Mutation<AviSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -170,12 +152,6 @@ mod tests;
 //#endregion 🔖️Tests
 
 //#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `📸️set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
-/// directory).
-#[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🔑️promotes/🦀️.rs"]
-mod set_snapshot_promotes_the_second_movi_chunk_to_a_keyframe;
 //#endregion 🧪️FixtureCases
 
 #[cfg(test)]

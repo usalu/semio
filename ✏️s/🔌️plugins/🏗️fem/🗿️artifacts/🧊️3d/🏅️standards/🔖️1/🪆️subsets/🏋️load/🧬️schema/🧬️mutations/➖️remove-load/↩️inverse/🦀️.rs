@@ -11,8 +11,8 @@ pub fn inverse(payload: &RemoveLoad, base: &Fem3dSnapshot) -> Result<Vec<Fem3dMu
     base.load_cases
         .iter()
         .find(|case| case.id == payload.case_id)
-        .and_then(|case| case.loads.iter().find(|load| load_id(load) == payload.load_id).cloned())
-        .map(|load| vec![Fem3dMutation::AddLoad(add_load::AddLoad { case_id: payload.case_id.clone(), load: Box::new(load) })])
+        .and_then(|case| case.loads.iter().position(|load| load_id(load) == payload.load_id).map(|at| (at, case.loads[at].clone())))
+        .map(|(at, load)| vec![Fem3dMutation::AddLoad(add_load::AddLoad { case_id: payload.case_id.clone(), load: Box::new(load), index: Some(at) })])
         .unwrap_or_default()
 
     })())

@@ -1,14 +1,10 @@
 use super::ChangeMu;
-use crate::diff::En1996WallList;
 use crate::{En1996Diff, En1996Snapshot};
+use crate::diff::{En1996WallDelta, En1996WallPatch};
 pub fn diff(payload: &ChangeMu, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
-    let diff = {
-        if payload.index >= base.walls.len() {
-            return protocol::MutationOutcome::fatal("mutation.invariant", String::from("Invalid wall index."), Vec::<String>::new());
-        }
-        let mut walls = base.walls.clone();
-        walls[payload.index].mu = payload.new_mu;
-        En1996Diff { walls: Some(En1996WallList { values: walls }), ..Default::default() }
-    };
-    protocol::MutationOutcome::new(diff)
+    if payload.index >= base.walls.len() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", String::from("Invalid wall index."), Vec::<String>::new());
+    }
+    let wall = &base.walls[payload.index];
+    protocol::MutationOutcome::new(En1996Diff { walls: En1996WallDelta::modification(&wall.id, En1996WallPatch { mu: Some(payload.new_mu), ..Default::default() }), ..Default::default() })
 }

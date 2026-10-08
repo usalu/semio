@@ -1,0 +1,8 @@
+{
+  "mutation": "setEntityArg",
+  "id": 1,
+  "argIndex": 1,
+  "value": {
+    "string": "Capsule Unit A"
+  }
+}

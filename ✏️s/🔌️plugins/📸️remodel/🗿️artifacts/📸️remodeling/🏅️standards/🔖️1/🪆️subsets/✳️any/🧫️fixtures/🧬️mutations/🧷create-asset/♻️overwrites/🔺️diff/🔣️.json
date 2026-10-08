@@ -1,448 +1,71 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "streams": null,
   "assets": {
-    "orbit-dsm": {
-      "childId": "remodeling-asset-ecbf340dfac06d86",
-      "target": {
-        "artifactId": "orbit-dsm-image",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "image"
+    "rows": [
+      {
+        "row": "replace",
+        "entity": {
+          "key": "orbit-frame-00",
+          "child": {
+            "childId": "remodeling-asset-0605a8d410402e0f",
+            "target": {
+              "artifactId": "orbit-frame-00-image",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "image"
+              }
+            }
+          }
         }
       }
-    },
-    "orbit-frame-00": {
-      "childId": "remodeling-asset-0605a8d410402e0f",
-      "target": {
-        "artifactId": "orbit-frame-00-image",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "image"
-        }
-      }
-    },
-    "orbit-frame-01": {
-      "childId": "remodeling-asset-c9ce5074a949b814",
-      "target": {
-        "artifactId": "orbit-frame-01-image",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "image"
-        }
-      }
-    },
-    "orbit-frame-02": {
-      "childId": "remodeling-asset-e6e19e89d3320aa7",
-      "target": {
-        "artifactId": "orbit-frame-02-image",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "image"
-        }
-      }
-    },
-    "orbit-frame-03": {
-      "childId": "remodeling-asset-57eae0612a914a1d",
-      "target": {
-        "artifactId": "orbit-frame-03-image",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "image"
-        }
-      }
-    },
-    "orbit-frame-04": {
-      "childId": "remodeling-asset-d4c82c1242643297",
-      "target": {
-        "artifactId": "orbit-frame-04-image",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "image"
-        }
-      }
-    },
-    "orbit-frame-05": {
-      "childId": "remodeling-asset-05c98ef601003277",
-      "target": {
-        "artifactId": "orbit-frame-05-image",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "image"
-        }
-      }
-    },
-    "orbit-frame-06": {
-      "childId": "remodeling-asset-46a0165861c691ec",
-      "target": {
-        "artifactId": "orbit-frame-06-image",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "image"
-        }
-      }
-    },
-    "orbit-frame-07": {
-      "childId": "remodeling-asset-9051c89a0cde8a83",
-      "target": {
-        "artifactId": "orbit-frame-07-image",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "image"
-        }
-      }
-    },
-    "orbit-frame-08": {
-      "childId": "remodeling-asset-6b399f4b66f9b650",
-      "target": {
-        "artifactId": "orbit-frame-08-image",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "image"
-        }
-      }
-    },
-    "orbit-frame-09": {
-      "childId": "remodeling-asset-013cae8e196405b2",
-      "target": {
-        "artifactId": "orbit-frame-09-image",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "image"
-        }
-      }
-    },
-    "orbit-orphan": {
-      "childId": "remodeling-asset-92c03cc2233e34dc",
-      "target": {
-        "artifactId": "orbit-orphan-image",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "image"
-        }
-      }
-    }
+    ]
   },
   "durableArtifacts": {
-    "remodeling-asset-013cae8e196405b2": {
-      "kind": "image",
-      "mime": "image/png",
-      "width": 320,
-      "height": 240,
-      "chunks": [
-        [
-          111,
-          114,
-          98,
-          105,
-          116,
-          45,
-          102,
-          114,
-          97,
-          109,
-          101,
-          45,
-          48,
-          57
+    "rows": [
+      {
+        "row": "truncate",
+        "id": "remodeling-asset-b5e857b335c98470",
+        "from": "0"
+      },
+      {
+        "row": "append",
+        "id": "remodeling-asset-0605a8d410402e0f",
+        "header": {
+          "kind": "image",
+          "mime": "image/png",
+          "width": 320,
+          "height": 240
+        },
+        "chunks": [
+          [
+            111,
+            114,
+            98,
+            105,
+            116,
+            45,
+            102,
+            114,
+            97,
+            109,
+            101,
+            45,
+            48,
+            48,
+            45,
+            114,
+            101,
+            115,
+            99,
+            97,
+            110
+          ]
         ]
-      ]
-    },
-    "remodeling-asset-05c98ef601003277": {
-      "kind": "image",
-      "mime": "image/png",
-      "width": 320,
-      "height": 240,
-      "chunks": [
-        [
-          111,
-          114,
-          98,
-          105,
-          116,
-          45,
-          102,
-          114,
-          97,
-          109,
-          101,
-          45,
-          48,
-          53
-        ]
-      ]
-    },
-    "remodeling-asset-0605a8d410402e0f": {
-      "kind": "image",
-      "mime": "image/png",
-      "width": 320,
-      "height": 240,
-      "chunks": [
-        [
-          111,
-          114,
-          98,
-          105,
-          116,
-          45,
-          102,
-          114,
-          97,
-          109,
-          101,
-          45,
-          48,
-          48,
-          45,
-          114,
-          101,
-          115,
-          99,
-          97,
-          110
-        ]
-      ]
-    },
-    "remodeling-asset-46a0165861c691ec": {
-      "kind": "image",
-      "mime": "image/png",
-      "width": 320,
-      "height": 240,
-      "chunks": [
-        [
-          111,
-          114,
-          98,
-          105,
-          116,
-          45,
-          102,
-          114,
-          97,
-          109,
-          101,
-          45,
-          48,
-          54
-        ]
-      ]
-    },
-    "remodeling-asset-57eae0612a914a1d": {
-      "kind": "image",
-      "mime": "image/png",
-      "width": 320,
-      "height": 240,
-      "chunks": [
-        [
-          111,
-          114,
-          98,
-          105,
-          116,
-          45,
-          102,
-          114,
-          97,
-          109,
-          101,
-          45,
-          48,
-          51
-        ]
-      ]
-    },
-    "remodeling-asset-6b399f4b66f9b650": {
-      "kind": "image",
-      "mime": "image/png",
-      "width": 320,
-      "height": 240,
-      "chunks": [
-        [
-          111,
-          114,
-          98,
-          105,
-          116,
-          45,
-          102,
-          114,
-          97,
-          109,
-          101,
-          45,
-          48,
-          56
-        ]
-      ]
-    },
-    "remodeling-asset-9051c89a0cde8a83": {
-      "kind": "image",
-      "mime": "image/png",
-      "width": 320,
-      "height": 240,
-      "chunks": [
-        [
-          111,
-          114,
-          98,
-          105,
-          116,
-          45,
-          102,
-          114,
-          97,
-          109,
-          101,
-          45,
-          48,
-          55
-        ]
-      ]
-    },
-    "remodeling-asset-92c03cc2233e34dc": {
-      "kind": "image",
-      "mime": "image/png",
-      "width": 320,
-      "height": 240,
-      "chunks": [
-        [
-          111,
-          114,
-          98,
-          105,
-          116,
-          45,
-          99,
-          97,
-          108,
-          105,
-          98,
-          114,
-          97,
-          116,
-          105,
-          111,
-          110,
-          45,
-          116,
-          97,
-          114,
-          103,
-          101,
-          116
-        ]
-      ]
-    },
-    "remodeling-asset-c9ce5074a949b814": {
-      "kind": "image",
-      "mime": "image/png",
-      "width": 320,
-      "height": 240,
-      "chunks": [
-        [
-          111,
-          114,
-          98,
-          105,
-          116,
-          45,
-          102,
-          114,
-          97,
-          109,
-          101,
-          45,
-          48,
-          49
-        ]
-      ]
-    },
-    "remodeling-asset-d4c82c1242643297": {
-      "kind": "image",
-      "mime": "image/png",
-      "width": 320,
-      "height": 240,
-      "chunks": [
-        [
-          111,
-          114,
-          98,
-          105,
-          116,
-          45,
-          102,
-          114,
-          97,
-          109,
-          101,
-          45,
-          48,
-          52
-        ]
-      ]
-    },
-    "remodeling-asset-e6e19e89d3320aa7": {
-      "kind": "image",
-      "mime": "image/png",
-      "width": 320,
-      "height": 240,
-      "chunks": [
-        [
-          111,
-          114,
-          98,
-          105,
-          116,
-          45,
-          102,
-          114,
-          97,
-          109,
-          101,
-          45,
-          48,
-          50
-        ]
-      ]
-    },
-    "remodeling-asset-ecbf340dfac06d86": {
-      "kind": "image",
-      "mime": "image/tiff",
-      "width": 512,
-      "height": 512,
-      "chunks": [
-        [
-          111,
-          114,
-          98,
-          105,
-          116,
-          45,
-          100,
-          115,
-          109,
-          45,
-          116,
-          105,
-          108,
-          101
-        ]
-      ]
-    }
+      }
+    ]
   },
   "calibration": null,
   "params": null,

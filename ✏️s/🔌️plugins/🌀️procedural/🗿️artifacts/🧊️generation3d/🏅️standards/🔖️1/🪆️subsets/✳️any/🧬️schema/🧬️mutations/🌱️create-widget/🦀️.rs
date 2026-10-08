@@ -8,7 +8,7 @@ use semio_framework_artifact_flow_flow::Widget;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️CreateWidget
 /// ➕ Full initial payload for a new widget, placed at `index` if no widget with the same id
-/// already exists (upsert-by-id, matching `apply_widgets_diff`'s own dedupe rule).
+/// already exists (upsert-by-id, matching the widgets delta's own dedupe rule).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]

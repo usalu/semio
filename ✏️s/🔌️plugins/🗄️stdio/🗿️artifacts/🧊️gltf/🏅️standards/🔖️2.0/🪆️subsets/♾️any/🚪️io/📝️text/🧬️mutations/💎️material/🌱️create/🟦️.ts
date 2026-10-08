@@ -3,8 +3,8 @@ import type {GltfCreateMaterialPayload,CreateMaterialMutation} from "../../../..
 export type * from "../../../../../🧬️schema/🧬️mutations/💎️material/🌱️create/🟦️.ts";
 /** 🌱️ `create-material` wire twin: the flat `Apply` payload `GltfCreateMaterialPayload` and the phase wire `CreateMaterialMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
-import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireIndex, gltfWireObject, gltfWireRequired, gltfWireOptional, parseGltfMaterial } from "../../../📸️snapshot/🔣️json/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
-export const parseGltfCreateMaterialPayload = gltfWireObject<GltfCreateMaterialPayload>({ position: gltfWireRequired(gltfWireIndex) });
-export const parseCreateMaterialMutation = gltfWirePhase(parseGltfCreateMaterialPayload, parseGltfDiff);
+export const parseGltfCreateMaterialPayload = gltfWireObject<GltfCreateMaterialPayload>({ position: gltfWireRequired(gltfWireIndex), material: gltfWireOptional(parseGltfMaterial) });
+export const parseCreateMaterialMutation = gltfWireApplyPhase(parseGltfCreateMaterialPayload);

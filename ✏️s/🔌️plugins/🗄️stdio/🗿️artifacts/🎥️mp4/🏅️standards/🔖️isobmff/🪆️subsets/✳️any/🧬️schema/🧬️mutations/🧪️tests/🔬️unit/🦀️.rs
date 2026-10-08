@@ -38,7 +38,7 @@ async fn mutation_diff_law_and_inverse_law_hold_for_every_variant() {
     for m in variants {
         let mut snap = base.clone();
         let diff = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(&m, &snap);
-        let expected = diff.diff().apply(&snap).unwrap();
+        let expected = protocol::apply_diff(diff.diff(), &snap).unwrap();
         let returned = apply_mp4_mutation(&mut snap, &m);
         assert_eq!(returned, diff, "apply_mp4_mutation must return the SAME diff as Mutation::diff for {m:?}");
         assert_eq!(snap, expected, "mutation_diff_law failed for {m:?}");
@@ -59,7 +59,7 @@ async fn remove_track_then_insert_track_round_trips() {
     let mut snap = base.clone();
     let diff = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(&m, &snap);
     apply_mp4_mutation(&mut snap, &m);
-    assert_eq!(snap, diff.diff().apply(&base).unwrap());
+    assert_eq!(snap, protocol::apply_diff(diff.diff(), &base).unwrap());
     assert_eq!(snap.tracks.len(), 1);
     let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     let mut round = snap.clone();
@@ -82,28 +82,11 @@ async fn remove_sample_then_insert_sample_round_trips() {
     assert_eq!(round, base);
 }
 
-#[semio_framework_async_macros::async_test]
-async fn set_snapshot_still_works_as_a_full_replace() {
-    let base = base_snapshot().await;
-    let mut next = base.clone();
-    next.ftyp.major_brand = "isom-mutated".into();
-    let mutation = Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: next.clone() });
-    let diff = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(&mutation, &base);
-    assert_eq!(diff.diff().apply(&base).unwrap(), next);
-    let inv = <Mp4Mutation as Mutation<Mp4Snapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
-    let mut round = next.clone();
-    apply_mp4_mutation(&mut round, &inv[0]);
-    assert_eq!(round, base);
-}
-
 /// 🧪️ op_text_binary_roundtrip_law
 #[semio_framework_async_macros::async_test]
 async fn op_text_binary_roundtrip_law() {
     let base = base_snapshot().await;
-    let patch = semio_s_artifact_stdio_contract::editing::prepare_snapshot_patch(&base, &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/movie/title".into(), value: semio_framework_value::DslValue::String("Edited".into()) }).unwrap();
     for m in [
-        Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-        Mp4Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }),
         Mp4Mutation::SetFtyp(set_ftyp::SetFtyp { ftyp: base.ftyp.clone() }),
         Mp4Mutation::RemoveTrack(remove_track::RemoveTrack { index: 0 }),
         Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index: 0, index: 0, sync: true }),
@@ -120,10 +103,9 @@ async fn op_text_binary_roundtrip_law() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn text_descriptor_recognizes_patch_snapshot_printer_output() {
+async fn text_descriptor_recognizes_set_movie_printer_output() {
     let base = base_snapshot().await;
-    let patch = semio_s_artifact_stdio_contract::editing::prepare_snapshot_patch(&base, &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/movie/title".into(), value: semio_framework_value::DslValue::String("Edited".into()) }).unwrap();
-    let mutation = Mp4Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch });
+    let mutation = Mp4Mutation::SetMovie(set_movie::SetMovie { movie: base.movie.clone() });
     let grammar = semio_framework_dsl::parse_grammar(crate::standards::isobmff::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO).expect("parse MP4 mutation grammar");
     let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
     let printed = mutation.print_op();
@@ -137,9 +119,8 @@ async fn text_descriptor_recognizes_patch_snapshot_printer_output() {
 async fn kinds_const_matches_enum_variants_in_declaration_order() {
     let base = base_snapshot().await;
     let one_per_variant = vec![
-        Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-        Mp4Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::prepare_snapshot_patch(&base, &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent::SetValue { path: "/movie/title".into(), value: semio_framework_value::DslValue::String("Edited".into()) }).unwrap() }),
         Mp4Mutation::SetFtyp(set_ftyp::SetFtyp { ftyp: base.ftyp.clone() }),
+        Mp4Mutation::SetMovie(set_movie::SetMovie { movie: base.movie.clone() }),
         Mp4Mutation::InsertTrack(insert_track::InsertTrack { index: 1, track: base.tracks[0].clone() }),
         Mp4Mutation::RemoveTrack(remove_track::RemoveTrack { index: 0 }),
         Mp4Mutation::SetTrackDimensions(set_track_dimensions::SetTrackDimensions { track_index: 0, width: 128, height: 128 }),
@@ -157,13 +138,12 @@ async fn kinds_const_matches_enum_variants_in_declaration_order() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn exact_fixture_no_mutation_inverse_and_set_snapshot_binary_codec_preserve_source() {
+async fn exact_fixture_no_mutation_inverse_and_set_movie_binary_codec_preserve_source() {
     let bytes = include_bytes!("../../../../🧫️fixtures/🎬️.mp4").to_vec();
     let base = crate::standards::isobmff::subsets::any::io::decode_mp4(&bytes).expect("decode exact MP4 fixture");
 
     let mut unchanged = base.clone();
-    let snapshot = unchanged.clone();
-    apply_mp4_mutation(&mut unchanged, &Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }));
+    apply_mp4_mutation(&mut unchanged, &Mp4Mutation::SetMovie(set_movie::SetMovie { movie: base.movie.clone() }));
     assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&unchanged), bytes);
 
     let mutation = Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index: 0, index: 0, sync: !base.tracks[0].samples[0].sync });
@@ -173,9 +153,35 @@ async fn exact_fixture_no_mutation_inverse_and_set_snapshot_binary_codec_preserv
     apply_mp4_mutation(&mut round_trip, &inverse[0]);
     assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&round_trip), bytes);
 
-    let set_snapshot = Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base });
-    let encoded = set_snapshot.encode_op().expect("encode exact source set-snapshot");
-    let decoded = Mp4Mutation::decode_op(&encoded).expect("decode exact source set-snapshot");
-    let Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) = decoded else { panic!("expected set-snapshot") };
-    assert_eq!(crate::standards::isobmff::subsets::any::io::encode_mp4(&snapshot), bytes);
+    let set_movie = Mp4Mutation::SetMovie(set_movie::SetMovie { movie: base.movie.clone() });
+    let encoded = set_movie.encode_op().expect("encode exact source set-movie");
+    let decoded = Mp4Mutation::decode_op(&encoded).expect("decode exact source set-movie");
+    assert_eq!(decoded, set_movie);
+}
+
+/// ⚖️ `mp4_mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff; the track and sample
+/// collections are exercised with a MIDDLE row so the inverse must restore the original position.
+#[semio_framework_async_macros::async_test]
+async fn mp4_mutation_inverse_sum_law_holds_for_every_leaf() {
+    let mut base = base_snapshot().await;
+    let sample = |n: u8| Mp4Sample { data: vec![n], duration: 33, cts_offset: 0, sync: n % 2 == 0 };
+    base.tracks[0].samples = vec![sample(1), sample(2), sample(3)];
+    base.tracks[0].chunk_sample_counts = vec![3];
+    let second = base.tracks[0].clone();
+    let third = Mp4Track { track_id: 3, ..base.tracks[0].clone() };
+    base.tracks.push(Mp4Track { track_id: 2, ..second });
+    base.tracks.push(third);
+    for m in [
+        Mp4Mutation::SetFtyp(set_ftyp::SetFtyp { ftyp: Mp4Ftyp { major_brand: "mp42".into(), minor_version: 1, compatible_brands: vec![] } }),
+        Mp4Mutation::SetMovie(set_movie::SetMovie { movie: Mp4Movie { title: Some("Two".into()), ..base.movie.clone() } }),
+        Mp4Mutation::InsertTrack(insert_track::InsertTrack { index: 1, track: Mp4Track { track_id: 9, ..base.tracks[0].clone() } }),
+        Mp4Mutation::RemoveTrack(remove_track::RemoveTrack { index: 1 }),
+        Mp4Mutation::SetTrackDimensions(set_track_dimensions::SetTrackDimensions { track_index: 1, width: 128, height: 96 }),
+        Mp4Mutation::SetTrackCodec(set_track_codec::SetTrackCodec { track_index: 1, codec: Mp4Codec::avc(vec![vec![0x67, 1]], vec![vec![0x68, 1]], 4, None) }),
+        Mp4Mutation::InsertSample(insert_sample::InsertSample { track_index: 1, index: 1, sample: sample(9) }),
+        Mp4Mutation::RemoveSample(remove_sample::RemoveSample { track_index: 1, index: 1 }),
+        Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index: 1, index: 1, sync: true }),
+    ] {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&m, &base).await;
+    }
 }

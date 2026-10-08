@@ -437,10 +437,10 @@ impl ArtifactOwnedToolJobFactory for SourcingCurationBoundedCommandJobFactory {
     ];
 }
 
-fn sourcing_grid_window_mutation(command: &SourcingCurationCommand, config: &grid_config::GridWindowConfig) -> Option<GridWindowConfigMutation> {
+fn sourcing_grid_window_mutation(command: &SourcingCurationCommand, _config: &grid_config::GridWindowConfig) -> Option<GridWindowConfigMutation> {
     match command {
         SourcingCurationCommand::SetGridInstanceDisplay(payload) if !payload.value.is_empty() => {
-            Some(GridWindowConfigMutation::Snapshot { config: grid_config::next_config(config, &payload.value) })
+            Some(GridWindowConfigMutation::SetInstanceDisplay { instance_display: payload.value.clone() })
         }
         _ => None,
     }
@@ -540,7 +540,7 @@ pub(crate) fn sourcing_curation_config_mutation_retained_bytes(mutation: &Sourci
         return sourcing_curation_config_retained_bytes(1, json.len());
     }
     let (items, retained_bytes) = match mutation {
-        SourcingCurationConfigMutation::Snapshot { .. } | SourcingCurationConfigMutation::SetContributions { .. } => return Err("Sourcing Config preparation rejects a non-retained mutation".into()),
+        SourcingCurationConfigMutation::SetContributions { .. } => return Err("Sourcing Config preparation rejects a non-retained mutation".into()),
         SourcingCurationConfigMutation::SetFilterQuery { value } => (1, value.len()),
         SourcingCurationConfigMutation::SetFilterModules { module_ids } => {
             if module_ids.len() > SOURCING_CURATION_CONFIG_STORE_MAXIMUM_ITEMS { return Err("Sourcing Config module filter exceeds its retained item envelope".into()); }
@@ -735,7 +735,7 @@ fn prepare_sourcing_curation_document(base: &CurationSnapshot, mutation: Sourcin
         return Err(format!("Sourcing Curation mutation was refused by its own vocabulary: {}", message.message));
     }
     let inverse = protocol::Mutation::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
-    let post = protocol::MutationDiff::apply(outcome.diff(), base).map_err(|error| format!("Sourcing Curation mutation could not apply onto its exact base: {}", error.message))?;
+    let post = protocol::apply_diff(outcome.diff(), base).map_err(|error| format!("Sourcing Curation mutation could not apply onto its exact base: {}", error.message))?;
     sourcing_curation_document_bytes(&post)?;
     Ok((post, inverse, mutation))
 }

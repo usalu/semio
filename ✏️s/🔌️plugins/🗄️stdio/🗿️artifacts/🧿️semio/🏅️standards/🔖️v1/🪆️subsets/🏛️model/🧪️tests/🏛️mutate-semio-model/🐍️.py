@@ -57,7 +57,7 @@ import json
 import math
 import struct
 
-from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
+from semio_repo_test import Adapter, Context, Outcome, digest
 
 # endregion 🔖️Imports
 
@@ -668,9 +668,6 @@ def pack_bytes(document: dict) -> bytes:
 
 # region 🔖️Mutations
 KINDS = (
-    "no-mutation",
-    "set-snapshot",
-    "patch-snapshot",
     "insert-spatial-node",
     "remove-spatial-node",
     "set-spatial-node",
@@ -764,12 +761,6 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     the removed member."""
     result = clone(document)
     tag = tagged(mutation)
-    if tag == "noMutation":
-        return result
-    if tag == "patchSnapshot":
-        return patched_snapshot(document, mutation["patch"])
-    if tag == "setSnapshot":
-        return clone(mutation["snapshot"])
     if tag in RELATIVE_PLACEMENT:
         motion = placement_motion(mutation)
         addressed = [element for element in result["elements"] if element["id"] in mutation["targets"]]
@@ -783,7 +774,7 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
         node = clone(mutation["node"])
         if any(existing["id"] == node["id"] for existing in result["spatial"]):
             raise AssertionError("insertSpatialNode would duplicate the existing node %r" % node["id"])
-        result["spatial"].append(node)
+        result["spatial"].insert(min(mutation["at"], len(result["spatial"])) if "at" in mutation else len(result["spatial"]), node)
         return result
     if tag == "removeSpatialNode":
         del result["spatial"][index_of(result["spatial"], mutation["id"], tag, "spatial node")]
@@ -800,7 +791,7 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
         element = clone(mutation["element"])
         if any(existing["id"] == element["id"] for existing in result["elements"]):
             raise AssertionError("insertElement would duplicate the existing element %r" % element["id"])
-        result["elements"].append(element)
+        result["elements"].insert(min(mutation["at"], len(result["elements"])) if "at" in mutation else len(result["elements"]), element)
         return result
     if tag == "removeElement":
         del result["elements"][index_of(result["elements"], mutation["id"], tag, "element")]
@@ -817,7 +808,7 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
         relation = clone(mutation["relation"])
         if any(existing["id"] == relation["id"] for existing in result["relations"]):
             raise AssertionError("insertRelation would duplicate the existing relation %r" % relation["id"])
-        result["relations"].append(relation)
+        result["relations"].insert(min(mutation["at"], len(result["relations"])) if "at" in mutation else len(result["relations"]), relation)
         return result
     if tag == "removeRelation":
         del result["relations"][index_of(result["relations"], mutation["id"], tag, "relation")]
@@ -838,12 +829,6 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     implementation, and the reason the committed vectors and this case's `remove-*` parameters
     address the last member of their collection."""
     tag = tagged(mutation)
-    if tag == "noMutation":
-        return []
-    if tag == "patchSnapshot":
-        return [{"mutation": "setSnapshot", "snapshot": clone(document)}]
-    if tag == "setSnapshot":
-        return [{"mutation": "setSnapshot", "snapshot": clone(document)}]
     if tag in RELATIVE_PLACEMENT:
         if placement_motion(mutation) is None:
             return []
@@ -851,7 +836,7 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     if tag == "insertSpatialNode":
         return [{"mutation": "removeSpatialNode", "id": mutation["node"]["id"]}]
     if tag == "removeSpatialNode":
-        return [{"mutation": "insertSpatialNode", "node": clone(document["spatial"][index_of(document["spatial"], mutation["id"], tag, "spatial node")])}]
+        return [{"mutation": "insertSpatialNode", "node": clone(document["spatial"][index_of(document["spatial"], mutation["id"], tag, "spatial node")]), "at": index_of(document["spatial"], mutation["id"], tag, "spatial node")}]
     if tag == "setSpatialNode":
         node = document["spatial"][index_of(document["spatial"], mutation["id"], tag, "spatial node")]
         undo = {"mutation": "setSpatialNode", "id": mutation["id"]}
@@ -864,7 +849,7 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     if tag == "insertElement":
         return [{"mutation": "removeElement", "id": mutation["element"]["id"]}]
     if tag == "removeElement":
-        return [{"mutation": "insertElement", "element": clone(document["elements"][index_of(document["elements"], mutation["id"], tag, "element")])}]
+        return [{"mutation": "insertElement", "element": clone(document["elements"][index_of(document["elements"], mutation["id"], tag, "element")]), "at": index_of(document["elements"], mutation["id"], tag, "element")}]
     if tag == "setElement":
         element = document["elements"][index_of(document["elements"], mutation["id"], tag, "element")]
         undo = {"mutation": "setElement", "id": mutation["id"]}
@@ -877,7 +862,7 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     if tag == "insertRelation":
         return [{"mutation": "removeRelation", "id": mutation["relation"]["id"]}]
     if tag == "removeRelation":
-        return [{"mutation": "insertRelation", "relation": clone(document["relations"][index_of(document["relations"], mutation["id"], tag, "relation")])}]
+        return [{"mutation": "insertRelation", "relation": clone(document["relations"][index_of(document["relations"], mutation["id"], tag, "relation")]), "at": index_of(document["relations"], mutation["id"], tag, "relation")}]
     relation = document["relations"][index_of(document["relations"], mutation["id"], tag, "relation")]
     undo = {"mutation": "setRelation", "id": mutation["id"]}
     for key in ("kind", "from", "to"):
@@ -1012,7 +997,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
 def adapter() -> Adapter:
     """🧭️ Registration entry point the host calls. Handlers are registered under the Scenario Outline base
     ids, which the host resolves for every Examples row, and plain scenarios under their own ids."""
-    return Adapter("python").oracle("mutate", mutate).oracle("no-mutation-baseline-mutate", mutate).oracle("inverse", inverse).oracle("no-mutation-baseline-inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
+    return Adapter("python").oracle("mutate", mutate).oracle("inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

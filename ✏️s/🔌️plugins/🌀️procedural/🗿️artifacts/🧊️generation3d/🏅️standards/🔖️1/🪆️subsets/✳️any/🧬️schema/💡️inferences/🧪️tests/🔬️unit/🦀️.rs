@@ -27,7 +27,7 @@ fn sample_snapshot() -> Generation3dSnapshot {
 #[test]
 fn inference_determinism_law() {
     let snapshot = sample_snapshot();
-    assert_eq!(Generation3dInference::infer(&snapshot).expect("valid materialized inference fixture"), Generation3dInference::infer(&snapshot).expect("valid materialized inference fixture"));
+    assert_eq!(Generation3dInference::infer(&crate::test_serial::geometry_input(&snapshot)).expect("valid materialized inference fixture"), Generation3dInference::infer(&crate::test_serial::geometry_input(&snapshot)).expect("valid materialized inference fixture"));
 }
 
 /// 💡️ LAW (totality on the identity element): the EMPTY document infers an empty topology — no
@@ -42,8 +42,8 @@ fn inference_determinism_law() {
 fn inference_of_the_empty_document_is_empty_and_trivially_cycle_free() {
     let empty = crate::standards::v1::subsets::any::schema::empty_generation3d_snapshot();
     assert_eq!(
-        Generation3dInference::infer(&empty).expect("valid materialized inference fixture"),
-        Generation3dInference { topology: Generation3dTopology { node_count: 0, edge_count: 0, topo_order: Vec::new(), depth: 0, cycle_free: true } }
+        Generation3dInference::infer(&crate::test_serial::geometry_input(&empty)).expect("valid materialized inference fixture"),
+        Generation3dInference { topology: Generation3dTopology { node_count: 0, edge_count: 0, topo_order: Vec::new(), depth: 0, cycle_free: true }, geometry: Default::default() }
     );
     empty.retire_cold();
 }
@@ -51,7 +51,7 @@ fn inference_of_the_empty_document_is_empty_and_trivially_cycle_free() {
 #[test]
 fn topology_matches_the_linear_chain() {
     let snapshot = sample_snapshot();
-    let inferred = Generation3dInference::infer(&snapshot).expect("valid materialized inference fixture");
+    let inferred = Generation3dInference::infer(&crate::test_serial::geometry_input(&snapshot)).expect("valid materialized inference fixture");
     assert_eq!(inferred.topology.node_count, 3);
     assert_eq!(inferred.topology.edge_count, 2);
     assert!(inferred.topology.cycle_free);

@@ -5,7 +5,7 @@
 use super::*;
 use crate::mutations::{apply_raster_mutation, inverse_raster_mutation};
 use crate::{RasterSnapshot, RASTER_DOCUMENT_SCHEMA};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 //#region 🧫️Cases
 fn base(locked: bool) -> RasterSnapshot {
@@ -67,7 +67,7 @@ fn outcome_json(outcome: &protocol::MutationOutcome<RasterDiff>) -> serde_json::
 /// 🖨️ The five files of one scenario as this leaf computes them: before, after, mutation, diff, outcome.
 fn quintet(before: &RasterSnapshot, mutation: &RasterMutation) -> [(&'static str, serde_json::Value); 5] {
     let outcome = mutation.diff(before);
-    let after = MutationDiff::apply(outcome.diff(), before).expect("every committed stroke diff applies");
+    let after = protocol::apply_diff(outcome.diff(), before).expect("every committed stroke diff applies");
     let files = [
         ("📸️snapshot/⬅️before/🔣️.json", json(before)),
         ("📸️snapshot/➡️after/🔣️.json", json(&after)),

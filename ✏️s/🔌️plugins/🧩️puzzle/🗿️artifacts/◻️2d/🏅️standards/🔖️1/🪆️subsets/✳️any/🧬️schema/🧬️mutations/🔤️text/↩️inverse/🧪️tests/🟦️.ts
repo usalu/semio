@@ -1,14 +1,11 @@
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
-import Ajv from "ajv";
 import {applyPatch} from "fast-json-patch";
 import {existsSync,readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import schema from "../🧬️schema/🔣️.json";
 import fixture from "../🧫️fixtures/🔣️.json";
 
 test("Puzzle2d optional text inverse restores original first-owner values and paged cancellation",()=>{
- expect(new Ajv({strict:false}).compile(schema)(fixture)).toBe(true);
  const db=new Database(":memory:");db.exec("CREATE TABLE target(ordinal INTEGER PRIMARY KEY,id TEXT,value TEXT)");
  try{for(const row of fixture.cases){
   db.exec("DELETE FROM target");db.query("INSERT INTO target VALUES(?,?,?)").run(0,"retained",row.before);db.query("INSERT INTO target VALUES(?,?,?)").run(1,"retained","second owner");

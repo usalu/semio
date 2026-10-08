@@ -2410,7 +2410,7 @@ pub(crate) fn fill_run_ops(object: &EngineSceneObject, attraction: &AttractionPr
         document.label = Some(puzzle3d_next_object_label(peers, catalog_snapshot, kind_id));
     }
     let create = encode_op(&create_object(document, None)).ok()?;
-    let connect = encode_op(&connect_vortices(attraction.id.clone(), attraction.attracting.clone(), attraction.attracted.clone(), attraction.gap, attraction.shift, attraction.rise, attraction.rotation, attraction.turn, attraction.tilt, attraction.x, attraction.y)).ok()?;
+    let connect = encode_op(&connect_vortices(attraction.id.clone(), attraction.attracting.clone(), attraction.attracted.clone(), attraction.gap, attraction.shift, attraction.rise, attraction.rotation, attraction.turn, attraction.tilt, attraction.x, attraction.y, None)).ok()?;
     Some([create, connect])
 }
 

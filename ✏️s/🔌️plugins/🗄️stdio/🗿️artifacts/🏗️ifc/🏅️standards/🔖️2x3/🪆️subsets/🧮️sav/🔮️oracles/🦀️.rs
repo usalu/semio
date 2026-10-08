@@ -8,7 +8,6 @@
 //!
 //! | kind | production rule it addresses |
 //! |---|---|
-//! | `set-snapshot` | `CODE_FILE_SCHEMA` — the document must declare `IFC2X3` |
 //! | `set-view-definition` | `CODE_VIEW_DEFINITION` — `FILE_DESCRIPTION` must name `StructuralAnalysisView` |
 //! | `set-analysis-model` | `CODE_NO_ANALYSIS_MODEL` — at least one `IfcStructuralAnalysisModel` (hard) |
 //! | `set-group-assignment` | `CODE_NO_GROUP_ASSIGNMENT` — members must relate to the model through `IfcRelAssignsToGroup` |
@@ -93,7 +92,7 @@ mod oracles {
                     Parameter::NotProvided,
                     Parameter::NotProvided,
                 ];
-                part21::upsert_simple(exchange, id, ANALYSIS_MODEL, args)
+                part21::upsert_simple_at(exchange, id, ANALYSIS_MODEL, args, part21::opt_usize_field(params, "index")?)
             }
         }
     }
@@ -115,7 +114,7 @@ mod oracles {
                     Parameter::NotProvided,
                     Parameter::NotProvided,
                 ];
-                part21::upsert_simple(exchange, id, LOAD_GROUP, args)
+                part21::upsert_simple_at(exchange, id, LOAD_GROUP, args, part21::opt_usize_field(params, "index")?)
             }
         }
     }
@@ -148,7 +147,7 @@ mod oracles {
                     Parameter::NotProvided,
                     Parameter::Ref(Name::Entity(relating)),
                 ];
-                part21::upsert_simple(exchange, id, GROUP_ASSIGNMENT, args)
+                part21::upsert_simple_at(exchange, id, GROUP_ASSIGNMENT, args, part21::opt_usize_field(params, "index")?)
             }
         }
     }
@@ -157,7 +156,6 @@ mod oracles {
     /// error, never a silent no-op.
     fn apply(exchange: &mut Exchange, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "set-snapshot" => part21::replace_with_snapshot(exchange, params.get("snapshot").ok_or("set-snapshot carries `snapshot`")?),
             "set-view-definition" => part21::set_view_definition(exchange, &part21::str_field(params, "view")?),
             "set-analysis-model" => set_analysis_model(exchange, params),
             "set-load-group" => set_load_group(exchange, params),
@@ -177,10 +175,6 @@ mod oracles {
         Ok(part21::write(&part21::read(input)?))
     }
 
-    /// 📸️ The untouched document as the `set-snapshot` payload that restores it.
-    pub fn snapshot_payload(input: &[u8]) -> Result<Json, String> {
-        Ok(part21::snapshot_payload(&part21::read(input)?))
-    }
     //#endregion 🔖️Apply
 
     //#region 🔖️Projection
@@ -239,12 +233,6 @@ pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
     oracles::round_trip(input)
 }
 
-/// 📸️ The untouched artifact as the `set-snapshot` wire payload that restores it — the inverse of `set-snapshot`.
-#[cfg(feature = "oracles")]
-pub fn oracle_snapshot_payload(input: &[u8]) -> Result<Json, String> {
-    oracles::snapshot_payload(input)
-}
-
 /// 👁️ This subset's own semantic projection, read back through the independent `ruststep` parser.
 #[cfg(feature = "oracles")]
 pub fn project_ifc_2x3_sav(bytes: &[u8]) -> Result<Json, String> {
@@ -259,11 +247,6 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 
 #[cfg(not(feature = "oracles"))]
 pub fn oracle_round_trip(_input: &[u8]) -> Result<Vec<u8>, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
-
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_snapshot_payload(_input: &[u8]) -> Result<Json, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

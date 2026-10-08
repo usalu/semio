@@ -1,8 +1,11 @@
 {
-  "artifact": null,
   "annex": null,
   "masonryClass": null,
   "designSituation": "Seismic",
   "storeys": null,
-  "walls": null
+  "walls": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

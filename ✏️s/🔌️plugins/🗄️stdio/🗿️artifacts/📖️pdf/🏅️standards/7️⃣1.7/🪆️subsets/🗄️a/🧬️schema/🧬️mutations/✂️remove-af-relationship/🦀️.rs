@@ -2,7 +2,7 @@
 
 use super::set_af_relationship::SetAfRelationship;
 use super::PdfAMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -22,16 +22,11 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveAfRelationship {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        support::file_spec_named(base, &self.file_name)
-            .and_then(|id| support::object(base, id))
-            .and_then(|value| support::dict_name(value, "AFRelationship"))
-            .map(|relationship| PdfAMutation::SetAfRelationship(SetAfRelationship { file_name: self.file_name.clone(), relationship: relationship.to_string() }))
-            .into_iter()
-            .collect()
-    
-    })())
-}
+        Ok({
+            let Some(id) = support::file_spec_named(base, &self.file_name) else { return Ok(Vec::new()) };
+            support::object(base, id).and_then(|value| support::dict_name(value, "AFRelationship")).map(|relationship| PdfAMutation::SetAfRelationship(SetAfRelationship { file_name: self.file_name.clone(), relationship: relationship.to_string(), entry_index: support::entry_position(base, id, "AFRelationship") })).into_iter().collect()
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove AF relationship from \"{}\"", self.file_name), &format!("AF-Beziehung aus \"{}\" entfernen", self.file_name))

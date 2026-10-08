@@ -1,7 +1,7 @@
 /** 🔗️ `bind-scene-root-node` wire twin: the flat `Apply` payload `GltfBindSceneRootNodePayload` and the phase wire `BindSceneRootNodeMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { type GltfApplyPhase, gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfBindSceneRootNodePayload {
   scene: bigint;
@@ -9,7 +9,7 @@ export interface GltfBindSceneRootNodePayload {
   position: bigint;
 }
 
-export type BindSceneRootNodeMutation = GltfPhase<GltfBindSceneRootNodePayload, GltfDiff>;
+export type BindSceneRootNodeMutation = GltfApplyPhase<GltfBindSceneRootNodePayload>;
 
 export const parseGltfBindSceneRootNodePayload = gltfWireObject<GltfBindSceneRootNodePayload>({ scene: gltfWireRequired(gltfWireIndex), node: gltfWireRequired(gltfWireIndex), position: gltfWireRequired(gltfWireIndex) });
-export const parseBindSceneRootNodeMutation = gltfWirePhase(parseGltfBindSceneRootNodePayload, parseGltfDiff);
+export const parseBindSceneRootNodeMutation = gltfWireApplyPhase(parseGltfBindSceneRootNodePayload);

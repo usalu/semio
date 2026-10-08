@@ -4829,7 +4829,7 @@ export function schemaFixtureIsolationDiagnostics(repoRoot: string, files: reado
   const found: SchemaDiagnostic[] = [];
   for (const rel of files) {
     if (!isFixtureOwnedPath(repoRoot, rel)) continue;
-    if (!schemaCollectionContractPath(repoRoot, rel) && (!rel.endsWith(".json") || inert.has(rel) || readSchemaDefinition(join(repoRoot, rel)) === undefined)) continue;
+    if (!schemaCollectionContractPath(repoRoot, rel) && (!rel.endsWith(".json") || inert.has(rel) || !fixtureSchemaAuthority(readJson(join(repoRoot, rel))))) continue;
     found.push(schemaDiagnostic("schema-fixture-defines-schema", `${rel} defines a schema inside a fixture or test collection; move the contract into the owning scope and bind the example to it with a schema:// target`, { path: rel }));
   }
   return found;
@@ -4838,7 +4838,29 @@ export function schemaFixtureIsolationDiagnostics(repoRoot: string, files: reado
 /** 🚧️ Contract facets below example collections cannot be declared as inert parser inputs. */
 function schemaCollectionContractPath(repoRoot: string, path: string): boolean {
   const segments = path.split("/");
-  return segments.some((segment, index) => (segment === schemaModuleDirName(repoRoot) || segment === "🛂️schema") && isFixtureOwnedPath(repoRoot, segments.slice(0, index).join("/")));
+  return segments.some((segment, index) => (segment === schemaModuleDirName(repoRoot) || segment === "🛂️schema") && isFixtureOwnedPath(repoRoot, segments.slice(0, index).join("/")))
+    || isFixtureOwnedPath(repoRoot, path) && /^(?:(?:📐️|🔣️|🧬️)?schema\.json|.+\.schema\.json)$/u.test(segments.at(-1)!);
+}
+
+/** 🧭️ Independent fixture authority recognition includes coherent marker-free schema roots. */
+function fixtureSchemaAuthority(value: unknown): boolean {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  const node = value as Record<string, unknown>;
+  if (typeof node.$schema === "string" && node.$schema.match(/^https?:\/\/json-schema\.org\//u)) return true;
+  const map = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value);
+  const schemaTypes = ["null", "boolean", "object", "array", "number", "string", "integer"];
+  if ("type" in node && !(Array.isArray(node.type) ? node.type.length > 0 && node.type.every(value => schemaTypes.includes(value)) : typeof node.type === "string" && schemaTypes.includes(node.type))) return false;
+  if ("properties" in node && (!map(node.properties) || Object.values(node.properties).some(value => typeof value !== "boolean" && (!map(value) || Object.keys(value).length > 0 && !fixtureSchemaAuthority(value) && !Object.hasOwn(value, "const") && !Array.isArray(value.enum))))) return false;
+  if ("required" in node && (!Array.isArray(node.required) || node.required.some(value => typeof value !== "string"))) return false;
+  const constraints = /^(?:enum|const|minLength|maxLength|pattern|format|minimum|maximum|exclusiveMinimum|exclusiveMaximum|multipleOf|items|additionalItems|minItems|maxItems|uniqueItems|contains|required|additionalProperties|patternProperties|propertyNames|minProperties|maxProperties|dependencies|not|if|then|else)$/u;
+  const annotation = /^(?:type|title|description|default|examples|readOnly|writeOnly|\$id|\$comment|\$schema)$/u;
+  if (typeof node.$ref === "string" || map(node.properties) || "type" in node && (Object.keys(node).some(key => constraints.test(key)) || Object.keys(node).every(key => annotation.test(key)))) return true;
+  for (const keyword of ["allOf", "anyOf", "oneOf"]) {
+    const rows = node[keyword];
+    if (Array.isArray(rows) && rows.length && rows.every(value => typeof value === "boolean" || fixtureSchemaAuthority(value))) return true;
+  }
+  for (const keyword of ["$defs", "definitions"]) if (map(node[keyword]) && Object.values(node[keyword]).some(fixtureSchemaAuthority)) return true;
+  return false;
 }
 
 /**

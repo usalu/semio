@@ -36,7 +36,7 @@ fn built_outcome() -> protocol::MutationOutcome<CurationDiff> {
 /// panel's own count of 4 and the row order untouched.
 #[semio_framework_async_macros::async_test]
 async fn sets_the_final_count_on_the_addressed_row() {
-    let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("change-curated-item-count applies to its committed before-document");
+    let applied = protocol::apply_diff(built_outcome().diff(), &before()).expect("change-curated-item-count applies to its committed before-document");
     assert_eq!(applied, expected_after(), "change-curated-item-count/raises-the-glulam-beam-count-to-20: the recounted curation differs from the committed after-snapshot");
     assert_eq!(applied.curated[0].count, 20, "change-curated-item-count/raises-the-glulam-beam-count-to-20: newCount is an absolute target, never an increment");
     assert_eq!(applied.curated[1].count, 4, "change-curated-item-count/raises-the-glulam-beam-count-to-20: the sibling pick's count must not move");
@@ -47,12 +47,12 @@ async fn sets_the_final_count_on_the_addressed_row() {
 #[semio_framework_async_macros::async_test]
 async fn recounting_to_the_base_value_restores_before() {
     let base = before();
-    let mut snapshot = protocol::MutationDiff::apply(built_outcome().diff(), &base).expect("forward change-curated-item-count applies");
+    let mut snapshot = protocol::apply_diff(built_outcome().diff(), &base).expect("forward change-curated-item-count applies");
     let inverse = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "change-curated-item-count/raises-the-glulam-beam-count-to-20: the inverse of one recount is exactly one recount back");
     for step in &inverse {
         let undo = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::diff(step, &snapshot);
-        snapshot = protocol::MutationDiff::apply(undo.diff(), &snapshot).expect("the change-curated-item-count inverse step applies");
+        snapshot = protocol::apply_diff(undo.diff(), &snapshot).expect("the change-curated-item-count inverse step applies");
     }
     assert_eq!(snapshot, base, "change-curated-item-count/raises-the-glulam-beam-count-to-20: recounting back to 12 did not restore the before-document");
 }
@@ -109,6 +109,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: CurationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-curated-item-count diff decodes");
-    let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-document");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(produced, expected_after(), "change-curated-item-count/raises-the-glulam-beam-count-to-20: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

@@ -1,11 +1,10 @@
-//! 🪜️ `set-shape-representation` — one axis of this conformance class, authored as its own mutation leaf.
-//! The class-neutral edit is performed by the shared ladder module; this file names the axis and
-//! routes to it, so each rule has ONE implementation and every class calls it.
+//! 🪜 `set-shape-representation` -- writes (at `index` when new) or deletes one `*_SHAPE_REPRESENTATION` this class admits; the instance is restored exactly at its position.
 
-use crate::standards::v_ap214::engine::ladder::ClassEdit;
+use crate::schema::diff::StepDiff;
+use crate::standards::v_ap214::engine::ladder;
 use crate::standards::v_ap214::engine::ladder::ShapeRepresentationRow;
-use crate::standards::v_ap214::subsets::cc6::schema::mutations::StepCc6Mutation;
-use crate::standards::v_ap214::subsets::cc6::schema::mutations::{class_diff, class_inverse};
+use crate::standards::v_ap214::subsets::cc6::schema::MAX_RUNG;
+use crate::standards::v_ap214::subsets::cc6::schema::mutations::{rejected, restored, StepCc6Mutation, CLASS};
 use crate::StepSnapshot;
 
 //#region 🔖️Payload
@@ -14,23 +13,32 @@ use crate::StepSnapshot;
 pub struct SetShapeRepresentation {
     pub id: u64,
     pub representation: Option<ShapeRepresentationRow>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 impl protocol::MutationKind<StepSnapshot, StepCc6Mutation> for SetShapeRepresentation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "shape-representation", kind: "set-shape-representation", record: "SetShapeRepresentation" };
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepCc6Mutation as protocol::Mutation<StepSnapshot>>::Diff> {
-        class_diff(base, &ClassEdit::Representation { id: self.id, row: self.representation.clone() })
+    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
+        let result = match &self.representation {
+            None => ladder::remove_representation_diff(base, self.id),
+            Some(row) => ladder::representation_diff(base, CLASS, MAX_RUNG, self.id, row, self.index),
+        };
+        match result {
+            Ok(diff) => protocol::MutationOutcome::new(diff),
+            Err(message) => rejected(message),
+        }
     }
+
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepCc6Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        class_inverse(base, &ClassEdit::Representation { id: self.id, row: self.representation.clone() })?
-    
-    })
-}
+        Ok(restored(ladder::restore_entity_rows(base, self.id)))
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set shape representation #{}", self.id), &format!("Formrepräsentation #{} setzen", self.id))
     }
+
     fn target(&self) -> Vec<String> {
         vec![self.id.to_string()]
     }

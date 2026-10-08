@@ -53,7 +53,7 @@ async fn count_component_cancellation_occurs_during_real_export_and_import_inter
 }
 fn refusal_file(dialect:&ArtifactDialect)->Vec<u8>{
  let mut database=SqliteDatabase::from_schema("CREATE TABLE fixture_refusal (id INTEGER PRIMARY KEY, value INTEGER NOT NULL);").unwrap();database.table_mut("fixture_refusal").unwrap().rows.push(SqliteRow{rowid:1,values:vec![SqliteValue::Integer(1),SqliteValue::Integer(0)]});
- semio_framework::io::io_mechanism::attach_sqlite_snapshot_metadata(&mut database,dialect,SnapshotEncoding::Text,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
+ semio_framework_os_kernel::io::io_mechanism::attach_sqlite_snapshot_metadata(&mut database,dialect,SnapshotEncoding::Text,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
  semio_framework::sqlite_snapshot::export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap()
 }
 #[semio_framework_async_macros::async_test]

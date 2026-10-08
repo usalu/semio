@@ -7,7 +7,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod mutations_codec {
 use super::*;
 use crate::standards::v_ecma_376::subsets::base::schema::mutations::*;
-use crate::schema::diff::{diff_set_snapshot, XlsxDiff};
+use crate::schema::diff::XlsxDiff;
 use crate::standards::v_ecma_376::subsets::base::io::binary::diff::{dec_cell_value_bin,dec_sheet_bin,enc_cell_value_bin,enc_sheet_bin,read_str_lp,write_str_lp};
 use crate::standards::v_ecma_376::subsets::base::io::text::diff::{dec_cell_value,dec_sheet,dec_str,enc_cell_value,enc_sheet,enc_str};
 #[cfg(test)]
@@ -25,26 +25,33 @@ use semio_s_artifact_stdio_zip::opc::OpcRelationship;
 use semio_s_artifact_stdio_zip::opc::OpcTargetMode;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_xlsx_snapshot_bin(s: &XlsxSnapshot, out: &mut Vec<u8>) {
-    write_str_lp(out, &semio_framework_pack_json::to_json_string(s));
+fn write_optional_index(out: &mut Vec<u8>, index: Option<usize>) {
+    match index {
+        Some(index) => {
+            out.push(1);
+            store::pack_rt::write_varint_u64(out, index as u64);
+        }
+        None => out.push(0),
+    }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_xlsx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSnapshot, String> {
-    semio_framework_pack_json::from_json_str(&read_str_lp(reader)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
+fn read_optional_index(reader: &mut store::ByteReader<'_>) -> Result<Option<usize>, String> {
+    match reader.read_u8().map_err(|e| e.to_string())? {
+        0 => Ok(None),
+        1 => Ok(Some(reader.read_varint_u64().map_err(|e| e.to_string())? as usize)),
+        other => Err(format!("optional index flag {other} is neither 0 nor 1")),
+    }
 }
 
 /// 🧪️ FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut (confirmed still on that
 /// shortcut live by direct read of this file before this wave, not assumed). `tag` is the
-/// `XlsxMutation` variant ordinal, in the SAME 0-9 order `print_xlsx_mutation`'s own keyword
-/// match uses.
+/// `record <kind> tag=<n>` line of `📡️.protocol.semio`.
 impl OpBinary for XlsxMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            XlsxMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
-            XlsxMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
             XlsxMutation::InsertSheet(_) => TAG_INSERT_SHEET,
             XlsxMutation::RemoveSheet(_) => TAG_REMOVE_SHEET,
             XlsxMutation::RenameSheet(_) => TAG_RENAME_SHEET,
@@ -57,9 +64,10 @@ impl OpBinary for XlsxMutation {
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
-            XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_xlsx_snapshot_bin(snapshot, &mut out),
-            XlsxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => out.extend(protocol::OpBinary::encode_op(patch)?),
-            XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet }) => enc_sheet_bin(sheet, &mut out),
+            XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet, index }) => {
+                enc_sheet_bin(sheet, &mut out);
+                write_optional_index(&mut out, *index);
+            }
             XlsxMutation::RemoveSheet(remove_sheet::RemoveSheet { name }) => write_str_lp(&mut out, name),
             XlsxMutation::RenameSheet(rename_sheet::RenameSheet { name, new_name }) => {
                 write_str_lp(&mut out, name);
@@ -74,7 +82,10 @@ impl OpBinary for XlsxMutation {
                 enc_cell_value_bin(value, &mut out);
             }
             XlsxMutation::RemoveCell(remove_cell::RemoveCell { address }) => write_str_lp(&mut out, &semio_framework_pack_json::to_json_string(address)),
-            XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value }) => write_str_lp(&mut out, value),
+            XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value, index }) => {
+                write_str_lp(&mut out, value);
+                write_optional_index(&mut out, *index);
+            }
             XlsxMutation::RemoveSharedString(remove_shared_string::RemoveSharedString { index }) => store::pack_rt::write_varint_u64(&mut out, *index as u64),
             XlsxMutation::SetSharedString(set_shared_string::SetSharedString { index, value }) => {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
@@ -90,20 +101,10 @@ impl OpBinary for XlsxMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            TAG_PATCH_SNAPSHOT => Ok(XlsxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot {
-                patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(reader.read_bytes(reader.remaining()).map_err(|e| protocol::ProtocolError::Malformed {
-                    what: "patch-snapshot payload",
-                    offset: reader.position() as u64,
-                    detail: e.to_string(),
-                })?)?,
-            })),
-            TAG_SET_SNAPSHOT => {
-                let snapshot = dec_xlsx_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
-                Ok(XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
-            }
             TAG_INSERT_SHEET => {
                 let sheet = dec_sheet_bin(&mut reader).map_err(|e| malformed("op sheet", reader.position(), e))?;
-                Ok(XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet }))
+                let index = read_optional_index(&mut reader).map_err(|e| malformed("op index", reader.position(), e))?;
+                Ok(XlsxMutation::InsertSheet(insert_sheet::InsertSheet { sheet, index }))
             }
             TAG_REMOVE_SHEET => {
                 let name = read_str_lp(&mut reader).map_err(|e| malformed("op name", reader.position(), e))?;
@@ -133,7 +134,8 @@ impl OpBinary for XlsxMutation {
             }
             TAG_INSERT_SHARED_STRING => {
                 let value = read_str_lp(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
-                Ok(XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value }))
+                let index = read_optional_index(&mut reader).map_err(|e| malformed("op index", reader.position(), e))?;
+                Ok(XlsxMutation::InsertSharedString(insert_shared_string::InsertSharedString { value, index }))
             }
             TAG_REMOVE_SHARED_STRING => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
@@ -154,8 +156,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `XlsxMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_INSERT_SHEET: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-sheet");
 const TAG_REMOVE_SHEET: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-sheet");
 const TAG_RENAME_SHEET: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "rename-sheet");

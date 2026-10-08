@@ -10,7 +10,6 @@
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, NamedModified, NamedTripleDiff};
 
 
-use crate::standards::v1::subsets::value::schema::diff::diff_set_snapshot;
 use crate::standards::v1::subsets::value::schema::diff::{value_diff_between, NamedAdded, SemioValueDiff, SemioValueTreeDiff};
 
 
@@ -240,13 +239,13 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioValueMutation> {
     let mixed_path = vec![SemioValuePathSegment::Key { key: "outer".into() }, SemioValuePathSegment::Index { index: 2 }, SemioValuePathSegment::Key { key: "inner".into() }];
     vec![
         SemioValueMutation::SetValue(set_value::SetValue { path: vec![], value: SemioValue::Ref { id: ValueId::new("n1") } }),
-        SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![], key: "a".into(), value: SemioValue::Float { lexeme: "2.5e10".into() } }),
-        SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: mixed_path.clone(), key: "k".into(), value: mapv(vec![("nested", strv("v"))]) }),
+        SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: vec![], key: "a".into(), value: SemioValue::Float { lexeme: "2.5e10".into() }, at: None }),
+        SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: mixed_path.clone(), key: "k".into(), value: mapv(vec![("nested", strv("v"))]), at: None }),
         SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path: vec![SemioValuePathSegment::Key { key: "outer".into() }], key: "gone".into() }),
         SemioValueMutation::InsertListItem(insert_list_item::InsertListItem { path: vec![SemioValuePathSegment::Key { key: "list".into() }], index: 1, value: listv(vec![intv("1"), intv("2")]) }),
         SemioValueMutation::RemoveListItem(remove_list_item::RemoveListItem { path: vec![SemioValuePathSegment::Index { index: 0 }], index: 3 }),
         SemioValueMutation::SetValue(set_value::SetValue { path: mixed_path, value: SemioValue::Null }),
-        SemioValueMutation::SetNode(set_node::SetNode { id: ValueId::new("n1"), value: SemioValue::Bytes { value: vec![255, 0, 128] } }),
+        SemioValueMutation::SetNode(set_node::SetNode { id: ValueId::new("n1"), value: SemioValue::Bytes { value: vec![255, 0, 128] }, at: None }),
         SemioValueMutation::RemoveNode(remove_node::RemoveNode { id: ValueId::new("n1") }),
     ]
 }

@@ -5,10 +5,9 @@ comment none
 
 # `Mp4Mutation::print_op` emits one DslVariants keyword followed by the leaf's inline named record.
 # REST retains the nested record grammar while this descriptor owns the exhaustive operation tags.
-document = set-snapshot | patch-snapshot | set-ftyp | insert-track | remove-track | set-track-dimensions | set-track-codec | insert-sample | remove-sample | set-sample-sync
-set-snapshot = "set-snapshot" REST
-patch-snapshot = "patch-snapshot" REST
+document = set-ftyp | set-movie | insert-track | remove-track | set-track-dimensions | set-track-codec | insert-sample | remove-sample | set-sample-sync
 set-ftyp = "set-ftyp" REST
+set-movie = "set-movie" REST
 insert-track = "insert-track" REST
 remove-track = "remove-track" REST
 set-track-dimensions = "set-track-dimensions" REST

@@ -1,5 +1,4 @@
 {
-  "$schema": "../../🧬️schema/🔣️replay-retirement/🔣️.json",
   "schema": "semio.store.replay-retirement.v1",
   "cases": [
     { "name": "an-encode-failure-at-the-first-operation", "operations": 3, "fault": "encode", "at": 0, "refusal": "validation-failed", "applied": 0 },

@@ -19,8 +19,9 @@
 //! @see 🪆️subsets/✳️sav/🧬️schema/🧬️mutations/🦀️.rs — Structural Analysis View's vocabulary.
 //! @see 🦀️oracle.rs — the reference Part-21 codec the same three subsets' oracles share.
 
+use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
 use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-use semio_s_artifact_stdio_contract::part21::{Part21Instance, Part21Value};
+use semio_s_artifact_stdio_contract::part21::{Part21Header, Part21Instance, Part21Value};
 
 //#region 🔖️ViewDefinition
 /// 🏷️ The view definition the document declares — `FILE_DESCRIPTION`'s first description string,
@@ -28,15 +29,6 @@ use semio_s_artifact_stdio_contract::part21::{Part21Instance, Part21Value};
 /// three subsets' own `check_*_conformance` functions read.
 pub fn view_definition(snapshot: &Ifc2x3Snapshot) -> Option<&str> {
     snapshot.document.header.file_description.first().and_then(Part21Value::as_list).and_then(|items| items.iter().find_map(Part21Value::as_str))
-}
-
-/// 🏷️ Re-stamps `FILE_DESCRIPTION`'s first description string to `ViewDefinition [<view>]`.
-pub fn set_view_definition(snapshot: &mut Ifc2x3Snapshot, view: &str) {
-    let stamped = Part21Value::List(vec![Part21Value::Str(format!("ViewDefinition [{view}]"))]);
-    match snapshot.document.header.file_description.first_mut() {
-        Some(slot) => *slot = stamped,
-        None => snapshot.document.header.file_description.push(stamped),
-    }
 }
 
 /// 🏷️ The bare view name inside a `ViewDefinition [...]` stamp, for an inverse that has to restore
@@ -64,44 +56,9 @@ pub fn reference_argument(snapshot: &Ifc2x3Snapshot, id: u64, index: usize) -> O
     argument(snapshot, id, index).and_then(Part21Value::as_ref_id)
 }
 
-/// ✏️ Replaces one positional argument of an instance's leading entity, padding with `$` when the
-/// record is shorter than `index`. `expect` guards the MVD concept the caller claims to edit; an
-/// empty `expect` accepts any type.
-pub fn set_argument(snapshot: &mut Ifc2x3Snapshot, id: u64, expect: &[&str], index: usize, value: Part21Value) -> Result<(), String> {
-    let instance = snapshot.document.instances.iter_mut().find(|candidate| candidate.id == id).ok_or_else(|| format!("no instance #{id} in the document"))?;
-    let (name, args) = instance.entities.first_mut().ok_or_else(|| format!("instance #{id} carries no entity"))?;
-    if !expect.is_empty() && !expect.iter().any(|expected| name.eq_ignore_ascii_case(expected)) {
-        return Err(format!("instance #{id} is {name} -- expected one of {expect:?}"));
-    }
-    while args.len() <= index {
-        args.push(Part21Value::Unset);
-    }
-    args[index] = value;
-    Ok(())
-}
-
 /// 🧩️ One simple `#id = NAME(args...)` instance.
 pub fn simple_instance(id: u64, name: &str, args: Vec<Part21Value>) -> Part21Instance {
     Part21Instance { id, entities: vec![(name.to_string(), args)] }
-}
-
-/// ➕ Inserts a brand-new instance, or replaces an existing id's whole record.
-pub fn upsert_instance(snapshot: &mut Ifc2x3Snapshot, instance: Part21Instance) {
-    match snapshot.document.instances.iter_mut().find(|candidate| candidate.id == instance.id) {
-        Some(existing) => *existing = instance,
-        None => snapshot.document.instances.push(instance),
-    }
-}
-
-/// ➖ Deletes an instance. An absent id is an error, never a silent no-op, and `expect` keeps an
-/// MVD concept's removal from deleting an unrelated real entity that happens to carry that id.
-pub fn remove_instance(snapshot: &mut Ifc2x3Snapshot, id: u64, expect: &[&str]) -> Result<(), String> {
-    let actual = instance_type(snapshot, id).ok_or_else(|| format!("no instance #{id} in the document"))?.to_string();
-    if !expect.is_empty() && !expect.iter().any(|expected| actual.eq_ignore_ascii_case(expected)) {
-        return Err(format!("instance #{id} is {actual} -- expected one of {expect:?}"));
-    }
-    snapshot.document.instances.retain(|instance| instance.id != id);
-    Ok(())
 }
 
 /// 🧭️ Ids of every instance whose leading type name is one of `types`, in document order.
@@ -136,6 +93,101 @@ pub fn canonical(snapshot: &Ifc2x3Snapshot) -> Ifc2x3Snapshot {
     canonical
 }
 //#endregion 🔖️Graph
+
+//#region 🔖️DiffBuilders
+/// 🏷️ The diff that re-stamps `FILE_DESCRIPTION`'s first description string to `ViewDefinition [<view>]`; the empty diff when it already is.
+pub fn view_definition_diff(base: &Ifc2x3Snapshot, view: &str) -> Ifc2x3Diff {
+    let stamped = Part21Value::List(vec![Part21Value::Str(format!("ViewDefinition [{view}]"))]);
+    let mut description = base.document.header.file_description.clone();
+    match description.first_mut() {
+        Some(slot) => *slot = stamped,
+        None => description.push(stamped),
+    }
+    if description == base.document.header.file_description {
+        return Ifc2x3Diff::default();
+    }
+    Ifc2x3Diff { header: Some(Part21Header { file_description: description, ..base.document.header.clone() }), ..Default::default() }
+}
+
+/// ✏️ The diff that replaces one positional argument of an instance's leading entity, padding with `$` when the record is shorter than `index`.
+/// `expect` guards the MVD concept the caller claims to edit; an empty `expect` accepts any type.
+pub fn argument_diff(base: &Ifc2x3Snapshot, id: u64, expect: &[&str], index: usize, value: Part21Value) -> Result<Ifc2x3Diff, String> {
+    let instance = base.document.instance(id).ok_or_else(|| format!("no instance #{id} in the document"))?;
+    let (name, args) = instance.entities.first().ok_or_else(|| format!("instance #{id} carries no entity"))?;
+    if !expect.is_empty() && !expect.iter().any(|expected| name.eq_ignore_ascii_case(expected)) {
+        return Err(format!("instance #{id} is {name} -- expected one of {expect:?}"));
+    }
+    if args.get(index) == Some(&value) {
+        return Ok(Ifc2x3Diff::default());
+    }
+    let mut replacement = instance.clone();
+    let args = &mut replacement.entities[0].1;
+    args.resize(args.len().max(index + 1), Part21Value::Unset);
+    args[index] = value;
+    Ok(Ifc2x3Diff { upserted_instances: vec![replacement], ..Default::default() })
+}
+
+/// ➕ The diff that inserts a brand-new instance (at `index`, last by default) or replaces an existing id's whole record in place.
+pub fn upsert_diff(base: &Ifc2x3Snapshot, instance: Part21Instance, index: Option<usize>) -> Ifc2x3Diff {
+    match base.document.instance(instance.id) {
+        Some(existing) if *existing == instance => Ifc2x3Diff::default(),
+        Some(_) => Ifc2x3Diff { upserted_instances: vec![instance], ..Default::default() },
+        None => {
+            let instance_order = index.filter(|at| *at < base.document.instances.len()).map(|at| {
+                let mut ids: Vec<u64> = base.document.instances.iter().map(|existing| existing.id).collect();
+                ids.insert(at, instance.id);
+                ids
+            });
+            Ifc2x3Diff { upserted_instances: vec![instance], instance_order, ..Default::default() }
+        }
+    }
+}
+
+/// ➖ The diff that deletes an instance. An absent id is an error, never a silent no-op, and `expect` keeps an MVD concept's removal from
+/// deleting an unrelated real entity that happens to carry that id.
+pub fn remove_diff(base: &Ifc2x3Snapshot, id: u64, expect: &[&str]) -> Result<Ifc2x3Diff, String> {
+    let actual = instance_type(base, id).ok_or_else(|| format!("no instance #{id} in the document"))?;
+    if !expect.is_empty() && !expect.iter().any(|expected| actual.eq_ignore_ascii_case(expected)) {
+        return Err(format!("instance #{id} is {actual} -- expected one of {expect:?}"));
+    }
+    Ok(Ifc2x3Diff { removed_instances: vec![id], ..Default::default() })
+}
+
+/// 🔎️ The position of instance `id`, for a restoring mutation that has to put it back where it stood.
+pub fn position(base: &Ifc2x3Snapshot, id: u64) -> Option<usize> {
+    base.document.instances.iter().position(|instance| instance.id == id)
+}
+/// 🧭️ Where an MVD concept's instance id stands in the base: not there, there as the expected concept, or there as an unrelated entity.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Standing {
+    Absent,
+    Present { index: usize },
+    Foreign,
+}
+
+/// 🧭️ Classifies instance `id` against the entity types `expect` of one MVD concept.
+pub fn standing(base: &Ifc2x3Snapshot, id: u64, expect: &[&str]) -> Standing {
+    match (instance_type(base, id), position(base, id)) {
+        (Some(actual), Some(index)) if expect.iter().any(|expected| actual.eq_ignore_ascii_case(expected)) => Standing::Present { index },
+        (Some(_), _) => Standing::Foreign,
+        _ => Standing::Absent,
+    }
+}
+
+/// 🧩️ The diff that sets (`Some`, at `index` when new) or clears (`None`) one MVD concept's instance; an id held by an unrelated entity is an error.
+pub fn entity_diff(base: &Ifc2x3Snapshot, id: u64, expect: &[&str], instance: Option<Part21Instance>, index: Option<usize>) -> Result<Ifc2x3Diff, String> {
+    match instance {
+        None => remove_diff(base, id, expect),
+        Some(instance) => {
+            if standing(base, id, expect) == Standing::Foreign {
+                return Err(format!("instance #{id} is {} -- expected one of {expect:?}", instance_type(base, id).unwrap_or("")));
+            }
+            Ok(upsert_diff(base, instance, index))
+        }
+    }
+}
+
+//#endregion 🔖️DiffBuilders
 
 //#region 🧪️Tests
 #[cfg(test)]

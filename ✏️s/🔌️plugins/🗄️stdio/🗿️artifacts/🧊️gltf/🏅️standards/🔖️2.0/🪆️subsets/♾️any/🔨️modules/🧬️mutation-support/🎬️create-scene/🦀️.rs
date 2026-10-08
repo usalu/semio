@@ -70,30 +70,4 @@ pub fn insertion_position(position: u32, snapshot: &GltfSnapshot) -> Result<usiz
     (position <= snapshot.document.scenes.len()).then_some(position).ok_or_else(|| reject("gltf.mutation.insert-out-of-range", "document/scenes", "position must be within the collection"))
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn existing_position(position: u32, snapshot: &GltfSnapshot) -> Result<usize, GltfCreateSceneRejection> {
-    default_scene(snapshot)?;
-    let position = usize_index(position, "document/scenes")?;
-    (position < snapshot.document.scenes.len()).then_some(position).ok_or_else(|| reject("gltf.mutation.index-out-of-range", "document/scenes", "position must address an existing scene"))
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn default_after(default_scene: Option<u32>, position: u32) -> Result<Option<u32>, GltfCreateSceneRejection> {
-    default_scene.map(|scene| if scene >= position { scene.checked_add(1).ok_or_else(|| reject("gltf.mutation.reference-overflow", "document/scene", "default scene cannot be remapped beyond u32")) } else { Ok(scene) }).transpose()
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn insert_empty_scene(snapshot: &mut GltfSnapshot, position: usize) -> Result<(), GltfCreateSceneRejection> {
-    let default_scene_before = default_scene(snapshot)?;
-    snapshot.document.scene = default_after(default_scene_before, u32_index(position, "document/scenes")?)?.map(|scene| usize_index(scene, "document/scene")).transpose()?;
-    snapshot.document.scenes.insert(position, GltfScene::default());
-    Ok(())
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn remove_created_scene(snapshot: &mut GltfSnapshot, position: usize, default_scene_before: Option<u32>) -> Result<(), GltfCreateSceneRejection> {
-    snapshot.document.scenes.remove(position);
-    snapshot.document.scene = default_scene_before.map(|scene| usize_index(scene, "document/scene")).transpose()?;
-    Ok(())
-}
 //#endregion 🎬️SceneState

@@ -2,11 +2,9 @@
 import type {GltfMutation} from "../../../🧬️schema/🧬️mutations/🟦️.ts";
 export type * from "../../../🧬️schema/🧬️mutations/🟦️.ts";
 /** 🧬️ `GltfMutation` twin: the adjacently tagged (`mutation`/`payload`) aggregate over every glTF 2.0 leaf, branch for branch as
- * `./🔣️.json` and `./🦀️.rs` spell it; a wrapped leaf's payload is its whole phase wire, the set-snapshot leaf's its plain record.
+ * `./🔣️.json` and `./🦀️.rs` spell it; a wrapped leaf's payload is its whole phase wire.
  * @see ./🔣️.json */
 import { gltfWireLiteral, gltfWireObject, gltfWireRequired, type GltfWireReader } from "../📸️snapshot/🔣️json/🟦️.ts";
-import { parseSetSnapshot, type SetSnapshot } from "./📸️snapshot/📸️set/🟦️.ts";
-import { parsePatchSnapshot, type PatchSnapshot } from "./📸️snapshot/🩹️patch/🟦️.ts";
 import { parseBindDefaultSceneMutation, type BindDefaultSceneMutation } from "./🏠️default-scene/🔗️bind/🟦️.ts";
 import { parseBindMorphTargetAttributeMutation, type BindMorphTargetAttributeMutation } from "./🎚️morph/🔗️bind/🟦️.ts";
 import { parseBindNodeCameraMutation, type BindNodeCameraMutation } from "./📷️node-camera/🔗️bind/🟦️.ts";
@@ -129,8 +127,6 @@ import { parseRemoveRequiredExtensionMutation, type RemoveRequiredExtensionMutat
 import { parseRemoveUsedExtensionMutation, type RemoveUsedExtensionMutation } from "./📣️used/➖️remove/🟦️.ts";
 
 const payloads: { readonly [K in GltfMutation["mutation"]]: GltfWireReader<Extract<GltfMutation, { readonly mutation: K }>["payload"]> } = {
-  setSnapshot: parseSetSnapshot,
-  patchSnapshot: parsePatchSnapshot,
   bindDefaultScene: parseBindDefaultSceneMutation,
   bindMorphTargetAttribute: parseBindMorphTargetAttributeMutation,
   bindNodeCamera: parseBindNodeCameraMutation,

@@ -14,12 +14,12 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetParagraphStyle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "paragraph-style", kind: "set-paragraph-style", record: "SetParagraphStyle" };
 
     fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as Mutation<DocxSnapshot>>::Diff> {
-        agg_diff(&DocxMutation::SetParagraphStyle(self.clone()), base)
+        addressed_outcome(&DocxMutation::SetParagraphStyle(self.clone()), base)
     }
 
     fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
     Ok({
-        agg_inverse(&DocxMutation::SetParagraphStyle(self.clone()), base)?
+        addressed_inverse(&DocxMutation::SetParagraphStyle(self.clone()), base)?
     
     })
 }

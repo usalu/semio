@@ -11,17 +11,12 @@ pub struct SetContributions {
 
 impl protocol::MutationKind<FormsConfig, FormsConfigMutation> for SetContributions {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "contributions", kind: "set-contributions", record: "SetContributions" };
-    fn diff(&self, base: &FormsConfig) -> protocol::MutationOutcome<FormsConfig> {
-        let mut next = base.clone();
-        next.contributions_json = self.json.clone();
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, _base: &FormsConfig) -> protocol::MutationOutcome<FormsConfigDiff> {
+        protocol::MutationOutcome::new(FormsConfigDiff { contributions_json: Some(self.json.clone()) })
     }
     fn inverse(&self, base: &FormsConfig) -> Result<Vec<FormsConfigMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![FormsConfigMutation::ReplaceConfig(ReplaceConfig { config: base.clone() })]
-    
-    })())
-}
+        Ok(vec![FormsConfigMutation::SetContributions(SetContributions { json: base.contributions_json.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Contributions", "Beiträge setzen")
     }

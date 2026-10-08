@@ -9,7 +9,7 @@ import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../../🧰️f
 import { MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { artifactFiles } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 import { PREVIEW2_VENDOR_RELATIVE } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
-import { FONT_ASSET } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/🟦️.ts";
+import { FONT_ASSET } from "../../../../../🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts";
 import { PLAY_RUNTIME_TARGETS, playPaneClosureRoot, playRuntimeComponentIds } from "../🟦️.ts";
 
 //#region 🛣️PlayActivationLanes

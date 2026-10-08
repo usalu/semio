@@ -1,12 +1,10 @@
 //! 🔺️ Diff for `remove-accidental-cases`.
 use super::RemoveAccidentalCases;
-use crate::artifact_schema::diff::En1991AccidentalCasesList;
 use crate::{En1991Diff, En1991Snapshot};
+use crate::diff::{En1991AccidentalCaseDelta};
 pub fn diff(payload: &RemoveAccidentalCases, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
     if payload.index >= base.accidental_cases.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", "Index out of range.", [payload.index.to_string()]);
     }
-    let mut values = base.accidental_cases.clone();
-    values.remove(payload.index);
-    protocol::MutationOutcome::new(En1991Diff { accidental_cases: Some(En1991AccidentalCasesList { values }), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { accidental_cases: En1991AccidentalCaseDelta::removal(&base.accidental_cases[payload.index].id), ..Default::default() })
 }

@@ -245,32 +245,6 @@ fn recipe(id: &str) -> Option<RecipeOutput> {
         // 🧬 the `no-mutation` scenario id (no DxfMutation variant of its own) — before==after content.
         "no-mutation-no-op" => Some(RecipeOutput::Pair(before, Some(base_doc()))),
 
-        // 🧬 SetSnapshot — diff_set_snapshot = DxfDiff::between(base, next) across every field;
-        // widens the circle entity's radius (matching this subset's own declared
-        // mutationCatalogs scenario id "widens-the-circle-entity-radius"), moves $INSBASE, and adds
-        // a fourth layer, so header_vars/tables/entities all move together, exactly like this
-        // subset's own `set-snapshot` test leaf.
-        "set-snapshot-applied" => {
-            let mut after = base_doc();
-            after.header.insertion_base = Point::new(100.0, 50.0, 0.0);
-            insert_layer_at(&mut after, 1, Layer { name: "MARKERS".to_string(), color: Color::from_index(6), line_type_name: "CONTINUOUS".to_string(), ..Default::default() });
-            for entity in after.entities_mut() {
-                if let EntityType::Circle(circle) = &mut entity.specific {
-                    circle.radius = 300.0;
-                }
-            }
-            Some(RecipeOutput::Pair(before, Some(after)))
-        }
-        // 🧬 SetSnapshot with next == base — diff is DxfDiff::default(), is_empty() true.
-        "set-snapshot-no-op" => Some(RecipeOutput::Pair(before, Some(base_doc()))),
-        // 🧬 SetSnapshot whose PAYLOAD snapshot declares two layers both named "DIMS" — one
-        // collides with the base's own existing "DIMS": DxfDiff::between's named_between computes
-        // a `modified` entry for the first "DIMS" match AND an `added` entry for the second, and
-        // `validate_named_targets`'s add-path rejects it (`present(key)` is true for a name that
-        // already exists in `base` — 🔺️diff/🦀️.rs:1571) — `invalid-add-target`. No `after`
-        // state is producible through the real dispatch, so only `before.dxf` is written; the
-        // payload that would be rejected is never itself encoded (rejected recipes never are).
-        "set-snapshot-rejected-duplicate-layer" => Some(RecipeOutput::Pair(before, None)),
 
         // 🧬 SetHeaderVar{name:"$INSBASE"} — the one generic $VAR `dxf`'s fixed Header struct
         // persists unconditionally on an R12 save (../../../🔮️oracles/🦀️.rs's own
@@ -459,9 +433,6 @@ fn recipe(id: &str) -> Option<RecipeOutput> {
 const RECIPE_IDS: &[&str] = &[
     "drafting-plate",
     "no-mutation-no-op",
-    "set-snapshot-applied",
-    "set-snapshot-no-op",
-    "set-snapshot-rejected-duplicate-layer",
     "set-header-var-applied",
     "remove-header-var-applied",
     "remove-header-var-rejected-missing",

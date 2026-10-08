@@ -6,7 +6,7 @@
       "target": "generation2d-example-export",
       "path": "🧪️tests/🖼️generation2d-example-export/🦀️.rs",
       "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🖼️bundled-example-export/🦀️.rs",
-      "sha256": "f4262f925d713ade7b13a36bf2f727d4eb135dbd955043b11b0a4668be2c9f7a",
+      "sha256": "f3ece8e14cf9875752e4832e1ff2e43b7c442f0c3795e597cd26b7170be2538a",
       "laws": [
         "bundled_example_exports_its_evaluated_rectangle_to_every_page_format"
       ],
@@ -16,7 +16,7 @@
       "target": "sequence-runtime",
       "path": "🧪️tests/🎬️sequence-runtime/🦀️.rs",
       "previousPath": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "ef59e61477e0d7bf58006da623d74ab63b3acf4f59c22434df2f01ac55797731",
+      "sha256": "04d071445ae105789af2c5345b841bed32a3fdcd06b9640a643b2c743d7c2937",
       "laws": [
         "run_executes_default_snapshot_and_records_scope",
         "function_steps_use_data_ports_without_visible_execution_pins",
@@ -39,7 +39,7 @@
       "target": "generation3d-example-geometry",
       "path": "🧪️tests/🧩️generation3d-example-geometry/🦀️.rs",
       "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧪️tests/🧩️geometry/🦀️.rs",
-      "sha256": "74a20968fc7c91c24857a71a93ba847d7a2e2d0aebca00a128595c1f6fee33cd",
+      "sha256": "a8352607bfd73639968b1034e1716ddf30af8718f9658d74774c167346ebbd12",
       "laws": [
         "the_budget_calibration_is_deterministic_and_never_narrows_a_ceiling",
         "rectangle_wire_preview_evaluates_to_an_open_wire",
@@ -66,7 +66,7 @@
       "target": "generation3d-incremental-eval",
       "path": "🧪️tests/🔁️generation3d-incremental-eval/🦀️.rs",
       "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/🧪️tests/🔁️incremental/🦀️.rs",
-      "sha256": "d138751564760ec2ed239b5abb1fcee867eb78191756e64ee0fc3ba3660160b8",
+      "sha256": "7fbd028fed36b38d4531f5fcd489f24e4365d6520860a7349963e1cdaabe8e93",
       "laws": [
         "an_edit_dirties_its_own_branch_and_leaves_every_other_node_to_free_ride",
         "a_burst_of_values_costs_one_dirty_branch_per_value_and_never_a_growing_one",
@@ -82,7 +82,7 @@
       "target": "sequence-runtime",
       "path": "🧪️tests/🎬️sequence-runtime/🪟️windows/🦀️.rs",
       "previousPath": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config/🧪️tests/🔬️window/🦀️.rs",
-      "sha256": "fa2168b5d6a0f80c15dadc6971add067bab54ff95525acf83a79faf1117260b0",
+      "sha256": "dbbb4caad194c9fc6d6a0c701838c742de7d17eebea2b4f7ac46d99dd8f7acbc",
       "laws": [
         "windows::sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows"
       ],
@@ -373,7 +373,7 @@
       "target": "generation3d-app-laws",
       "path": "🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
       "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "fabb3ac1ca2bbf173a73a594d3b9cf22bd153232e40d0852affbb98a93b15ba6",
+      "sha256": "662e5baefbc7a94266f94697704dbdaaae7cd7c3e4c4c6daed35d16bbaf9b58d",
       "laws": [
         "editor_domain::editor_laws::preview_eval_exact_window_transient_isolates_and_resets_in_the_registered_app",
         "editor_domain::editor_laws::generation_preview_is_one_evaluation_shared_by_two_generation_windows",
@@ -831,7 +831,7 @@
       "target": "generation3d-app-laws",
       "path": "🧪️tests/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧪️tests/🔬️unit/🦀️.rs",
       "previousPath": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔪️knife-mesh-selection/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "7ade91ba7c7e8cadfbf3958afccdbc24e1b7accff1d985093db90805aca4afec",
+      "sha256": "f25447b84ea37f3009c52aab78d321115e1577acd0f72aa2a50abdff63cf60e4",
       "laws": [
         "editor_generation3d_knife_mesh_selection_tests_laws::laws::knife_selection_parameters_match_shared_fixtures",
         "editor_generation3d_knife_mesh_selection_tests_laws::laws::knife_selection_splices_a_typed_widget_and_preserves_analysis",
@@ -932,7 +932,7 @@
     },
     {
       "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️fold-contract/🦀️.rs",
-      "sha256": "ba1d525a2fd899c0e6049835924b7bbe00fed9ba39ca8f6b5408f181ee7360ee",
+      "sha256": "8829c8f1b821b4b4bd06a0a36cf1f66bba68f4ea275579070ceeb79067d58242",
       "laws": [
         "editor::generation3d::component::fold_contract::a_one_work_item_declaration_cannot_carry_a_point_invertible_item",
         "editor::generation3d::component::fold_contract::set_active_example_artifact_gesture_fits_its_declared_fold_envelope_for_every_example",
@@ -941,7 +941,7 @@
     },
     {
       "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "d3a7b2bfd38ecfc66c189d5886158ac0a44f20dc0998a6aed1054ff5f2221ee8",
+      "sha256": "4451bd78eaa35729f4a924d9f1bc686c48a2cc18e0c98b8227ab19afa867d6d0",
       "laws": [
         "editor::generation3d::component::unit_tests::command_ids_are_unique_and_cover_every_row",
         "editor::generation3d::component::unit_tests::contributions_route_declares_a_reachable_wire_ceiling",
@@ -983,7 +983,7 @@
     },
     {
       "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-widget-input/🧪️tests/🔬️unit/🦀️.rs",
-      "sha256": "1106dccb35fa8e219bcf0c2a4afd7d5911c2b4fb5cd40fda36fadc29311156f2",
+      "sha256": "5ade2a3ccb9be38e9f9f175db7ed76fcf5fce7f9a8bf1deefad6f545ed2f80d9",
       "laws": [
         "editor::generation3d::commands::set_widget_input::tests::widget_input_is_one_typed_leaf_and_rejects_connected_ports",
         "editor::generation3d::commands::set_widget_input::tests::widget_input_language_neutral_cases",

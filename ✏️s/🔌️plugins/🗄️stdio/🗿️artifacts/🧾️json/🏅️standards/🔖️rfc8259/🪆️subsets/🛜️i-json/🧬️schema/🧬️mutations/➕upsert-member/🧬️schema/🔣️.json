@@ -57,6 +57,24 @@
           "de": "Ein JSON-Wert: null, Wahrheitswert, Zahl, Zeichenkette, Array oder Objekt."
         }
       }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Where a newly added member lands among its object's members, counted from 0; omitted appends.",
+          "de": "Wo eine neu hinzugefügte Eigenschaft unter den Eigenschaften ihres Objekts landet, ab 0 gezählt; ohne Angabe wird angehängt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 40
+      }
     }
   },
   "$defs": {

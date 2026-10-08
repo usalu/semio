@@ -13,6 +13,8 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[value(rename_all = "camelCase")]
 pub struct SetEmbeddedFile {
     pub file: PdfEmbeddedFile,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfMutation> for SetEmbeddedFile {
@@ -20,13 +22,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetEmbeddedFile {
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         let _ = base;
-        MutationOutcome::new(diff::diff_set_embedded_file(base, self.file.clone()))
+        MutationOutcome::new(diff::diff_set_embedded_file(base, self.file.clone(), self.index))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        match base.embedded_files.iter().find(|item| item.id == self.file.id) { Some(previous) => vec![PdfMutation::SetEmbeddedFile(SetEmbeddedFile { file: previous.clone() })], None => vec![PdfMutation::RemoveEmbeddedFile(super::remove_embedded_file::RemoveEmbeddedFile { id: self.file.id.clone() })] }
+        match base.embedded_files.iter().find(|item| item.id == self.file.id) { Some(previous) => vec![PdfMutation::SetEmbeddedFile(SetEmbeddedFile { file: previous.clone(), index: None })], None => vec![PdfMutation::RemoveEmbeddedFile(super::remove_embedded_file::RemoveEmbeddedFile { id: self.file.id.clone() })] }
     
     })())
 }

@@ -28,7 +28,7 @@ fn computers_manifest() -> json::Value {
 // 🚫️async: E1 pure — `extension_exports!` calls `bundle` outside an async context (macro requires a
 // plain sync fn). `.mode`/`.contributes_topic` are still `fn` in
 // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` (out of this packet's path_scope);
-// bridged via `semio_framework::io::resolve_ready` — see this packet's lease-request. See R9.
+// bridged via `semio_framework_os_kernel::io::resolve_ready` — see this packet's lease-request. See R9.
 fn bundle() -> ExtensionBundle {
     let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD Spatial Shape", env!("CARGO_PKG_VERSION")).extends("cad").depends_on("cad", semio_framework::tree_pin!());
     // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this

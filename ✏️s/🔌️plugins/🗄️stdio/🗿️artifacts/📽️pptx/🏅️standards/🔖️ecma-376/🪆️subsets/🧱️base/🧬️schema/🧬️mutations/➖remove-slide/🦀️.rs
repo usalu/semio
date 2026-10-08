@@ -1,6 +1,4 @@
-//! ➖️ `remove-slide` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! ➖️ `remove-slide` -- builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -14,15 +12,14 @@ pub struct RemoveSlide {
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for RemoveSlide {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "slide", kind: "remove-slide", record: "RemoveSlide" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxMutation as Mutation<PptxSnapshot>>::Diff> {
-        agg_diff(&PptxMutation::RemoveSlide(self.clone()), base)
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
+        plan_outcome(xml_address::remove_slide_plan(base, &self.address))
     }
+
     fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&PptxMutation::RemoveSlide(self.clone()), base)?
-    
-    })
-}
+        Ok(plan_inverse(xml_address::remove_slide_plan(base, &self.address)))
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove slide", "Folie entfernen")
     }

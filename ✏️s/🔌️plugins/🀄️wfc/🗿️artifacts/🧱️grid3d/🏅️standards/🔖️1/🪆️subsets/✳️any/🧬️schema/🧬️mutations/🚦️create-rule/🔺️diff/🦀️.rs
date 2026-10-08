@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `CreateRule` — an id-keyed delta over `Grid3dSnapshot`, never a
 //! whole-snapshot capture.
 
-use crate::diff::Grid3dDiff;
+use crate::diff::{Grid3dDiff, Grid3dRows};
 use crate::schema::snapshot::*;
 
 pub fn diff(payload: &super::CreateRule, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
@@ -16,6 +16,5 @@ pub fn diff(payload: &super::CreateRule, base: &Grid3dSnapshot) -> protocol::Mut
             return protocol::MutationOutcome::fatal("mutation.invariant", format!("Rule \"{}\" names unknown tile \"{tile}\".", payload.rule.id), [tile.clone()]);
         }
     }
-    let at = crate::mutations::ordered_index(&base.rules, &payload.rule.id, |rule| rule.id.clone());
-    protocol::MutationOutcome::new(Grid3dDiff { rules_upserted: vec![(at, payload.rule.clone())], ..Default::default() })
+    protocol::MutationOutcome::new(Grid3dDiff { rules: Grid3dRows { added: vec![payload.rule.clone()], ..Default::default() }, ..Default::default() })
 }

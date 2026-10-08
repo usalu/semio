@@ -23,3 +23,9 @@ async fn applies_change_zone_pollution_class() {
 fn sample_mutation(base: &Din16798Snapshot) -> Din16798Mutation {
     Din16798Mutation::ChangeZonePollutionClass(change_zone_pollution_class::ChangeZonePollutionClass { zone_id: base.zones[0].id.clone(), new_pollution_class: "non_low".into() })
 }
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    let base = Din16798Snapshot::default();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&sample_mutation(&base), &base).await;
+}

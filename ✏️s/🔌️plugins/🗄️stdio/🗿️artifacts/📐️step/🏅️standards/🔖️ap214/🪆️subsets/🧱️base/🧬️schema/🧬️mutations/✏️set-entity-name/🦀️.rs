@@ -1,7 +1,5 @@
-//! ✏️️ `set-entity-name` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! ✏️️ `set-entity-name` — authored as its own mutation leaf. It builds its own sparse diff and concrete
+//! inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,15 +14,20 @@ pub struct SetEntityName {
 impl protocol::MutationKind<StepSnapshot, StepMutation> for SetEntityName {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entity-name", kind: "set-entity-name", record: "SetEntityName" };
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepMutation as Mutation<StepSnapshot>>::Diff> {
-        agg_diff(&StepMutation::SetEntityName(self.clone()), base)
+    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
+        let Self { id, name } = self;
+        protocol::MutationOutcome::new(match base.entities.iter().find(|e| e.id == *id) {
+            Some(e) if e.name == *name => StepDiff::default(),
+            _ => StepDiff { entities: Some(StepEntitiesDiff { modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { name: Some(name.clone()), ..Default::default() } }], ..Default::default() }), ..Default::default() },
+        })
     }
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&StepMutation::SetEntityName(self.clone()), base)?
-    
-    })
-}
+        let Self { id, .. } = self;
+        Ok(match base.entities.iter().find(|e| e.id == *id) {
+            Some(e) => vec![StepMutation::SetEntityName(set_entity_name::SetEntityName { id: *id, name: e.name.clone() })],
+            None => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set entity name", "Entitätsname setzen")
     }

@@ -39,9 +39,10 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
+    use semio_s_artifact_stdio_semio::apply_diff;
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::mutations::{apply_semio_mesh_mutation, inverse_semio_mesh_mutation, SemioMeshMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::mutations::{diff_semio_mesh_mutation, inverse_semio_mesh_mutation, SemioMeshMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::text::mutations::{decode_semio_mesh_mutation_json};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::binary::snapshot::{decode_mesh_pack};
@@ -92,9 +93,10 @@ mod subject {
     }
 
     fn apply(current: &mut SemioMeshSnapshot, step: &SemioMeshMutation, what: &str) -> Result<(), String> {
-        let outcome = apply_semio_mesh_mutation(current, step);
+        let outcome = diff_semio_mesh_mutation(step, current);
         let refusals = semio_mutation_refusals(&outcome);
         if refusals.is_empty() {
+            *current = apply_diff(outcome.diff(), current).map_err(|error| format!("the diff could not be applied: {error:?}"))?;
             return Ok(());
         }
         Err(format!("{what}: the mutation was rejected: {refusals:?}"))
@@ -221,7 +223,7 @@ mod subject {
         let mut current = base.clone();
         apply(&mut current, &step, &ctx.scenario.id)?;
         let mutated = snapshot_json(&current)?;
-        for undo in &inverse_semio_mesh_mutation(&step, &base).expect("valid retained mutation inverse fixture") {
+        for undo in inverse_semio_mesh_mutation(&step, &base).expect("valid retained mutation inverse fixture").iter().rev() {
             apply(&mut current, undo, &ctx.scenario.id)?;
         }
         if current != base {

@@ -92,8 +92,8 @@ export const stdioSemioV1FlowMutationsTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export interface SemioFlowMutationText {
-  readonly mutation: "setSnapshot" | "insertNode" | "removeNode" | "setNodeKind" | "setNodeLabel" | "setNodePosition" | "setNodeParam" | "removeNodeParam" | "insertEdge" | "removeEdge" | "setEdgeEndpoints" | "setEdgeKind" | "dragNodes";
-  readonly snapshot?: SemioFlowSnapshot;
+  readonly mutation: "insertNode" | "removeNode" | "setNodeKind" | "setNodeLabel" | "setNodePosition" | "setNodeParam" | "removeNodeParam" | "insertEdge" | "removeEdge" | "setEdgeEndpoints" | "setEdgeKind" | "dragNodes";
+  readonly at?: number;
   readonly node?: FlowNode;
   readonly edge?: FlowEdge;
   readonly id?: string;

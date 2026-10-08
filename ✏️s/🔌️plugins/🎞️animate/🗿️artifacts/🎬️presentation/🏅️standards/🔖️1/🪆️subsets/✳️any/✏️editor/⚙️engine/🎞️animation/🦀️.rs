@@ -449,7 +449,7 @@ pub mod animation {
             }
         }
         fn interpolate_mobject(&mut self, parent_alpha: f64) {
-            self.apply(&mut HashMap::new(), parent_alpha);
+            protocol::apply_diff(&self, &mut HashMap::new(), parent_alpha);
         }
         fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
@@ -534,7 +534,7 @@ pub mod animation {
             self.group.finish();
         }
         fn interpolate_mobject(&mut self, parent_alpha: f64) {
-            self.apply(&mut HashMap::new(), parent_alpha);
+            protocol::apply_diff(&self, &mut HashMap::new(), parent_alpha);
         }
         fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
@@ -596,7 +596,7 @@ pub mod animation {
             }
         }
         fn interpolate_mobject(&mut self, parent_alpha: f64) {
-            self.apply(&mut HashMap::new(), parent_alpha);
+            protocol::apply_diff(&self, &mut HashMap::new(), parent_alpha);
         }
         fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);

@@ -148,7 +148,7 @@ async fn block_run_style_and_part_mutations_apply_and_inverse() {
         DocxMutation::InsertStyle(insert_style::InsertStyle { style: DocxStyle { id: "Heading1".into(), name: "Heading 1".into(), based_on: Some("Normal".into()) } }),
         DocxMutation::SetStyleName(set_style_name::SetStyleName { id: "Normal".into(), name: "Body".into() }),
         DocxMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id: "Normal".into(), based_on: Some("Heading1".into()) }),
-        DocxMutation::SetPart(set_part::SetPart { path: "word/media/new.bin".into(), content_type: "application/octet-stream".into(), payload: set_part::DocxPartContent::Binary { bytes: vec![4, 5, 6] } }),
+        DocxMutation::SetPart(set_part::SetPart { path: "word/media/new.bin".into(), content_type: "application/octet-stream".into(), payload: set_part::DocxPartContent::Binary { bytes: vec![4, 5, 6] }, index: None }),
         DocxMutation::RemovePart(remove_part::RemovePart { path: "word/media/original.bin".into() }),
     ];
 
@@ -174,13 +174,13 @@ async fn every_mutation_has_exact_diff_inverse_and_text_binary_replay() {
     for mutation in demo_mutation_cases() {
         let base = fixture();
         let direct = Mutation::diff(&mutation, &base);
-        let via_diff = MutationDiff::apply(direct.diff(), &base).expect("diff applies");
+        let via_diff = protocol::apply_diff(direct.diff(), &base).expect("diff applies");
         let mut via_mutation = base.clone();
         apply(&mut via_mutation, &mutation);
         assert_eq!(via_diff, via_mutation, "mutation and diff disagree for {mutation:?}");
 
         let inverse = DiffAlgebra::inverse(direct.diff(), &base);
-        assert_eq!(MutationDiff::apply(&inverse, &via_diff).expect("inverse applies"), base);
+        assert_eq!(protocol::apply_diff(&inverse, &via_diff).expect("inverse applies"), base);
 
         let text = mutation.print_op();
         assert_eq!(DocxMutation::parse_op(&text).expect("text replay"), mutation);
@@ -196,7 +196,7 @@ async fn canonical_xml_and_opc_diff_round_trip_and_absorb() {
     let address = docx_block_run_address(&base, &DocxBlockPath { segments: vec![], index: 0 }, 0).expect("run address");
     apply(&mut middle, &DocxMutation::SetRunText(set_run_text::SetRunText { address, text: "middle".into() }));
     let mut final_snapshot = middle.clone();
-    apply(&mut final_snapshot, &DocxMutation::SetPart(set_part::SetPart { path: "word/media/final.bin".into(), content_type: "application/octet-stream".into(), payload: set_part::DocxPartContent::Binary { bytes: vec![9, 8, 7] } }));
+    apply(&mut final_snapshot, &DocxMutation::SetPart(set_part::SetPart { path: "word/media/final.bin".into(), content_type: "application/octet-stream".into(), payload: set_part::DocxPartContent::Binary { bytes: vec![9, 8, 7] }, index: None }));
 
     let first = DocxDiff::between(&base, &middle);
     let second = DocxDiff::between(&middle, &final_snapshot);
@@ -204,8 +204,8 @@ async fn canonical_xml_and_opc_diff_round_trip_and_absorb() {
     assert!(second.opc.is_some(), "binary part edit must be an OPC diff");
     let mut absorbed = first;
     absorbed.absorb(second);
-    assert_eq!(absorbed.apply(&base).expect("absorbed diff applies"), final_snapshot);
-    assert_eq!(absorbed.inverse(&base).apply(&final_snapshot).expect("inverse applies"), base);
+    assert_eq!(protocol::apply_diff(&absorbed, &base).expect("absorbed diff applies"), final_snapshot);
+    assert_eq!(protocol::apply_diff(&absorbed.inverse(&base), &final_snapshot).expect("inverse applies"), base);
 
     let text = absorbed.print_diff();
     assert_eq!(DocxDiff::parse_diff(&text).expect("text diff replay"), absorbed);
@@ -513,4 +513,32 @@ fn empty_paragraph_text_edit_preserves_markup_and_roundtrips_through_independent
         assert_eq!(snapshot, before);
         println!("[DEBUG] DOCX empty paragraph {} retains markup, namespace, save/reopen, and exact undo", case["id"]);
     }
+}
+
+/// ⚖️ Every demo kind satisfies the inverse sum law on the demo fixture.
+#[semio_framework_async_macros::async_test]
+async fn every_demo_kind_satisfies_the_inverse_sum_law() {
+    let base = fixture();
+    for mutation in demo_mutation_cases() {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+}
+
+/// ⚖️ Removing a MIDDLE block, table row or style is restored at its original position.
+#[semio_framework_async_macros::async_test]
+async fn removing_a_middle_member_is_restored_at_its_original_position() {
+    let row = |text: &str| DocxTableRow { cells: vec![DocxTableCell { blocks: vec![DocxBlock::paragraph(text)], ..Default::default() }], ..Default::default() };
+    let base = crate::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(DocxDocument {
+        body: vec![DocxBlock::paragraph("a"), DocxBlock::paragraph("b"), DocxBlock::paragraph("c"), DocxBlock::Table(DocxTable { rows: vec![row("r0"), row("r1"), row("r2")], ..Default::default() })],
+        styles: vec![
+            DocxStyle { id: "One".into(), name: "One".into(), based_on: None },
+            DocxStyle { id: "Two".into(), name: "Two".into(), based_on: None },
+            DocxStyle { id: "Three".into(), name: "Three".into(), based_on: None },
+        ],
+    });
+    let laws = protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
+    laws(&DocxMutation::RemoveBlock(remove_block::RemoveBlock { path: DocxBlockPath { segments: vec![], index: 1 } }), &base).await;
+    let table = docx_top_level_block_address(&base, 3).expect("table address");
+    laws(&DocxMutation::RemoveTableRow(remove_table_row::RemoveTableRow { address: table, index: 1 }), &base).await;
+    laws(&DocxMutation::RemoveStyle(remove_style::RemoveStyle { id: "Two".into() }), &base).await;
 }

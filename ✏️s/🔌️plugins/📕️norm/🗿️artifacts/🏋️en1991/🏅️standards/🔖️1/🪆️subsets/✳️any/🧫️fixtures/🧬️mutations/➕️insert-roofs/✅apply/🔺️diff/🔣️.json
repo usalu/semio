@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "annex": null,
   "snowZone": null,
   "altitude": null,
@@ -65,36 +64,45 @@
   "assumedSiloPressure": null,
   "assumedSiloPatch": null,
   "assumedSiloWallFriction": null,
-  "floors": null,
-  "selfWeightElements": null,
-  "roofs": {
-    "values": [
-      {
-        "id": "roof-main",
-        "roofType": "duopitch",
-        "pitchDeg": 15.0,
-        "cE": 1.0,
-        "cT": 1.0,
-        "hasParapet": false,
-        "parapetHeight": 0.0,
-        "driftObstructionHeight": 0.0,
-        "multiSpan": false,
-        "assumedSk": 200.0
-      },
-      {
-        "id": "roof-annex",
-        "roofType": "monopitch",
-        "pitchDeg": 10.0,
-        "cE": 1.0,
-        "cT": 1.0,
-        "hasParapet": true,
-        "parapetHeight": 0.8,
-        "driftObstructionHeight": 0.0,
-        "multiSpan": false,
-        "assumedSk": 1200.0
-      }
-    ]
+  "floors": {
+    "removed": [],
+    "added": [],
+    "modified": []
   },
-  "windFaces": null,
-  "accidentalCases": null
+  "selfWeightElements": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "roofs": {
+    "removed": [],
+    "added": [
+      {
+        "after": "roof-main",
+        "row": {
+          "id": "roof-annex",
+          "roofType": "monopitch",
+          "pitchDeg": 10.0,
+          "cE": 1.0,
+          "cT": 1.0,
+          "hasParapet": true,
+          "parapetHeight": 0.8,
+          "driftObstructionHeight": 0.0,
+          "multiSpan": false,
+          "assumedSk": 1200.0
+        }
+      }
+    ],
+    "modified": []
+  },
+  "windFaces": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "accidentalCases": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

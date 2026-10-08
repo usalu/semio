@@ -11,9 +11,9 @@ pub use delete_n::DeleteN;
 #[path = "➕️add-n/🦀️.rs"]
 mod add_n;
 pub use add_n::AddN;
-#[path = "↩️assign-n/🦀️.rs"]
-mod assign_n;
-pub use assign_n::AssignN;
+#[path = "↩️restore-n/🦀️.rs"]
+mod restore_n;
+pub use restore_n::RestoreN;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value_derive::RetireOwned, dsl::Mutations, semio_framework_dsl_record_derive::DslEnum)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
@@ -23,5 +23,5 @@ pub(crate) enum DemoMutation {
     SetN(SetN),
     DeleteN(DeleteN),
     AddN(AddN),
-    AssignN(AssignN),
+    RestoreN(RestoreN),
 }

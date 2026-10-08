@@ -1,0 +1,21 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "samplers": [
+      {
+        "name": "sampler0"
+      },
+      {
+        "name": "sampler1"
+      },
+      {
+        "name": "sampler2"
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

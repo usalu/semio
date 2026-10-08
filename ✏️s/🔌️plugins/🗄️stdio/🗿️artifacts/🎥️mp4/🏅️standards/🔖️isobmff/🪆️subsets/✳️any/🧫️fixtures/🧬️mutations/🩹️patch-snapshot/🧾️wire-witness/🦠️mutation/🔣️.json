@@ -1,8 +1,0 @@
-{
-  "mutation": "patchSnapshot",
-  "patch": {
-    "operation": "set",
-    "path": "/tracks/0/samples/1/sync",
-    "value": true
-  }
-}

@@ -1,7 +1,5 @@
-//! 🔧️ `set-entity-arg` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 🔧️ `set-entity-arg` — authored as its own mutation leaf. It builds its own sparse diff and concrete
+//! inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -18,15 +16,26 @@ pub struct SetEntityArg {
 impl protocol::MutationKind<StepSnapshot, StepMutation> for SetEntityArg {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entity-arg", kind: "set-entity-arg", record: "SetEntityArg" };
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepMutation as Mutation<StepSnapshot>>::Diff> {
-        agg_diff(&StepMutation::SetEntityArg(self.clone()), base)
+    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
+        let Self { id, arg_index, value } = self;
+        protocol::MutationOutcome::new(match base.entities.iter().find(|e| e.id == *id) {
+            Some(e) if e.args.get(*arg_index).is_some_and(|v| v == value) => StepDiff::default(),
+            _ => StepDiff {
+                entities: Some(StepEntitiesDiff {
+                    modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { args: Some(StepArgsDiff { modified: vec![StepArgModified { index: *arg_index, value: value.clone() }], ..Default::default() }), ..Default::default() } }],
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+        })
     }
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&StepMutation::SetEntityArg(self.clone()), base)?
-    
-    })
-}
+        let Self { id, arg_index, .. } = self;
+        Ok(match base.entities.iter().find(|e| e.id == *id).and_then(|e| e.args.get(*arg_index)) {
+            Some(v) => vec![StepMutation::SetEntityArg(set_entity_arg::SetEntityArg { id: *id, arg_index: *arg_index, value: v.clone() })],
+            None => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set entity arg", "Entitätsargument setzen")
     }

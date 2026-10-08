@@ -107,6 +107,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Block5dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let produced = <crate::standards::v1::subsets::any::schema::diff::Block5dDiff as protocol::MutationDiff<Block5dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-grip-kind/removes-plug-grip-kind: committed diff did not carry before to after");
+}
+
+/// ➕️ The concrete inverse operations' diffs sum to exactly the negative of the forward diff (law L3).
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

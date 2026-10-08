@@ -7,7 +7,7 @@ use super::super::*;
 pub fn inverse(payload: &super::RemoveLayout, base: &SemioPresentationSnapshot) -> Result<Vec<SemioPresentationMutation>, semio_framework_value::ValueError> {
     let super::RemoveLayout { id } = payload;
     Ok(match layout_at(base, id) {
-        Some(l) => vec![SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout: l.clone() })],
+        Some(l) => vec![SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout: l.clone(), at: base.layouts.iter().position(|layout| layout.id == *id) })],
         None => Vec::new(),
     })
 }

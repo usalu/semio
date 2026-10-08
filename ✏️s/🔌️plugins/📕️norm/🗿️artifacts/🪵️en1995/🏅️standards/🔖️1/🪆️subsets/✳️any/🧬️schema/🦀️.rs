@@ -35,7 +35,6 @@ impl En1995Artifact {
     pub fn from_snapshot(snapshot: En1995Snapshot) -> Self {
         Self { annex: snapshot.annex, members: snapshot.members, connections: snapshot.connections }
     }
-    pub fn set_snapshot(&mut self, snapshot: En1995Snapshot) { *self = Self::from_snapshot(snapshot); }
 }
 //#endregion 🔖️Conversions
 

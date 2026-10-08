@@ -2,7 +2,7 @@
 //! position in `id` order (never a whole-snapshot capture), so `delete-stream` puts it back exactly
 //! where it was. Duplicate `stream.id` ⇒ Fatal `mutation.duplicate-id`; a `camera_id` naming a camera
 //! this base does not calibrate ⇒ Error `mutation.target-missing`, addressed to that camera.
-use crate::diff::{RemodelingDiff, RemodelingMediaStreamList};
+use crate::diff::{RemodelingDiff, RemodelingRow};
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
@@ -15,9 +15,6 @@ pub fn diff(payload: &super::CreateStream, base: &RemodelingSnapshot) -> protoco
             return protocol::MutationOutcome::error("mutation.target-missing", format!("Stream \"{}\" references unknown camera \"{}\".", payload.stream.id, camera_id), [camera_id.clone()]);
         }
     }
-    let mut streams = base.streams.clone();
-    let at = crate::mutations::ordered_index(&streams, &payload.stream.id, |stream| stream.id.clone());
-    streams.insert(at, payload.stream.clone());
-    protocol::MutationOutcome::new(RemodelingDiff { streams: Some(RemodelingMediaStreamList { values: streams }), ..Default::default() })
+    protocol::MutationOutcome::new(RemodelingDiff::stream_rows(vec![RemodelingRow::Insert { entity: payload.stream.clone() }]))
 }
 //#endregion 🔖️Diff

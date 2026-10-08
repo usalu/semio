@@ -159,7 +159,7 @@ fn session_close_dag_host_nonterminal_drop_refuses_recursive_release() {
 
 #[test]
 fn session_close_vector_scene_retirement_retains_and_reuses_exact_slot() {
-    use crate::infinite::canvas::{advance_opaque_scene_retirement, append_svg_document, publish_opaque_scene_retirement, reserve_opaque_scene_retirement, Affine, BezPath, Color, FillRule, OpaqueSceneRetirementStep, Scene, SvgDocument};
+    use semio_framework_canvas::{advance_opaque_scene_retirement, append_svg_document, publish_opaque_scene_retirement, reserve_opaque_scene_retirement, Affine, BezPath, Color, FillRule, OpaqueSceneRetirementStep, Scene, SvgDocument};
 
     let fixture = semio_framework_pack_json::parse(include_str!("../../🧫️fixtures/🧹️session-retirement/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let capacity = fixture.get("scene").and_then(|value| value.get("retirementCapacity")).and_then(semio_framework_pack_json::Value::as_u64).unwrap() as usize;

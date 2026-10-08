@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateElement`.
 use super::CreateElement;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dElementsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dElementsDelta, insertion_order};
 use crate::standards::v1::subsets::any::schema::mutations::resolve_element;
 use crate::{element_id, Fem3dSnapshot};
 
@@ -13,6 +13,6 @@ pub fn diff(payload: &CreateElement, base: &Fem3dSnapshot) -> protocol::Mutation
     if let Some(refusal) = resolve_element(base, &payload.element) {
         return refusal;
     }
-    protocol::MutationOutcome::new(Fem3dDiff { elements: Some(Fem3dElementsDelta { added: vec![(*payload.element).clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem3dDiff { elements: Some(Fem3dElementsDelta { added: vec![(*payload.element).clone()], reordered: insertion_order(base.elements.iter().map(|item| element_id(item)), new_id, payload.index), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -40,8 +40,7 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real 40 KB DOCTYPE
   notion that it did: its `set-doctype` takes an arbitrary doctype, so `{"name": "book"}` on this
   document desynchronises §2.8 and `null` deletes the declaration outright. Every kind below is
   subset-closed instead — `declare-doctype` takes NO name (it derives one from the actual document
-  element), `rename-document-element` retags the DOCTYPE Name in the SAME step, and `set-snapshot` is
-  gated on the two hard axes where `✳️any`'s is ungated by design.
+  element) and `rename-document-element` retags the DOCTYPE Name in the SAME step.
 
   Two kinds this subset deliberately does NOT declare, stated rather than left as a gap.
   `undeclare-doctype`: every application of it would make the document hard-invalid, so the kind
@@ -98,7 +97,6 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real 40 KB DOCTYPE
     And the semantic projection moved
     Examples:
       | id | params |
-      | set-snapshot | {"snapshot": {"schema": "stdio.xml", "doc": {"root": {"kind": "element", "name": "plist", "attrs": [{"name": "version", "value": "1.0"}], "children": [{"kind": "element", "name": "dict", "attrs": [], "children": [{"kind": "element", "name": "key", "attrs": [], "children": [{"kind": "text", "text": "UTTypeIdentifier"}]}, {"kind": "element", "name": "string", "attrs": [], "children": [{"kind": "text", "text": "tech.semio.kit"}]}]}]}, "doctype": {"name": "plist", "externalId": {"kind": "system", "systemId": "PropertyList-1.0.dtd"}}, "declaration": {"version": "1.0", "encoding": "UTF-8"}}}} |
       | declare-doctype | {"externalId": {"kind": "system", "systemId": "https://www.apple.com/DTDs/PropertyList-1.0.dtd"}} |
       | rename-document-element | {"name": "propertyList"} |
       | set-external-subset | {"externalId": null} |
@@ -106,7 +104,6 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real 40 KB DOCTYPE
       | declare-entity | {"index": 0, "parameter": false, "name": "semioVendor", "value": "tech.semio"} |
       | set-internal-subset | {"declarations": [{"kind": "entity", "parameter": false, "name": "semioVendor", "value": "tech.semio"}, {"kind": "entity", "parameter": true, "name": "semioShared", "value": "tech.semio.shared"}]} |
       | set-text | {"path": [1, 3, 0], "text": "reuse-marketplaces-2026"} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/doc/root/children/1/children/3/children/0/text", "value": "reuse-marketplaces-patched"}} |
 
   @id-inverse
   @level-exhaustive
@@ -120,7 +117,6 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real 40 KB DOCTYPE
     Then the restored document's semantic projection equals the original document's own
     Examples:
       | id | params |
-      | set-snapshot | {"snapshot": {"schema": "stdio.xml", "doc": {"root": {"kind": "element", "name": "plist", "attrs": [{"name": "version", "value": "1.0"}], "children": [{"kind": "element", "name": "dict", "attrs": [], "children": [{"kind": "element", "name": "key", "attrs": [], "children": [{"kind": "text", "text": "UTTypeIdentifier"}]}, {"kind": "element", "name": "string", "attrs": [], "children": [{"kind": "text", "text": "tech.semio.kit"}]}]}]}, "doctype": {"name": "plist", "externalId": {"kind": "system", "systemId": "PropertyList-1.0.dtd"}}, "declaration": {"version": "1.0", "encoding": "UTF-8"}}}} |
       | declare-doctype | {"externalId": {"kind": "system", "systemId": "https://www.apple.com/DTDs/PropertyList-1.0.dtd"}} |
       | rename-document-element | {"name": "propertyList"} |
       | set-external-subset | {"externalId": null} |
@@ -128,7 +124,6 @@ Feature: Apply every typed XML 1.0 valid-subset mutation to a real 40 KB DOCTYPE
       | declare-entity | {"index": 0, "parameter": false, "name": "semioVendor", "value": "tech.semio"} |
       | set-internal-subset | {"declarations": [{"kind": "entity", "parameter": false, "name": "semioVendor", "value": "tech.semio"}, {"kind": "entity", "parameter": true, "name": "semioShared", "value": "tech.semio.shared"}]} |
       | set-text | {"path": [1, 3, 0], "text": "reuse-marketplaces-2026"} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/doc/root/children/1/children/3/children/0/text", "value": "reuse-marketplaces-patched"}} |
 
   @id-identity-round-trip
   @level-long

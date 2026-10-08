@@ -41,16 +41,16 @@ async fn artifact_engine_apply_and_inverse_round_trip() {
     // `protocol::Mutation` diff/apply/inverse contract and the new `rename-object` mutation.
     use crate::mutations::rename_object;
     use crate::LowpolyMutation;
-    use protocol::{Mutation, MutationDiff};
+    use protocol::Mutation;
     let base = default_snapshot();
     let object_id = base.objects[0].id.clone();
     let mutation = LowpolyMutation::RenameObject(rename_object::RenameObject { id: object_id, new_name: "Renamed".into() });
-    let after = mutation.diff(&base).diff().apply(&base).expect("valid mutation diff");
+    let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
     assert_eq!(after.objects[0].name, "Renamed");
     let inverse = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     let mut state = after;
     for step in &inverse {
-        state = step.diff(&state).diff().apply(&state).expect("valid mutation diff");
+        state = protocol::apply_diff(step.diff(&state).diff(), &state).expect("valid mutation diff");
     }
     assert_eq!(state.objects[0].name, LOWPOLY_DEFAULT_EXAMPLE_LABEL);
 }

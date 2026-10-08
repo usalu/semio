@@ -1,15 +1,14 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "title": null,
   "blocks": {
-    "added": [],
-    "removed": [
-      "blk-math"
-    ],
-    "patched": [],
-    "reordered": null
+    "rows": [
+      {
+        "row": "remove",
+        "id": "blk-math"
+      }
+    ]
   },
   "gridVisible": null,
   "gridSpacing": null,

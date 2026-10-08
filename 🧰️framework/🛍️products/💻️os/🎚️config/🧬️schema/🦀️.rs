@@ -3,7 +3,7 @@
 //! (`🏪️store`); the resolved state is a fold over the config op log, never a mutable map — see
 //! `set-default-app`/`clear-default-app` under `🧬️mutations/`. `AppRole`/`AppRef`/`ArtifactDialect`
 //! are owned by lane 0-A (`🧰️framework/🔨️modules/🛂️manifest/🦀️.rs` and
-//! `🧰️framework/🔨️modules/🚪️io/🦀️.rs`, both re-exported flat off the `semio_framework`
+//! `🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🦀️.rs`, both re-exported flat off the `semio_framework`
 //! crate root) — imported here, never redefined. The plugin host mounts this schema together with
 //! every direct mutation leaf in its Rust glue.
 
@@ -549,6 +549,74 @@ pub fn inverse_ui_preferences_config_mutation_steps(mutation: &super::mutations:
     mutation.inverse(base)?
 
     })
+}
+
+/// 🧬️ Applies one identity mutation through the central applier.
+pub fn apply_identity_config_mutation(snapshot: &mut super::mutations::IdentitySetting, mutation: &super::mutations::IdentityConfigMutation) -> protocol::MutationApplyResult<()> {
+    use protocol::Mutation as _;
+    *snapshot = protocol::apply_diff(mutation.diff(snapshot).diff(), snapshot)?;
+    Ok(())
+}
+
+/// ▶️ Applies a identity mutation and returns its diagnostic `(code, severity)` pairs.
+pub fn apply_identity_config_mutation_reporting(snapshot: &mut super::mutations::IdentitySetting, mutation: &super::mutations::IdentityConfigMutation) -> Vec<(String, String)> {
+    use protocol::Mutation as _;
+    let outcome = mutation.diff(snapshot);
+    if let Ok(next) = protocol::apply_diff(outcome.diff(), snapshot) {
+        *snapshot = next;
+    }
+    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
+}
+
+/// 🧬️ Applies one merge-policy mutation through the central applier.
+pub fn apply_merge_policy_config_mutation(snapshot: &mut super::mutations::MergePolicySetting, mutation: &super::mutations::MergePolicyConfigMutation) -> protocol::MutationApplyResult<()> {
+    use protocol::Mutation as _;
+    *snapshot = protocol::apply_diff(mutation.diff(snapshot).diff(), snapshot)?;
+    Ok(())
+}
+
+/// ▶️ Applies a merge-policy mutation and returns its diagnostic `(code, severity)` pairs.
+pub fn apply_merge_policy_config_mutation_reporting(snapshot: &mut super::mutations::MergePolicySetting, mutation: &super::mutations::MergePolicyConfigMutation) -> Vec<(String, String)> {
+    use protocol::Mutation as _;
+    let outcome = mutation.diff(snapshot);
+    if let Ok(next) = protocol::apply_diff(outcome.diff(), snapshot) {
+        *snapshot = next;
+    }
+    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
+}
+
+/// 🧬️ Applies one local-catalog mutation through the central applier.
+pub fn apply_local_catalog_config_mutation(snapshot: &mut super::mutations::LocalCatalog, mutation: &super::mutations::LocalCatalogConfigMutation) -> protocol::MutationApplyResult<()> {
+    use protocol::Mutation as _;
+    *snapshot = protocol::apply_diff(mutation.diff(snapshot).diff(), snapshot)?;
+    Ok(())
+}
+
+/// ▶️ Applies a local-catalog mutation and returns its diagnostic `(code, severity)` pairs.
+pub fn apply_local_catalog_config_mutation_reporting(snapshot: &mut super::mutations::LocalCatalog, mutation: &super::mutations::LocalCatalogConfigMutation) -> Vec<(String, String)> {
+    use protocol::Mutation as _;
+    let outcome = mutation.diff(snapshot);
+    if let Ok(next) = protocol::apply_diff(outcome.diff(), snapshot) {
+        *snapshot = next;
+    }
+    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
+}
+
+/// 🧬️ Applies one local-folders mutation through the central applier.
+pub fn apply_local_folders_config_mutation(snapshot: &mut super::mutations::LocalFolderBindings, mutation: &super::mutations::LocalFoldersConfigMutation) -> protocol::MutationApplyResult<()> {
+    use protocol::Mutation as _;
+    *snapshot = protocol::apply_diff(mutation.diff(snapshot).diff(), snapshot)?;
+    Ok(())
+}
+
+/// ▶️ Applies a local-folders mutation and returns its diagnostic `(code, severity)` pairs.
+pub fn apply_local_folders_config_mutation_reporting(snapshot: &mut super::mutations::LocalFolderBindings, mutation: &super::mutations::LocalFoldersConfigMutation) -> Vec<(String, String)> {
+    use protocol::Mutation as _;
+    let outcome = mutation.diff(snapshot);
+    if let Ok(next) = protocol::apply_diff(outcome.diff(), snapshot) {
+        *snapshot = next;
+    }
+    outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
 }
 //#endregion 🌉️MutationCodecBridge
 

@@ -31,7 +31,7 @@ fn mutation() -> SemioDrawingMutation {
 #[semio_framework_async_macros::async_test]
 async fn repaints_the_fill_and_leaves_the_rest_of_the_style_alone() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("replace-fill applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("replace-fill applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "replace-fill/repaints-the-primary-styles-fill-from-red-to-blue: applied state differs from the committed after-snapshot");
     let fill = produced.styles[0].fill.expect("the style still has a fill");
     assert_eq!((fill.r, fill.b), (0.0, 1.0), "the fill takes the payload's own colour");
@@ -45,13 +45,14 @@ async fn repaints_the_fill_and_leaves_the_rest_of_the_style_alone() {
 async fn the_undo_replace_fill_restores_the_red() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "replace-fill of an existing style undoes as exactly one replace-fill");
     let SemioDrawingMutation::ReplaceFill(restore) = &undo[0] else { panic!("replace-fill must undo as replace-fill") };
     assert_eq!(restore.new_fill, base.styles[0].fill, "the undo must recapture BASE's own fill, Option and all");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward replace-fill applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo replace-fill applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward replace-fill applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo replace-fill applies");
     }
     assert_eq!(current, base, "replace-fill/repaints-the-primary-styles-fill-from-red-to-blue: the undo did not restore the before-snapshot");
 }
@@ -112,6 +113,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-fill diff decodes");
-    let produced = decoded.apply(&before()).expect("committed replace-fill diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed replace-fill diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-fill/repaints-the-primary-styles-fill-from-red-to-blue: committed diff did not carry before to after");
 }

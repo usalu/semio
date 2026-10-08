@@ -1,4 +1,5 @@
 # 🏷️ Direct set-properties GraphQL payload.
 input SetPropertiesMutationInput {
   properties: PdfNamedPropertiesInput
+  index: Int
 }

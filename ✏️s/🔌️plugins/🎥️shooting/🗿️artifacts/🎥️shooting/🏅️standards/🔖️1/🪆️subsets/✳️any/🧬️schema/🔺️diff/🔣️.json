@@ -6,65 +6,113 @@
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "artifact": {
-      "title": "ShootingArtifact",
-      "type": "object",
-      "x-semio-state": "artifact"
-    },
     "schema": {
-      "type": "string",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "assets": {
-      "$ref": "#/$defs/ShootingAssetsDelta",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/ShootingAssetsDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "savedCameras": {
-      "$ref": "#/$defs/ShootingSavedCamerasDelta",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/ShootingSavedCamerasDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "scene": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingSceneLighting",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/ShootingScenePatch"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "shots": {
-      "$ref": "#/$defs/ShootingShotsDelta",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/ShootingShotsDelta"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "activeShotId": {
-      "type": "string",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "activeAssetId": {
-      "type": "string",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string"
+        }
+      ],
       "x-semio-state": "artifact"
     },
     "emblem": {
       "anyOf": [
-        { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json" },
-        { "type": "null" }
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "value"
+          ],
+          "properties": {
+            "value": {
+              "anyOf": [
+                {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "x-semio-child-kind": "s.stdio.semio.image"
+        }
       ],
-      "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio.image"
+      "x-semio-state": "artifact"
     }
   },
   "$defs": {
-    "ShootingStringList": {
-      "title": "ShootingStringList",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "values"
-      ],
-      "properties": {
-        "values": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "ShootingAssetPatch": {
       "title": "ShootingAssetPatch",
       "type": "object",
@@ -72,37 +120,114 @@
       "required": [],
       "properties": {
         "name": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "url": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "format": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "origin": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 3,
-          "maxItems": 3
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "format": "double"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            }
+          ]
         },
         "orientation": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 4,
-          "maxItems": 4
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "number",
+                        "format": "double"
+                      },
+                      "minItems": 4,
+                      "maxItems": 4
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
         },
         "scale": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          },
-          "minItems": 3,
-          "maxItems": 3
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "number",
+                        "format": "double"
+                      },
+                      "minItems": 3,
+                      "maxItems": 3
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
         }
       }
     },
@@ -113,25 +238,112 @@
       "required": [],
       "properties": {
         "label": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "width": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0,
-          "maximum": 4294967295
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          ]
         },
         "height": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0,
-          "maximum": 4294967295
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          ]
         },
         "format": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "shape": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "background": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "cameraId": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value"
+              ],
+              "properties": {
+                "value": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
         }
       }
     },
@@ -142,12 +354,402 @@
       "required": [],
       "properties": {
         "label": {
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "camera": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingCamera"
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingCamera"
+            }
+          ]
         }
       }
+    },
+    "ShootingScenePatch": {
+      "title": "ShootingScenePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "background": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "sunEnabled": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "sunAzimuth": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number",
+              "format": "double"
+            }
+          ]
+        },
+        "sunElevation": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number",
+              "format": "double"
+            }
+          ]
+        },
+        "sunIntensity": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number",
+              "format": "double"
+            }
+          ]
+        },
+        "sunColor": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "ambientIntensity": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number",
+              "format": "double"
+            }
+          ]
+        },
+        "ambientColor": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "shadowEnabled": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "shadowOpacity": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number",
+              "format": "double"
+            }
+          ]
+        },
+        "shadowSoftness": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number",
+              "format": "double"
+            }
+          ]
+        },
+        "materialColor": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "materialMetalness": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number",
+              "format": "double"
+            }
+          ]
+        },
+        "materialRoughness": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number",
+              "format": "double"
+            }
+          ]
+        },
+        "materialEmissive": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "materialEmissiveIntensity": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number",
+              "format": "double"
+            }
+          ]
+        },
+        "materialStroke": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    "ShootingAssetEdit": {
+      "title": "ShootingAssetEdit",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "edit",
+            "index",
+            "item"
+          ],
+          "properties": {
+            "edit": {
+              "const": "add"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "item": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingAsset"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "edit",
+            "id"
+          ],
+          "properties": {
+            "edit": {
+              "const": "remove"
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "edit",
+            "id",
+            "index"
+          ],
+          "properties": {
+            "edit": {
+              "const": "move"
+            },
+            "id": {
+              "type": "string"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "ShootingShotEdit": {
+      "title": "ShootingShotEdit",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "edit",
+            "index",
+            "item"
+          ],
+          "properties": {
+            "edit": {
+              "const": "add"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "item": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingShot"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "edit",
+            "id"
+          ],
+          "properties": {
+            "edit": {
+              "const": "remove"
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "edit",
+            "id",
+            "index"
+          ],
+          "properties": {
+            "edit": {
+              "const": "move"
+            },
+            "id": {
+              "type": "string"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "ShootingSavedCameraEdit": {
+      "title": "ShootingSavedCameraEdit",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "edit",
+            "index",
+            "item"
+          ],
+          "properties": {
+            "edit": {
+              "const": "add"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "item": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingSavedCamera"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "edit",
+            "id"
+          ],
+          "properties": {
+            "edit": {
+              "const": "remove"
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "edit",
+            "id",
+            "index"
+          ],
+          "properties": {
+            "edit": {
+              "const": "move"
+            },
+            "id": {
+              "type": "string"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
     },
     "ShootingAssetPatchEntry": {
       "title": "ShootingAssetPatchEntry",
@@ -205,33 +807,20 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
-        "removed",
+        "edits",
         "patched"
       ],
       "properties": {
-        "added": {
+        "edits": {
           "type": "array",
           "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingAsset"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
+            "$ref": "#/$defs/ShootingAssetEdit"
           }
         },
         "patched": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ShootingAssetPatchEntry"
-          }
-        },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
           }
         }
       }
@@ -241,33 +830,20 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
-        "removed",
+        "edits",
         "patched"
       ],
       "properties": {
-        "added": {
+        "edits": {
           "type": "array",
           "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingShot"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
+            "$ref": "#/$defs/ShootingShotEdit"
           }
         },
         "patched": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ShootingShotPatchEntry"
-          }
-        },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
           }
         }
       }
@@ -277,33 +853,20 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "added",
-        "removed",
+        "edits",
         "patched"
       ],
       "properties": {
-        "added": {
+        "edits": {
           "type": "array",
           "items": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/shooting/shooting/artifact.json#/$defs/ShootingSavedCamera"
-          }
-        },
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "string"
+            "$ref": "#/$defs/ShootingSavedCameraEdit"
           }
         },
         "patched": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/ShootingSavedCameraPatchEntry"
-          }
-        },
-        "reordered": {
-          "type": "array",
-          "items": {
-            "type": "string"
           }
         }
       }

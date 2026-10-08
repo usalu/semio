@@ -100,7 +100,6 @@
       "subsetDirectoryName": "🌐️iso21320",
       "vectors": [],
       "kinds": [
-        "set-snapshot",
         "set-archive-comment",
         "add-stored-entry",
         "add-deflated-entry",
@@ -257,26 +256,6 @@
             "operation": "set-entry-data",
             "bridgeVersion": 1,
             "variant": "SetEntryData"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "zip-2-0-iso21320-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "yauzl-zip-2-0-iso21320-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "zip-2-0-iso21320-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
           },
           "oracleRequirements": [
             {
@@ -589,56 +568,6 @@
       "reproducible": true,
       "family": "structural",
       "notes": "The single entry's content replaced, Hello -> World, name untouched."
-    },
-    {
-      "id": "set-snapshot-applied",
-      "class": "third-party-generated",
-      "target": {
-        "artifact": "s.stdio.zip",
-        "standard": "2.0",
-        "subset": "iso21320"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before-zip",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.zip",
-          "mediaType": "application/zip",
-          "sha256": "sha256:315973b7855ec6e2b6d14e3242516301f07e4f8451f059ede2dc346555299a77",
-          "bytes": 123
-        },
-        {
-          "role": "expected-after-zip",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.zip",
-          "mediaType": "application/zip",
-          "sha256": "sha256:ebe925bcdab7443c3cce31ae7c4ea752177b65a318c73b6bdd65785b05d401ac",
-          "bytes": 226
-        }
-      ],
-      "generator": {
-        "oracle": "yazl-zip-2-0-iso21320-mutate-writer",
-        "packageVersion": "2.5.1",
-        "engineFamily": "yazl",
-        "engineVersion": "2.5.1",
-        "command": "bun 🔨️f2-gen-zip-fixtures.cjs (yazl.ZipFile write, yauzl.fromBuffer read-verify)",
-        "platform": "darwin-arm64"
-      },
-      "provenance": {
-        "source": "generated",
-        "license": "MIT (yazl)",
-        "attribution": "Written by yazl 2.5.1's own ZipFile encoder; independently re-read and verified with yauzl 3.4.0 before commit",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "exact-bytes-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": "Whole-archive snapshot replace: an unrelated valid archive substituted wholesale."
     }
   ],
   "oracleHostPackages": []

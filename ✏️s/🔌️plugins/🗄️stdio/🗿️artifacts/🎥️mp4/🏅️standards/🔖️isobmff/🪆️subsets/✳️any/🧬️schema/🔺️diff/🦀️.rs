@@ -226,6 +226,25 @@ pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: Indexe
     d1.modified = modified_map.into_iter().map(|(index, diff)| IndexedModified { index, diff }).collect();
     d1.added = merged_added_final;
 }
+/// ↩️ Negative rows for an indexed collection triple against its BASE items: added rows become removals at their final index,
+/// removed rows return at their base index, and each modified row restores its base value at the index the row has after the
+/// diff. Every list comes back ascending, the normal form [`absorb_indexed`] emits.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_indexed<T: Clone, D>(diff: &IndexedDiff<T, D>, base: &[T], inverse_item: impl Fn(&D, &T) -> D) -> IndexedDiff<T, D> {
+    let mut removed_sorted = diff.removed.clone();
+    removed_sorted.sort_unstable();
+    removed_sorted.dedup();
+    let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
+    added_final.sort_unstable();
+    let after_index = |index: usize| {
+        let survivor = index - removed_sorted.iter().filter(|dropped| **dropped < index).count();
+        added_final.iter().fold(survivor, |position, inserted| if *inserted <= position { position + 1 } else { position })
+    };
+    let mut modified: Vec<IndexedModified<D>> = diff.modified.iter().filter_map(|row| base.get(row.index).map(|item| IndexedModified { index: after_index(row.index), diff: inverse_item(&row.diff, item) })).collect();
+    modified.sort_by_key(|row| row.index);
+    let added = removed_sorted.iter().filter_map(|index| base.get(*index).map(|item| IndexedAdded { index: *index, item: item.clone() })).collect();
+    IndexedDiff { removed: added_final, modified, added }
+}
 //#endregion 🔖️IndexedTriple
 
 //#region 🔖️Sample
@@ -252,6 +271,9 @@ fn apply_sample_diff_mut(item: &mut Mp4Sample, d: &Mp4SampleDiff) {
 
 fn between_sample(a: &Mp4Sample, b: &Mp4Sample) -> Mp4SampleDiff {
     Mp4SampleDiff { data: (a.data != b.data).then(|| b.data.clone()), duration: (a.duration != b.duration).then_some(b.duration), cts_offset: (a.cts_offset != b.cts_offset).then_some(b.cts_offset), sync: (a.sync != b.sync).then_some(b.sync) }
+}
+fn inverse_sample_diff(d: &Mp4SampleDiff, base: &Mp4Sample) -> Mp4SampleDiff {
+    Mp4SampleDiff { data: d.data.as_ref().map(|_| base.data.clone()), duration: d.duration.map(|_| base.duration), cts_offset: d.cts_offset.map(|_| base.cts_offset), sync: d.sync.map(|_| base.sync) }
 }
 fn sample_diff_is_empty(d: &Mp4SampleDiff) -> bool {
     d.data.is_none() && d.duration.is_none() && d.cts_offset.is_none() && d.sync.is_none()
@@ -368,6 +390,18 @@ fn between_track(a: &Mp4Track, b: &Mp4Track) -> Mp4TrackDiff {
         metadata: (a.metadata != b.metadata).then(|| b.metadata.clone()),
         chunk_sample_counts: (a.chunk_sample_counts != b.chunk_sample_counts).then(|| b.chunk_sample_counts.clone()),
         samples: (!samples_diff.is_empty()).then_some(samples_diff),
+    }
+}
+fn inverse_track_diff(d: &Mp4TrackDiff, base: &Mp4Track) -> Mp4TrackDiff {
+    Mp4TrackDiff {
+        track_id: d.track_id.map(|_| base.track_id),
+        timescale: d.timescale.map(|_| base.timescale),
+        codec: d.codec.as_ref().map(|_| base.codec.clone()),
+        width: d.width.map(|_| base.width),
+        height: d.height.map(|_| base.height),
+        metadata: d.metadata.as_ref().map(|_| base.metadata.clone()),
+        chunk_sample_counts: d.chunk_sample_counts.as_ref().map(|_| base.chunk_sample_counts.clone()),
+        samples: d.samples.as_ref().map(|samples| inverse_indexed(samples, &base.samples, inverse_sample_diff)).filter(|samples| !samples.is_empty()),
     }
 }
 fn track_diff_is_empty(d: &Mp4TrackDiff) -> bool {
@@ -502,21 +536,11 @@ impl DiffAlgebra<Mp4Snapshot> for Mp4Diff {
         Self { ftyp: (base.ftyp != other.ftyp).then(|| other.ftyp.clone()), movie: (base.movie != other.movie).then(|| other.movie.clone()), tracks: (!tracks_diff.is_empty()).then_some(tracks_diff) }
     }
     fn inverse(&self, base: &Mp4Snapshot) -> Self {
-        // 🔁️ Correct-by-construction: `between(after, base)` trivially satisfies the inverse law
-        // `d.inverse(base).apply(&d.apply(base)) == base` because `between` itself satisfies
-        // `between(a,b).apply(a) == b` (tested directly below) — applying `between(after, base)`
-        // to `after` yields `base` by that same law with `a = after, b = base`.
-        let mut after = base.clone();
-        if let Some(v) = &self.ftyp {
-            after.ftyp = v.clone();
+        Self {
+            ftyp: self.ftyp.as_ref().map(|_| base.ftyp.clone()),
+            movie: self.movie.as_ref().map(|_| base.movie.clone()),
+            tracks: self.tracks.as_ref().map(|tracks| inverse_indexed(tracks, &base.tracks, inverse_track_diff)).filter(|tracks| !tracks.is_empty()),
         }
-        if let Some(v) = &self.movie {
-            after.movie = v.clone();
-        }
-        if let Some(v) = &self.tracks {
-            after.tracks = apply_indexed(&base.tracks, v, apply_track_diff);
-        }
-        Self::between(&after, base)
     }
 
     fn is_empty(&self) -> bool {
@@ -524,10 +548,6 @@ impl DiffAlgebra<Mp4Snapshot> for Mp4Diff {
     }
 }
 
-/// 🧩 Set-snapshot diff helper — used by the `📸️set-snapshot/🔺️diff` leaf.
-pub fn diff_set_snapshot(base: &Mp4Snapshot, snapshot: &Mp4Snapshot) -> Mp4Diff {
-    <Mp4Diff as DiffAlgebra<Mp4Snapshot>>::between(base, snapshot)
-}
 //#endregion 🔖️Diff
 
 //#region 🔖️Tests

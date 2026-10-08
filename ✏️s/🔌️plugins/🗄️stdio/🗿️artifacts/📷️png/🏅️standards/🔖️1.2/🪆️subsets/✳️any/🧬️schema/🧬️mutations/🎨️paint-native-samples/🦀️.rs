@@ -2,7 +2,7 @@
 
 use crate::schema::snapshot::{PngNativePaint, PngRegion};
 use crate::schema::diff::PngDiff;
-use crate::schema::mutations::{PngMutation, SetSnapshot};
+use crate::schema::mutations::{PngMutation, ReplaceImage};
 use crate::PngSnapshot;
 use protocol::DiffAlgebra;
 
@@ -27,7 +27,7 @@ impl protocol::MutationKind<PngSnapshot, PngMutation> for PaintNativeSamplesMuta
     }
 
     fn inverse(&self, base: &PngSnapshot) -> Result<Vec<PngMutation>, semio_framework_value::ValueError> {
-        Ok(vec![PngMutation::SetSnapshot(SetSnapshot { snapshot: base.clone() })])
+        Ok(vec![PngMutation::ReplaceImage(ReplaceImage { image: base.image.clone() })])
     }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

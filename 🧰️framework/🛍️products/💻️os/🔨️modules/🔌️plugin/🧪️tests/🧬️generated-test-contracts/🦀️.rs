@@ -85,10 +85,10 @@ macro_rules! __semio_subset_derived_conformance_tests {
             #[semio_framework_async_macros::async_test]
             async fn subset_macro_derived_validator_registers() {
                 register().await;
-                let registered = semio_framework::io::list_registered_subset_validator_dialects().await.expect("registered subset observation");
+                let registered = semio_framework_os_kernel::io::list_registered_subset_validator_dialects().await.expect("registered subset observation");
                 assert_eq!(registered.iter().filter(|dialect| **dialect == SUBSET_DIALECT).count(), 1);
-                let payload = $crate::IoPayload::Text(String::new());
-                let _ = <$validator as $crate::SubsetValidator>::validate(&payload).await;
+                let payload = $crate::io::IoPayload::Text(String::new());
+                let _ = <$validator as $crate::io::SubsetValidator>::validate(&payload).await;
             }
         }
     };

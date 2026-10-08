@@ -20,6 +20,6 @@ pub fn handle(payload: &AddSection, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg:
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.sections.iter().map(|s| s.id.clone()), "s");
     Ok(Emit::mutations(vec![Fem3dMutation::CreateSection(crate::standards::v1::subsets::any::schema::mutations::create_section::CreateSection {
-        section: crate::FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy, iz: payload.iz, j: payload.j },
+        section: crate::FemSection { id, name: payload.name.clone(), area: payload.area, iy: payload.iy, iz: payload.iz, j: payload.j }, index: None,
     })]))
 }

@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../.."
 name = "semio-s-artifact-procedural-generation3d"
 version.workspace = true
 edition.workspace = true
@@ -38,12 +38,16 @@ semio-framework-artifact-infinite-dag = { workspace = true }
 semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-framework-3d = { workspace = true }
+semio-framework-mesh-engine = { workspace = true }
+semio-framework-io-base64 = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
+semio-s-artifact-stdio-step = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-las = { workspace = true }
@@ -73,7 +77,7 @@ semio-framework-ui-styling = { workspace = true, optional = true }
 syn = { version = "=2.0.117", features = ["full", "visit"] }
 proc-macro2 = "1"
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async-macros = { workspace = true }
 # 🧮️ The heap witness the guest-memory laws weigh the contributions install path with — test-only,
 # never a `[dependencies]` entry: a production guest reads its own footprint with `memory.size`.

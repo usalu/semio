@@ -44,4 +44,5 @@ message SemioBrepMutation {
   repeated semio.s_stdio_semio_brep.snapshot.BrepShellFace faces = 17;
   repeated semio.s_stdio_semio_brep.snapshot.BrepSolidShell shells = 18;
   optional double tol = 19;
+  optional uint64 at = 20;
 }

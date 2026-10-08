@@ -17,41 +17,9 @@ impl Default for SequenceMainWindowConfig {
     fn default() -> Self { Self { orientation: "leftRight".into(), camera: SequenceCamera::default() } }
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(tag = "kind", rename_all = "kebab-case")]
-pub enum SequenceMainWindowConfigMutation {
-    Snapshot { config: SequenceMainWindowConfig },
-}
 
-impl protocol::Mutation<SequenceMainWindowConfig> for SequenceMainWindowConfigMutation {
-    type Diff = SequenceMainWindowConfig;
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
-        schema_version: 1,
-        owner: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main/🎚️config",
-        semantic_kind: "set-window-config",
-        display_name: "Set Sequence Main Window Configuration",
-        emoji: "🎚️",
-        aggregate_variant: "Snapshot",
-        payload_schema: "sequence.mainwindowconfig",
-        text_opcode: None,
-        binary_tag: None,
-        invertibility: protocol::MutationInvertibility::ExplicitMutation,
-        diff_participation: protocol::MutationDiffParticipation::Detect,
-        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-        composition: protocol::MutationComposition::Atomic,
-        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }];
-    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, _base: &SequenceMainWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
-        match self { Self::Snapshot { config } => protocol::MutationOutcome::new(config.clone()) }
-    }
-    fn inverse(&self, base: &SequenceMainWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { config: base.clone() }]
-    
-    })())
-}
-}
+
+
 
 /// 📜️ Record-backed text form — the derived `__dsl_spec` grammar inside this window kind's semio
 /// text envelope, the same shape every sibling window config prints.
@@ -94,20 +62,21 @@ impl store::ArtifactPack for SequenceMainWindowConfig {
     }
 }
 
-store::impl_whole_record_config!(SequenceMainWindowConfig);
-impl protocol::OpText for SequenceMainWindowConfigMutation {
-    fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) }
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
+semio_framework_os_kernel::config_record! {
+    record: SequenceMainWindowConfig,
+    diff: SequenceMainWindowConfigDiff,
+    set: SequenceMainWindowConfigMutation,
+    owner: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📽️main",
+    payload_schema: "sequence.mainwindowconfig",
+    emoji: "🎚️",
+    replace: Snapshot { config } wire "snapshot" kind "set-window-config" name "Set Sequence Main Window Configuration",
+    fields: {
+        orientation: String => SetOrientation "set-orientation",
+        camera: SequenceCamera => SetCamera "set-camera",
+    },
 }
-impl protocol::OpBinary for SequenceMainWindowConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(protocol::OpText::print_op(self).into_bytes()) }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
-        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
-    }
-}
+
+
 
 pub struct SequenceMainWindowConfigOwner;
 

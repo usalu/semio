@@ -15,7 +15,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written. Text and pack are the
 /// derived spec-driven encodings of the one `dsl::DslRecord` spec, composed child and link slot included.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[value(rename_all = "camelCase", deny_unknown_fields, retire_with="crate::standards::v1::subsets::any::io::sqlite::snapshot::retire")]
+#[value(rename_all = "camelCase", deny_unknown_fields, retire_with="crate::standards::v1::subsets::any::schema::snapshot::retire")]
 #[dsl(extension = "layout")]
 #[artifact_schema(id = "s.layout.layout")]
 pub struct LayoutSnapshot {
@@ -97,3 +97,10 @@ mod round_trip_tests;
 
 #[path="🧩️component/🦀️.rs"]
 pub mod drawing_child;
+
+/// 🧹️ Releases recursive child and dictionary owners before the plain snapshot fields.
+pub fn retire(mut value: LayoutSnapshot) {
+    if let Some(child) = value.background_drawing.take() { crate::standards::v1::subsets::any::schema::snapshot::drawing_child::retire(child); }
+    if let Some(dictionary) = value.data_fields.take() { <crate::FormDictionary as semio_framework_value::FromValue>::retire_decoded(dictionary); }
+    drop(value);
+}

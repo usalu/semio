@@ -3,6 +3,10 @@
 use crate::diff::En1999Diff;
 use crate::En1999Snapshot;
 
+#[path = "🧭️edit-rules/🦀️.rs"]
+mod edit_rules;
+pub use edit_rules::{resolve_edit, EDIT_RULES};
+
 use super::change_annex;
 use super::change_materials;
 use super::change_sections;
@@ -109,7 +113,7 @@ mod tests;
 pub fn apply_en1999_mutation(base: &En1999Snapshot, mutation: &En1999Mutation) -> Result<(En1999Snapshot, Vec<String>), String> {
     let raised = <En1999Mutation as protocol::Mutation<En1999Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = <En1999Diff as protocol::MutationDiff<En1999Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
 
@@ -130,3 +134,7 @@ mod kinds_catalog;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧫️Vectors
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row;

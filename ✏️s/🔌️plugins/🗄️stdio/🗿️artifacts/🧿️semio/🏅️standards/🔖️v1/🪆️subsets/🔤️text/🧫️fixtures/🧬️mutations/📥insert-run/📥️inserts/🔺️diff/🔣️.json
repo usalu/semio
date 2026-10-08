@@ -1,20 +1,13 @@
 {
   "runs": {
-    "values": [
+    "added": [
       {
-        "language": "en",
-        "content": "Good morning",
-        "marks": []
-      },
-      {
-        "language": "de",
-        "content": "Guten Morgen",
-        "marks": []
-      },
-      {
-        "language": "en",
-        "content": "Goodbye",
-        "marks": []
+        "index": 1,
+        "item": {
+          "language": "de",
+          "content": "Guten Morgen",
+          "marks": []
+        }
       }
     ]
   }

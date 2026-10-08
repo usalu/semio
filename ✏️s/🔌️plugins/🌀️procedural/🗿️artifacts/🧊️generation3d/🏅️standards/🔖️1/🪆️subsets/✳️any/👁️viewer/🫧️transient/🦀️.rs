@@ -69,14 +69,6 @@ impl store::ArtifactPack for Generation3dViewTransient {
     }
 }
 
-impl protocol::MutationDiff<Generation3dViewTransient> for Generation3dViewTransient {
-    fn apply(&self, _base: &Generation3dViewTransient) -> protocol::MutationApplyResult<Generation3dViewTransient> {
-        Ok(self.clone())
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 
 // 🧹️ The explicit retirement ladder both this surface's APP-level transient lane and its preview
 // WINDOW-level one publish through (`🪟️windows/👁️preview/🫧️transient`): a published evaluation is
@@ -91,3 +83,45 @@ pub use mutations::*;
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
+
+/// 🩹 Owned-field diff of [`Generation3dViewTransient`]: exactly the fields a leaf sets.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Generation3dViewTransientPatch {
+    pub preview_eval_text: Option<Generation3dPreviewEvalChange>,
+}
+
+/// 🔺️ One change of the nullable `preview_eval_text`: the inner `None` clears it.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Generation3dPreviewEvalChange {
+    pub text: Option<String>,
+}
+
+impl protocol::MutationDiff<Generation3dViewTransient> for Generation3dViewTransientPatch {
+    fn apply(&self, base: &Generation3dViewTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Generation3dViewTransient> {
+        Ok(Generation3dViewTransient {
+            preview_eval_text: self.preview_eval_text.clone().map_or_else(|| base.preview_eval_text.clone(), |change| change.text),
+            ..base.clone()
+        })
+    }
+    fn absorb(&mut self, other: Self) {
+        self.preview_eval_text = other.preview_eval_text.or_else(|| self.preview_eval_text.take());
+    }
+}
+
+impl protocol::DiffAlgebra<Generation3dViewTransient> for Generation3dViewTransientPatch {
+    fn inverse(&self, base: &Generation3dViewTransient) -> Self {
+        Self {
+            preview_eval_text: self.preview_eval_text.as_ref().map(|_| Generation3dPreviewEvalChange { text: base.preview_eval_text.clone() }),
+        }
+    }
+    fn between(base: &Generation3dViewTransient, other: &Generation3dViewTransient) -> Self {
+        Self {
+            preview_eval_text: (base.preview_eval_text != other.preview_eval_text).then(|| Generation3dPreviewEvalChange { text: other.preview_eval_text.clone() }),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.preview_eval_text.is_none()
+    }
+}

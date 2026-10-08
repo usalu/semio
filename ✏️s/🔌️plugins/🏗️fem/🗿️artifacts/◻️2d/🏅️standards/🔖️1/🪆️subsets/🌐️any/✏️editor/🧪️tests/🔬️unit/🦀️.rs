@@ -583,7 +583,7 @@ async fn import_media_geometry_in_builds_a_new_region_from_the_first_material() 
     let emit = Fem2dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
     assert_eq!(emit.artifact_mutations.len(), 1);
     match &emit.artifact_mutations[0] {
-        Fem2dMutation::CreateRegion(crate::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region }) => {
+        Fem2dMutation::CreateRegion(crate::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region, .. }) => {
             assert_eq!(region.outline, vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]]);
             assert!(region.holes.is_empty());
             assert_eq!(region.material_id, "steel");
@@ -602,7 +602,7 @@ async fn import_media_geometry_in_falls_back_to_unassigned_material_when_none_ex
     let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
     let emit = Fem2dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
     match &emit.artifact_mutations[0] {
-        Fem2dMutation::CreateRegion(crate::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region }) => assert_eq!(region.material_id, "unassigned"),
+        Fem2dMutation::CreateRegion(crate::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region, .. }) => assert_eq!(region.material_id, "unassigned"),
         _ => panic!("expected CreateRegion"),
     }
 }

@@ -14,7 +14,7 @@
 //     built by `../🦀️engine` and admitted through `tobj` 4. Its own `testEvidence` entry's
 //     `generator.command` still reads plain `generate` with no `--only`, so that exact invocation
 //     must keep producing exactly this one file — this script preserves that path byte-for-byte.
-//   * the 20 reader-oracle corpus recipes (`no-mutation-no-op`, `set-snapshot-applied`, …) — built by
+//   * the 20 reader-oracle corpus recipes (`no-mutation-no-op`, `set-vertex-applied`, …) — built by
 //     `../📖️tobj-obj-reader`'s `build <recipe-id> <out-dir>`, one dedicated before/after (or
 //     before-only, for `-rejected-`) pair per WITNESSABLE mutation kind. See that crate's module
 //     doc for exactly which 12 of the 22 declared kinds are witnessable by a pure `tobj` mesh
@@ -60,7 +60,6 @@ const READER_BIN = join(cargoTargetDirectory(getWorkspaceRoot()), "release", pro
 type ReaderRecipe = Readonly<{ id: string; directoryName: string; hasAfter: boolean }>;
 const READER_RECIPES: readonly ReaderRecipe[] = [
   { id: "no-mutation-no-op", directoryName: "⏸️no-mutation-no-op", hasAfter: true },
-  { id: "set-snapshot-applied", directoryName: "📸️set-snapshot-applied", hasAfter: true },
   { id: "set-vertex-applied", directoryName: "📍️set-vertex-applied", hasAfter: true },
   { id: "set-vertex-rejected-out-of-bounds", directoryName: "⛔️set-vertex-rejected-out-of-bounds", hasAfter: false },
   { id: "set-texcoord-applied", directoryName: "🧭️set-texcoord-applied", hasAfter: true },

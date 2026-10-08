@@ -50,6 +50,32 @@
         "group": "value",
         "order": 20
       }
+    },
+    "entryIndex": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Entry position",
+          "de": "Eintragsposition"
+        },
+        "description": {
+          "en": "Position the dictionary entry takes when it does not exist yet, counted from 0; absent appends.",
+          "de": "Position, die der Wörterbucheintrag einnimmt, wenn er noch nicht existiert, ab 0 gezählt; fehlt sie, wird angehängt."
+        },
+        "group": "target",
+        "order": 30,
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0
+      }
     }
   }
 }

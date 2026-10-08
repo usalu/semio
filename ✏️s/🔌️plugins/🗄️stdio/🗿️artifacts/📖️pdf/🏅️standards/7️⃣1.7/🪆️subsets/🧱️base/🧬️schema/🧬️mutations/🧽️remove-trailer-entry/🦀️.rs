@@ -25,7 +25,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveTrailerEntry {
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-        base.trailer.iter().find(|entry| entry.key == self.key).map(|entry| PdfMutation::SetTrailerEntry(SetTrailerEntry { key: self.key.clone(), value: entry.value.clone() })).into_iter().collect()
+        base.trailer.iter().position(|entry| entry.key == self.key).map(|position| PdfMutation::SetTrailerEntry(SetTrailerEntry { key: self.key.clone(), value: base.trailer[position].value.clone(), index: Some(position) })).into_iter().collect()
     
     })())
 }

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "moves": [
+    {
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
+      "to": "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
+      "occurrences": 6
+    },
+    {
+      "from": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/Cargo.toml",
+      "to": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/Cargo.toml",
+      "occurrences": 1
+    }
+  ]
+}

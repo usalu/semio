@@ -1,4 +1,4 @@
-# 🧬️ Puzzle2d diff schema — sparse field delta.
+# 🧬️ Puzzle2d diff schema — sparse typed delta.
 
 type Puzzle2dDiff {
   artifact: Puzzle2dArtifact @state(class: ARTIFACT)
@@ -7,21 +7,26 @@ type Puzzle2dDiff {
   nodes: Puzzle2dNodesDelta @state(class: ARTIFACT)
   edges: Puzzle2dEdgesDelta @state(class: ARTIFACT)
   targetRegions: Puzzle2dTargetRegionsDelta @state(class: ARTIFACT)
-  meta: Puzzle2dMeta @state(class: ARTIFACT)
+  meta: Puzzle2dMetaPatch @state(class: ARTIFACT)
 }
 
-type Puzzle2dStringList { values: [String!]! }
+type Puzzle2dKindCompatibilityKey { source: String! target: String! }
+type Puzzle2dHandlePatch { handleKind: String angle: Float radius: Float color: String iconKind: String scale: Float visible: Boolean locked: Boolean }
+type Puzzle2dNodePatch { nodeKind: String shape: String x: Float y: Float radius: Float width: Float height: Float text: String iconKind: String root: Boolean scale: Float visible: Boolean locked: Boolean anchor: Puzzle2dNodeAnchor handles: Puzzle2dHandlesDelta }
+type Puzzle2dEdgePatch { source: String target: String edgeKind: String gap: Float shift: Float rise: Float rotation: Float turn: Float tilt: Float x: Float y: Float sourceTip: String targetTip: String visible: Boolean locked: Boolean }
+type Puzzle2dTargetRegionPatch { x: Float y: Float width: Float height: Float label: String hidden: Boolean locked: Boolean }
+type Puzzle2dKindCompatibilityPatch { bidirectional: Boolean important: Boolean specificity: Puzzle2dCompatSpecificity }
+type Puzzle2dMetaPatch { manifestId: String kindCompatibility: Puzzle2dKindCompatibilityDelta kindCatalogs: Puzzle2dKindCatalogs }
+type Puzzle2dHandlesDelta { added: [Puzzle2dHandle!]! removed: [String!]! patched: [Puzzle2dHandlePatchEntry!]! reordered: [String!] }
+type Puzzle2dHandlePatchEntry { id: String! patch: Puzzle2dHandlePatch! }
 type Puzzle2dNodesDelta { added: [Puzzle2dNode!]! removed: [String!]! patched: [Puzzle2dNodePatchEntry!]! reordered: [String!] }
 type Puzzle2dNodePatchEntry { id: String! patch: Puzzle2dNodePatch! }
-type Puzzle2dNodePatch { replacement: Puzzle2dNode }
 type Puzzle2dEdgesDelta { added: [Puzzle2dEdge!]! removed: [String!]! patched: [Puzzle2dEdgePatchEntry!]! reordered: [String!] }
 type Puzzle2dEdgePatchEntry { id: String! patch: Puzzle2dEdgePatch! }
-type Puzzle2dEdgePatch { replacement: Puzzle2dEdge }
 type Puzzle2dTargetRegionsDelta { added: [Puzzle2dTargetRegion!]! removed: [String!]! patched: [Puzzle2dTargetRegionPatchEntry!]! reordered: [String!] }
 type Puzzle2dTargetRegionPatchEntry { id: String! patch: Puzzle2dTargetRegionPatch! }
-type Puzzle2dTargetRegionPatch { replacement: Puzzle2dTargetRegion }
-type Puzzle2dArtifact { schema: String! }
-
+type Puzzle2dKindCompatibilityDelta { added: [Puzzle2dKindCompatibility!]! removed: [Puzzle2dKindCompatibilityKey!]! patched: [Puzzle2dKindCompatibilityPatchEntry!]! reordered: [Puzzle2dKindCompatibilityKey!] }
+type Puzzle2dKindCompatibilityPatchEntry { id: Puzzle2dKindCompatibilityKey! patch: Puzzle2dKindCompatibilityPatch! }
 
 enum Puzzle2dNodeAnchor { FIXED DERIVED }
 
@@ -152,4 +157,3 @@ type Puzzle2dMeta {
   kindCompatibility: [Puzzle2dKindCompatibility!]!
   kindCatalogs: Puzzle2dKindCatalogs
 }
-

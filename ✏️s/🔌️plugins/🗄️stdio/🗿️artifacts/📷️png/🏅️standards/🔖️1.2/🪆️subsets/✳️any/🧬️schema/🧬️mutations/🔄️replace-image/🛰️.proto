@@ -1,0 +1,4 @@
+syntax = "proto3";
+import "../../📸️snapshot/🛰️.proto";
+package semio.s_stdio_png.mutations.replace_image;
+message ReplaceImage { semio.s_stdio_png.snapshot.PngImage image = 1; }

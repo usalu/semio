@@ -66,7 +66,7 @@ fn the_reference_reads_the_text_frames_a_real_encoder_wrote() {
 
 /// 🧾️ The case's OWN `Examples` rows, read straight out of the committed feature rather than transcribed:
 /// checking the laws against the wire payloads the scenarios actually carry is the point — a row whose payload
-/// addresses nothing would report green while testing nothing. `set-snapshot`'s three real frames cross the first
+/// addresses nothing would report green while testing nothing. `set-frames`'s three real frames cross the first
 /// padding-slot change (frames 0 and 1 are 417 bytes, frame 2 is 418), so the packed headers land on both
 /// branches of the frame-size formula.
 fn feature_example_rows() -> Vec<Json> {
@@ -109,7 +109,7 @@ fn an_unknown_kind_is_an_error_not_a_silent_no_op() {
 fn kinds_match_the_catalog_and_the_vocabulary() {
     let manifest = include_str!("../../🔣️.json");
     let vocabulary = include_str!("../../../🧬️schema/🧬️mutations/🦀️.rs");
-    let variants = ["SetSnapshot", "PatchSnapshot", "SetId3v2", "SetFrames", "SetId3v1"];
+    let variants = ["SetId3v2", "SetFrames", "SetId3v1"];
     assert_eq!(KINDS.len(), variants.len());
     for (kind, variant) in KINDS.iter().zip(variants.iter()) {
         assert!(manifest.contains(&format!("\"{kind}\"")), "catalog is missing kind {kind:?}");

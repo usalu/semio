@@ -8,8 +8,8 @@ use crate::ProgramSnapshot;
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::DeleteAccessRule, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    match base.access_rules.iter().find(|row| row.header.id == payload.id) {
-        Some(existing) => vec![ProgramMutation::CreateAccessRule(super::super::create_access_rule::CreateAccessRule { access_rule: existing.clone() })],
+    match base.access_rules.iter().position(|row| row.header.id == payload.id) {
+        Some(position) => vec![ProgramMutation::CreateAccessRule(super::super::create_access_rule::CreateAccessRule { access_rule: base.access_rules[position].clone(), index: Some(position) })],
         None => Vec::new(),
     }
 

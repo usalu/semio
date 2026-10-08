@@ -8,17 +8,14 @@ fn text_edit_requires_an_explicit_text_value_and_allows_empty_documents() {
 }
 
 #[test]
-fn natural_file_route_exports_html5_and_reopens_through_one_mutation() {
+fn natural_file_route_exports_html5_and_reopens_the_same_document() {
     let source = b"<!doctype html><html><head><title>Natural Open Save</title></head><body><p>Edited body.</p></body></html>";
     let edited = crate::standards::v5::subsets::any::io::text::snapshot::parse_html_document(std::str::from_utf8(source).unwrap()).expect("HTML fixture");
     let bytes = <HtmlEditor as ArtifactEditor>::encode_natural_file(&edited).expect("HTML natural bytes");
     let oracle = semio_s_artifact_stdio_html_test_oracle::standards::v5::subsets::any::project_html_5;
     assert_eq!(oracle(&bytes).expect("html5ever reads exported HTML"), oracle(source).expect("html5ever reads expected HTML"));
     let reopened = <HtmlEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("HTML natural bytes reopen");
-    let Some(HtmlMutation::SetSnapshot(SetSnapshot { snapshot: opened })) = <HtmlEditor as ArtifactEditor>::whole_document_operation(reopened) else {
-        panic!("natural HTML opens through one event-sourced snapshot mutation")
-    };
-    assert_eq!(opened, edited);
+    assert_eq!(reopened, edited);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -158,7 +155,7 @@ fn net_leaf_summary(leaf: &HtmlMutation) -> serde_json::Value {
         HtmlMutation::SetText(leaf) => leaf.path.clone(),
         HtmlMutation::SetComment(leaf) => leaf.path.clone(),
         HtmlMutation::SetRawText(leaf) => leaf.path.clone(),
-        HtmlMutation::SetDoctype(_) | HtmlMutation::SetSnapshot(_) => Vec::new(),
+        HtmlMutation::SetDoctype(_) => Vec::new(),
     };
     serde_json::json!({ "kind": protocol::SemanticMutation::<HtmlSnapshot>::semantics(leaf).kind, "at": at })
 }
@@ -191,24 +188,24 @@ fn an_applied_text_is_its_net_node_leaves_and_they_reach_exactly_that_text() {
     }
 }
 
-/// ⚖️ LAW (audit T4): the ONLY whole-document `set-snapshot`s the net leaves emit are the named replace intents — another document
-/// schema, or a root the node leaves cannot reach (another node kind) — and no net-leaves corpus change emits one.
+/// ⚖️ LAW: a change the node leaves cannot reach — another document schema, or a root of another node kind — is refused by the
+/// exact replay instead of being published as a whole-document replacement, and no net-leaves corpus change is refused.
 #[test]
-fn only_the_named_replace_intents_are_a_whole_document_set_snapshot() {
+fn an_unreachable_replacement_is_refused_and_no_corpus_change_is() {
     let corpus: serde_json::Value = serde_json::from_str(NET_LEAVES).expect("net-leaves corpus");
     for case in corpus["cases"].as_array().expect("cases") {
         let parse = |field: &str| <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(case[field].as_str().expect("text")).unwrap_or_else(|error| panic!("{}: {field} parses: {error:?}", case["id"]));
-        assert!(html_net_mutations(&parse("before"), &parse("after")).iter().all(|leaf| !matches!(leaf, HtmlMutation::SetSnapshot(_))), "{}: a node edit is never a whole-document set-snapshot", case["id"]);
+        assert!(semio_s_artifact_stdio_contract::editing::net_leaves_exact(&parse("before"), &parse("after"), html_net_mutations).is_ok(), "{}: a node edit is addressed by its leaves", case["id"]);
     }
     let base = HtmlSnapshot::default();
     let other = HtmlSnapshot { schema: "stdio.html.other-schema".into(), ..base.clone() };
-    assert_eq!(html_net_mutations(&base, &other), vec![HtmlMutation::SetSnapshot(SetSnapshot { snapshot: other.clone() })], "another document schema replaces the document");
+    assert!(semio_s_artifact_stdio_contract::editing::net_leaves_exact(&base, &other, html_net_mutations).is_err(), "another document schema is unaddressed");
     let text_root = HtmlSnapshot { root: HtmlNode::Text { text: "plain".into() }, ..base.clone() };
-    assert_eq!(html_net_mutations(&base, &text_root).last(), Some(&HtmlMutation::SetSnapshot(SetSnapshot { snapshot: text_root.clone() })), "a root of another kind replaces the document");
+    assert!(semio_s_artifact_stdio_contract::editing::net_leaves_exact(&base, &text_root, html_net_mutations).is_err(), "a root of another kind is unaddressed");
 }
 
 /// ⚖️ LAW (design §20.3): a document-details edit publishes the artifact's own net node leaves — exactly the corpus leaves of the
-/// same change, never a whole `set-snapshot` for a node edit — with no description, so its row is labelled from its leaves.
+/// same change, never a whole-document replacement for a node edit — with no description, so its row is labelled from its leaves.
 #[test]
 fn a_document_details_edit_is_its_net_node_leaves() {
     use semio_s_artifact_stdio_contract::editing::{snapshot_edit_source, SnapshotEditEvent, SnapshotEditingEditor};
@@ -223,7 +220,6 @@ fn a_document_details_edit_is_its_net_node_leaves() {
         assert_eq!(serde_json::Value::Array(emit.artifact_mutations.iter().map(net_leaf_summary).collect()), case["leaves"], "{id}: the details edit is the net leaves");
         for leaf in &emit.artifact_mutations {
             let expected = match leaf {
-                HtmlMutation::SetSnapshot(_) => ("Set snapshot", "Momentaufnahme setzen"),
                 HtmlMutation::SetDoctype(_) => ("Set doctype", "Dokumenttyp setzen"),
                 HtmlMutation::InsertNode(_) => ("Insert node", "Knoten einfügen"),
                 HtmlMutation::RemoveNode(_) => ("Remove node", "Knoten entfernen"),

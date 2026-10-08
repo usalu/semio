@@ -13,7 +13,7 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/demo/mutation/add-n/schema.json"
     },
     {
-      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/demo/mutation/assign-n/schema.json"
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/demo/mutation/restore-n/schema.json"
     }
   ]
 }

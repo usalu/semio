@@ -602,7 +602,7 @@
         for _ in 0..128 {
             scene.pop_layer();
         }
-        let mut path = crate::BezPath::new();
+        let mut path = semio_framework_canvas::BezPath::new();
         path.move_to((0.0, 0.0));
         for point in 0..1600 {
             path.line_to((f64::from(point), f64::from(point)));
@@ -1471,7 +1471,7 @@ fn regions_count_against_the_descriptor_census_and_never_the_pointer_credits() {
 
 #[cfg(test)]
 fn icon_clip_centers(scene: &Scene) -> Vec<(f64, f64)> {
-    let encoded: serde_json::Value = serde_json::from_str(&infinite::canvas::draw_list::scene_draw_list_json(scene, infinite::canvas::draw_list::DrawListOptions::default())).expect("icon draw list");
+    let encoded: serde_json::Value = serde_json::from_str(&semio_framework_canvas::draw_list::scene_draw_list_json(scene, semio_framework_canvas::draw_list::DrawListOptions::default())).expect("icon draw list");
     encoded["commands"]
         .as_array()
         .expect("commands")

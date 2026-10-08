@@ -266,13 +266,14 @@
             "de": "Quader"
           },
           "description": {
-            "en": "The bounding box as a solid.",
-            "de": "Der umgebende Quader als Körper."
+            "en": "The bounding box as a solid; absent when the shape is flat along an axis and the box would have no volume.",
+            "de": "Der umgebende Quader als Körper; fehlt, wenn die Form entlang einer Achse flach ist und der Quader kein Volumen hätte."
           },
           "type": "shape",
           "shapeKinds": [
             "solid"
-          ]
+          ],
+          "optional": true
         },
         {
           "name": "min",
@@ -692,8 +693,8 @@
         "de": "Winkel zwischen"
       },
       "description": {
-        "en": "Measures the angle between two planar faces or two straight edges.",
-        "de": "Misst den Winkel zwischen zwei ebenen Flächen oder zwei geraden Kanten."
+        "en": "Measures the angle between two planar faces (between their outward normals, 0 to 180 degrees) or two straight edges (between their lines, 0 to 90 degrees).",
+        "de": "Misst den Winkel zwischen zwei ebenen Flächen (zwischen ihren äußeren Normalen, 0 bis 180 Grad) oder zwei geraden Kanten (zwischen ihren Geraden, 0 bis 90 Grad)."
       },
       "inputs": [
         {
@@ -737,8 +738,8 @@
             "de": "Winkel"
           },
           "description": {
-            "en": "The angle between the two, from 0 to 180 degrees.",
-            "de": "Der Winkel zwischen beiden, von 0 bis 180 Grad."
+            "en": "The angle between the two in radians: from 0 to pi between faces, from 0 to pi/2 between edges.",
+            "de": "Der Winkel zwischen beiden im Bogenmaß: von 0 bis pi zwischen Flächen, von 0 bis pi/2 zwischen Kanten."
           },
           "type": "angle"
         }

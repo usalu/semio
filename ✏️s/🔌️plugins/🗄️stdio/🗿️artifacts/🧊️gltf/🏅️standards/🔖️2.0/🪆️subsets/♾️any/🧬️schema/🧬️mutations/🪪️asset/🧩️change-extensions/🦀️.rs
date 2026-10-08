@@ -1,4 +1,6 @@
 //! 🧬️ Direct change-asset-extension-data mutation owner: payload, validation, typed diff, inverse, and outcomes.
+use crate::schema::diff::*;
+use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::schema::snapshot::GltfJson;
@@ -18,11 +20,21 @@ pub fn validate(payload: &GltfChangeAssetExtensionDataPayload, base: &GltfSnapsh
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfChangeAssetExtensionDataPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
-    let mut next = base.clone();
-    next.document.asset.extensions = payload.data.clone();
-    Ok(next)
+pub fn plan(p: &GltfChangeAssetExtensionDataPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
+    validate(p, base)?;
+    let current = &base.document.asset.extensions;
+    Ok(GltfDiff { asset: changed(GltfAssetDiff { extensions: (current != &p.data).then(|| p.data.clone()), ..Default::default() }), ..Default::default() })
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(p: &GltfChangeAssetExtensionDataPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    if validate(p, base).is_err() {
+        return Vec::new();
+    }
+    let current = &base.document.asset.extensions;
+    if current == &p.data {
+        return Vec::new();
+    }
+    vec![super::change_asset_extension_data::mutation(super::change_asset_extension_data::GltfChangeAssetExtensionDataPayload { data: current.clone() })]
 }
 
 //#region 🧬️DirectMutation
@@ -31,7 +43,11 @@ pub fn apply(payload: &GltfChangeAssetExtensionDataPayload, base: &GltfSnapshot)
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeAssetExtensionDataMutation {
     Apply(GltfChangeAssetExtensionDataPayload),
-    Restore(Box<crate::schema::diff::GltfDiff>),
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutation(payload: GltfChangeAssetExtensionDataPayload) -> super::GltfMutation {
+    super::GltfMutation::ChangeAssetExtensionData(ChangeAssetExtensionDataMutation::Apply(payload))
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetExtensionDataMutation {
@@ -39,28 +55,18 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetEx
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => match apply(payload, base) {
-                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Self::Apply(payload) => match plan(payload, base) {
+                Ok(diff) => protocol::MutationOutcome::new(diff),
                 Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
-            },
-            Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
-                Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-                Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
             },
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
-            return Vec::new();
+        match self {
+            Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::GltfMutation::ChangeAssetExtensionData(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change Asset Extension Data", "Erweiterungsdaten des Assets ändern")

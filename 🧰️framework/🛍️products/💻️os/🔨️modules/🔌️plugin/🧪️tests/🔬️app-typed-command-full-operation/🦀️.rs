@@ -437,14 +437,14 @@ mod typed_command_full_operation_tests {
         }
     }
 
-    fn fixture_latest_wins_key(scope: &Value) -> std::sync::Arc<String> {
+    fn fixture_latest_wins_key(scope: &Value) -> semio_framework_value::ordered::SharedOwner<String> {
         let parts = [scope["document"].as_str().unwrap(), scope["controller"].as_str().unwrap(), scope["tool"].as_str().unwrap(), scope["target"].as_str().unwrap()];
         let mut copy = ToolLatestWinsKeyCopy::new(scope["instance"].as_u64().unwrap() as u32, parts).unwrap();
         assert_eq!(copy.advance(parts, 0, 4_096), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         assert_eq!(copy.advance(parts, 1, 0), PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         for _ in 0..100_000 {
             match copy.advance(parts, 1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
-                PluginCloseStep::Complete => return copy.take_key().unwrap(),
+                PluginCloseStep::Complete => return copy.take_key(TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap(),
                 PluginCloseStep::Pending { released_items, released_bytes } => {
                     assert!(released_items <= 1);
                     assert!(released_bytes <= 4_096);
@@ -454,6 +454,34 @@ mod typed_command_full_operation_tests {
             }
         }
         panic!("full-domain key did not progress under the production grant")
+    }
+
+    #[test]
+    fn latest_wins_owned_key_retains_zero_and_subexact_headers() {
+        use semio_framework_value::{ordered::SharedOwner, retained_clone::RetainedCloneGrant};
+        let fixture:Value=serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
+        let scope=&fixture["first"];
+        let parts=[scope["document"].as_str().unwrap(),scope["controller"].as_str().unwrap(),scope["tool"].as_str().unwrap(),scope["target"].as_str().unwrap()];
+        let mut copy=ToolLatestWinsKeyCopy::new(scope["instance"].as_u64().unwrap() as u32,parts).unwrap();
+        for turn in 0..100_000 {if copy.advance(parts,1,TYPED_OPERATION_RESULT_PAGE_BYTES)==PluginCloseStep::Complete {break;}assert!(turn<99_999);}
+        let pointer=copy.key.as_ref().unwrap().as_ptr();
+        let expected=copy.key.as_ref().unwrap().clone();
+        assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&expected).unwrap()).unwrap(),expected);
+        let demand=SharedOwner::<String>::allocation_bytes();
+        assert!(copy.take_key(0).is_none());
+        assert!(copy.take_key(demand-1).is_none());
+        assert_eq!(copy.key.as_ref().unwrap().as_ptr(),pointer);
+        let mut key=copy.take_key(demand).unwrap();
+        assert_eq!(key.as_bytes(),expected.as_bytes());
+        assert_eq!(key.as_bytes().as_ptr(),pointer);
+        let mut alias=key.clone();
+        assert_eq!(alias.as_bytes().as_ptr(),pointer);
+        for bytes in [0,demand-1] {let step=key.release_step(RetainedCloneGrant::one_release_turn(bytes,1)).unwrap();assert_eq!(step.progress.copied_items,0);assert!(step.value.is_none());assert!(!key.terminal_is_empty());}
+        let step=key.release_step(RetainedCloneGrant::one_release_turn(demand,1)).unwrap();
+        assert_eq!(step.progress.released_bytes,0);assert!(step.value.is_none());assert!(key.terminal_is_empty());
+        let step=alias.release_step(RetainedCloneGrant::one_release_turn(demand,1)).unwrap();
+        assert_eq!(step.progress.released_bytes,demand);let text=step.value.unwrap();assert_eq!(text,expected);assert_eq!(text.as_ptr(),pointer);assert!(alias.terminal_is_empty());
+        eprintln!("[DEBUG] latest-wins neutral key matched serde identity and retained subexact shared headers");
     }
 
     pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(factory: std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>, mutation: fn() -> A::Mutation, observe: fn(&A::Snapshot) -> i32) {
@@ -637,19 +665,21 @@ mod typed_command_full_operation_tests {
                     generation: semio_framework_job::Generation(0),
                 })
                 .unwrap();
-            assert!(registry.begin(first_operation.0, fixture_latest_wins_key(first), &first_lease));
+            let mut first_key=fixture_latest_wins_key(first);
+            assert!(registry.begin(first_operation.0, &first_key, &first_lease, TYPED_OPERATION_RESULT_PAGE_BYTES));
+            assert!(first_key.release_step(semio_framework_value::retained_clone::RetainedCloneGrant::one_release_turn(first_key.next_release_byte_demand(),1)).unwrap().value.is_none());
             for _ in 0..100_000 {
                 if registry.take_outcome(first_operation.0) == Some(true) {
                     break;
                 }
-                let _ = registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
+                let _ = registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
             }
             assert!(!first_lease.token.is_cancelled_now());
             for _ in 0..100_000 {
                 if registry.can_begin() {
                     break;
                 }
-                let _ = registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
+                let _ = registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
             }
             assert!(registry.can_begin());
             let next_operation = semio_framework_job::allocate_operation_id();
@@ -662,14 +692,16 @@ mod typed_command_full_operation_tests {
                     generation: semio_framework_job::Generation(0),
                 })
                 .unwrap();
-            assert!(registry.begin(next_operation.0, fixture_latest_wins_key(next), &next_lease));
+            let mut next_key=fixture_latest_wins_key(next);
+            assert!(registry.begin(next_operation.0, &next_key, &next_lease, TYPED_OPERATION_RESULT_PAGE_BYTES));
+            assert!(next_key.release_step(semio_framework_value::retained_clone::RetainedCloneGrant::one_release_turn(next_key.next_release_byte_demand(),1)).unwrap().value.is_none());
             let mut accepted = false;
             for _ in 0..100_000 {
                 if let Some(result) = registry.take_outcome(next_operation.0) {
                     accepted = result;
                     break;
                 }
-                match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
+                match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
                     PluginCloseStep::Pending { released_items, released_bytes } => {
                         assert!(released_items <= 1);
                         assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
@@ -690,7 +722,7 @@ mod typed_command_full_operation_tests {
                 if registry.terminal_is_empty() {
                     break;
                 }
-                match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
+                match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
                     PluginCloseStep::Pending { released_items, released_bytes } => {
                         assert!(released_items <= 1);
                         assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
@@ -796,12 +828,12 @@ mod typed_command_full_operation_tests {
             let lease = cancellations
                 .begin_keyed(ToolOperationKey { app_instance_id: 7, document: ArtifactDocumentAuthority(7), operation_id: operation, base_revision: semio_framework_job::RevisionId(1), generation: semio_framework_job::Generation(0) })
                 .unwrap();
-            let key = std::sync::Arc::new(format!("target-{index:04}"));
+            let mut key = semio_framework_value::ordered::SharedOwner::admit(format!("target-{index:04}"), semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:TYPED_OPERATION_RESULT_PAGE_BYTES,maximum_release_bytes:0,maximum_depth:1}).unwrap().0;
             let mut begun = false;
             let mut result = None;
             for _ in 0..100_000 {
                 if !begun {
-                    begun = registry.begin(operation.0, key.clone(), &lease);
+                    begun = registry.begin(operation.0, &key, &lease, TYPED_OPERATION_RESULT_PAGE_BYTES);
                 }
                 if begun {
                     result = registry.take_outcome(operation.0);
@@ -809,7 +841,7 @@ mod typed_command_full_operation_tests {
                 if result.is_some() {
                     break;
                 }
-                match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES) {
+                match registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap() {
                     PluginCloseStep::Pending { released_items, released_bytes } => {
                         assert!(released_items <= 1);
                         assert!(released_bytes <= TYPED_OPERATION_RESULT_PAGE_BYTES);
@@ -820,12 +852,13 @@ mod typed_command_full_operation_tests {
                 }
             }
             assert_eq!(result, Some(true), "completed target {index} must not consume permanent admission capacity");
+            assert!(key.release_step(semio_framework_value::retained_clone::RetainedCloneGrant::one_release_turn(key.next_release_byte_demand(),1)).unwrap().value.is_none());
             accepted += 1;
             for _ in 0..100_000 {
                 if registry.can_begin() {
                     break;
                 }
-                registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
+                registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
             }
             assert!(registry.can_begin());
             lease.finish();
@@ -837,7 +870,7 @@ mod typed_command_full_operation_tests {
             if registry.terminal_is_empty() {
                 break;
             }
-            registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES);
+            registry.advance(1, TYPED_OPERATION_RESULT_PAGE_BYTES).unwrap();
         }
         assert!(registry.terminal_is_empty());
     }
@@ -1807,11 +1840,11 @@ mod child_complete_group_candidate_tests{
         let pointer=mutation.value.as_ptr();let backing=mutation.value.capacity();assert_eq!(backing,backing_bytes);
         let ((mut cursor,source_pointer),construction)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let source_pointer=mutation.value.as_ptr();(mutation.value.retirement(),source_pointer)});
         assert_eq!(pointer,source_pointer);assert_eq!(construction.released_bytes,0);assert!(!construction.overflowed);
-        let (step,zero)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(0));
+        let (step,zero)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(Default::default()));
         assert!(matches!(step,RetirementStep::BudgetExhausted));assert_eq!((zero.requested_bytes,zero.released_bytes),(0,0));assert!(!cursor.terminal_is_empty());
         let mut processed=0;
         while cursor.next_work_byte_demand()!=0{
-            let (step,observed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(work_bytes));
+            let (step,observed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:work_bytes,..Default::default()}));
             assert!(!observed.overflowed);assert_eq!((observed.requested_bytes,observed.released_bytes),(0,0));
             let RetirementStep::ProcessedBytes(bytes)=step else{panic!("logical source drain must preserve the exact backing")};
             assert!(bytes>0&&bytes<=work_bytes);processed+=bytes;assert!(processed<=backing_bytes);
@@ -1820,18 +1853,18 @@ mod child_complete_group_candidate_tests{
         assert_eq!(processed,backing_bytes);
         for grant in fixture["physicalRelease"]["deniedBytes"].as_array().unwrap(){
             let bytes=grant.as_u64().unwrap() as usize;assert_eq!(cursor.next_close_byte_demand(),Some(backing));
-            let (step,observed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(bytes));
+            let (step,observed)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_release_bytes:bytes,..Default::default()}));
             assert!(matches!(step,RetirementStep::BudgetExhausted));assert!(!cursor.terminal_is_empty());
             assert_eq!(cursor.next_close_byte_demand(),Some(backing));assert_eq!((observed.requested_bytes,observed.released_bytes),(0,0));assert!(!observed.overflowed);
             eprintln!("[DEBUG] actual typed String physical denied grant={bytes} retainedDemand={backing} released=0");
         }
         let demand=cursor.next_close_byte_demand().expect("retained physical source demand");
         assert_eq!(demand,fixture["physicalRelease"]["demandBytes"].as_u64().unwrap() as usize);assert!(demand<=admission);
-        let (step,released)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(demand));
+        let (step,released)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_release_bytes:demand,..Default::default()}));
         let RetirementStep::Bytes(reported)=step else{panic!("whole funded source release must publish its exact physical receipt")};
         assert_eq!(reported,fixture["physicalRelease"]["reportedBytes"].as_u64().unwrap() as usize);
         assert_eq!((released.requested_bytes,released.released_bytes,released.largest_release_bytes),(0,reported,reported));assert!(!released.overflowed);assert_eq!(reported,backing);
-        let (step,terminal)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(work_bytes));
+        let (step,terminal)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:work_bytes,..Default::default()}));
         assert!(matches!(step,RetirementStep::Complete));assert!(cursor.terminal_is_empty());assert_eq!((terminal.requested_bytes,terminal.released_bytes),(0,0));assert!(!terminal.overflowed);
         let frame=cursor.terminal_release_bytes().expect("separate terminal cursor extent");
         assert_eq!(frame,std::mem::size_of_val(cursor.as_ref()));assert_eq!(frame,construction.requested_bytes);assert!(frame<=admission);assert_eq!(fixture["physicalRelease"]["terminalFrameSeparate"],true);

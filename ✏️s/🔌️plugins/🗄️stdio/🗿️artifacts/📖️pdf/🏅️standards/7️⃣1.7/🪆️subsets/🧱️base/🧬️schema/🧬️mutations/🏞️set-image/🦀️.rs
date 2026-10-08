@@ -13,6 +13,8 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[value(rename_all = "camelCase")]
 pub struct SetImage {
     pub image: PdfImage,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfMutation> for SetImage {
@@ -20,13 +22,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetImage {
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         let _ = base;
-        MutationOutcome::new(diff::diff_set_image(base, self.image.clone()))
+        MutationOutcome::new(diff::diff_set_image(base, self.image.clone(), self.index))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        match base.images.iter().find(|item| item.id == self.image.id) { Some(previous) => vec![PdfMutation::SetImage(SetImage { image: previous.clone() })], None => vec![PdfMutation::RemoveImage(super::remove_image::RemoveImage { id: self.image.id.clone() })] }
+        match base.images.iter().find(|item| item.id == self.image.id) { Some(previous) => vec![PdfMutation::SetImage(SetImage { image: previous.clone(), index: None })], None => vec![PdfMutation::RemoveImage(super::remove_image::RemoveImage { id: self.image.id.clone() })] }
     
     })())
 }

@@ -1,4 +1,5 @@
 # 📄️ Direct set-form GraphQL payload.
 input SetFormMutationInput {
   form: PdfFormXObjectInput
+  index: Int
 }

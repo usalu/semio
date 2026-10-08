@@ -35,7 +35,7 @@ use crate::editor::bitmap::transient::component::mutations::*;
 use crate::editor::bitmap::transient::component::BitmapTransient;
 
 /// 🌉️ The committed-vector report of this state lane for the language-neutral case adapter, which links only this
-/// crate: production dispatch (`Mutation::diff(..).apply_to`) and the mutation's own inverse over `BitmapTransient`.
+/// crate: production dispatch (`protocol::apply_diff`) and the mutation's own inverse over `BitmapTransient`.
 ///
 /// @see store::os_store::test_support::mutation_report_json
 pub fn bitmap_transient_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {

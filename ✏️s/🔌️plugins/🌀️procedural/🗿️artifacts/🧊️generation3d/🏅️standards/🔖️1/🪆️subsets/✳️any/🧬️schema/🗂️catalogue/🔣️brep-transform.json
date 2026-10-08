@@ -36,7 +36,16 @@
             "en": "The shape to operate on.",
             "de": "Die Form, auf die der Vorgang angewendet wird."
           },
-          "type": "shape"
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound",
+            "face",
+            "wire",
+            "curve",
+            "surface",
+            "vertex"
+          ]
         },
         {
           "name": "offset",
@@ -110,7 +119,16 @@
             "en": "The shape to operate on.",
             "de": "Die Form, auf die der Vorgang angewendet wird."
           },
-          "type": "shape"
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound",
+            "face",
+            "wire",
+            "curve",
+            "surface",
+            "vertex"
+          ]
         },
         {
           "name": "axis",
@@ -200,7 +218,16 @@
             "en": "The shape to operate on.",
             "de": "Die Form, auf die der Vorgang angewendet wird."
           },
-          "type": "shape"
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound",
+            "face",
+            "wire",
+            "curve",
+            "surface",
+            "vertex"
+          ]
         },
         {
           "name": "origin",
@@ -308,7 +335,16 @@
             "en": "The shape to operate on.",
             "de": "Die Form, auf die der Vorgang angewendet wird."
           },
-          "type": "shape"
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound",
+            "face",
+            "wire",
+            "curve",
+            "surface",
+            "vertex"
+          ]
         },
         {
           "name": "factor",
@@ -400,7 +436,16 @@
             "en": "The shape to operate on.",
             "de": "Die Form, auf die der Vorgang angewendet wird."
           },
-          "type": "shape"
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound",
+            "face",
+            "wire",
+            "curve",
+            "surface",
+            "vertex"
+          ]
         },
         {
           "name": "plane",
@@ -485,7 +530,16 @@
             "en": "The shape to operate on.",
             "de": "Die Form, auf die der Vorgang angewendet wird."
           },
-          "type": "shape"
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound",
+            "face",
+            "wire",
+            "curve",
+            "surface",
+            "vertex"
+          ]
         }
       ],
       "outputs": [
@@ -522,8 +576,8 @@
         "de": "Lineares Muster"
       },
       "description": {
-        "en": "Repeats a shape along a direction at a fixed spacing.",
-        "de": "Wiederholt eine Form entlang einer Richtung mit festem Abstand."
+        "en": "Repeats a solid along a direction at a fixed spacing and fuses the copies into one solid.",
+        "de": "Wiederholt einen Körper entlang einer Richtung mit festem Abstand und verschmilzt die Kopien zu einem Körper."
       },
       "inputs": [
         {
@@ -533,10 +587,13 @@
             "de": "Form"
           },
           "description": {
-            "en": "The shape to operate on.",
-            "de": "Die Form, auf die der Vorgang angewendet wird."
+            "en": "The solid to repeat.",
+            "de": "Der zu wiederholende Körper."
           },
-          "type": "shape"
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
         },
         {
           "name": "direction",
@@ -596,12 +653,12 @@
             "de": "Muster"
           },
           "description": {
-            "en": "All copies as one compound.",
-            "de": "Alle Kopien als ein Verbund."
+            "en": "The fused copies as one solid.",
+            "de": "Die verschmolzenen Kopien als ein Körper."
           },
           "type": "shape",
           "shapeKinds": [
-            "compound"
+            "solid"
           ]
         }
       ],
@@ -625,8 +682,8 @@
         "de": "Kreismuster"
       },
       "description": {
-        "en": "Repeats a shape evenly around an axis through the origin.",
-        "de": "Wiederholt eine Form gleichmäßig um eine Achse durch den Ursprung."
+        "en": "Repeats a solid evenly around an axis through the origin and fuses the copies into one solid.",
+        "de": "Wiederholt einen Körper gleichmäßig um eine Achse durch den Ursprung und verschmilzt die Kopien zu einem Körper."
       },
       "inputs": [
         {
@@ -636,10 +693,13 @@
             "de": "Form"
           },
           "description": {
-            "en": "The shape to operate on.",
-            "de": "Die Form, auf die der Vorgang angewendet wird."
+            "en": "The solid to repeat.",
+            "de": "Der zu wiederholende Körper."
           },
-          "type": "shape"
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
         },
         {
           "name": "axis",
@@ -683,12 +743,12 @@
             "de": "Muster"
           },
           "description": {
-            "en": "All copies as one compound.",
-            "de": "Alle Kopien als ein Verbund."
+            "en": "The fused copies as one solid.",
+            "de": "Die verschmolzenen Kopien als ein Körper."
           },
           "type": "shape",
           "shapeKinds": [
-            "compound"
+            "solid"
           ]
         }
       ],
@@ -712,8 +772,8 @@
         "de": "Rastermuster"
       },
       "description": {
-        "en": "Repeats a shape in a two-dimensional grid.",
-        "de": "Wiederholt eine Form in einem zweidimensionalen Raster."
+        "en": "Repeats a solid in a two-dimensional grid and fuses the copies into one solid.",
+        "de": "Wiederholt einen Körper in einem zweidimensionalen Raster und verschmilzt die Kopien zu einem Körper."
       },
       "inputs": [
         {
@@ -723,10 +783,13 @@
             "de": "Form"
           },
           "description": {
-            "en": "The shape to operate on.",
-            "de": "Die Form, auf die der Vorgang angewendet wird."
+            "en": "The solid to repeat.",
+            "de": "Der zu wiederholende Körper."
           },
-          "type": "shape"
+          "type": "shape",
+          "shapeKinds": [
+            "solid"
+          ]
         },
         {
           "name": "dirX",
@@ -835,12 +898,12 @@
             "de": "Muster"
           },
           "description": {
-            "en": "All copies as one compound.",
-            "de": "Alle Kopien als ein Verbund."
+            "en": "The fused copies as one solid.",
+            "de": "Die verschmolzenen Kopien als ein Körper."
           },
           "type": "shape",
           "shapeKinds": [
-            "compound"
+            "solid"
           ]
         }
       ],

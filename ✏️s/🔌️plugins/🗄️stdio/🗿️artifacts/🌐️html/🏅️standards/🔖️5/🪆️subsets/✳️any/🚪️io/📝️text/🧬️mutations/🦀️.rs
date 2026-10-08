@@ -16,7 +16,7 @@ use crate::standards::v5::subsets::any::io::text::diff::{decode_option};
 use crate::standards::v5::subsets::any::io::text::diff::{encode_option};
 use crate::standards::v5::subsets::any::io::text::diff::{dec_str};
 use crate::standards::v5::subsets::any::io::text::diff::{enc_str};
-use crate::standards::v5::subsets::any::schema::diff::{diff_at_path, diff_set_snapshot, HtmlAttrAdded, HtmlAttrModified, HtmlAttributesDiff, HtmlChildAdded, HtmlChildrenDiff, HtmlDiff, HtmlElementDiff, HtmlNodeDiff};
+use crate::standards::v5::subsets::any::schema::diff::{diff_at_path, HtmlAttrAdded, HtmlAttrModified, HtmlAttributesDiff, HtmlChildAdded, HtmlChildrenDiff, HtmlDiff, HtmlElementDiff, HtmlNodeDiff};
 use crate::standards::v5::subsets::any::schema::snapshot::{element_attr, node_at, HtmlNode, HtmlSnapshot, NodePath};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
@@ -62,7 +62,6 @@ pub(crate) fn dec_attr_value_tristate(s: &str) -> Result<Option<Option<String>>,
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_html_mutation(m: &HtmlMutation) -> String {
     match m {
-        HtmlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_html_snapshot(snapshot)),
         HtmlMutation::SetDoctype(set_doctype::SetDoctype { doctype }) => format!("set-doctype doctype={}", encode_option(doctype, |v| enc_str(v))),
         HtmlMutation::InsertNode(insert_node::InsertNode { parent, index, node }) => format!("insert-node parent={} index={index} node={}", enc_node_path(parent), enc_html_node(node)),
         HtmlMutation::RemoveNode(remove_node::RemoveNode { parent, index }) => format!("remove-node parent={} index={index}", enc_node_path(parent)),
@@ -81,7 +80,6 @@ pub(crate) fn parse_html_mutation(line: &str) -> Result<HtmlMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("html mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(HtmlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_html_snapshot(arg("snapshot")?)? })),
         "set-doctype" => Ok(HtmlMutation::SetDoctype(set_doctype::SetDoctype { doctype: decode_option(arg("doctype")?, dec_str)? })),
         "insert-node" => Ok(HtmlMutation::InsertNode(insert_node::InsertNode { parent: dec_node_path(arg("parent")?)?, index: usize_arg("index")?, node: dec_html_node(arg("node")?)? })),
         "remove-node" => Ok(HtmlMutation::RemoveNode(remove_node::RemoveNode { parent: dec_node_path(arg("parent")?)?, index: usize_arg("index")? })),

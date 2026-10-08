@@ -310,6 +310,7 @@ type UpdateLayer {
 type CreateCharacterStyle {
   id: String!
   name: String
+  index: Int
 }
 
 type DeleteCharacterStyle {
@@ -371,6 +372,7 @@ type CreateLayer {
   pageId: String!
   id: String!
   name: String!
+  index: Int
   remove: Boolean!
 }
 

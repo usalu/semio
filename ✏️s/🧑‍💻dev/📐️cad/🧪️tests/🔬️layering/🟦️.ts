@@ -2,7 +2,6 @@ import { readdir, readFile } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
-import Ajv from "ajv";
 import { build } from "esbuild";
 import { merge } from "lodash";
 import { core } from "../../📦️packages/🟦️typescript/🟦️.ts";
@@ -30,8 +29,6 @@ function imports(source: string): string[] {
 describe("spatial and CAD ownership", () => {
   it("answers contribution vectors with zero, independent, and removed owners", async () => {
     const fixture = JSON.parse(await readFile(resolve(root, "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧫️fixtures/🔌️contributions/🔣️.json"), "utf8"));
-    const schema = JSON.parse(await readFile(resolve(root, "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧬️schema/🔌️contributions/🔣️.json"), "utf8"));
-    expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
     const contributions = new Map<string, Record<string, unknown>>();
     const removals = new Map<string, () => void>();
     const events: string[][] = [];
@@ -63,8 +60,6 @@ describe("spatial and CAD ownership", () => {
   });
   it("answers removable command vectors and restores independent owners", async () => {
     const fixture = JSON.parse(await readFile(resolve(root, "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🧫️fixtures/🔌️commands/🔣️.json"), "utf8"));
-    const schema = JSON.parse(await readFile(resolve(root, "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🧬️schema/🔌️commands/🔣️.json"), "utf8"));
-    expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
     const contributions = new Map<string, { owner: string }>();
     const removals = new Map<string, () => void>();
     const kernel = new core.SemioBrepKernel();

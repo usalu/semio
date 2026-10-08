@@ -28,6 +28,7 @@ pub struct CreateFenestration {
     pub fin_depth_m: f64,
     pub fin_offset_m: f64,
     pub glazing_construction_id: Option<crate::model::EntityId>,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
@@ -48,6 +49,7 @@ pub fn create_fenestration(
     fin_depth_m: f64,
     fin_offset_m: f64,
     glazing_construction_id: Option<crate::model::EntityId>,
+    index: Option<u32>,
 ) -> EnergyModelMutation {
     EnergyModelMutation::CreateFenestration(CreateFenestration {
         id,
@@ -65,8 +67,7 @@ pub fn create_fenestration(
         overhang_offset_m,
         fin_depth_m,
         fin_offset_m,
-        glazing_construction_id,
-    })
+        glazing_construction_id, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateFenestration {

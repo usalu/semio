@@ -1,0 +1,9 @@
+{
+  "mutation": "deleteMaterial",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "index": 1
+    }
+  }
+}

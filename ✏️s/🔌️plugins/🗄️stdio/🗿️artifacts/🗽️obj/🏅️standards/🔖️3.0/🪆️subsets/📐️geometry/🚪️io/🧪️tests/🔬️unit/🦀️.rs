@@ -212,7 +212,7 @@ mod conformance_laws {
 
     /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
     /// output for every representative `ObjMutation` variant (`mutations::demo_mutation_cases()`),
-    /// including `SetSnapshot`'s whole nested `ObjSnapshot` tree, precisely field-by-field
+    /// precisely field-by-field
     /// (this artifact's own leaf collections are all flat records, no `REST` fallback
     /// needed).
     #[semio_framework_async_macros::async_test]

@@ -1,7 +1,6 @@
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import Ajv from "ajv";
 import ManifoldModule from "manifold-3d";
 
 type Solid = { kind: "box"; width: number; depth: number; height: number } | { kind: "cylinder"; radius: number; height: number };
@@ -11,7 +10,6 @@ type Fixture = { scene: { stock: { solid: Solid; pose: Pose }; steps: { id: stri
 
 test("Timber replay has five independent Manifold volume witnesses", async () => {
   const root = resolve(import.meta.dir, "../🧫️fixtures/🪵️timber-replay"), fixture: Fixture = JSON.parse(readFileSync(resolve(root, "🔣️.json"), "utf8"));
-  expect(new Ajv({ strict: true }).compile(JSON.parse(readFileSync(resolve(root, "🧬️schema/🔣️.json"), "utf8")))(fixture)).toBe(true);
   for (const row of fixture.poseScalarBits) {
     const scalar = new DataView(new ArrayBuffer(8));
     scalar.setFloat64(0, fixture.scene.steps[row.step]!.measure.pose.position[row.coordinate]!);

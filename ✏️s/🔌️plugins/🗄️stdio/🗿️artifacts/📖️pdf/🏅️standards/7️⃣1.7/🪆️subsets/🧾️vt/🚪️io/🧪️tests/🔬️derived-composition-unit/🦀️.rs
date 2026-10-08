@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use semio_framework_plugin::AnalyzeSource;
+    use semio_framework_plugin::io::AnalyzeSource;
 
     /// 🧾️ Handwritten PDF graph with real ICC bytes and terminal document-part ownership.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

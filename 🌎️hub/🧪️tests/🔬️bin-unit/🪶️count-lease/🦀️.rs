@@ -12,7 +12,7 @@ async fn real_count_component_lease_uses_authenticated_hub_authority_and_erased_
  use directory::os_directory::client::LocalHubCredential;
  use std::path::PathBuf;
  use semio_framework::io_schema::{ArtifactDialect,IoPayload,SQLITE_SNAPSHOT};
- use semio_framework::io::io_mechanism::{io_route,io_run_with_snapshot_control};
+ use directory::io::io_mechanism::{io_route,io_run_with_snapshot_control};
  use semio_framework::sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotPhase,SqliteValue};
  use semio_framework_value::ValueRefusalKind;
  let output=crate::test_artifact_root::test_artifact_root().join("real-count-workspace-lease");std::fs::create_dir_all(&output).unwrap();
@@ -50,7 +50,7 @@ async fn real_count_component_lease_uses_authenticated_hub_authority_and_erased_
     let IoPayload::Binary(bytes)=&file else{panic!("physical SQLite file required")};
     independent_count_file(&output,bytes,count,"text");
     let mut database=semio_framework::sqlite_snapshot::import_sqlite_database(bytes,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();assert_eq!(database.table("fixture_counter").unwrap().rows[0].values,vec![SqliteValue::Integer(1),SqliteValue::Integer(i64::from(count))]);
-    assert_eq!(semio_framework::io::io_mechanism::sqlite_snapshot_metadata(&database).unwrap().0,dialect);
+    assert_eq!(directory::io::io_mechanism::sqlite_snapshot_metadata(&database).unwrap().0,dialect);
     let returned=io_run_with_snapshot_control(&import,file.clone(),SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;let IoPayload::Text(text)=returned else{panic!("text encoding preserved")};assert_eq!(serde_json::from_str::<serde_json::Value>(&text).unwrap(),serde_json::json!({"count":count}));
     database.table_mut("semio_snapshot").unwrap().rows[0].values[5]=SqliteValue::Text("binary".into());let binary_file=semio_framework::sqlite_snapshot::export_sqlite_database(&database,SqliteDatabaseLimits::default(),&mut |_|true).unwrap();
     let binary=io_run_with_snapshot_control(&import,IoPayload::Binary(binary_file),SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;let IoPayload::Binary(native_pack)=&binary else{panic!("native Binary required")};

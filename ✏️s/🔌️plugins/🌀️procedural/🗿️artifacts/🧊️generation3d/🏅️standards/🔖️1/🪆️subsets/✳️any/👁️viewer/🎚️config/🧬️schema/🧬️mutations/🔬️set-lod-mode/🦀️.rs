@@ -1,6 +1,6 @@
 //! 🔬️ Sets the tessellation level of detail (`""`/`coarse`/`fine`) the read-only preview meshes at.
 
-use super::{Generation3dViewConfig, Generation3dViewConfigMutation};
+use super::{Generation3dViewConfigPatch, Generation3dViewConfig, Generation3dViewConfigMutation};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "lod-mode")]
@@ -13,10 +13,8 @@ pub struct SetLodMode {
 impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutation> for SetLodMode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "lod-mode", kind: "set-lod-mode", record: "SetLodMode" };
 
-    fn diff(&self, base: &Generation3dViewConfig) -> protocol::MutationOutcome<Generation3dViewConfig> {
-        let mut next = base.clone();
-        next.lod_mode.clone_from(&self.value);
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, base: &Generation3dViewConfig) -> protocol::MutationOutcome<Generation3dViewConfigPatch> {
+        protocol::MutationOutcome::new(Generation3dViewConfigPatch { lod_mode: Some(self.value.clone()), ..Default::default() })
     }
 
     fn inverse(&self, base: &Generation3dViewConfig) -> Result<Vec<Generation3dViewConfigMutation>, semio_framework_value::ValueError> {

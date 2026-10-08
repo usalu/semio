@@ -172,9 +172,6 @@ pub fn parse_entity_id_from_args(args: Option<&Value>, key: &str) -> Option<Enti
 }
 
 pub fn register_entities(program: &ProgramSnapshot, register: &str) -> Vec<Value> {
-    // 🧩️ `benchmarks` composes stdio's `table` subset (ticket UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
-    // W4 batch Db) — its rows live behind the working-scene cache, not a direct `Vec<T>` field,
-    // so it can't join the generic `program.$field.iter()` macro expansion below.
     if register == "benchmarks" {
         return program.benchmarks_payload.iter().map(entity_to_json).collect();
     }
@@ -265,7 +262,6 @@ pub fn find_register_for_entity(program: &ProgramSnapshot, id: &EntityId) -> Opt
     if program.traces.iter().any(|row| row.id == *id) {
         return Some("traces");
     }
-    // 🧩️ `benchmarks` composes stdio's `table` subset — see `register_entities`'s own comment.
     if program.benchmarks_payload.iter().any(|row| row.header.id == *id) {
         return Some("benchmarks");
     }
@@ -663,7 +659,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
             let to = program.elements.get(1).map_or_else(|| EntityId::new_serial("to", "to"), |element| element.header.id.clone());
             let item = TraceLink::new(from, to, TraceKind::FunctionToProgramElement);
             let id = item.id.clone();
-            (ProgramMutation::ConnectTrace(leaves::connect_trace::ConnectTrace { trace: item }), id)
+            (ProgramMutation::ConnectTrace(leaves::connect_trace::ConnectTrace { trace: item, index: None }), id)
         }
         _ => return None,
     })
@@ -773,7 +769,7 @@ pub fn patch_register_item_operation(program: &ProgramSnapshot, register: &str, 
         "adjacencies" => {
             let existing = program.adjacencies.iter().find(|row| row.header.id == *entity_id)?;
             let merged = merge_json_patch(existing, patch)?;
-            ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency: merged })
+            ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency: merged, index: None })
         }
         "requirements" => {
             let existing = program.requirements.iter().find(|row| row.header.id == *entity_id)?;

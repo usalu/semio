@@ -100,7 +100,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "edit-block-ink-stroke/redraws-the-sketch-polyline: committed diff did not carry before to after");
 }
 
@@ -119,4 +119,10 @@ async fn points_and_bounding_box_are_rewritten_atomically() {
     assert_eq!(points, &vec![[0.0, 0.0], [10.0, 4.0], [20.0, 0.0]], "the whole point list must be replaced by the addressed polyline");
     assert_eq!(*stroke_width, 2.0, "the stroke WIDTH belongs to change-block-ink-width, not to this leaf");
     assert_eq!(block_bounds(find_block(&applied.blocks, "blk-ink").expect("the ink block exists")), (25.0, 150.0, 20.0, 4.0), "the bounding box is rewritten in the SAME atomic step as the geometry");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

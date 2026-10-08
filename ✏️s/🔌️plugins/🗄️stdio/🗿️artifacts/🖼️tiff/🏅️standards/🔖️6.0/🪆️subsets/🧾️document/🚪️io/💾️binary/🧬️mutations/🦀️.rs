@@ -13,13 +13,12 @@ pub struct Entry {
     pub decode: fn(&[u8]) -> Result<TiffMutation, protocol::ProtocolError>,
 }
 pub const REGISTRY: &[Entry] = &[
-    crate::standards::v6_0::subsets::document::io::binary::mutations::patch_snapshot::CODEC,
-    crate::standards::v6_0::subsets::document::io::binary::mutations::set_snapshot::CODEC,
     crate::standards::v6_0::subsets::document::io::binary::mutations::insert_ifd::CODEC,
     crate::standards::v6_0::subsets::document::io::binary::mutations::remove_ifd::CODEC,
     crate::standards::v6_0::subsets::document::io::binary::mutations::replace_tag::CODEC,
     crate::standards::v6_0::subsets::document::io::binary::mutations::remove_tag::CODEC,
     crate::standards::v6_0::subsets::document::io::binary::mutations::paint_region::CODEC,
+    crate::standards::v6_0::subsets::document::io::binary::mutations::replace_samples::CODEC,
 ];
 //#endregion Registry
 
@@ -42,12 +41,6 @@ impl protocol::OpBinary for TiffMutation {
 //#endregion Framing
 
 
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-
 #[path = "🗑️remove-tag/🦀️.rs"]
 pub mod remove_tag;
 
@@ -62,3 +55,6 @@ pub mod remove_ifd;
 
 #[path = "🎨️paint-region/🦀️.rs"]
 pub mod paint_region;
+
+#[path = "🧮️replace-samples/🦀️.rs"]
+pub mod replace_samples;

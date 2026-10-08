@@ -1,0 +1,1682 @@
+{
+ "description": "Language-agnostic laws of the mesh.edit widgets on a unit cube, a two-quad strip and a 3 by 3 grid. Edge ids are half-edge handles in face-corner order. Expected measures follow from the geometry (a flat bevel of 0.1 removes a prism of volume 0.005 and adds one chamfer face).",
+ "tolerance": 0.0001,
+ "cases": [
+  {
+   "name": "bevel one cube edge flat",
+   "kind": "mesh.edit.bevel",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "edges": [
+     0
+    ],
+    "amount": 0.1,
+    "segments": 1
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 10,
+     "faces": 7,
+     "edges": 15,
+     "euler": 2,
+     "closed": true,
+     "oriented": true,
+     "volume": 0.995,
+     "area": 5.931421356237309
+    }
+   }
+  },
+  {
+   "name": "dissolve the edge between two coplanar quads",
+   "kind": "mesh.edit.dissolveEdges",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       2,
+       0,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       2,
+       1,
+       0
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       1,
+       4,
+       3
+      ],
+      [
+       1,
+       2,
+       5,
+       4
+      ]
+     ]
+    },
+    "edges": [
+     1
+    ]
+   },
+   "outputs": {
+    "mesh": {
+     "faces": 1,
+     "area": 2
+    }
+   }
+  },
+  {
+   "name": "dissolve the centre vertex of a flat grid",
+   "kind": "mesh.edit.dissolveVertices",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0.0,
+       0.0,
+       0
+      ],
+      [
+       1.0,
+       0.0,
+       0
+      ],
+      [
+       2.0,
+       0.0,
+       0
+      ],
+      [
+       3.0,
+       0.0,
+       0
+      ],
+      [
+       0.0,
+       1.0,
+       0
+      ],
+      [
+       1.0,
+       1.0,
+       0
+      ],
+      [
+       2.0,
+       1.0,
+       0
+      ],
+      [
+       3.0,
+       1.0,
+       0
+      ],
+      [
+       0.0,
+       2.0,
+       0
+      ],
+      [
+       1.0,
+       2.0,
+       0
+      ],
+      [
+       2.0,
+       2.0,
+       0
+      ],
+      [
+       3.0,
+       2.0,
+       0
+      ],
+      [
+       0.0,
+       3.0,
+       0
+      ],
+      [
+       1.0,
+       3.0,
+       0
+      ],
+      [
+       2.0,
+       3.0,
+       0
+      ],
+      [
+       3.0,
+       3.0,
+       0
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       4,
+       5,
+       9,
+       8
+      ],
+      [
+       5,
+       6,
+       10,
+       9
+      ],
+      [
+       6,
+       7,
+       11,
+       10
+      ],
+      [
+       8,
+       9,
+       13,
+       12
+      ],
+      [
+       9,
+       10,
+       14,
+       13
+      ],
+      [
+       10,
+       11,
+       15,
+       14
+      ]
+     ]
+    },
+    "vertices": [
+     5
+    ]
+   },
+   "outputs": {
+    "mesh": {
+     "faces": 6,
+     "area": 9
+    }
+   }
+  },
+  {
+   "name": "merge the ends of a cube edge at their center",
+   "kind": "mesh.edit.mergeVertices",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "vertices": [
+     0,
+     1
+    ],
+    "mode": "center"
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 7,
+     "edges": 11,
+     "faces": 6,
+     "euler": 2,
+     "closed": true,
+     "oriented": true
+    }
+   }
+  },
+  {
+   "name": "loop cut through four parallel cube edges",
+   "kind": "mesh.edit.loopCut",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "edges": [
+     0
+    ],
+    "cuts": 1
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 12,
+     "faces": 10,
+     "edges": 20,
+     "euler": 2,
+     "closed": true,
+     "oriented": true,
+     "area": 6,
+     "volume": 1,
+     "bbox": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       1
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "knife through the bottom face",
+   "kind": "mesh.edit.knifeCut",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "face": [
+     0
+    ],
+    "start": [
+     0.5,
+     -1,
+     0
+    ],
+    "end": [
+     0.5,
+     2,
+     0
+    ]
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 10,
+     "faces": 7,
+     "closed": true,
+     "oriented": true,
+     "area": 6,
+     "volume": 1
+    }
+   }
+  },
+  {
+   "name": "extrude the top face by one",
+   "kind": "mesh.edit.extrude",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "faces": [
+     1
+    ],
+    "distance": 1
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 12,
+     "faces": 10,
+     "edges": 20,
+     "euler": 2,
+     "closed": true,
+     "oriented": true,
+     "area": 10,
+     "volume": 2,
+     "bbox": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       2
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "inset the top face",
+   "kind": "mesh.edit.inset",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "faces": [
+     1
+    ],
+    "amount": 0.25
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 12,
+     "faces": 10,
+     "euler": 2,
+     "closed": true,
+     "oriented": true,
+     "area": 6,
+     "volume": 1
+    }
+   }
+  },
+  {
+   "name": "subdivide the top face",
+   "kind": "mesh.edit.subdivide",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "faces": [
+     1
+    ]
+   },
+   "outputs": {
+    "mesh": {
+     "euler": 2,
+     "closed": true,
+     "oriented": true,
+     "area": 6,
+     "volume": 1,
+     "bbox": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       1
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "flip the top face breaks the orientation",
+   "kind": "mesh.edit.flip",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "faces": [
+     1
+    ]
+   },
+   "outputs": {
+    "mesh": {
+     "faces": 6,
+     "oriented": false,
+     "volume": 0.3333333333333333,
+     "area": 6
+    }
+   }
+  },
+  {
+   "name": "delete the top face opens the cube",
+   "kind": "mesh.edit.deleteFaces",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "faces": [
+     1
+    ]
+   },
+   "outputs": {
+    "mesh": {
+     "faces": 5,
+     "boundaryEdges": 4,
+     "closed": false,
+     "area": 5
+    }
+   }
+  },
+  {
+   "name": "triangulate the cube",
+   "kind": "mesh.edit.triangulate",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    }
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 8,
+     "faces": 12,
+     "edges": 18,
+     "boundaryEdges": 0,
+     "euler": 2,
+     "area": 6.0,
+     "volume": 1.0,
+     "closed": true,
+     "oriented": true,
+     "bbox": [
+      [
+       0.0,
+       0.0,
+       0.0
+      ],
+      [
+       1,
+       1,
+       1
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "a stale face selection",
+   "kind": "mesh.edit.extrude",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "faces": [
+     99
+    ]
+   },
+   "fault": {
+    "code": "generation3d.geometry.selection-stale",
+    "port": "faces"
+   }
+  },
+  {
+   "name": "a stale edge selection",
+   "kind": "mesh.edit.bevel",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "edges": [
+     24
+    ]
+   },
+   "fault": {
+    "code": "generation3d.geometry.selection-stale",
+    "port": "edges"
+   }
+  },
+  {
+   "name": "a stale vertex selection",
+   "kind": "mesh.edit.dissolveVertices",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "vertices": [
+     8
+    ]
+   },
+   "fault": {
+    "code": "generation3d.geometry.selection-stale",
+    "port": "vertices"
+   }
+  },
+  {
+   "name": "the knife takes exactly one face",
+   "kind": "mesh.edit.knifeCut",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "face": [
+     0,
+     1
+    ]
+   },
+   "fault": {
+    "code": "generation3d.geometry.selection-count",
+    "port": "face"
+   }
+  }
+ ]
+}

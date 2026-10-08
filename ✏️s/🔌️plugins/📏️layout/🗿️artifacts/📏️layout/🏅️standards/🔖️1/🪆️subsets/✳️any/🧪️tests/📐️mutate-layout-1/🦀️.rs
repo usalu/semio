@@ -290,7 +290,7 @@ fn inverse_oracle_for(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
     use semio_repo_test_host::law;
-    use semio_s_artifact_layout_layout::standards::v1::subsets::any::schema::mutations::{apply_layout_mutation_json,undo_layout_mutation_json};
+    use semio_s_artifact_layout_layout::standards::v1::subsets::any::io::text::mutations::{apply_layout_mutation_json,undo_layout_mutation_json};
 
     use semio_s_artifact_layout_layout::standards::v1::subsets::any::io::text::snapshot::{round_trip_layout_dsl};
 

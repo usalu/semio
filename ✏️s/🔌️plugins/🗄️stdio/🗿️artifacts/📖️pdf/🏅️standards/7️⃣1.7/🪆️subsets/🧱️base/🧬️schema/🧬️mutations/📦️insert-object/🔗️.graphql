@@ -2,4 +2,5 @@
 input InsertObjectMutationInput {
   id: ObjRefInput
   value: PdfObjectInput
+  index: Int
 }

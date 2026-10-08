@@ -3,7 +3,7 @@
 //! carry ⇒ Error `mutation.target-missing` too (the referential half of `delete-stream`'s own guard), the exact
 //! observation already present ⇒ Warning `mutation.no-op`. The observation lands at its canonical
 //! `(stream_id, frame_index)` position so `remove-gcp-observation` puts it back where it was.
-use crate::diff::{RemodelingDiff, RemodelingGcpList};
+use crate::diff::{RemodelingDiff, RemodelingRow, GroundControlPointPatch, RemodelingMembers};
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
@@ -17,11 +17,6 @@ pub fn diff(payload: &super::AddGcpObservation, base: &RemodelingSnapshot) -> pr
     if gcp.observations.contains(&payload.observation) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("GCP \"{}\" already has this observation.", payload.id));
     }
-    let mut gcps = base.gcps.clone();
-    if let Some(gcp) = gcps.iter_mut().find(|gcp| gcp.id == payload.id) {
-        let at = crate::mutations::ordered_index(&gcp.observations, &(payload.observation.stream_id.clone(), payload.observation.frame_index), |observation| (observation.stream_id.clone(), observation.frame_index));
-        gcp.observations.insert(at, payload.observation.clone());
-    }
-    protocol::MutationOutcome::new(RemodelingDiff { gcps: Some(RemodelingGcpList { values: gcps }), ..Default::default() })
+    protocol::MutationOutcome::new(RemodelingDiff::gcp_rows(vec![RemodelingRow::Patch { key: payload.id.clone(), patch: GroundControlPointPatch { observations: Some(RemodelingMembers { removed: Vec::new(), added: vec![payload.observation.clone()] }) } }]))
 }
 //#endregion 🔖️Diff

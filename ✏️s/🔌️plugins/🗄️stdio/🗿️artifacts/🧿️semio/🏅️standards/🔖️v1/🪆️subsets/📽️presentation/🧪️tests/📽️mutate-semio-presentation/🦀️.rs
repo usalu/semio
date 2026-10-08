@@ -42,13 +42,14 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
+    use semio_s_artifact_stdio_semio::apply_diff;
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocListItem, DocRun, DocTableCell, DocTableRow, RunStyle};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::mutations::{
-        apply_semio_presentation_mutation, insert_layout, insert_master, insert_shape, insert_slide, remove_layout, remove_master, remove_shape, remove_slide, semio_presentation_mutation_inverse, set_layout_master, set_shape_frame,
-        set_slide_layout, set_slide_notes, set_snapshot, set_textbox_blocks, SemioPresentationMutation,
+        diff_semio_presentation_mutation, insert_layout, insert_master, insert_shape, insert_slide, remove_layout, remove_master, remove_shape, remove_slide, semio_presentation_mutation_inverse, set_layout_master, set_shape_frame,
+        set_slide_layout, set_slide_notes, set_textbox_blocks, SemioPresentationMutation,
     };
     use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage, SlideShape, SlideTableCell, SlideTableRow};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::io::binary::snapshot::{decode_semio_presentation_pack};
@@ -235,17 +236,8 @@ mod subject {
     /// `rename_all` on an enum renames variants only, which is why `slide_index`/`shape_index`/
     /// `layout_id`/`master_id` are snake_case on the wire even though `SlideLayout::master_id` (a
     /// struct) is `masterId`.
-    ///
-    /// 🧭️ `noMutation` is no longer a real variant (the stdio mutation-leaf migration dropped
-    /// `NoMutation`: `no` is not an approved semantic verb for `#[derive(dsl::Mutations)]`), so this
-    /// decoder — per the migration fleet's convention ruling — maps it to the identity mutation
-    /// `set-snapshot(base)` instead of failing or dropping the scenario. `base` is the deck the
-    /// scenario is about to apply the decoded mutation to, so replaying it back onto itself is a
-    /// true no-op.
     fn decode_mutation(json: &Json, base: &SemioPresentationSnapshot) -> SemioPresentationMutation {
         match json.str("mutation").as_str() {
-            "noMutation" => SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-            "setSnapshot" => SemioPresentationMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: decode_snapshot(field(json, "snapshot")) }),
             "insertSlide" => SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index: usize_field(json, "index"), slide: decode_slide(field(json, "slide")) }),
             "removeSlide" => SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index: usize_field(json, "index") }),
             "setSlideLayout" => SemioPresentationMutation::SetSlideLayout(set_slide_layout::SetSlideLayout { index: usize_field(json, "index"), layout_id: opt_string(json, "layout_id") }),
@@ -254,9 +246,9 @@ mod subject {
             "removeShape" => SemioPresentationMutation::RemoveShape(remove_shape::RemoveShape { slide_index: usize_field(json, "slide_index"), shape_index: usize_field(json, "shape_index") }),
             "setShapeFrame" => SemioPresentationMutation::SetShapeFrame(set_shape_frame::SetShapeFrame { slide_index: usize_field(json, "slide_index"), shape_index: usize_field(json, "shape_index"), frame: decode_frame(field(json, "frame")) }),
             "setTextBoxBlocks" => SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index: usize_field(json, "slide_index"), shape_index: usize_field(json, "shape_index"), blocks: decode_blocks(json, "blocks") }),
-            "insertMaster" => SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: decode_master(field(json, "master")) }),
+            "insertMaster" => SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: decode_master(field(json, "master")), at: None }),
             "removeMaster" => SemioPresentationMutation::RemoveMaster(remove_master::RemoveMaster { id: json.str("id") }),
-            "insertLayout" => SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout: decode_layout(field(json, "layout")) }),
+            "insertLayout" => SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout: decode_layout(field(json, "layout")), at: None }),
             "removeLayout" => SemioPresentationMutation::RemoveLayout(remove_layout::RemoveLayout { id: json.str("id") }),
             "setLayoutMaster" => SemioPresentationMutation::SetLayoutMaster(set_layout_master::SetLayoutMaster { id: json.str("id"), master_id: json.str("master_id") }),
             other => panic!("mutate-semio-presentation: no decoder for mutation variant {other:?}"),
@@ -407,10 +399,6 @@ mod subject {
         parse_semio_presentation_dsl(&text)
     }
 
-    /// 📜️ The scenario's own mutation payload — the committed fixture its steps name, or, for the
-    /// `no-mutation` baselines, the sentinel in its doc string. The feature owns both. `base` is the
-    /// deck this payload is about to be applied to, needed only so `decode_mutation` can turn the
-    /// `noMutation` sentinel into the identity `set-snapshot(base)` mutation.
     fn payload(ctx: &Context, base: &SemioPresentationSnapshot) -> Result<SemioPresentationMutation, String> {
         let json = match step_uris(ctx, "shared://📽️mutate-semio-presentation/").into_iter().find(|uri| uri.ends_with("/🦠️mutation/🔣️.json")) {
             Some(uri) => ctx.input_json(&uri)?,
@@ -420,9 +408,10 @@ mod subject {
     }
 
     fn apply(current: &mut SemioPresentationSnapshot, step: &SemioPresentationMutation, what: &str) -> Result<(), String> {
-        let outcome = apply_semio_presentation_mutation(current, step);
+        let outcome = diff_semio_presentation_mutation(step, current);
         let refusals = semio_mutation_refusals(&outcome);
         if refusals.is_empty() {
+            *current = apply_diff(outcome.diff(), current).map_err(|error| format!("the diff could not be applied: {error:?}"))?;
             return Ok(());
         }
         Err(format!("{what}: the mutation was rejected: {refusals:?}"))
@@ -543,8 +532,8 @@ pub fn adapter() -> Adapter {
     #[cfg(feature = "sut")]
     {
         built = built
-            .subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate)
-            .subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse)
+            .subject("mutate", subject::mutate)
+            .subject("inverse", subject::inverse)
             .subject("spec-vector", subject::spec_vector);
         built = built.subject("identity-round-trip", subject::identity);
     }

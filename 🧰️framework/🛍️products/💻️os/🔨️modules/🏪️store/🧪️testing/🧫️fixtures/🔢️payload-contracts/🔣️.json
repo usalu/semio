@@ -173,7 +173,7 @@
       "n": 2147483648
     },
     {
-      "operation": "assignN",
+      "operation": "restoreN",
       "n": null
     },
     {

@@ -11,8 +11,6 @@ framing record
 header fixed 2
 field format u8
 field tag varint
-record set-snapshot tag=0
-field payload bytes
 record set-main-header tag=1
 field payload bytes
 record set-idx1-present tag=2
@@ -34,6 +32,4 @@ field payload bytes
 record add-unknown-chunk tag=10
 field payload bytes
 record remove-unknown-chunk tag=11
-field payload bytes
-record patch-snapshot tag=12
 field payload bytes

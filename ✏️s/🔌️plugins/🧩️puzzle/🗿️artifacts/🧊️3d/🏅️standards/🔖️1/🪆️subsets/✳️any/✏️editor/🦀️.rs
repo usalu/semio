@@ -3524,7 +3524,7 @@ impl Puzzle3dActionPrologue {
         // makes this cheap, and keeps a pure read-only action (e.g. a re-materialize/re-save of an
         // already-idle window's options) from creating a no-op undo entry.
         let shared_after = window_ownership::shared(&scene.runtime);
-        let config_mutations = if shared_after != shared_before { vec![Puzzle3dConfigMutation::Snapshot { config: shared_after }] } else { Vec::new() };
+        let config_mutations = shared_before.mutations_to(&shared_after);
         let window_after = window_ownership::Puzzle3dWindowConfig::from_runtime(&scene.runtime);
         let window_config_mutations = if window_after != window_before { vec![window_ownership::addressed_config_for(&wid, window_after)] } else { Vec::new() };
         let transient_after = window_ownership::transient(&scene.runtime, view_state);
@@ -4984,7 +4984,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     attraction.turn,
                     attraction.tilt,
                     attraction.x,
-                    attraction.y,
+                    attraction.y, None,
                 ))?;
                 self.stage = Puzzle3dPatchInspectorStage::Attractions;
                 Ok(Self::progress("puzzle3d-patch-inspector-attraction-reconnect", "Reconnecting attraction", "Anziehung wird neu verbunden"))
@@ -5222,7 +5222,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let id = format!("attraction-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
                 self.stage = Puzzle3dCreateAttractionStage::Complete;
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
-                    artifact_mutations: vec![crate::standards::v1::subsets::any::schema::mutations::connect_vortices(id, attracting.vortex_id, attracted.vortex_id, gap, shift, rise, rotation, turn, tilt, 0.0, 0.0)],
+                    artifact_mutations: vec![crate::standards::v1::subsets::any::schema::mutations::connect_vortices(id, attracting.vortex_id, attracted.vortex_id, gap, shift, rise, rotation, turn, tilt, 0.0, 0.0, None)],
                     ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("createAttraction")),
                     ..Default::default()
                 }))
@@ -5480,7 +5480,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                             attraction.turn,
                             attraction.tilt,
                             0.0,
-                            0.0,
+                            0.0, None,
                         ))?;
                     }
                     return Ok(Self::progress("puzzle3d-example-create-attraction", "Adding example attraction", "Beispielanziehung wird hinzugefügt"));
@@ -5522,7 +5522,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 if !range.is_empty() {
                     for row in items[range].iter().cloned() {
                         let row: crate::Puzzle3dKindCompatibility = semio_framework_value::FromValue::from_value(row).map_err(|_| Fault::from("puzzle3d-set-active-example-compatibility-malformed"))?;
-                        self.push(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source, row.target, row.bidirectional, row.important, row.specificity))?;
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source, row.target, row.bidirectional, row.important, row.specificity, None))?;
                     }
                     return Ok(Self::progress("puzzle3d-example-create-compatibility", "Adding example compatibility", "Beispielkompatibilität wird hinzugefügt"));
                 }
@@ -5535,7 +5535,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let config_mutations = if config.active_example_id == example_id {
                     Vec::new()
                 } else {
-                    vec![Puzzle3dConfigMutation::Snapshot { config: Puzzle3dConfig { active_example_id: example_id.to_string(), ..config.clone() } }]
+                    vec![Puzzle3dConfigMutation::SetActiveExampleId { value: example_id.to_string() }]
                 };
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
                     artifact_mutations: std::mem::take(&mut self.mutations),
@@ -5806,7 +5806,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let object_id = self.object_id.take().ok_or_else(|| Fault::from("puzzle3d-brush-object-owner"))?;
                 let attracted = format!("{object_id}:v{}", payload.source_vortex_index);
                 let attraction_id = format!("attraction-{}-{attracted}", payload.target_vortex_id);
-                self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_vortices(attraction_id, payload.target_vortex_id, attracted, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+                self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_vortices(attraction_id, payload.target_vortex_id, attracted, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None));
                 self.stage = Puzzle3dAddBrushObjectStage::Complete;
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: puzzle3d_scope(puzzle3d_command_scope_class("addBrushObject")), ..Default::default() }))
             }
@@ -6254,7 +6254,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                 let target = self.target_id.take().ok_or_else(|| Fault::from("puzzle3d-accept-target-owner"))?;
                 let object_id = self.object_id.clone().ok_or_else(|| Fault::from("puzzle3d-accept-object-owner"))?;
                 let source = format!("{object_id}:v{}", self.candidate.take().ok_or_else(|| Fault::from("puzzle3d-accept-candidate-owner"))?.source_vortex_index);
-                self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_vortices(format!("attraction-{target}-{source}"), target, source, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+                self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_vortices(format!("attraction-{target}-{source}"), target, source, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None));
                 self.stage = Puzzle3dAcceptSuggestionStage::PublishResult;
                 Ok(Self::progress("puzzle3d-accept-publish-attraction", "Transferring suggested attraction", "Vorschlagsanziehung wird übertragen"))
             }
@@ -6812,7 +6812,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutati
                 }
                 let completed_bytes = puzzle3d_config_store_bounded_bytes(base.get())?;
                 let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-                let post = mutation.diff(base.get()).into_parts().0.apply(base.get()).map_err(|_| "Puzzle3d Config mutation could not produce its post root".to_string())?;
+                let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| "Puzzle3d Config mutation could not produce its post root".to_string())?;
                 self.candidate = Some((post, inverse, mutation, completed_bytes));
                 self.phase = 1;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: completed_bytes as u64, digest: [0; 32] };
@@ -6990,7 +6990,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dPlaySnapshot, Puzzle3dMutati
                 let base = self.base.as_ref().ok_or_else(|| "Puzzle3d Artifact preparation lost its exact base root".to_string())?;
                 let mutation = self.mutation.take().ok_or_else(|| "Puzzle3d Artifact preparation lost its mutation owner".to_string())?;
                 let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-                let post = mutation.diff(base.get()).into_parts().0.apply(base.get()).map_err(|_| "Puzzle3d Artifact mutation could not produce its post root".to_string())?;
+                let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| "Puzzle3d Artifact mutation could not produce its post root".to_string())?;
                 self.candidate = Some((post, inverse, mutation));
                 self.phase = 1;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: [0; 32] };

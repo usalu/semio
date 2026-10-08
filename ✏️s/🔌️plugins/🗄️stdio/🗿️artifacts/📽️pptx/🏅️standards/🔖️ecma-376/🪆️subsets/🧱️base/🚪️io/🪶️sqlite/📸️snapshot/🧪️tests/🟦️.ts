@@ -202,11 +202,8 @@ test('PPTX full request settlement preserves independently inspected enclosing o
     expect(await pptxSnapshotFromSqliteDatabase(await importSqliteDatabase(new Uint8Array(sql.serialize())))).toEqual(input);
   } finally { sql.close(); }
 });
-import retitlesBefore from "../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🏷️retitles/📸️snapshot/⬅️before/🔣️.json";
-import retitlesAfter from "../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🏷️retitles/📸️snapshot/➡️after/🔣️.json";
-import retitlesMutation from "../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🏷️retitles/🦠️mutation/🔣️.json";
-import retitlesDiff from "../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🏷️retitles/🔺️diff/🔣️.json";
-import retitlesOutcome from "../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🏷️retitles/🎯️outcome/🔣️.json";
+import retitlesBefore from "../../../../🧫️fixtures/🧬️history-snapshots/🏷️retitles/📸️snapshot/⬅️before/🔣️.json";
+import retitlesAfter from "../../../../🧫️fixtures/🧬️history-snapshots/🏷️retitles/📸️snapshot/➡️after/🔣️.json";
 
 test('PPTX authored retitles history preserves title, picture and transform through physical SQLite', async () => {
   const ajv = new Ajv({strict: false}).addSchema(xmlSchema);
@@ -226,9 +223,6 @@ test('PPTX authored retitles history preserves title, picture and transform thro
     } finally { sql.close(); }
   }
   expect(retitlesBefore.opc).toEqual(retitlesAfter.opc);
-  expect(retitlesMutation).toEqual({mutation: 'setSnapshot', snapshot: retitlesAfter});
-  expect(retitlesDiff).toEqual({xmlParts: retitlesAfter.xmlParts});
-  expect(retitlesOutcome).toEqual({status: 'applied'});
 });
 
 import strictInitial from "../../../../🧬️schema/📸️snapshot/🧫️fixtures/🔒️strict-initial/🔣️.json";

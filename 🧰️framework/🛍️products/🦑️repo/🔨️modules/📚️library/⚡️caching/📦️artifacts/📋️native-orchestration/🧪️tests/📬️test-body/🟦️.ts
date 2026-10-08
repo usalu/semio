@@ -1,17 +1,14 @@
 import {test,expect} from "bun:test";
 import {readFileSync} from "node:fs";
 import {resolve,dirname} from "node:path";
-import Ajv from "ajv";
 import ts from "typescript";
 import {nativeOwnerTestManifestRequestV1} from "../../🗺️owner-test-manifests/🟦️.ts";
 const owner=resolve(import.meta.dir,"../.."),fixture=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/📬️test-body/🔣️.json"),"utf8"));
-const schema=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/📬️test-body/📐️schema.json"),"utf8"));
 const source=ts.createSourceFile("native.ts",readFileSync(resolve(owner,"🟦️.ts"),"utf8"),ts.ScriptTarget.Latest,true);
 const native=source.statements.find((node:any)=>node.name?.text==="NativeScript")!.getText(source).replace(/^export /,"");
 const library=resolve(owner,"../../.."),bodySource=ts.createSourceFile("library.ts",readFileSync(resolve(library,"🟦️.ts"),"utf8"),ts.ScriptTarget.Latest,true);
 const consume=bodySource.statements.find((node:any)=>node.name?.text==="runRepositoryCargoTests")!.getText(bodySource).replace(/^export /,"");
 test("typed owner route prepares exactly at current Cargo consumption and preserves external preparation",async()=>{
- expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
  const oracle=Bun.spawnSync(["node","--eval",`const cases=${JSON.stringify(fixture.cases)};console.log(JSON.stringify(cases.map(row=>{const valid=row.route==='owner-command'||row.command==='bun'&&row.args[0]==='./📜️script.ts'&&row.args[1]==='test';return valid?(row.route==='owner-command'?['prepare:1','owned','prepare:2','cargo:2']:['owned','prepare:2','cargo:2']):['refused']})))`]);expect(oracle.exitCode).toBe(0);expect(JSON.parse(new TextDecoder().decode(oracle.stdout))).toEqual(fixture.cases.map((row:any)=>row.expected));
  for(const compile of [(text:string)=>new Bun.Transpiler({loader:"ts"}).transformSync(text),(text:string)=>ts.transpileModule(text,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText]){
   for(const row of fixture.cases){

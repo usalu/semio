@@ -49,8 +49,15 @@
       }
     },
     "mode": {
-      "type": "integer",
-      "minimum": 0,
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ],
       "x-semio-ui": {
         "widget": "stepper",
         "label": {
@@ -58,8 +65,8 @@
           "de": "Topologiemodus"
         },
         "description": {
-          "en": "0 points, 1 lines, 2 line loop, 3 line strip, 4 triangles, 5 triangle strip, 6 triangle fan.",
-          "de": "0 Punkte, 1 Linien, 2 Linienschleife, 3 Linienzug, 4 Dreiecke, 5 Dreiecksstreifen, 6 Dreiecksfächer."
+          "en": "0 points, 1 lines, 2 line loop, 3 line strip, 4 triangles, 5 triangle strip, 6 triangle fan. Empty keeps the glTF default.",
+          "de": "0 Punkte, 1 Linien, 2 Linienschleife, 3 Linienzug, 4 Dreiecke, 5 Dreiecksstreifen, 6 Dreiecksfächer. Leer behält den glTF-Standard."
         },
         "step": 1,
         "precision": 0,
@@ -70,41 +77,21 @@
   },
   "$defs": {
     "ChangePrimitiveTopologyModeMutation": {
-      "description": "The whole wire of ChangePrimitiveTopologyModeMutation: the editable apply payload (this document's root) or the inert restore.",
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "phase",
-            "value"
-          ],
-          "properties": {
-            "phase": {
-              "const": "apply"
-            },
-            "value": {
-              "$ref": "#"
-            }
-          }
+      "description": "The whole wire of ChangePrimitiveTopologyModeMutation: the editable apply payload (this document's root).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "value"
+      ],
+      "properties": {
+        "phase": {
+          "const": "apply"
         },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "phase",
-            "value"
-          ],
-          "properties": {
-            "phase": {
-              "const": "restore"
-            },
-            "value": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
-            }
-          }
+        "value": {
+          "$ref": "#"
         }
-      ]
+      }
     }
   }
 }

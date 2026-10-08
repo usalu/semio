@@ -1,7 +1,7 @@
 //! 🖥️ Flow host: canvas editing, evaluation session, and host errors.
 
 use crate::infinite::board::ports::directed_dag as dag;
-use crate::infinite::canvas;
+use semio_framework_canvas as canvas;
 use neural_engine as neural;
 use semio_framework_artifact_infinite_dag::io::text::snapshot::dag_host_snapshot_to_wire_literal;
 
@@ -330,7 +330,7 @@ impl FlowHost {
             geometry_port: None,
             operator_registry: None,
             host_snapshot: host_snapshot,
-            dag: DagHost::from_host_snapshot(DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: semio_framework_artifact_infinite_dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
+            dag: DagHost::from_host_snapshot(DagHostSnapshot { schema: "dag.hostDocument".into(), camera: semio_framework_artifact_infinite_dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
             outputs: BTreeMap::new(),
             export_payloads: BTreeMap::new(),
             last_eval_json: String::new(),
@@ -1964,7 +1964,7 @@ impl FlowHost {
                 Some(DagHostSnapshotEdge { id: syn.id.clone(), source: format!("{}@{}", syn.from, from_port), target: format!("{}@{}", syn.to, to_port), route_style: EdgeRouteStyle::default(), properties: PropertyBag::new() })
             })
             .collect();
-        DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: semio_framework_artifact_infinite_dag::DagCamera { x: self.host_snapshot.camera.x, y: self.host_snapshot.camera.y, zoom: self.host_snapshot.camera.zoom }, nodes, edges }
+        DagHostSnapshot { schema: "dag.hostDocument".into(), camera: semio_framework_artifact_infinite_dag::DagCamera { x: self.host_snapshot.camera.x, y: self.host_snapshot.camera.y, zoom: self.host_snapshot.camera.zoom }, nodes, edges }
     }
 
     fn screen_to_world_point(&self, sx: f64, sy: f64) -> canvas::Point {
@@ -2734,7 +2734,12 @@ impl FlowHostRetirement {
         if context.should_yield() {
             return false;
         }
-        let complete = self.close_page(1, 4096).unwrap_or(false);
+        let maximum_bytes = if self.close_phase() == FlowHostClosePhase::HistoryStore {
+            4096.max(self.state.history_store.as_ref().map_or(0, |store| store.next_close_byte_demand()))
+        } else {
+            4096
+        };
+        let complete = self.close_page(1, maximum_bytes).unwrap_or(false);
         context.consume_fuel(1);
         complete
     }

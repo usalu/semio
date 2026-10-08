@@ -15,6 +15,9 @@ use protocol::{MutationKind, SemanticDescriptor};
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CreateDocument {
     pub document: ArtifactRecord,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    pub index: Option<usize>,
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateDocument {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "document", kind: "create-document", record: "CreatedDocument" };

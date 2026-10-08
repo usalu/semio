@@ -17,11 +17,11 @@ test("testing mutation leaves resolve actual semantic scalar owners", () => {
   const prefix = "../../🧪️testing/🧬️mutations/";
   const schemas = [
     read(prefix + "🧮️demo/🧬️mutations/🔢️set-n/🧬️schema/🔣️.json"),
-    read(prefix + "🧮️demo/🧬️mutations/↩️assign-n/🧬️schema/🔣️.json"),
+    read(prefix + "🧮️demo/🧬️mutations/↩️restore-n/🧬️schema/🔣️.json"),
     read(prefix + "⏱️timestamped/🧬️mutations/🔢️set-n/🧬️schema/🔣️.json")
   ];
   for (let index = 0; index < examples.mutations.length; index++) {
-    const row = examples.mutations[index], schema = Object.hasOwn(row, "physicalMs") ? schemas[2] : row.operation === "assignN" ? schemas[1] : schemas[0];
+    const row = examples.mutations[index], schema = Object.hasOwn(row, "physicalMs") ? schemas[2] : row.operation === "restoreN" ? schemas[1] : schemas[0];
     expect(ajv.compile(schema)(row)).toBe(examples.mutationValidity[index]);
   }
 });

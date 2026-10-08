@@ -3,8 +3,8 @@ import type {GltfCreateAnimationPayload,CreateAnimationMutation} from "../../../
 export type * from "../../../../../🧬️schema/🧬️mutations/🎞️animation/🌱️create/🟦️.ts";
 /** 🌱️ `create-animation` wire twin: the flat `Apply` payload `GltfCreateAnimationPayload` and the phase wire `CreateAnimationMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
-import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireIndex, gltfWireObject, gltfWireRequired, gltfWireOptional, parseGltfAnimation } from "../../../📸️snapshot/🔣️json/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
-export const parseGltfCreateAnimationPayload = gltfWireObject<GltfCreateAnimationPayload>({ position: gltfWireRequired(gltfWireIndex) });
-export const parseCreateAnimationMutation = gltfWirePhase(parseGltfCreateAnimationPayload, parseGltfDiff);
+export const parseGltfCreateAnimationPayload = gltfWireObject<GltfCreateAnimationPayload>({ position: gltfWireRequired(gltfWireIndex), animation: gltfWireOptional(parseGltfAnimation) });
+export const parseCreateAnimationMutation = gltfWireApplyPhase(parseGltfCreateAnimationPayload);

@@ -1,6 +1,4 @@
-//! 🏷️ `set-ftyp` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🏷️ `set-ftyp` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,14 +14,12 @@ pub struct SetFtyp {
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for SetFtyp {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "ftyp", kind: "set-ftyp", record: "SetFtyp" };
     fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
-        agg_diff(&Mp4Mutation::SetFtyp(self.clone()), base)
+        let Self { ftyp } = self;
+        protocol::MutationOutcome::new(Mp4Diff { ftyp: Some(ftyp.clone()), movie: None, tracks: None })
     }
     fn inverse(&self, base: &Mp4Snapshot) -> Result<Vec<Mp4Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&Mp4Mutation::SetFtyp(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![Mp4Mutation::SetFtyp(set_ftyp::SetFtyp { ftyp: base.ftyp.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set ftyp", "ftyp-Box setzen")
     }

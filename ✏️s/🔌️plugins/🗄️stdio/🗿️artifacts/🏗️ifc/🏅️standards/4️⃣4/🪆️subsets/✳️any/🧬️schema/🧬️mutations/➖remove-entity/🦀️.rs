@@ -1,7 +1,5 @@
-//! ➖️ `remove-entity` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! ➖️ `remove-entity` — authored as its own mutation leaf. It builds its own sparse diff and concrete
+//! inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,15 +13,18 @@ pub struct RemoveEntity {
 impl protocol::MutationKind<IfcSnapshot, IfcMutation> for RemoveEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "entity", kind: "remove-entity", record: "RemoveEntity" };
 
-    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<<IfcMutation as Mutation<IfcSnapshot>>::Diff> {
-        agg_diff(&IfcMutation::RemoveEntity(self.clone()), base)
+    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<IfcDiff> {
+        let Self { id } = self;
+        protocol::MutationOutcome::new(diff::diff_remove_entity(*id))
     }
     fn inverse(&self, base: &IfcSnapshot) -> Result<Vec<IfcMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&IfcMutation::RemoveEntity(self.clone()), base)?
-    
-    })
-}
+        let entity = |id: u64| base.entities.iter().find(|e| e.id == id);
+        let Self { id } = self;
+        Ok(vec![match base.entities.iter().position(|e| e.id == *id) {
+            Some(index) => IfcMutation::InsertEntity(insert_entity::InsertEntity { index, entity: base.entities[index].clone() }),
+            None => return Ok(Vec::new()),
+        }])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove entity", "Entität entfernen")
     }

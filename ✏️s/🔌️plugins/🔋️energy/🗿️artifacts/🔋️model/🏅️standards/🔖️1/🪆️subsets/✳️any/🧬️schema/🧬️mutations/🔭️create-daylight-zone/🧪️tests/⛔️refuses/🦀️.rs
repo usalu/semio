@@ -22,7 +22,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.zones.push(zone(2, "ZONE TWO"));
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 20.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 27.0 });
-    (snapshot(model), super::create_daylight_zone(crate::model::EntityId(14), crate::model::EntityId(1), 500.0, 22.0, 1.4))
+    (snapshot(model), super::create_daylight_zone(crate::model::EntityId(14), crate::model::EntityId(1), 500.0, 22.0, 1.4, None))
 }
 
 fn case() -> Case {

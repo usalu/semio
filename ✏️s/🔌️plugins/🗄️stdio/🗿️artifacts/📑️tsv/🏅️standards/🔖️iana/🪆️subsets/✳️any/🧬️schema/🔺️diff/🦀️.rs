@@ -49,6 +49,11 @@ impl TsvRowDiff {
             }
         }
     }
+    /// ↩️ The positional patch restoring exactly the columns this patch sets back to their `base` values.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn inverse(&self, base: &[String]) -> Self {
+        Self { fields: self.fields.as_ref().map(|patches| patches.iter().enumerate().map(|(index, patch)| patch.as_ref().and_then(|_| base.get(index).cloned())).collect()) }
+    }
     /// 🧭️ State delta between two rows with the SAME column count (positional patch). Callers
     /// with differing column counts must instead express the change as a remove-then-add pair
     /// at the `records` collection level (see `TsvDiff::between`).
@@ -164,8 +169,7 @@ fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize
 //#endregion 🔖️IndexTransport
 
 //#region 🔖️Diff
-/// 🔺️ Diff for `stdio.tsv`. No `snapshot: Option<TsvSnapshot>` full-replace slot — even
-/// `SetSnapshot`'s diff is `TsvDiff::between(base, next)`.
+/// 🔺️ Diff for `stdio.tsv`. No `snapshot: Option<TsvSnapshot>` full-replace slot — every diff is sparse.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.tsv.diff")]
@@ -371,10 +375,33 @@ fn absorb_records(d1: TsvRowsDiff, d2: TsvRowsDiff) -> TsvRowsDiff {
     TsvRowsDiff { removed: final_removed, modified: final_modified, added: final_added }
 }
 
+/// ↩️ Negative rows for the records triple against its BASE rows: added rows become removals at their final index, removed rows
+/// return at their base index, and each modified row restores its base cells at the index the row has after the diff. Every list
+/// comes back ascending, the normal form [`absorb_records`] emits.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_rows(diff: &TsvRowsDiff, base: &[Vec<String>]) -> TsvRowsDiff {
+    let mut removed_sorted = diff.removed.clone();
+    removed_sorted.sort_unstable();
+    removed_sorted.dedup();
+    let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
+    added_final.sort_unstable();
+    let after_index = |index: usize| {
+        let survivor = index - removed_sorted.iter().filter(|dropped| **dropped < index).count();
+        added_final.iter().fold(survivor, |position, inserted| if *inserted <= position { position + 1 } else { position })
+    };
+    let mut modified: Vec<TsvRowModified> = diff.modified.iter().filter_map(|row| base.get(row.index).map(|cells| TsvRowModified { index: after_index(row.index), diff: row.diff.inverse(cells) })).collect();
+    modified.sort_by_key(|row| row.index);
+    let added = removed_sorted.iter().filter_map(|index| base.get(*index).map(|row| TsvRowAdded { index: *index, row: row.clone() })).collect();
+    TsvRowsDiff { removed: added_final, modified, added }
+}
+
 impl DiffAlgebra<TsvSnapshot> for TsvDiff {
     fn inverse(&self, base: &TsvSnapshot) -> Self {
-        let applied = apply_tsv_diff_unchecked(self, base);
-        Self::between(&applied, base)
+        Self {
+            trailing_newline: self.trailing_newline.map(|_| base.trailing_newline),
+            line_ending: self.line_ending.map(|_| base.line_ending),
+            records: self.records.as_ref().map(|records| inverse_rows(records, &base.records)).filter(|records| !records.is_empty()),
+        }
     }
 
     fn between(base: &TsvSnapshot, other: &TsvSnapshot) -> Self {
@@ -417,11 +444,6 @@ impl DiffAlgebra<TsvSnapshot> for TsvDiff {
     }
 }
 
-/// 🧩 Builds a set-snapshot diff (sparse field-by-field delta, never a full-replace slot).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &TsvSnapshot, next: &TsvSnapshot) -> TsvDiff {
-    TsvDiff::between(base, next)
-}
 //#endregion 🔖️Diff
 
 //#region 🔖️HandcraftedDiffCodec

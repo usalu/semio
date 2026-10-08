@@ -34,22 +34,8 @@
       "capability": "csv-rfc4180-mutate",
       "standardDirectoryName": "🔖️rfc4180",
       "subsetDirectoryName": "✳️any",
-      "vectors": [
-        {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
-          "scenarios": [
-            {
-              "id": "corrects-the-area-cell-and-quotes-it",
-              "directoryName": "✏️corrects"
-            }
-          ]
-        }
-      ],
+      "vectors": [],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "set-has-header",
         "insert-record",
         "remove-record",
@@ -78,26 +64,6 @@
             "operation": "insert-record",
             "bridgeVersion": 1,
             "variant": "InsertRecord"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "csv-rfc4180-mutate",
-              "qualifyingKind": "third-party-library"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "csv-rfc4180-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {
@@ -157,26 +123,6 @@
             "operation": "set-has-header",
             "bridgeVersion": 1,
             "variant": "SetHasHeader"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "csv-rfc4180-mutate",
-              "qualifyingKind": "third-party-library"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "csv-rfc4180-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
           },
           "oracleRequirements": [
             {

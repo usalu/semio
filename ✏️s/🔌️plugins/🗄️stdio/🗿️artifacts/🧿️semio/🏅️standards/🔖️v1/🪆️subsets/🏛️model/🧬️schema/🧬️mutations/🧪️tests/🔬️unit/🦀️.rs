@@ -1,4 +1,6 @@
 use super::*;
+use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
+use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, RelationKind, SemioModelElement, SpatialKind, SpatialNode};
 use crate::standards::v1::subsets::model::io::binary::mutations::wire_tag;
 
 /// 🧪️ kinds_match_the_enum_and_the_catalog — the honesty check the test platform cannot make
@@ -31,15 +33,17 @@ fn kinds_match_the_enum_and_the_catalog() {
 fn assert_round_trips(base: &SemioModelSnapshot, mutation: SemioModelMutation) {
     let diff = <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(&mutation, base);
     let mut applied = base.clone();
-    let produced = apply_semio_model_mutation(&mut applied, &mutation);
+    let (__next, produced) = crate::applied(&applied, &mutation);
+    applied = __next;
     assert_eq!(produced, diff, "diff() must match what apply_semio_model_mutation actually applied for {mutation:?}");
-    let expected = <SemioModelDiff as protocol::MutationDiff<SemioModelSnapshot>>::apply(diff.diff(), base).expect("apply must succeed for a well-formed fixture");
+    let expected = protocol::apply_diff(diff.diff(), base).expect("apply must succeed for a well-formed fixture");
     assert_eq!(applied, expected, "applying the mutation must equal applying its own diff for {mutation:?}");
 
     let inv = <SemioModelMutation as Mutation<SemioModelSnapshot>>::inverse(&mutation, base).expect("valid retained mutation inverse fixture");
     let mut restored = applied.clone();
-    for m in &inv {
-        let _ = apply_semio_model_mutation(&mut restored, m);
+    for m in inv.iter().rev() {
+        let (__next, _) = crate::applied(&restored, m);
+        restored = __next;
     }
     assert_eq!(&restored, base, "inverse must restore the original base for {mutation:?}");
 }
@@ -50,11 +54,10 @@ async fn mutation_diff_law_and_inverse_law_cover_every_collection() {
 
     let mut swapped = base.clone();
     swapped.elements[0].class = ElementClass::Slab;
-    assert_round_trips(&base, SemioModelMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: swapped }));
 
     assert_round_trips(
         &base,
-        SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node: SpatialNode { id: "s2".into(), kind: SpatialKind::Building, name: "Bldg".into(), parent_id: Some("s1".into()), placement: sample_transform() } }),
+        SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node: SpatialNode { id: "s2".into(), kind: SpatialKind::Building, name: "Bldg".into(), parent_id: Some("s1".into()), placement: sample_transform() }, at: None }),
     );
     assert_round_trips(&base, SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id: "s1".into() }));
     assert_round_trips(&base, SemioModelMutation::SetSpatialNode(set_spatial_node::SetSpatialNode { id: "s1".into(), kind: Some(SpatialKind::Storey), name: Some("Renamed".into()), parent_id: Some(None), placement: Some(sample_transform()) }));
@@ -62,7 +65,7 @@ async fn mutation_diff_law_and_inverse_law_cover_every_collection() {
     assert_round_trips(
         &base,
         SemioModelMutation::InsertElement(insert_element::InsertElement {
-            element: SemioModelElement { id: "e2".into(), class: ElementClass::Door, placement: sample_transform(), geometry: GeometryRef::Mesh { mesh_id: "m1".into() }, spatial_id: Some("s1".into()), psets: vec![] },
+            element: SemioModelElement { id: "e2".into(), class: ElementClass::Door, placement: sample_transform(), geometry: GeometryRef::Mesh { mesh_id: "m1".into() }, spatial_id: Some("s1".into()), psets: vec![] }, at: None,
         }),
     );
     assert_round_trips(&base, SemioModelMutation::RemoveElement(remove_element::RemoveElement { id: "e1".into() }));
@@ -78,7 +81,7 @@ async fn mutation_diff_law_and_inverse_law_cover_every_collection() {
         }),
     );
 
-    assert_round_trips(&base, SemioModelMutation::InsertRelation(insert_relation::InsertRelation { relation: ModelRelation { id: "r2".into(), kind: RelationKind::VoidsElement, from: "e1".into(), to: "s1".into() } }));
+    assert_round_trips(&base, SemioModelMutation::InsertRelation(insert_relation::InsertRelation { relation: ModelRelation { id: "r2".into(), kind: RelationKind::VoidsElement, from: "e1".into(), to: "s1".into() }, at: None }));
     assert_round_trips(&base, SemioModelMutation::RemoveRelation(remove_relation::RemoveRelation { id: "r1".into() }));
     assert_round_trips(&base, SemioModelMutation::SetRelation(set_relation::SetRelation { id: "r1".into(), kind: Some(RelationKind::FillsVoid), from: Some("e1".into()), to: Some("s1".into()) }));
 }
@@ -116,7 +119,8 @@ async fn relative_placement_leaves_derive_from_the_base_and_undo_exactly() {
         assert_round_trips(&base, leaf);
     }
     let mut moved = base.clone();
-    let _ = apply_semio_model_mutation(&mut moved, &drag);
+    let (__next, _) = crate::applied(&moved, &drag);
+    moved = __next;
     assert_eq!((moved.elements[1].placement.translation.x, moved.elements[1].placement.translation.y, moved.elements[1].placement.translation.z), (6.5, 4.0, 7.25));
     let level = |mutation: &SemioModelMutation| <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(mutation, &base).messages().iter().map(|message| message.code.0.clone()).collect::<Vec<_>>();
     assert_eq!(level(&SemioModelMutation::DragElements(drag_elements::DragElements { targets: vec!["e1".into(), "ghost".into()], offset: [1.0, 0.0, 0.0] })), vec!["mutation.partial".to_string()]);
@@ -126,3 +130,24 @@ async fn relative_placement_leaves_derive_from_the_base_and_undo_exactly() {
     assert_eq!(level(&SemioModelMutation::ScaleElements(scale_elements::ScaleElements { targets: both(), factors: [0.0, 1.0, 1.0] })), vec!["mutation.invariant".to_string()]);
     assert_eq!(level(&SemioModelMutation::DragElements(drag_elements::DragElements { targets: vec!["e1".into(), "e1".into()], offset: [1.0, 0.0, 0.0] })), vec!["mutation.invariant".to_string()]);
 }
+
+/// 🎯️ Position law: removing ANY spatial node, element or relation (first, middle, last) is undone at its original index.
+#[semio_framework_async_macros::async_test]
+async fn removals_invert_at_every_position() {
+    let mut base = fixture();
+    for n in 1..=3 {
+        base.spatial.push(SpatialNode { id: format!("sx{n}"), kind: SpatialKind::Space, name: format!("Space {n}"), parent_id: None, placement: SemioTransform::identity() });
+        base.elements.push(SemioModelElement { id: format!("ex{n}"), class: ElementClass::Beam, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] });
+        base.relations.push(ModelRelation { id: format!("rx{n}"), kind: RelationKind::ConnectsTo, from: "ex1".into(), to: "ex2".into() });
+    }
+    for item in &base.spatial {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id: item.id.clone() }), &base).await;
+    }
+    for item in &base.elements {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioModelMutation::RemoveElement(remove_element::RemoveElement { id: item.id.clone() }), &base).await;
+    }
+    for item in &base.relations {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioModelMutation::RemoveRelation(remove_relation::RemoveRelation { id: item.id.clone() }), &base).await;
+    }
+}
+

@@ -11,4 +11,5 @@ export interface ConnectVortices {
   tilt: number;
   x: number;
   y: number;
+  index?: number | null;
 }

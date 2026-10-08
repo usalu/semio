@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `MoveWidget` — a real id-keyed upsert into the fixture's layout
 //! collection helper (never a whole-snapshot capture).
 
-use crate::standards::v1::subsets::any::schema::diff::{diff_snapshot_from_helpers, Generation2dDiff, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{Generation2dDiff, Generation2dLayoutDelta, Generation2dLayoutRow};
 use crate::{widget_id, Generation2dSnapshot};
 
 pub fn diff(payload: &super::MoveWidget, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
@@ -11,5 +11,7 @@ pub fn diff(payload: &super::MoveWidget, base: &Generation2dSnapshot) -> protoco
     if !payload.layout.x.is_finite() || !payload.layout.y.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Widget \"{}\" position must be finite.", payload.id), [payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(diff_snapshot_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff { removed: vec![], set: vec![(payload.id.clone(), payload.layout.clone())] }, None, None))
+    let row = Generation2dLayoutRow { id: payload.id.clone(), layout: payload.layout.clone() };
+    let delta = if base.host_snapshot.layout.contains_key(&payload.id) { Generation2dLayoutDelta { patched: vec![row], ..Default::default() } } else { Generation2dLayoutDelta { added: vec![row], ..Default::default() } };
+    protocol::MutationOutcome::new(Generation2dDiff { layout: Some(delta), ..Default::default() })
 }

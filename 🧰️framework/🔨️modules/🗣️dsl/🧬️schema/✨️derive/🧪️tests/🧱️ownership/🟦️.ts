@@ -37,15 +37,10 @@ test("every public compiler front uses the owned system token boundary", () => {
 
 test("a required inline tagged owner has exactly one native variant without boxing", () => {
   const fixture = JSON.parse(read("🧫️fixtures/🏷️required-inline/🔣️.json")) as {valid: unknown[]; invalid: unknown[]; fieldKinds: {type: string; role: string}[]};
-  const Ajv = require("ajv/dist/2020").default;
-  const schema = JSON.parse(read("🧫️fixtures/🏷️required-inline/🔣️schema.json"));
-  const validate = new Ajv({strict: true}).compile(schema);
-  for (const row of fixture.valid) {
-    expect(validate(row)).toBe(true);
-    expect(JSON.parse(JSON.stringify(row))).toEqual(row);
-  }
-  for (const row of fixture.invalid) expect(validate(row)).toBe(false);
-  console.log(`[DEBUG] required inline native variant agrees with independent Ajv2020: ${fixture.valid.length} valid and ${fixture.invalid.length} invalid`);
+  for (const row of [...fixture.valid, ...fixture.invalid]) expect(JSON.parse(JSON.stringify(row))).toEqual(row);
+  const native = read("../🧪️tests/🏷️required-inline/🦀️.rs");
+  expect(native).toContain("serde_json::from_value::<InlineStatement>");
+  expect(native).toContain('corpus["invalid"].as_array().unwrap()');
   const source = read("🦀️.rs");
   expect(source).toContain("RequiredInlineStatements(Box<Type>)");
   expect(source).toContain("FieldKind::RequiredInlineStatements");

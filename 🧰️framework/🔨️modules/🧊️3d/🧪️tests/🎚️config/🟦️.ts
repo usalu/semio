@@ -19,7 +19,7 @@ export default defineConfig({
   assetsInclude: ["**/*.wasm"],
   test: {
     root: testRoot,
-    name: "@semio-tech/s-3d-js",
+    name: "@semio-tech/framework-3d-js",
     environment: "node",
     // 🩹️ In-source (`import.meta.vitest`) suite in `../../🟦️.ts` — `include` names ACTUAL TEST FILES,
     // and no file named literally "index.ts" exists here (the real file is `../../🟦️.ts`), so this was

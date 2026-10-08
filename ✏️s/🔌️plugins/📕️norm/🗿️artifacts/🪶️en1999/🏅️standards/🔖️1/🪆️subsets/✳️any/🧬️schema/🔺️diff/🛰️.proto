@@ -1,25 +1,102 @@
 syntax = "proto3";
 package semio.s.norm.en1999.diff;
-// 🧬️ EN 1999 sparse diff — hierarchical aluminium-structure subject
+
+message En1999MaterialsPatch {
+  string id = 1;
+  optional string designation = 2;
+}
+
+message En1999MaterialsRows {
+  repeated string removed = 1;
+  repeated En1999MaterialsPatch modified = 2;
+  repeated string order = 3;
+}
+
+message En1999SectionsElementsPatch {
+  string id = 1;
+  optional double thickness = 2;
+}
+
+message En1999SectionsElementsRows {
+  repeated En1999SectionsElementsPatch modified = 1;
+}
+
+message En1999SectionsPatch {
+  string id = 1;
+  optional En1999SectionsElementsRows elements = 2;
+}
+
+message En1999SectionsRows {
+  repeated string removed = 1;
+  repeated En1999SectionsPatch modified = 2;
+  repeated string order = 3;
+}
+
+message En1999MembersActionsPatch {
+  string id = 1;
+  optional double n_k = 2;
+  optional double m_y_k = 3;
+}
+
+message En1999MembersActionsRows {
+  repeated En1999MembersActionsPatch modified = 1;
+}
+
+message En1999MembersPatch {
+  string id = 1;
+  optional double buckling_length_y = 2;
+  optional double buckling_length_z = 3;
+  optional double buckling_length_t = 4;
+  optional double ltb_length = 5;
+  optional En1999MembersActionsRows actions = 6;
+}
+
+message En1999MembersRows {
+  repeated string removed = 1;
+  repeated En1999MembersPatch modified = 2;
+  repeated string order = 3;
+}
+
+message En1999ConnectionsPatch {
+  string id = 1;
+  optional double welds_throat = 2;
+  optional uint32 bolts_rows = 3;
+  optional uint32 bolts_bolts_per_row = 4;
+}
+
+message En1999ConnectionsRows {
+  repeated string removed = 1;
+  repeated En1999ConnectionsPatch modified = 2;
+  repeated string order = 3;
+}
+
+message En1999FireScenariosRows {
+  repeated string removed = 1;
+  repeated string order = 2;
+}
+
+message En1999FatigueDetailsRows {
+  repeated string removed = 1;
+  repeated string order = 2;
+}
+
+message En1999ColdFormedRows {
+  repeated string removed = 1;
+  repeated string order = 2;
+}
+
+message En1999ShellsRows {
+  repeated string removed = 1;
+  repeated string order = 2;
+}
+
 message En1999Diff {
-  // @state artifact
-  bytes artifact = 1;
-  // @state artifact
-  string annex = 2;
-  // @state artifact
-  bytes materials = 3;
-  // @state artifact
-  bytes sections = 4;
-  // @state artifact
-  bytes members = 5;
-  // @state artifact
-  bytes connections = 6;
-  // @state artifact
-  bytes fire_scenarios = 7;
-  // @state artifact
-  bytes fatigue_details = 8;
-  // @state artifact
-  bytes cold_formed = 9;
-  // @state artifact
-  bytes shells = 10;
+  optional En1999MaterialsRows materials = 1;
+  optional En1999SectionsRows sections = 2;
+  optional En1999MembersRows members = 3;
+  optional En1999ConnectionsRows connections = 4;
+  optional En1999FireScenariosRows fire_scenarios = 5;
+  optional En1999FatigueDetailsRows fatigue_details = 6;
+  optional En1999ColdFormedRows cold_formed = 7;
+  optional En1999ShellsRows shells = 8;
 }

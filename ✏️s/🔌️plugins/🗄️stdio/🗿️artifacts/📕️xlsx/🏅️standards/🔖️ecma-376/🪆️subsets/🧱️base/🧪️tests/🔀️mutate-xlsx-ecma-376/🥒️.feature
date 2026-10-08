@@ -25,9 +25,6 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
   declared kinds are fully representable as "read the whole workbook into a grid, change the grid,
   rebuild the whole workbook from it", which is a genuine second producer, so they stay
   `@mode-differential`: `insert-sheet`, `remove-sheet`, `rename-sheet`, `set-cell`, `remove-cell`.
-  `set-snapshot` carries a whole replacement package, and "the workbook becomes this snapshot" is
-  reproduced by the shared OPC engine, which writes the package the snapshot describes from its own
-  parts, content types and relationships without ever reaching this repository's OPC codec.
 
   THE REMAINING THREE HAVE A SECOND PRODUCER TOO, AND IT IS NOT THAT PAIRING. `insert-shared-string`,
   `remove-shared-string` and `set-shared-string` address the pool by an INDEX independent of any cell
@@ -62,14 +59,12 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
   THE LAWS THE ORACLE ASSERTS IN-ROLE, so a scenario cannot pass merely because the reference
   pairing did not error. `inverse-<kind>` applies the mutation, undoes it with the reference's own
   independently computed inverse, and fails with the first diverging cell unless the result projects
-  onto exactly what the real workbook projects onto — every kind held to the whole projection,
-  `set-snapshot` included, since undoing a whole replacement means rebuilding the original's own
-  grid. `identity-round-trip` fails unless the rebuilt bytes differ from the input AND their
+  onto exactly what the real workbook projects onto — every kind held to the whole projection.
+  `identity-round-trip` fails unless the rebuilt bytes differ from the input AND their
   projection is identical to the input's.
 
   Every `params` cell is the leaf's own wire payload, exactly what `XlsxMutation::payload_value()`
-  emits: a sheet is the `XlsxSheet` wire with tagged `XlsxCellValue`s, `set-snapshot` carries the whole
-  replacement `XlsxSnapshot` (one worksheet "Ersatz" holding an inline string and a number), and
+  emits: a sheet is the `XlsxSheet` wire with tagged `XlsxCellValue`s, and
   `set-cell`/`remove-cell` address their cell by the lineage-bound `XlsxCellAddress` the subject takes
   on the real workbook — the worksheet part, the child path to the `c` element and its revision.
   The reference resolves that address independently: it walks the path through its own XML reader,
@@ -89,13 +84,11 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id           | params |
-      | set-snapshot | {"snapshot":{"schema":"stdio.xlsx","opc":{"parts":[],"contentTypes":{"defaults":[["rels","application/vnd.openxmlformats-package.relationships+xml"],["xml","application/xml"]],"overrides":[["/xl/workbook.xml","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"],["/xl/sharedStrings.xml","application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"],["/xl/worksheets/sheet1.xml","application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"]]},"relationships":{"":[{"id":"rId1","relType":"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument","target":"xl/workbook.xml","targetMode":"internal"}],"xl/workbook.xml":[{"id":"rId1","relType":"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet","target":"worksheets/sheet1.xml","targetMode":"internal"},{"id":"rId2","relType":"http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings","target":"sharedStrings.xml","targetMode":"internal"}]},"comment":""},"xmlParts":[{"path":"xl/sharedStrings.xml","contentType":"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml","document":{"root":{"kind":"element","name":"sst","attrs":[{"name":"xmlns","value":"http://schemas.openxmlformats.org/spreadsheetml/2006/main"},{"name":"count","value":"0"},{"name":"uniqueCount","value":"0"}],"children":[]}}},{"path":"xl/workbook.xml","contentType":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml","document":{"root":{"kind":"element","name":"workbook","attrs":[{"name":"xmlns","value":"http://schemas.openxmlformats.org/spreadsheetml/2006/main"},{"name":"xmlns:r","value":"http://schemas.openxmlformats.org/officeDocument/2006/relationships"}],"children":[{"kind":"element","name":"sheets","attrs":[],"children":[{"kind":"element","name":"sheet","attrs":[{"name":"name","value":"Ersatz"},{"name":"sheetId","value":"1"},{"name":"r:id","value":"rId1"}],"children":[]}]}]}}},{"path":"xl/worksheets/sheet1.xml","contentType":"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml","document":{"root":{"kind":"element","name":"worksheet","attrs":[{"name":"xmlns","value":"http://schemas.openxmlformats.org/spreadsheetml/2006/main"}],"children":[{"kind":"element","name":"sheetData","attrs":[],"children":[{"kind":"element","name":"row","attrs":[{"name":"r","value":"1"}],"children":[{"kind":"element","name":"c","attrs":[{"name":"r","value":"A1"},{"name":"t","value":"inlineStr"}],"children":[{"kind":"element","name":"is","attrs":[],"children":[{"kind":"element","name":"t","attrs":[{"name":"xml:space","value":"preserve"}],"children":[{"kind":"text","text":"Ersetzt"}]}]}]},{"kind":"element","name":"c","attrs":[{"name":"r","value":"B1"}],"children":[{"kind":"element","name":"v","attrs":[],"children":[{"kind":"text","text":"42"}]}]}]}]}]}}}]}} |
       | insert-sheet | {"sheet":{"name":"Quellen","cells":[{"row":1,"col":0,"value":{"kind":"inlineString","value":"Baustoffbörsen: Eine systematische Erhebung, 2024"}},{"row":2,"col":0,"value":{"kind":"inlineString","value":"Herkunft: mit-bestand/bericht/zwischenbericht/anhang/bauteilboersen.tex"}}]}} |
       | remove-sheet | {"name":"Länderübersicht"} |
       | rename-sheet | {"name":"Länderübersicht","newName":"Länder"} |
       | set-cell     | {"address":{"partPath":"xl/worksheets/sheet1.xml","nodePath":[3,2,2],"namespaceUri":"http://schemas.openxmlformats.org/spreadsheetml/2006/main","localName":"c","revision":"c10cb4fa36844692"},"value":{"kind":"inlineString","value":"Restado (überarbeitet)"}} |
       | remove-cell  | {"address":{"partPath":"xl/worksheets/sheet1.xml","nodePath":[3,5,7],"namespaceUri":"http://schemas.openxmlformats.org/spreadsheetml/2006/main","localName":"c","revision":"b2b766d8b96c5b6b"}} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/xmlParts/5/document/root/children/0/children/0/children/0/text", "value": "Kennung (gepatcht)"}} |
 
   @id-mutate
   @level-exhaustive
@@ -126,7 +119,6 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
     Then the oracle and the subject agree on the semantic projection of the original workbook
     Examples:
       | id                   | params |
-      | set-snapshot         | {"snapshot":{"schema":"stdio.xlsx","opc":{"parts":[],"contentTypes":{"defaults":[["rels","application/vnd.openxmlformats-package.relationships+xml"],["xml","application/xml"]],"overrides":[["/xl/workbook.xml","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"],["/xl/sharedStrings.xml","application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"],["/xl/worksheets/sheet1.xml","application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"]]},"relationships":{"":[{"id":"rId1","relType":"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument","target":"xl/workbook.xml","targetMode":"internal"}],"xl/workbook.xml":[{"id":"rId1","relType":"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet","target":"worksheets/sheet1.xml","targetMode":"internal"},{"id":"rId2","relType":"http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings","target":"sharedStrings.xml","targetMode":"internal"}]},"comment":""},"xmlParts":[{"path":"xl/sharedStrings.xml","contentType":"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml","document":{"root":{"kind":"element","name":"sst","attrs":[{"name":"xmlns","value":"http://schemas.openxmlformats.org/spreadsheetml/2006/main"},{"name":"count","value":"0"},{"name":"uniqueCount","value":"0"}],"children":[]}}},{"path":"xl/workbook.xml","contentType":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml","document":{"root":{"kind":"element","name":"workbook","attrs":[{"name":"xmlns","value":"http://schemas.openxmlformats.org/spreadsheetml/2006/main"},{"name":"xmlns:r","value":"http://schemas.openxmlformats.org/officeDocument/2006/relationships"}],"children":[{"kind":"element","name":"sheets","attrs":[],"children":[{"kind":"element","name":"sheet","attrs":[{"name":"name","value":"Ersatz"},{"name":"sheetId","value":"1"},{"name":"r:id","value":"rId1"}],"children":[]}]}]}}},{"path":"xl/worksheets/sheet1.xml","contentType":"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml","document":{"root":{"kind":"element","name":"worksheet","attrs":[{"name":"xmlns","value":"http://schemas.openxmlformats.org/spreadsheetml/2006/main"}],"children":[{"kind":"element","name":"sheetData","attrs":[],"children":[{"kind":"element","name":"row","attrs":[{"name":"r","value":"1"}],"children":[{"kind":"element","name":"c","attrs":[{"name":"r","value":"A1"},{"name":"t","value":"inlineStr"}],"children":[{"kind":"element","name":"is","attrs":[],"children":[{"kind":"element","name":"t","attrs":[{"name":"xml:space","value":"preserve"}],"children":[{"kind":"text","text":"Ersetzt"}]}]}]},{"kind":"element","name":"c","attrs":[{"name":"r","value":"B1"}],"children":[{"kind":"element","name":"v","attrs":[],"children":[{"kind":"text","text":"42"}]}]}]}]}]}}}]}} |
       | insert-sheet         | {"sheet":{"name":"Quellen","cells":[{"row":1,"col":0,"value":{"kind":"inlineString","value":"Baustoffbörsen: Eine systematische Erhebung, 2024"}},{"row":2,"col":0,"value":{"kind":"inlineString","value":"Herkunft: mit-bestand/bericht/zwischenbericht/anhang/bauteilboersen.tex"}}]}} |
       | remove-sheet         | {"name":"Länderübersicht"} |
       | rename-sheet         | {"name":"Länderübersicht","newName":"Länder"} |
@@ -135,7 +127,6 @@ Feature: Apply every typed XLSX ECMA-376 mutation to a real-world workbook
       | insert-shared-string | {"value":"Ökobau Referenzquelle 2024"} |
       | remove-shared-string | {"index":229} |
       | set-shared-string    | {"index":0,"value":"Aktualisierter Quellwert"} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/xmlParts/5/document/root/children/0/children/0/children/0/text", "value": "Kennung (gepatcht)"}} |
 
   @id-identity-round-trip
   @level-long

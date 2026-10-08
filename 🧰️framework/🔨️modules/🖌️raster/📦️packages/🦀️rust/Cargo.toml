@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../.."
+workspace = "../../../.."
 name = "semio-framework-raster"
 version.workspace = true
 edition.workspace = true

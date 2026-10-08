@@ -87,6 +87,7 @@ semio-framework-plugin-host = { path = "../../../🔨️modules/🔌️plugin/�
 semio-framework-async = { workspace = true }
 
 [dev-dependencies]
+semio-framework-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
 png = "0.17.16"
 semio-framework-async-macros = { path = "../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 

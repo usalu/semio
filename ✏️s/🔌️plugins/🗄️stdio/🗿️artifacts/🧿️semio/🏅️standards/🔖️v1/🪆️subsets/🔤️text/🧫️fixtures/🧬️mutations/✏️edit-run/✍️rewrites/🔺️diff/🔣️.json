@@ -1,20 +1,11 @@
 {
   "runs": {
-    "values": [
+    "modified": [
       {
-        "language": "en",
-        "content": "Hello",
-        "marks": []
-      },
-      {
-        "language": "en",
-        "content": "planet",
-        "marks": [
-          {
-            "kind": "bold",
-            "href": ""
-          }
-        ]
+        "index": 1,
+        "diff": {
+          "content": "planet"
+        }
       }
     ]
   }

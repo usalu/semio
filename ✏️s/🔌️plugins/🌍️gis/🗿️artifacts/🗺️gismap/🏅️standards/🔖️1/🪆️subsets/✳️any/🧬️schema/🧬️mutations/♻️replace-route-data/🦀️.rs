@@ -32,11 +32,8 @@ impl MutationKind<GisMapSnapshot, GisMapMutation> for ReplaceRouteData {
     }
 
     fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+        super::inverse::inverse(self, base)
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Replace route \"{}\" data", self.id), &format!("Daten von Route \"{}\" ersetzen", self.id))

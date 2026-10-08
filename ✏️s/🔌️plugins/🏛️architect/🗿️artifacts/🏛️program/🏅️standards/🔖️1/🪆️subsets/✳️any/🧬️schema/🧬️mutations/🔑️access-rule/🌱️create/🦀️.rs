@@ -15,6 +15,9 @@ use protocol::{MutationKind, SemanticDescriptor};
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CreateAccessRule {
     pub access_rule: AccessRule,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    pub index: Option<usize>,
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateAccessRule {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "access-rule", kind: "create-access-rule", record: "CreatedAccessRule" };

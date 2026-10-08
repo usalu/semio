@@ -1,33 +1,35 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "title": null,
   "blocks": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "rows": [
       {
+        "row": "patch",
         "id": "blk-math",
         "patch": {
-          "block": {
-            "kind": "math",
-            "id": "blk-math",
-            "name": "Formula",
-            "x": 40.0,
-            "y": 320.0,
-            "width": 200.0,
-            "height": 80.0,
-            "rotation": 0.0,
-            "visible": true,
-            "locked": false,
-            "tex": "E = mc^2",
-            "displayMode": true
-          }
+          "name": null,
+          "x": 40.0,
+          "y": 320.0,
+          "width": null,
+          "height": null,
+          "rotation": null,
+          "visible": null,
+          "locked": null,
+          "content": null,
+          "fontSize": null,
+          "fontWeight": null,
+          "align": null,
+          "imageKey": null,
+          "table": null,
+          "tex": null,
+          "displayMode": null,
+          "points": null,
+          "strokeWidth": null,
+          "color": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "gridVisible": null,
   "gridSpacing": null,

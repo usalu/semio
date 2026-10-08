@@ -8,8 +8,8 @@ use crate::EnergyModelSnapshot;
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
 pub fn inverse(payload: &super::DeletePlantLoop, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    match base.model.plant_loops.iter().find(|item| item.id == payload.id) {
-        Some(item) => vec![vocabulary::create_plant_loop(item.id, item.name.clone(), item.loop_type, item.supply_temperature_c, item.return_temperature_c, item.design_flow_kg_s, item.equipment_ids.clone())],
+    match base.model.plant_loops.iter().enumerate().find(|(_, item)| item.id == payload.id) {
+        Some((index, item)) => vec![vocabulary::create_plant_loop(item.id, item.name.clone(), item.loop_type, item.supply_temperature_c, item.return_temperature_c, item.design_flow_kg_s, item.equipment_ids.clone(), Some(index as u32))],
         _ => Vec::new(),
     }
 

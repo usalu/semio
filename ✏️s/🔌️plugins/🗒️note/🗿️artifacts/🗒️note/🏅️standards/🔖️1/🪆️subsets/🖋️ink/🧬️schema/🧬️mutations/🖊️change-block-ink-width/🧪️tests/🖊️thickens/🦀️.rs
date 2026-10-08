@@ -100,7 +100,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-block-ink-width/thickens-the-sketch-stroke: committed diff did not carry before to after");
 }
 
@@ -120,4 +120,10 @@ async fn drawn_stroke_width_changes_without_touching_points_or_the_tool() {
     assert_eq!(points, before_points, "thickening a stroke must not redraw its geometry");
     assert_eq!(*color, [0.0, 0.0, 0.0, 1.0], "thickening a stroke must not recolour it");
     assert_eq!(applied.pencil_width, Some(3.0), "the document's pencil TOOL width is a separate setting");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

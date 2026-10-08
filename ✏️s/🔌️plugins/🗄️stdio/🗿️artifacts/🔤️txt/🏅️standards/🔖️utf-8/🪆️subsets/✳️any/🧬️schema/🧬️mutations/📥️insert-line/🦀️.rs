@@ -22,41 +22,45 @@ pub fn decode_insert_line_payload(value: &semio_framework_value::DslValue) -> Re
 //#endregion 🔖️Payload
 
 //#region ⚙️Semantics
-impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for InsertLineMutation {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "line", kind: "insert-line", record: "InsertedLine" };
-
-    fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<TxtDiff> {
+impl InsertLineMutation {
+    /// 🧭️ The refusal reason, or the line index this insert lands at (clamped to the end).
+    fn plan(&self, base: &TxtSnapshot) -> Result<usize, String> {
         if let Some(reason) = native_snapshot_error(base) {
-            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
+            return Err(reason);
         }
         let at = txt_u32_to_usize(self.index).unwrap_or(base.lines.len()).min(base.lines.len());
         let last_empty = if at == base.lines.len() { self.text.is_empty() } else { base.lines.last().is_some_and(|line| line.is_empty()) };
         if let Some(reason) = native_shape_error(base.lines.len() + 1, last_empty, base.trailing_newline, base.line_ending) {
-            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
+            return Err(reason);
         }
         if let Some(reason) = native_text_error(&self.text, base.line_ending, at < base.lines.len() || base.trailing_newline) {
-            return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
+            return Err(reason);
         }
         if at == base.lines.len() {
             if let Some(reason) = base.lines.last().and_then(|line| native_text_error(line, base.line_ending, true)) {
-                return protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new());
+                return Err(reason);
             }
         }
-        protocol::MutationOutcome::new(TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![], added: vec![TxtLineAdded { index: at, text: self.text.clone() }] }), ..Default::default() })
+        Ok(at)
+    }
+}
+
+impl protocol::MutationKind<TxtSnapshot, super::TxtMutation> for InsertLineMutation {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "line", kind: "insert-line", record: "InsertedLine" };
+
+    fn diff(&self, base: &TxtSnapshot) -> protocol::MutationOutcome<TxtDiff> {
+        match self.plan(base) {
+            Err(reason) => protocol::MutationOutcome::fatal("mutation.invariant", reason, Vec::<String>::new()),
+            Ok(at) => protocol::MutationOutcome::new(TxtDiff { lines: Some(TxtLinesDiff { removed: vec![], modified: vec![], added: vec![TxtLineAdded { index: at, text: self.text.clone() }] }), ..Default::default() }),
+        }
     }
 
     fn inverse(&self, base: &TxtSnapshot) -> Result<Vec<super::TxtMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = self.diff(base);
-        if !outcome.messages().is_empty() {
-            return Vec::new();
-        }
-        let at = txt_u32_to_usize(self.index).unwrap_or(base.lines.len()).min(base.lines.len());
-        let index = txt_usize_to_u32(at).expect("line length is within the public uint32 domain after a successful insert");
-        vec![super::TxtMutation::RemoveLine(super::RemoveLineMutation { index })]
-    
-    })())
-}
+        Ok(match self.plan(base) {
+            Ok(at) => vec![super::TxtMutation::RemoveLine(super::RemoveLineMutation { index: txt_usize_to_u32(at).expect("line length is within the public uint32 domain after a successful insert") })],
+            Err(_) => Vec::new(),
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert Line", "Zeile einfügen")

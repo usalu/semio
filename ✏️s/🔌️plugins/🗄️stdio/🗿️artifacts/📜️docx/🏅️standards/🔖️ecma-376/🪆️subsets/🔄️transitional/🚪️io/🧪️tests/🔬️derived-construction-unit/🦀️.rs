@@ -21,7 +21,7 @@ mod tests {
             document: semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument::try_from_document(&semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text("<w:styles xmlns:w=\"http://purl.oclc.org/ooxml/wordprocessingml/main\"/>").unwrap()).unwrap(),
         }).unwrap();
         snapshot.opc.content_types.set_override("word/strict-extra.xml", "application/xml");
-        let (mutated, _diff) = DocxTransitionalBuilderConstruction::from_snapshot(DocxSnapshot::default()).mutate(DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }));
+        let mutated = DocxTransitionalBuilderConstruction::from_snapshot(snapshot);
         let err = mutated.build().expect_err("mixed-in strict namespace must fail build()");
         assert!(err.iter().any(|d| d.code.0 == crate::standards::v_ecma_376::subsets::transitional::schema::conformance::CODE_STRICT_NS_PRESENT));
     }

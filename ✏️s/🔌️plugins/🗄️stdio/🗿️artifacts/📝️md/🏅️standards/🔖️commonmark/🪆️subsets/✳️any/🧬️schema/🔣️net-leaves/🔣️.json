@@ -12,7 +12,6 @@
   "properties": {
     "kind": {
       "enum": [
-        "set-snapshot",
         "insert-block",
         "remove-block",
         "replace-block",

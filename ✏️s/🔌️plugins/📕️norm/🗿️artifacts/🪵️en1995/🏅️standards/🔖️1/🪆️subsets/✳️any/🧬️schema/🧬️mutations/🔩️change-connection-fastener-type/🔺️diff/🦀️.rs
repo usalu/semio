@@ -1,11 +1,10 @@
 use super::ChangeConnectionFastenerType;
-use crate::diff::En1995ConnectionList;
 use crate::{En1995Diff, En1995Snapshot};
+use crate::diff::{En1995ConnectionDelta, En1995ConnectionPatch};
 pub fn diff(payload: &ChangeConnectionFastenerType, base: &En1995Snapshot) -> protocol::MutationOutcome<En1995Diff> {
     let Some(idx) = base.connections.iter().position(|item| item.id == payload.connection_id) else {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Unknown connection id.", vec![payload.connection_id.clone()]);
     };
-    let mut connections = base.connections.clone();
-    connections[idx].fastener_type = payload.new_value.clone();
-    protocol::MutationOutcome::new(En1995Diff { connections: Some(En1995ConnectionList { values: connections }), ..Default::default() })
+    let connection = &base.connections[idx];
+    protocol::MutationOutcome::new(En1995Diff { connections: En1995ConnectionDelta::modification(&connection.id, En1995ConnectionPatch { fastener_type: Some(payload.new_value.clone()), ..Default::default() }), ..Default::default() })
 }

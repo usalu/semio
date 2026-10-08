@@ -3,4 +3,5 @@ import type { ObjRef, PdfCcittParameters, PdfDecimal, PdfDictEntry, PdfExtGState
 export interface SetExtGStateMutation {
   mutation: 'setExtGState';
   state: PdfExtGState;
+  index?: number | null;
 }

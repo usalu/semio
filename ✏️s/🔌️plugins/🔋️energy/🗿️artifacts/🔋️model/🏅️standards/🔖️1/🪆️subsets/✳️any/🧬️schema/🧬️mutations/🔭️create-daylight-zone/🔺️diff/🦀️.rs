@@ -21,7 +21,11 @@ pub fn diff(payload: &super::CreateDaylightZone, base: &EnergyModelSnapshot) -> 
     if !payload.window_transmittance.is_finite() || !(0.0..=1.0).contains(&payload.window_transmittance) {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A window transmittance must lie between 0.0 and 1.0, got {}.", payload.window_transmittance), [payload.id.0.to_string()]);
     }
-    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { daylight_zones: Rows::inserting(base.model.daylight_zones.len(), crate::model::DaylightZoneConfig {
+    let position = payload.index.map_or(base.model.daylight_zones.len(), |index| index as usize);
+    if position > base.model.daylight_zones.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} daylight_zones.", position, base.model.daylight_zones.len()), [payload.id.0.to_string()]);
+    }
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { daylight_zones: Rows::inserting(position, crate::model::DaylightZoneConfig {
         id: payload.id,
         zone_id: payload.zone_id,
         illuminance_target_lux: payload.illuminance_target_lux,

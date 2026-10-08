@@ -10,6 +10,8 @@ pub struct CreateSolid {
     pub id: String,
     #[value(default)]
     pub shells: Vec<BrepSolidShell>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for CreateSolid {

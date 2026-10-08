@@ -68,7 +68,7 @@ async fn mutation_diff_law_every_variant() {
         let returned = apply_deflate_mutation(&mut via_apply, &m);
         let direct = m.diff(&base);
         assert_eq!(direct, returned, "diff mismatch for {m:?}");
-        assert_eq!(protocol::apply_diff(&direct.diff(), &base).unwrap(), via_apply, "apply mismatch for {m:?}");
+        assert_eq!(protocol::apply_diff(direct.diff(), &base).unwrap(), via_apply, "apply mismatch for {m:?}");
     }
 }
 //#endregion mutation_diff_law
@@ -93,8 +93,8 @@ async fn inverse_law_mutation_and_diff_level() {
 
         // 🔁️ diff-level: d.diff().inverse(base).apply(&d.diff().apply(base)) == base.
         let d = m.diff(&base);
-        let applied = protocol::apply_diff(&d.diff(), &base).unwrap();
-        let undone = protocol::apply_diff(&d.diff().inverse(&base), &applied).unwrap();
+        let applied = protocol::apply_diff(d.diff(), &base).unwrap();
+        let undone = protocol::apply_diff(d.diff().inverse(&base), &applied).unwrap();
         assert_eq!(undone, base, "diff-level inverse failed for {m:?}");
     }
 }

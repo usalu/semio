@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/renderer/node-graph/scene/schema.json",
+  "title": "OS Node Graph Retained Scene Request",
+  "$ref": "#/$defs/Request",
+  "$defs": {
+    "Request": {"$ref": "https://json.schemas.assets.semio-tech.com/framework/surface/node-graph/scene/schema.json#/$defs/DecodeRequest"},
+    "InputGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumUnits", "maximumCapacityBytes", "cancelled"],
+      "properties": {
+        "maximumUnits": {"type": "integer", "minimum": 0},
+        "maximumCapacityBytes": {"type": "integer", "minimum": 0},
+        "cancelled": {"type": "boolean"}
+      }
+    },
+    "InputStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["units", "copiedBytes", "admittedBytes"],
+      "properties": {
+        "units": {"type": "integer", "minimum": 0},
+        "copiedBytes": {"type": "integer", "minimum": 0},
+        "admittedBytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "Progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "inputBytes", "totalInputBytes", "admittedBytes", "complete"],
+      "properties": {
+        "phase": {"enum": ["input-copy", "input", "projection", "base64", "pack", "json-measure", "json-write", "retirement", "complete"]},
+        "inputBytes": {"type": "integer", "minimum": 0},
+        "totalInputBytes": {"type": "integer", "minimum": 0},
+        "admittedBytes": {"type": "integer", "minimum": 0},
+        "complete": {"type": "boolean"}
+      }
+    }
+  }
+}

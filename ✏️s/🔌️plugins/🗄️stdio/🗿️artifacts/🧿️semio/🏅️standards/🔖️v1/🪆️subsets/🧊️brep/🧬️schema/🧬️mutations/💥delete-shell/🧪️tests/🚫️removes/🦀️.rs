@@ -33,7 +33,7 @@ fn mutation() -> SemioBrepMutation {
 #[semio_framework_async_macros::async_test]
 async fn removes_the_shell_without_cascading_either_way() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("delete-shell applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-shell applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-shell/removes-the-only-shell-and-leaves-its-faces-behind: applied state differs from the committed after-snapshot");
     assert!(produced.shells.is_empty(), "the only shell must be gone");
     assert_eq!(produced.faces, base.faces, "delete-shell must NOT cascade down into the faces it gathered");
@@ -45,13 +45,14 @@ async fn removes_the_shell_without_cascading_either_way() {
 async fn the_undo_create_shell_restores_the_captured_face_list() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "delete-shell of an existing shell undoes as exactly one create-shell");
     let SemioBrepMutation::CreateShell(recreate) = &undo[0] else { panic!("delete-shell must undo as create-shell") };
     assert_eq!(recreate.faces, base.shells[0].faces, "the undo must recapture the deleted shell's own face list verbatim");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-shell applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo create-shell applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-shell applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo create-shell applies");
     }
     assert_eq!(current, base, "delete-shell/removes-the-only-shell-and-leaves-its-faces-behind: the undo did not restore the before-snapshot");
 }
@@ -108,6 +109,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded = decode_semio_brep_diff_json(DIFF).expect("committed delete-shell diff decodes");
-    let produced = decoded.apply(&before()).expect("committed delete-shell diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-shell diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-shell/removes-the-only-shell-and-leaves-its-faces-behind: committed diff did not carry before to after");
 }

@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "annex": null,
   "materials": null,
   "sections": null,
@@ -7,30 +6,36 @@
   "connections": null,
   "fireScenarios": null,
   "fatigueDetails": null,
-  "coldFormed": [
-    {
-      "id": "sheet-pass",
-      "materialId": "mat-6082",
-      "thickness": 0.004,
-      "width": 0.08,
-      "span": 1.0,
-      "welded": false,
-      "actions": [
-        {
-          "id": "G-sheet",
-          "kind": "permanent",
-          "category": "self",
-          "source": "external",
-          "gKLine": 120.0,
-          "qKLine": 0.0,
-          "nK": 5926.0,
-          "vYK": 0.0,
-          "vZK": 0.0,
-          "mYK": 29.6,
-          "mZK": 0.0
-        }
-      ]
-    }
-  ],
+  "coldFormed": {
+    "added": [
+      {
+        "id": "sheet-pass",
+        "materialId": "mat-6082",
+        "thickness": 0.004,
+        "width": 0.08,
+        "span": 1.0,
+        "welded": false,
+        "actions": [
+          {
+            "id": "G-sheet",
+            "kind": "permanent",
+            "category": "self",
+            "source": "external",
+            "gKLine": 120.0,
+            "qKLine": 0.0,
+            "nK": 5926.0,
+            "vYK": 0.0,
+            "vZK": 0.0,
+            "mYK": 29.6,
+            "mZK": 0.0
+          }
+        ]
+      }
+    ],
+    "removed": [
+      "sheet-pass"
+    ],
+    "order": null
+  },
   "shells": null
 }

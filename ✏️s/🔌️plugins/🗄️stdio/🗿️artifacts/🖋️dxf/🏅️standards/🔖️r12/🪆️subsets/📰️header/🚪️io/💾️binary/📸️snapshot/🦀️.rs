@@ -48,48 +48,5 @@ use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use crate::standards::v_r12::subsets::any::io::binary::diff::{enc_other_table_bin, dec_other_table_bin, enc_dxf_tables_bin, dec_dxf_tables_bin};
-/// 🧬️ Whole `DxfSnapshot` binary twin of [`enc_dxf_snapshot`]/[`dec_dxf_snapshot`] — needed by
-/// `🧬️mutations::DxfMutation::SetSnapshot`'s upgraded `OpBinary` payload.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_dxf_snapshot_bin(s: &DxfSnapshot, out: &mut Vec<u8>) {
-    write_str_lp(out, &s.schema);
-    store::pack_rt::write_varint_u64(out, s.header_vars.len() as u64);
-    for hv in &s.header_vars {
-        enc_header_var_bin(hv, out);
-    }
-    enc_dxf_tables_bin(&s.tables, out);
-    store::pack_rt::write_varint_u64(out, s.other_tables.len() as u64);
-    for t in &s.other_tables {
-        enc_other_table_bin(t, out);
-    }
-    store::pack_rt::write_varint_u64(out, s.blocks.len() as u64);
-    for b in &s.blocks {
-        enc_block_bin(b, out);
-    }
-    enc_dxf_entities_bin(&s.entities, out);
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_dxf_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfSnapshot, String> {
-    let schema = read_str_lp(reader)?;
-    let hvc = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut header_vars = Vec::with_capacity(hvc as usize);
-    for _ in 0..hvc {
-        header_vars.push(dec_header_var_bin(reader)?);
-    }
-    let tables = dec_dxf_tables_bin(reader)?;
-    let otc = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut other_tables = Vec::with_capacity(otc as usize);
-    for _ in 0..otc {
-        other_tables.push(dec_other_table_bin(reader)?);
-    }
-    let bc = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut blocks = Vec::with_capacity(bc as usize);
-    for _ in 0..bc {
-        blocks.push(dec_block_bin(reader)?);
-    }
-    let entities = dec_dxf_entities_bin(reader)?;
-    Ok(DxfSnapshot { schema, header_vars, tables, other_tables, blocks, entities })
-}
 }
 pub use diff_codec::*;

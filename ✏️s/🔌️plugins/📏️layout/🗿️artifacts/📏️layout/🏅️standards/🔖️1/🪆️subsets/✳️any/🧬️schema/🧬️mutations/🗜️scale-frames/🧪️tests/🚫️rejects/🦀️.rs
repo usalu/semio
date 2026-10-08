@@ -29,7 +29,7 @@ fn outcome() -> serde_json::Value {
 }
 fn applied() -> LayoutSnapshot {
     let base = before();
-    mutation().diff(&base).diff().apply(&base).expect("scale-frames/rejects-missing-frames: the diff applies to its committed before-snapshot")
+    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("scale-frames/rejects-missing-frames: the diff applies to its committed before-snapshot")
 }
 
 /// 🗣️ `(level, code, target)` of every message `scale-frames` raises on the committed base.

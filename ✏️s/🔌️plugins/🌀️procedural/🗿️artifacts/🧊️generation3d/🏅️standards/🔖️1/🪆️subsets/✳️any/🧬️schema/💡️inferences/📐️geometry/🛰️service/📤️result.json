@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/geometry.result.json",
+  "title": "Generation3dGeometryResult",
+  "description": "The progress of a geometry run and a summary of every widget finished so far. The geometry itself stays in the instance; the dependency hash names it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["complete", "progress", "computed", "cacheHits", "fuelUsed", "faulted", "cursor", "widgets"],
+  "properties": {
+    "complete": { "type": "boolean" },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["completed", "total", "fraction"],
+      "properties": {
+        "completed": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 0 },
+        "fraction": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "computed": { "type": "integer", "minimum": 0, "description": "Widgets computed by this call." },
+    "cacheHits": { "type": "integer", "minimum": 0, "description": "Widgets served from the cache by this call." },
+    "fuelUsed": { "type": "integer", "minimum": 0, "description": "Work units this call spent." },
+    "faulted": { "type": "integer", "minimum": 0 },
+    "cursor": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["digest", "next"],
+          "properties": {
+            "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "next": { "type": "integer", "minimum": 0 }
+          }
+        }
+      ]
+    },
+    "widgets": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/widget" }
+    }
+  },
+  "definitions": {
+    "widget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "dep", "quality", "fault", "outputs"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "dep": { "type": "string", "pattern": "^([0-9a-f]{64})?$" },
+        "quality": { "enum": ["exact-analytic", "exact-numerical", "approximate", "mesh-derived-brep", "polygon-mesh", "tessellated-mesh"] },
+        "fault": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["code", "en", "de", "port"],
+              "properties": {
+                "code": { "type": "string", "pattern": "^[a-z0-9]+(\\.[a-z0-9-]+)+$" },
+                "en": { "type": "string", "minLength": 1 },
+                "de": { "type": "string", "minLength": 1 },
+                "port": { "type": ["string", "null"] }
+              }
+            }
+          ]
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["port", "kind", "detail"],
+            "properties": {
+              "port": { "type": "string", "minLength": 1 },
+              "kind": { "enum": ["number", "integer", "boolean", "text", "vector", "point", "plane", "shape", "mesh", "selection", "list"] },
+              "detail": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

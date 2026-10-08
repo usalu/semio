@@ -92,11 +92,11 @@ mod viewer_head_tests;
 mod replay_retirement_tests;
 
 use super::fixture_mutations::{
-    demo::{AddN, DeleteN, DemoMutation, AssignN, SetN},
+    demo::{AddN, DeleteN, DemoMutation, RestoreN, SetN},
     lossy::{LossyMutation, SetN as LossySetN},
     severity::{SetErrorN, SetFatalN, SetN as SeveritySetN, SetWarningN, SeverityMutation},
     timestamped::{SetN as TimestampedSetN, TimestampedMutation},
-    validated::{AssignN as ValidatedAssignN, SetN as ValidatedSetN, ValidatedMutation},
+    validated::{RestoreN as ValidatedRestoreN, SetN as ValidatedSetN, ValidatedMutation},
 };
 use super::snapshot_clone_preparation::{RetainedCloneEdit, RetainedCloneEditCursor, RetainedCloneEditStep, RetainedClonePreparationFactory};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef};
@@ -129,7 +129,7 @@ where
         assert!(Op::from_value(invalid.into()).is_err());
         let mut missing = serde_json::Value::from(mutation.to_value());
         missing.as_object_mut().unwrap().remove(key);
-        assert_eq!(Op::from_value(missing.into()).is_ok(), row["operation"] == "assignN" && key == "n");
+        assert_eq!(Op::from_value(missing.into()).is_ok(), row["operation"] == "restoreN" && key == "n");
     }
     let before = DemoSnapshot { n: serde_json::from_value(row["before"].clone()).unwrap() };
     let outcome = mutation.diff(&before);
@@ -178,16 +178,16 @@ fn committed_wire_witnesses_are_the_canonical_wire() {
     assert_witness::<DemoMutation>(include_str!("../../🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🔢️set-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<DemoMutation>(include_str!("../../🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🗑️delete-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<DemoMutation>(include_str!("../../🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/➕️add-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    assert_witness::<DemoMutation>(include_str!("../../🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️assign-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    assert_witness::<DemoMutation>(include_str!("../../🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️restore-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<TimestampedMutation>(include_str!("../../🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/🔢️set-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    assert_witness::<TimestampedMutation>(include_str!("../../🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/↩️assign-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    assert_witness::<TimestampedMutation>(include_str!("../../🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/↩️restore-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<SeverityMutation>(include_str!("../../🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🔢️set-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<SeverityMutation>(include_str!("../../🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/⚠️set-warning-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<SeverityMutation>(include_str!("../../🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🚫️set-error-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<SeverityMutation>(include_str!("../../🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🛑️set-fatal-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    assert_witness::<SeverityMutation>(include_str!("../../🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/↩️assign-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    assert_witness::<SeverityMutation>(include_str!("../../🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/↩️restore-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<ValidatedMutation>(include_str!("../../🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/🔢️set-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    assert_witness::<ValidatedMutation>(include_str!("../../🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️assign-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    assert_witness::<ValidatedMutation>(include_str!("../../🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️restore-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<LossyMutation>(include_str!("../../🧪️testing/🧬️mutations/🪤️lossy/🧬️mutations/🔢️set-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<SpaceHistoryMutation>(include_str!("../../🧫️fixtures/🧬️mutations/📌️commit-space-checkpoint/🧾️wire-witness/🦠️mutation/🔣️.json"));
     assert_witness::<SpaceHistoryMutation>(include_str!("../../🧫️fixtures/🧬️mutations/🌿️create-space-alternative/🧾️wire-witness/🦠️mutation/🔣️.json"));
@@ -213,7 +213,7 @@ fn direct_store_fixture_absence_inverse_boundary() {
     });
     assert_fixture_text_codecs(&fixture, "validated", |row| match row["variant"].as_str().unwrap() {
         "SetN" => ValidatedMutation::SetN(ValidatedSetN { n: row["payload"]["n"].as_i64().unwrap() as i32 }),
-        "AssignN" => ValidatedMutation::AssignN(ValidatedAssignN { n: Some(row["payload"]["n"].as_i64().unwrap() as i32) }),
+        "RestoreN" => ValidatedMutation::RestoreN(ValidatedRestoreN { n: Some(row["payload"]["n"].as_i64().unwrap() as i32) }),
         variant => panic!("unexpected validated text codec variant {variant}"),
     });
     for json in ["{}", "{\"n\":null}"] {
@@ -246,7 +246,7 @@ fn direct_store_fixture_structural_diff_composition() {
         assert_eq!(crate::os_spr::apply_diff(&combined, &before).unwrap(), expected);
         let round_trip = serde_json::from_value::<DemoDiff>(serde_json::to_value(&combined).unwrap()).unwrap();
         assert_eq!(crate::os_spr::apply_diff(&round_trip, &before).unwrap(), expected);
-        let restore = DemoMutation::AssignN(AssignN { n: before.n });
+        let restore = DemoMutation::RestoreN(RestoreN { n: before.n });
         assert_eq!(crate::os_spr::apply_diff(restore.diff(&actual).diff(), &actual).unwrap(), before);
     }
 }
@@ -4066,9 +4066,9 @@ impl ArtifactCanonicalJson for DemoMutation {
             DemoMutation::AddN(value) => ArtifactCanonicalJsonValue::Object(ArtifactCanonicalJsonObject::new(
                 [("operation", ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::String("addN"))), ("delta", ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::I64(i64::from(value.delta))))].into_iter(),
             )),
-            DemoMutation::AssignN(value) => ArtifactCanonicalJsonValue::Object(ArtifactCanonicalJsonObject::new(
+            DemoMutation::RestoreN(value) => ArtifactCanonicalJsonValue::Object(ArtifactCanonicalJsonObject::new(
                 [
-                    ("operation", ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::String("assignN"))),
+                    ("operation", ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::String("restoreN"))),
                     ("n", value.n.map_or(ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::Null), |n| ArtifactCanonicalJsonValue::Scalar(ArtifactCanonicalJsonNode::I64(i64::from(n))))),
                 ]
                 .into_iter(),
@@ -4681,7 +4681,7 @@ async fn artifact_store_batch_publication_of_one_mutation_is_the_single_item_cas
     assert_eq!(store.snapshot_ref().n, Some(7));
     let staged = store.envelope.vcs.edits.last().expect("staged edit");
     assert_eq!(staged.forwards, vec![DemoMutation::SetN(SetN { n: 7 })]);
-    assert_eq!(staged.inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::AssignN(AssignN { n: Some(0) })]);
+    assert_eq!(staged.inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::RestoreN(RestoreN { n: Some(0) })]);
     assert_eq!(staged.mutation_meta[0].mutation_id, Some(MutationId(staged.id.clone())), "a one-mutation gesture names its mutation after its edit on the batched route as on every other");
     assert!(publication.acknowledge());
     close_durable_publication(&mut publication);
@@ -5550,8 +5550,8 @@ async fn canonical_revision_distinguishes_interior_aba_across_load_and_reset() {
     let original_revision = original.content_revision().await;
     let mut changed = owned_test_envelope(&original).await;
     changed.vcs.edits[1].forwards = vec![DemoMutation::SetN(SetN { n: 99 })];
-    changed.vcs.edits[1].inverse = vec![DemoMutation::AssignN(AssignN { n: Some(1) })].into();
-    changed.vcs.edits[2].inverse = vec![DemoMutation::AssignN(AssignN { n: Some(99) })].into();
+    changed.vcs.edits[1].inverse = vec![DemoMutation::RestoreN(RestoreN { n: Some(1) })].into();
+    changed.vcs.edits[2].inverse = vec![DemoMutation::RestoreN(RestoreN { n: Some(99) })].into();
 
     let mut loaded = ArtifactStore::bare(changed).await;
     loaded.install_document_store_owners_exact(demo_closable_store_owners());
@@ -6489,7 +6489,7 @@ async fn apply_computes_backwards_from_pre_state() {
     let mut store = ArtifactStore::new(envelope).await;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
     let edit = &store.envelope().vcs.edits[0];
-    assert_eq!(edit.inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::AssignN(AssignN { n: Some(0) })]);
+    assert_eq!(edit.inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::RestoreN(RestoreN { n: Some(0) })]);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -7238,7 +7238,7 @@ async fn edit_mutations_exposes_the_latest_edit() {
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
     let (forwards, inverse, meta) = store.edit_mutations().expect("edit operations");
     assert_eq!(forwards, &[DemoMutation::SetN(SetN { n: 5 })]);
-    assert_eq!(inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::AssignN(AssignN { n: Some(0) })], "inverse restores the pre-state");
+    assert_eq!(inverse.iter().cloned().collect::<Vec<_>>(), vec![DemoMutation::RestoreN(RestoreN { n: Some(0) })], "inverse restores the pre-state");
     assert_eq!(meta.len(), 1);
 }
 
@@ -7713,6 +7713,44 @@ async fn space_history_op_round_trips() {
     test_support::assert_operation_round_trip(&with_alternative_active, SpaceHistoryMutation::RemoveSpaceAlternative(RemoveSpaceAlternative { alternative_id: "sa-other".into() })).await;
     test_support::assert_operation_round_trip(&with_alternative_active, SpaceHistoryMutation::RemoveSpaceAlternative(RemoveSpaceAlternative { alternative_id: "sa-1".into() })).await;
     test_support::assert_operation_round_trip(&with_alternative_active, SpaceHistoryMutation::SetActiveSpaceAlternative(SetActiveSpaceAlternative { alternative_id: None })).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn demo_fixture_inverse_diffs_sum_to_the_negative_diff() {
+    use crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law as law;
+    let base = DemoSnapshot { n: Some(3) };
+    law(&DemoMutation::AddN(AddN { delta: 4 }), &base).await;
+    law(&DemoMutation::SetN(SetN { n: 9 }), &base).await;
+    law(&DemoMutation::DeleteN(DeleteN {}), &base).await;
+    law(&DemoMutation::RestoreN(RestoreN { n: None }), &base).await;
+    law(&DemoMutation::RestoreN(RestoreN { n: Some(8) }), &DemoSnapshot { n: None }).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn space_history_inverse_diffs_sum_to_the_negative_diff() {
+    use crate::os_spr::protocol_laws::assert_mutation_inverse_sum_law as law;
+    let checkpoint = SpaceCheckpoint {
+        id: "sc-1".into(),
+        parent_id: None,
+        message: "root".into(),
+        authors: Vec::new(),
+        timestamp: HybridLogicalTimestamp::new(0, 1),
+        members: vec![SpaceMemberPin { document_id: "member-a".into(), checkpoint_id: "cp-1".into(), alternative_id: String::new() }],
+    };
+    law(&SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint.clone() }), &SpaceHistorySnapshot::default()).await;
+    let with_checkpoint = SpaceHistorySnapshot { checkpoints: vec![checkpoint], alternatives: Vec::new(), active_alternative_id: None };
+    let alternative = SpaceAlternative { id: "sa-1".into(), name: "branch".into(), checkpoint_ids: vec!["sc-1".into()] };
+    law(&SpaceHistoryMutation::CreateSpaceAlternative(CreateSpaceAlternative { alternative }), &with_checkpoint).await;
+    let with_alternative_active = SpaceHistorySnapshot {
+        alternatives: vec![SpaceAlternative { id: "sa-1".into(), name: "branch".into(), checkpoint_ids: vec!["sc-1".into()] }, SpaceAlternative { id: "sa-other".into(), name: "other".into(), checkpoint_ids: vec!["sc-1".into()] }],
+        active_alternative_id: Some("sa-1".into()),
+        ..with_checkpoint.clone()
+    };
+    law(&SpaceHistoryMutation::SwitchSpaceAlternative(SwitchSpaceAlternative { alternative_id: "sa-other".into() }), &with_alternative_active).await;
+    law(&SpaceHistoryMutation::RemoveSpaceCheckpoint(RemoveSpaceCheckpoint { checkpoint_id: "sc-1".into() }), &with_checkpoint).await;
+    law(&SpaceHistoryMutation::RemoveSpaceAlternative(RemoveSpaceAlternative { alternative_id: "sa-other".into() }), &with_alternative_active).await;
+    law(&SpaceHistoryMutation::RemoveSpaceAlternative(RemoveSpaceAlternative { alternative_id: "sa-1".into() }), &with_alternative_active).await;
+    law(&SpaceHistoryMutation::SetActiveSpaceAlternative(SetActiveSpaceAlternative { alternative_id: None }), &with_alternative_active).await;
 }
 
 //#endregion 🏛️StudioTests
@@ -10135,7 +10173,7 @@ async fn dispatch_group_phase1_rejects_under_vigilant_on_a_members_warning() {
 }
 
 /// 🧪️ `GroupReceipt.messages` carries the FULL union (both parent's own and the child's),
-/// each `target` prefixed with the ORIGINATING member's own `crate::os_io::ArtifactRef::
+/// each `target` prefixed with the ORIGINATING member's own `semio_framework_artifact_reference::ArtifactRef::
 /// to_uri()` — the discipline that lets a caller with several members in flight tell messages
 /// apart. Parent-first ordering matches phase 1's own collection order.
 ///
@@ -10785,13 +10823,38 @@ fn envelope_and_genesis_preserve_terminal_cursor_physical_grants() {
 }
 
 /// 🧺️ The store preserves its terminal disposer allocation under an insufficient physical grant.
+#[test]
+fn displaced_store_owner_preserves_terminal_physical_grants(){
+    struct TerminalOwner<const N:usize>([u8;N]);
+    impl<const N:usize> ErasedSnapshotRetirement for TerminalOwner<N>{
+        fn close_step(&mut self,_:usize,_:usize)->Result<SnapshotRetirementStep,ValueError>{Ok(SnapshotRetirementStep::Complete)}
+        fn terminal_is_empty(&self)->bool{true}
+        fn next_close_byte_demand(&self)->usize{0}
+    }
+    fn check<const N:usize>(row:&serde_json::Value){
+        let mut queue=super::ArtifactStoreDisplacedRetirements::new();queue.push_reserved(Box::new(TerminalOwner::<N>([0;N])));
+        let original=queue.owners.front().unwrap().as_ref()as*const dyn ErasedSnapshotRetirement as*const();
+        assert_eq!(queue.next_close_byte_demand(),N);
+        let(zero,allocated,released)=crate::test_allocation::observe_backing(||queue.close_step(0,N).unwrap());assert_eq!((allocated,released),(0,0));assert!(matches!(zero,SnapshotRetirementStep::Pending{released_items:0,released_bytes:0}));
+        let caller=row["callerBytes"].as_u64().unwrap()as usize;let expected=row["releasedBytes"].as_u64().unwrap()as usize;
+        let(step,allocated,released)=crate::test_allocation::observe_backing(||queue.close_step(1,caller).unwrap());assert_eq!(allocated,0);assert_eq!(released,expected);assert!(matches!(step,SnapshotRetirementStep::Pending{released_items,released_bytes}if released_items==usize::from(expected!=0)&&released_bytes==expected));
+        if expected==0{assert_eq!(queue.owners.front().unwrap().as_ref()as*const dyn ErasedSnapshotRetirement as*const(),original);assert_eq!(queue.next_close_byte_demand(),N);let(step,allocated,released)=crate::test_allocation::observe_backing(||queue.close_step(1,N).unwrap());assert_eq!((allocated,released),(0,N));assert!(matches!(step,SnapshotRetirementStep::Pending{released_items:1,released_bytes}if released_bytes==N));}
+        assert!(queue.terminal_is_empty());assert_eq!(queue.next_close_byte_demand(),0);
+        println!("[DEBUG] displaced original terminal owner extent={N} caller={caller} release={expected}; zero/below preserve pointer, exact grant releases original Box");
+    }
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap(){match row["physicalBytes"].as_u64().unwrap(){1=>check::<1>(row),16384=>check::<16384>(row),65536=>check::<65536>(row),262144=>check::<262144>(row),_=>panic!("declared neutral displaced-owner extents")}}
+    let mut queue=super::ArtifactStoreDisplacedRetirements::new();let reservation=queue.reserve_owner_slots(1).unwrap();assert!(matches!(queue.close_step(1,0).unwrap(),SnapshotRetirementStep::Blocked));assert_eq!(queue.next_close_byte_demand(),0);queue.release_owner_slots(reservation).unwrap();assert!(queue.terminal_is_empty());
+}
+
+/// 🧺️ The store preserves its terminal disposer allocation under an insufficient physical grant.
 #[semio_framework_async_macros::async_test]
 async fn installed_store_disposer_preserves_terminal_physical_grant() {
     struct TerminalDisposer<const N: usize>([u8; N]);
     impl<const N: usize> ArtifactStoreOwnedDisposer<DemoSnapshot, DemoMutation> for TerminalDisposer<N> {
         fn close_step(&mut self, _: &mut ArtifactStoreCloseView<'_, DemoSnapshot, DemoMutation>, _: usize, _: usize) -> Result<SnapshotRetirementStep, ValueError> { Ok(SnapshotRetirementStep::Complete) }
         fn terminal_is_empty(&self, _: &super::ArtifactStore<DemoSnapshot, DemoMutation>) -> bool { true }
-        fn next_close_byte_demand(&self) -> usize { 0 }
+        fn next_close_byte_demand(&self, _: &super::ArtifactStore<DemoSnapshot, DemoMutation>) -> usize { 0 }
         fn close_uninstalled_step(&mut self, _: usize) -> Result<SnapshotRetirementStep, ValueError> { Ok(SnapshotRetirementStep::Complete) }
         fn uninstalled_terminal_is_empty(&self) -> bool { true }
     }
@@ -10810,7 +10873,7 @@ async fn installed_store_disposer_preserves_terminal_physical_grant() {
         let mut cursor = ArtifactStoreCursorDisposer::<DemoSnapshot, DemoMutation>::new();
         cursor.phase = ArtifactStoreCursorDisposerPhase::Complete;
         *cursor.active = Some(Box::new(TerminalDisposer::<N>([0; N])));
-        let nested_demand = cursor.next_close_byte_demand();
+        let nested_demand = cursor.next_close_byte_demand(&store);
         let (nested_step, _, nested_actual) = crate::test_allocation::observe_backing(|| cursor.close_step(&mut ArtifactStoreCloseView { store: &mut store }, 1, caller).unwrap());
         let nested_report = match nested_step { SnapshotRetirementStep::Pending { released_bytes, .. } => released_bytes, _ => usize::MAX };
         for _ in 0..8 { if cursor.active.is_none() { break; } cursor.close_step(&mut ArtifactStoreCloseView { store: &mut store }, 1, admission).unwrap(); }

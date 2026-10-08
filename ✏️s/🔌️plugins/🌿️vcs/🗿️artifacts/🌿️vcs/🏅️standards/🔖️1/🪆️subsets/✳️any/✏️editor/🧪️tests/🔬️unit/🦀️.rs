@@ -494,7 +494,7 @@ fn one_item_store_preparation_rejects_non_document_lanes() {
     let config = VcsOneItemPreparationFactory::<VcsDemoConfig, VcsDemoConfigMutation>::new(store::HistoryLane::Document);
     assert!(artifact.preflight(&crate::mutations::change_counter(1), store::HistoryLane::Document).is_ok());
     assert!(artifact.preflight(&crate::mutations::change_counter(1), store::HistoryLane::Interaction).is_err());
-    let mutation = VcsDemoConfigMutation::Snapshot { config: VcsDemoConfig::default() };
+    let mutation = VcsDemoConfigMutation::Noop;
     assert!(config.preflight(&mutation, store::HistoryLane::Document).is_ok());
     assert!(config.preflight(&mutation, store::HistoryLane::Interaction).is_err());
 }

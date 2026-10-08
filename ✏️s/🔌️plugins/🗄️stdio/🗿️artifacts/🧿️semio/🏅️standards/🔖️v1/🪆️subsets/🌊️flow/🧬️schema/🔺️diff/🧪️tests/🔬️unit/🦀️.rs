@@ -27,15 +27,8 @@ fn base_snapshot() -> SemioFlowSnapshot {
 /// one modified-in-every-field, one added; the modified node's own `params` collection gets
 /// one removed, one modified, one added (exercising the doubly-nested `NamedTripleDiff`).
 ///
-/// 🔧️ W2b closer fix: `"toRemove"` moved to the END of `params` (was first). `NamedTripleDiff`
-/// is name-keyed with no positional field (`apply_named` — see this module's own
-/// `🔖️GenericNamedEngine` region — always appends `added` items at the tail, by design, same
-/// as every other name-keyed collection in this program); the original ordering put
-/// `"toRemove"` FIRST in `sweep_a`, so `between(sweep_b, sweep_a).apply(sweep_b)` (the reverse
-/// direction, where `"toRemove"` is the ADDED item) reconstructed it at the tail instead of
-/// the front — a real `assert_eq!` mismatch caught by both `between_roundtrip_law` and
-/// `field_sweep`, not a bug in `apply_named` itself (its append-at-end behavior is the
-/// correct, documented semantics for a name-keyed — i.e. order-insignificant — collection).
+/// 🔧️ `added` rows carry their final position (`NamedAdded`), so `"toRemove"` returns to the front of `params` when the
+/// reverse direction re-adds it.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sweep_a() -> SemioFlowSnapshot {
     SemioFlowSnapshot {
@@ -58,11 +51,11 @@ fn sweep_b() -> SemioFlowSnapshot {
 async fn between_roundtrip_law() {
     let a = sweep_a();
     let b = sweep_b();
-    assert_eq!(MutationDiff::apply(&<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&a, &b), &a).expect("apply must succeed for a well-formed fixture"), b);
-    assert_eq!(MutationDiff::apply(&<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&b, &a), &b).expect("apply must succeed for a well-formed fixture"), a);
+    assert_eq!(protocol::apply_diff(&<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&a, &b), &a).expect("apply must succeed for a well-formed fixture"), b);
+    assert_eq!(protocol::apply_diff(&<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&b, &a), &b).expect("apply must succeed for a well-formed fixture"), a);
 
     let sample = base_snapshot();
-    assert_eq!(MutationDiff::apply(&<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&sample, &sample), &sample).expect("apply must succeed for a well-formed fixture"), sample);
+    assert_eq!(protocol::apply_diff(&<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&sample, &sample), &sample).expect("apply must succeed for a well-formed fixture"), sample);
 }
 //#endregion 🔖️BetweenRoundtripLaw
 
@@ -76,7 +69,7 @@ async fn field_sweep() {
     let b = sweep_b();
 
     let diff_ab = <SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&a, &b);
-    assert_eq!(MutationDiff::apply(&diff_ab, &a).expect("apply must succeed for a well-formed fixture"), b);
+    assert_eq!(protocol::apply_diff(&diff_ab, &a).expect("apply must succeed for a well-formed fixture"), b);
     assert!(<SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&a, &a).is_empty());
 
     let nodes_diff = diff_ab.nodes.as_ref().expect("nodes diff present");
@@ -102,17 +95,17 @@ async fn field_sweep() {
     assert!(keep_edge_diff.kind.is_some(), "edge.kind not exercised");
 
     let diff_ba = <SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&b, &a);
-    assert_eq!(MutationDiff::apply(&diff_ba, &b).expect("apply must succeed for a well-formed fixture"), a);
+    assert_eq!(protocol::apply_diff(&diff_ba, &b).expect("apply must succeed for a well-formed fixture"), a);
 }
 //#endregion 🔖️FieldSweep
 
 //#region 🔖️AbsorbLaw
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_absorb_matches_sequential(base: &SemioFlowSnapshot, d1: &SemioFlowDiff, d2: &SemioFlowDiff) -> SemioFlowDiff {
-    let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+    let sequential = protocol::apply_diff(d2, &protocol::apply_diff(d1, base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
     let mut absorbed = d1.clone();
     MutationDiff::absorb(&mut absorbed, d2.clone());
-    assert_eq!(MutationDiff::apply(&absorbed, base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+    assert_eq!(protocol::apply_diff(&absorbed, base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
     absorbed
 }
 
@@ -122,22 +115,22 @@ async fn absorb_law() {
     // index-transport interaction between an unrelated insert and an unrelated removal).
     {
         let base = base_snapshot();
-        let d1 = diff_insert_node(node("f", "new", "F", vec![], 1.0, 1.0));
-        let _mid = MutationDiff::apply(&d1, &base).expect("apply must succeed for a well-formed fixture");
+        let d1 = diff_insert_node(&empty_base(), node("f", "new", "F", vec![], 1.0, 1.0), None);
+        let _mid = protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture");
         let d2 = diff_remove_node("n2");
         let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
         let nd = absorbed.nodes.as_ref().unwrap();
         assert_eq!(nd.removed, vec!["n2".to_string()]);
         assert_eq!(nd.added.len(), 1);
-        assert_eq!(nd.added[0].id, "f");
+        assert_eq!(nd.added[0].item.id, "f");
     }
 
     // Canonical: Insert(f)+Insert(g) -> both survive.
     {
         let base = base_snapshot();
-        let d1 = diff_insert_node(node("f", "new", "F", vec![], 1.0, 1.0));
-        let mid = MutationDiff::apply(&d1, &base).expect("apply must succeed for a well-formed fixture");
-        let d2 = diff_insert_node(node("g", "new", "G", vec![], 2.0, 2.0));
+        let d1 = diff_insert_node(&empty_base(), node("f", "new", "F", vec![], 1.0, 1.0), None);
+        let mid = protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture");
+        let d2 = diff_insert_node(&empty_base(), node("g", "new", "G", vec![], 2.0, 2.0), None);
         let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
         let nd = absorbed.nodes.as_ref().unwrap();
         assert_eq!(nd.added.len(), 2, "both inserts must survive absorb, not LWW-clobber");
@@ -147,14 +140,14 @@ async fn absorb_law() {
     // Canonical: Insert(f)+SetField(f) -> patch into the added payload.
     {
         let base = base_snapshot();
-        let d1 = diff_insert_node(node("f", "new", "F", vec![], 1.0, 1.0));
-        let mid = MutationDiff::apply(&d1, &base).expect("apply must succeed for a well-formed fixture");
+        let d1 = diff_insert_node(&empty_base(), node("f", "new", "F", vec![], 1.0, 1.0), None);
+        let mid = protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture");
         let d2 = diff_set_node_kind("f", "patched");
         let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
         let nd = absorbed.nodes.as_ref().unwrap();
         assert!(nd.modified.is_empty(), "patch-into-added must not surface as a separate modified entry");
         assert_eq!(nd.added.len(), 1);
-        assert_eq!(nd.added[0].kind, "patched");
+        assert_eq!(nd.added[0].item.kind, "patched");
         let _ = mid;
     }
 
@@ -162,7 +155,7 @@ async fn absorb_law() {
     {
         let base = base_snapshot();
         let d1 = diff_set_node_kind("n2", "patched");
-        let mid = MutationDiff::apply(&d1, &base).expect("apply must succeed for a well-formed fixture");
+        let mid = protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture");
         let d2 = diff_remove_node("n2");
         let absorbed = assert_absorb_matches_sequential(&base, &d1, &d2);
         let nd = absorbed.nodes.as_ref().unwrap();
@@ -174,12 +167,12 @@ async fn absorb_law() {
     // Associativity over a triple.
     {
         let base = base_snapshot();
-        let d1 = diff_insert_node(node("f", "new", "F", vec![], 1.0, 1.0));
-        let mid1 = MutationDiff::apply(&d1, &base).expect("apply must succeed for a well-formed fixture");
-        let d2 = diff_insert_node(node("g", "new", "G", vec![], 2.0, 2.0));
-        let mid2 = MutationDiff::apply(&d2, &mid1).expect("apply must succeed for a well-formed fixture");
+        let d1 = diff_insert_node(&empty_base(), node("f", "new", "F", vec![], 1.0, 1.0), None);
+        let mid1 = protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture");
+        let d2 = diff_insert_node(&empty_base(), node("g", "new", "G", vec![], 2.0, 2.0), None);
+        let mid2 = protocol::apply_diff(&d2, &mid1).expect("apply must succeed for a well-formed fixture");
         let d3 = diff_remove_node("n2");
-        let sequential = MutationDiff::apply(&d3, &mid2).expect("apply must succeed for a well-formed fixture");
+        let sequential = protocol::apply_diff(&d3, &mid2).expect("apply must succeed for a well-formed fixture");
 
         let mut left = d1.clone();
         MutationDiff::absorb(&mut left, d2.clone());
@@ -190,8 +183,8 @@ async fn absorb_law() {
         let mut right = d1.clone();
         MutationDiff::absorb(&mut right, d2_then_d3);
 
-        assert_eq!(MutationDiff::apply(&left, &base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb associativity (left) failed");
-        assert_eq!(MutationDiff::apply(&right, &base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb associativity (right) failed");
+        assert_eq!(protocol::apply_diff(&left, &base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb associativity (left) failed");
+        assert_eq!(protocol::apply_diff(&right, &base).expect("apply must succeed for a well-formed fixture"), sequential, "absorb associativity (right) failed");
     }
 }
 //#endregion 🔖️AbsorbLaw
@@ -205,8 +198,8 @@ async fn diff_codec_text_binary_roundtrip_law() {
         SemioFlowDiff::default(),
         <SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&a, &b),
         <SemioFlowDiff as DiffAlgebra<SemioFlowSnapshot>>::between(&b, &a),
-        diff_insert_node(node("z", "k", "L", vec![("a", "b")], 1.5, 2.5)),
-        diff_insert_edge(edge("z", "a", "p", "b", "q", "k")),
+        diff_insert_node(&empty_base(), node("z", "k", "L", vec![("a", "b")], 1.5, 2.5), None),
+        diff_insert_edge(&empty_base(), edge("z", "a", "p", "b", "q", "k"), None),
     ];
     for d in diffs {
         let printed = d.print_diff();
@@ -229,4 +222,9 @@ async fn node_and_edge_value_codecs_round_trip() {
     assert_eq!(dec_node(&enc_node(&n)).unwrap(), n);
     let e = edge("e1", "a", "p", "b", "q", "k");
     assert_eq!(dec_edge(&enc_edge(&e)).unwrap(), e);
+}
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn empty_base() -> SemioFlowSnapshot {
+    SemioFlowSnapshot { schema: crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() }
 }

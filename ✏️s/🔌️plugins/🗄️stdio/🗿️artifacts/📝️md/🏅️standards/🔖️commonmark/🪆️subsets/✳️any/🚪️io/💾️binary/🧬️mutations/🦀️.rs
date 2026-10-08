@@ -28,7 +28,7 @@ use crate::standards::v_commonmark::subsets::any::io::binary::diff::{read_str_bi
 use crate::standards::v_commonmark::subsets::any::io::binary::diff::{write_str_bin};
 use crate::standards::v_commonmark::subsets::any::io::binary::diff::{dec_block_bin};
 use crate::standards::v_commonmark::subsets::any::io::binary::diff::{enc_block_bin};
-use crate::schema::diff::{diff_at_path, diff_set_snapshot, MdBlockDiff, MdBlocksLeafDiff, MdDiff};
+use crate::schema::diff::{diff_at_path, MdBlockDiff, MdBlocksLeafDiff, MdDiff};
 use crate::schema::snapshot::{MdBlock, MdInline};
 use crate::MdSnapshot;
 use protocol::{Mutation, OpText};
@@ -103,7 +103,6 @@ pub(crate) fn dec_path_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdP
 impl protocol::OpBinary for MdMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            MdMutation::SetSnapshot(_) => TAG_SET_SNAPSHOT,
             MdMutation::InsertBlock(_) => TAG_INSERT_BLOCK,
             MdMutation::RemoveBlock(_) => TAG_REMOVE_BLOCK,
             MdMutation::ReplaceBlock(_) => TAG_REPLACE_BLOCK,
@@ -111,7 +110,6 @@ impl protocol::OpBinary for MdMutation {
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
-            MdMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_snapshot_bin(snapshot, &mut out),
             MdMutation::InsertBlock(insert_block::InsertBlock { path, index, block }) => {
                 enc_path_bin(path, &mut out);
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
@@ -141,10 +139,6 @@ impl protocol::OpBinary for MdMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            TAG_SET_SNAPSHOT => {
-                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
-                Ok(MdMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
-            }
             TAG_INSERT_BLOCK => {
                 let path = dec_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
@@ -178,7 +172,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `MdMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
 const TAG_INSERT_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-block");
 const TAG_REMOVE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-block");
 const TAG_REPLACE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "replace-block");

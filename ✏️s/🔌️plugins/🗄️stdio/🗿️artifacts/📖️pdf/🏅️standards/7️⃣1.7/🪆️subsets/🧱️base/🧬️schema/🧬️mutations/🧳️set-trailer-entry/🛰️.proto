@@ -8,4 +8,5 @@ import "../../🔺️diff/🛰️.proto";
 message SetTrailerEntryMutation {
   string key = 1;
   PdfObject value = 2;
+  optional uint64 index = 3;
 }

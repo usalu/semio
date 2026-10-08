@@ -29,7 +29,7 @@ mod tests {
         let mut doc = snapshot.to_part21_document();
         doc.instances.push(Part21Instance { id: 99, entities: vec![("ADVANCED_BREP_SHAPE_REPRESENTATION".into(), vec![])] });
         snapshot = StepSnapshot::from_part21_document(&doc);
-        let (mutated, _diff) = StepCc6BuilderConstruction::from_snapshot(StepSnapshot::default()).mutate(StepCc6Mutation::SetSnapshot(crate::standards::v_ap214::subsets::cc6::schema::mutations::set_snapshot::SetSnapshot { snapshot }));
+        let mutated = StepCc6BuilderConstruction::from_snapshot(snapshot);
         mutated.build().expect("cc6 is the top of the ladder -- ADVANCED_BREP_SHAPE_REPRESENTATION is never a violation");
     }
 }

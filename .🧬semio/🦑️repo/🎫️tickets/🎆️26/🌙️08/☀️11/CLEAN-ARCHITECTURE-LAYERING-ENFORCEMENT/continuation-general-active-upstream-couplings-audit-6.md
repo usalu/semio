@@ -11,3 +11,7 @@ No active OS/System/Product imports were found in current General DSL/Pack produ
 3. General Surface node graph imports OS interaction types DomainHover/DomainSelection/SelectionMethod/Viewport2d at line 26. It must consume the defining neutral interaction and viewport owners directly. Existing laws graph_host_syncs_selection_from_framework_interaction_state, graph_host_pointer_up_after_plain_click_gathers_one_pick_target, node_graph_scene_payload_rejects_an_invalid_typed_viewport and node_graph_scene_viewport_matches_the_shared_neutral_contract already expose the needed behavior. Exact defining owners require a targeted type/alias audit before implementing; do not substitute guessed type identities.
 
 The first candidate is the concrete Root Pack lane opportunity. The latter two expose broader UI ownership constraints and are not claims that those lanes are completed.
+
+## Exact Defining Types for Candidate 3
+
+A subsequent targeted current-source declaration search resolves SelectionMethod to General replication/📡️wire/🦀️.rs line 2450, DomainSelection line 2591 and DomainHover line 2636. General interaction/🦀️.rs line 31 explicitly reexports these exact defining types and its schema aliases them. Viewport2d is defined in General UI viewport/◻️2d/🧬️schema/🦀️.rs line 5 and publicly reexported by viewport/🦀️.rs line 9. These are source-confirmed identities rather than guessed replacements.

@@ -20,10 +20,8 @@ start op
 # same honest-restatement precedent zip's OPC family and svg's own xml-derived grammar establish).
 comment none
 
-op = set-snapshot-op | patch-snapshot-op | set-format-op | insert-comment-op | remove-comment-op | add-element-op | remove-element-op | insert-row-op | remove-row-op | set-row-property-op
+op = set-format-op | insert-comment-op | remove-comment-op | add-element-op | remove-element-op | insert-row-op | remove-row-op | set-row-property-op
 
-patch-snapshot-op = "patch-snapshot" "patch" "=" hex
-set-snapshot-op = "set-snapshot" "snapshot" "=" snapshot-value
 set-format-op = "set-format" "format" "=" format-tag
 insert-comment-op = "insert-comment" "index" "=" INT "comment" "=" hex
 remove-comment-op = "remove-comment" "index" "=" INT
@@ -35,11 +33,6 @@ set-row-property-op = "set-row-property" "element-name" "=" hex "row-index" "=" 
 
 format-tag = "a" | "l" | "b"
 
-# `PlySnapshot` — positional `[schema,format,[comments],[elements]]` tuple — `enc_snapshot`/
-# `dec_snapshot` (../🦀️.rs).
-snapshot-value = "[" hex "," format-tag "," "[" comment-list? "]" "," "[" element-list? "]" "]"
-comment-list = hex {"," hex}*
-element-list = element-value {"," element-value}*
 
 # `PlyElement` — positional `[name,count,[properties],[rows]]` tuple.
 element-value = "[" hex "," INT "," "[" property-list? "]" "," "[" row-list? "]" "]"

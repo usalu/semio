@@ -1,3 +1,4 @@
+use crate::NoteSnapshot;
 use crate::standards::v1::subsets::any::io::binary::snapshot::*;
 use crate::{NoteBlockNode, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
 use std::collections::BTreeMap;

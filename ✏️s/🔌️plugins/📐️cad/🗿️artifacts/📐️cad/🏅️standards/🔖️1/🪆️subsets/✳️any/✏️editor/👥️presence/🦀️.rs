@@ -33,12 +33,75 @@ impl Default for CadPresence {
     }
 }
 
-impl protocol::MutationDiff<CadPresence> for CadPresence {
-    fn apply(&self, _base: &CadPresence) -> protocol::MutationApplyResult<CadPresence> {
-        Ok(self.clone())
+/// 🔺️ Sparse delta of the shareable presence: only the fields a mutation actually changes.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct CadPresenceDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera_position: Option<[f64; 3]>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera_target: Option<[f64; 3]>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera_zoom: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera_fov: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub engagement_step: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub engagement_pane: Option<crate::editor::cad::config::CadTextSet>,
+}
+
+impl protocol::MutationDiff<CadPresence> for CadPresenceDiff {
+    fn apply(&self, base: &CadPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<CadPresence> {
+        Ok(CadPresence {
+            camera_position: self.camera_position.unwrap_or(base.camera_position),
+            camera_target: self.camera_target.unwrap_or(base.camera_target),
+            camera_zoom: self.camera_zoom.unwrap_or(base.camera_zoom),
+            camera_fov: self.camera_fov.unwrap_or(base.camera_fov),
+            engagement_step: self.engagement_step.clone().unwrap_or_else(|| base.engagement_step.clone()),
+            engagement_pane: self.engagement_pane.as_ref().map_or_else(|| base.engagement_pane.clone(), |set| set.value.clone()),
+        })
     }
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
+        }
+        take!(camera_position);
+        take!(camera_target);
+        take!(camera_zoom);
+        take!(camera_fov);
+        take!(engagement_step);
+        take!(engagement_pane);
+    }
+}
+
+impl protocol::DiffAlgebra<CadPresence> for CadPresenceDiff {
+    fn inverse(&self, base: &CadPresence) -> Self {
+        Self {
+            camera_position: self.camera_position.map(|_| base.camera_position),
+            camera_target: self.camera_target.map(|_| base.camera_target),
+            camera_zoom: self.camera_zoom.map(|_| base.camera_zoom),
+            camera_fov: self.camera_fov.map(|_| base.camera_fov),
+            engagement_step: self.engagement_step.as_ref().map(|_| base.engagement_step.clone()),
+            engagement_pane: self.engagement_pane.as_ref().map(|_| crate::editor::cad::config::CadTextSet { value: base.engagement_pane.clone() }),
+        }
+    }
+    fn between(base: &CadPresence, other: &CadPresence) -> Self {
+        Self {
+            camera_position: (base.camera_position != other.camera_position).then_some(other.camera_position),
+            camera_target: (base.camera_target != other.camera_target).then_some(other.camera_target),
+            camera_zoom: (base.camera_zoom != other.camera_zoom).then_some(other.camera_zoom),
+            camera_fov: (base.camera_fov != other.camera_fov).then_some(other.camera_fov),
+            engagement_step: (base.engagement_step != other.engagement_step).then(|| other.engagement_step.clone()),
+            engagement_pane: (base.engagement_pane != other.engagement_pane).then(|| crate::editor::cad::config::CadTextSet { value: other.engagement_pane.clone() }),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        *self == Self::default()
     }
 }
 
@@ -92,23 +155,23 @@ impl ArtifactPack for CadPresence {
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(rename_all = "camelCase")]
 pub enum CadPresenceMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
+    #[dsl(key = "set")]
+    Set {
         #[dsl(block)]
         presence: CadPresence,
     },
 }
 
 impl Mutation<CadPresence> for CadPresenceMutation {
-    type Diff = CadPresence;
+    type Diff = CadPresenceDiff;
 
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
-        owner: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot",
-        semantic_kind: "snapshot",
-        display_name: "Snapshot",
-        emoji: "📄",
-        aggregate_variant: "Snapshot",
+        owner: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+        semantic_kind: "set-presence",
+        display_name: "Set Presence",
+        emoji: "👥️",
+        aggregate_variant: "Set",
         payload_schema: "🧬️schema/🔣️.json",
         text_opcode: None,
         binary_tag: None,
@@ -121,27 +184,29 @@ impl Mutation<CadPresence> for CadPresenceMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Self::Set { .. } => &Self::DESCRIPTORS[0],
         }
     }
 
-    fn diff(&self, base: &CadPresence) -> protocol::MutationOutcome<CadPresence> {
-        match self {
-            Self::Snapshot { presence } => {
-                if presence == base {
-                    return protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "Presence snapshot is already up to date.");
-                }
-                protocol::MutationOutcome::new(presence.clone())
-            }
+    fn diff(&self, base: &CadPresence) -> protocol::MutationOutcome<CadPresenceDiff> {
+        let Self::Set { presence } = self;
+        let diff = CadPresenceDiff {
+            camera_position: (base.camera_position != presence.camera_position).then_some(presence.camera_position),
+            camera_target: (base.camera_target != presence.camera_target).then_some(presence.camera_target),
+            camera_zoom: (base.camera_zoom != presence.camera_zoom).then_some(presence.camera_zoom),
+            camera_fov: (base.camera_fov != presence.camera_fov).then_some(presence.camera_fov),
+            engagement_step: (base.engagement_step != presence.engagement_step).then(|| presence.engagement_step.clone()),
+            engagement_pane: (base.engagement_pane != presence.engagement_pane).then(|| crate::editor::cad::config::CadTextSet { value: presence.engagement_pane.clone() }),
+        };
+        if diff == CadPresenceDiff::default() {
+            return protocol::MutationOutcome::new(diff).warning("mutation.no-op", "Presence is already up to date.");
         }
+        protocol::MutationOutcome::new(diff)
     }
 
     fn inverse(&self, base: &CadPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { presence: base.clone() }]
-    
-    })())
-}
+        Ok(vec![Self::Set { presence: base.clone() }])
+    }
 }
 
 impl protocol::OpText for CadPresenceMutation {
@@ -179,3 +244,9 @@ impl protocol::OpBinary for CadPresenceMutation {
     }
 }
 //#endregion 🔖️PresenceMutation
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

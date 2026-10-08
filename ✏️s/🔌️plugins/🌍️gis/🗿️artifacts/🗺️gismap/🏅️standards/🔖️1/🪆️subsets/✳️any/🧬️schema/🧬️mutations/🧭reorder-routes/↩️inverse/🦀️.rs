@@ -7,12 +7,9 @@ use crate::GisMapSnapshot;
 /// ↩️ Undo moves the feature back to its pre-reorder index, captured from `base` — missing target
 /// returns `Vec::new()`.
 pub fn inverse(payload: &ReorderRoutes, base: &GisMapSnapshot) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
     let Some(current_index) = base.routes.iter().position(|feature| feature.id == payload.id) else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
-    vec![GisMapMutation::ReorderRoutes(ReorderRoutes { id: payload.id.clone(), to_index: current_index })]
-
-    })())
+    Ok(vec![GisMapMutation::ReorderRoutes(ReorderRoutes { id: payload.id.clone(), to_index: current_index })])
 }
 //#endregion 🔹Inverse

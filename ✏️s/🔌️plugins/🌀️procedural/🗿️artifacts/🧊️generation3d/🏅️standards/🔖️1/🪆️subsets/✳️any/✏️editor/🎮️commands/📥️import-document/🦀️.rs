@@ -104,7 +104,7 @@ pub fn apply_complete_payload(
     let operations = generation3d_document_replacement(doc.snapshot, &imported);
     let config = config_after_document_load(cfg.snapshot, &imported.host_snapshot.camera, imported.generation.selected_generation_id.clone());
     imported.retire_cold();
-    Ok(Emit { artifact_mutations: operations, config_mutations: vec![Generation3dConfigMutation::SetSnapshot(crate::editor::generation3d::config::SetSnapshot { config })], ..Default::default() })
+    Ok(Emit { artifact_mutations: operations, config_mutations: crate::editor::generation3d::config::config_replacement(cfg.snapshot, &config), ..Default::default() })
 }
 
 /// 🧵️ The session-free entry point: the import needs no evaluation session, only the document and its config.

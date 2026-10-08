@@ -7,4 +7,5 @@ import "../../🔺️diff/🛰️.proto";
 // 🧩️ Direct set-pattern protobuf payload.
 message SetPatternMutation {
   PdfPattern pattern = 1;
+  optional uint64 index = 2;
 }

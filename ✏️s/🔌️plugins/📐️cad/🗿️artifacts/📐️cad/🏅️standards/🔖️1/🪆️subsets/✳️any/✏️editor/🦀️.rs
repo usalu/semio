@@ -521,7 +521,7 @@ pub fn runtime_of(cfg: &ConfigView<'_, CadConfig>, transient: &CadWorldWindowTra
 
 /// 🔀️ The artifact-wide config snapshot of the (possibly mutated) runtime.
 pub fn snapshot_of(runtime: &CadPlayRuntime, base: &CadConfig) -> Result<CadConfigMutation, Fault> {
-    Ok(CadConfigMutation::Snapshot { config: Box::new(cad_config_from_runtime(runtime, base)) })
+    Ok(CadConfigMutation::Set { config: Box::new(cad_config_from_runtime(runtime, base)) })
 }
 
 /// 🫧️ Hands the runtime's engagement state to the addressed window's transient when it changed (design §17.4): an
@@ -1661,7 +1661,7 @@ fn admit_cad_config(config: &CadConfig) -> Result<usize, String> {
 
 fn admit_cad_config_mutation(mutation: &CadConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = match mutation {
-        CadConfigMutation::Snapshot { config } => admit_cad_config(config)?,
+        CadConfigMutation::Set { config } => admit_cad_config(config)?,
         CadConfigMutation::SetContributions { json } if json.len() <= CAD_CONFIG_STORE_MAXIMUM_BYTES => json.len(),
         CadConfigMutation::SetContributions { .. } => return Err("CAD config mutation exceeds its fixed retained byte envelope".into()),
     };
@@ -1672,7 +1672,7 @@ fn prepare_cad_config(base: &CadConfig, mutation: CadConfigMutation) -> Result<(
     admit_cad_config(base)?;
     admit_cad_config_mutation(&mutation)?;
     let inverse = <CadConfigMutation as protocol::Mutation<CadConfig>>::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
-    let post = <CadConfigMutation as protocol::Mutation<CadConfig>>::diff(&mutation, base).into_parts().0;
+    let post = protocol::apply_diff(&<CadConfigMutation as protocol::Mutation<CadConfig>>::diff(&mutation, base).into_parts().0, base).map_err(|error| error.to_string())?;
     admit_cad_config(&post)?;
     Ok((post, inverse, mutation))
 }
@@ -1851,7 +1851,7 @@ fn prepare_cad_artifact(base: &CadSnapshot, mutation: CadMutation) -> Result<(Ca
     admit_cad_artifact_mutation(&mutation)?;
     let inverse = <CadMutation as protocol::Mutation<CadSnapshot>>::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
     let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&mutation, base);
-    let post = protocol::MutationDiff::apply(outcome.diff(), base).map_err(|error| error.to_string())?;
+    let post = protocol::apply_diff(outcome.diff(), base).map_err(|error| error.to_string())?;
     admit_cad_snapshot(&post)?;
     Ok((post, inverse, mutation))
 }

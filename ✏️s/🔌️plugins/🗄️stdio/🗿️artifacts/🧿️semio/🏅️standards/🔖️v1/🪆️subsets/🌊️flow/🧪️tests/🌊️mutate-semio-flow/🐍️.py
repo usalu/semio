@@ -47,7 +47,7 @@ from __future__ import annotations
 # region 🔖️Imports
 import json
 
-from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
+from semio_repo_test import Adapter, Context, Outcome, digest
 
 # endregion 🔖️Imports
 
@@ -382,9 +382,6 @@ def pack_bytes(document: dict) -> bytes:
 
 # region 🔖️Mutations
 KINDS = (
-    "no-mutation",
-    "set-snapshot",
-    "patch-snapshot",
     "insert-node",
     "remove-node",
     "set-node-kind",
@@ -447,17 +444,11 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     absent one."""
     result = clone(document)
     tag, args = tagged(mutation)
-    if tag == "noMutation":
-        return result
-    if tag == "patchSnapshot":
-        return patched_snapshot(document, args["patch"])
-    if tag == "setSnapshot":
-        return clone(args["snapshot"])
     if tag == "insertNode":
         node = clone(args["node"])
         if any(existing["id"] == node["id"] for existing in result["nodes"]):
             raise AssertionError("insertNode would duplicate the existing node %r" % node["id"])
-        result["nodes"].append(node)
+        result["nodes"].insert(min(args["at"], len(result["nodes"])) if "at" in args else len(result["nodes"]), node)
         return result
     if tag == "removeNode":
         del result["nodes"][node_at(result, args["id"], tag)]
@@ -476,7 +467,7 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
         node = result["nodes"][node_at(result, args["id"], tag)]
         at = param_at(node, args["key"])
         if at is None:
-            node["params"].append({"key": args["key"], "value": args["value"]})
+            node["params"].insert(min(args["at"], len(node["params"])) if "at" in args else len(node["params"]), {"key": args["key"], "value": args["value"]})
         else:
             node["params"][at]["value"] = args["value"]
         return result
@@ -491,7 +482,7 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
         edge = clone(args["edge"])
         if any(existing["id"] == edge["id"] for existing in result["edges"]):
             raise AssertionError("insertEdge would duplicate the existing edge %r" % edge["id"])
-        result["edges"].append(edge)
+        result["edges"].insert(min(args["at"], len(result["edges"])) if "at" in args else len(result["edges"]), edge)
         return result
     if tag == "removeEdge":
         del result["edges"][edge_at(result, args["id"], tag)]
@@ -524,16 +515,10 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     either implementation, and the reason both the committed vectors and this case's `remove-node` /
     `remove-edge` / `remove-node-param` parameters address the last record of their collection."""
     tag, args = tagged(mutation)
-    if tag == "noMutation":
-        return []
-    if tag == "patchSnapshot":
-        return [{"mutation": "setSnapshot", "snapshot": clone(document)}]
-    if tag == "setSnapshot":
-        return [{"mutation": "setSnapshot", "snapshot": clone(document)}]
     if tag == "insertNode":
         return [{"mutation": "removeNode", "id": args["node"]["id"]}]
     if tag == "removeNode":
-        return [{"mutation": "insertNode", "node": clone(document["nodes"][node_at(document, args["id"], tag)])}]
+        return [{"mutation": "insertNode", "node": clone(document["nodes"][node_at(document, args["id"], tag)]), "at": node_at(document, args["id"], tag)}]
     if tag == "setNodeKind":
         return [{"mutation": "setNodeKind", "id": args["id"], "kind": document["nodes"][node_at(document, args["id"], tag)]["kind"]}]
     if tag == "setNodeLabel":
@@ -551,11 +536,11 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
         at = param_at(node, args["key"])
         if at is None:
             raise AssertionError("removeNodeParam addresses the key %r, which node %r does not carry" % (args["key"], args["id"]))
-        return [{"mutation": "setNodeParam", "id": args["id"], "key": args["key"], "value": node["params"][at]["value"]}]
+        return [{"mutation": "setNodeParam", "id": args["id"], "key": args["key"], "value": node["params"][at]["value"], "at": at}]
     if tag == "insertEdge":
         return [{"mutation": "removeEdge", "id": args["edge"]["id"]}]
     if tag == "removeEdge":
-        return [{"mutation": "insertEdge", "edge": clone(document["edges"][edge_at(document, args["id"], tag)])}]
+        return [{"mutation": "insertEdge", "edge": clone(document["edges"][edge_at(document, args["id"], tag)]), "at": edge_at(document, args["id"], tag)}]
     if tag == "setEdgeEndpoints":
         edge = document["edges"][edge_at(document, args["id"], tag)]
         return [{"mutation": "setEdgeEndpoints", "id": args["id"], "from": clone(edge["from"]), "to": clone(edge["to"])}]
@@ -684,7 +669,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
 def adapter() -> Adapter:
     """🧭️ Registration entry point the host calls. Handlers are registered under the Scenario Outline base
     ids, which the host resolves for every Examples row, and plain scenarios under their own ids."""
-    return Adapter("python").oracle("mutate", mutate).oracle("no-mutation-baseline-mutate", mutate).oracle("inverse", inverse).oracle("no-mutation-baseline-inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
+    return Adapter("python").oracle("mutate", mutate).oracle("inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

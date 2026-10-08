@@ -1,74 +1,36 @@
 {
   "artifact": null,
-  "schema": null,
   "domain": null,
-  "label": null,
-  "meta": null,
-  "kindCatalogs": null,
-  "kindCatalogsExtra": null,
+  "fasteners": {
+    "added": [],
+    "patched": [],
+    "removed": [
+      "fast-1"
+    ],
+    "reordered": null
+  },
   "kindCompatibility": null,
+  "meta": null,
   "parts": {
     "added": [],
-    "removed": [],
     "patched": [
       {
         "id": "part-a",
         "patch": {
-          "replacement": {
-            "id": "part-a",
-            "partKind": "part-kind-a",
-            "2d": {
-              "x": 0.0,
-              "y": 0.0,
-              "shape": "circle",
-              "radius": 10.0,
-              "text": "Alpha",
-              "iconKind": "icon-alpha"
-            },
-            "3d": {
-              "origin": [
-                0.0,
-                0.0,
-                0.0
-              ],
-              "meshUrl": "mesh://alpha",
-              "orientation": [
-                0.0,
-                0.0,
-                0.0,
-                1.0
-              ],
-              "label": "Alpha 3d"
-            },
-            "grips": [
-              {
-                "id": "grip-spare",
-                "gripKind": "grip-kind-a",
-                "2d": {
-                  "angle": 0.0
-                },
-                "3d": {
-                  "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                  ]
-                }
-              }
-            ]
+          "grips": {
+            "added": [],
+            "patched": [],
+            "removed": [
+              "grip-1"
+            ],
+            "reordered": null
           }
         }
       }
     ],
+    "removed": [],
     "reordered": null
   },
-  "fasteners": {
-    "added": [],
-    "removed": [
-      "fast-1"
-    ],
-    "patched": [],
-    "reordered": null
-  },
+  "schema": null,
   "targetVolumes": null
 }

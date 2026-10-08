@@ -3,47 +3,25 @@ use crate::schema::diff::XmlDiff;
 use crate::schema::snapshot::XmlDoctype;
 use crate::XmlSnapshot;
 
-
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-pub struct SetDoctypePayload {
+pub struct SetDoctypeMutation {
     pub doctype: Option<XmlDoctype>,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol, payload = Apply)]
-#[value(tag = "phase", content = "value", rename_all = "camelCase")]
-pub enum SetDoctypeMutation {
-    Apply(SetDoctypePayload),
-    /// 📦️ Boxed on purpose: `XmlDiff` is the largest thing this leaf can hold, and an inline
-    /// variant of that size pushes the whole leaf past the neutral inline-ownership budget
-    /// (`🧫️fixtures/📦️inline-layout/🔣️.json`, 128 B) every ephemeral transfer of it is measured
-    /// against — same boxing the sibling `🧊️gltf` leaves use for their own `Restore` arm.
-    Restore(Box<XmlDiff>),
-}
+pub type SetDoctypePayload = SetDoctypeMutation;
 
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetDoctypeMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "doctype", kind: "set-doctype", record: "SetDoctype" };
 
-    fn diff(&self, _base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
-        match self {
-            Self::Apply(payload) => protocol::MutationOutcome::new(XmlDiff { prolog: None, epilog: None, declaration: None, doctype: Some(payload.doctype.clone()), root: None }),
-            Self::Restore(diff) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-        }
+    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
+        protocol::MutationOutcome::new(XmlDiff { prolog: None, epilog: None, declaration: None, doctype: Some(self.doctype.clone()), root: None })
     }
 
     fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<super::XmlMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<XmlSnapshot, super::XmlMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::is_empty(outcome.diff()) {
-            return Vec::new();
-        }
-        let inverse = <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::XmlMutation::SetDoctype(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+        Ok(vec![super::XmlMutation::SetDoctype(Self { doctype: base.doc.doctype.clone() })])
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Doctype", "Dokumenttyp setzen")

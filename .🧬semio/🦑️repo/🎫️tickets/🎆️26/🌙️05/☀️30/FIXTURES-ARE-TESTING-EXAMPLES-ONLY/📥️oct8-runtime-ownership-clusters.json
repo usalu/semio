@@ -1,0 +1,91 @@
+{
+  "summary": {
+    "computed-resource": {
+      "occurrences": 4,
+      "unique": 4,
+      "paths": 4
+    },
+    "other": {
+      "occurrences": 2,
+      "unique": 2,
+      "paths": 2
+    },
+    "compiler-witness": {
+      "occurrences": 217,
+      "unique": 119,
+      "paths": 71
+    },
+    "macro-expansion": {
+      "occurrences": 2099,
+      "unique": 746,
+      "paths": 505
+    },
+    "filesystem": {
+      "occurrences": 33,
+      "unique": 12,
+      "paths": 7
+    }
+  },
+  "filesystem": [
+    {
+      "code": "runtime-unresolved-edge",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs",
+      "detail": "Filesystem read_dir requires actual read input ownership"
+    },
+    {
+      "code": "runtime-unresolved-edge",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs",
+      "detail": "Filesystem read_to_string requires actual read input ownership"
+    },
+    {
+      "code": "runtime-unresolved-edge",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧬️semio/🦀️.rs",
+      "detail": "Filesystem read requires actual read input ownership"
+    },
+    {
+      "code": "runtime-unresolved-edge",
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+      "detail": "Filesystem read_to_string requires actual read input ownership"
+    },
+    {
+      "code": "runtime-unresolved-edge",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs",
+      "detail": "Filesystem read requires actual read input ownership"
+    },
+    {
+      "code": "runtime-unresolved-edge",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs",
+      "detail": "Filesystem read_dir requires actual read input ownership"
+    },
+    {
+      "code": "runtime-unresolved-edge",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs",
+      "detail": "Filesystem read_to_string requires actual read input ownership"
+    },
+    {
+      "code": "runtime-unresolved-edge",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️builder/🦀️.rs",
+      "detail": "Filesystem read_dir requires actual read input ownership"
+    },
+    {
+      "code": "runtime-unresolved-edge",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/build.rs",
+      "detail": "Filesystem read_dir requires actual read input ownership"
+    },
+    {
+      "code": "runtime-unresolved-edge",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/build.rs",
+      "detail": "Filesystem read_to_string requires actual read input ownership"
+    },
+    {
+      "code": "runtime-unresolved-edge",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/🦀️.rs",
+      "detail": "Filesystem read_dir requires actual read input ownership"
+    },
+    {
+      "code": "runtime-unresolved-edge",
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/🦀️.rs",
+      "detail": "Filesystem read_to_string requires actual read input ownership"
+    }
+  ]
+}

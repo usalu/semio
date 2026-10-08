@@ -37,10 +37,11 @@ async fn mutation_diff_law() {
     for mutation in sample_mutations() {
         let base = fixture();
         let diff_direct = Mutation::diff(&mutation, &base);
-        let applied_via_diff = MutationDiff::apply(diff_direct.diff(), &base).expect("apply must succeed for a well-formed fixture");
+        let applied_via_diff = protocol::apply_diff(diff_direct.diff(), &base).expect("apply must succeed for a well-formed fixture");
 
         let mut via_apply = base.clone();
-        let diff_from_apply = apply_semio_image_mutation(&mut via_apply, &mutation);
+        let (__next, diff_from_apply) = crate::applied(&via_apply, &mutation);
+        via_apply = __next;
 
         assert_eq!(applied_via_diff, via_apply, "mutation_diff_law: apply mismatch for {mutation:?}");
         assert_eq!(diff_direct, diff_from_apply, "mutation_diff_law: diff mismatch for {mutation:?}");
@@ -55,16 +56,16 @@ async fn inverse_law() {
         let base = fixture();
 
         let mut round_tripped = base.clone();
-        apply_semio_image_mutation(&mut round_tripped, &mutation);
-        for inverse_mutation in <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
-            apply_semio_image_mutation(&mut round_tripped, &inverse_mutation);
+        round_tripped = crate::applied(&round_tripped, &mutation).0;
+        for inverse_mutation in <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            round_tripped = crate::applied(&round_tripped, &inverse_mutation).0;
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
         let diff = Mutation::diff(&mutation, &base);
-        let next = MutationDiff::apply(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
+        let next = protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
-        let restored = MutationDiff::apply(&inverse_diff, &next).expect("apply must succeed for a well-formed fixture");
+        let restored = protocol::apply_diff(&inverse_diff, &next).expect("apply must succeed for a well-formed fixture");
         assert_eq!(restored, base, "inverse_law (diff-level).await failed for {mutation:?}");
     }
 }
@@ -76,7 +77,7 @@ async fn inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
     let mut snap = fixture();
-    apply_semio_image_mutation(&mut snap, &SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Author".into(), value: "x".into() }));
+    snap = crate::applied(&snap, &SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Author".into(), value: "x".into(), at: None })).0;
     let bytes = store::ArtifactPack::encode_pack(&snap);
     let decoded = <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
@@ -104,8 +105,6 @@ async fn op_text_binary_roundtrip_law() {
 /// no arm here, so the crate stops building until both this match and `KINDS` name it.
 fn kind_of(mutation: &SemioImageMutation) -> &'static str {
     match mutation {
-        SemioImageMutation::PatchSnapshot(_) => "patch-snapshot",
-        SemioImageMutation::SetSnapshot(_) => "set-snapshot",
         SemioImageMutation::SetDimensions(_) => "set-dimensions",
         SemioImageMutation::SetColorspace(_) => "set-colorspace",
         SemioImageMutation::SetBitDepth(_) => "set-bit-depth",
@@ -126,8 +125,6 @@ fn kind_of(mutation: &SemioImageMutation) -> &'static str {
 #[test]
 fn kinds_match_the_enum_and_the_catalog() {
     let one_per_variant = [
-        SemioImageMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: SemioImageSnapshot::default() }),
-        SemioImageMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("owned schema".into()) } }),
         SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width: 4, height: 2 }),
         SemioImageMutation::SetColorspace(set_colorspace::SetColorspace { colorspace: SemioColorspace::Rgba }),
         SemioImageMutation::SetBitDepth(set_bit_depth::SetBitDepth { bit_depth: 16 }),
@@ -137,7 +134,7 @@ fn kinds_match_the_enum_and_the_catalog() {
         SemioImageMutation::MoveFrame(move_frame::MoveFrame { from: 1, to: 0 }),
         SemioImageMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index: 0, delay_ms: 40 }),
         SemioImageMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index: 0, rgba8: Vec::new() }),
-        SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Author".into(), value: "semio".into() }),
+        SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Author".into(), value: "semio".into(), at: None }),
         SemioImageMutation::RemoveMetadataEntry(remove_metadata_entry::RemoveMetadataEntry { key: "Author".into() }),
     ];
     assert_eq!(KINDS.len(), one_per_variant.len(), "KINDS must name exactly one entry per declared variant");

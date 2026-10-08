@@ -1,49 +1,18 @@
 {
   "artifact": null,
-  "schema": null,
   "domain": null,
-  "label": null,
-  "meta": null,
-  "kindCatalogs": null,
-  "kindCatalogsExtra": null,
+  "fasteners": null,
   "kindCompatibility": null,
+  "meta": null,
   "parts": {
     "added": [],
-    "removed": [],
     "patched": [
       {
         "id": "part-a",
         "patch": {
-          "replacement": {
-            "id": "part-a",
-            "partKind": "part-kind-a",
-            "2d": {
-              "x": 0.0,
-              "y": 0.0,
-              "shape": "circle",
-              "radius": 10.0,
-              "text": "Alpha",
-              "iconKind": "icon-alpha"
-            },
-            "3d": {
-              "origin": [
-                0.0,
-                0.0,
-                0.0
-              ],
-              "meshUrl": "mesh://alpha",
-              "orientation": [
-                0.0,
-                0.0,
-                0.0,
-                1.0
-              ],
-              "label": "Alpha 3d"
-            },
-            "grips": [
+          "grips": {
+            "added": [
               {
-                "id": "grip-1",
-                "gripKind": "grip-kind-a",
                 "2d": {
                   "angle": 0.0
                 },
@@ -53,43 +22,21 @@
                     0.0,
                     0.0
                   ]
-                }
-              },
-              {
-                "id": "grip-spare",
-                "gripKind": "grip-kind-a",
-                "2d": {
-                  "angle": 0.0
                 },
-                "3d": {
-                  "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "id": "grip-3",
                 "gripKind": "grip-kind-b",
-                "2d": {
-                  "angle": 0.0
-                },
-                "3d": {
-                  "position": [
-                    0.0,
-                    0.0,
-                    0.0
-                  ]
-                }
+                "id": "grip-3"
               }
-            ]
+            ],
+            "patched": [],
+            "removed": [],
+            "reordered": null
           }
         }
       }
     ],
+    "removed": [],
     "reordered": null
   },
-  "fasteners": null,
+  "schema": null,
   "targetVolumes": null
 }

@@ -58,3 +58,25 @@ fn mutation_trait_matches_adjacent_required_declaration_facts() {
     println!("actual={} expected={}", serde_json::to_string(&actual).expect("actual facts serialize"), serde_json::to_string(&expected.facts).expect("expected facts serialize"));
     assert_eq!(actual, expected.facts);
 }
+
+/// 🔍️ Exercises the actual production lookup against shared neutral filesystem specimens.
+#[test]
+fn mutation_schema_document_index_excludes_example_collections() {
+    let vector: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧬️schema-search/🔣️.json")).unwrap();
+    let parent = std::path::PathBuf::from(std::env::var("SEMIO_TEST_ARTIFACT_DIR").expect("ticket-owned schema search output required"));
+    let base = parent.join(format!("dsl-schema-search-{}", std::process::id()));
+    for (ordinal, case) in vector["cases"].as_array().unwrap().iter().enumerate() {
+        let root = base.join(ordinal.to_string()).join(case["root"].as_str().unwrap());
+        std::fs::create_dir_all(&root).unwrap();
+        for (path, document) in case["files"].as_object().unwrap() {
+            let destination = root.join(path);
+            std::fs::create_dir_all(destination.parent().unwrap()).unwrap();
+            std::fs::write(destination, serde_json::to_vec(document).unwrap()).unwrap();
+        }
+        let actual = super::mutation_schema_document_index(&root);
+        let expected = case["expected"]["ids"].as_array().unwrap().iter().map(|id| id.as_str().unwrap().to_string()).collect::<std::collections::BTreeSet<_>>();
+        assert_eq!(actual.keys().cloned().collect::<std::collections::BTreeSet<_>>(), expected, "{}", case["id"]);
+        println!("[DEBUG] actual production schema index case={} indexed={}", case["id"], actual.len());
+    }
+    std::fs::remove_dir_all(base).unwrap();
+}

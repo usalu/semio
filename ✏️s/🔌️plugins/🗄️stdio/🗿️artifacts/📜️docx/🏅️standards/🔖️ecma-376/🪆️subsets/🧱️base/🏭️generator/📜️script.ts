@@ -194,9 +194,7 @@ function withExtraParts(model: DocxModel, edit: (parts: ExtraPart[]) => ExtraPar
   return { ...model, extraParts: edit([...(model.extraParts ?? [])]) };
 }
 
-// 🗼 Same opening paragraph as the committed `set-snapshot/🧪️tests/bolds-the-tower-run-of-the-opening-
-// paragraph` fixture's own `📸️snapshot/⬅️before` — reused here on purpose so this independently-built
-// DOCX and that hand-authored `DocxSnapshot` JSON describe the same document.
+// 🗼 The opening paragraph every recipe starts from.
 const STYLE_HEADING: DocxStyleRecipe = { id: "Heading1", name: "heading 1" };
 const STYLE_BODY: DocxStyleRecipe = { id: "Body", name: "Body Text" };
 const STYLE_QUOTE: DocxStyleRecipe = { id: "Quote", name: "Quote", basedOn: "Body" };
@@ -210,17 +208,16 @@ const CORE_TITLE = "Nakagin Capsule Tower Survey";
 export type Recipe = { id: string; mutation: string; outcome: "applied" | "no-op" | "rejected"; before: DocxModel; after?: DocxModel; notes: string };
 
 export const RECIPES: Recipe[] = [
-  { id: "no-mutation-no-op", mutation: "set-snapshot", outcome: "no-op", before: BASE_MODEL, after: BASE_MODEL, notes: "The identity element — `DocxMutation::NoMutation` was dropped (`#[derive(dsl::Mutations)]` rejects unit variants), so the no-op identity is now `DocxMutation::SetSnapshot` applied to an identical snapshot, which `diff_set_snapshot` resolves to `DocxDiff::default()` — before and after are the same document, byte for byte." },
+  { id: "no-mutation-no-op", mutation: "none", outcome: "no-op", before: BASE_MODEL, after: BASE_MODEL, notes: "The identity element: no mutation at all, so before and after are the same document." },
 
   {
     id: "bolds-the-tower-run-of-the-opening-paragraph",
-    mutation: "set-snapshot",
+    mutation: "set-run-formatting",
     outcome: "applied",
     before: BASE_MODEL,
     after: withBody(BASE_MODEL, (body) => [{ ...P_TOWER, runs: [P_TOWER.runs[0]!, { ...P_TOWER.runs[1]!, bold: true }] }, ...body.slice(1)]),
-    notes: "Same scenario id and opening paragraph as the committed set-snapshot/🧪️tests fixture: the second run of the opening paragraph is bolded, nothing else moves.",
+    notes: "The second run of the opening paragraph is bolded, nothing else moves.",
   },
-  { id: "set-snapshot-no-op-identical-snapshot", mutation: "set-snapshot", outcome: "no-op", before: BASE_MODEL, after: BASE_MODEL, notes: "`set-snapshot`'s own diff leaf explicitly warns `mutation.no-op` and returns `DocxDiff::default()` when the new snapshot is identical to the current one." },
 
   {
     id: "insert-block-appends-a-pricing-table",
@@ -314,7 +311,6 @@ const FIXTURE_DIRECTORY_NAMES: Readonly<Record<string, string>> = {
   "set-run-formatting-no-op-identical-flags": "🚩️set-run-formatting-no-op-identical-flags",
   "set-run-text-no-op-identical-text": "🪞️set-run-text-no-op-identical-text",
   "set-run-text-rewrites-the-closing-paragraph": "✍️set-run-text-rewrites-the-closing-paragraph",
-  "set-snapshot-no-op-identical-snapshot": "📸️set-snapshot-no-op-identical-snapshot",
   "set-style-based-on-rejected-missing-id": "🔗️set-style-based-on-rejected-missing-id",
   "set-style-based-on-reparents-the-quote-style": "🌳️set-style-based-on-reparents-the-quote-style",
   "set-style-name-rejected-missing-id": "🏷️set-style-name-rejected-missing-id",

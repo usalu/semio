@@ -24,12 +24,94 @@ impl Default for Puzzle5dPresence {
     }
 }
 
-impl protocol::MutationDiff<Puzzle5dPresence> for Puzzle5dPresence {
-    fn apply(&self, _base: &Puzzle5dPresence) -> protocol::MutationApplyResult<Puzzle5dPresence> {
-        Ok(self.clone())
+
+/// 🔺️ Sparse typed delta of the shareable live presence of a Puzzle 5D scene: names only the fields a mutation changes.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Puzzle5dPresenceDiff {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub camera2d_x: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub camera2d_y: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub camera2d_zoom: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub camera3d_position: Option<[f64; 3]>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub camera3d_target: Option<[f64; 3]>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub camera3d_zoom: Option<f64>,
+}
+
+impl Puzzle5dPresenceDiff {
+    /// 🎯️ Every field set to `state`'s value.
+    pub fn of(state: &Puzzle5dPresence) -> Self {
+        Self { camera2d_x: Some(state.camera2d_x), camera2d_y: Some(state.camera2d_y), camera2d_zoom: Some(state.camera2d_zoom), camera3d_position: Some(state.camera3d_position), camera3d_target: Some(state.camera3d_target), camera3d_zoom: Some(state.camera3d_zoom) }
+    }
+    /// ✂️ The named fields that differ from `base`.
+    pub fn changed(&self, base: &Puzzle5dPresence) -> Self {
+        Self { camera2d_x: self.camera2d_x.as_ref().filter(|value| **value != base.camera2d_x).cloned(), camera2d_y: self.camera2d_y.as_ref().filter(|value| **value != base.camera2d_y).cloned(), camera2d_zoom: self.camera2d_zoom.as_ref().filter(|value| **value != base.camera2d_zoom).cloned(), camera3d_position: self.camera3d_position.as_ref().filter(|value| **value != base.camera3d_position).cloned(), camera3d_target: self.camera3d_target.as_ref().filter(|value| **value != base.camera3d_target).cloned(), camera3d_zoom: self.camera3d_zoom.as_ref().filter(|value| **value != base.camera3d_zoom).cloned() }
+    }
+    /// ↩️ The named fields at the values `base` holds.
+    pub fn restoring(&self, base: &Puzzle5dPresence) -> Self {
+        Self { camera2d_x: self.camera2d_x.as_ref().map(|_| base.camera2d_x), camera2d_y: self.camera2d_y.as_ref().map(|_| base.camera2d_y), camera2d_zoom: self.camera2d_zoom.as_ref().map(|_| base.camera2d_zoom), camera3d_position: self.camera3d_position.as_ref().map(|_| base.camera3d_position), camera3d_target: self.camera3d_target.as_ref().map(|_| base.camera3d_target), camera3d_zoom: self.camera3d_zoom.as_ref().map(|_| base.camera3d_zoom) }
+    }
+}
+
+impl protocol::MutationDiff<Puzzle5dPresence> for Puzzle5dPresenceDiff {
+    fn apply(&self, base: &Puzzle5dPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle5dPresence> {
+        let mut next = base.clone();
+        if let Some(value) = &self.camera2d_x {
+            next.camera2d_x = *value;
+        }
+        if let Some(value) = &self.camera2d_y {
+            next.camera2d_y = *value;
+        }
+        if let Some(value) = &self.camera2d_zoom {
+            next.camera2d_zoom = *value;
+        }
+        if let Some(value) = &self.camera3d_position {
+            next.camera3d_position = *value;
+        }
+        if let Some(value) = &self.camera3d_target {
+            next.camera3d_target = *value;
+        }
+        if let Some(value) = &self.camera3d_zoom {
+            next.camera3d_zoom = *value;
+        }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if other.camera2d_x.is_some() {
+            self.camera2d_x = other.camera2d_x;
+        }
+        if other.camera2d_y.is_some() {
+            self.camera2d_y = other.camera2d_y;
+        }
+        if other.camera2d_zoom.is_some() {
+            self.camera2d_zoom = other.camera2d_zoom;
+        }
+        if other.camera3d_position.is_some() {
+            self.camera3d_position = other.camera3d_position;
+        }
+        if other.camera3d_target.is_some() {
+            self.camera3d_target = other.camera3d_target;
+        }
+        if other.camera3d_zoom.is_some() {
+            self.camera3d_zoom = other.camera3d_zoom;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<Puzzle5dPresence> for Puzzle5dPresenceDiff {
+    fn inverse(&self, base: &Puzzle5dPresence) -> Self {
+        self.restoring(base)
+    }
+    fn between(base: &Puzzle5dPresence, other: &Puzzle5dPresence) -> Self {
+        Self { camera2d_x: (base.camera2d_x != other.camera2d_x).then(|| other.camera2d_x), camera2d_y: (base.camera2d_y != other.camera2d_y).then(|| other.camera2d_y), camera2d_zoom: (base.camera2d_zoom != other.camera2d_zoom).then(|| other.camera2d_zoom), camera3d_position: (base.camera3d_position != other.camera3d_position).then(|| other.camera3d_position), camera3d_target: (base.camera3d_target != other.camera3d_target).then(|| other.camera3d_target), camera3d_zoom: (base.camera3d_zoom != other.camera3d_zoom).then(|| other.camera3d_zoom) }
+    }
+    fn is_empty(&self) -> bool {
+        self.camera2d_x.is_none() && self.camera2d_y.is_none() && self.camera2d_zoom.is_none() && self.camera3d_position.is_none() && self.camera3d_target.is_none() && self.camera3d_zoom.is_none()
     }
 }
 
@@ -91,7 +173,7 @@ pub enum Puzzle5dPresenceMutation {
 }
 
 impl Mutation<Puzzle5dPresence> for Puzzle5dPresenceMutation {
-    type Diff = Puzzle5dPresence;
+    type Diff = Puzzle5dPresenceDiff;
 
     /// 🧷️ Hand-written (not `#[derive(dsl::Mutations)]`: this enum derives `dsl::DslOps`, a
     /// different derive that supplies `DslVariants` for the text/binary op codecs below, not
@@ -109,10 +191,13 @@ impl Mutation<Puzzle5dPresence> for Puzzle5dPresenceMutation {
         }
     }
 
-    fn diff(&self, _base: &Puzzle5dPresence) -> protocol::MutationOutcome<Puzzle5dPresence> {
-        protocol::MutationOutcome::new(match self {
-            Self::Snapshot { presence } => presence.clone(),
-        })
+    fn diff(&self, base: &Puzzle5dPresence) -> protocol::MutationOutcome<Puzzle5dPresenceDiff> {
+        let Self::Snapshot { presence } = self;
+        let diff = Puzzle5dPresenceDiff::of(presence).changed(base);
+        if protocol::DiffAlgebra::<Puzzle5dPresence>::is_empty(&diff) {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The presence already holds this state.");
+        }
+        protocol::MutationOutcome::new(diff)
     }
 
     fn inverse(&self, base: &Puzzle5dPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {

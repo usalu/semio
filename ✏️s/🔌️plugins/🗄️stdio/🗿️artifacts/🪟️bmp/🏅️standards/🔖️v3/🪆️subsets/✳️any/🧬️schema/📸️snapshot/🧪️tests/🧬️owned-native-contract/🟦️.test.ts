@@ -19,6 +19,24 @@ describe("Bmp owned native sample contract", () => {
   });
 });
 
+import replacementSchema from "../../../🧬️mutations/🔄️replace-image/🧬️schema/🔣️.json";
+test("native BMP image replacement and inverse retain the exact ten-bit 513 component",async()=>{
+ const validator=new Ajv({strict:false,allErrors:true}).addSchema(schema).compile(replacementSchema);
+ const base=parseBmpSnapshot(fixture.cases[0]!.snapshot);
+ for(const row of [...fixture.cases,...fixture.replacementCases]){
+  const target=parseBmpSnapshot(row.snapshot),payload={image:target.image};
+  expect(validator(payload),row.name).toBe(true);expect(validator({...payload,bytes:[0]}),row.name).toBe(false);
+  const actual=await applyBmpMutation(base,{mutation:"replace-image",payload});expect(actual).toEqual(target);
+  const diff=betweenBmpSnapshots(base,actual);expect(applyBmpDiff(actual,inverseBmpDiff(base,diff))).toEqual(base);
+  const bytes=await encodeBmpSnapshot(actual);expect(await decodeBmpSnapshot(bytes)).toEqual(target);
+  if(row.name==="bitfields32-ten-bit-513-exact-image-replacement"){
+   const reference=Buffer.from(bytes),offset=reference.readUInt32LE(10),word=reference.readUInt32LE(offset);
+   expect((word&1072693248)>>>20).toBe(513);expect((word&1047552)>>>10).toBe(777);expect(word>>>31).toBe(1);
+  }
+  console.log(`[DEBUG] BMP typed image replacement neutral=${row.name} nativeWordsExact=true inverseExact=true`);
+ }
+});
+
 import {Database} from "bun:sqlite";
 import {parseBmpSnapshot} from "../../🟦️.ts";
 import {bmpRevision,paintBmpIndexedRegion,paintBmpDirectRegion,applyBmpMutation} from "../../../⚙️operations/🟦️.ts";

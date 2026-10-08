@@ -89,7 +89,7 @@ fn stamp_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let output = oracle_stamp(&input, true)?;
     let projection = project_package(&output)?;
-    mutation_is_observable("set-snapshot", &projection, &project_package(&input)?, &[])?;
+    mutation_is_observable("stamp-strict-class", &projection, &project_package(&input)?, &[])?;
     Ok(Outcome::with_raw(output, projection))
 }
 
@@ -98,7 +98,7 @@ fn stamp_inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let restored = oracle_stamp(&oracle_stamp(&input, true)?, false)?;
     let projection = project_package(&restored)?;
-    inverse_restores("set-snapshot", &projection, &project_package(&input)?)?;
+    inverse_restores("stamp-strict-class", &projection, &project_package(&input)?)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 //#endregion 🔖️Oracle
@@ -112,7 +112,7 @@ mod subject {
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_docx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx;
-    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::transitional::schema::mutations::{apply_docx_transitional_mutation, stamp_conformance_class_mutation, DocxTransitionalMutation};
+    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::transitional::schema::mutations::{apply_docx_transitional_mutation, stamp_conformance_class_mutations, DocxTransitionalMutation};
     use semio_s_artifact_stdio_docx::DocxSnapshot;
     use semio_s_artifact_stdio_docx_test_oracle::standards::v_ecma_376::subsets::transitional::{oracle_inverse_spec, project_package};
 
@@ -151,23 +151,26 @@ mod subject {
         Ok(Outcome::with_raw(output, projection))
     }
 
-    /// 🏅️ The whole-package class stamp recorded as one `set-snapshot` of this repository's own stamp.
+    /// 🏅️ The whole-package class stamp recorded as the concrete namespace, relationship-base and conformance-attribute mutations.
     pub fn stamp(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
-        let stamp = stamp_conformance_class_mutation(&snapshot, true);
-        apply_docx_transitional_mutation(&mut snapshot, &stamp);
+        for stamp in stamp_conformance_class_mutations(true) {
+            apply_docx_transitional_mutation(&mut snapshot, &stamp);
+        }
         let output = encode(&snapshot)?;
         let projection = project_package(&output)?;
         Ok(Outcome::with_raw(output, projection))
     }
 
-    /// ↩️ The class stamp undone by `set-snapshot`'s own production inverse.
+    /// ↩️ The class stamp undone by the production inverse of each stamp mutation, replayed in reverse.
     pub fn stamp_inverse(ctx: &Context) -> Result<Outcome, String> {
-        let base = decode(&mutable_input(ctx)?)?;
-        let stamp = stamp_conformance_class_mutation(&base, true);
-        let mut snapshot = base.clone();
-        apply_docx_transitional_mutation(&mut snapshot, &stamp);
-        for undo in mutation_inverse(&stamp, &base).expect("valid retained mutation inverse fixture") {
+        let mut snapshot = decode(&mutable_input(ctx)?)?;
+        let mut undos = Vec::new();
+        for stamp in stamp_conformance_class_mutations(true) {
+            undos.push(mutation_inverse(&stamp, &snapshot).expect("valid retained mutation inverse fixture"));
+            apply_docx_transitional_mutation(&mut snapshot, &stamp);
+        }
+        for undo in undos.into_iter().rev().flatten() {
             apply_docx_transitional_mutation(&mut snapshot, &undo);
         }
         let output = encode(&snapshot)?;
@@ -194,10 +197,10 @@ mod subject {
 /// 🧭️ Registration entry point the generated host calls.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("mutate-set-snapshot", stamp_oracle).oracle("inverse-set-snapshot", stamp_inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("mutate-stamp-strict-class", stamp_oracle).oracle("inverse-stamp-strict-class", stamp_inverse_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse).subject("mutate-set-snapshot", subject::stamp).subject("inverse-set-snapshot", subject::stamp_inverse);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse).subject("mutate-stamp-strict-class", subject::stamp).subject("inverse-stamp-strict-class", subject::stamp_inverse);
     }
     built = built.oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]

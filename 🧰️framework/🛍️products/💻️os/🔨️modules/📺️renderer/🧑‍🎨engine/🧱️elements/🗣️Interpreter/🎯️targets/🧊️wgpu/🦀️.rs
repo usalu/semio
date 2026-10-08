@@ -5432,6 +5432,71 @@ fn event_feed_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree) -> Vec<EventFe
     entries
 }
 
+fn collect_world3d_accessibility_entries(tree: &ui_wgpu::wgpu::UiTree, node: NodeId, depth: usize, entries: &mut Vec<(usize, crate::scenes::World3dAccessibilityControl)>) {
+    let Some(retained) = tree.node(node) else { return };
+    if let UiNode::ComponentScene(scene) = &retained.spec.0 {
+        if scene.component_kind == ui_wgpu::wgpu::SurfaceKind::World3d && scene.presence.visible() && !crate::scenes::scene_host_retiring(&scene.host_id) {
+            entries.extend(crate::scenes::accepted_world3d_accessibility_controls(&scene.host_id).into_iter().map(|control| (depth.saturating_add(1), control)));
+        }
+    }
+    if depth >= ui_wgpu::wgpu::accessibility::UI_ACCESSIBILITY_PROJECTION_DEPTH {
+        return;
+    }
+    for child in tree.children(node) {
+        collect_world3d_accessibility_entries(tree, child, depth.saturating_add(1), entries);
+    }
+}
+
+/// ♿️ Publishes the modelling overlays of every visible world surface (annotation list, scalar-field legend, mismatch status) as read-only nodes of the accessibility mirror;
+/// the mismatch status is a polite live region so a screen reader announces it.
+fn append_world3d_accessibility_nodes(tree: &ui_wgpu::wgpu::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
+    let mut entries = Vec::new();
+    if let Some(root) = tree.root {
+        collect_world3d_accessibility_entries(tree, root, 0, &mut entries);
+    }
+    for (depth, control) in entries {
+        if nodes.len() >= ui_contract::UI_DOCUMENT_NODES {
+            break;
+        }
+        nodes.push(ui_contract::AccessibilityProjectionNode {
+            value_step: None,
+            invalid: false,
+            set_size: None,
+            pos_in_set: None,
+            tone: None,
+            node_id: scene_virtual_accessibility_node_id(&control.key),
+            key: control.key,
+            role: control.role.into(),
+            depth: depth.saturating_add(usize::from(control.depth)),
+            label: Some(control.label),
+            description: None,
+            live: ui_contract::liveness_name(if control.polite { ui_contract::Liveness::Polite } else { ui_contract::Liveness::Off }).into(),
+            shortcut: None,
+            hidden: false,
+            disabled: false,
+            focusable: false,
+            tabbable: false,
+            actionable: false,
+            focused: false,
+            checked: None,
+            pressed: None,
+            selected: None,
+            expanded: None,
+            editable: false,
+            multiline: false,
+            controls: None,
+            active_descendant: None,
+            level: None,
+            rect: None,
+            value_min: None,
+            value_max: None,
+            value_now: None,
+            value_text: None,
+            busy: false,
+        });
+    }
+}
+
 fn append_event_feed_accessibility_nodes(tree: &ui_wgpu::wgpu::UiTree, nodes: &mut Vec<ui_contract::AccessibilityProjectionNode>) {
     for entry in event_feed_accessibility_entries(tree) {
         if nodes.len() >= ui_contract::UI_DOCUMENT_NODES {
@@ -5677,6 +5742,7 @@ fn build_accessibility_dump(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>)
                 append_vfs_accessibility_nodes(&window_id, tree, &mut nodes);
                 append_block_list_accessibility_nodes(tree, &mut nodes);
                 append_event_feed_accessibility_nodes(tree, &mut nodes);
+                append_world3d_accessibility_nodes(tree, &mut nodes);
                 append_graph_timeline_accessibility_nodes(tree, &mut nodes);
                 append_text_editor_accessibility_nodes(&window_id, tree, &mut nodes);
             }

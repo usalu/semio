@@ -1,0 +1,45 @@
+{
+  "cases": [
+    {
+      "owner": "root",
+      "source": "export function snapshotFromJson(value: unknown): unknown { return value; }",
+      "forbidden": [
+        "snapshotFromJson"
+      ]
+    },
+    {
+      "owner": "root",
+      "source": "export {snapshotFromJson} from \"./🚪️io/📝️text/📸️snapshot/🟦️.ts\";",
+      "forbidden": []
+    },
+    {
+      "owner": "root",
+      "source": "export type Snapshot = {id:string};",
+      "forbidden": []
+    },
+    {
+      "owner": "io",
+      "source": "export function applyProgramDiff(): ProgramSnapshot { throw Error(); }",
+      "forbidden": [
+        "applyProgramDiff"
+      ]
+    },
+    {
+      "owner": "io",
+      "source": "export function diffProgram(): ProgramDiff { throw Error(); }",
+      "forbidden": [
+        "diffProgram"
+      ]
+    },
+    {
+      "owner": "io",
+      "source": "export function programDiffToJson(): unknown { return null; }",
+      "forbidden": []
+    },
+    {
+      "owner": "io",
+      "source": "const example=\"export function applyProgramDiff() {}\";",
+      "forbidden": []
+    }
+  ]
+}

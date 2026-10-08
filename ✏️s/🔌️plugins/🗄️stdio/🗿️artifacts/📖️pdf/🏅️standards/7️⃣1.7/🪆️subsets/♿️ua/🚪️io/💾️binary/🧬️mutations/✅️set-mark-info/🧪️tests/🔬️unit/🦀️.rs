@@ -2,6 +2,6 @@ use super::*;
 
 #[test]
 fn owned_payload_round_trips() {
-    let payload = SetMarkInfo { marked: true };
+    let payload = SetMarkInfo { marked: true, entry_index: None };
     assert_eq!(decode(&encode(&payload).unwrap()).unwrap(), payload);
 }

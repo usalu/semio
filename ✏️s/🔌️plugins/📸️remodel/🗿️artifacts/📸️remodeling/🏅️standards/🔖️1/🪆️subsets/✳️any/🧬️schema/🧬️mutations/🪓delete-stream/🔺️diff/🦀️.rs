@@ -4,7 +4,7 @@
 //! severing another record's data: the document never carries a dangling reference and the delete
 //! never destroys what it does not own, which is also what makes `create-stream` its exact inverse.
 //! Missing target ⇒ Error.
-use crate::diff::{RemodelingDiff, RemodelingMediaStreamList};
+use crate::diff::{RemodelingDiff, RemodelingRow};
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
@@ -16,7 +16,6 @@ pub fn diff(payload: &super::DeleteStream, base: &RemodelingSnapshot) -> protoco
     if !referencing.is_empty() {
         return protocol::MutationOutcome::error("mutation.target-referenced", format!("Stream \"{}\" is still observed by {} ground control point(s); remove those observations first.", payload.id, referencing.len()), referencing);
     }
-    let streams: Vec<_> = base.streams.iter().filter(|stream| stream.id != payload.id).cloned().collect();
-    protocol::MutationOutcome::new(RemodelingDiff { streams: Some(RemodelingMediaStreamList { values: streams }), ..Default::default() })
+    protocol::MutationOutcome::new(RemodelingDiff::stream_rows(vec![RemodelingRow::Remove { key: payload.id.clone() }]))
 }
 //#endregion 🔖️Diff

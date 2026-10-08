@@ -1,7 +1,7 @@
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 # 🧬️ Curation diff schema — sparse field delta.
 
-# import CurationArtifact, ObjectKindExtra, CuratedItem from "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
+# import ObjectKindExtra, CuratedItem from "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
 
 type CurationObjectKindExtraPatchEntry {
   id: String!
@@ -28,7 +28,6 @@ type CurationCuratedDelta {
 }
 
 type CurationDiff {
-  artifact: CurationArtifact @state(class: ARTIFACT)
   catalog: ArtifactChild @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
   stockExtra: CurationStockExtraDelta @state(class: ARTIFACT)
   curated: CurationCuratedDelta @state(class: ARTIFACT)

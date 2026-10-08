@@ -1,15 +1,12 @@
 {
   "artifact": null,
-  "schema": null,
   "domain": null,
-  "label": null,
+  "fasteners": null,
+  "kindCompatibility": null,
   "meta": {
     "description": "Description changed by fixture."
   },
-  "kindCatalogs": null,
-  "kindCatalogsExtra": null,
-  "kindCompatibility": null,
   "parts": null,
-  "fasteners": null,
+  "schema": null,
   "targetVolumes": null
 }

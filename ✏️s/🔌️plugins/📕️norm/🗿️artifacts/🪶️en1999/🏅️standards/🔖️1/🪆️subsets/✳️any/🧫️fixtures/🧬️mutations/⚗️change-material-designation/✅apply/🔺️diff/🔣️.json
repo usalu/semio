@@ -1,12 +1,16 @@
 {
-  "artifact": null,
   "annex": null,
-  "materials": [
-    {
-      "id": "mat-6082",
-      "designation": "EN AW-6082 T6"
-    }
-  ],
+  "materials": {
+    "added": [],
+    "removed": [],
+    "modified": [
+      {
+        "id": "mat-6082",
+        "designation": "EN AW-6082 T6"
+      }
+    ],
+    "order": null
+  },
   "sections": null,
   "members": null,
   "connections": null,

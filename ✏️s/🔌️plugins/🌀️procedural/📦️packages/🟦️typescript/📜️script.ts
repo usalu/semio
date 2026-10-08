@@ -6,7 +6,10 @@ import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    const rendererCases = ["✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/💥️extension-evaluate-fault/🟦️.ts"];
+    const rendererCases = [
+      "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/💥️extension-evaluate-fault/🟦️.ts",
+      "✏️s/🔌️plugins/🌀️procedural/🧪️tests/🚀️renderer-boot-selection/🟦️.ts",
+    ];
     if (segments[0] === "renderer-contract") {
       runCmd(process.execPath, ["test", ...rendererCases.map(path => resolve(this.repoRoot, path))], { cwd: this.repoRoot });
       return;

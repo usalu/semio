@@ -9,11 +9,17 @@ fn changes_the_owned_catalog_axis_and_plans_its_inverse() {
     let mutation = RemoveDisplayDocTitle {};
     let next = applied(&base, &PdfUaMutation::RemoveDisplayDocTitle(mutation.clone()));
     assert!(support::catalog_entry(&next, "ViewerPreferences").is_none());
-    assert_eq!(<RemoveDisplayDocTitle as MutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfUaMutation::SetDisplayDocTitle(SetDisplayDocTitle { display: true })]);
+    assert_eq!(<RemoveDisplayDocTitle as MutationKind<PdfSnapshot, PdfUaMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfUaMutation::SetDisplayDocTitle(SetDisplayDocTitle { display: true, entry_index: None })]);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    let base = applied(&support::document(), &PdfUaMutation::SetDisplayDocTitle(SetDisplayDocTitle { display: true }));
+    let base = applied(&support::document(), &PdfUaMutation::SetDisplayDocTitle(SetDisplayDocTitle { display: true, entry_index: None }));
+    assert_mutation_inverse_sum_law(&PdfUaMutation::RemoveDisplayDocTitle(RemoveDisplayDocTitle {}), &base).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_restores_a_middle_row() {
+    let base = support::with_tail(&applied(&support::document(), &PdfUaMutation::SetDisplayDocTitle(SetDisplayDocTitle { display: true, entry_index: None })));
     assert_mutation_inverse_sum_law(&PdfUaMutation::RemoveDisplayDocTitle(RemoveDisplayDocTitle {}), &base).await;
 }

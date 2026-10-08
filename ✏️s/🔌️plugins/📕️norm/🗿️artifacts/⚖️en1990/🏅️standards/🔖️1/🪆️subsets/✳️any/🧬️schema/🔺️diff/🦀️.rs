@@ -1,12 +1,78 @@
-//! 🧬️ En1990 diff schema — sparse scalar fields and ordered per-collection row edits.
+//! 🧬️ En1990 diff schema — sparse scalar fields plus keyed row deltas for every list the document owns.
 
-use crate::document::AnnexChoice;
-use crate::{En1990Snapshot, AccidentalAction, BridgeSls, Member, MemberEffect, PermanentAction, SeismicAction, VariableAction};
 use framework_schema::ArtifactSchema;
+use protocol::{DiffAlgebra, MutationDiff};
+use semio_s_artifact_norm_contract::{norm_list_delta, norm_row_patch};
+
+use crate::En1990Snapshot;
+use crate::document::AnnexChoice;
+use crate::MemberEffect;
+
+//#region 🔖️Rows
+norm_row_patch! {
+    /// 🩹 Sparse field patch of one `PermanentAction`.
+    pub En1990PermanentPatch of crate::PermanentAction { set { kind: String, gk: f64 } }
+}
+
+norm_list_delta! {
+    /// 📋️ Keyed row delta of one `PermanentAction` list.
+    pub En1990PermanentDelta { addition: En1990PermanentAddition, modification: En1990PermanentModification, row: crate::PermanentAction, patch: En1990PermanentPatch, key: id }
+}
+
+norm_row_patch! {
+    /// 🩹 Sparse field patch of one `VariableAction`.
+    pub En1990VariablePatch of crate::VariableAction { set { category: String, qk: f64 } }
+}
+
+norm_list_delta! {
+    /// 📋️ Keyed row delta of one `VariableAction` list.
+    pub En1990VariableDelta { addition: En1990VariableAddition, modification: En1990VariableModification, row: crate::VariableAction, patch: En1990VariablePatch, key: id }
+}
+
+norm_row_patch! {
+    /// 🩹 Sparse field patch of one `AccidentalAction`.
+    pub En1990AccidentalPatch of crate::AccidentalAction { set { ad: f64 } }
+}
+
+norm_list_delta! {
+    /// 📋️ Keyed row delta of one `AccidentalAction` list.
+    pub En1990AccidentalDelta { addition: En1990AccidentalAddition, modification: En1990AccidentalModification, row: crate::AccidentalAction, patch: En1990AccidentalPatch, key: id }
+}
+
+norm_row_patch! {
+    /// 🩹 Sparse field patch of one `SeismicAction`.
+    pub En1990SeismicPatch of crate::SeismicAction { set { a_ek: f64, importance_class: crate::ImportanceClass } }
+}
+
+norm_list_delta! {
+    /// 📋️ Keyed row delta of one `SeismicAction` list.
+    pub En1990SeismicDelta { addition: En1990SeismicAddition, modification: En1990SeismicModification, row: crate::SeismicAction, patch: En1990SeismicPatch, key: id }
+}
+
+norm_row_patch! {
+    /// 🩹 Sparse field patch of one `Member`.
+    pub En1990MemberPatch of crate::Member { set { label_en: String, label_de: String, rd_str: f64, rd_geo: f64, rd_equ_stab: f64, rd_equ_destab: f64, rd_fat: f64, span: f64, deflection_w: f64, deflection_limit_ratio: f64, vibration_frequency: f64, vibration_frequency_min: f64 } }
+}
+
+norm_list_delta! {
+    /// 📋️ Keyed row delta of one `Member` list.
+    pub En1990MemberDelta { addition: En1990MemberAddition, modification: En1990MemberModification, row: crate::Member, patch: En1990MemberPatch, key: id }
+}
+
+norm_row_patch! {
+    /// 🩹 Sparse field patch of one `BridgeSls`.
+    pub En1990BridgeSlsPatch of crate::BridgeSls { set { member_id: String, deck_acceleration: f64, deck_acceleration_limit: f64, deck_twist: f64, deck_twist_limit: f64, bridge_deflection: f64, bridge_deflection_limit: f64 } }
+}
+
+norm_list_delta! {
+    /// 📋️ Keyed row delta of one `BridgeSls` list.
+    pub En1990BridgeSlsDelta { addition: En1990BridgeSlsAddition, modification: En1990BridgeSlsModification, row: crate::BridgeSls, patch: En1990BridgeSlsPatch, key: id }
+}
+//#endregion 🔖️Rows
 
 //#region 🔖️Diff
-/// 🔺️ Sparse delta for the En1990 artifact: the changed scalars and ordered row edits per collection.
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
+/// 🔺️ Sparse delta for the En1990 artifact: the scalar fields a mutation sets and the keyed row deltas of its lists.
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
@@ -39,17 +105,17 @@ pub struct En1990Diff {
     #[state(artifact)]
     pub beta_computed: Option<f64>,
     #[state(artifact)]
-    pub permanents: Vec<En1990PermanentEdit>,
+    pub permanents: En1990PermanentDelta,
     #[state(artifact)]
-    pub variables: Vec<En1990VariableEdit>,
+    pub variables: En1990VariableDelta,
     #[state(artifact)]
-    pub accidentals: Vec<En1990AccidentalEdit>,
+    pub accidentals: En1990AccidentalDelta,
     #[state(artifact)]
-    pub seismics: Vec<En1990SeismicEdit>,
+    pub seismics: En1990SeismicDelta,
     #[state(artifact)]
-    pub members: Vec<En1990MemberEdit>,
+    pub members: En1990MemberDelta,
     #[state(artifact)]
-    pub bridge_sls: Vec<En1990BridgeSlsEdit>,
+    pub bridge_sls: En1990BridgeSlsDelta,
     #[state(artifact)]
     pub effects: Vec<En1990EffectEdit>,
 }
@@ -220,252 +286,6 @@ fn rows_between<E: En1990RowEdit>(base: &[E::Row], other: &[E::Row]) -> Vec<E> {
 }
 //#endregion 🔖️RowEdits
 
-/// 🧾️ One ordered-row edit of `permanents`.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct En1990PermanentEdit {
-    pub op: En1990RowOp,
-    pub index: u32,
-    pub id: String,
-    pub value: Option<PermanentAction>,
-}
-
-impl En1990RowEdit for En1990PermanentEdit {
-    type Row = PermanentAction;
-    fn key(row: &PermanentAction) -> String {
-        row.id.clone()
-    }
-
-    fn view(&self) -> En1990RowView<'_, PermanentAction> {
-        let (index, id) = (self.index as usize, self.id.as_str());
-        match (self.op, &self.value) {
-            (En1990RowOp::Insert, Some(row)) => En1990RowView::Insert(index, row),
-            (En1990RowOp::Remove, None) => En1990RowView::Remove(index, id),
-            (En1990RowOp::Replace, Some(row)) => En1990RowView::Replace(index, id, row),
-            _ => En1990RowView::Malformed(index),
-        }
-    }
-
-    fn insert(index: usize, row: PermanentAction) -> Self {
-        Self { op: En1990RowOp::Insert, index: slot(index), id: Self::key(&row), value: Some(row) }
-    }
-
-    fn remove(index: usize, id: String) -> Self {
-        Self { op: En1990RowOp::Remove, index: slot(index), id, value: None }
-    }
-
-    fn replace(index: usize, id: String, row: PermanentAction) -> Self {
-        Self { op: En1990RowOp::Replace, index: slot(index), id, value: Some(row) }
-    }
-}
-
-/// 🧾️ One ordered-row edit of `variables`.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct En1990VariableEdit {
-    pub op: En1990RowOp,
-    pub index: u32,
-    pub id: String,
-    pub value: Option<VariableAction>,
-}
-
-impl En1990RowEdit for En1990VariableEdit {
-    type Row = VariableAction;
-    fn key(row: &VariableAction) -> String {
-        row.id.clone()
-    }
-
-    fn view(&self) -> En1990RowView<'_, VariableAction> {
-        let (index, id) = (self.index as usize, self.id.as_str());
-        match (self.op, &self.value) {
-            (En1990RowOp::Insert, Some(row)) => En1990RowView::Insert(index, row),
-            (En1990RowOp::Remove, None) => En1990RowView::Remove(index, id),
-            (En1990RowOp::Replace, Some(row)) => En1990RowView::Replace(index, id, row),
-            _ => En1990RowView::Malformed(index),
-        }
-    }
-
-    fn insert(index: usize, row: VariableAction) -> Self {
-        Self { op: En1990RowOp::Insert, index: slot(index), id: Self::key(&row), value: Some(row) }
-    }
-
-    fn remove(index: usize, id: String) -> Self {
-        Self { op: En1990RowOp::Remove, index: slot(index), id, value: None }
-    }
-
-    fn replace(index: usize, id: String, row: VariableAction) -> Self {
-        Self { op: En1990RowOp::Replace, index: slot(index), id, value: Some(row) }
-    }
-}
-
-/// 🧾️ One ordered-row edit of `accidentals`.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct En1990AccidentalEdit {
-    pub op: En1990RowOp,
-    pub index: u32,
-    pub id: String,
-    pub value: Option<AccidentalAction>,
-}
-
-impl En1990RowEdit for En1990AccidentalEdit {
-    type Row = AccidentalAction;
-    fn key(row: &AccidentalAction) -> String {
-        row.id.clone()
-    }
-
-    fn view(&self) -> En1990RowView<'_, AccidentalAction> {
-        let (index, id) = (self.index as usize, self.id.as_str());
-        match (self.op, &self.value) {
-            (En1990RowOp::Insert, Some(row)) => En1990RowView::Insert(index, row),
-            (En1990RowOp::Remove, None) => En1990RowView::Remove(index, id),
-            (En1990RowOp::Replace, Some(row)) => En1990RowView::Replace(index, id, row),
-            _ => En1990RowView::Malformed(index),
-        }
-    }
-
-    fn insert(index: usize, row: AccidentalAction) -> Self {
-        Self { op: En1990RowOp::Insert, index: slot(index), id: Self::key(&row), value: Some(row) }
-    }
-
-    fn remove(index: usize, id: String) -> Self {
-        Self { op: En1990RowOp::Remove, index: slot(index), id, value: None }
-    }
-
-    fn replace(index: usize, id: String, row: AccidentalAction) -> Self {
-        Self { op: En1990RowOp::Replace, index: slot(index), id, value: Some(row) }
-    }
-}
-
-/// 🧾️ One ordered-row edit of `seismics`.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct En1990SeismicEdit {
-    pub op: En1990RowOp,
-    pub index: u32,
-    pub id: String,
-    pub value: Option<SeismicAction>,
-}
-
-impl En1990RowEdit for En1990SeismicEdit {
-    type Row = SeismicAction;
-    fn key(row: &SeismicAction) -> String {
-        row.id.clone()
-    }
-
-    fn view(&self) -> En1990RowView<'_, SeismicAction> {
-        let (index, id) = (self.index as usize, self.id.as_str());
-        match (self.op, &self.value) {
-            (En1990RowOp::Insert, Some(row)) => En1990RowView::Insert(index, row),
-            (En1990RowOp::Remove, None) => En1990RowView::Remove(index, id),
-            (En1990RowOp::Replace, Some(row)) => En1990RowView::Replace(index, id, row),
-            _ => En1990RowView::Malformed(index),
-        }
-    }
-
-    fn insert(index: usize, row: SeismicAction) -> Self {
-        Self { op: En1990RowOp::Insert, index: slot(index), id: Self::key(&row), value: Some(row) }
-    }
-
-    fn remove(index: usize, id: String) -> Self {
-        Self { op: En1990RowOp::Remove, index: slot(index), id, value: None }
-    }
-
-    fn replace(index: usize, id: String, row: SeismicAction) -> Self {
-        Self { op: En1990RowOp::Replace, index: slot(index), id, value: Some(row) }
-    }
-}
-
-/// 🧾️ One ordered-row edit of `members`.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct En1990MemberEdit {
-    pub op: En1990RowOp,
-    pub index: u32,
-    pub id: String,
-    pub value: Option<Member>,
-}
-
-impl En1990RowEdit for En1990MemberEdit {
-    type Row = Member;
-    fn key(row: &Member) -> String {
-        row.id.clone()
-    }
-
-    fn view(&self) -> En1990RowView<'_, Member> {
-        let (index, id) = (self.index as usize, self.id.as_str());
-        match (self.op, &self.value) {
-            (En1990RowOp::Insert, Some(row)) => En1990RowView::Insert(index, row),
-            (En1990RowOp::Remove, None) => En1990RowView::Remove(index, id),
-            (En1990RowOp::Replace, Some(row)) => En1990RowView::Replace(index, id, row),
-            _ => En1990RowView::Malformed(index),
-        }
-    }
-
-    fn insert(index: usize, row: Member) -> Self {
-        Self { op: En1990RowOp::Insert, index: slot(index), id: Self::key(&row), value: Some(row) }
-    }
-
-    fn remove(index: usize, id: String) -> Self {
-        Self { op: En1990RowOp::Remove, index: slot(index), id, value: None }
-    }
-
-    fn replace(index: usize, id: String, row: Member) -> Self {
-        Self { op: En1990RowOp::Replace, index: slot(index), id, value: Some(row) }
-    }
-}
-
-/// 🧾️ One ordered-row edit of `bridge_sls`.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[value(rename_all = "camelCase")]
-pub struct En1990BridgeSlsEdit {
-    pub op: En1990RowOp,
-    pub index: u32,
-    pub id: String,
-    pub value: Option<BridgeSls>,
-}
-
-impl En1990RowEdit for En1990BridgeSlsEdit {
-    type Row = BridgeSls;
-    fn key(row: &BridgeSls) -> String {
-        row.id.clone()
-    }
-
-    fn view(&self) -> En1990RowView<'_, BridgeSls> {
-        let (index, id) = (self.index as usize, self.id.as_str());
-        match (self.op, &self.value) {
-            (En1990RowOp::Insert, Some(row)) => En1990RowView::Insert(index, row),
-            (En1990RowOp::Remove, None) => En1990RowView::Remove(index, id),
-            (En1990RowOp::Replace, Some(row)) => En1990RowView::Replace(index, id, row),
-            _ => En1990RowView::Malformed(index),
-        }
-    }
-
-    fn insert(index: usize, row: BridgeSls) -> Self {
-        Self { op: En1990RowOp::Insert, index: slot(index), id: Self::key(&row), value: Some(row) }
-    }
-
-    fn remove(index: usize, id: String) -> Self {
-        Self { op: En1990RowOp::Remove, index: slot(index), id, value: None }
-    }
-
-    fn replace(index: usize, id: String, row: BridgeSls) -> Self {
-        Self { op: En1990RowOp::Replace, index: slot(index), id, value: Some(row) }
-    }
-}
-
 /// 🧾️ One ordered-row edit of `effects`.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -507,11 +327,11 @@ impl En1990RowEdit for En1990EffectEdit {
     }
 }
 
-impl protocol::MutationDiff<En1990Snapshot> for En1990Diff {
+impl MutationDiff<En1990Snapshot> for En1990Diff {
     fn apply(&self, base: &En1990Snapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<En1990Snapshot> {
         let mut next = base.clone();
-        if let Some(value) = &self.annex {
-            next.annex = value.clone();
+        if let Some(value) = self.annex {
+            next.annex = value;
         }
         if let Some(value) = &self.project_id {
             next.project_id = value.clone();
@@ -519,23 +339,23 @@ impl protocol::MutationDiff<En1990Snapshot> for En1990Diff {
         if let Some(value) = &self.structure_kind {
             next.structure_kind = value.clone();
         }
-        if let Some(value) = &self.altitude_m {
-            next.altitude_m = value.clone();
+        if let Some(value) = self.altitude_m {
+            next.altitude_m = value;
         }
-        if let Some(value) = &self.consequence_class {
-            next.consequence_class = value.clone();
+        if let Some(value) = self.consequence_class {
+            next.consequence_class = value;
         }
-        if let Some(value) = &self.reliability_class {
-            next.reliability_class = value.clone();
+        if let Some(value) = self.reliability_class {
+            next.reliability_class = value;
         }
-        if let Some(value) = &self.design_working_life_category {
-            next.design_working_life_category = value.clone();
+        if let Some(value) = self.design_working_life_category {
+            next.design_working_life_category = value;
         }
-        if let Some(value) = &self.design_working_life_years {
-            next.design_working_life_years = value.clone();
+        if let Some(value) = self.design_working_life_years {
+            next.design_working_life_years = value;
         }
-        if let Some(value) = &self.reference_period_years {
-            next.reference_period_years = value.clone();
+        if let Some(value) = self.reference_period_years {
+            next.reference_period_years = value;
         }
         if let Some(value) = &self.supervision_level {
             next.supervision_level = value.clone();
@@ -543,18 +363,18 @@ impl protocol::MutationDiff<En1990Snapshot> for En1990Diff {
         if let Some(value) = &self.inspection_level {
             next.inspection_level = value.clone();
         }
-        if let Some(value) = &self.k_fi_declared {
-            next.k_fi_declared = value.clone();
+        if let Some(value) = self.k_fi_declared {
+            next.k_fi_declared = value;
         }
-        if let Some(value) = &self.beta_computed {
-            next.beta_computed = value.clone();
+        if let Some(value) = self.beta_computed {
+            next.beta_computed = value;
         }
-        apply_rows::<En1990PermanentEdit>(&mut next.permanents, &self.permanents).map_err(|error| error.under(["permanents"]))?;
-        apply_rows::<En1990VariableEdit>(&mut next.variables, &self.variables).map_err(|error| error.under(["variables"]))?;
-        apply_rows::<En1990AccidentalEdit>(&mut next.accidentals, &self.accidentals).map_err(|error| error.under(["accidentals"]))?;
-        apply_rows::<En1990SeismicEdit>(&mut next.seismics, &self.seismics).map_err(|error| error.under(["seismics"]))?;
-        apply_rows::<En1990MemberEdit>(&mut next.members, &self.members).map_err(|error| error.under(["members"]))?;
-        apply_rows::<En1990BridgeSlsEdit>(&mut next.bridge_sls, &self.bridge_sls).map_err(|error| error.under(["bridgeSls"]))?;
+        next.permanents = self.permanents.commit_onto(&base.permanents).map_err(|error| error.under(["permanents"]))?;
+        next.variables = self.variables.commit_onto(&base.variables).map_err(|error| error.under(["variables"]))?;
+        next.accidentals = self.accidentals.commit_onto(&base.accidentals).map_err(|error| error.under(["accidentals"]))?;
+        next.seismics = self.seismics.commit_onto(&base.seismics).map_err(|error| error.under(["seismics"]))?;
+        next.members = self.members.commit_onto(&base.members).map_err(|error| error.under(["members"]))?;
+        next.bridge_sls = self.bridge_sls.commit_onto(&base.bridge_sls).map_err(|error| error.under(["bridgeSls"]))?;
         apply_rows::<En1990EffectEdit>(&mut next.effects, &self.effects).map_err(|error| error.under(["effects"]))?;
         Ok(next)
     }
@@ -599,82 +419,93 @@ impl protocol::MutationDiff<En1990Snapshot> for En1990Diff {
         if other.beta_computed.is_some() {
             self.beta_computed = other.beta_computed;
         }
-        for edit in other.permanents {
-            push_row(&mut self.permanents, edit);
-        }
-        for edit in other.variables {
-            push_row(&mut self.variables, edit);
-        }
-        for edit in other.accidentals {
-            push_row(&mut self.accidentals, edit);
-        }
-        for edit in other.seismics {
-            push_row(&mut self.seismics, edit);
-        }
-        for edit in other.members {
-            push_row(&mut self.members, edit);
-        }
-        for edit in other.bridge_sls {
-            push_row(&mut self.bridge_sls, edit);
-        }
+        self.permanents.absorb(other.permanents);
+        self.variables.absorb(other.variables);
+        self.accidentals.absorb(other.accidentals);
+        self.seismics.absorb(other.seismics);
+        self.members.absorb(other.members);
+        self.bridge_sls.absorb(other.bridge_sls);
         for edit in other.effects {
             push_row(&mut self.effects, edit);
         }
     }
 }
 
-impl protocol::DiffAlgebra<En1990Snapshot> for En1990Diff {
+impl DiffAlgebra<En1990Snapshot> for En1990Diff {
     fn inverse(&self, base: &En1990Snapshot) -> Self {
         Self {
-            annex: self.annex.as_ref().map(|_| base.annex.clone()),
+            annex: self.annex.map(|_| base.annex),
             project_id: self.project_id.as_ref().map(|_| base.project_id.clone()),
             structure_kind: self.structure_kind.as_ref().map(|_| base.structure_kind.clone()),
-            altitude_m: self.altitude_m.as_ref().map(|_| base.altitude_m.clone()),
-            consequence_class: self.consequence_class.as_ref().map(|_| base.consequence_class.clone()),
-            reliability_class: self.reliability_class.as_ref().map(|_| base.reliability_class.clone()),
-            design_working_life_category: self.design_working_life_category.as_ref().map(|_| base.design_working_life_category.clone()),
-            design_working_life_years: self.design_working_life_years.as_ref().map(|_| base.design_working_life_years.clone()),
-            reference_period_years: self.reference_period_years.as_ref().map(|_| base.reference_period_years.clone()),
+            altitude_m: self.altitude_m.map(|_| base.altitude_m),
+            consequence_class: self.consequence_class.map(|_| base.consequence_class),
+            reliability_class: self.reliability_class.map(|_| base.reliability_class),
+            design_working_life_category: self.design_working_life_category.map(|_| base.design_working_life_category),
+            design_working_life_years: self.design_working_life_years.map(|_| base.design_working_life_years),
+            reference_period_years: self.reference_period_years.map(|_| base.reference_period_years),
             supervision_level: self.supervision_level.as_ref().map(|_| base.supervision_level.clone()),
             inspection_level: self.inspection_level.as_ref().map(|_| base.inspection_level.clone()),
-            k_fi_declared: self.k_fi_declared.as_ref().map(|_| base.k_fi_declared.clone()),
-            beta_computed: self.beta_computed.as_ref().map(|_| base.beta_computed.clone()),
-            permanents: invert_rows::<En1990PermanentEdit>(&base.permanents, &self.permanents),
-            variables: invert_rows::<En1990VariableEdit>(&base.variables, &self.variables),
-            accidentals: invert_rows::<En1990AccidentalEdit>(&base.accidentals, &self.accidentals),
-            seismics: invert_rows::<En1990SeismicEdit>(&base.seismics, &self.seismics),
-            members: invert_rows::<En1990MemberEdit>(&base.members, &self.members),
-            bridge_sls: invert_rows::<En1990BridgeSlsEdit>(&base.bridge_sls, &self.bridge_sls),
+            k_fi_declared: self.k_fi_declared.map(|_| base.k_fi_declared),
+            beta_computed: self.beta_computed.map(|_| base.beta_computed),
+            permanents: self.permanents.inverse(&base.permanents),
+            variables: self.variables.inverse(&base.variables),
+            accidentals: self.accidentals.inverse(&base.accidentals),
+            seismics: self.seismics.inverse(&base.seismics),
+            members: self.members.inverse(&base.members),
+            bridge_sls: self.bridge_sls.inverse(&base.bridge_sls),
             effects: invert_rows::<En1990EffectEdit>(&base.effects, &self.effects),
         }
     }
 
     fn between(base: &En1990Snapshot, other: &En1990Snapshot) -> Self {
         Self {
-            annex: (base.annex != other.annex).then(|| other.annex.clone()),
+            annex: (base.annex != other.annex).then_some(other.annex),
             project_id: (base.project_id != other.project_id).then(|| other.project_id.clone()),
             structure_kind: (base.structure_kind != other.structure_kind).then(|| other.structure_kind.clone()),
-            altitude_m: (base.altitude_m != other.altitude_m).then(|| other.altitude_m.clone()),
-            consequence_class: (base.consequence_class != other.consequence_class).then(|| other.consequence_class.clone()),
-            reliability_class: (base.reliability_class != other.reliability_class).then(|| other.reliability_class.clone()),
-            design_working_life_category: (base.design_working_life_category != other.design_working_life_category).then(|| other.design_working_life_category.clone()),
-            design_working_life_years: (base.design_working_life_years != other.design_working_life_years).then(|| other.design_working_life_years.clone()),
-            reference_period_years: (base.reference_period_years != other.reference_period_years).then(|| other.reference_period_years.clone()),
+            altitude_m: (base.altitude_m != other.altitude_m).then_some(other.altitude_m),
+            consequence_class: (base.consequence_class != other.consequence_class).then_some(other.consequence_class),
+            reliability_class: (base.reliability_class != other.reliability_class).then_some(other.reliability_class),
+            design_working_life_category: (base.design_working_life_category != other.design_working_life_category).then_some(other.design_working_life_category),
+            design_working_life_years: (base.design_working_life_years != other.design_working_life_years).then_some(other.design_working_life_years),
+            reference_period_years: (base.reference_period_years != other.reference_period_years).then_some(other.reference_period_years),
             supervision_level: (base.supervision_level != other.supervision_level).then(|| other.supervision_level.clone()),
             inspection_level: (base.inspection_level != other.inspection_level).then(|| other.inspection_level.clone()),
-            k_fi_declared: (base.k_fi_declared != other.k_fi_declared).then(|| other.k_fi_declared.clone()),
-            beta_computed: (base.beta_computed != other.beta_computed).then(|| other.beta_computed.clone()),
-            permanents: rows_between::<En1990PermanentEdit>(&base.permanents, &other.permanents),
-            variables: rows_between::<En1990VariableEdit>(&base.variables, &other.variables),
-            accidentals: rows_between::<En1990AccidentalEdit>(&base.accidentals, &other.accidentals),
-            seismics: rows_between::<En1990SeismicEdit>(&base.seismics, &other.seismics),
-            members: rows_between::<En1990MemberEdit>(&base.members, &other.members),
-            bridge_sls: rows_between::<En1990BridgeSlsEdit>(&base.bridge_sls, &other.bridge_sls),
+            k_fi_declared: (base.k_fi_declared != other.k_fi_declared).then_some(other.k_fi_declared),
+            beta_computed: (base.beta_computed != other.beta_computed).then_some(other.beta_computed),
+            permanents: En1990PermanentDelta::between(&base.permanents, &other.permanents),
+            variables: En1990VariableDelta::between(&base.variables, &other.variables),
+            accidentals: En1990AccidentalDelta::between(&base.accidentals, &other.accidentals),
+            seismics: En1990SeismicDelta::between(&base.seismics, &other.seismics),
+            members: En1990MemberDelta::between(&base.members, &other.members),
+            bridge_sls: En1990BridgeSlsDelta::between(&base.bridge_sls, &other.bridge_sls),
             effects: rows_between::<En1990EffectEdit>(&base.effects, &other.effects),
         }
     }
 
     fn is_empty(&self) -> bool {
-        self.annex.is_none() && self.project_id.is_none() && self.structure_kind.is_none() && self.altitude_m.is_none() && self.consequence_class.is_none() && self.reliability_class.is_none() && self.design_working_life_category.is_none() && self.design_working_life_years.is_none() && self.reference_period_years.is_none() && self.supervision_level.is_none() && self.inspection_level.is_none() && self.k_fi_declared.is_none() && self.beta_computed.is_none() && self.permanents.is_empty() && self.variables.is_empty() && self.accidentals.is_empty() && self.seismics.is_empty() && self.members.is_empty() && self.bridge_sls.is_empty() && self.effects.is_empty()
+        self.annex.is_none()
+            && self.project_id.is_none()
+            && self.structure_kind.is_none()
+            && self.altitude_m.is_none()
+            && self.consequence_class.is_none()
+            && self.reliability_class.is_none()
+            && self.design_working_life_category.is_none()
+            && self.design_working_life_years.is_none()
+            && self.reference_period_years.is_none()
+            && self.supervision_level.is_none()
+            && self.inspection_level.is_none()
+            && self.k_fi_declared.is_none()
+            && self.beta_computed.is_none()
+            && self.permanents.is_empty()
+            && self.variables.is_empty()
+            && self.accidentals.is_empty()
+            && self.seismics.is_empty()
+            && self.members.is_empty()
+            && self.bridge_sls.is_empty()
+            && self.effects.is_empty()
     }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

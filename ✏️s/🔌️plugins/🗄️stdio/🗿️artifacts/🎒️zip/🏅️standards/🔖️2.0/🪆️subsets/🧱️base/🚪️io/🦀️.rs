@@ -4,7 +4,7 @@
 pub mod derived_composition {
     use crate::standards::v2_0::subsets::base::io::ZipAnalyzer;
     use crate::ZipSnapshot;
-    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
     const DEP_BINARY: Dialect = Dialect { artifact_kind: "s.stdio.binary", standard: StandardId("raw"), subset: SubsetId("*") };
@@ -1089,7 +1089,7 @@ pub fn decode_document_archive<S: store::ArtifactDsl>(bytes: &[u8]) -> Result<S,
 
 //#region Sniff
 /// 🎚️ Byte-level sniff confidence — kept local to the codec (no framework dependency here);
-/// the analyzer maps this onto `IoConfidence` at the layer that owns that type.
+/// the analyzer maps this onto `semio_framework_plugin::io::Confidence` at the layer that owns that type.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SniffConfidence {
     High,
@@ -1134,7 +1134,7 @@ mod codec_tests;
 pub mod io_registry {
     use crate::standards::v2_0::subsets::base::io::ZipComposer as ZipRawAnyComposer;
     use crate::standards::v2_0::subsets::iso21320::io::ZipIso21320Composer;
-    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -1189,7 +1189,7 @@ pub mod derived_construction {
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <ZipDiff as protocol::MutationDiff<ZipSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
@@ -1242,7 +1242,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::ZipSnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.zip` parts.
@@ -1260,7 +1260,7 @@ pub mod derived_analysis {
         type Parts = ZipParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             // 🕵️ Real sniff: inspects the argument's bytes (magic + a well-formed EOCD), never a
             // constant. `AnalyzeSource::Text` is the hex-envelope DSL form, not raw container bytes,
             // so it can't be magic-sniffed the same way — treated as low confidence here (the DSL
@@ -1268,24 +1268,24 @@ pub mod derived_analysis {
             use crate::standards::v2_0::subsets::base::io::{sniff_zip_bytes, SniffConfidence};
             match source {
                 AnalyzeSource::Binary(bytes) => match sniff_zip_bytes(bytes) {
-                    SniffConfidence::High => IoConfidence::High,
-                    SniffConfidence::Medium => IoConfidence::Medium,
-                    SniffConfidence::Low => IoConfidence::Low,
+                    SniffConfidence::High => semio_framework_plugin::io::Confidence::High,
+                    SniffConfidence::Medium => semio_framework_plugin::io::Confidence::Medium,
+                    SniffConfidence::Low => semio_framework_plugin::io::Confidence::Low,
                 },
-                AnalyzeSource::Text(_) => IoConfidence::Low,
+                AnalyzeSource::Text(_) => semio_framework_plugin::io::Confidence::Low,
             }
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = ZipParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
+            let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <ZipSnapshot as store::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
@@ -1298,7 +1298,7 @@ pub mod derived_analysis {
                         match result {
                             Ok(snapshot) => parts.snapshot = Some(snapshot),
                             Err(err) => {
-                                confidence = IoConfidence::Low;
+                                confidence = semio_framework_plugin::io::Confidence::Low;
                                 diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err));
                             }
                         }

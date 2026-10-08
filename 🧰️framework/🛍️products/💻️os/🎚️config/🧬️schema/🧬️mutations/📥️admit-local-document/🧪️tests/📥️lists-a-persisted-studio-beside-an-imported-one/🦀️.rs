@@ -86,3 +86,9 @@ fn produces_and_applies_the_committed_diff() {
     let decoded: LocalCatalogDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert_eq!(protocol::apply_diff(&decoded, &before()).expect("committed diff applies"), expected_after());
 }
+
+/// ➕️ The concrete inverse's diffs sum to the negative of the forward diff (L3).
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+}

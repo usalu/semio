@@ -3,42 +3,9 @@
 //! The category files beside this module are the single source for the palette, inspector controls, history labels,
 //! accessible names and validation of every geometry widget; the meta-schema in `🔣️.json` describes their shape.
 
-use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_value::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
-use std::sync::OnceLock;
-
-/// 📚️ Every bundled category file with its slug, in the order of the folder listing.
-pub const CATEGORY_SOURCES: [(&str, &str); 27] = [
-    ("brep-primitive", include_str!("🔣️brep-primitive.json")),
-    ("brep-curve", include_str!("🔣️brep-curve.json")),
-    ("brep-surface", include_str!("🔣️brep-surface.json")),
-    ("brep-solid", include_str!("🔣️brep-solid.json")),
-    ("brep-boolean", include_str!("🔣️brep-boolean.json")),
-    ("brep-feature", include_str!("🔣️brep-feature.json")),
-    ("brep-transform", include_str!("🔣️brep-transform.json")),
-    ("brep-intersect", include_str!("🔣️brep-intersect.json")),
-    ("brep-evaluate", include_str!("🔣️brep-evaluate.json")),
-    ("brep-topology", include_str!("🔣️brep-topology.json")),
-    ("brep-interchange", include_str!("🔣️brep-interchange.json")),
-    ("mesh-primitive", include_str!("🔣️mesh-primitive.json")),
-    ("mesh-convert", include_str!("🔣️mesh-convert.json")),
-    ("mesh-transform", include_str!("🔣️mesh-transform.json")),
-    ("mesh-component", include_str!("🔣️mesh-component.json")),
-    ("mesh-edit", include_str!("🔣️mesh-edit.json")),
-    ("mesh-repair", include_str!("🔣️mesh-repair.json")),
-    ("mesh-inspect", include_str!("🔣️mesh-inspect.json")),
-    ("mesh-interchange", include_str!("🔣️mesh-interchange.json")),
-    ("mesh-shading", include_str!("🔣️mesh-shading.json")),
-    ("mesh-uv", include_str!("🔣️mesh-uv.json")),
-    ("analysis-measure", include_str!("🔣️analysis-measure.json")),
-    ("analysis-check", include_str!("🔣️analysis-check.json")),
-    ("math-values", include_str!("🔣️math-values.json")),
-    ("math-arithmetic", include_str!("🔣️math-arithmetic.json")),
-    ("math-vector", include_str!("🔣️math-vector.json")),
-    ("math-list", include_str!("🔣️math-list.json")),
-];
 
 fn is_false(value: &bool) -> bool {
     !*value
@@ -308,13 +275,8 @@ pub struct Catalogue {
 }
 
 impl Catalogue {
-    /// 🏗️ Parses category sources and indexes their kinds; a duplicate kind id is refused.
-    pub fn parse<'a>(sources: impl IntoIterator<Item = (&'a str, &'a str)>) -> Result<Self, CatalogueError> {
-        let mut categories = Vec::new();
-        for (slug, text) in sources {
-            let file: CategoryFile = from_json_str(text, JsonMemberPolicy::Reject).map_err(|error| CatalogueError { source: slug.to_string(), message: error.to_string() })?;
-            categories.push((slug, file));
-        }
+    /// 🏗️ Assembles admitted category definitions and refuses duplicate kind identities.
+    pub fn from_categories(mut categories: Vec<(String, CategoryFile)>) -> Result<Self, CatalogueError> {
         categories.sort_by(|left, right| left.1.category.order.cmp(&right.1.category.order).then_with(|| left.1.category.id.cmp(&right.1.category.id)));
         let mut index = BTreeMap::new();
         for (category_index, (slug, file)) in categories.iter().enumerate() {
@@ -325,11 +287,6 @@ impl Catalogue {
             }
         }
         Ok(Self { categories: categories.into_iter().map(|(_, file)| file).collect(), index })
-    }
-
-    /// 📦️ The catalogue bundled into this crate.
-    pub fn bundled() -> Result<Self, CatalogueError> {
-        Self::parse(CATEGORY_SOURCES)
     }
 
     /// 🗂️ The category files in palette order.
@@ -357,12 +314,6 @@ impl Catalogue {
         let kind = self.kind(id)?;
         kind.input(name).or_else(|| kind.output(name))
     }
-}
-
-/// 📦️ The process-wide bundled catalogue, parsed once; the catalogue tests prove the bundle parses.
-pub fn catalogue() -> &'static Catalogue {
-    static BUNDLED: OnceLock<Catalogue> = OnceLock::new();
-    BUNDLED.get_or_init(|| Catalogue::bundled().expect("the bundled geometry catalogue is validated by its tests"))
 }
 
 //#region 🔖️Findings
@@ -683,6 +634,3 @@ impl Catalogue {
 }
 //#endregion 🔖️Findings
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

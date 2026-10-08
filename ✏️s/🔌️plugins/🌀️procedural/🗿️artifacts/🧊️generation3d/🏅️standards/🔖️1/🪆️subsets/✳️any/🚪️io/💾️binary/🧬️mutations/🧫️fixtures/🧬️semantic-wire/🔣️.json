@@ -206,6 +206,46 @@
       "source": "🎛️change-widget-input",
       "mutation": {
         "mutation": "changeWidgetInput",
+        "id": "section",
+        "channel": "plane",
+        "type": "plane",
+        "value": {
+          "origin": [
+            0,
+            0,
+            1.5
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "expected": {
+        "input": {
+          "$schema": "plane",
+          "origin": {
+            "$schema": "point",
+            "x": 0,
+            "y": 0,
+            "z": 1.5
+          },
+          "normal": {
+            "$schema": "vector",
+            "x": 0,
+            "y": 0,
+            "z": 1
+          }
+        }
+      }
+    },
+    {
+      "keyword": "change-widget-input",
+      "tag": 19,
+      "source": "🎛️change-widget-input",
+      "mutation": {
+        "mutation": "changeWidgetInput",
         "id": "shape",
         "channel": "items",
         "type": "numberList",

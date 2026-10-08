@@ -10,12 +10,12 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn sniff_reports_high_for_real_payloads_low_for_garbage() {
         let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&sample());
-        assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::High);
-        assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a presentation")), IoConfidence::Low);
+        assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), semio_framework_plugin::io::Confidence::High);
+        assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a presentation")), semio_framework_plugin::io::Confidence::Low);
 
         let text = <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(&sample());
-        assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Text(&text)), IoConfidence::High);
-        assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Text("garbage")), IoConfidence::Low);
+        assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Text(&text)), semio_framework_plugin::io::Confidence::High);
+        assert_eq!(SemioPresentationAnalyzerAnalysis::sniff(&AnalyzeSource::Text("garbage")), semio_framework_plugin::io::Confidence::Low);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -23,7 +23,7 @@ mod tests {
         let snap = sample();
         let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let analysis = SemioPresentationAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&bytes)]);
-        assert_eq!(analysis.confidence, IoConfidence::High);
+        assert_eq!(analysis.confidence, semio_framework_plugin::io::Confidence::High);
         assert_eq!(analysis.parts.snapshot, Some(snap.clone()));
 
         let text = <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(&snap);
@@ -34,7 +34,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn analyze_flags_low_confidence_on_undecodable_source() {
         let analysis = SemioPresentationAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(b"garbage")]);
-        assert_eq!(analysis.confidence, IoConfidence::Low);
+        assert_eq!(analysis.confidence, semio_framework_plugin::io::Confidence::Low);
         assert!(!analysis.diagnostics.is_empty());
     }
 }

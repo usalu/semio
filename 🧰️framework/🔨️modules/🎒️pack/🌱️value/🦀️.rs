@@ -824,6 +824,7 @@ enum Expect {
 
 pub struct RetainedValueCursor {
     limits: PackLimits,
+    intrinsic_field: bool,
     stack: std::mem::ManuallyDrop<Vec<Expect>>,
     maximum_frames: usize,
     maximum_allocation_bytes: usize,
@@ -869,6 +870,7 @@ impl RetainedValueCursor {
         }
         Ok(Self {
             limits,
+            intrinsic_field:false,
             stack: std::mem::ManuallyDrop::new(Vec::new()),
             maximum_frames,
             maximum_allocation_bytes,
@@ -880,6 +882,11 @@ impl RetainedValueCursor {
             fault: None,
             closed: false,
         })
+    }
+
+    /// 🎞️ Counts intrinsic value depth from its declared Value field rather than physical framing.
+    pub fn try_new_intrinsic(limits:PackLimits,maximum_allocation_bytes:usize)->Result<Self,PackRefusal>{
+        let mut cursor=Self::try_new(limits,maximum_allocation_bytes)?;cursor.intrinsic_field=true;Ok(cursor)
     }
 
     fn stack_allocation_bytes(&self) -> usize {
@@ -1126,7 +1133,7 @@ impl RetainedValueCursor {
         if depth > self.limits.max_depth {
             return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::DepthLimit,limit:"retained value depth"});
         }
-        if context == RetainedContext::Dsl && !matches!(tag, TAG_FALSE | TAG_TRUE | TAG_INT | TAG_UINT | TAG_F64 | TAG_STR | TAG_STR_INLINE | TAG_LIST | TAG_MAP | TAG_NULL) {
+        if context == RetainedContext::Dsl && !matches!(tag, TAG_FALSE | TAG_TRUE | TAG_INT | TAG_UINT | TAG_F64 | TAG_STR | TAG_STR_INLINE | TAG_BYTES | TAG_BYTES_CHUNKED | TAG_LIST | TAG_MAP | TAG_NULL) {
             return Err(PackRefusal::RetainedMalformed { kind: ValueRefusalKind::InvalidValue, what: "dsl-value", offset, detail: "field-only tag" });
         }
         if context == RetainedContext::Field && tag == TAG_NULL {
@@ -1147,7 +1154,7 @@ impl RetainedValueCursor {
             TAG_BLOCK => self.push(Expect::Value(depth + 1, context))?,
             TAG_STATEMENTS => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Statements(depth)))?,
             TAG_MAP => self.push(Expect::Varint(RetainedVarint::default(), AfterVarint::Map(depth, context)))?,
-            TAG_VALUE => self.push(Expect::Value(depth + 1, RetainedContext::Dsl))?,
+            TAG_VALUE => self.push(Expect::Value(if self.intrinsic_field&&depth==1{0}else{depth+1}, RetainedContext::Dsl))?,
             TAG_WIRE => {
                 self.push(Expect::End(RetainedValueContainer::Wire))?;
                 self.push(Expect::Wire(depth))?;
@@ -1391,6 +1398,9 @@ impl RetainedValueCursor {
         !self.closed && !self.closing && self.fault.is_none() && !self.sealed && self.initialized_roots == 2 && !self.stack.is_empty() && self.pending.is_none()
     }
 
+    /// 📏️ Reports validated bytes independently of admitted pending ingress.
+    pub fn consumed_bytes(&self)->u64{self.offset}
+
     pub fn progress(&self) -> RetainedValueProgress {
         RetainedValueProgress {
             frames: self.stack.len(),
@@ -1444,6 +1454,7 @@ enum RetainedRecordBodyClosePhase {
 /// schema-erased record.
 pub struct RetainedRecordBodyCursor {
     limits: PackLimits,
+    intrinsic_field: bool,
     phase: RetainedRecordBodyPhase,
     symbols: std::mem::ManuallyDrop<crate::format::RetainedPackSymbolTable>,
     maximum_allocation_bytes: usize,
@@ -1496,6 +1507,7 @@ impl RetainedRecordBodyCursor {
         if maximum_allocation_bytes == 0 || maximum_allocation_bytes > isize::MAX as usize { return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::OwnershipLimit, limit: "retained record-body physical credits" }); }
         Ok(Self {
             limits,
+            intrinsic_field:false,
             phase: RetainedRecordBodyPhase::SymbolCount(RetainedVarint::default()),
             symbols: std::mem::ManuallyDrop::new(
                 crate::format::RetainedPackSymbolTable::try_new(maximum_symbols, maximum_symbol_utf8_bytes, maximum_symbol_scalars, maximum_allocation_bytes)
@@ -1515,6 +1527,11 @@ impl RetainedRecordBodyCursor {
             closing: false,
             close_phase: RetainedRecordBodyClosePhase::ValueLogical,
         })
+    }
+
+    /// 🎞️ Validates intrinsic logical depth independently from the single-field Body envelope.
+    pub fn try_new_intrinsic(limits:PackLimits,maximum_symbols:usize,maximum_symbol_utf8_bytes:usize,maximum_symbol_scalars:usize,maximum_allocation_bytes:usize)->Result<Self,PackRefusal>{
+        let mut cursor=Self::try_new(limits,maximum_symbols,maximum_symbol_utf8_bytes,maximum_symbol_scalars,maximum_allocation_bytes)?;cursor.intrinsic_field=true;Ok(cursor)
     }
 
     pub fn admit_byte(&mut self, offset: u64, value: u8) -> Result<(), (u64, u8)> {
@@ -1679,12 +1696,23 @@ impl RetainedRecordBodyCursor {
         self.symbols.symbol_chars(symbol).map_err(|fault| fault.into_pack_refusal("retained-record-body-symbol"))
     }
 
+    /// 🧮️ Borrows the validated exact UTF-8 size before any symbol copy is allocated.
+    pub fn symbol_utf8_bytes(&self, symbol:u64)->Result<usize,PackRefusal>{
+        let span=self.symbols.symbol_span(symbol).map_err(|fault|fault.into_pack_refusal("retained-record-body-symbol"))?;
+        usize::try_from(span.utf8_len).map_err(|_|PackRefusal::LimitExceeded{kind:ValueRefusalKind::OwnershipLimit,limit:"retained symbol UTF-8 size"})
+    }
+
+    /// 📍️ Counts consumed wire bytes without counting any still-pending ingress byte.
+    pub fn consumed_bytes(&self)->u64{
+        self.offset-self.value_offset+self.value.as_ref().map_or(0,|value|value.offset)
+    }
+
     pub fn symbol_char(&self, symbol: u64, index: usize) -> Result<Option<char>, PackRefusal> {
         self.symbols.symbol_char(symbol, index).map_err(|fault| fault.into_pack_refusal("retained-record-body-symbol"))
     }
 
     fn begin_value(&mut self) -> Result<(), PackRefusal> {
-        *self.value = Some(RetainedValueCursor::try_new(self.limits.clone(), self.maximum_allocation_bytes)?);
+        *self.value = Some(if self.intrinsic_field{RetainedValueCursor::try_new_intrinsic(self.limits.clone(),self.maximum_allocation_bytes)?}else{RetainedValueCursor::try_new(self.limits.clone(), self.maximum_allocation_bytes)?});
         self.phase = RetainedRecordBodyPhase::Value;
         Ok(())
     }

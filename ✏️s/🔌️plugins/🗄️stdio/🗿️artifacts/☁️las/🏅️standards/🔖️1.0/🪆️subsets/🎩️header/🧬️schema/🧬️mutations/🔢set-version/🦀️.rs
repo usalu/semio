@@ -1,7 +1,4 @@
-//! 🔢️ `set-version` — its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 🔢️ `set-version` — its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 //!
 //! 🔢️ Sets the LAS point format major/minor version.
 use super::*;
@@ -19,14 +16,12 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetVersion {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "version", kind: "set-version", record: "SetVersion" };
 
     fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
-        agg_diff(&LasMutation::SetVersion(self.clone()), base)
+        let Self { major, minor } = self;
+        protocol::MutationOutcome::new(diff::diff_set_version(*major, *minor))
     }
     fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&LasMutation::SetVersion(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![LasMutation::SetVersion(set_version::SetVersion { major: base.header.version_major, minor: base.header.version_minor })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set version", "Version setzen")
     }

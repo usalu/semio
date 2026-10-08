@@ -1,6 +1,4 @@
-//! 🔢️ `remove-alternate-content` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🔢️ `remove-alternate-content` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -14,15 +12,14 @@ pub struct RemoveAlternateContent {
 impl protocol::MutationKind<PptxSnapshot, PptxStrictMutation> for RemoveAlternateContent {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "alternate-content", kind: "remove-alternate-content", record: "RemoveAlternateContent" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxStrictMutation as Mutation<PptxSnapshot>>::Diff> {
-        agg_diff(&PptxStrictMutation::RemoveAlternateContent(self.clone()), base)
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
+        protocol::MutationOutcome::new(diff_strip_alternate_content(base, &self.path))
     }
+
     fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxStrictMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&PptxStrictMutation::RemoveAlternateContent(self.clone()), base)?
-    
-    })
-}
+        Ok(if xml_part(base, &self.path).is_some() { vec![PptxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: self.path.clone() })] } else { Vec::new() })
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove alternate content", "Alternativen Inhalt entfernen")
     }

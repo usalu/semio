@@ -1,0 +1,220 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/neural/engine/schema.json",
+  "title": "Neural Dictionary and Declared Fields",
+  "$defs": {
+    "Value": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Value"
+          }
+        }
+      ]
+    },
+    "Cardinality": {
+      "type": "string",
+      "pattern": "^(!|\\?|\\*|\\+|[0-9]+)$"
+    },
+    "FieldSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/type/schema.json"
+        },
+        "default": {
+          "$ref": "#/$defs/Value"
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+    "Schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "module",
+        "name",
+        "icon",
+        "summary",
+        "fields"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "module": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FieldSpec"
+          }
+        }
+      }
+    },
+    "ChannelSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "abbreviation",
+        "name",
+        "fullName"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "abbreviation": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        },
+        "operators": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "valueTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "itemTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "default": {
+          "$ref": "#/$defs/Value"
+        },
+        "label": {
+          "type": "string"
+        },
+        "cardinality": {
+          "$ref": "#/$defs/Cardinality"
+        }
+      }
+    },
+    "VariadicSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slotKey",
+        "min"
+      ],
+      "properties": {
+        "slotKey": {
+          "type": "string"
+        },
+        "min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "OperatorInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "extension",
+        "name",
+        "abbreviation",
+        "icon",
+        "summary",
+        "inputs",
+        "outputs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "extension": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "abbreviation": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChannelSpec"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChannelSpec"
+          }
+        },
+        "variadicInput": {
+          "$ref": "#/$defs/VariadicSpec"
+        },
+        "variadicOutput": {
+          "$ref": "#/$defs/VariadicSpec"
+        },
+        "group": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

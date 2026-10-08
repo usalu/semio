@@ -482,7 +482,7 @@ import {
   windowMeasureChromeStatus,
 } from "@semio-tech/framework";
 import { createRoot } from "react-dom/client";
-import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-canvas-react-renderer";
+import { type WasmCanvasSession, WasmCanvas, type CanvasInputModifiers } from "@semio-tech/canvas-react-renderer";
 import {
   FRAMEWORK_SYNC_CONTROLLER_ID,
   buildFileBackboneUri,
@@ -871,7 +871,7 @@ export type { PluginRegistryEntry };
 //#endregion 🔖️plugin-runtime
 
 //#region 🔖️wasm-session-loader
-import { createDemandFrameScheduler } from "@semio-tech/infinite-canvas-react-renderer";
+import { createDemandFrameScheduler } from "@semio-tech/canvas-react-renderer";
 import {
   createGraphSession,
   type FlowWasmSession,

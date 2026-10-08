@@ -18,7 +18,10 @@ pub fn diff(payload: &super::CreateShadingSurface, base: &EnergyModelSnapshot) -
     if payload.transmittance_schedule_id.is_some_and(|schedule| !base.model.schedules.contains(schedule)) {
         return protocol::MutationOutcome::error("mutation.target-missing", "The named transmittance schedule is not defined by this model.", [payload.id.0.to_string()]);
     }
-    let position = base.model.shading_surfaces.iter().position(|item| item.id > payload.id).unwrap_or(base.model.shading_surfaces.len());
+    let position = payload.index.map_or_else(|| base.model.shading_surfaces.iter().position(|item| item.id > payload.id).unwrap_or(base.model.shading_surfaces.len()), |index| index as usize);
+    if position > base.model.shading_surfaces.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} shading_surfaces.", position, base.model.shading_surfaces.len()), [payload.id.0.to_string()]);
+    }
     protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { shading_surfaces: Rows::inserting(position, crate::model::ShadingSurface { id: payload.id, name: payload.name.clone(), vertices_m: payload.vertices_m.clone(), transmittance_schedule_id: payload.transmittance_schedule_id }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

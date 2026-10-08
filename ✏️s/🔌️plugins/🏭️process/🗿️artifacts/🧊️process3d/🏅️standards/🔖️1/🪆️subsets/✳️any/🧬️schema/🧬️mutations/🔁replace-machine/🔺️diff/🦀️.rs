@@ -2,8 +2,8 @@
 //! built directly from `base` + payload, never a snapshot clone. Error `target-missing` when the
 //! machine is absent, Warning `no-op` when the capability list is unchanged.
 
-use crate::diff::Process3dDiff;
-use crate::{Process3dSnapshot, Workshop};
+use crate::diff::{Process3dDiff, Process3dMachinePatch, Process3dMachinesDelta};
+use crate::Process3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ReplaceMachineCapabilities, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
@@ -13,10 +13,6 @@ pub fn diff(payload: &super::ReplaceMachineCapabilities, base: &Process3dSnapsho
     if existing.capabilities == payload.new_capabilities {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Machine \"{}\" capabilities are unchanged.", payload.id));
     }
-    let mut machines = base.workshop.machines.clone();
-    if let Some(machine) = machines.iter_mut().find(|machine| machine.id == payload.id) {
-        machine.capabilities = payload.new_capabilities.clone();
-    }
-    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Workshop { machines }), ..Default::default() })
+    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Process3dMachinesDelta { patched: vec![Process3dMachinePatch { id: payload.id.clone(), capabilities: Some(payload.new_capabilities.clone()), ..Default::default() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

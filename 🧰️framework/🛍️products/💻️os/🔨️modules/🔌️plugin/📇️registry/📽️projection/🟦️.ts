@@ -261,12 +261,6 @@ pub const PLUGIN_ARTIFACT_KIND_ACTIVATIONS: &[(&str, &str)] = &[
 ${artifactKindRows}
 ];
 
-/// 🎬️ The plugin an artifact kind activates, resolved from declared activation events alone — no
-/// manifest, no loaded module. The wgpu shell's opening relay calls this when the kind's owner is not
-/// resident yet, exactly where the React shell calls \`artifactKindActivationOwner\`.
-pub fn resolve_artifact_kind_activation_owner(artifact_kind: &str) -> Option<&'static str> {
-    PLUGIN_ARTIFACT_KIND_ACTIVATIONS.iter().find_map(|(kind, plugin_id)| (*kind == artifact_kind).then_some(*plugin_id))
-}
 `;
 }
 

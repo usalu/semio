@@ -11,10 +11,10 @@ mod tests {
     async fn sniff_detects_own_binary_and_text_payloads() {
         let snap = rich_snapshot();
         let bytes = store::ArtifactPack::encode_pack(&snap);
-        assert_eq!(SemioDocumentAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), IoConfidence::High);
+        assert_eq!(SemioDocumentAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(&bytes)), semio_framework_plugin::io::Confidence::High);
         let text = <SemioDocumentSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-        assert_eq!(SemioDocumentAnalyzerAnalysis::sniff(&AnalyzeSource::Text(&text)), IoConfidence::High);
-        assert_eq!(SemioDocumentAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a semio document at all")), IoConfidence::Low);
+        assert_eq!(SemioDocumentAnalyzerAnalysis::sniff(&AnalyzeSource::Text(&text)), semio_framework_plugin::io::Confidence::High);
+        assert_eq!(SemioDocumentAnalyzerAnalysis::sniff(&AnalyzeSource::Binary(b"not a semio document at all")), semio_framework_plugin::io::Confidence::Low);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -22,14 +22,14 @@ mod tests {
         let snap = rich_snapshot();
         let bytes = store::ArtifactPack::encode_pack(&snap);
         let analysis = SemioDocumentAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&bytes)]);
-        assert_eq!(analysis.confidence, IoConfidence::High);
+        assert_eq!(analysis.confidence, semio_framework_plugin::io::Confidence::High);
         assert_eq!(analysis.parts.snapshot, Some(snap));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn analyze_reports_low_confidence_on_malformed_text() {
         let analysis = SemioDocumentAnalyzerAnalysis::analyze(&[AnalyzeSource::Text("not valid semio document dsl")]);
-        assert_eq!(analysis.confidence, IoConfidence::Low);
+        assert_eq!(analysis.confidence, semio_framework_plugin::io::Confidence::Low);
         assert!(!analysis.diagnostics.is_empty());
     }
 }

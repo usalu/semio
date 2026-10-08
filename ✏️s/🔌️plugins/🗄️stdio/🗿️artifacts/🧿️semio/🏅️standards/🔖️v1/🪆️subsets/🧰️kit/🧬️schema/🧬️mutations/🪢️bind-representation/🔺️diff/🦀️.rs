@@ -1,7 +1,8 @@
 //! 🔺️ Diff for `BindRepresentation`.
 
-use crate::standards::v1::subsets::kit::schema::diff::{SemioKitDiff, SemioKitLinkList};
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexedTripleDiff};
+use crate::standards::v1::subsets::kit::schema::diff::{SemioKitDiff};
+use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot};
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -13,8 +14,6 @@ pub fn diff(payload: &super::BindRepresentation, base: &SemioKitSnapshot) -> pro
     if base.representations.contains(&new_link) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Representation is already bound for \"{}\".", payload.role));
     }
-    let mut representations = base.representations.clone();
-    representations.push(new_link);
-    protocol::MutationOutcome::new(SemioKitDiff { representations: Some(SemioKitLinkList { values: representations }), ..Default::default() })
+    protocol::MutationOutcome::new(SemioKitDiff { representations: Some(IndexedTripleDiff { added: vec![IndexAdded { index: payload.at.map_or(base.representations.len(), |at| at.min(base.representations.len())), item: new_link }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

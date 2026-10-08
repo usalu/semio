@@ -31,7 +31,7 @@ fn mutation() -> SemioDrawingMutation {
 async fn removes_the_layer_at_z_order_zero() {
     let base = before();
     assert_eq!(base.layers.len(), 2, "the fixture needs a second layer for the z-order shift to be observable");
-    let produced = mutation().diff(&base).diff().apply(&base).expect("delete-layer applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-layer applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-layer/removes-the-leading-layer-and-keeps-the-overlay: applied state differs from the committed after-snapshot");
     assert!(!produced.layers.iter().any(|layer| layer.id == "l1"), "the named layer must be gone");
     assert_eq!(produced.layers, vec![base.layers[1].clone()], "the overlay slides down into z-order 0");
@@ -43,14 +43,15 @@ async fn removes_the_layer_at_z_order_zero() {
 async fn the_undo_create_layer_restores_the_layer_at_its_original_index() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "delete-layer of an existing layer undoes as exactly one create-layer");
     let SemioDrawingMutation::CreateLayer(recreate) = &undo[0] else { panic!("delete-layer must undo as create-layer") };
     assert_eq!(recreate.index, 0, "the undo must re-insert at the ORIGINAL z-order, not append");
     assert_eq!(recreate.layer, base.layers[0], "and must recapture the whole layer, node tree included");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-layer applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo create-layer applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-layer applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo create-layer applies");
     }
     assert_eq!(current, base, "delete-layer/removes-the-leading-layer-and-keeps-the-overlay: the undo did not restore the before-snapshot");
 }
@@ -107,6 +108,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-layer diff decodes");
-    let produced = decoded.apply(&before()).expect("committed delete-layer diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-layer diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-layer/removes-the-leading-layer-and-keeps-the-overlay: committed diff did not carry before to after");
 }

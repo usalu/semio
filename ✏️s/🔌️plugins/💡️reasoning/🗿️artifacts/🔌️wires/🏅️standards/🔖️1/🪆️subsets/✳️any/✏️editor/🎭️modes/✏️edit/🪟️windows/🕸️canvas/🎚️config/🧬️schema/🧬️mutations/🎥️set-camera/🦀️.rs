@@ -38,10 +38,10 @@ mod law_tests {
     use super::*;
 
     /// ⚖️ The inverse diffs sum to the negative of the forward diff (L3).
-    #[test]
-    fn inverse_diffs_sum_to_the_negative_diff() {
+    #[semio_framework_async_macros::async_test]
+    async fn inverse_diffs_sum_to_the_negative_diff() {
         let base = WiresCanvasWindowConfig::default();
-        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&WiresCanvasWindowConfigMutation::SetCamera(SetCamera { camera: WiresCanvasCamera { x: 4.0, y: -2.0, zoom: 2.0 } }), &base);
-        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&WiresCanvasWindowConfigMutation::SetCamera(SetCamera { camera: WiresCanvasCamera::default() }), &base);
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&WiresCanvasWindowConfigMutation::SetCamera(SetCamera { camera: WiresCanvasCamera { x: 4.0, y: -2.0, zoom: 2.0 } }), &base).await;
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&WiresCanvasWindowConfigMutation::SetCamera(SetCamera { camera: WiresCanvasCamera::default() }), &base).await;
     }
 }

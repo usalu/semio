@@ -9,11 +9,10 @@ field format u8
 field tag u8
 record change-gamma tag=5
 field payload bytes
-record set-snapshot tag=17
-field payload bytes
 record patch-pixels tag=18
 field payload bytes
-record patch-snapshot tag=19
-field payload bytes
 record paint-native-samples tag=20
+field payload bytes
+
+record replace-image tag=12
 field payload bytes

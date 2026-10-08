@@ -1,8 +1,9 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
-  "title": "Field Notes v2",
+  "title": {
+    "value": "Field Notes v2"
+  },
   "blocks": null,
   "gridVisible": null,
   "gridSpacing": null,

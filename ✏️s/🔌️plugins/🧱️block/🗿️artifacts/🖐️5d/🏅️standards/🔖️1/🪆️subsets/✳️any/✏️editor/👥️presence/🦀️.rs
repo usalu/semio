@@ -1,6 +1,5 @@
 //! 👥️ Block5dPresence — shareable live ephemeral state + mutations.
 
-use protocol::Mutation;
 
 use store::ArtifactPack;
 
@@ -17,15 +16,6 @@ use store::ArtifactPack;
 #[artifact(extension = "block5d.presence")]
 #[dsl(layout = "lines")]
 pub struct Block5dPresence {}
-
-impl protocol::MutationDiff<Block5dPresence> for Block5dPresence {
-    fn apply(&self, _base: &Block5dPresence) -> protocol::MutationApplyResult<Block5dPresence> {
-        Ok(self.clone())
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
-    }
-}
 
 impl store::ArtifactDsl for Block5dPresence {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
@@ -74,82 +64,65 @@ impl ArtifactPack for Block5dPresence {
 //#endregion 🔖️Presence
 
 //#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-pub enum Block5dPresenceMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        presence: Block5dPresence,
-    },
+/// 🔺️ The diff of an empty presence: there is nothing to change.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Block5dPresenceDiff {}
+
+impl protocol::DiffAlgebra<Block5dPresence> for Block5dPresenceDiff {
+    fn inverse(&self, _base: &Block5dPresence) -> Self {
+        Self {}
+    }
+    fn between(_base: &Block5dPresence, _other: &Block5dPresence) -> Self {
+        Self {}
+    }
+    fn is_empty(&self) -> bool {
+        true
+    }
 }
 
-impl Mutation<Block5dPresence> for Block5dPresenceMutation {
-    type Diff = Block5dPresence;
+impl protocol::MutationDiff<Block5dPresence> for Block5dPresenceDiff {
+    fn apply(&self, base: &Block5dPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Block5dPresence> {
+        Ok(base.clone())
+    }
+    fn absorb(&mut self, _other: Self) {}
+}
 
-    /// 🧷️ Hand-written (not `#[derive(dsl::Mutations)]`: this enum derives `dsl::DslOps`, which
-    /// supplies `DslVariants` for the text/binary op codecs, not `protocol::Mutation`). ⚠️
-    /// PROVISIONAL: the `owner` path names a directory that does not exist on disk — this enum has
-    /// no `🧬️mutations/<slug>` leaf triad of its own, so the entry is a metadata placeholder to
-    /// satisfy `protocol::Mutation`, matching puzzle5d's presence precedent.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-    ];
+/// 🧮️ An empty presence has no mutation: the enum is uninhabited, so no diff can be raised against it.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+pub enum Block5dPresenceMutation {}
+
+impl protocol::Mutation<Block5dPresence> for Block5dPresenceMutation {
+    type Diff = Block5dPresenceDiff;
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
-        match self {
-            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
-        }
+        match *self {}
     }
 
-    fn diff(&self, _base: &Block5dPresence) -> protocol::MutationOutcome<Block5dPresence> {
-        protocol::MutationOutcome::new(match self {
-            Self::Snapshot { presence } => presence.clone(),
-        })
+    fn diff(&self, _base: &Block5dPresence) -> protocol::MutationOutcome<Block5dPresenceDiff> {
+        match *self {}
     }
 
-    fn inverse(&self, base: &Block5dPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { presence: base.clone() }]
-    
-    })())
-}
+    fn inverse(&self, _base: &Block5dPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+        match *self {}
+    }
 }
 
 impl protocol::OpText for Block5dPresenceMutation {
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{keyword} ");
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                let record = semio_framework_dsl_record::parse(body, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
-                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
+    fn parse_op(_line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "no presence mutations exist", semio_framework_diagnostic::TextSpan::at(1, 1)))
     }
     fn print_op(&self) -> String {
-        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
-        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        let body = semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline);
-        if body.is_empty() {
-            keyword
-        } else {
-            format!("{keyword} {body}")
-        }
+        match *self {}
     }
 }
 
 impl protocol::OpBinary for Block5dPresenceMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
+        match *self {}
     }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        Err(protocol::ProtocolError::Malformed { what: "no-presence-mutation", offset: 0, detail: "no presence mutations exist".into() })
     }
 }
-//#endregion 🔖️PresenceMutation

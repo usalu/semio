@@ -42,7 +42,7 @@ fn wire_host(law: &Value) -> DagHost {
         })
         .collect();
     let viewport = &graph["viewport"];
-    let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot { schema: "dag.host_snapshot".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges: vec![] });
+    let mut host = DagHost::from_host_snapshot_without_layout(DagHostSnapshot { schema: "dag.hostDocument".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes, edges: vec![] });
     host.set_viewport(viewport["width"].as_u64().expect("viewport width") as u32, viewport["height"].as_u64().expect("viewport height") as u32, viewport["dpr"].as_f64().expect("viewport dpr"));
     host
 }

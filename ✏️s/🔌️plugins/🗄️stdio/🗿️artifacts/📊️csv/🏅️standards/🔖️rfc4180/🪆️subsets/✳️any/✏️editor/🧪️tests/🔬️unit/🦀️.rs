@@ -296,10 +296,11 @@ fn structural_command_codecs_roundtrip_unicode_and_empty_headers() {
 #[test]
 fn blank_csv_can_build_edit_and_remove_a_table_through_structural_mutations() {
     fn apply(snapshot: &mut CsvSnapshot, command: CsvEditorCommand) {
-        let mut emitted = csv_emit(&command, snapshot).expect("structural edit");
-        assert_eq!(emitted.artifact_mutations.len(), 1);
-        let mutation = emitted.artifact_mutations.pop().expect("one mutation");
-        crate::schema::mutations::apply_csv_mutation(snapshot, &mutation);
+        let emitted = csv_emit(&command, snapshot).expect("structural edit");
+        assert!(!emitted.artifact_mutations.is_empty());
+        for mutation in &emitted.artifact_mutations {
+            crate::schema::mutations::apply_csv_mutation(snapshot, mutation);
+        }
     }
     let mut snapshot = CsvSnapshot::default();
     let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);
@@ -333,8 +334,7 @@ fn natural_file_route_exports_edited_csv_bytes_and_reopens_them() {
     assert!(records.iter().any(|record| record.iter().any(|field| field == "Natural Open Save")));
     let reopened = <CsvEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("CSV natural bytes reopen");
     assert_eq!(reopened, edited);
-    let Some(CsvMutation::SetSnapshot(set)) = <CsvEditor as ArtifactEditor>::whole_document_operation(reopened) else { panic!("natural CSV opens through one event-sourced snapshot mutation") };
-    assert_eq!(set.snapshot.records[row].fields[0].value, "Natural Open Save");
+    assert_eq!(reopened.records[row].fields[0].value, "Natural Open Save");
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", CsvEditor, || semio_framework_plugin::App { definition: create_csv_editor(), examples: Vec::new() }, "../..");

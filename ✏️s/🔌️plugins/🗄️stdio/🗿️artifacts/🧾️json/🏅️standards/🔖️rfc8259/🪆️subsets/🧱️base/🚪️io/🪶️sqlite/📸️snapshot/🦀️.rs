@@ -46,7 +46,7 @@ impl ArtifactSqliteSnapshot for JsonSnapshot {
         Ok(semio_framework_os_kernel::io_schema::IoOutcome{value:(),diagnostics})
     }
 
-    fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+    fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
         crate::standards::v_rfc8259::subsets::base::io::binary::snapshot::owned_pack::decode(payload,control)
     }
 

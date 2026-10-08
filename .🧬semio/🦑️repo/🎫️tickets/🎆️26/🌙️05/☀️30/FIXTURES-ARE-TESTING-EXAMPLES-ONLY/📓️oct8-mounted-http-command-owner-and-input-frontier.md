@@ -1,0 +1,17 @@
+# Mounted HTTP Command Owner and Input Frontier
+
+The existing ticket 📜️script.ts owns the additive uncached mounted-runtime-http command, with matching project/live/seed launch wiring. It reserves a free loopback port then acquires the actual existing ensureDevServe owner for an actual generated playground variant/renderer/profile, rejects reuse, captures bounded response bytes, verifies MIME and independent SHA256 against actual staged-file claims before/after requests, probes explicit retired routes, and stops only its owned serve. It distinguishes these raw mounted artifacts from transformed Vite modules and physical release bundles. Progress/cancellation and output remain inside the ticket generated owner.
+
+The retained actual mount input must be populated after current production producer/publication evidence is handed off; no placeholder or empty roster is an admissible proof. No execution/HTTP success is claimed from this command registration. Actual expected native artifact receipts and selected activation still must be current. The input file is deliberately absent until genuine byte owners are available.
+
+Preimages: 📥️oct8-mounted-runtime-command-registration-source-input.json. The command does not create a server implementation, compile an independent runtime, substitute arbitrary actor asset GETs for protected selected-document requests, or hand-edit published bytes.
+
+Read-only review identified and closed two source seams: requests now forbid backslashes and require exact constructed serve origin; HTTP200 HTML on retired routes must match the captured entry SHA, so arbitrary HTML fixture assets do not count as SPA refusal. The proposed React-only WGPU limitation was withdrawn after independently following ensureDevServe’s explicit separate WGPU server branch. These are source-reviewed safeguards, not executed HTTP verdicts.
+
+The retained input may now select any actual current generated playground, allowing genuine CAD/Infinite asset positives alongside s rawJS/WASM. An optional exact contentType claim compares normalized response MIME; default native artifacts retain JS/WASM MIME checks. All positive rows still require original/current file SHA/length equality before/after actual HTTP and independent response hashes. Output/log names include the variant so separate actual contexts never overwrite each other. Preimage: 📥️oct8-mounted-runtime-asset-positive-source-input.json. Actual inputs and HTTP remain pending normal production.
+
+Positive expected-file claims now check both logical and real physical repository coordinates against the existing owned runtime fixture classifier, refusing collection paths and symlink aliases before reading bytes. This prevents positive asset verification from endorsing a fixture mount merely because expected bytes match. Actual owner inputs/fetches remain pending.
+
+The one retained actual input can contain a sequential context list, so current dev/release renderer and genuine asset variants retain separate owners/receipts without overwriting the requested input or launching overlapping servers. An empty list is refused. No context is yet populated or executed.
+
+Read-only cross-host review also closed different-drive positive-file containment: relative coordinates now refuse native absolute and explicit drive prefixes. Physical path identity is rechecked after fetch, and duplicate variant/renderer/profile contexts are refused to preserve separate receipt ownership. These are source safeguards pending actual execution.

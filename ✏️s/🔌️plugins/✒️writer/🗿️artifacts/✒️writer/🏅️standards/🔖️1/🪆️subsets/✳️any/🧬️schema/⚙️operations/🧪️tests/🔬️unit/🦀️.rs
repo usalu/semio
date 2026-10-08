@@ -43,12 +43,14 @@ async fn change_uri_and_change_language_obey_the_inverse_and_diff_absorb_laws() 
 
     let uri_mutation = WriterMutation::ChangeUri(ChangeUri { new_uri: "writer://b".into() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &uri_mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&uri_mutation, &base).await;
     let d1 = uri_mutation.diff(&base).diff().clone();
     let d2 = WriterMutation::ChangeUri(ChangeUri { new_uri: "writer://c".into() }).diff(&base).diff().clone();
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 
     let language_mutation = WriterMutation::ChangeLanguage(ChangeLanguage { new_language_id: "jack".into() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &language_mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&language_mutation, &base).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -60,6 +62,7 @@ async fn edit_text_obeys_the_inverse_and_diff_absorb_laws() {
     let base = crate::writer_snapshot_with_text(crate::WRITER_DOCUMENT_SCHEMA, "empty", "plaintext", "writer://empty", "first");
     let mutation = WriterMutation::EditText(EditText { text: "second".into() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = WriterMutation::EditText(EditText { text: "third".into() }).diff(&base).diff().clone();
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;

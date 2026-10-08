@@ -33,7 +33,7 @@ fn mutation() -> SemioBrepMutation {
 #[semio_framework_async_macros::async_test]
 async fn removes_only_the_addressed_edge() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("delete-edge applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-edge applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-edge/removes-the-closing-edge-and-keeps-its-two-vertices: applied state differs from the committed after-snapshot");
     assert!(!produced.edges.iter().any(|edge| edge.id == "e4"), "the addressed edge must be gone");
     assert_eq!(produced.edges.len(), base.edges.len() - 1, "exactly one edge is removed");
@@ -46,15 +46,16 @@ async fn removes_only_the_addressed_edge() {
 async fn the_undo_create_edge_restores_the_full_captured_edge() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "delete-edge of an existing edge undoes as exactly one create-edge");
     let SemioBrepMutation::CreateEdge(recreate) = &undo[0] else { panic!("delete-edge must undo as create-edge") };
     assert_eq!((recreate.start_vertex.as_str(), recreate.end_vertex.as_str()), ("v4", "v1"), "the undo must recapture the deleted edge's own endpoints from base");
     assert_eq!(recreate.curve, base.edges[3].curve, "the undo must recapture the deleted edge's own curve, not a default one");
     assert_eq!(recreate.tol, base.edges[3].tol, "the undo must recapture the deleted edge's nonzero tolerance");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-edge applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo create-edge applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-edge applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo create-edge applies");
     }
     assert_eq!(current, base, "delete-edge/removes-the-closing-edge-and-keeps-its-two-vertices: the undo did not restore the before-snapshot");
 }
@@ -111,6 +112,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded = decode_semio_brep_diff_json(DIFF).expect("committed delete-edge diff decodes");
-    let produced = decoded.apply(&before()).expect("committed delete-edge diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-edge diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-edge/removes-the-closing-edge-and-keeps-its-two-vertices: committed diff did not carry before to after");
 }

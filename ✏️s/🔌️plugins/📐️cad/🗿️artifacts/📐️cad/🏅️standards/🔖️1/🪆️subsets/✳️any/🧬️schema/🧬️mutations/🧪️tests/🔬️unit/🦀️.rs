@@ -20,11 +20,11 @@ pub fn every_mutation() -> Vec<CadMutation> {
         CadMutation::DeleteEnergyModel(DeleteEnergyModel {}),
         CadMutation::CreateStructureClassicModel(CreateStructureClassicModel { child_id: sample.child_id.clone(), target: sample.target.clone() }),
         CadMutation::DeleteStructureClassicModel(DeleteStructureClassicModel {}),
-        CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-fresh".into(), target: sample.target.clone() }),
+        CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-fresh".into(), target: sample.target.clone() , index: None }),
         CadMutation::DeleteDrawing(DeleteDrawing { child_id: "drawing-fresh".into() }),
         CadMutation::CreateBrep(crate::mutations::create_brep::CreateBrep { child_id: "brep-fresh".into(), target: semio_framework_artifact_reference::ArtifactRef { artifact_id: "topology-fresh".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } }, index: 0 }),
         CadMutation::DeleteBrep(crate::mutations::delete_brep::DeleteBrep { child_id: "brep-fresh".into() }),
-        CadMutation::CreateNode(CreateNode { node: crate::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } }),
+        CadMutation::CreateNode(CreateNode { node: crate::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } , index: None }),
         CadMutation::DeleteNode(DeleteNode { node_id: "node-1".into() }),
         CadMutation::RenameNode(RenameNode { node_id: "node-1".into(), new_label: "Renamed".into() }),
         CadMutation::ChangeReferenceHidden(ChangeReferenceHidden { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), new_hidden: true }),
@@ -48,10 +48,10 @@ pub fn every_mutation() -> Vec<CadMutation> {
 async fn inverse_inverts_every_variant_against_a_populated_scene() {
     let base = sample_scene();
     for op in every_mutation() {
-        let forward = protocol::MutationDiff::apply(op.diff(&base).diff(), &base).expect("valid mutation diff");
+        let forward = protocol::apply_diff(op.diff(&base).diff(), &base).expect("valid mutation diff");
         let mut restored = forward.clone();
         for inverse in op.inverse(&base).expect("valid retained mutation inverse fixture") {
-            restored = protocol::MutationDiff::apply(inverse.diff(&restored).diff(), &restored).expect("valid inverse mutation diff");
+            restored = protocol::apply_diff(inverse.diff(&restored).diff(), &restored).expect("valid inverse mutation diff");
         }
         assert_eq!(restored, base, "inverse must restore the base scene for {op:?}");
     }
@@ -87,7 +87,7 @@ async fn create_shape_model_satisfies_the_inverse_and_absorb_laws() {
 #[semio_framework_async_macros::async_test]
 async fn create_drawing_satisfies_the_inverse_and_absorb_laws() {
     let base = sample_scene();
-    let mutation = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-law-1".into(), target: semio_framework_artifact_reference::ArtifactRef { artifact_id:"drawing-law-1".into(), dialect:semio_framework_artifact_reference::ArtifactDialect {artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"drawing".into()} } });
+    let mutation = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-law-1".into(), target: semio_framework_artifact_reference::ArtifactRef { artifact_id:"drawing-law-1".into(), dialect:semio_framework_artifact_reference::ArtifactDialect {artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"drawing".into()} } , index: None });
     store::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     let d1 = mutation.diff(&base).diff().clone();
     let d2 = CadMutation::DeleteDrawing(DeleteDrawing { child_id: "drawing-law-1".into() }).diff(&base).diff().clone();
@@ -130,7 +130,7 @@ async fn change_hidden_on_missing_reference_is_a_target_missing_error() {
 #[semio_framework_async_macros::async_test]
 async fn create_node_duplicate_id_never_applies() {
     let base = sample_scene();
-    let duplicate = CadMutation::CreateNode(CreateNode { node: crate::CadNode { id: "node-1".into(), label: "Dup".into(), kind: "group".into() } });
+    let duplicate = CadMutation::CreateNode(CreateNode { node: crate::CadNode { id: "node-1".into(), label: "Dup".into(), kind: "group".into() } , index: None });
     store::os_spr::protocol_laws::assert_fatal_never_applies(&duplicate.diff(&base)).await;
 }
 
@@ -144,8 +144,8 @@ async fn delete_missing_drawing_is_a_target_missing_error() {
 async fn create_drawing_duplicate_id_never_applies() {
     let sample = sample_model_child("dup-drawing-1");
     let mut base = sample_scene();
-    base = protocol::MutationDiff::apply(CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.clone() }).diff(&base).diff(), &base).expect("valid mutation diff");
-    let duplicate = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.clone() });
+    base = protocol::apply_diff(CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.clone() , index: None }).diff(&base).diff(), &base).expect("valid mutation diff");
+    let duplicate = CadMutation::CreateDrawing(CreateDrawing { child_id: "drawing-dup".into(), target: sample.target.clone() , index: None });
     store::os_spr::protocol_laws::assert_fatal_never_applies(&duplicate.diff(&base)).await;
 }
 
@@ -170,14 +170,14 @@ async fn change_reference_hidden_outcome_obeys_the_policy_matrix() {
 #[semio_framework_async_macros::async_test]
 async fn create_node_outcome_obeys_the_policy_matrix() {
     let base = sample_scene();
-    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::CreateNode(CreateNode { node: crate::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } })).await;
+    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::CreateNode(CreateNode { node: crate::CadNode { id: "node-fresh".into(), label: "Root".into(), kind: "group".into() } , index: None })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_drawing_outcome_obeys_the_policy_matrix() {
     let sample = sample_model_child("law-drawing-2");
     let mut base = sample_scene();
-    base = protocol::MutationDiff::apply(CadMutation::CreateDrawing(CreateDrawing { child_id: "cad-drawing-2".into(), target: sample.target.clone() }).diff(&base).diff(), &base).expect("valid mutation diff");
+    base = protocol::apply_diff(CadMutation::CreateDrawing(CreateDrawing { child_id: "cad-drawing-2".into(), target: sample.target.clone() , index: None }).diff(&base).diff(), &base).expect("valid mutation diff");
     store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::DeleteDrawing(DeleteDrawing { child_id: "cad-drawing-2".into() })).await;
 }
 
@@ -185,7 +185,7 @@ async fn delete_drawing_outcome_obeys_the_policy_matrix() {
 async fn create_drawing_outcome_obeys_the_policy_matrix() {
     let base = sample_scene();
     let sample = sample_model_child("law-drawing-3");
-    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::CreateDrawing(CreateDrawing { child_id: "cad-drawing-3".into(), target: sample.target.clone() })).await;
+    store::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &CadMutation::CreateDrawing(CreateDrawing { child_id: "cad-drawing-3".into(), target: sample.target.clone() , index: None })).await;
 }
 //#endregion 🧪️OutcomeLaws
 //#region 🧪️KindsCatalog
@@ -206,3 +206,29 @@ fn kinds_match_the_enum_and_the_catalog() {
     }
 }
 //#endregion 🧪️KindsCatalog
+
+/// ⚖️ Ordered-collection law on a MIDDLE row: deleting the middle node or drawing inverts to an insert at its original index,
+/// the concrete inverse sums to exactly the negative diff, and an explicit-index insert lands where it says.
+#[semio_framework_async_macros::async_test]
+async fn deleting_a_middle_row_inverts_at_its_original_index() {
+    let mut base = sample_scene();
+    for id in ["node-a", "node-b", "node-c"] {
+        base.nodes.push(crate::CadNode { id: id.into(), label: id.into(), kind: "group".into() });
+    }
+    let target = sample_model_child("middle-drawing").target;
+    for id in ["drawing-a", "drawing-b", "drawing-c"] {
+        base.drawings.push(crate::cad_drawing_child(id, &target).expect("drawing child"));
+    }
+    let delete_node = CadMutation::DeleteNode(DeleteNode { node_id: "node-b".into() });
+    let position = base.nodes.iter().position(|node| node.id == "node-b").expect("middle node");
+    assert!(matches!(delete_node.inverse(&base).expect("inverse").as_slice(), [CadMutation::CreateNode(CreateNode { index: Some(index), .. })] if *index as usize == position));
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&delete_node, &base).await;
+    let delete_drawing = CadMutation::DeleteDrawing(DeleteDrawing { child_id: "drawing-b".into() });
+    let position = base.drawings.iter().position(|drawing| drawing.child_id == "drawing-b").expect("middle drawing");
+    assert!(matches!(delete_drawing.inverse(&base).expect("inverse").as_slice(), [CadMutation::CreateDrawing(CreateDrawing { index: Some(index), .. })] if *index as usize == position));
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&delete_drawing, &base).await;
+    let insert = CadMutation::CreateNode(CreateNode { node: crate::CadNode { id: "node-first".into(), label: "First".into(), kind: "group".into() }, index: Some(0) });
+    let after = protocol::apply_diff(insert.diff(&base).diff(), &base).expect("insert applies");
+    assert_eq!(after.nodes[0].id, "node-first");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&insert, &base).await;
+}

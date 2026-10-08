@@ -5,7 +5,7 @@
 
 use super::MoveObject;
 use crate::diff::diff_objects_patch;
-use crate::{LowpolyDiff, LowpolyObjectPatch, LowpolySnapshot, LowpolyTransform};
+use crate::{LowpolyDiff, LowpolyObjectPatch, LowpolySnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &MoveObject, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {
@@ -18,7 +18,6 @@ pub fn diff(payload: &MoveObject, base: &LowpolySnapshot) -> protocol::MutationO
     if existing.transform.position == payload.new_position {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Object \"{}\" is already at position {:?}.", payload.id, payload.new_position));
     }
-    let transform = LowpolyTransform { position: payload.new_position, ..existing.transform.clone() };
-    protocol::MutationOutcome::new(diff_objects_patch(payload.id.clone(), LowpolyObjectPatch { transform: Some(transform), ..LowpolyObjectPatch::default() }))
+    protocol::MutationOutcome::new(diff_objects_patch(payload.id.clone(), LowpolyObjectPatch { position: Some(payload.new_position), ..LowpolyObjectPatch::default() }))
 }
 //#endregion 🔖️Diff

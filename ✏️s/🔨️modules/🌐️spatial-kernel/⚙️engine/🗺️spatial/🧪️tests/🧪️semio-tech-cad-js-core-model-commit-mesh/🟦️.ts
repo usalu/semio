@@ -2,9 +2,9 @@ import { ObjectRef, SelectionTarget, deletableObjectIdsFromSelection, deleteObje
 import { appendCommittedMeshFaceToModel, applyModelDiff } from "../../🟦️.ts";
 import { Model } from "../../../📐️geometry/🟦️.ts";
 import { preciseSpatialKernelMath } from "../../../🧮️preview/🟦️.ts";
-import { solidRef } from "@semio-tech/s-3d-js";
+import { solidRef } from "@semio-tech/framework-3d-js";
 import type { TypologyRef } from "../../../📐️geometry/🟦️.ts";
-import type { MeshTransfer } from "@semio-tech/s-3d-js";
+import type { MeshTransfer } from "@semio-tech/framework-3d-js";
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>): Promise<void> {
   const M = preciseSpatialKernelMath;

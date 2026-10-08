@@ -1,0 +1,1011 @@
+{
+  "description": "Language-agnostic laws of the brep.intersect widgets. A section returns the planar cross-section faces in member order, a split the solid in front of and behind the plane; the point intersections keep only hits inside edge and wire members, sorted along the first curve; surface intersections return exact wires. TypeScript recomputes the line/line, line/plane and split volumes with three.",
+  "tolerance": 1e-06,
+  "meshTolerance": 1e-06,
+  "deflection": 0.05,
+  "cases": [
+    {
+      "name": "section through the middle of a box",
+      "kind": "brep.intersect.section",
+      "inputs": {
+        "solid": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "plane": {
+          "origin": [
+            0,
+            0,
+            1
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "outputs": {
+        "faces": [
+          {
+            "kind": "face",
+            "area": 4.0,
+            "bbox": [
+              [
+                0,
+                0,
+                1
+              ],
+              [
+                2,
+                2,
+                1
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "section that misses the solid is an empty list",
+      "kind": "brep.intersect.section",
+      "inputs": {
+        "solid": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "plane": {
+          "origin": [
+            0,
+            0,
+            5
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "outputs": {
+        "faces": []
+      }
+    },
+    {
+      "name": "section of a compound keeps member order",
+      "kind": "brep.intersect.section",
+      "inputs": {
+        "solid": {
+          "recipe": "compound",
+          "of": [
+            {
+              "recipe": "box",
+              "size": [
+                2,
+                2,
+                2
+              ]
+            },
+            {
+              "recipe": "translate",
+              "of": {
+                "recipe": "box",
+                "size": [
+                  2,
+                  2,
+                  2
+                ]
+              },
+              "by": [
+                3,
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "plane": {
+          "origin": [
+            0,
+            0,
+            1
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      },
+      "outputs": {
+        "faces": [
+          {
+            "kind": "face",
+            "area": 4.0,
+            "bbox": [
+              [
+                0,
+                0,
+                1
+              ],
+              [
+                2,
+                2,
+                1
+              ]
+            ]
+          },
+          {
+            "kind": "face",
+            "area": 4.0,
+            "bbox": [
+              [
+                3,
+                0,
+                1
+              ],
+              [
+                5,
+                2,
+                1
+              ]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "split a box at its middle",
+      "kind": "brep.intersect.split",
+      "inputs": {
+        "solid": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "plane": {
+          "origin": [
+            1,
+            0,
+            0
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ]
+        }
+      },
+      "outputs": {
+        "positive": {
+          "kind": "solid",
+          "volume": 4.0,
+          "area": 16.0,
+          "bbox": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        },
+        "negative": {
+          "kind": "solid",
+          "volume": 4.0,
+          "area": 16.0,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              2,
+              2
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "split with the opposite normal swaps the sides",
+      "kind": "brep.intersect.split",
+      "inputs": {
+        "solid": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "plane": {
+          "origin": [
+            1,
+            0,
+            0
+          ],
+          "normal": [
+            -1,
+            0,
+            0
+          ]
+        }
+      },
+      "outputs": {
+        "positive": {
+          "kind": "solid",
+          "volume": 4.0,
+          "area": 16.0,
+          "bbox": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              2,
+              2
+            ]
+          ]
+        },
+        "negative": {
+          "kind": "solid",
+          "volume": 4.0,
+          "area": 16.0,
+          "bbox": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              2
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "split of a compound is refused at the port",
+      "kind": "brep.intersect.split",
+      "inputs": {
+        "solid": {
+          "recipe": "compound",
+          "of": [
+            {
+              "recipe": "box",
+              "size": [
+                2,
+                2,
+                2
+              ]
+            },
+            {
+              "recipe": "translate",
+              "of": {
+                "recipe": "box",
+                "size": [
+                  2,
+                  2,
+                  2
+                ]
+              },
+              "by": [
+                3,
+                0,
+                0
+              ]
+            }
+          ]
+        },
+        "plane": {
+          "origin": [
+            1,
+            0,
+            0
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ]
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.shape-kind",
+        "port": "solid"
+      }
+    },
+    {
+      "name": "split with a zero normal is a kernel fault",
+      "kind": "brep.intersect.split",
+      "inputs": {
+        "solid": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "plane": {
+          "origin": [
+            1,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "fault": {
+        "code": "generation3d.geometry.kernel"
+      }
+    },
+    {
+      "name": "two crossing lines meet once",
+      "kind": "brep.intersect.curveCurve",
+      "inputs": {
+        "a": {
+          "recipe": "line",
+          "start": [
+            0,
+            0,
+            0
+          ],
+          "end": [
+            2,
+            2,
+            0
+          ]
+        },
+        "b": {
+          "recipe": "line",
+          "start": [
+            0,
+            2,
+            0
+          ],
+          "end": [
+            2,
+            0,
+            0
+          ]
+        },
+        "tolerance": 1e-06
+      },
+      "outputs": {
+        "points": [
+          [
+            1,
+            1,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "skew lines never meet",
+      "kind": "brep.intersect.curveCurve",
+      "inputs": {
+        "a": {
+          "recipe": "line",
+          "start": [
+            0,
+            0,
+            0
+          ],
+          "end": [
+            1,
+            0,
+            0
+          ]
+        },
+        "b": {
+          "recipe": "line",
+          "start": [
+            0,
+            0,
+            1
+          ],
+          "end": [
+            0,
+            1,
+            1
+          ]
+        },
+        "tolerance": 1e-06
+      },
+      "outputs": {
+        "points": []
+      }
+    },
+    {
+      "name": "a circle and a line through it meet twice and the polyline joins them",
+      "kind": "brep.intersect.curveCurve",
+      "inputs": {
+        "a": {
+          "recipe": "circle",
+          "center": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "radius": 1
+        },
+        "b": {
+          "recipe": "line",
+          "start": [
+            -2,
+            0,
+            0
+          ],
+          "end": [
+            2,
+            0,
+            0
+          ]
+        },
+        "tolerance": 1e-06
+      },
+      "outputs": {
+        "points": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            -1,
+            0,
+            0
+          ]
+        ],
+        "wire": {
+          "kind": "wire",
+          "bbox": [
+            [
+              -1,
+              0,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "a wire keeps only the hits inside its members",
+      "kind": "brep.intersect.curveCurve",
+      "inputs": {
+        "a": {
+          "recipe": "rectangleWire",
+          "width": 2,
+          "height": 1
+        },
+        "b": {
+          "recipe": "line",
+          "start": [
+            -1,
+            0.5,
+            0
+          ],
+          "end": [
+            3,
+            0.5,
+            0
+          ]
+        },
+        "tolerance": 1e-06
+      },
+      "outputs": {
+        "points": [
+          [
+            2,
+            0.5,
+            0
+          ],
+          [
+            0,
+            0.5,
+            0
+          ]
+        ],
+        "wire": {
+          "kind": "wire",
+          "bbox": [
+            [
+              0,
+              0.5,
+              0
+            ],
+            [
+              2,
+              0.5,
+              0
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "the joint of two members is reported once",
+      "kind": "brep.intersect.curveCurve",
+      "inputs": {
+        "a": {
+          "recipe": "rectangleWire",
+          "width": 2,
+          "height": 1
+        },
+        "b": {
+          "recipe": "line",
+          "start": [
+            1,
+            -1,
+            0
+          ],
+          "end": [
+            3,
+            1,
+            0
+          ]
+        },
+        "tolerance": 1e-06
+      },
+      "outputs": {
+        "points": [
+          [
+            2,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a line pierces a plane",
+      "kind": "brep.intersect.curveSurface",
+      "inputs": {
+        "curve": {
+          "recipe": "line",
+          "start": [
+            0,
+            0,
+            -1
+          ],
+          "end": [
+            0,
+            0,
+            1
+          ]
+        },
+        "surface": {
+          "recipe": "plane",
+          "origin": [
+            0,
+            0,
+            0.5
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        "tolerance": 1e-06
+      },
+      "outputs": {
+        "points": [
+          [
+            0,
+            0,
+            0.5
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a line pierces the supporting plane of a face",
+      "kind": "brep.intersect.curveSurface",
+      "inputs": {
+        "curve": {
+          "recipe": "line",
+          "start": [
+            1,
+            1,
+            0
+          ],
+          "end": [
+            1,
+            1,
+            3
+          ]
+        },
+        "surface": {
+          "recipe": "face",
+          "of": {
+            "recipe": "box",
+            "size": [
+              2,
+              2,
+              2
+            ]
+          },
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        "tolerance": 1e-06
+      },
+      "outputs": {
+        "points": [
+          [
+            1,
+            1,
+            2
+          ]
+        ]
+      }
+    },
+    {
+      "name": "an edge pierces a plane inside its range",
+      "kind": "brep.intersect.curveSurface",
+      "inputs": {
+        "curve": {
+          "recipe": "edge",
+          "of": {
+            "recipe": "box",
+            "size": [
+              2,
+              2,
+              2
+            ]
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            2,
+            0,
+            0
+          ]
+        },
+        "surface": {
+          "recipe": "plane",
+          "origin": [
+            1,
+            0,
+            0
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ]
+        },
+        "tolerance": 1e-06
+      },
+      "outputs": {
+        "points": [
+          [
+            1,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "an edge does not reach a plane beyond its end",
+      "kind": "brep.intersect.curveSurface",
+      "inputs": {
+        "curve": {
+          "recipe": "edge",
+          "of": {
+            "recipe": "box",
+            "size": [
+              2,
+              2,
+              2
+            ]
+          },
+          "from": [
+            0,
+            0,
+            0
+          ],
+          "to": [
+            2,
+            0,
+            0
+          ]
+        },
+        "surface": {
+          "recipe": "plane",
+          "origin": [
+            3,
+            0,
+            0
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ]
+        },
+        "tolerance": 1e-06
+      },
+      "outputs": {
+        "points": []
+      }
+    },
+    {
+      "name": "a line parallel to a plane never pierces it",
+      "kind": "brep.intersect.curveSurface",
+      "inputs": {
+        "curve": {
+          "recipe": "line",
+          "start": [
+            0,
+            0,
+            1
+          ],
+          "end": [
+            1,
+            0,
+            1
+          ]
+        },
+        "surface": {
+          "recipe": "plane",
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        "tolerance": 1e-06
+      },
+      "outputs": {
+        "points": []
+      }
+    },
+    {
+      "name": "two perpendicular planes meet in one curve",
+      "kind": "brep.intersect.surfaceSurface",
+      "inputs": {
+        "a": {
+          "recipe": "plane",
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        "b": {
+          "recipe": "plane",
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            1,
+            0,
+            0
+          ]
+        },
+        "tolerance": 1e-06
+      },
+      "outputs": {
+        "wires": {
+          "count": 1,
+          "each": {
+            "kind": "wire"
+          }
+        }
+      }
+    },
+    {
+      "name": "parallel planes do not meet",
+      "kind": "brep.intersect.surfaceSurface",
+      "inputs": {
+        "a": {
+          "recipe": "plane",
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        "b": {
+          "recipe": "plane",
+          "origin": [
+            0,
+            0,
+            1
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        "tolerance": 1e-06
+      },
+      "outputs": {
+        "wires": []
+      }
+    },
+    {
+      "name": "a plane cuts a sphere face in a circle",
+      "kind": "brep.intersect.surfaceSurface",
+      "inputs": {
+        "a": {
+          "recipe": "plane",
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        "b": {
+          "recipe": "curvedFace",
+          "of": {
+            "recipe": "sphere",
+            "radius": 1
+          }
+        },
+        "tolerance": 1e-06
+      },
+      "outputs": {
+        "wires": {
+          "count": 1,
+          "each": {
+            "kind": "wire",
+            "bbox": [
+              [
+                -1,
+                -1,
+                0
+              ],
+              [
+                1,
+                1,
+                0
+              ]
+            ]
+          }
+        }
+      },
+      "meshTolerance": 0.01
+    },
+    {
+      "name": "a solid is not a curve",
+      "kind": "brep.intersect.curveCurve",
+      "inputs": {
+        "a": {
+          "recipe": "box",
+          "size": [
+            2,
+            2,
+            2
+          ]
+        },
+        "b": {
+          "recipe": "line",
+          "start": [
+            0,
+            0,
+            0
+          ],
+          "end": [
+            1,
+            0,
+            0
+          ]
+        },
+        "tolerance": 1e-06
+      },
+      "fault": {
+        "code": "generation3d.geometry.shape-kind",
+        "port": "a"
+      }
+    },
+    {
+      "name": "a curve is not a surface",
+      "kind": "brep.intersect.surfaceSurface",
+      "inputs": {
+        "a": {
+          "recipe": "circle",
+          "center": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "radius": 1
+        },
+        "b": {
+          "recipe": "plane",
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        "tolerance": 1e-06
+      },
+      "fault": {
+        "code": "generation3d.geometry.shape-kind",
+        "port": "a"
+      }
+    }
+  ]
+}

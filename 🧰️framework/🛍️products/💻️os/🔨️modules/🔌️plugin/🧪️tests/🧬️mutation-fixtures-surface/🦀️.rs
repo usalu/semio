@@ -475,15 +475,18 @@ impl crate::app::NaturalFileDecodeCursor<SurfaceSnapshot> for SurfaceNaturalDeco
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
-        if maximum_items == 0 || maximum_bytes == 0 {
+        if maximum_items == 0 || maximum_bytes == 0 || maximum_bytes < crate::app::NaturalFileDecodeCursor::next_close_byte_demand(self) {
             return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(retirement) = self.retirement.as_mut() {
-            let step = retirement.close_step(maximum_items, maximum_bytes).map_err(|error| Fault::from(error.message))?;
             if retirement.terminal_is_empty() {
+                let bytes = std::mem::size_of_val(retirement.as_ref());
                 self.retirement = None;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
             }
+            let step = retirement.close_step(maximum_items, maximum_bytes).map_err(|error| Fault::from(error.message.into_owned()))?;
             return Ok(match step {
+                store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 } => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
                 store::SnapshotRetirementStep::Pending { released_items, released_bytes } => PluginCloseStep::Pending { released_items, released_bytes },
                 store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "surface natural input retirement is blocked" },
                 store::SnapshotRetirementStep::Complete => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
@@ -494,6 +497,10 @@ impl crate::app::NaturalFileDecodeCursor<SurfaceSnapshot> for SurfaceNaturalDeco
             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
         }
         Ok(PluginCloseStep::Complete)
+    }
+
+    fn next_close_byte_demand(&self) -> usize {
+        self.retirement.as_ref().map_or_else(|| if self.bytes.is_some() { semio_framework_value::retirement::owned_retirement_birth_bytes::<Vec<u8>>() } else { 0 }, |owner| if owner.terminal_is_empty() { std::mem::size_of_val(owner.as_ref()) } else { owner.next_close_byte_demand() })
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -900,11 +907,19 @@ fn close_surface_natural_file_job(job: &mut ArtifactReservedToolJob) {
         if semio_framework_job::InteractiveJob::terminal_is_empty(job) {
             break;
         }
-        match semio_framework_job::InteractiveJob::close_step(job, 1, 64) {
+        let demand = semio_framework_job::InteractiveJob::next_close_byte_demand(job);
+        assert_eq!(semio_framework_job::InteractiveJob::next_close_byte_demand(job), demand);
+        if demand > 64 {
+            assert_eq!(semio_framework_job::InteractiveJob::close_step(job, 1, 64), semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            assert_eq!(semio_framework_job::InteractiveJob::next_close_byte_demand(job), demand);
+            assert!(!semio_framework_job::InteractiveJob::terminal_is_empty(job));
+        }
+        let bytes = 64.max(demand);
+        match semio_framework_job::InteractiveJob::close_step(job, 1, bytes) {
             semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes } => {
                 assert!(released_items > 0 || released_bytes > 0, "positive natural-file close grants must make observable retirement progress");
                 assert!(released_items <= 1);
-                assert!(released_bytes <= 64);
+                assert!(released_bytes <= bytes);
             }
             semio_framework_job::InteractiveJobCloseStep::Complete => {}
             semio_framework_job::InteractiveJobCloseStep::Blocked => panic!("natural-file job close retained an unmounted owner"),
@@ -1256,7 +1271,7 @@ fn surface_owned_mutation_admission_forwards_exact_birth_and_preserves_every_den
 
 struct SurfaceMutationRetirement { value: Option<SurfaceMutation> }
 impl semio_framework_value::retirement::RetirementCursor for SurfaceMutationRetirement {
-    fn close_step(&mut self, _maximum_bytes: usize) -> semio_framework_value::retirement::RetirementStep { self.value.take(); semio_framework_value::retirement::RetirementStep::Complete }
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep { if grant.maximum_items==0{return semio_framework_value::retirement::RetirementStep::BudgetExhausted;}self.value.take(); semio_framework_value::retirement::RetirementStep::Complete }
     fn terminal_is_empty(&self) -> bool { self.value.is_none() }
     fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
     fn next_birth_bytes(&self, _maximum_bytes: usize) -> Option<usize> { Some(0) }

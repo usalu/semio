@@ -1,19 +1,7 @@
 {
-  "lodMode": "",
+  "lodMode": null,
   "showMode": "shaded+edges",
-  "previewCamera": {
-    "position": [
-      6.0,
-      6.0,
-      6.0
-    ],
-    "target": [
-      0.0,
-      0.0,
-      0.0
-    ],
-    "fov": 45.0
-  },
-  "sunJson": "{\"azimuth\":135,\"elevation\":45}",
+  "previewCamera": null,
+  "sunJson": null,
   "activeExampleId": null
 }

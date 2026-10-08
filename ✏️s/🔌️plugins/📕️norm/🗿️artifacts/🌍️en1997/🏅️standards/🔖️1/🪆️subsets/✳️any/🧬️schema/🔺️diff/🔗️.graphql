@@ -1,27 +1,86 @@
-# 🧬️ EN 1997 diff schema.
+# 🧬️ En1997 diff schema — keyed sparse diff: scalar setters, id/index/key keyed row diffs and per-field section patches.
+
+type En1997LayersPatch {
+  id: String!
+  oedometricModulus: Float
+  phiPrimeDeg: Float
+}
+
+type En1997LayersRows {
+  added: [SoilLayer!]!
+  removed: [String!]!
+  modified: [En1997LayersPatch!]!
+  order: [String!]
+}
+
+type En1997FootingsPatch {
+  id: String!
+  width: Float
+  embedment: Float
+}
+
+type En1997FootingsRows {
+  added: [SpreadFoundation!]!
+  removed: [String!]!
+  modified: [En1997FootingsPatch!]!
+  order: [String!]
+}
+
+type En1997PilesPatch {
+  id: String!
+  length: Float
+  count: Int
+}
+
+type En1997PilesRows {
+  added: [Pile!]!
+  removed: [String!]!
+  modified: [En1997PilesPatch!]!
+  order: [String!]
+}
+
+type En1997RetainingWallsPatch {
+  id: String!
+  baseWidth: Float
+}
+
+type En1997RetainingWallsRows {
+  added: [RetainingWall!]!
+  removed: [String!]!
+  modified: [En1997RetainingWallsPatch!]!
+  order: [String!]
+}
+
+type En1997SlopesPatch {
+  id: String!
+  angleDeg: Float
+}
+
+type En1997SlopesRows {
+  added: [Slope!]!
+  removed: [String!]!
+  modified: [En1997SlopesPatch!]!
+  order: [String!]
+}
+
+type En1997UpliftCasesRows {
+  added: [UpliftCase!]!
+  removed: [String!]!
+  order: [String!]
+}
 
 type En1997Diff {
-  artifact: En1997Artifact @state(class: ARTIFACT)
-  vEdKn: Float @state(class: ARTIFACT)
-  hEdKn: Float @state(class: ARTIFACT)
-  footingAreaM2: Float @state(class: ARTIFACT)
-  phiDeg: Float @state(class: ARTIFACT)
-  cKpa: Float @state(class: ARTIFACT)
-  gammaKnM3: Float @state(class: ARTIFACT)
-  bM: Float @state(class: ARTIFACT)
-  dFM: Float @state(class: ARTIFACT)
-  eSMpa: Float @state(class: ARTIFACT)
-  nu: Float @state(class: ARTIFACT)
-  designApproach: Float @state(class: ARTIFACT)
-  annex: Float @state(class: ARTIFACT)
-  settlementLimitMm: Float @state(class: ARTIFACT)
-  nPileEdKn: Float @state(class: ARTIFACT)
-  alphaS: Float @state(class: ARTIFACT)
-  pileDM: Float @state(class: ARTIFACT)
-  qSKpa: Float @state(class: ARTIFACT)
-  pileLM: Float @state(class: ARTIFACT)
-  qBKpa: Float @state(class: ARTIFACT)
-  pileBaseAreaM2: Float @state(class: ARTIFACT)
-  pileNProfiles: Int @state(class: ARTIFACT)
-  zInvestigatedM: Float @state(class: ARTIFACT)
+  structureId: String @state(class: ARTIFACT)
+  geotechnicalCategory: Int @state(class: ARTIFACT)
+  designSituation: String @state(class: ARTIFACT)
+  designApproach: String @state(class: ARTIFACT)
+  annex: AnnexChoice @state(class: ARTIFACT)
+  groundwaterLevel: Float @state(class: ARTIFACT)
+  investigationDepth: Float @state(class: ARTIFACT)
+  layers: En1997LayersRows @state(class: ARTIFACT)
+  footings: En1997FootingsRows @state(class: ARTIFACT)
+  piles: En1997PilesRows @state(class: ARTIFACT)
+  retainingWalls: En1997RetainingWallsRows @state(class: ARTIFACT)
+  slopes: En1997SlopesRows @state(class: ARTIFACT)
+  upliftCases: En1997UpliftCasesRows @state(class: ARTIFACT)
 }

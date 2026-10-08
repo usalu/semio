@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "maximumBytes"
+  ],
+  "properties": {
+    "source": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "maximumBytes": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "definitions": {
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "queuedBytes",
+        "state"
+      ],
+      "properties": {
+        "queuedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "state": {
+          "enum": [
+            "complete",
+            "closed",
+            "refused"
+          ]
+        }
+      }
+    }
+  }
+}

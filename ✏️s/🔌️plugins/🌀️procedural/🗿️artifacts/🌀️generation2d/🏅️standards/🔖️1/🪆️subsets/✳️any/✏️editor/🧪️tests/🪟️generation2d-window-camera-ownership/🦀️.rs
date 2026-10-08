@@ -19,9 +19,9 @@ macro_rules! assert_window_config_codecs {
         let base: $state = $base;
         let next: $state = $next;
         let operation: $mutation = $operation;
-        let applied = operation.diff(&base).diff().apply(&base).expect("window-config diff applies");
+        let applied = protocol::apply_diff(operation.diff(&base).diff(), &base).expect("window-config diff applies");
         assert_eq!(applied, next);
-        let restored = operation.inverse(&base).expect("window-config inverse").into_iter().fold(applied, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("window-config inverse applies"));
+        let restored = operation.inverse(&base).expect("window-config inverse").into_iter().fold(applied, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).expect("window-config inverse applies"));
         assert_eq!(restored, base);
         assert_eq!(<$state>::parse_dsl(&base.print_dsl()).expect("window-config DSL round-trip"), base);
         assert_eq!(<$state>::decode_pack(&base.encode_pack()).expect("window-config Pack round-trip"), base);

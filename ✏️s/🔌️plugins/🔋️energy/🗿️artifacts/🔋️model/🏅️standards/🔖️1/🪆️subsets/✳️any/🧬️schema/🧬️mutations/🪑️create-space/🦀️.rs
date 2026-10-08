@@ -16,11 +16,12 @@ pub struct CreateSpace {
     pub name: String,
     pub zone_id: crate::model::EntityId,
     pub floor_area_m2: f64,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_space(id: crate::model::EntityId, name: String, zone_id: crate::model::EntityId, floor_area_m2: f64) -> EnergyModelMutation {
-    EnergyModelMutation::CreateSpace(CreateSpace { id, name, zone_id, floor_area_m2 })
+pub fn create_space(id: crate::model::EntityId, name: String, zone_id: crate::model::EntityId, floor_area_m2: f64, index: Option<u32>) -> EnergyModelMutation {
+    EnergyModelMutation::CreateSpace(CreateSpace { id, name, zone_id, floor_area_m2, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateSpace {

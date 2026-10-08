@@ -1,47 +1,125 @@
-//! 🔺️ SemioKitDiff — sparse per-field diff over `SemioKitSnapshot`. Six independently diffable
-//! fields, each an `Option<…>` slot (`None` = untouched by this diff) — the same per-field shape
-//! `📦️object`'s diff facet uses, scaled up to six fields including two CHILD collections, one
-//! optional CHILD slot, and one LINK collection. Every mutation triad's own `🔺️diff` leaf builds
-//! the touched field's whole new value directly from `(payload, base)`, never apply-then-capture
-//! — `📓️taxonomy.md`'s whole-list-replace convention, unchanged by D2's resolution (Concern B:
-//! the shape itself was never the defect).
+//! 🔺️ SemioKitDiff — sparse keyed-row diff over `SemioKitSnapshot`. Six independently diffable fields: the four ordered
+//! collections (`types`, `designs`, `objects`, `models`) and the link collection (`representations`) each carry an index-keyed
+//! triple — removed base indices, modified rows (a sparse per-row diff) and added rows with their final position — while the
+//! single optional `properties` CHILD slot carries its replacement (`Some(None)` clears it). No whole-list slot anywhere.
 
-use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitDesign, SemioKitSnapshot, SemioKitType};
+use crate::standards::v1::subsets::base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, between_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
+use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitConnection, SemioKitDesign, SemioKitPiece, SemioKitSnapshot, SemioKitType};
 use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
 use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
 use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 
-//#region 🔖️ListWrappers
-/// 📋 Whole-list wrappers, one per collection field — every mutation triad rebuilds the full
-/// ordered `values` vec from `base` and wraps it here (`🔤️text`'s own `SemioTextRunList` shape).
+//#region 🔖️RowDiffs
+/// 🧩 Sparse diff of one type: each present field is the new value.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct SemioKitTypeList {
-    pub values: Vec<SemioKitType>,
+#[value(rename_all = "camelCase")]
+pub struct SemioKitTypeDiff {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub category: Option<String>,
 }
+
+impl IndexedRow<SemioKitType> for SemioKitTypeDiff {
+    fn apply_row(&self, base: &SemioKitType) -> SemioKitType {
+        SemioKitType { id: base.id.clone(), name: self.name.clone().unwrap_or_else(|| base.name.clone()), category: self.category.clone().unwrap_or_else(|| base.category.clone()) }
+    }
+    fn inverse_row(&self, base: &SemioKitType) -> Self {
+        Self { name: self.name.as_ref().map(|_| base.name.clone()), category: self.category.as_ref().map(|_| base.category.clone()) }
+    }
+    fn absorb_row(&mut self, other: Self) {
+        if other.name.is_some() {
+            self.name = other.name;
+        }
+        if other.category.is_some() {
+            self.category = other.category;
+        }
+    }
+    fn row_is_empty(&self) -> bool {
+        self.name.is_none() && self.category.is_none()
+    }
+    fn between_row(base: &SemioKitType, other: &SemioKitType) -> Self {
+        Self { name: (base.name != other.name).then(|| other.name.clone()), category: (base.category != other.category).then(|| other.category.clone()) }
+    }
+}
+
+/// 🧩 Sparse diff of one design: `name`, and the design's whole `pieces` / `connections` content when the design is edited.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct SemioKitDesignList {
-    pub values: Vec<SemioKitDesign>,
+#[value(rename_all = "camelCase")]
+pub struct SemioKitDesignDiff {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub pieces: Option<Vec<SemioKitPiece>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub connections: Option<Vec<SemioKitConnection>>,
 }
+
+impl IndexedRow<SemioKitDesign> for SemioKitDesignDiff {
+    fn apply_row(&self, base: &SemioKitDesign) -> SemioKitDesign {
+        SemioKitDesign {
+            id: base.id.clone(),
+            name: self.name.clone().unwrap_or_else(|| base.name.clone()),
+            pieces: self.pieces.clone().unwrap_or_else(|| base.pieces.clone()),
+            connections: self.connections.clone().unwrap_or_else(|| base.connections.clone()),
+        }
+    }
+    fn inverse_row(&self, base: &SemioKitDesign) -> Self {
+        Self { name: self.name.as_ref().map(|_| base.name.clone()), pieces: self.pieces.as_ref().map(|_| base.pieces.clone()), connections: self.connections.as_ref().map(|_| base.connections.clone()) }
+    }
+    fn absorb_row(&mut self, other: Self) {
+        if other.name.is_some() {
+            self.name = other.name;
+        }
+        if other.pieces.is_some() {
+            self.pieces = other.pieces;
+        }
+        if other.connections.is_some() {
+            self.connections = other.connections;
+        }
+    }
+    fn row_is_empty(&self) -> bool {
+        self.name.is_none() && self.pieces.is_none() && self.connections.is_none()
+    }
+    fn between_row(base: &SemioKitDesign, other: &SemioKitDesign) -> Self {
+        Self {
+            name: (base.name != other.name).then(|| other.name.clone()),
+            pieces: (base.pieces != other.pieces).then(|| other.pieces.clone()),
+            connections: (base.connections != other.connections).then(|| other.connections.clone()),
+        }
+    }
+}
+
+/// 🔗️ Sparse diff of one representation link: only its pin ever changes in place.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct SemioKitObjectChildList {
-    pub values: Vec<store::ArtifactChild<SemioObjectSnapshot>>,
+#[value(rename_all = "camelCase")]
+pub struct SemioKitLinkDiff {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub pin: Option<store::LinkPin>,
 }
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct SemioKitModelChildList {
-    pub values: Vec<store::ArtifactChild<SemioModelSnapshot>>,
+
+impl IndexedRow<store::ArtifactLink> for SemioKitLinkDiff {
+    fn apply_row(&self, base: &store::ArtifactLink) -> store::ArtifactLink {
+        store::ArtifactLink { target: base.target.clone(), pin: self.pin.clone().unwrap_or_else(|| base.pin.clone()), role: base.role.clone() }
+    }
+    fn inverse_row(&self, base: &store::ArtifactLink) -> Self {
+        Self { pin: self.pin.as_ref().map(|_| base.pin.clone()) }
+    }
+    fn absorb_row(&mut self, other: Self) {
+        if other.pin.is_some() {
+            self.pin = other.pin;
+        }
+    }
+    fn row_is_empty(&self) -> bool {
+        self.pin.is_none()
+    }
+    fn between_row(base: &store::ArtifactLink, other: &store::ArtifactLink) -> Self {
+        Self { pin: (base.pin != other.pin).then(|| other.pin.clone()) }
+    }
 }
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct SemioKitLinkList {
-    pub values: Vec<store::ArtifactLink>,
-}
-//#endregion 🔖️ListWrappers
+//#endregion 🔖️RowDiffs
 
 //#region 🔖️Diff
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -50,97 +128,103 @@ pub struct SemioKitLinkList {
 pub struct SemioKitDiff {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub types: Option<SemioKitTypeList>,
+    pub types: Option<IndexedTripleDiff<SemioKitTypeDiff, SemioKitType>>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub designs: Option<SemioKitDesignList>,
+    pub designs: Option<IndexedTripleDiff<SemioKitDesignDiff, SemioKitDesign>>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub objects: Option<SemioKitObjectChildList>,
+    pub objects: Option<IndexedTripleDiff<Replace<store::ArtifactChild<SemioObjectSnapshot>>, store::ArtifactChild<SemioObjectSnapshot>>>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub models: Option<SemioKitModelChildList>,
+    pub models: Option<IndexedTripleDiff<Replace<store::ArtifactChild<SemioModelSnapshot>>, store::ArtifactChild<SemioModelSnapshot>>>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub properties: Option<Option<store::ArtifactChild<SemioValueSnapshot>>>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub representations: Option<SemioKitLinkList>,
+    pub representations: Option<IndexedTripleDiff<SemioKitLinkDiff, store::ArtifactLink>>,
 }
 
 impl SemioKitDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty_diff(&self) -> bool {
-        self.types.is_none() && self.designs.is_none() && self.objects.is_none() && self.models.is_none() && self.properties.is_none() && self.representations.is_none()
+        self.types.as_ref().is_none_or(IndexedTripleDiff::is_unchanged)
+            && self.designs.as_ref().is_none_or(IndexedTripleDiff::is_unchanged)
+            && self.objects.as_ref().is_none_or(IndexedTripleDiff::is_unchanged)
+            && self.models.as_ref().is_none_or(IndexedTripleDiff::is_unchanged)
+            && self.properties.is_none()
+            && self.representations.as_ref().is_none_or(IndexedTripleDiff::is_unchanged)
     }
 }
 
 impl MutationDiff<SemioKitSnapshot> for SemioKitDiff {
-    fn apply(&self, base: &SemioKitSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioKitSnapshot> {
+    fn apply(&self, base: &SemioKitSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioKitSnapshot> {
         let mut next = base.clone();
-        if let Some(t) = &self.types {
-            next.types = t.values.clone();
+        if let Some(types) = &self.types {
+            validate_indexed_triple(types, base.types.len(), ["types"])?;
+            next.types = apply_indexed_rows(types, &base.types);
         }
-        if let Some(d) = &self.designs {
-            next.designs = d.values.clone();
+        if let Some(designs) = &self.designs {
+            validate_indexed_triple(designs, base.designs.len(), ["designs"])?;
+            next.designs = apply_indexed_rows(designs, &base.designs);
         }
-        if let Some(o) = &self.objects {
-            next.objects = o.values.clone();
+        if let Some(objects) = &self.objects {
+            validate_indexed_triple(objects, base.objects.len(), ["objects"])?;
+            next.objects = apply_indexed_rows(objects, &base.objects);
         }
-        if let Some(m) = &self.models {
-            next.models = m.values.clone();
+        if let Some(models) = &self.models {
+            validate_indexed_triple(models, base.models.len(), ["models"])?;
+            next.models = apply_indexed_rows(models, &base.models);
         }
-        if let Some(p) = &self.properties {
-            next.properties = p.clone();
+        if let Some(properties) = &self.properties {
+            next.properties = properties.clone();
         }
-        if let Some(r) = &self.representations {
-            next.representations = r.values.clone();
+        if let Some(representations) = &self.representations {
+            validate_indexed_triple(representations, base.representations.len(), ["representations"])?;
+            next.representations = apply_indexed_rows(representations, &base.representations);
         }
         Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.types.is_some() {
-            self.types = other.types;
-        }
-        if other.designs.is_some() {
-            self.designs = other.designs;
-        }
-        if other.objects.is_some() {
-            self.objects = other.objects;
-        }
-        if other.models.is_some() {
-            self.models = other.models;
-        }
+        absorb_indexed_slot(&mut self.types, other.types);
+        absorb_indexed_slot(&mut self.designs, other.designs);
+        absorb_indexed_slot(&mut self.objects, other.objects);
+        absorb_indexed_slot(&mut self.models, other.models);
         if other.properties.is_some() {
             self.properties = other.properties;
         }
-        if other.representations.is_some() {
-            self.representations = other.representations;
-        }
+        absorb_indexed_slot(&mut self.representations, other.representations);
     }
 }
 
-/// 🧮️ `kit`'s own `DiffAlgebra` — required by the `✉️base` envelope's own dispatch.
+/// 🧮️ `kit`'s own `DiffAlgebra` — required by the `✉️base` envelope's own dispatch. `inverse` is the concrete negative diff of the
+/// keyed rows (the `properties` slot restores the base child); `between` is the positional sync/import delta, never used by
+/// mutation leaves.
 impl protocol::command::DiffAlgebra<SemioKitSnapshot> for SemioKitDiff {
     fn between(base: &SemioKitSnapshot, other: &SemioKitSnapshot) -> Self {
+        // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+        fn slot<D, T>(triple: IndexedTripleDiff<D, T>) -> Option<IndexedTripleDiff<D, T>> {
+            (!triple.is_unchanged()).then_some(triple)
+        }
         SemioKitDiff {
-            types: (base.types != other.types).then(|| SemioKitTypeList { values: other.types.clone() }),
-            designs: (base.designs != other.designs).then(|| SemioKitDesignList { values: other.designs.clone() }),
-            objects: (base.objects != other.objects).then(|| SemioKitObjectChildList { values: other.objects.clone() }),
-            models: (base.models != other.models).then(|| SemioKitModelChildList { values: other.models.clone() }),
+            types: slot(between_indexed_rows(&base.types, &other.types)),
+            designs: slot(between_indexed_rows(&base.designs, &other.designs)),
+            objects: slot(between_indexed_rows(&base.objects, &other.objects)),
+            models: slot(between_indexed_rows(&base.models, &other.models)),
             properties: (base.properties != other.properties).then(|| other.properties.clone()),
-            representations: (base.representations != other.representations).then(|| SemioKitLinkList { values: other.representations.clone() }),
+            representations: slot(between_indexed_rows(&base.representations, &other.representations)),
         }
     }
     fn inverse(&self, base: &SemioKitSnapshot) -> Self {
         SemioKitDiff {
-            types: self.types.as_ref().map(|_| SemioKitTypeList { values: base.types.clone() }),
-            designs: self.designs.as_ref().map(|_| SemioKitDesignList { values: base.designs.clone() }),
-            objects: self.objects.as_ref().map(|_| SemioKitObjectChildList { values: base.objects.clone() }),
-            models: self.models.as_ref().map(|_| SemioKitModelChildList { values: base.models.clone() }),
+            types: self.types.as_ref().map(|d| inverse_indexed_rows(d, &base.types)),
+            designs: self.designs.as_ref().map(|d| inverse_indexed_rows(d, &base.designs)),
+            objects: self.objects.as_ref().map(|d| inverse_indexed_rows(d, &base.objects)),
+            models: self.models.as_ref().map(|d| inverse_indexed_rows(d, &base.models)),
             properties: self.properties.as_ref().map(|_| base.properties.clone()),
-            representations: self.representations.as_ref().map(|_| SemioKitLinkList { values: base.representations.clone() }),
+            representations: self.representations.as_ref().map(|d| inverse_indexed_rows(d, &base.representations)),
         }
     }
     fn is_empty(&self) -> bool {
@@ -173,12 +257,22 @@ impl protocol::command::DiffAlgebra<SemioKitSnapshot> for SemioKitDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioKitDiff> {
+    use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified};
     use crate::standards::v1::subsets::kit::schema::snapshot::demo_kit_snapshot;
+    let demo = demo_kit_snapshot();
     vec![
         SemioKitDiff::default(),
-        SemioKitDiff { types: Some(SemioKitTypeList { values: demo_kit_snapshot().types }), ..Default::default() },
+        SemioKitDiff { types: Some(IndexedTripleDiff { added: demo.types.iter().cloned().enumerate().map(|(index, item)| IndexAdded { index, item }).collect(), ..Default::default() }), ..Default::default() },
         SemioKitDiff { properties: Some(None), ..Default::default() },
-        SemioKitDiff { representations: Some(SemioKitLinkList { values: demo_kit_snapshot().representations }), ..Default::default() },
+        SemioKitDiff { representations: Some(IndexedTripleDiff { added: demo.representations.iter().cloned().enumerate().map(|(index, item)| IndexAdded { index, item }).collect(), ..Default::default() }), ..Default::default() },
+        SemioKitDiff {
+            types: Some(IndexedTripleDiff { removed: vec![0], modified: vec![IndexModified { index: 1, diff: SemioKitTypeDiff { name: Some("Renamed".into()), category: None } }], ..Default::default() }),
+            designs: Some(IndexedTripleDiff {
+                modified: vec![IndexModified { index: 0, diff: SemioKitDesignDiff { name: Some("Edited".into()), pieces: Some(demo.designs[0].pieces.clone()), connections: Some(Vec::new()) } }],
+                ..Default::default()
+            }),
+            ..Default::default()
+        },
     ]
 }
 //#endregion 🔖️Demo

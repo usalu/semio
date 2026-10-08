@@ -1,10 +1,7 @@
-#[test]
-fn applies_insert_opening() {
-    use crate::mutations::insert_opening::InsertOpening;
-    use crate::En1996Snapshot;
-    use protocol::MutationKind;
-    let base = En1996Snapshot::compliant_clay_wall();
-    let _ = base;
-    // Constructed in aggregate from_snapshot / unit suite; leaf compiles and SEMANTICS are wired.
-    assert_eq!(<InsertOpening as MutationKind<En1996Snapshot, crate::En1996Mutation>>::SEMANTICS.kind, "insert-opening");
+//! 🧪️ `insert-opening` — the committed applied vector's inverse diffs sum to the negative of its forward diff.
+
+#[semio_framework_async_macros::async_test]
+async fn insert_opening_inverse_diffs_sum_to_the_negative_diff() {
+    let (mutation, before) = crate::mutations::fixture_tests::applied_vector("insert-opening");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
 }

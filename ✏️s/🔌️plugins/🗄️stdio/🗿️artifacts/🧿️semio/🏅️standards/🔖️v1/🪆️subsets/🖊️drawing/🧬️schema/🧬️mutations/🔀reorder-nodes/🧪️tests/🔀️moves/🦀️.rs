@@ -31,7 +31,7 @@ fn mutation() -> SemioDrawingMutation {
 #[semio_framework_async_macros::async_test]
 async fn moves_the_leading_child_past_the_other_two() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("reorder-nodes applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("reorder-nodes applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-nodes/moves-the-leading-path-node-to-the-end-of-the-layer-root: applied state differs from the committed after-snapshot");
     let DrawNode::Group { children, .. } = &produced.layers[0].root else { panic!("the layer root is a group") };
     let DrawNode::Group { children: base_children, .. } = &base.layers[0].root else { panic!("the layer root is a group") };
@@ -45,13 +45,14 @@ async fn moves_the_leading_child_past_the_other_two() {
 async fn the_undo_reorder_moves_the_node_back_to_the_head() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "reorder-nodes undoes as exactly one reorder-nodes");
     let SemioDrawingMutation::ReorderNodes(back) = &undo[0] else { panic!("reorder-nodes must undo as reorder-nodes") };
     assert_eq!((back.from, back.to), (2, 0), "the undo addresses the landed index and sends it back to the original one");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward reorder-nodes applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo reorder-nodes applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward reorder-nodes applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo reorder-nodes applies");
     }
     assert_eq!(current, base, "reorder-nodes/moves-the-leading-path-node-to-the-end-of-the-layer-root: the undo did not restore the before-snapshot");
 }
@@ -117,6 +118,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-nodes diff decodes");
-    let produced = decoded.apply(&before()).expect("committed reorder-nodes diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed reorder-nodes diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-nodes/moves-the-leading-path-node-to-the-end-of-the-layer-root: committed diff did not carry before to after");
 }

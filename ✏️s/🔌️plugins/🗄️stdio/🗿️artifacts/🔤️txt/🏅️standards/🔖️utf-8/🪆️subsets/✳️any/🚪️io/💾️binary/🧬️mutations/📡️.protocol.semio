@@ -10,8 +10,6 @@ framing record
 # codec derives its tag from its record at compile time (`dsl::protocol_record::tag_u32`).
 header fixed 1
 field tag u8
-record set-snapshot tag=6
-field payload bytes
 record set-trailing-newline tag=1
 field payload bytes
 record set-line-ending tag=2

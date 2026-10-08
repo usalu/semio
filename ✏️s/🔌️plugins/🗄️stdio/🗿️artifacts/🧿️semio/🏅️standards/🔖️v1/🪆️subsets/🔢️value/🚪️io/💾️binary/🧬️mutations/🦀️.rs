@@ -9,7 +9,6 @@ use super::*;
 use crate::standards::v1::subsets::value::schema::mutations::*;
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, NamedModified, NamedTripleDiff};
 use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::value::schema::diff::diff_set_snapshot;
 use crate::standards::v1::subsets::value::schema::diff::{value_diff_between, NamedAdded, SemioValueDiff, SemioValueTreeDiff};
 use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value};
 use crate::standards::v1::subsets::value::io::text::diff::{enc_semio_value};
@@ -115,10 +114,11 @@ impl protocol::OpBinary for SemioValueMutation {
                 enc_semio_path_bin(path, &mut out);
                 enc_semio_value_bin(value, &mut out);
             }
-            SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path, key, value }) => {
+            SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path, key, value, at }) => {
                 enc_semio_path_bin(path, &mut out);
                 write_str_lp(&mut out, key);
                 enc_semio_value_bin(value, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, at.map_or(0, |at| at as u64 + 1));
             }
             SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path, key }) => {
                 enc_semio_path_bin(path, &mut out);
@@ -133,9 +133,10 @@ impl protocol::OpBinary for SemioValueMutation {
                 enc_semio_path_bin(path, &mut out);
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
             }
-            SemioValueMutation::SetNode(set_node::SetNode { id, value }) => {
+            SemioValueMutation::SetNode(set_node::SetNode { id, value, at }) => {
                 write_str_lp(&mut out, &id.value);
                 enc_semio_value_bin(value, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, at.map_or(0, |at| at as u64 + 1));
             }
             SemioValueMutation::RemoveNode(remove_node::RemoveNode { id }) => {
                 write_str_lp(&mut out, &id.value);
@@ -159,7 +160,8 @@ impl protocol::OpBinary for SemioValueMutation {
                 let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let key = read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))?;
                 let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
-                Ok(SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path, key, value }))
+                let at = reader.read_varint_u64().map_err(|e| malformed("op at", reader.position(), e.to_string()))?.checked_sub(1).map(|at| at as usize);
+                Ok(SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path, key, value, at }))
             }
             TAG_REMOVE_MAP_ENTRY => {
                 let path = dec_semio_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
@@ -180,7 +182,8 @@ impl protocol::OpBinary for SemioValueMutation {
             TAG_SET_NODE => {
                 let id = ValueId::new(read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?);
                 let value = dec_semio_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
-                Ok(SemioValueMutation::SetNode(set_node::SetNode { id, value }))
+                let at = reader.read_varint_u64().map_err(|e| malformed("op at", reader.position(), e.to_string()))?.checked_sub(1).map(|at| at as usize);
+                Ok(SemioValueMutation::SetNode(set_node::SetNode { id, value, at }))
             }
             TAG_REMOVE_NODE => {
                 let id = ValueId::new(read_str_lp(&mut reader).map_err(|e| malformed("op id", reader.position(), e))?);

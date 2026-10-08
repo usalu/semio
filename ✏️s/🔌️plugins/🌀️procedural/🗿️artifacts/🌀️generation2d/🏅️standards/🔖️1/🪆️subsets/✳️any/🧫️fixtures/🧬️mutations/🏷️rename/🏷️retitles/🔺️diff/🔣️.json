@@ -1,16 +1,23 @@
 {
-  "artifact": null,
-  "hostSnapshot": null,
-  "generation": {
-    "generations": [
+  "schema": null,
+  "camera": null,
+  "widgets": null,
+  "synapses": null,
+  "layout": null,
+  "generations": {
+    "added": [],
+    "removed": [],
+    "patched": [
       {
         "id": "gen-1",
-        "name": "Baseline, revised",
-        "values": {
-          "height": 3
+        "patch": {
+          "name": "Baseline, revised",
+          "values": null
         }
       }
     ],
-    "selectedGenerationId": "gen-1"
-  }
+    "reordered": null
+  },
+  "selectedGeneration": null,
+  "previewText": null
 }

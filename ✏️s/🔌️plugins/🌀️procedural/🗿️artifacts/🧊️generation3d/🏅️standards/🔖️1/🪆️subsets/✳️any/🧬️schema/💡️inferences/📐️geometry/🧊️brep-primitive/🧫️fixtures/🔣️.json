@@ -1,0 +1,13 @@
+{
+  "description": "Language-agnostic laws of the seed brep.primitive widgets (box, sphere). A shape output is checked by its kind, volume and surface area. TypeScript recomputes the analytic values and measures three's BoxGeometry and SphereGeometry as independent oracles; Rust checks the kernel's exported shape with the kernel's own measures.",
+  "tolerance": 1e-9,
+  "cases": [
+    { "name": "box 2 x 3 x 4", "kind": "brep.primitive.box", "inputs": { "width": 2, "depth": 3, "height": 4 }, "outputs": { "shape": { "kind": "solid", "volume": 24, "area": 52 } } },
+    { "name": "unit cube", "kind": "brep.primitive.box", "inputs": { "width": 1, "depth": 1, "height": 1 }, "outputs": { "shape": { "kind": "solid", "volume": 1, "area": 6 } } },
+    { "name": "thin plate", "kind": "brep.primitive.box", "inputs": { "width": 10, "depth": 0.5, "height": 0.25 }, "outputs": { "shape": { "kind": "solid", "volume": 1.25, "area": 15.25 } } },
+    { "name": "box without volume", "kind": "brep.primitive.box", "inputs": { "width": 0, "depth": 3, "height": 4 }, "fault": { "code": "generation3d.geometry.kernel" } },
+    { "name": "sphere r 1.5", "kind": "brep.primitive.sphere", "inputs": { "radius": 1.5 }, "outputs": { "shape": { "kind": "solid", "volume": 14.137166941154069, "area": 28.274333882308138 } }, "tolerance": 1e-6 },
+    { "name": "sphere r 1", "kind": "brep.primitive.sphere", "inputs": { "radius": 1 }, "outputs": { "shape": { "kind": "solid", "volume": 4.1887902047863905, "area": 12.566370614359172 } }, "tolerance": 1e-6 },
+    { "name": "sphere without radius", "kind": "brep.primitive.sphere", "inputs": { "radius": -2 }, "fault": { "code": "generation3d.geometry.kernel" } }
+  ]
+}

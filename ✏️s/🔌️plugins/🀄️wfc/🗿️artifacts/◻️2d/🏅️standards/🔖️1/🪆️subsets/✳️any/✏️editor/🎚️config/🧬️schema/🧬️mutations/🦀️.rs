@@ -16,7 +16,7 @@ pub use change_active_tile::ChangeActiveTile;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
 #[cfg_attr(test, serde(tag = "mutation", content = "payload", rename_all = "camelCase"))]
-#[mutations(snapshot = Wfc2dConfig, diff = Wfc2dConfig, schema = "wfc.wfc2d.config")]
+#[mutations(snapshot = Wfc2dConfig, diff = Wfc2dConfigDiff, schema = "wfc.wfc2d.config")]
 pub enum Wfc2dConfigMutation {
     ReplaceConfig(ReplaceConfig),
     ChangeCamera(ChangeCamera),

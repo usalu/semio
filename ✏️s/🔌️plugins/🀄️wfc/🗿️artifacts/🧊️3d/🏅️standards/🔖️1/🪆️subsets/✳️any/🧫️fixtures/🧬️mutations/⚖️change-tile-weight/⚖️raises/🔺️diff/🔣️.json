@@ -1,1 +1,33 @@
-{"schema":null,"seed":null,"slotsRemoved":[],"slotsUpserted":[],"edgesRemoved":[],"edgesUpserted":[],"tilesRemoved":[],"tilesUpserted":[[1,{"id":"room","label":"Room","weight":5.0,"media":{"kind":"mesh","positions":[0.0,0.0,0.0,1.0,0.0,0.0,1.0,1.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0,1.0,0.0,1.0,1.0,1.0,1.0,0.0,1.0,1.0],"indices":[0,2,1,0,3,2,4,5,6,4,6,7,0,1,5,0,5,4,3,7,6,3,6,2,0,4,7,0,7,3,1,2,6,1,6,5],"color":{"r":180,"g":140,"b":100,"a":255}}}]],"rulesRemoved":[],"rulesUpserted":[]}
+{
+  "schema": null,
+  "seed": null,
+  "slots": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "edges": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "tiles": {
+    "removed": [],
+    "added": [],
+    "patched": [
+      {
+        "id": "room",
+        "patch": {
+          "weight": 5.0,
+          "media": null,
+          "label": null
+        }
+      }
+    ]
+  },
+  "rules": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  }
+}

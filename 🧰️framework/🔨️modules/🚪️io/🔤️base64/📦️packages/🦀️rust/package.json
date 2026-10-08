@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/framework-io-base64-rs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bundleKind": "library",
+  "scripts": {
+    "test-native": "bun nx run @semio-tech/framework-io-base64-rs:test-native",
+    "test-source": "bun nx run @semio-tech/framework-io-base64-rs:test-source",
+    "test-strict": "bun nx run @semio-tech/framework-io-base64-rs:test-strict"
+  },
+  "nx": { "includedScripts": [] }
+}

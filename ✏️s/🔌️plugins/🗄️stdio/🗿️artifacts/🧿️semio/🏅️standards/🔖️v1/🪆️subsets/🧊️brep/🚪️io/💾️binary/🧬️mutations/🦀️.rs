@@ -6,10 +6,6 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[path = "🫳️borrowed/🦀️.rs"]
 mod borrowed;
 
-#[cfg(test)]
-#[path = "🫳️borrowed/🧪️tests/🦀️.rs"]
-mod borrowed_tests;
-
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
@@ -136,10 +132,3 @@ const TAG_REPLACE_SURFACE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "rep
 const TAG_MOVE_VERTEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "move-vertex");
 //#endregion 🏷️WireTags
 
-/// 📦️ Reborrows original snapshot and patch fields for bounded prestage operation-wire receipts.
-pub fn prepared_operation_wire_source(mutation: &crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation) -> Option<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactPreparedOperationSource<'_>> {
-    use crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
-    match mutation {
-        _ => None,
-    }
-}

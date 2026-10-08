@@ -35,6 +35,7 @@ export type FreshComponentLeaseV1 = Readonly<{
 export type FreshComponentProducedV1<T> = Readonly<{
   receipt: FreshComponentReceiptV1;
   derived: T;
+  compilerInvocations?: readonly string[];
 }>;
 
 export type FreshSourceEpochLegV1 = Readonly<{ id: string; package: string; args: readonly string[] }>;

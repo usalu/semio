@@ -27,7 +27,7 @@
       },
       "execution": "isolated",
       "executionProtocol": {
-        "appChannelVersion": 21
+        "appChannelVersion": 23
       },
       "hashes": {
         "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",

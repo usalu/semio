@@ -1,7 +1,4 @@
-//! ➖️ `remove-entry` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! ➖️ `remove-entry` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,14 +13,27 @@ impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for RemoveEntry {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "entry", kind: "remove-entry", record: "RemoveEntry" };
 
     fn diff(&self, base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipIso21320Mutation as protocol::Mutation<ZipSnapshot>>::Diff> {
-        agg_diff(&ZipIso21320Mutation::RemoveEntry(self.clone()), base)
+        let Self { name } = self;
+        protocol::MutationOutcome::new(diff::diff_remove_entry(name))
     }
     fn inverse(&self, base: &ZipSnapshot) -> Result<Vec<ZipIso21320Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&ZipIso21320Mutation::RemoveEntry(self.clone()), base)?
-    
-    })
-}
+        let Self { name } = self;
+        Ok({
+            base.entries
+                .iter()
+                .position(|entry| entry.name == *name)
+                .map(|index| {
+                    let entry = base.entries[index].clone();
+                    let before = base.entries.get(index + 1).map(|entry| entry.name.clone());
+                    if entry.metadata.compression_method == ZipIso21320Method::Stored.wire_code() {
+                        vec![ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry, before })]
+                    } else {
+                        vec![ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry, before })]
+                    }
+                })
+                .unwrap_or_default()
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove entry", "Eintrag entfernen")
     }

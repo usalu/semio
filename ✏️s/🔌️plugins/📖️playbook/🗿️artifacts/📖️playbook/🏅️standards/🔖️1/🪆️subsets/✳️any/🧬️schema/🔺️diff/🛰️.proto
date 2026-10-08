@@ -1,9 +1,7 @@
 syntax = "proto3";
 package semio.s.playbook.playbook.diff;
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
-import "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 message PlaybookDiff {
-  semio.s.playbook.playbook.artifact.PlaybookArtifact artifact = 7;
   optional string schema = 1;
   optional string id = 2;
   optional string version = 3;

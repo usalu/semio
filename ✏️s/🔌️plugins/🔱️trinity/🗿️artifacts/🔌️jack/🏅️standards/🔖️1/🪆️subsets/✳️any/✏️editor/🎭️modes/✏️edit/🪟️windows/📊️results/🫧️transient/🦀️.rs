@@ -2,7 +2,7 @@
 
 #[path = "🧬️schema/🦀️.rs"]
 mod schema;
-pub use schema::JackResultsWindowTransient;
+pub use schema::{JackResultsWindowTransient, JackResultsWindowTransientDiff};
 
 impl store::ArtifactDsl for JackResultsWindowTransient {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
@@ -37,15 +37,6 @@ impl store::ArtifactPack for JackResultsWindowTransient {
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
-    }
-}
-
-impl protocol::MutationDiff<JackResultsWindowTransient> for JackResultsWindowTransient {
-    fn apply(&self, _base: &JackResultsWindowTransient) -> protocol::MutationApplyResult<JackResultsWindowTransient> {
-        Ok(self.clone())
-    }
-    fn absorb(&mut self, other: Self) {
-        *self = other;
     }
 }
 

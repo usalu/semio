@@ -529,7 +529,7 @@
     },
     {
       "id": "semantic-cad-entity-step-v1",
-      "description": "The five kinds STEP can witness, through the Part-21 carrier. Registered against `no-mutation`, `set-snapshot`, `add-entity`, `remove-entity` and `set-entity-geometry` only, because the step export leaf drops seven of the nine entity shapes and never reads layers or blocks.",
+      "description": "The five kinds STEP can witness, through the Part-21 carrier. Registered against `add-entity`, `remove-entity` and `set-entity-geometry` only, because the step export leaf drops seven of the nine entity shapes and never reads layers or blocks.",
       "toleranceProfile": "cad-exact",
       "referenceScale": "declared",
       "stages": [
@@ -577,22 +577,8 @@
       "capability": "semio-v1-cad-mutate",
       "standardDirectoryName": "🔖️v1",
       "subsetDirectoryName": "📐️cad",
-      "vectors": [
-        {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
-          "scenarios": [
-            {
-              "id": "dims-the-walls-layer-and-widens-the-circle",
-              "directoryName": "⭕️dims"
-            }
-          ]
-        }
-      ],
+      "vectors": [],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "add-layer",
         "remove-layer",
         "set-layer",
@@ -619,83 +605,6 @@
       "standardDirectoryName": "🔖️v1",
       "subsetDirectoryName": "📐️cad",
       "mutations": [
-        {
-          "id": "set-snapshot",
-          "capability": "semio-v1-cad-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSnapshot",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-cad-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "dxf-crate-cad-r12-read"
-            },
-            {
-              "capability": "semio-v1-cad-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "ruststep-cad-line-circle-read"
-            }
-          ],
-          "carriers": [
-            "dxf",
-            "step"
-          ],
-          "invariants": {
-            "local": [
-              "entity-graph-agrees-across-every-registered-carrier"
-            ],
-            "enclosing": [
-              "carrier-that-cannot-encode-the-change-reports-unsupported-not-ok"
-            ]
-          }
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "semio-v1-cad-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#PatchSnapshot",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-cad-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "dxf-crate-cad-r12-read"
-            },
-            {
-              "capability": "semio-v1-cad-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "ruststep-cad-line-circle-read"
-            }
-          ],
-          "carriers": [
-            "dxf",
-            "step"
-          ],
-          "invariants": {
-            "local": [
-              "entity-graph-agrees-across-every-registered-carrier"
-            ],
-            "enclosing": [
-              "carrier-that-cannot-encode-the-change-reports-unsupported-not-ok"
-            ]
-          }
-        },
         {
           "id": "add-layer",
           "capability": "semio-v1-cad-mutate",
@@ -1180,112 +1089,6 @@
     }
   ],
   "testEvidence": [
-    {
-      "id": "no-mutation-identity",
-      "class": "third-party-generated",
-      "target": {
-        "artifact": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "cad"
-      },
-      "units": {
-        "length": "millimetre",
-        "angle": "degree",
-        "handedness": "right",
-        "up": "z"
-      },
-      "files": [
-        {
-          "role": "before-dxf",
-          "path": "../🧫️fixtures/⏸️no-mutation-identity/⬅️before.dxf",
-          "mediaType": "image/vnd.dxf",
-          "sha256": "sha256:e3598b454dec313f8ad18c1147da42a242ea69f60c4eef011787ffac7f04d989",
-          "bytes": 9407
-        },
-        {
-          "role": "expected-dxf",
-          "path": "../🧫️fixtures/⏸️no-mutation-identity/➡️after.dxf",
-          "mediaType": "image/vnd.dxf",
-          "sha256": "sha256:e3598b454dec313f8ad18c1147da42a242ea69f60c4eef011787ffac7f04d989",
-          "bytes": 9407
-        }
-      ],
-      "generator": {
-        "oracle": "dxf-crate-cad-r12-read",
-        "packageVersion": "0.6.1",
-        "engineFamily": "dxf-rs",
-        "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only no-mutation-identity",
-        "seed": 0,
-        "platform": "darwin-arm64"
-      },
-      "provenance": {
-        "source": "generated",
-        "license": "MIT",
-        "attribution": "Built and written by the dxf crate 0.6.1 (MIT) — no byte of DXF here originates in this repository.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "semantic-cad-entity-v1",
-      "toleranceProfile": "cad-exact",
-      "reproducible": true,
-      "family": "dxf-entities",
-      "notes": "The identity edit — before and after are the same drawing. The control the whole corpus is read against."
-    },
-    {
-      "id": "set-snapshot-replaces-drawing",
-      "class": "third-party-generated",
-      "target": {
-        "artifact": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "cad"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "millimetre",
-        "angle": "degree",
-        "handedness": "right",
-        "up": "z"
-      },
-      "files": [
-        {
-          "role": "before-dxf",
-          "path": "../🧫️fixtures/🖼️set-snapshot-replaces-drawing/⬅️before.dxf",
-          "mediaType": "image/vnd.dxf",
-          "sha256": "sha256:e3598b454dec313f8ad18c1147da42a242ea69f60c4eef011787ffac7f04d989",
-          "bytes": 9407
-        },
-        {
-          "role": "expected-dxf",
-          "path": "../🧫️fixtures/🖼️set-snapshot-replaces-drawing/➡️after.dxf",
-          "mediaType": "image/vnd.dxf",
-          "sha256": "sha256:2f9e9d24121a3b9c6a5007d22490d0440e4db7e91d77c6b034a3d0bbe7521d61",
-          "bytes": 7708
-        }
-      ],
-      "generator": {
-        "oracle": "dxf-crate-cad-r12-read",
-        "packageVersion": "0.6.1",
-        "engineFamily": "dxf-rs",
-        "engineVersion": "0.6.1",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only set-snapshot-replaces-drawing",
-        "seed": 0,
-        "platform": "darwin-arm64"
-      },
-      "provenance": {
-        "source": "generated",
-        "license": "MIT",
-        "attribution": "Built and written by the dxf crate 0.6.1 (MIT) — no byte of DXF here originates in this repository.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "semantic-cad-entity-v1",
-      "toleranceProfile": "cad-exact",
-      "reproducible": true,
-      "family": "dxf-entities",
-      "notes": "The whole drawing replaced by a different one: a single GRID layer with one line and one circle, sharing nothing with the base."
-    },
     {
       "id": "add-layer-hidden-services",
       "class": "third-party-generated",
@@ -2048,112 +1851,6 @@
       "reproducible": true,
       "family": "dxf-entities",
       "notes": "A nested block entity's endpoint moved, the block's own base point untouched."
-    },
-    {
-      "id": "step-no-mutation-identity",
-      "class": "handcrafted",
-      "target": {
-        "artifact": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "cad"
-      },
-      "units": {
-        "length": "millimetre",
-        "angle": "degree",
-        "handedness": "right",
-        "up": "z"
-      },
-      "files": [
-        {
-          "role": "before-step",
-          "path": "../🧫️fixtures/🪞️step-no-mutation-identity/⬅️before.step",
-          "mediaType": "model/step",
-          "sha256": "sha256:b5aff0522213acd3aadea485f26b89abcfa7c44ce201949bc5c43938ba974e56",
-          "bytes": 386
-        },
-        {
-          "role": "expected-step",
-          "path": "../🧫️fixtures/🪞️step-no-mutation-identity/➡️after.step",
-          "mediaType": "model/step",
-          "sha256": "sha256:b5aff0522213acd3aadea485f26b89abcfa7c44ce201949bc5c43938ba974e56",
-          "bytes": 386
-        }
-      ],
-      "generator": {
-        "oracle": "ruststep-cad-line-circle-read",
-        "packageVersion": "0.4.0",
-        "engineFamily": "ruststep",
-        "engineVersion": "0.4.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only step-no-mutation-identity",
-        "seed": 0,
-        "platform": "darwin-arm64"
-      },
-      "provenance": {
-        "source": "generated",
-        "license": "Apache-2.0",
-        "attribution": "Part-21 text authored in this repository and VERIFIED by ruststep 0.4.0 (Apache-2.0), which has no Part-21 writer; classed handcrafted rather than third-party-generated for exactly that reason.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "semantic-cad-entity-v1",
-      "toleranceProfile": "cad-exact",
-      "reproducible": true,
-      "family": "step-line-circle",
-      "notes": "The identity edit through the Part-21 carrier."
-    },
-    {
-      "id": "step-set-snapshot-replaces-entities",
-      "class": "handcrafted",
-      "target": {
-        "artifact": "s.stdio.semio",
-        "standard": "v1",
-        "subset": "cad"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "millimetre",
-        "angle": "degree",
-        "handedness": "right",
-        "up": "z"
-      },
-      "files": [
-        {
-          "role": "before-step",
-          "path": "../🧫️fixtures/🔄️step-set-snapshot-replaces-entities/⬅️before.step",
-          "mediaType": "model/step",
-          "sha256": "sha256:b5aff0522213acd3aadea485f26b89abcfa7c44ce201949bc5c43938ba974e56",
-          "bytes": 386
-        },
-        {
-          "role": "expected-step",
-          "path": "../🧫️fixtures/🔄️step-set-snapshot-replaces-entities/➡️after.step",
-          "mediaType": "model/step",
-          "sha256": "sha256:3f89b284e1ea8ebdcdaae7311c00726a6909ca4d78e9596482b615a5a7dbea88",
-          "bytes": 387
-        }
-      ],
-      "generator": {
-        "oracle": "ruststep-cad-line-circle-read",
-        "packageVersion": "0.4.0",
-        "engineFamily": "ruststep",
-        "engineVersion": "0.4.0",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/📜️script.ts generate --only step-set-snapshot-replaces-entities",
-        "seed": 0,
-        "platform": "darwin-arm64"
-      },
-      "provenance": {
-        "source": "generated",
-        "license": "Apache-2.0",
-        "attribution": "Part-21 text authored in this repository and VERIFIED by ruststep 0.4.0 (Apache-2.0), which has no Part-21 writer; classed handcrafted rather than third-party-generated for exactly that reason.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "semantic-cad-entity-v1",
-      "toleranceProfile": "cad-exact",
-      "reproducible": true,
-      "family": "step-line-circle",
-      "notes": "Both entities replaced. Only the ENTITY half of a set-snapshot is visible here; layers and blocks are not in this carrier at all, which is why STEP is registered alongside dxf rather than instead of it."
     },
     {
       "id": "step-add-entity-circle",

@@ -10,7 +10,7 @@ use crate::standards::v1::subsets::flow::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_triple, enc_named_triple};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_added, dec_named_triple, enc_named_added, enc_named_triple};
 use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
 use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot};
@@ -167,12 +167,12 @@ pub(crate) fn dec_param_diff(s: &str) -> Result<FlowParamDiff, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_params_diff(d: &FlowParamsDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_param_diff, enc_param)
+    enc_named_triple(d, |k| enc_str(k), enc_param_diff, |a| enc_named_added(a, enc_param))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_params_diff(s: &str) -> Result<FlowParamsDiff, String> {
-    dec_named_triple(s, dec_str, dec_param_diff, dec_param)
+    dec_named_triple(s, dec_str, dec_param_diff, |t| dec_named_added(t, dec_param))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -190,12 +190,12 @@ pub(crate) fn dec_node_diff(s: &str) -> Result<FlowNodeDiff, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_nodes_diff(d: &FlowNodesDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_node_diff, enc_node)
+    enc_named_triple(d, |k| enc_str(k), enc_node_diff, |a| enc_named_added(a, enc_node))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_nodes_diff(s: &str) -> Result<FlowNodesDiff, String> {
-    dec_named_triple(s, dec_str, dec_node_diff, dec_node)
+    dec_named_triple(s, dec_str, dec_node_diff, |t| dec_named_added(t, dec_node))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -213,12 +213,12 @@ pub(crate) fn dec_edge_diff(s: &str) -> Result<FlowEdgeDiff, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_edges_diff(d: &FlowEdgesDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_edge_diff, enc_edge)
+    enc_named_triple(d, |k| enc_str(k), enc_edge_diff, |a| enc_named_added(a, enc_edge))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_edges_diff(s: &str) -> Result<FlowEdgesDiff, String> {
-    dec_named_triple(s, dec_str, dec_edge_diff, dec_edge)
+    dec_named_triple(s, dec_str, dec_edge_diff, |t| dec_named_added(t, dec_edge))
 }
 }
 pub use diff_codec::*;

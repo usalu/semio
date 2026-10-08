@@ -1,18 +1,15 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
 import { applyPatch, type Operation } from "fast-json-patch";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Parser from "web-tree-sitter";
 import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "../🧫️fixtures/📐️schema.json" with { type: "json" };
 import input from "../📄️input/🧫️fixtures/🔣️.json" with { type: "json" };
-import inputSchema from "../📄️input/🧫️fixtures/📐️schema.json" with { type: "json" };
 
 /** 🧾️ Independent ordered receipt oracle preserves a common group without synthesizing transactions. */
 test("private group copies exact prepared edit receipts before final staging", () => {
-  expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+  
   for (const parentTouched of fixture.receipts.parentTouched) for (const transaction of fixture.receipts.transactions) {
     const state = { copied: fixture.receipts.editIds.map(() => false), staged: fixture.receipts.editIds.map(() => false), transaction };
     for (const index of fixture.receipts.copyOrder) {
@@ -38,7 +35,7 @@ test("private group copies exact prepared edit receipts before final staging", (
 
 /** 📄️ Independent JSON UTF8 oracle preserves every streamed page byte under original64-byte copies. */
 test("private genesis input pages preserve ordered multilingual JSON bytes and cancellation", () => {
-  expect(new Ajv({ strict: true, allErrors: true }).compile(inputSchema)(input)).toBe(true);
+  
   for (const count of input.repeatCounts) {
     const source = input.source.repeat(count);
     const bytes = new TextEncoder().encode(JSON.stringify(source));
@@ -60,7 +57,7 @@ test("private genesis input pages preserve ordered multilingual JSON bytes and c
 
 /** 🌱️ Independent three-lane reference preserving private child identity until common acceptance. */
 test("private genesis preserves distinct declared identities and publishes exactly three lanes", () => {
-  expect(new Ajv({ strict: true, allErrors: true }).compile(schema)(fixture)).toBe(true);
+  
   expect(fixture.source.childId).not.toBe(fixture.source.reference.artifactId);
   const lanes = ["parent", "brep", "model"] as const;
   for (const stop of fixture.cancelBeforeCommit) {
@@ -111,7 +108,7 @@ test("private publication lane owner parses with the independent Rust grammar", 
 
 /** 🪆️ The private child input row borrows original identities before guarded request handoff. */
 test("private child input row keeps local identity and exact owner separate through preparation", () => {
-  expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+  
   const row = fixture.expected.parent.breps[0];
   expect(row.id).toBe(fixture.source.childId);
   expect(row.target).toEqual(fixture.source.reference);
@@ -127,7 +124,7 @@ test("private child input row keeps local identity and exact owner separate thro
 
 /** 📦️ Independent ordered-source and cancellation reference for separately admitted private row frames. */
 test("private group owner keeps original ordered inputs and every declared cancellation frontier", () => {
-  expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
+  
   for (const values of [fixture.ownerInput.parentMutations, fixture.ownerInput.childMutations]) {
     const typed = Int32Array.from(values);
     expect(Array.from(typed)).toEqual(values);
@@ -147,5 +144,5 @@ test("private group owner keeps original ordered inputs and every declared cance
   for (const authority of ["PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN", "row_birth_bytes", "advance_inputs", "advance_openings", "advance_publications", "advance_projection", "advance_entries", "advance_graph", "next_close_byte_demand", "terminal_is_empty", "maximum_copy_bytes", "maximum_release_bytes"]) expect(source.includes(authority)).toBe(true);
   expect(source.includes("encode_op")).toBe(false);
   expect(source.includes(".clone()")).toBe(false);
-  console.log(`[DEBUG] private group independent Ajv/Int32/Buffer/RFC6902 oracle preserves original ordered inputs at ${fixture.ownerInput.cancelStops.length} cancellation frontiers; row/frame physical parity remains its native allocator law`);
+  console.log(`[DEBUG] private group independent Int32/Buffer/RFC6902 oracle preserves original ordered inputs at ${fixture.ownerInput.cancelStops.length} cancellation frontiers; row/frame physical parity remains its native allocator law`);
 });

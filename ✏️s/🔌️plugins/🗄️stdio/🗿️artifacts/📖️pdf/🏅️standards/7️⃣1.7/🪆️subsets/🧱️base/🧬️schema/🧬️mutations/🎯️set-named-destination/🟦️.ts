@@ -3,4 +3,5 @@ import type { PdfDestination, PdfDestinationFit, PdfNamedDestination } from '../
 export interface SetNamedDestinationMutation {
   mutation: 'setNamedDestination';
   destination: PdfNamedDestination;
+  index?: number | null;
 }

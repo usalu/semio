@@ -6,13 +6,13 @@ op: ( insertSpatialNode | removeSpatialNode | setSpatialNode
     | insertElement | removeElement | setElement | insertRelation | removeRelation | setRelation
     | dragElements | rotateElements | scaleElements) EOF;
 
-insertSpatialNode: 'insert-spatial-node' 'node' '=' spatialNode;
+insertSpatialNode: 'insert-spatial-node' 'node' '=' spatialNode ('at' '=' INT)?;
 removeSpatialNode: 'remove-spatial-node' 'id' '=' HEX;
 setSpatialNode: 'set-spatial-node' 'id' '=' HEX 'kind' '=' optionSpatialKind 'name' '=' optionHex 'parent_id' '=' optionOptionHex 'placement' '=' optionTransform;
-insertElement: 'insert-element' 'element' '=' element;
+insertElement: 'insert-element' 'element' '=' element ('at' '=' INT)?;
 removeElement: 'remove-element' 'id' '=' HEX;
 setElement: 'set-element' 'id' '=' HEX 'class' '=' optionElementClass 'placement' '=' optionTransform 'geometry' '=' optionGeometryRef 'spatial_id' '=' optionOptionHex 'psets' '=' optionPsets;
-insertRelation: 'insert-relation' 'relation' '=' relation;
+insertRelation: 'insert-relation' 'relation' '=' relation ('at' '=' INT)?;
 removeRelation: 'remove-relation' 'id' '=' HEX;
 setRelation: 'set-relation' 'id' '=' HEX 'kind' '=' optionRelationKind 'from' '=' optionHex 'to' '=' optionHex;
 dragElements: 'drag-elements' 'targets' '=' hexList 'offset' '=' triple;
@@ -21,10 +21,6 @@ scaleElements: 'scale-elements' 'targets' '=' hexList 'factors' '=' triple;
 hexList: '[' (HEX (',' HEX)*)? ']';
 triple: '[' number ',' number ',' number ']';
 
-snapshotLit: '[' HEX ',' '[' spatialList? ']' ',' '[' elementList? ']' ',' '[' relationList? ']' ']';
-spatialList: spatialNode (',' spatialNode)*;
-elementList: element (',' element)*;
-relationList: relation (',' relation)*;
 
 spatialNode: '[' HEX ',' spatialKind ',' HEX ',' optionHex ',' transform ']';
 spatialKind: 'S' | 'B' | 'T' | 'P';

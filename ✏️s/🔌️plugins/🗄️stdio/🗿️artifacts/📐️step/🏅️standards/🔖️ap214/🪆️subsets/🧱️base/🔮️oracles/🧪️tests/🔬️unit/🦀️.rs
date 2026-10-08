@@ -1,4 +1,4 @@
-use super::{oracle_apply_mutation, oracle_round_trip, oracle_snapshot_payload, project_step_ap214_any};
+use super::{oracle_apply_mutation, oracle_round_trip, project_step_ap214_any};
 use semio_repo_test_host::{parse_json, Json};
 
 const FIXTURE: &[u8] = include_bytes!("../../../🧫️fixtures/🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp");
@@ -34,7 +34,7 @@ fn args_of(projection: &Json, id: f64) -> Vec<Json> {
     }
 }
 
-/// ↩️ The pristine fixture's own values as the inverse of every non-snapshot row, in the same leaf wire.
+/// ↩️ The pristine fixture's own values as the inverse of every row, in the same leaf wire.
 fn inverse(kind: &str) -> Json {
     let spec = match kind {
         "set-file-description" => r#"{"kind": "set-file-description", "params": {"fileDescription": {"description": [""], "implementationLevel": "2;1"}}}"#,
@@ -70,28 +70,19 @@ fn round_trip_is_not_byte_identical_but_reparses() {
 }
 
 /// ⚖️ Every row of the case — its leaf wire payload, exactly as the scenario runs it — must move the
-/// projection, and its inverse must restore it; `set-snapshot`'s inverse is the untouched model itself,
-/// read back as a `set-snapshot` payload.
+/// projection, and its inverse must restore it.
 #[test]
 fn every_feature_row_moves_the_projection_and_its_inverse_restores_it() {
     let pristine = project_step_ap214_any(FIXTURE).unwrap();
     let rows = feature_rows();
-    assert_eq!(rows.len(), 10, "one row per declared StepMutation kind");
+    assert_eq!(rows.len(), 9, "one row per declared StepMutation kind");
     for (kind, params) in rows {
         let mutated = oracle_apply_mutation(FIXTURE, &spec(&kind, params)).unwrap_or_else(|error| panic!("{kind} failed: {error}"));
         assert_ne!(project_step_ap214_any(&mutated).unwrap(), pristine, "{kind} left the projection unchanged");
-        let undo = if kind == "set-snapshot" { spec("set-snapshot", oracle_snapshot_payload(FIXTURE).unwrap()) } else { inverse(&kind) };
+        let undo = inverse(&kind);
         let restored = oracle_apply_mutation(&mutated, &undo).unwrap_or_else(|error| panic!("inverse {kind} failed: {error}"));
         assert_eq!(project_step_ap214_any(&restored).unwrap(), pristine, "{kind} and its inverse must restore the pristine projection");
     }
-}
-
-#[test]
-fn set_snapshot_replaces_the_whole_exchange_structure() {
-    let (_, row) = feature_rows().into_iter().find(|(kind, _)| kind == "set-snapshot").expect("set-snapshot row");
-    let projection = project_step_ap214_any(&oracle_apply_mutation(FIXTURE, &spec("set-snapshot", row)).unwrap()).unwrap();
-    assert_eq!(entity_count(&projection), 3.0, "the row's snapshot is the product identity chain alone");
-    assert_eq!(args_of(&projection, 2.0)[1], Json::Object(vec![("t".to_string(), Json::String("unset".to_string()))]), "the wire `\"unset\"` reaches the file as `$`");
 }
 
 #[test]

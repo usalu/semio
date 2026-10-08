@@ -191,7 +191,10 @@ impl protocol::OpBinary for Iso16757Mutation {
             Iso16757Mutation::RemovePartNumberInput(p) => write_str_bin(&mut out, &p.key),
             Iso16757Mutation::ChangeSelectionClass(p) => write_str_bin(&mut out, &p.new_class_id),
             Iso16757Mutation::ChangeSelectionSeries(p) => write_opt_str_bin(&mut out, &p.new_series_id),
-            Iso16757Mutation::AddSelectionConstraint(p) => write_json_bin(&mut out, &p.constraint),
+            Iso16757Mutation::AddSelectionConstraint(p) => {
+                write_json_bin(&mut out, &p.constraint);
+                write_opt_usize_bin(&mut out, &p.index);
+            }
             Iso16757Mutation::RemoveSelectionConstraint(p) => store::pack_rt::write_varint_u64(&mut out, p.index as u64),
             Iso16757Mutation::RenameCatalogue(p) => write_str_bin(&mut out, &p.new_name),
             Iso16757Mutation::RenameManufacturer(p) => write_str_bin(&mut out, &p.new_name),
@@ -266,7 +269,11 @@ impl protocol::OpBinary for Iso16757Mutation {
             TAG_REMOVE_PART_NUMBER_INPUT => Ok(Iso16757Mutation::RemovePartNumberInput(RemovePartNumberInput { key: read_str_bin(&mut reader).map_err(|e| malformed("key", reader.position(), e))? })),
             TAG_CHANGE_SELECTION_CLASS => Ok(Iso16757Mutation::ChangeSelectionClass(ChangeSelectionClass { new_class_id: read_str_bin(&mut reader).map_err(|e| malformed("new_class_id", reader.position(), e))? })),
             TAG_CHANGE_SELECTION_SERIES => Ok(Iso16757Mutation::ChangeSelectionSeries(ChangeSelectionSeries { new_series_id: read_opt_str_bin(&mut reader).map_err(|e| malformed("new_series_id", reader.position(), e))? })),
-            TAG_ADD_SELECTION_CONSTRAINT => Ok(Iso16757Mutation::AddSelectionConstraint(AddSelectionConstraint { constraint: read_json_bin(&mut reader).map_err(|e| malformed("constraint", reader.position(), e))? })),
+            TAG_ADD_SELECTION_CONSTRAINT => {
+                let constraint = read_json_bin(&mut reader).map_err(|e| malformed("constraint", reader.position(), e))?;
+                let index = read_opt_usize_bin(&mut reader).map_err(|e| malformed("index", reader.position(), e))?;
+                Ok(Iso16757Mutation::AddSelectionConstraint(AddSelectionConstraint { constraint, index }))
+            }
             TAG_REMOVE_SELECTION_CONSTRAINT => {
                 let index = reader.read_varint_u64().map_err(|e| malformed("index", reader.position(), e.to_string()))? as usize;
                 Ok(Iso16757Mutation::RemoveSelectionConstraint(RemoveSelectionConstraint { index }))

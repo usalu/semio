@@ -395,7 +395,7 @@ message PdfFunction {
   optional uint32 order = 6;
   repeated double encode = 7;
   repeated double decode = 8;
-  optional bytes samples = 9;
+  repeated uint32 samples = 9;
   repeated double c0 = 10;
   repeated double c1 = 11;
   optional double n = 12;

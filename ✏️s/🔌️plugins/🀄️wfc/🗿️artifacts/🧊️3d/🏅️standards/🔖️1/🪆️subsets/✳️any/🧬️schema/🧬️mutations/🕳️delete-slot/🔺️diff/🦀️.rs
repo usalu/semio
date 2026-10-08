@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `DeleteSlot` — removes the id from `slots` AND cascades to every edge
 //! incident to it (real BASE lookup, not a whole-snapshot capture).
 
-use crate::diff::Wfc3dDiff;
+use crate::diff::{Wfc3dDiff, Wfc3dRows};
 use crate::schema::snapshot::Wfc3dSnapshot;
 
 pub fn diff(payload: &super::DeleteSlot, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
@@ -9,7 +9,7 @@ pub fn diff(payload: &super::DeleteSlot, base: &Wfc3dSnapshot) -> protocol::Muta
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Slot \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
     let incident_edge_ids: Vec<String> = base.edges.iter().filter(|edge| edge.from_slot_id == payload.id || edge.to_slot_id == payload.id).map(|edge| edge.id.clone()).collect();
-    let outcome = protocol::MutationOutcome::new(Wfc3dDiff { slots_removed: vec![payload.id.clone()], edges_removed: incident_edge_ids.clone(), ..Default::default() });
+    let outcome = protocol::MutationOutcome::new(Wfc3dDiff { slots: Wfc3dRows { removed: vec![payload.id.clone()], ..Default::default() }, edges: Wfc3dRows { removed: incident_edge_ids.clone(), ..Default::default() }, ..Default::default() });
     if incident_edge_ids.is_empty() {
         outcome
     } else {

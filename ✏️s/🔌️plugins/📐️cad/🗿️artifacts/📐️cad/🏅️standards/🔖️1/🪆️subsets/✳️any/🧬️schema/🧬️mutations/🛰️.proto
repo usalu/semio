@@ -35,9 +35,9 @@ message CreateEnergyModel { string child_id = 1; semio.framework.schema.artifact
 message DeleteEnergyModel {  }
 message CreateStructureClassicModel { string child_id = 1; semio.framework.schema.artifact_reference.ArtifactRef target = 2; }
 message DeleteStructureClassicModel {  }
-message CreateDrawing { string child_id = 1; semio.framework.schema.artifact_reference.ArtifactRef target = 2; }
+message CreateDrawing { string child_id = 1; semio.framework.schema.artifact_reference.ArtifactRef target = 2; optional uint32 index = 3; }
 message DeleteDrawing { string child_id = 1; }
-message CreateNode { semio.s.cad.cad.artifact.CadNode node = 1; }
+message CreateNode { semio.s.cad.cad.artifact.CadNode node = 1; optional uint32 index = 2; }
 message DeleteNode { string node_id = 1; }
 message RenameNode { string node_id = 1; string new_label = 2; }
 message ChangeReferenceHidden { string model_definition_id = 1; string reference_id = 2; bool new_hidden = 3; }

@@ -1,6 +1,4 @@
-//! 📥️ `insert-record` — its own mutation leaf. The aggregate's original `diff`/`inverse` bodies were
-//! lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 📥️ `insert-record` — its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,14 +14,17 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for InsertRecord {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "record", kind: "insert-record", record: "InsertRecord" };
 
     fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as Mutation<CsvSnapshot>>::Diff> {
-        agg_diff(&CsvMutation::InsertRecord(self.clone()), base)
+        let Self { index, record } = self;
+        protocol::MutationOutcome::new({ CsvDiff { has_header: None, records: Some(CsvRecordsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![CsvRecordAdded { index: *index, record: record.clone() }] }) } })
     }
     fn inverse(&self, base: &CsvSnapshot) -> Result<Vec<CsvMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&CsvMutation::InsertRecord(self.clone()), base)?
-    
-    })
-}
+        let Self { index, .. } = self;
+        Ok({
+            {
+                vec![CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: *index })]
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert record", "Datensatz einfügen")
     }

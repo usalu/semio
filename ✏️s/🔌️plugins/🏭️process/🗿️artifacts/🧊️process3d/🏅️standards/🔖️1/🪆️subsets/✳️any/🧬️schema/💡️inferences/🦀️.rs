@@ -19,7 +19,6 @@
 //! recipe's §3 prescribes.
 
 use crate::{Capability, MeasureKind, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, ProcessWorkingScene, Stock, StockQuantity, WorkingSolid, Workshop, WorkshopMachine};
-use crate::standards::v1::subsets::any::io::text::inferences::{hash_value, prefix_signature};
 use framework_schema::ArtifactSchema;
 use protocol::Inference;
 use semio_framework_value::FromValue;
@@ -428,3 +427,39 @@ mod tests;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use super::bounds::BoundingBox;
 //#endregion 🔁️Re-exports
+
+/// 🧮️ Hashes typed semantic values directly, preserving numeric variants and IEEE words.
+fn hash_intrinsic(value: &semio_framework_value::DslValue, hasher: &mut impl Hasher) {
+    use semio_framework_value::{DslValue, Number};
+    std::mem::discriminant(value).hash(hasher);
+    match value {
+        DslValue::Null => {},
+        DslValue::Bool(value) => value.hash(hasher),
+        DslValue::Number(value) => {
+            std::mem::discriminant(value).hash(hasher);
+            match value { Number::UInt(value) => value.hash(hasher), Number::Int(value) => value.hash(hasher), Number::Float(value) => value.to_bits().hash(hasher) }
+        },
+        DslValue::String(value) => value.hash(hasher),
+        DslValue::Bytes(value) => value.hash(hasher),
+        DslValue::Array(values) => { values.len().hash(hasher); for value in values { hash_intrinsic(value, hasher); } },
+        DslValue::Object(values) => { values.len().hash(hasher); for (key, value) in values { key.hash(hasher); hash_intrinsic(value, hasher); } },
+    }
+}
+
+fn hash_value<T: ToValue>(value: &T) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    let value = semio_framework_value::DecodedValue::new(value.to_value(), <semio_framework_value::DslValue as FromValue>::retire_decoded);
+    hash_intrinsic(value.get(), &mut hasher);
+    hasher.finish()
+}
+
+fn prefix_signature(stock_signature: u64, steps: &[&ProcessStep]) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    stock_signature.hash(&mut hasher);
+    steps.len().hash(&mut hasher);
+    for step in steps {
+        let value = semio_framework_value::DecodedValue::new(step.to_value(), <semio_framework_value::DslValue as FromValue>::retire_decoded);
+        hash_intrinsic(value.get(), &mut hasher);
+    }
+    hasher.finish()
+}

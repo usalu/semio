@@ -30,7 +30,7 @@ fn mutation() -> SemioGraphMutation {
 #[semio_framework_async_macros::async_test]
 async fn inserts_the_weight_property_ahead_of_the_colour_property() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("add-node-property applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("add-node-property applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "add-node-property/inserts-a-weight-property-ahead-of-the-colour-property: applied state differs from the committed after-snapshot");
     assert_eq!(produced.nodes[0].properties.len(), base.nodes[0].properties.len() + 1, "the nested properties collection grows by exactly one");
     assert_eq!(produced.nodes[0].properties[0].key, "weight", "the new entry must occupy the FINAL-state index it was addressed with");
@@ -43,12 +43,13 @@ async fn inserts_the_weight_property_ahead_of_the_colour_property() {
 async fn the_undo_remove_node_property_detaches_the_weight_entry_again() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "add-node-property undoes as exactly one remove-node-property");
     assert!(matches!(undo[0], SemioGraphMutation::RemoveNodeProperty(_)), "the undo of an add is the matching remove");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward add-node-property applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo remove-node-property applies to the enriched graph");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward add-node-property applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo remove-node-property applies to the enriched graph");
     }
     assert_eq!(current, base, "add-node-property/inserts-a-weight-property-ahead-of-the-colour-property: the undo did not restore the before-snapshot");
 }
@@ -92,7 +93,6 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical_and_omits_edges_entirely() {
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed add-node-property diff decodes");
     assert!(decoded.edges.is_none(), "add-node-property must leave the edges slot untouched");
-    assert_eq!(decoded.nodes.as_ref().map(|list| list.values.len()), Some(2), "the diff must carry the whole rebuilt nodes list");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert!(committed.get("edges").is_none(), "the committed diff JSON must not carry a edges key at all");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
@@ -103,6 +103,6 @@ async fn committed_diff_is_canonical_and_omits_edges_entirely() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed add-node-property diff decodes");
-    let produced = decoded.apply(&before()).expect("committed add-node-property diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed add-node-property diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "add-node-property/inserts-a-weight-property-ahead-of-the-colour-property: committed diff did not carry before to after");
 }

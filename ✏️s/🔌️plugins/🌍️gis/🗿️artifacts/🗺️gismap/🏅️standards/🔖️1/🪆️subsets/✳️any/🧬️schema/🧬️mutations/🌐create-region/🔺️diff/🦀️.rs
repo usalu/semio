@@ -11,6 +11,11 @@ pub fn diff(payload: &CreateRegion, base: &GisMapSnapshot) -> protocol::Mutation
     if base.regions.iter().any(|feature| feature.id == payload.item.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A region with id \"{}\" already exists.", payload.item.id), [payload.item.id.clone()]);
     }
-    protocol::MutationOutcome::new(GisMapDiff { regions: Some(GisMapFeaturesDelta { added: vec![payload.item.clone()], ..Default::default() }), ..Default::default() })
+    let reordered = (payload.index < base.regions.len()).then(|| {
+        let mut order: Vec<String> = base.regions.iter().map(|feature| feature.id.clone()).collect();
+        order.insert(payload.index, payload.item.id.clone());
+        order
+    });
+    protocol::MutationOutcome::new(GisMapDiff { regions: Some(GisMapFeaturesDelta { added: vec![payload.item.clone()], reordered, ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔹Diff

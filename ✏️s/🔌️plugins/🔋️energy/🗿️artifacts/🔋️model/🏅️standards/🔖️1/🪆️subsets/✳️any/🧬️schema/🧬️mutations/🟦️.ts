@@ -114,6 +114,7 @@ export interface AddOutputVariable {
   readonly name: string;
   readonly key: string;
   readonly reportingFrequency: "Timestep" | "Hourly" | "Daily" | "Monthly" | "RunPeriod";
+  readonly index: number | null;
 }
 
 /** 📉️ `remove-output-variable` payload. */
@@ -189,6 +190,7 @@ export interface CreateZone {
   readonly multiplier: number;
   readonly conditioned: boolean;
   readonly partOfTotalFloorArea: boolean;
+  readonly index: number | null;
 }
 
 /** 🏚️ `delete-zone` payload. */
@@ -204,6 +206,7 @@ export interface CreateSpace {
   readonly name: string;
   readonly zoneId: number;
   readonly floorAreaM2: number;
+  readonly index: number | null;
 }
 
 /** 🧹️ `delete-space` payload. */
@@ -247,6 +250,7 @@ export interface CreateSurface {
   readonly sunExposed: boolean;
   readonly windExposed: boolean;
   readonly multiplier: number;
+  readonly index: number | null;
 }
 
 /** 🪚️ `delete-surface` payload. */
@@ -338,6 +342,7 @@ export interface CreateFenestration {
   readonly finDepthM: number;
   readonly finOffsetM: number;
   readonly glazingConstructionId: number | null;
+  readonly index: number | null;
 }
 
 /** 🚪️ `delete-fenestration` payload. */
@@ -409,6 +414,7 @@ export interface CreateShadingSurface {
   readonly name: string;
   readonly verticesM: readonly (readonly [number, number, number])[];
   readonly transmittanceScheduleId: number | null;
+  readonly index: number | null;
 }
 
 /** 🪵️ `delete-shading-surface` payload. */
@@ -443,6 +449,7 @@ export interface ConnectSurfaces {
   readonly mutation: "connectSurfaces";
   readonly surfaceAId: number;
   readonly surfaceBId: number;
+  readonly index: number | null;
 }
 
 /** 💔️ `disconnect-surfaces` payload. */
@@ -983,6 +990,7 @@ export interface CreateThermostat {
   readonly coolingSetpointScheduleId: number;
   readonly heatingThrottleRangeK: number;
   readonly coolingThrottleRangeK: number;
+  readonly index: number | null;
 }
 
 /** 🛑️ `delete-thermostat` payload. */
@@ -1035,6 +1043,7 @@ export interface CreateHumidistat {
   readonly dehumidifyingSetpointScheduleId: number;
   readonly humidifyingThrottleRange: number;
   readonly dehumidifyingThrottleRange: number;
+  readonly index: number | null;
 }
 
 /** 🏜️ `delete-humidistat` payload. */
@@ -1091,6 +1100,7 @@ export interface CreateIdealLoadsSystem {
   readonly maxCoolingCapacityW: number;
   readonly outdoorAirPerPersonM3S: number;
   readonly outdoorAirPerAreaM3SM2: number;
+  readonly index: number | null;
 }
 
 /** 🫥️ `delete-ideal-loads-system` payload. */
@@ -1159,6 +1169,7 @@ export interface CreateZoneEquipment {
   readonly priority: number;
   readonly heatingCapacityW: number;
   readonly coolingCapacityW: number;
+  readonly index: number | null;
 }
 
 /** 🗑️ `delete-zone-equipment` payload. */
@@ -1210,6 +1221,7 @@ export interface CreateDaylightZone {
   readonly illuminanceTargetLux: number;
   readonly glareLimit: number;
   readonly windowTransmittance: number;
+  readonly index: number | null;
 }
 
 /** 🌗️ `delete-daylight-zone` payload. */
@@ -1253,6 +1265,7 @@ export interface CreateSizingObject {
   readonly zoneId: number;
   readonly sizingType: "Heating" | "Cooling" | "OutdoorAir";
   readonly designDayType: "Heating" | "Cooling";
+  readonly index: number | null;
 }
 
 /** 🪒️ `delete-sizing-object` payload. */
@@ -1287,6 +1300,7 @@ export interface CreateRoomAirModelAssignment {
   readonly mutation: "createRoomAirModelAssignment";
   readonly zoneId: number;
   readonly model: "WellMixed" | "OneNodeDisplacement" | "TwoNodeBuoyancy" | "UnderFloorAirDistribution";
+  readonly index: number | null;
 }
 
 /** 🧺️ `delete-room-air-model-assignment` payload. */
@@ -1314,6 +1328,7 @@ export interface CreateSetpointManager {
   readonly highSetpointC: number;
   readonly schedulePresent: boolean;
   readonly scheduleId: number;
+  readonly index: number | null;
 }
 
 /** 🍄️ `delete-setpoint-manager` payload. */
@@ -1357,6 +1372,7 @@ export interface CreateAirLoop {
   readonly returnNodeId: number;
   readonly designSupplyAirFlowM3S: number;
   readonly terminalZoneIds: readonly number[];
+  readonly index: number | null;
 }
 
 /** 🥀️ `delete-air-loop` payload. */
@@ -1398,6 +1414,7 @@ export interface AddAirLoopTerminalZone {
   readonly mutation: "addAirLoopTerminalZone";
   readonly id: number;
   readonly zoneId: number;
+  readonly index: number | null;
 }
 
 /** 🪹️ `remove-air-loop-terminal-zone` payload. */
@@ -1417,6 +1434,7 @@ export interface CreatePlantLoop {
   readonly returnTemperatureC: number;
   readonly designFlowKgS: number;
   readonly equipmentIds: readonly number[];
+  readonly index: number | null;
 }
 
 /** 💣️ `delete-plant-loop` payload. */
@@ -1465,6 +1483,7 @@ export interface AddPlantLoopEquipment {
   readonly mutation: "addPlantLoopEquipment";
   readonly id: number;
   readonly equipmentId: number;
+  readonly index: number | null;
 }
 
 /** ⚙️ `remove-plant-loop-equipment` payload. */
@@ -1481,6 +1500,7 @@ export interface CreateOutdoorAirSystem {
   readonly airLoopId: number;
   readonly minOaFlowM3S: number;
   readonly economizerEnabled: boolean;
+  readonly index: number | null;
 }
 
 /** 🍂️ `delete-outdoor-air-system` payload. */

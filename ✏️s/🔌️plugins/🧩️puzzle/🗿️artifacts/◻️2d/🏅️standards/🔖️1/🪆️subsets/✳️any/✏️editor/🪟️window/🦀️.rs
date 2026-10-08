@@ -57,41 +57,29 @@ impl Default for Puzzle2dWindowConfig {
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Puzzle2dWindowConfigMutation {
-    Snapshot { config: Puzzle2dWindowConfig },
+    Set { patch: Puzzle2dWindowConfigDiff },
 }
 
 impl protocol::Mutation<Puzzle2dWindowConfig> for Puzzle2dWindowConfigMutation {
-    type Diff = Puzzle2dWindowConfig;
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
-        schema_version: 1,
-        owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window",
-        semantic_kind: "set-window-config",
-        display_name: "Set Puzzle 2D Window Configuration",
-        emoji: "🪟️",
-        aggregate_variant: "Snapshot",
-        payload_schema: "puzzle.2dwindowconfig",
-        text_opcode: None,
-        binary_tag: None,
-        invertibility: protocol::MutationInvertibility::ExplicitMutation,
-        diff_participation: protocol::MutationDiffParticipation::Detect,
-        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-        composition: protocol::MutationComposition::Atomic,
-        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }];
+    type Diff = Puzzle2dWindowConfigDiff;
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window", semantic_kind: "set-window-config", display_name: "Set Puzzle 2D Window Configuration", emoji: "🪟️", aggregate_variant: "Set", payload_schema: "puzzle.2dwindowconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         &Self::DESCRIPTORS[0]
     }
-    fn diff(&self, _base: &Puzzle2dWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
-        match self {
-            Self::Snapshot { config } => protocol::MutationOutcome::new(config.clone()),
+    fn diff(&self, base: &Puzzle2dWindowConfig) -> protocol::MutationOutcome<Puzzle2dWindowConfigDiff> {
+        let Self::Set { patch } = self;
+        let diff = patch.changed(base);
+        if protocol::DiffAlgebra::<Puzzle2dWindowConfig>::is_empty(&diff) {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The window configuration already holds these values.");
         }
+        protocol::MutationOutcome::new(diff)
     }
     fn inverse(&self, base: &Puzzle2dWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { config: base.clone() }]
-    
-    })())
-}
+        let Self::Set { patch } = self;
+        Ok(vec![Self::Set { patch: patch.restoring(base) }])
+    }
 }
 
 macro_rules! json_store {
@@ -161,7 +149,178 @@ impl store::ArtifactPack for Puzzle2dWindowConfig {
     }
 }
 
-store::impl_whole_record_config!(Puzzle2dWindowConfig);
+impl store::ConfigRecord for Puzzle2dWindowConfig {}
+
+/// 🔺️ Sparse typed delta of one Puzzle 2D pane's persisted-local options: names only the fields a mutation changes.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Puzzle2dWindowConfigDiff {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub camera_x: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub camera_y: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub camera_zoom: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub lod_mode: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub grid_visible: Option<bool>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub grid_snap_enabled: Option<bool>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub grid_factor: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub suggestion_offset: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub proximity_radius: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub area_brush_width: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub area_brush_height: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub transform_move: Option<bool>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub transform_rotate: Option<bool>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub selectable_nodes: Option<bool>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub selectable_handles: Option<bool>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub selectable_edges: Option<bool>,
+}
+
+impl Puzzle2dWindowConfigDiff {
+    /// 🎯️ Every field set to `state`'s value.
+    pub fn of(state: &Puzzle2dWindowConfig) -> Self {
+        Self { camera_x: Some(state.camera_x), camera_y: Some(state.camera_y), camera_zoom: Some(state.camera_zoom), lod_mode: Some(state.lod_mode.clone()), grid_visible: Some(state.grid_visible), grid_snap_enabled: Some(state.grid_snap_enabled), grid_factor: Some(state.grid_factor), suggestion_offset: Some(state.suggestion_offset), proximity_radius: Some(state.proximity_radius), area_brush_width: Some(state.area_brush_width), area_brush_height: Some(state.area_brush_height), transform_move: Some(state.transform_move), transform_rotate: Some(state.transform_rotate), selectable_nodes: Some(state.selectable_nodes), selectable_handles: Some(state.selectable_handles), selectable_edges: Some(state.selectable_edges) }
+    }
+    /// ✂️ The named fields that differ from `base`.
+    pub fn changed(&self, base: &Puzzle2dWindowConfig) -> Self {
+        Self { camera_x: self.camera_x.as_ref().filter(|value| **value != base.camera_x).cloned(), camera_y: self.camera_y.as_ref().filter(|value| **value != base.camera_y).cloned(), camera_zoom: self.camera_zoom.as_ref().filter(|value| **value != base.camera_zoom).cloned(), lod_mode: self.lod_mode.as_ref().filter(|value| **value != base.lod_mode).cloned(), grid_visible: self.grid_visible.as_ref().filter(|value| **value != base.grid_visible).cloned(), grid_snap_enabled: self.grid_snap_enabled.as_ref().filter(|value| **value != base.grid_snap_enabled).cloned(), grid_factor: self.grid_factor.as_ref().filter(|value| **value != base.grid_factor).cloned(), suggestion_offset: self.suggestion_offset.as_ref().filter(|value| **value != base.suggestion_offset).cloned(), proximity_radius: self.proximity_radius.as_ref().filter(|value| **value != base.proximity_radius).cloned(), area_brush_width: self.area_brush_width.as_ref().filter(|value| **value != base.area_brush_width).cloned(), area_brush_height: self.area_brush_height.as_ref().filter(|value| **value != base.area_brush_height).cloned(), transform_move: self.transform_move.as_ref().filter(|value| **value != base.transform_move).cloned(), transform_rotate: self.transform_rotate.as_ref().filter(|value| **value != base.transform_rotate).cloned(), selectable_nodes: self.selectable_nodes.as_ref().filter(|value| **value != base.selectable_nodes).cloned(), selectable_handles: self.selectable_handles.as_ref().filter(|value| **value != base.selectable_handles).cloned(), selectable_edges: self.selectable_edges.as_ref().filter(|value| **value != base.selectable_edges).cloned() }
+    }
+    /// ↩️ The named fields at the values `base` holds.
+    pub fn restoring(&self, base: &Puzzle2dWindowConfig) -> Self {
+        Self { camera_x: self.camera_x.as_ref().map(|_| base.camera_x), camera_y: self.camera_y.as_ref().map(|_| base.camera_y), camera_zoom: self.camera_zoom.as_ref().map(|_| base.camera_zoom), lod_mode: self.lod_mode.as_ref().map(|_| base.lod_mode.clone()), grid_visible: self.grid_visible.as_ref().map(|_| base.grid_visible), grid_snap_enabled: self.grid_snap_enabled.as_ref().map(|_| base.grid_snap_enabled), grid_factor: self.grid_factor.as_ref().map(|_| base.grid_factor), suggestion_offset: self.suggestion_offset.as_ref().map(|_| base.suggestion_offset), proximity_radius: self.proximity_radius.as_ref().map(|_| base.proximity_radius), area_brush_width: self.area_brush_width.as_ref().map(|_| base.area_brush_width), area_brush_height: self.area_brush_height.as_ref().map(|_| base.area_brush_height), transform_move: self.transform_move.as_ref().map(|_| base.transform_move), transform_rotate: self.transform_rotate.as_ref().map(|_| base.transform_rotate), selectable_nodes: self.selectable_nodes.as_ref().map(|_| base.selectable_nodes), selectable_handles: self.selectable_handles.as_ref().map(|_| base.selectable_handles), selectable_edges: self.selectable_edges.as_ref().map(|_| base.selectable_edges) }
+    }
+}
+
+impl protocol::MutationDiff<Puzzle2dWindowConfig> for Puzzle2dWindowConfigDiff {
+    fn apply(&self, base: &Puzzle2dWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle2dWindowConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.camera_x {
+            next.camera_x = *value;
+        }
+        if let Some(value) = &self.camera_y {
+            next.camera_y = *value;
+        }
+        if let Some(value) = &self.camera_zoom {
+            next.camera_zoom = *value;
+        }
+        if let Some(value) = &self.lod_mode {
+            next.lod_mode = value.clone();
+        }
+        if let Some(value) = &self.grid_visible {
+            next.grid_visible = *value;
+        }
+        if let Some(value) = &self.grid_snap_enabled {
+            next.grid_snap_enabled = *value;
+        }
+        if let Some(value) = &self.grid_factor {
+            next.grid_factor = *value;
+        }
+        if let Some(value) = &self.suggestion_offset {
+            next.suggestion_offset = *value;
+        }
+        if let Some(value) = &self.proximity_radius {
+            next.proximity_radius = *value;
+        }
+        if let Some(value) = &self.area_brush_width {
+            next.area_brush_width = *value;
+        }
+        if let Some(value) = &self.area_brush_height {
+            next.area_brush_height = *value;
+        }
+        if let Some(value) = &self.transform_move {
+            next.transform_move = *value;
+        }
+        if let Some(value) = &self.transform_rotate {
+            next.transform_rotate = *value;
+        }
+        if let Some(value) = &self.selectable_nodes {
+            next.selectable_nodes = *value;
+        }
+        if let Some(value) = &self.selectable_handles {
+            next.selectable_handles = *value;
+        }
+        if let Some(value) = &self.selectable_edges {
+            next.selectable_edges = *value;
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.camera_x.is_some() {
+            self.camera_x = other.camera_x;
+        }
+        if other.camera_y.is_some() {
+            self.camera_y = other.camera_y;
+        }
+        if other.camera_zoom.is_some() {
+            self.camera_zoom = other.camera_zoom;
+        }
+        if other.lod_mode.is_some() {
+            self.lod_mode = other.lod_mode;
+        }
+        if other.grid_visible.is_some() {
+            self.grid_visible = other.grid_visible;
+        }
+        if other.grid_snap_enabled.is_some() {
+            self.grid_snap_enabled = other.grid_snap_enabled;
+        }
+        if other.grid_factor.is_some() {
+            self.grid_factor = other.grid_factor;
+        }
+        if other.suggestion_offset.is_some() {
+            self.suggestion_offset = other.suggestion_offset;
+        }
+        if other.proximity_radius.is_some() {
+            self.proximity_radius = other.proximity_radius;
+        }
+        if other.area_brush_width.is_some() {
+            self.area_brush_width = other.area_brush_width;
+        }
+        if other.area_brush_height.is_some() {
+            self.area_brush_height = other.area_brush_height;
+        }
+        if other.transform_move.is_some() {
+            self.transform_move = other.transform_move;
+        }
+        if other.transform_rotate.is_some() {
+            self.transform_rotate = other.transform_rotate;
+        }
+        if other.selectable_nodes.is_some() {
+            self.selectable_nodes = other.selectable_nodes;
+        }
+        if other.selectable_handles.is_some() {
+            self.selectable_handles = other.selectable_handles;
+        }
+        if other.selectable_edges.is_some() {
+            self.selectable_edges = other.selectable_edges;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<Puzzle2dWindowConfig> for Puzzle2dWindowConfigDiff {
+    fn inverse(&self, base: &Puzzle2dWindowConfig) -> Self {
+        self.restoring(base)
+    }
+    fn between(base: &Puzzle2dWindowConfig, other: &Puzzle2dWindowConfig) -> Self {
+        Self { camera_x: (base.camera_x != other.camera_x).then(|| other.camera_x), camera_y: (base.camera_y != other.camera_y).then(|| other.camera_y), camera_zoom: (base.camera_zoom != other.camera_zoom).then(|| other.camera_zoom), lod_mode: (base.lod_mode != other.lod_mode).then(|| other.lod_mode.clone()), grid_visible: (base.grid_visible != other.grid_visible).then(|| other.grid_visible), grid_snap_enabled: (base.grid_snap_enabled != other.grid_snap_enabled).then(|| other.grid_snap_enabled), grid_factor: (base.grid_factor != other.grid_factor).then(|| other.grid_factor), suggestion_offset: (base.suggestion_offset != other.suggestion_offset).then(|| other.suggestion_offset), proximity_radius: (base.proximity_radius != other.proximity_radius).then(|| other.proximity_radius), area_brush_width: (base.area_brush_width != other.area_brush_width).then(|| other.area_brush_width), area_brush_height: (base.area_brush_height != other.area_brush_height).then(|| other.area_brush_height), transform_move: (base.transform_move != other.transform_move).then(|| other.transform_move), transform_rotate: (base.transform_rotate != other.transform_rotate).then(|| other.transform_rotate), selectable_nodes: (base.selectable_nodes != other.selectable_nodes).then(|| other.selectable_nodes), selectable_handles: (base.selectable_handles != other.selectable_handles).then(|| other.selectable_handles), selectable_edges: (base.selectable_edges != other.selectable_edges).then(|| other.selectable_edges) }
+    }
+    fn is_empty(&self) -> bool {
+        self.camera_x.is_none() && self.camera_y.is_none() && self.camera_zoom.is_none() && self.lod_mode.is_none() && self.grid_visible.is_none() && self.grid_snap_enabled.is_none() && self.grid_factor.is_none() && self.suggestion_offset.is_none() && self.proximity_radius.is_none() && self.area_brush_width.is_none() && self.area_brush_height.is_none() && self.transform_move.is_none() && self.transform_rotate.is_none() && self.selectable_nodes.is_none() && self.selectable_handles.is_none() && self.selectable_edges.is_none()
+    }
+}
+
 
 impl protocol::OpText for Puzzle2dWindowConfigMutation {
     fn print_op(&self) -> String {
@@ -199,7 +358,7 @@ pub enum Puzzle2dWindowTransientMutation {
 }
 
 impl protocol::Mutation<Puzzle2dWindowTransient> for Puzzle2dWindowTransientMutation {
-    type Diff = Puzzle2dWindowTransient;
+    type Diff = Puzzle2dWindowTransientDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window",
@@ -219,10 +378,13 @@ impl protocol::Mutation<Puzzle2dWindowTransient> for Puzzle2dWindowTransientMuta
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         &Self::DESCRIPTORS[0]
     }
-    fn diff(&self, _base: &Puzzle2dWindowTransient) -> protocol::MutationOutcome<Self::Diff> {
-        match self {
-            Self::Snapshot { transient } => protocol::MutationOutcome::new(transient.clone()),
+    fn diff(&self, base: &Puzzle2dWindowTransient) -> protocol::MutationOutcome<Self::Diff> {
+        let Self::Snapshot { transient } = self;
+        let diff = Puzzle2dWindowTransientDiff::of(transient).changed(base);
+        if protocol::DiffAlgebra::<Puzzle2dWindowTransient>::is_empty(&diff) {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The window transient already holds this state.");
         }
+        protocol::MutationOutcome::new(diff)
     }
     fn inverse(&self, base: &Puzzle2dWindowTransient) -> Result<Vec<Self>, semio_framework_value::ValueError> {
     Ok((|| {
@@ -232,12 +394,91 @@ impl protocol::Mutation<Puzzle2dWindowTransient> for Puzzle2dWindowTransientMuta
 }
 }
 
-impl protocol::MutationDiff<Puzzle2dWindowTransient> for Puzzle2dWindowTransient {
-    fn apply(&self, _base: &Puzzle2dWindowTransient) -> protocol::MutationApplyResult<Puzzle2dWindowTransient> {
-        Ok(self.clone())
+/// 🕳️ Tri-state decode of every `Option<Option<T>>` diff slot: a missing key is the unchanged slot (`None`) and a PRESENT
+/// `null` is the clear `Some(None)`, never the unchanged slot the blanket `Option<T>` decode would fold it into.
+fn deserialize_double_option<T: semio_framework_value::FromValue>(value: semio_framework_value::DslValue) -> Result<Option<Option<T>>, semio_framework_value::ValueError> {
+    <Option<T> as semio_framework_value::FromValue>::from_value(value).map(Some)
+}
+
+/// 🔺️ Sparse typed delta of one Puzzle 2D pane's ephemeral interaction state: names only the fields a mutation changes.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Puzzle2dWindowTransientDiff {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub engagement_input: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub brush_candidate_index: Option<usize>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub brush_candidates: Option<Vec<semio_framework_value::DslValue>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub brush_candidate_source_handle_id: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
+    pub suggestion_menu: Option<Option<Puzzle2dSuggestionMenu>>,
+}
+
+impl Puzzle2dWindowTransientDiff {
+    /// 🎯️ Every field set to `state`'s value.
+    pub fn of(state: &Puzzle2dWindowTransient) -> Self {
+        Self { engagement_input: Some(state.engagement_input.clone()), brush_candidate_index: Some(state.brush_candidate_index), brush_candidates: Some(state.brush_candidates.clone()), brush_candidate_source_handle_id: Some(state.brush_candidate_source_handle_id.clone()), suggestion_menu: Some(state.suggestion_menu.clone()) }
+    }
+    /// ✂️ The named fields that differ from `base`.
+    pub fn changed(&self, base: &Puzzle2dWindowTransient) -> Self {
+        Self { engagement_input: self.engagement_input.as_ref().filter(|value| **value != base.engagement_input).cloned(), brush_candidate_index: self.brush_candidate_index.as_ref().filter(|value| **value != base.brush_candidate_index).cloned(), brush_candidates: self.brush_candidates.as_ref().filter(|value| **value != base.brush_candidates).cloned(), brush_candidate_source_handle_id: self.brush_candidate_source_handle_id.as_ref().filter(|value| **value != base.brush_candidate_source_handle_id).cloned(), suggestion_menu: self.suggestion_menu.as_ref().filter(|value| **value != base.suggestion_menu).cloned() }
+    }
+    /// ↩️ The named fields at the values `base` holds.
+    pub fn restoring(&self, base: &Puzzle2dWindowTransient) -> Self {
+        Self { engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()), brush_candidate_index: self.brush_candidate_index.as_ref().map(|_| base.brush_candidate_index), brush_candidates: self.brush_candidates.as_ref().map(|_| base.brush_candidates.clone()), brush_candidate_source_handle_id: self.brush_candidate_source_handle_id.as_ref().map(|_| base.brush_candidate_source_handle_id.clone()), suggestion_menu: self.suggestion_menu.as_ref().map(|_| base.suggestion_menu.clone()) }
+    }
+}
+
+impl protocol::MutationDiff<Puzzle2dWindowTransient> for Puzzle2dWindowTransientDiff {
+    fn apply(&self, base: &Puzzle2dWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle2dWindowTransient> {
+        let mut next = base.clone();
+        if let Some(value) = &self.engagement_input {
+            next.engagement_input = value.clone();
+        }
+        if let Some(value) = &self.brush_candidate_index {
+            next.brush_candidate_index = *value;
+        }
+        if let Some(value) = &self.brush_candidates {
+            next.brush_candidates = value.clone();
+        }
+        if let Some(value) = &self.brush_candidate_source_handle_id {
+            next.brush_candidate_source_handle_id = value.clone();
+        }
+        if let Some(value) = &self.suggestion_menu {
+            next.suggestion_menu = value.clone();
+        }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if other.engagement_input.is_some() {
+            self.engagement_input = other.engagement_input;
+        }
+        if other.brush_candidate_index.is_some() {
+            self.brush_candidate_index = other.brush_candidate_index;
+        }
+        if other.brush_candidates.is_some() {
+            self.brush_candidates = other.brush_candidates;
+        }
+        if other.brush_candidate_source_handle_id.is_some() {
+            self.brush_candidate_source_handle_id = other.brush_candidate_source_handle_id;
+        }
+        if other.suggestion_menu.is_some() {
+            self.suggestion_menu = other.suggestion_menu;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<Puzzle2dWindowTransient> for Puzzle2dWindowTransientDiff {
+    fn inverse(&self, base: &Puzzle2dWindowTransient) -> Self {
+        self.restoring(base)
+    }
+    fn between(base: &Puzzle2dWindowTransient, other: &Puzzle2dWindowTransient) -> Self {
+        Self { engagement_input: (base.engagement_input != other.engagement_input).then(|| other.engagement_input.clone()), brush_candidate_index: (base.brush_candidate_index != other.brush_candidate_index).then(|| other.brush_candidate_index), brush_candidates: (base.brush_candidates != other.brush_candidates).then(|| other.brush_candidates.clone()), brush_candidate_source_handle_id: (base.brush_candidate_source_handle_id != other.brush_candidate_source_handle_id).then(|| other.brush_candidate_source_handle_id.clone()), suggestion_menu: (base.suggestion_menu != other.suggestion_menu).then(|| other.suggestion_menu.clone()) }
+    }
+    fn is_empty(&self) -> bool {
+        self.engagement_input.is_none() && self.brush_candidate_index.is_none() && self.brush_candidates.is_none() && self.brush_candidate_source_handle_id.is_none() && self.suggestion_menu.is_none()
     }
 }
 
@@ -435,7 +676,7 @@ pub fn kind_for_view(view: &semio_framework_plugin::ViewModel) -> Option<&str> {
 
 pub fn addressed_config(view: &semio_framework_plugin::ViewModel, config: Puzzle2dWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
     let (id, kind) = kind(view).ok_or_else(|| semio_framework_plugin::Fault::from("puzzle2d-window-required"))?;
-    let mutation = Puzzle2dWindowConfigMutation::Snapshot { config };
+    let mutation = Puzzle2dWindowConfigMutation::Set { patch: Puzzle2dWindowConfigDiff::of(&config) };
     match kind {
         overview::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle2dOverviewWindowConfigOwner>(id, mutation)),
         detail::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<Puzzle2dDetailWindowConfigOwner>(id, mutation)),

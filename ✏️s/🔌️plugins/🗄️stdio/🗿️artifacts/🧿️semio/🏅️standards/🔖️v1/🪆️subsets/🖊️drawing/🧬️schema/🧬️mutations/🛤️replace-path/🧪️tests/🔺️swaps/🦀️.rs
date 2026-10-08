@@ -31,7 +31,7 @@ fn mutation() -> SemioDrawingMutation {
 #[semio_framework_async_macros::async_test]
 async fn replaces_the_segments_and_keeps_the_style_reference() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("replace-path applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("replace-path applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "replace-path/swaps-the-open-path-for-a-closed-triangle: applied state differs from the committed after-snapshot");
     let DrawNode::Group { children, .. } = &produced.layers[0].root else { panic!("the layer root is a group") };
     let DrawNode::Path { segments, style } = &children[0] else { panic!("child #0 is the path node") };
@@ -45,13 +45,14 @@ async fn replaces_the_segments_and_keeps_the_style_reference() {
 async fn the_undo_replace_path_restores_the_captured_segments() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "replace-path of a real path undoes as exactly one replace-path");
     let SemioDrawingMutation::ReplacePath(restore) = &undo[0] else { panic!("replace-path must undo as replace-path") };
     assert_eq!(restore.new_segments.len(), 3, "the undo must recapture BASE's own three segments");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward replace-path applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo replace-path applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward replace-path applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo replace-path applies");
     }
     assert_eq!(current, base, "replace-path/swaps-the-open-path-for-a-closed-triangle: the undo did not restore the before-snapshot");
 }
@@ -116,6 +117,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-path diff decodes");
-    let produced = decoded.apply(&before()).expect("committed replace-path diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed replace-path diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-path/swaps-the-open-path-for-a-closed-triangle: committed diff did not carry before to after");
 }

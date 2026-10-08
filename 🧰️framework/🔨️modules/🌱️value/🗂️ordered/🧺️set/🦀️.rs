@@ -1,6 +1,6 @@
 //! 🧺️ Immutable ordered string membership over the codebase-owned retained map.
 
-use super::{Grant, Iter, LookupCursor, OrderedMap, Retirement, RetirementStep, UpdateCursor};
+use super::{Iter, LookupCursor, OrderedMap, Retirement, RetirementStep, UpdateCursor, RetainedCloneGrant};
 use super::super::{DslValue, FromValue, ToValue, ValueError};
 
 //#region 🧺️OrderedSet
@@ -30,8 +30,8 @@ impl OrderedSet {
     pub fn retire_cold(self) {
         let mut retirement = self.retire();
         loop {
-            let maximum_bytes = retirement.next_close_byte_demand().expect("finite ordered-set cold release demand").max(1);
-            if matches!(retirement.advance(Grant { maximum_items: 1, maximum_bytes }), RetirementStep::Complete) { break; }
+            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:0,maximum_release_bytes:retirement.next_close_byte_demand().expect("finite ordered-set cold release demand"),maximum_depth:retirement.next_depth_demand()};
+            match retirement.advance(grant){RetirementStep::Complete=>break,RetirementStep::Failure(error)=>panic!("ordered set cold release refused: {error}"),_=>{}}
         }
     }
 }

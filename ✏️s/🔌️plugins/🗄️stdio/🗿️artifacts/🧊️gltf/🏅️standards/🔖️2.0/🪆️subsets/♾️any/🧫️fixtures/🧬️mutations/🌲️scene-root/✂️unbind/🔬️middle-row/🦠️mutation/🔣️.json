@@ -1,0 +1,10 @@
+{
+  "mutation": "unbindSceneRootNode",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "scene": 0,
+      "node": 1
+    }
+  }
+}

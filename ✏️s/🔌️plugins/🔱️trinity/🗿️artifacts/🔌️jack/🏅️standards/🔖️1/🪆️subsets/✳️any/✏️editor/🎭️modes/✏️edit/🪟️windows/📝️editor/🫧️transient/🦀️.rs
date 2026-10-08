@@ -62,13 +62,45 @@ impl store::ArtifactPack for JackEditorWindowTransient {
     }
 }
 
-impl protocol::MutationDiff<JackEditorWindowTransient> for JackEditorWindowTransient {
-    fn apply(&self, _base: &JackEditorWindowTransient) -> protocol::MutationApplyResult<JackEditorWindowTransient> {
-        Ok(self.clone())
+/// 🕳️ Tri-state decode of every `Option<Option<T>>` diff slot: a missing key is the unchanged slot (`None`) and a PRESENT
+/// `null` is the clear `Some(None)`, never the unchanged slot the blanket `Option<T>` decode would fold it into.
+fn deserialize_double_option<T: semio_framework_value::FromValue>(value: semio_framework_value::DslValue) -> Result<Option<Option<T>>, semio_framework_value::ValueError> {
+    <Option<T> as semio_framework_value::FromValue>::from_value(value).map(Some)
+}
+
+/// 🔺️ Sparse typed delta of one Jack editor window's transient selection: names only the slot a mutation changes.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct JackEditorWindowTransientDiff {
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
+    pub selection: Option<Option<JackEditorSelection>>,
+}
+
+impl protocol::MutationDiff<JackEditorWindowTransient> for JackEditorWindowTransientDiff {
+    fn apply(&self, base: &JackEditorWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<JackEditorWindowTransient> {
+        let mut next = base.clone();
+        if let Some(selection) = &self.selection {
+            next.selection.clone_from(selection);
+        }
+        Ok(next)
     }
 
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if other.selection.is_some() {
+            self.selection = other.selection;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<JackEditorWindowTransient> for JackEditorWindowTransientDiff {
+    fn inverse(&self, base: &JackEditorWindowTransient) -> Self {
+        Self { selection: self.selection.as_ref().map(|_| base.selection.clone()) }
+    }
+    fn between(base: &JackEditorWindowTransient, other: &JackEditorWindowTransient) -> Self {
+        Self { selection: (base.selection != other.selection).then(|| other.selection.clone()) }
+    }
+    fn is_empty(&self) -> bool {
+        self.selection.is_none()
     }
 }
 
@@ -114,3 +146,7 @@ impl semio_framework_plugin::WindowTransientOwner for JackEditorWindowTransientO
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️selection/🦀️.rs"]
+mod selection_tests;

@@ -156,7 +156,7 @@ fn indexed_gamma_edit_obeys_neutral_order_inverse_zero_and_pngjs_laws() {
     });
     let outcome = mutation.diff(&snapshot);
     assert!(outcome.messages().is_empty(), "indexed gamma edit was refused: {:?}", outcome.messages());
-    let mut edited = outcome.diff().apply(&snapshot).unwrap();
+    let mut edited = protocol::apply_diff(outcome.diff(), &snapshot).unwrap();
     assert_eq!(edited.image.gamma,Some(law["value"].as_u64().unwrap() as u32));
     let mut expected=snapshot.clone();expected.image.gamma=edited.image.gamma;assert_eq!(edited,expected);
     let mut oracle = Command::new("bun").args(["-e", "import {PNG} from 'pngjs';const bytes=Buffer.from(await Bun.stdin.arrayBuffer()),image=PNG.sync.read(bytes);if(Math.abs(image.gamma-0.45455)>1e-9)throw Error(`gamma ${image.gamma}`);console.log(JSON.stringify([...image.data]));"])
@@ -166,7 +166,7 @@ fn indexed_gamma_edit_obeys_neutral_order_inverse_zero_and_pngjs_laws() {
     assert!(output.status.success(), "pngjs refused edited indexed PNG: {}", String::from_utf8_lossy(&output.stderr));
     assert_eq!(serde_json::from_slice::<serde_json::Value>(&output.stdout).unwrap(), serde_json::json!(project_png(INDEXED_2).unwrap().pixels));
     for inverse in mutation.inverse(&snapshot).unwrap() {
-        edited = inverse.diff(&edited).diff().apply(&edited).unwrap();
+        edited = protocol::apply_diff(&inverse.diff(&edited).diff(), &edited).unwrap();
     }
     assert_eq!(edited, snapshot, "gamma inverse must restore the exact indexed source bytes");
     for value in law["rejectedValues"].as_array().unwrap() {
@@ -364,10 +364,10 @@ fn native_paint_mutation_roundtrips_and_inverse_restores_exact_source() {
     });
     assert_eq!(crate::PngMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
     assert_eq!(crate::PngMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
-    let edited = mutation.diff(&base).diff().apply(&base).unwrap();
+    let edited = protocol::apply_diff(&mutation.diff(&base).diff(), &base).unwrap();
     assert_eq!(png_native_pixel(&edited, 1, 0).unwrap(), vec![0x1234]);
     let inverse = mutation.inverse(&base).unwrap();
-    assert_eq!(inverse[0].diff(&edited).diff().apply(&edited).unwrap(), base);
+    assert_eq!(protocol::apply_diff(&inverse[0].diff(&edited).diff(), &edited).unwrap(), base);
 }
 
 #[test]

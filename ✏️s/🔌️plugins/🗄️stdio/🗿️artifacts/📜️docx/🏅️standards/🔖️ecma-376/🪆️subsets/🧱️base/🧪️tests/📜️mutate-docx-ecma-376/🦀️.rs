@@ -24,7 +24,7 @@
 //! outright rather than faked, and the feature says so.
 
 use semio_repo_test_host::{Adapter, Context, Outcome};
-use semio_s_artifact_stdio_docx_test_oracle::standards::v_ecma_376::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_replace_package, oracle_round_trip, project_docx_ecma_376};
+use semio_s_artifact_stdio_docx_test_oracle::standards::v_ecma_376::subsets::base::{oracle_apply_mutation, oracle_apply_mutation_inverse, oracle_round_trip, project_docx_ecma_376};
 use semio_repo_test_host::law::{inverse_restores, mutation_is_observable, reparsed_not_copied, round_trip_preserves};
 
 //#region 🔖️Input
@@ -36,11 +36,6 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
     std::fs::read(&copy).map_err(|error| error.to_string())
 }
 
-/// 📸️ The committed after-document whose decoded snapshot the `set-snapshot` scenarios replace the README with.
-fn set_snapshot_document(ctx: &Context) -> Result<Vec<u8>, String> {
-    let copy = ctx.copy_input("shared://🧾️readme-afters/📸️set-snapshot/➡️after.docx", Some("set-snapshot-after.docx"))?;
-    std::fs::read(&copy).map_err(|error| error.to_string())
-}
 //#endregion 🔖️Input
 
 //#region 🔖️Oracle
@@ -87,36 +82,18 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     round_trip_preserves(&projection, &project_docx_ecma_376(&input)?)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
-/// 📸️ The reference side of the whole-document replacement: the committed after-document read and re-written by the
-/// `zip`+`quick-xml` composition in place of the README, which has to move the compared projection.
-fn set_snapshot_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let input = mutable_input(ctx)?;
-    let bytes = oracle_replace_package(&input, &set_snapshot_document(ctx)?)?;
-    let projection = project_docx_ecma_376(&bytes)?;
-    mutation_is_observable("set-snapshot", &projection, &project_docx_ecma_376(&input)?, &[])?;
-    Ok(Outcome::with_raw(bytes, projection))
-}
-
-/// ↩️ The replacement undone by replacing back, which must land on the untouched README's projection.
-fn set_snapshot_inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
-    let input = mutable_input(ctx)?;
-    let bytes = oracle_replace_package(&oracle_replace_package(&input, &set_snapshot_document(ctx)?)?, &input)?;
-    let projection = project_docx_ecma_376(&bytes)?;
-    inverse_restores("set-snapshot", &projection, &project_docx_ecma_376(&input)?)?;
-    Ok(Outcome::with_raw(bytes, projection))
-}
 //#endregion 🔖️Oracle
 
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use super::{mutable_input, set_snapshot_document};
+    use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_docx;
     use semio_repo_test_host::law::wire_operation;
     use semio_s_artifact_stdio_docx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
     use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx;
-    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::schema::mutations::{apply_docx_mutation, set_snapshot};
+    use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::schema::mutations::apply_docx_mutation;
     use semio_s_artifact_stdio_docx::{DocxMutation, DocxSnapshot};
     use semio_s_artifact_stdio_docx_test_oracle::standards::v_ecma_376::subsets::base::project_docx_ecma_376;
 
@@ -145,12 +122,6 @@ mod subject {
         snapshot
     }
 
-    /// 📸️ The whole-document replacement by the snapshot this repository's own codec decodes from the committed
-    /// after-document — a `set-snapshot` payload is an entire package, not a table cell.
-    fn replacement(ctx: &Context) -> Result<DocxMutation, String> {
-        Ok(DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: decode(&set_snapshot_document(ctx)?)? }))
-    }
-
     /// 📦️ The produced package as the `actual-docx` artifact the `docx-ecma-376-jszip-compare-v1` pipeline reads.
     fn actual(ctx: &Context, bytes: Vec<u8>) -> Result<Outcome, String> {
         let projection = project_docx_ecma_376(&bytes)?;
@@ -168,17 +139,6 @@ mod subject {
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let base = decode(&mutable_input(ctx)?)?;
         actual(ctx, encode(&applied_and_undone(&base, &mutation_from_spec(&ctx.doc_json()?)?))?)
-    }
-
-    pub fn mutate_set_snapshot(ctx: &Context) -> Result<Outcome, String> {
-        let mut snapshot = decode(&mutable_input(ctx)?)?;
-        apply_docx_mutation(&mut snapshot, &replacement(ctx)?);
-        actual(ctx, encode(&snapshot)?)
-    }
-
-    pub fn inverse_set_snapshot(ctx: &Context) -> Result<Outcome, String> {
-        let base = decode(&mutable_input(ctx)?)?;
-        actual(ctx, encode(&applied_and_undone(&base, &replacement(ctx)?))?)
     }
 
     /// 🔒️ The no-byte-pass-through rule: the subject must fully parse the real artifact into its
@@ -200,11 +160,11 @@ mod subject {
 /// base ids, which the host resolves for every Examples row, and plain scenarios under their own ids.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("mutate-set-snapshot", set_snapshot_oracle).oracle("inverse-set-snapshot", set_snapshot_inverse_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle);
     built = built.oracle("identity-round-trip", identity_round_trip_oracle);
     #[cfg(feature = "sut")]
     {
-        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse).subject("mutate-set-snapshot", subject::mutate_set_snapshot).subject("inverse-set-snapshot", subject::inverse_set_snapshot);
+        built = built.subject("mutate", subject::mutate).subject("inverse", subject::inverse);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }
     built

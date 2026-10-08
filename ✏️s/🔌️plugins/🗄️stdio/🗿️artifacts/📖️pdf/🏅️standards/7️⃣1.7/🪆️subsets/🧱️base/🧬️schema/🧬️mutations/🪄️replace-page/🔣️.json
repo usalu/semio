@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🪄️replace-page",
+  "semanticKind": "replace-page",
+  "displayName": "Replace Page",
+  "emoji": "🪄️",
+  "aggregateVariant": "ReplacePage",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "replace-page",
+  "binaryTag": 60,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

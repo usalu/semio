@@ -333,7 +333,7 @@ ${list}
 }
 
 /** 🔖️ Renders universal shortcode bindings from the explicit external emoji snapshot. */
-function renderShortcodes(icons: Record<string, string>, iconsDir: string, generatedDir: string): AssetArtifact {
+function renderShortcodes(icons: Record<string, string>, iconsDir: string, generatedDir: string): readonly AssetArtifact[] {
   const catalog = Object.keys(icons).sort();
   const snapshotPath = join(iconsDir, "🔣️shortcodes.json");
   if (!existsSync(snapshotPath)) throw new Error("missing external 🔣️shortcodes.json snapshot");
@@ -372,7 +372,29 @@ export function shortcodeCatalogKey(code: string): ShortcodeCatalogName | undefi
   return (SHORTCODE_CATALOG as readonly string[]).includes(key) ? (key as ShortcodeCatalogName) : undefined;
 }
 `;
-  return { path: join(generatedDir, "🔤️shortcodes", "🟦️.ts"), content: tsBody };
+  const literal = (value: string): string => `"${escapeRustString(value)}"`;
+  const sources = readCatalogSources(iconsDir);
+  const metabolism = readCatalogSources(join(assetsRoot(), "🌱️metabolism/🔣️icons"));
+  const emojiArms = Object.keys(emoji).sort().map((code) => `        ${literal(code)} => Some(ShortcodeResolved::Emoji(${literal(emoji[code]!)})),`).join("\n");
+  const arms = (values: readonly { id: string; path: string }[], prefix: string, kind: string): string => values.map(({id,path}) => `        ${literal(id)} => Some(ShortcodeResolved::${kind}(include_str!(${literal(prefix + path)}))),`).join("\n");
+  const rustBody = `/// 🔖️ Generated universal shortcode bindings owned by General Assets.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ShortcodeResolved {
+    Emoji(&'static str),
+    SvgPlain(&'static str),
+    SvgThemed(&'static str),
+}
+pub fn icon_shortcode_resolve(code: &str) -> Option<ShortcodeResolved> {
+    let code = code.trim();
+    match code {
+${emojiArms}
+${arms(metabolism,"../../../🌱️metabolism/🔣️icons/","SvgThemed")}
+${arms(sources,"../../","SvgPlain")}
+        _ => None,
+    }
+}
+`;
+  return [{ path: join(generatedDir, "🔤️shortcodes", "🟦️.ts"), content: tsBody }, { path: join(generatedDir, "🔤️shortcodes", "🦀️.rs"), content: rustBody }];
 }
 //#endregion 🧬️Codegen
 
@@ -393,7 +415,7 @@ export function renderCatalogArtifacts(target: string): readonly AssetArtifact[]
   if (target === "net" || target === "all") artifacts.push(renderCs(icons, generatedDir));
   if (target === "py" || target === "all") artifacts.push(renderPy(icons, generatedDir));
   if (target === "rust" || target === "all") artifacts.push(...renderRust(icons, generatedDir, sources));
-  if (target === "all") artifacts.push(renderShortcodes(icons, iconsDir, generatedDir));
+  if (target === "rust" || target === "all") artifacts.push(...renderShortcodes(icons, iconsDir, generatedDir));
   return artifacts;
 }
 //#endregion 🚀️Commands

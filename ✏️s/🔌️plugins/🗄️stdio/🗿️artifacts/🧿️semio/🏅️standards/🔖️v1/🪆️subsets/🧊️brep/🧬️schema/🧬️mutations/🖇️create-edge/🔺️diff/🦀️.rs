@@ -14,7 +14,7 @@ pub fn diff(payload: &super::CreateEdge, base: &SemioBrepSnapshot) -> protocol::
         edges: Some(NamedTripleDiff {
             removed: vec![],
             modified: vec![],
-            added: vec![BrepEdge { id: payload.id.clone(), start_vertex: payload.start_vertex.clone(), end_vertex: payload.end_vertex.clone(), curve: payload.curve.clone(), tol: payload.tol }],
+            added: vec![crate::standards::v1::subsets::base::schema::triples::NamedAdded { index: payload.at.map_or(base.edges.len(), |at| at.min(base.edges.len())), item: BrepEdge { id: payload.id.clone(), start_vertex: payload.start_vertex.clone(), end_vertex: payload.end_vertex.clone(), curve: payload.curve.clone(), tol: payload.tol } }],
         }),
         ..Default::default()
     })

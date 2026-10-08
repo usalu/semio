@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import { drawSceneNode, paintCompositedLayers, isDecodedImage, type CanvasSceneNode } from "./🎨️paint/🟦️.ts";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
-import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-canvas-react-renderer";
+import { type WasmCanvasSession, WasmCanvas, type CanvasInputModifiers } from "@semio-tech/canvas-react-renderer";
 import { ContextMenuController, CATALOGUE_DRAG_MIME, getActiveCataloguePointerDragData, registerIntroductionSurfaceResolver, sampleBezierSegments, windowElementId, useLabel, type ContextMenuItem, type IntroductionResolvedGeometry } from "@semio-tech/ui-react";
 import { fitCanvasFrame, type Canvas2dFraming, applyPinchToCamera, type ComponentSceneHostProps, type PinchStep } from "@semio-tech/framework";
 import { currentStylingAppearanceName, STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_STROKES } from "@semio-tech/ui-styling";
@@ -313,7 +313,7 @@ export function createCanvasPointerGestureLane(dispatch: CanvasPointerDispatch, 
 }
 //#endregion CanvasPointerGestureLane
 
-export class JsonLayersCanvasSession implements GraphWasmSession {
+export class JsonLayersCanvasSession implements WasmCanvasSession {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private logicalWidth = 0;
@@ -972,7 +972,7 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
       onPointerMove={onPresencePointerMove}
       onPointerLeave={onPresencePointerLeave}
     >
-      <GraphWasmCanvas className="h-full w-full" sessionFactory={sessionFactory} />
+      <WasmCanvas className="h-full w-full" sessionFactory={sessionFactory} />
       <Canvas2dGumballOverlay
         layersJson={scene.layersJson}
         activeUtility={activeUtility}

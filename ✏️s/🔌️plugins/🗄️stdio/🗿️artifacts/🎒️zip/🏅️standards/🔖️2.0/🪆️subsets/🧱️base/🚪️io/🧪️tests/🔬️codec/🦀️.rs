@@ -447,10 +447,10 @@ fn decode_rejects_crc_mismatch() {
 
 #[semio_framework_async_macros::async_test]
 async fn deterministic_logical_round_trip() {
-    use crate::schema::mutations::set_snapshot;
+    use crate::schema::mutations::{add_entry, set_archive_comment};
     use crate::{ZipDiff, ZipMutation};
     use protocol::{DiffAlgebra, DiffBinary,DiffCodec,DiffText, MutationDiff, OpBinary, OpText};
-    use semio_framework_plugin::{AnalyzeSource, ArtifactAnalysis, ArtifactComposition, ComposeSource};
+    use semio_framework_plugin::{io::AnalyzeSource, ArtifactAnalysis, ArtifactComposition, io::ComposeSource};
 
     let entry = ZipEntry { name: "readme.md".into(), data: b"# hello\nsome content here to compress".to_vec(), ..Default::default() };
     let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![entry], comment: "archive comment".into(), ..Default::default() };
@@ -475,18 +475,22 @@ async fn deterministic_logical_round_trip() {
 
     let self_diff = ZipDiff::between(&logical, &logical);
     let text_diff = ZipDiff::parse_diff(&self_diff.print_diff()).expect("parse logical ZIP diff");
-    assert_eq!(text_diff.apply(&logical).unwrap(), logical);
+    assert_eq!(protocol::apply_diff(&text_diff, &logical).unwrap(), logical);
     let binary_diff = ZipDiff::decode_diff(&self_diff.encode_diff().expect("encode logical ZIP diff")).expect("decode logical ZIP diff");
-    assert_eq!(binary_diff.apply(&logical).unwrap(), logical);
+    assert_eq!(protocol::apply_diff(&binary_diff, &logical).unwrap(), logical);
 
-    let set_snapshot = ZipMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: logical.clone() });
-    let text_op = ZipMutation::parse_op(&set_snapshot.print_op()).expect("parse logical ZIP operation");
+    let operations: Vec<ZipMutation> = std::iter::once(ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: logical.comment.clone(), comment_utf8: logical.comment_utf8 }))
+        .chain(logical.entries.iter().map(|entry| ZipMutation::AddEntry(add_entry::AddEntry { entry: entry.clone(), before: None })))
+        .collect();
     let mut from_text_op = ZipSnapshot::default();
-    crate::schema::mutations::apply_zip_mutation(&mut from_text_op, &text_op);
-    assert_eq!(from_text_op, logical);
-    let binary_op = ZipMutation::decode_op(&set_snapshot.encode_op().expect("encode logical ZIP operation")).expect("decode logical ZIP operation");
     let mut from_binary_op = ZipSnapshot::default();
-    crate::schema::mutations::apply_zip_mutation(&mut from_binary_op, &binary_op);
+    for operation in &operations {
+        let text_op = ZipMutation::parse_op(&operation.print_op()).expect("parse logical ZIP operation");
+        crate::schema::mutations::apply_zip_mutation(&mut from_text_op, &text_op);
+        let binary_op = ZipMutation::decode_op(&operation.encode_op().expect("encode logical ZIP operation")).expect("decode logical ZIP operation");
+        crate::schema::mutations::apply_zip_mutation(&mut from_binary_op, &binary_op);
+    }
+    assert_eq!(from_text_op, logical);
     assert_eq!(from_binary_op, logical);
 
     let analysis = crate::standards::v2_0::subsets::base::io::ZipAnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(archive_bytes)]);

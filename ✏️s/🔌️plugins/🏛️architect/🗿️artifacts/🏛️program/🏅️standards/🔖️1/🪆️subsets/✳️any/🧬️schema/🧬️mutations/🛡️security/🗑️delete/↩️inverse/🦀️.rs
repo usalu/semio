@@ -8,8 +8,8 @@ use crate::ProgramSnapshot;
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::DeleteSecurityRequirement, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    match base.security.iter().find(|row| row.header.id == payload.id) {
-        Some(existing) => vec![ProgramMutation::CreateSecurityRequirement(super::super::create_security_requirement::CreateSecurityRequirement { security_requirement: existing.clone() })],
+    match base.security.iter().position(|row| row.header.id == payload.id) {
+        Some(position) => vec![ProgramMutation::CreateSecurityRequirement(super::super::create_security_requirement::CreateSecurityRequirement { security_requirement: base.security[position].clone(), index: Some(position) })],
         None => Vec::new(),
     }
 

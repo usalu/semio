@@ -21,21 +21,73 @@ impl Default for LayoutWindowConfig {
     }
 }
 
+/// 🩹 Owned-field patch of [`LayoutWindowConfig`]: exactly the fields an update sets. It is both the update payload and the sparse diff.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct LayoutWindowConfigPatch {
+    pub active_page_id: Option<String>,
+    pub active_utility: Option<String>,
+    pub camera: Option<LayoutCamera>,
+}
+
+impl LayoutWindowConfigPatch {
+    /// 🩹 The patch that sets every field of `config`.
+    pub fn replacing(config: &LayoutWindowConfig) -> Self {
+        Self { active_page_id: Some(config.active_page_id.clone()), active_utility: Some(config.active_utility.clone()), camera: Some(config.camera.clone()) }
+    }
+
+    /// 🔎️ This patch reduced to the fields that differ from `base`.
+    pub fn against(&self, base: &LayoutWindowConfig) -> Self {
+        Self {
+            active_page_id: self.active_page_id.clone().filter(|value| *value != base.active_page_id),
+            active_utility: self.active_utility.clone().filter(|value| *value != base.active_utility),
+            camera: self.camera.clone().filter(|value| *value != base.camera),
+        }
+    }
+}
+
+impl protocol::MutationDiff<LayoutWindowConfig> for LayoutWindowConfigPatch {
+    fn apply(&self, base: &LayoutWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<LayoutWindowConfig> {
+        Ok(LayoutWindowConfig {
+            active_page_id: self.active_page_id.clone().unwrap_or_else(|| base.active_page_id.clone()),
+            active_utility: self.active_utility.clone().unwrap_or_else(|| base.active_utility.clone()),
+            camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()),
+        })
+    }
+    fn absorb(&mut self, other: Self) {
+        self.active_page_id = other.active_page_id.or_else(|| self.active_page_id.take());
+        self.active_utility = other.active_utility.or_else(|| self.active_utility.take());
+        self.camera = other.camera.or_else(|| self.camera.take());
+    }
+}
+
+impl protocol::DiffAlgebra<LayoutWindowConfig> for LayoutWindowConfigPatch {
+    fn inverse(&self, base: &LayoutWindowConfig) -> Self {
+        Self { active_page_id: self.active_page_id.as_ref().map(|_| base.active_page_id.clone()), active_utility: self.active_utility.as_ref().map(|_| base.active_utility.clone()), camera: self.camera.as_ref().map(|_| base.camera.clone()) }
+    }
+    fn between(base: &LayoutWindowConfig, other: &LayoutWindowConfig) -> Self {
+        Self::replacing(other).against(base)
+    }
+    fn is_empty(&self) -> bool {
+        self.active_page_id.is_none() && self.active_utility.is_none() && self.camera.is_none()
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(tag = "kind", rename_all = "kebab-case")]
 pub enum LayoutWindowConfigMutation {
-    Snapshot { config: LayoutWindowConfig },
+    Update { patch: LayoutWindowConfigPatch },
 }
 
 impl protocol::Mutation<LayoutWindowConfig> for LayoutWindowConfigMutation {
-    type Diff = LayoutWindowConfig;
+    type Diff = LayoutWindowConfigPatch;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️blueprint/🎚️config",
         semantic_kind: "set-window-config",
         display_name: "Set Layout Window Configuration",
         emoji: "🎚️",
-        aggregate_variant: "Snapshot",
+        aggregate_variant: "Update",
         payload_schema: "layout.windowconfig",
         text_opcode: None,
         binary_tag: None,
@@ -47,15 +99,15 @@ impl protocol::Mutation<LayoutWindowConfig> for LayoutWindowConfigMutation {
     }];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, _base: &LayoutWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
-        match self { Self::Snapshot { config } => protocol::MutationOutcome::new(config.clone()) }
+    fn diff(&self, base: &LayoutWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+        let Self::Update { patch } = self;
+        protocol::MutationOutcome::new(patch.against(base))
     }
     fn inverse(&self, base: &LayoutWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { config: base.clone() }]
-    
-    })())
-}
+        let Self::Update { patch } = self;
+        let changed = patch.against(base);
+        Ok(if changed == LayoutWindowConfigPatch::default() { Vec::new() } else { vec![Self::Update { patch: protocol::DiffAlgebra::inverse(&changed, base) }] })
+    }
 }
 
 /// 📜️ Record-backed text form — the derived `__dsl_spec` grammar inside this window kind's semio
@@ -99,7 +151,7 @@ impl store::ArtifactPack for LayoutWindowConfig {
     }
 }
 
-store::impl_whole_record_config!(LayoutWindowConfig);
+impl store::ConfigRecord for LayoutWindowConfig {}
 
 impl protocol::OpText for LayoutWindowConfigMutation {
     fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) }
@@ -160,7 +212,7 @@ pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> LayoutWin
 pub fn addressed(view: &semio_framework_plugin::ViewModel, config: LayoutWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("layout-window-required"))?;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("layout-window-stale"))?;
-    let mutation = LayoutWindowConfigMutation::Snapshot { config };
+    let mutation = LayoutWindowConfigMutation::Update { patch: LayoutWindowConfigPatch::replacing(&config) };
     match kind {
         super::LAYOUT_PLAY_WINDOW_BLUEPRINT => Ok(semio_framework_plugin::WindowConfigMutation::of::<LayoutBlueprintWindowConfigOwner>(id, mutation)),
         crate::editor::layout::modes::edit::windows::preview::LAYOUT_PLAY_WINDOW_PREVIEW => Ok(semio_framework_plugin::WindowConfigMutation::of::<LayoutPreviewWindowConfigOwner>(id, mutation)),

@@ -33,6 +33,36 @@
         "group": "target",
         "order": 10
       }
+    },
+    "cells": {
+      "type": "array",
+      "items": {
+        "title": "NoteTableCell",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "content"
+        ],
+        "properties": {
+          "content": {
+            "type": "string"
+          }
+        }
+      },
+      "x-semio-ui": {
+        "widget": "multiline",
+        "role": "value",
+        "label": {
+          "en": "Cells",
+          "de": "Zellen"
+        },
+        "group": "content",
+        "order": 30,
+        "description": {
+          "en": "The cells of the appended row; omit for a blank row.",
+          "de": "Die Zellen der angehängten Zeile; weglassen für eine leere Zeile."
+        }
+      }
     }
   }
 }

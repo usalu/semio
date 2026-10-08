@@ -13,14 +13,6 @@ use semio_repo_test_host::law::vector::Vector;
 /// 🧫️ The committed applied vector of one kind, read literally from `✏️editor/🎚️config/🧫️fixtures`.
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
-        "set-snapshot" => Vector {
-            before: include_str!("../../✏️editor/🎚️config/🧫️fixtures/⚙️set/✅️set/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎚️config/🧫️fixtures/⚙️set/✅️set/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎚️config/🧫️fixtures/⚙️set/✅️set/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎚️config/🧫️fixtures/⚙️set/✅️set/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎚️config/🧫️fixtures/⚙️set/✅️set/🎯️outcome/🔣️.json"),
-            observable: true,
-        },
         "set-sun" => Vector {
             before: include_str!("../../✏️editor/🎚️config/🧫️fixtures/🌞️set-sun/✅️set/📸️snapshot/⬅️before/🔣️.json"),
             mutation: include_str!("../../✏️editor/🎚️config/🧫️fixtures/🌞️set-sun/✅️set/🦠️mutation/🔣️.json"),

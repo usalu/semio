@@ -11,7 +11,7 @@ pub mod derived_composition {
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use {semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::SubsetValidator};
+    use {semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator};
 
     const DIALECT_GEOJSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("geojson") };
     const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
@@ -120,7 +120,7 @@ pub mod derived_construction {
         }
 
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <JsonDiff as protocol::MutationDiff<JsonSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             Ok(self)
         }
 
@@ -140,7 +140,7 @@ pub mod derived_analysis {
     use crate::standards::v_rfc8259::subsets::geojson::schema::check_geojson_conformance;
     use crate::standards::v_rfc8259::subsets::base::io::JsonAnalyzer as JsonAnyAnalyzer;
     use crate::standards::v_rfc8259::subsets::base::io::JsonParts;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     /// 🎯️ This subset's dialect coordinate.
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("geojson") };
@@ -152,7 +152,7 @@ pub mod derived_analysis {
         type Parts = JsonParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             JsonAnyAnalyzer::sniff(source)
         }
 
@@ -163,7 +163,7 @@ pub mod derived_analysis {
             if let Some(snapshot) = &inner.parts.snapshot {
                 let checks = check_geojson_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
-                    confidence = IoConfidence::Low;
+                    confidence = semio_framework_plugin::io::Confidence::Low;
                 }
                 diagnostics.extend(checks);
             }

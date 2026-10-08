@@ -9,7 +9,8 @@ pub fn inverse(payload: &super::mutation::DeleteTargetVolume, base: &Puzzle3dSna
     let Some(item) = base.target_volumes.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
-    vec![crate::standards::v1::subsets::any::schema::mutations::create_target_volume::mutation::create_target_volume(item.clone(), None)]
+    let index = base.target_volumes.iter().position(|entry| entry.id == payload.id);
+    vec![crate::standards::v1::subsets::any::schema::mutations::create_target_volume::mutation::create_target_volume(item.clone(), index)]
 
     })())
 }

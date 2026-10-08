@@ -23,8 +23,7 @@
       "metadata",
       "catalog",
       "trailer"
-    ],
-    "openMutation": "set-snapshot"
+    ]
   },
   "invalidText": "This is not a PDF."
 }

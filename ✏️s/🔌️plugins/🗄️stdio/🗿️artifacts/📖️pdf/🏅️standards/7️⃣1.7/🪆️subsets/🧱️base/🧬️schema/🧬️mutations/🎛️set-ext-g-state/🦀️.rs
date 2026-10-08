@@ -13,6 +13,8 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[value(rename_all = "camelCase")]
 pub struct SetExtGState {
     pub state: PdfExtGState,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfMutation> for SetExtGState {
@@ -20,13 +22,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetExtGState {
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         let _ = base;
-        MutationOutcome::new(diff::diff_set_ext_g_state(base, self.state.clone()))
+        MutationOutcome::new(diff::diff_set_ext_g_state(base, self.state.clone(), self.index))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        match base.ext_g_states.iter().find(|item| item.id == self.state.id) { Some(previous) => vec![PdfMutation::SetExtGState(SetExtGState { state: previous.clone() })], None => vec![PdfMutation::RemoveExtGState(super::remove_ext_g_state::RemoveExtGState { id: self.state.id.clone() })] }
+        match base.ext_g_states.iter().find(|item| item.id == self.state.id) { Some(previous) => vec![PdfMutation::SetExtGState(SetExtGState { state: previous.clone(), index: None })], None => vec![PdfMutation::RemoveExtGState(super::remove_ext_g_state::RemoveExtGState { id: self.state.id.clone() })] }
     
     })())
 }

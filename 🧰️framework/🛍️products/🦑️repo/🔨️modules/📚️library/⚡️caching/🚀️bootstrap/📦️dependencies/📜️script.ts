@@ -5,12 +5,19 @@ import { join } from "node:path";
 import { Script, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { prepareCargoWorkspaceInvocation } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { discoverBunWorkspaces, bunWorkspaceNativePatterns } from "../../../🗂️workspaces/🟦️bun/🟦️.ts";
+import {withPreparedCargoDependencyPairV1} from "../../../🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts";
+import {fileURLToPath} from "node:url";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 
 /** 🏃️ Runs one tool with progress, bounded optional output and cancellation of its process tree. */
 export async function runTool(command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean | "ignore" = false, environment: NodeJS.ProcessEnv = process.env): Promise<string> {
     signal.throwIfAborted();
     if (command === "cargo") prepareCargoWorkspaceInvocation(getWorkspaceRoot(environment), args, cwd, environment);
+    return executeTool(command,args,cwd,signal,capture,environment);
+}
+
+async function executeTool(command:string,args:string[],cwd:string,signal:AbortSignal,capture:boolean|"ignore",environment:NodeJS.ProcessEnv):Promise<string> {
+    signal.throwIfAborted();
     const child = spawn(command, args, { cwd, env: environment, detached: process.platform !== "win32", stdio: ["ignore", capture === "ignore" ? "ignore" : capture ? "pipe" : "inherit", "inherit"], windowsHide: true });
     let output = "", overflow = false;
     let force: ReturnType<typeof setTimeout> | undefined;
@@ -39,6 +46,11 @@ export async function runTool(command: string, args: string[], cwd: string, sign
       clearInterval(progress);
       signal.removeEventListener("abort", stop);
     }
+}
+
+/** 🦀️ Executes only the owned prepared dependency pair without a public preparation bypass. */
+export async function runPreparedCargoDependencyPairV1(root:string,manifest:string,signal:AbortSignal,runner?:(command:string,args:string[],cwd:string,signal:AbortSignal,capture?:boolean|"ignore",environment?:NodeJS.ProcessEnv)=>Promise<string>):Promise<void> {
+ await withPreparedCargoDependencyPairV1(root,manifest,signal,async(args,cwd,signal)=>{await (runner??executeTool)("cargo",args,cwd,signal,false,process.env);},[fileURLToPath(import.meta.url),fileURLToPath(new URL("./🏗️native/📜️script.ts",import.meta.url))]);
 }
 
 /** 📦️ Runs the selected Bun runtime through the shared process owner. */

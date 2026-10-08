@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "vectors": [
+    {"id":"external-source-entry","projection":{"name":"@drawing/geometry-js","nxName":"@drawing/geometry-js","entry":"../../source.ts","moduleEdges":["./curve.ts","../process/tool.ts"]},"accepted":true},
+    {"id":"local-source-entry","projection":{"name":"@mesh/kernel-js","nxName":"@mesh/kernel-js","entry":"./entry.ts","moduleEdges":[]},"accepted":true},
+    {"id":"missing-entry","projection":{"name":"@drawing/geometry-js","nxName":"@drawing/geometry-js","moduleEdges":[]},"accepted":false},
+    {"id":"foreign-field","projection":{"name":"@mesh/kernel-js","nxName":"@mesh/kernel-js","entry":"./entry.ts","moduleEdges":[],"fallback":"./old.ts"},"accepted":false},
+    {"id":"non-string-edge","projection":{"name":"@mesh/kernel-js","nxName":"@mesh/kernel-js","entry":"./entry.ts","moduleEdges":[7]},"accepted":false}
+  ]
+}

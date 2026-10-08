@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "title": null,
@@ -13,12 +12,16 @@
   "pencilWidth": null,
   "eraserRadius": null,
   "assets": {
-    "entries": {
-      "asset-logo": {
-        "mime": "image/svg+xml",
-        "data": "PHN2Zy8+"
+    "rows": [
+      {
+        "row": "replace",
+        "key": "asset-logo",
+        "asset": {
+          "mime": "image/svg+xml",
+          "data": "PHN2Zy8+"
+        }
       }
-    }
+    ]
   },
   "linkedArtifact": null
 }

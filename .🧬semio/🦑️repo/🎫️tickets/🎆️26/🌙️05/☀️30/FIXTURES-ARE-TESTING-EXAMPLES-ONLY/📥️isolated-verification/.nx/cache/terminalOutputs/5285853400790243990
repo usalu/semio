@@ -1,5 +1,0 @@
-> bun ./📜️script.ts test-owner-command ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️30/FIXTURES-ARE-TESTING-EXAMPLES-ONLY/📥️current-plugin-admission-closure/📜️script.ts" root-job-ghost-ledger
-
-[DEBUG] isolated Nx verification test-owner-command
-[DEBUG] Actual shared-owner parser scope {"failures":[],"length":22105,"arming":646,"accepted":20816,"armed":21107,"recordingCalls":1}
-[DEBUG] Narrow exact root Job ghost/current shared owner integrity passed 4

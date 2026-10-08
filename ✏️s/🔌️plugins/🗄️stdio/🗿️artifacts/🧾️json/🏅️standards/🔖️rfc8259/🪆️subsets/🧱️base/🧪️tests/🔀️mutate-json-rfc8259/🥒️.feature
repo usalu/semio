@@ -69,7 +69,6 @@ Feature: Apply every typed RFC 8259 JSON mutation to a real-world document
       | insert-array-element  | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}, {"kind": "key", "value": "vertices"}], "index": 0, "value": {"kind": "object", "members": [{"key": "id", "value": {"kind": "string", "value": "mutation-test-vertex"}}, {"key": "position", "value": {"kind": "array", "items": [{"kind": "number", "lexeme": "0"}, {"kind": "number", "lexeme": "0"}, {"kind": "number", "lexeme": "0"}]}}]}} |
       | remove-array-element  | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}, {"kind": "key", "value": "vertices"}], "index": 10} |
       | set-scalar            | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}, {"kind": "key", "value": "vertices"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "position"}, {"kind": "index", "value": 0}], "value": {"kind": "number", "lexeme": "999.25"}} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/value/members/1/value", "value": {"kind": "number", "lexeme": "7"}}} |
   @id-inverse
   @level-exhaustive
   @mode-differential
@@ -88,7 +87,6 @@ Feature: Apply every typed RFC 8259 JSON mutation to a real-world document
       | insert-array-element  | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}, {"kind": "key", "value": "vertices"}], "index": 0, "value": {"kind": "object", "members": [{"key": "id", "value": {"kind": "string", "value": "mutation-test-vertex"}}, {"key": "position", "value": {"kind": "array", "items": [{"kind": "number", "lexeme": "0"}, {"kind": "number", "lexeme": "0"}, {"kind": "number", "lexeme": "0"}]}}]}} |
       | remove-array-element  | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}, {"kind": "key", "value": "vertices"}], "index": 10} |
       | set-scalar            | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "geometry"}, {"kind": "key", "value": "vertices"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "position"}, {"kind": "index", "value": 0}], "value": {"kind": "number", "lexeme": "999.25"}} |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/value/members/1/value", "value": {"kind": "number", "lexeme": "7"}}} |
   @id-identity-round-trip
   @level-long
   @mode-round-trip

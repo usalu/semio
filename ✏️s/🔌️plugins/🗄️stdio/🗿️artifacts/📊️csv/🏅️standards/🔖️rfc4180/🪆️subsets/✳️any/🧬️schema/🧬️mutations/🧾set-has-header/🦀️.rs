@@ -1,6 +1,4 @@
-//! 🧾️ `set-has-header` — its own mutation leaf. The aggregate's original `diff`/`inverse` bodies were
-//! lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🧾️ `set-has-header` — its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,14 +14,12 @@ impl protocol::MutationKind<CsvSnapshot, CsvMutation> for SetHasHeader {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "has-header", kind: "set-has-header", record: "SetHasHeader" };
 
     fn diff(&self, base: &CsvSnapshot) -> protocol::MutationOutcome<<CsvMutation as Mutation<CsvSnapshot>>::Diff> {
-        agg_diff(&CsvMutation::SetHasHeader(self.clone()), base)
+        let Self { has_header } = self;
+        protocol::MutationOutcome::new(CsvDiff { has_header: Some(*has_header), records: None })
     }
     fn inverse(&self, base: &CsvSnapshot) -> Result<Vec<CsvMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&CsvMutation::SetHasHeader(self.clone()), base)?
-    
-    })
-}
+        Ok({ vec![CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: base.has_header })] })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set has header", "Kopfzeile vorhanden setzen")
     }

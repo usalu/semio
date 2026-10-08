@@ -1,48 +1,35 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "title": null,
   "blocks": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "rows": [
       {
+        "row": "patch",
         "id": "blk-ink",
         "patch": {
-          "block": {
-            "kind": "stroke",
-            "id": "blk-ink",
-            "name": "Sketch",
-            "x": 20.0,
-            "y": 160.0,
-            "width": 80.0,
-            "height": 40.0,
-            "rotation": 0.0,
-            "visible": true,
-            "locked": false,
-            "points": [
-              [
-                0.0,
-                0.0
-              ],
-              [
-                10.0,
-                10.0
-              ]
-            ],
-            "strokeWidth": 6.0,
-            "color": [
-              0.0,
-              0.0,
-              0.0,
-              1.0
-            ]
-          }
+          "name": null,
+          "x": null,
+          "y": null,
+          "width": null,
+          "height": null,
+          "rotation": null,
+          "visible": null,
+          "locked": null,
+          "content": null,
+          "fontSize": null,
+          "fontWeight": null,
+          "align": null,
+          "imageKey": null,
+          "table": null,
+          "tex": null,
+          "displayMode": null,
+          "points": null,
+          "strokeWidth": 6.0,
+          "color": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "gridVisible": null,
   "gridSpacing": null,

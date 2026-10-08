@@ -7,7 +7,7 @@
 //! media ports, render primitives, manifest constructors) in `crate::document::app` / `crate::document::config`.
 
 use crate::document::NormHost;
-use crate::editor::en1995::commands::{apply_remedy, evaluate, insert_item, remove_item, selected_check, set_active_example, set_field, set_snapshot};
+use crate::editor::en1995::commands::{apply_remedy, evaluate, insert_item, remove_item, selected_check, set_field};
 use crate::editor::en1995::modes::edit as edit_mode;
 use crate::editor::en1995::modes::edit::windows::{inputs, results};
 use crate::editor::en1995::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -55,10 +55,8 @@ semio_framework_plugin::app_commands! {
     /// id and the kebab `#[dsl(key)]` wire keyword respectively — both copied verbatim off the
     /// pre-migration enum, never derived from one another.
     pub enum En1995Command for En1995Snapshot, En1995Mutation, NoConfig, NoConfigMutation {
-        "setSnapshot" as "set-snapshot" => set_snapshot::ReplaceSnapshot,
         "evaluate" as "evaluate" => evaluate::Evaluate,
         "setSelectedCheckIndex" as "selected-check" => selected_check::SetSelectedCheckIndex,
-        "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
         "setField" as "set-field" => set_field::SetField,
         "insertItem" as "insert-item" => insert_item::InsertItem,
         "removeItem" as "remove-item" => remove_item::RemoveItem,
@@ -115,7 +113,7 @@ impl ArtifactEditor for En1995PlayApp {
         factory: "En1995BoundedCommandJobFactory",
         factory_type: En1995BoundedCommandJobFactory,
         contract: crate::app_surface::norm_bounded_contract(),
-        tools: ["setSnapshot", "evaluate", "setSelectedCheckIndex", "setActiveExample", "setField", "insertItem", "removeItem", "applyRemedy"]
+        tools: ["evaluate", "setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy"]
     }
 
 
@@ -176,9 +174,8 @@ impl ArtifactEditor for En1995PlayApp {
     }
 
     /// 🎞️ `"model:in"`/`"artifact:in"` — see `crate::app_surface::import_media`.
-    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, En1995Snapshot>) -> Result<Emit<En1995Mutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
-        let base = doc.snapshot.clone();
-        crate::app_surface::import_media(port, media, move |snapshot: En1995Snapshot| En1995Mutation::from_snapshot(&base, &snapshot))
+    fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, En1995Snapshot>) -> Result<Emit<En1995Mutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
+        crate::app_surface::import_media(port, media)
     }
     //#endregion 🔖️MediaPorts
 }
@@ -241,26 +238,10 @@ pub fn create_en1995_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            // 📝️ `setSnapshot` replaces the whole compliance document, so the shells' `{action,args}`
-            // channel needs somewhere to put it: one staged text argument carrying the document's own
-            // camelCase JSON — the projection the Inputs window already renders. Without it the rail
-            // stages no form and the bridge refuses `norm.set-snapshot-arg-missing` (ticket 26/09/18 S10).
-            .action_with(
-                semio_framework_plugin::ActionDefinition::new_catalog("setSnapshot", LocalizedLabel::native("Set En1995Snapshot", "Dokument setzen"), semio_framework_plugin::ActionKind::Mutation)
-                    .with_args(vec![semio_framework_plugin::ActionArgDef::json_text("snapshot", LocalizedLabel::native("Document JSON", "Dokument-JSON")).required()]),
-            )
-            .action_destructive("setSnapshot")
             .action_with(semio_framework_plugin::ActionDefinition::new("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"), semio_framework_plugin::ActionKind::View, "hash"))
             .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "Ausgewählte Prüfung setzen"))
-            .action_interactive_job("setSnapshot", InteractiveJobClassification::Migrated)
             .action_interactive_job("evaluate", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSelectedCheckIndex", InteractiveJobClassification::Migrated)
-            .action_with(
-                semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left")
-                    .with_args(vec![semio_framework_plugin::ActionArgDef::text("exampleId", LocalizedLabel::native("Example", "Beispiel"))]),
-            )
-            .action_destructive("setActiveExample")
-            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             
             .action_with(
                 semio_framework_plugin::ActionDefinition::new_catalog("setField", LocalizedLabel::native("Set Field", "Feld setzen"), semio_framework_plugin::ActionKind::Mutation)
@@ -302,10 +283,8 @@ pub fn create_en1995_app() -> semio_framework_plugin::AppDefinition {
             // gaps" #4), so the old app-level example/workflow registration is dropped here, not
             // silently: the subset's own `📚️examples/🎬️demo-session` facet (real content, moved
             // verbatim below) is the modern role-agnostic replacement surface for this.
-            .action_describe("setSnapshot", LocalizedLabel::native("Replaces the whole EN 1995 (Eurocode 5, timber structures) compliance document with the supplied document JSON; the previous inputs are discarded.", "Ersetzt das gesamte Nachweisdokument nach EN 1995 (Eurocode 5, Holzbau) durch das übergebene Dokument-JSON; die bisherigen Eingaben werden verworfen."))
             .action_describe("evaluate", LocalizedLabel::native("Recomputes every EN 1995 (Eurocode 5, timber structures) check from the document's inputs and refreshes the results window; the document is not changed.", "Berechnet alle Nachweise nach EN 1995 (Eurocode 5, Holzbau) aus den Eingaben des Dokuments neu und aktualisiert das Ergebnisfenster; das Dokument ändert sich nicht."))
             .action_describe("setSelectedCheckIndex", LocalizedLabel::native("Points the inspection panel at one computed check by its index in the results list; only the view changes.", "Richtet das Inspektionspanel anhand seines Index in der Ergebnisliste auf einen berechneten Nachweis aus; nur die Ansicht ändert sich."))
-            .action_describe("setActiveExample", LocalizedLabel::native("Loads one of the bundled EN 1995 (Eurocode 5, timber structures) examples into the open compliance document, replacing its inputs, by example id.", "Lädt eines der mitgelieferten Beispiele nach EN 1995 (Eurocode 5, Holzbau) in das offene Nachweisdokument und ersetzt dessen Eingaben, anhand der Beispiel-Id."))
             .build_definition()
 }
 //#endregion 🔖️Manifest

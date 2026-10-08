@@ -1,9 +1,9 @@
 //! 🎨️ Checked indexed and direct BMP region authoring with retained progress.
 
 use super::{BmpEditCommand, BmpEditor, BmpNativeEditCommand};
-use crate::schema::operations::{BmpPaintWorkOperation,BmpPaintWorkStep,BmpRetainedPaint};
+use crate::schema::operations::BmpRetainedPaint;
 use crate::schema::snapshot::BmpRegion;
-use crate::schema::mutations::{BmpMutation, SetSnapshot};
+use crate::schema::mutations::{BmpMutation,PaintIndexedRegion,PaintDirectRegion};
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
 use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionKind, ArgSchema, EditorApp, Emit, Fault, FaultCode, FaultOrigin};
@@ -175,14 +175,16 @@ fn validate(command: &BmpNativeEditCommand, snapshot: &crate::schema::snapshot::
 
 pub struct PaintRegionWork {
     tool_id: &'static str,
-    operation: Option<BmpPaintWorkOperation<'static>>,
+    intent:Option<(BmpRegion,BmpRetainedPaint)>,
+    validation:crate::schema::operations::owned_validation::BmpOwnedValidationWork,
+    reader:Option<std::sync::Weak<crate::schema::snapshot::BmpSnapshot>>,
     complete: bool,
     closing: bool,
 }
 
 impl PaintRegionWork {
     pub fn new(tool_id: &'static str) -> Self {
-        Self { tool_id, operation: None, complete: false, closing: false }
+        Self { tool_id, intent: None, validation:Default::default(),reader:None,complete: false, closing: false }
     }
 }
 
@@ -214,32 +216,32 @@ impl ArtifactCommandWork<EditorApp<BmpEditor>> for PaintRegionWork {
         if self.closing || self.complete {return Err(fault("stdio.bmp.paint-region.work-closed", "Paint work is already closed"));}
         let BmpEditCommand::Native(command)=input.command else {return Err(fault("stdio.bmp.paint-region.route-mismatch", "Paint work received another command"));};
         let reader=input.snapshot_owner.ok_or_else(||fault("stdio.bmp.paint-region.reader", "Paint work requires an immutable snapshot reader"))?;
-        if self.operation.is_none() {
-            validate(command,input.snapshot)?;
-            let (region,paint)=match command {
-                BmpNativeEditCommand::PaintIndexedRegion(command) if self.tool_id==INDEXED_ACTION_ID=>(command.region(),BmpRetainedPaint::Indexed(command.palette_index)),
-                BmpNativeEditCommand::PaintDirectRegion(command) if self.tool_id==DIRECT_ACTION_ID=>(command.region(),BmpRetainedPaint::Direct(crate::schema::snapshot::BmpColor {red:command.red,green:command.green,blue:command.blue,alpha:command.alpha})),
-                _=>return Err(fault("stdio.bmp.paint-region.route-mismatch", "Paint action and command profile differ")),
-            };
-            self.operation=Some(BmpPaintWorkOperation::try_new_retained(std::sync::Arc::clone(reader),region,paint,512*1024*1024).map_err(|error|fault("stdio.bmp.paint-region.prepare",error))?);
-        }
-        let operation=self.operation.as_mut().expect("paint operation prepared");
-        if !operation.retained_reader_matches(reader) {return Err(fault("stdio.bmp.paint-region.reader-drift", "Paint source reader changed"));}
-        match operation.advance(cx).map_err(|error|fault("stdio.bmp.paint-region.work",error))? {
-            BmpPaintWorkStep::Yield {painting:false,..}=>Ok(ArtifactCommandWorkStep::Progress {stage:"bmp-paint-region-copy",preview:br#"{"en":"Copying owned bitmap samples","de":"Eigene Bitmap-Abtastwerte werden kopiert"}"#}),
-            BmpPaintWorkStep::Yield {painting:true,..}=>Ok(ArtifactCommandWorkStep::Progress {stage:"bmp-paint-region-paint",preview:br#"{"en":"Painting owned bitmap samples","de":"Eigene Bitmap-Abtastwerte werden gemalt"}"#}),
-            BmpPaintWorkStep::Cancelled=>Err(fault("stdio.bmp.paint-region.cancelled", "Paint work was cancelled")),
-            BmpPaintWorkStep::Complete=>{let snapshot=operation.take_result().map_err(|error|fault("stdio.bmp.paint-region.result",error))?;self.complete=true;Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(vec![BmpMutation::SetSnapshot(SetSnapshot {snapshot})])))},
-        }
+        let identity=std::sync::Arc::downgrade(reader);
+        if self.reader.as_ref().is_some_and(|source|!std::sync::Weak::ptr_eq(source,&identity)){return Err(fault("stdio.bmp.paint-region.reader-drift","Paint source reader changed"));}
+        if self.reader.is_none(){self.reader=Some(identity);}
+        validate(command,reader.as_ref())?;
+        let intent=match command {
+            BmpNativeEditCommand::PaintIndexedRegion(value) if self.tool_id==INDEXED_ACTION_ID=>(value.region(),BmpRetainedPaint::Indexed(value.palette_index)),
+            BmpNativeEditCommand::PaintDirectRegion(value) if self.tool_id==DIRECT_ACTION_ID=>(value.region(),BmpRetainedPaint::Direct(crate::schema::snapshot::BmpColor{red:value.red,green:value.green,blue:value.blue,alpha:value.alpha})),
+            _=>return Err(fault("stdio.bmp.paint-region.route-mismatch","Paint action and command profile differ")),
+        };
+        if self.intent.is_some_and(|bound|bound!=intent){return Err(fault("stdio.bmp.paint-region.intent-drift","Paint intent changed"));}
+        self.intent=Some(intent);
+        if cx.should_yield(){return Ok(ArtifactCommandWorkStep::Progress{stage:"bmp-paint-region-copy",preview:br#"{"en":"Checking owned bitmap samples","de":"Eigene Bitmap-Abtastwerte werden geprueft"}"#});}
+        let(done,_)=self.validation.advance(reader.as_ref(),semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_depth:64,maximum_release_bytes:0}).map_err(|error|fault("stdio.bmp.paint-region.revision",error))?;cx.consume_fuel(1);
+        if !done{return Ok(ArtifactCommandWorkStep::Progress{stage:"bmp-paint-region-copy",preview:br#"{"en":"Checking owned bitmap samples","de":"Eigene Bitmap-Abtastwerte werden geprueft"}"#});}
+        let revision=self.validation.revision().ok_or_else(||fault("stdio.bmp.paint-region.revision","Validated source revision is absent"))?;
+        let mutation=match command{
+            BmpNativeEditCommand::PaintIndexedRegion(value)=>BmpMutation::PaintIndexedRegion(PaintIndexedRegion{revision,x:value.x,y:value.y,width:value.width,height:value.height,palette_index:value.palette_index}),
+            BmpNativeEditCommand::PaintDirectRegion(value)=>BmpMutation::PaintDirectRegion(PaintDirectRegion{revision,x:value.x,y:value.y,width:value.width,height:value.height,red:value.red,green:value.green,blue:value.blue,alpha:value.alpha}),
+            _=>return Err(fault("stdio.bmp.paint-region.route-mismatch","Paint intent changed")),
+        };
+        self.complete=true;Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(vec![mutation])))
     }
-    fn begin_close(&mut self) {self.closing=true;if let Some(operation)=&mut self.operation {operation.begin_close();}}
-    fn close_step(&mut self,maximum_items:usize,maximum_bytes:usize)->InteractiveJobCloseStep {
-        if !self.closing {return InteractiveJobCloseStep::Blocked;}
-        let Some(operation)=&mut self.operation else {return InteractiveJobCloseStep::Complete};
-        let step=operation.close_step(maximum_items,maximum_bytes);if step==InteractiveJobCloseStep::Complete {self.operation=None;}step
-    }
+    fn begin_close(&mut self){self.closing=true;self.reader=None;self.intent=None;}
+    fn close_step(&mut self,_maximum_items:usize,_maximum_bytes:usize)->InteractiveJobCloseStep{if self.closing{InteractiveJobCloseStep::Complete}else{InteractiveJobCloseStep::Blocked}}
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.operation.is_none()
+        self.closing && self.reader.is_none() && self.intent.is_none()
     }
 }

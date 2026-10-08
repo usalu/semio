@@ -1461,7 +1461,6 @@ impl WorkflowDiff {
             WorkflowDiff::PlaceNodes { positions } => vec![WorkflowDiff::PlaceNodes {
                 positions: positions
                     .iter()
-                    .rev()
                     .filter_map(|position| state.graph.nodes.iter().find(|node| node.id == position.node_id).map(|node| WorkflowNodePosition { node_id: position.node_id.clone(), x: node.x, y: node.y }))
                     .collect(),
             }],
@@ -1493,7 +1492,7 @@ impl WorkflowDiff {
             WorkflowDiff::RemoveInput { input_id } => {
                 let Some(input) = state.inputs.iter().find(|input| input.id == *input_id) else { return Vec::new() };
                 let mut steps = vec![WorkflowDiff::DeclareInput { input: input.clone() }];
-                steps.extend(state.input_bindings.iter().filter(|binding| binding.input_id == *input_id).map(|binding| WorkflowDiff::BindInput { binding: binding.clone() }));
+                steps.extend(state.input_bindings.iter().rev().filter(|binding| binding.input_id == *input_id).map(|binding| WorkflowDiff::BindInput { binding: binding.clone() }));
                 steps
             }
             WorkflowDiff::BindInput { binding } => vec![match state.input_bindings.iter().find(|entry| entry.input_id == binding.input_id) {

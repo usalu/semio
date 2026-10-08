@@ -69,3 +69,10 @@ fn intrinsic_decoding_obeys_the_original_caller_cancellation_and_allocation_ceil
         assert!(bounded.owned_bytes() <= bounded.maximum_bytes());
     }
 }
+
+#[test]
+fn intrinsic_document_schema_refusal_does_not_allocate_unadmitted_constructor(){
+ let bytes=encoded(DslValue::Null,IntrinsicFormat::Document);let mut allow=|_|true;let mut control=NativeDecodeControl::new(0,&mut allow);
+ let((kind,diagnostic),requests,releases)=crate::test_allocation::observe_backing(||{let error=decode(&bytes,IntrinsicFormat::Document,&Default::default(),&mut control).expect_err("zero ownership must refuse");let diagnostic=match &error{crate::PackRefusal::ValueRefusal(error)=>match &error.message{std::borrow::Cow::Borrowed(_)=>0,std::borrow::Cow::Owned(message)=>message.capacity()},_=>0};let kind=error.kind();drop(error);(kind,diagnostic)});
+ assert_eq!(kind,semio_framework_value::ValueRefusalKind::OwnershipLimit);assert_eq!(requests,releases);assert_eq!(requests,control.owned_bytes()+diagnostic,"only the actual refusal diagnostic may be allocated after denied schema admission");
+}

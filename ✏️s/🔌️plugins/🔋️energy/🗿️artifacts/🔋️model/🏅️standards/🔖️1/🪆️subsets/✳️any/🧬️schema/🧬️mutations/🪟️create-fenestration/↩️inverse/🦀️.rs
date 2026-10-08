@@ -28,6 +28,9 @@ pub fn inverse(payload: &super::CreateFenestration, base: &EnergyModelSnapshot) 
     {
         return Vec::new();
     }
+    if payload.index.is_some_and(|index| index as usize > base.model.fenestrations.len()) {
+        return Vec::new();
+    }
     vec![vocabulary::delete_fenestration(payload.id)]
 
     })())

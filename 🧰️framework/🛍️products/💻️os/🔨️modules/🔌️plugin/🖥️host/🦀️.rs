@@ -69,7 +69,7 @@ use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 /// 🗝️ Conflicting ownership of one composer route.
 #[derive(Debug)]
 pub struct IoRouteConflict {
-    pub key: semio_framework::IoKey,
+    pub key: semio_framework_os_kernel::io::IoKey,
     pub existing_plugin: String,
     pub incoming_plugin: String,
 }
@@ -6244,7 +6244,7 @@ pub async fn decode_conflicts(bytes: &[u8]) -> Result<Vec<protocol::Conflict>, P
 /// half of cross-plugin artifact reuse. Each `WasmPluginRuntime`'s own in-guest `IO_REGISTRY` only
 /// ever sees composers registered inside ITS OWN wasm linear memory; this router is what makes a
 /// key owned by plugin B actually reachable from plugin A's `host.io-compose` import — a single
-/// shared table (keyed exactly like `semio_framework::IoKey`) built by calling `list-artifact-
+/// shared table (keyed exactly like `semio_framework_os_kernel::io::IoKey`) built by calling `list-artifact-
 /// dialects` on every plugin as it loads, mapping each key to the plugin id that owns it, plus a
 /// handle to that plugin's own `WasmPluginRuntime` to actually forward the call.
 pub struct IoRouter {
@@ -6252,7 +6252,7 @@ pub struct IoRouter {
 }
 
 struct IoRouterState {
-    routes: HashMap<semio_framework::IoKey, String>,
+    routes: HashMap<semio_framework_os_kernel::io::IoKey, String>,
     runtimes: HashMap<String, Arc<PluginInstanceHandle>>,
     /// 🌉️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): the NEW mechanism's merged cross-plugin
     /// graph — `(from, into) -> IoEntryRoute` — built from every plugin's `list-io-entries` roster,
@@ -6449,20 +6449,20 @@ impl IoRouter {
         let mut candidate_routes = Vec::new();
         for (writes, reads) in artifact_dialect_entries {
             for read in reads {
-                candidate_routes.push(semio_framework::IoKey {
+                candidate_routes.push(semio_framework_os_kernel::io::IoKey {
                     artifact_kind: writes.artifact_kind.clone(),
                     standard: writes.standard.clone(),
                     subset: writes.subset.clone(),
-                    direction: semio_framework::IoDirection::Import,
+                    direction: semio_framework_os_kernel::io::IoDirection::Import,
                     format_kind: read.artifact_kind.clone(),
                     format_standard: read.standard.clone(),
                     format_subset: read.subset.clone(),
                 });
-                candidate_routes.push(semio_framework::IoKey {
+                candidate_routes.push(semio_framework_os_kernel::io::IoKey {
                     artifact_kind: read.artifact_kind.clone(),
                     standard: read.standard.clone(),
                     subset: read.subset.clone(),
-                    direction: semio_framework::IoDirection::Export,
+                    direction: semio_framework_os_kernel::io::IoDirection::Export,
                     format_kind: writes.artifact_kind.clone(),
                     format_standard: writes.standard.clone(),
                     format_subset: writes.subset.clone(),
@@ -6519,7 +6519,7 @@ impl IoRouter {
     /// further host change.
     pub async fn compose(&self, calling_plugin_id: &str, key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, PluginHostError> {
         let key_text = std::str::from_utf8(key_bytes).map_err(|error| PluginHostError::Json(error.to_string()))?;
-        let key: semio_framework::IoKey = semio_framework_pack_json::from_json_str(key_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
+        let key: semio_framework_os_kernel::io::IoKey = semio_framework_pack_json::from_json_str(key_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| PluginHostError::Json(error.to_string()))?;
         let handle = {
             let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
             let owner = state
@@ -6539,8 +6539,8 @@ impl IoRouter {
     /// ("import"|"export"), JSON `Vec<ArtifactDialect>` bytes.
     pub async fn dialects(&self, artifact_kind: &str, direction: &str) -> Result<Vec<u8>, PluginHostError> {
         let direction = match direction {
-            "import" => semio_framework::IoDirection::Import,
-            "export" => semio_framework::IoDirection::Export,
+            "import" => semio_framework_os_kernel::io::IoDirection::Import,
+            "export" => semio_framework_os_kernel::io::IoDirection::Export,
             other => return Err(PluginHostError::Plugin(format!("unknown io direction `{other}` (expected \"import\" or \"export\")"))),
         };
         let state = self.state.lock().map_err(|_| PluginHostError::LockPoisoned("io router"))?;
@@ -7490,9 +7490,9 @@ mod artifact_mutation_router_tests;
 /// is no instance directory" before this ticket). Populated at `instantiate-app` and at every
 /// document load (see `WasmPluginRuntime::create_app` and `HostState::pre_adopt_command_packs`'s
 /// hooks below) and consulted by `HostTransactionCoordinator` to resolve a `ForeignStep.target`
-/// into a live instance. Keyed by plain artifact-id strings (not the full `io::ArtifactRef`, which
+/// into a live instance. Keyed by plain artifact-id strings (not the full `semio_framework_artifact_reference::ArtifactRef`, which
 /// requires an `ArtifactDialect` not always resolvable at bind time) — callers that have a real
-/// `io::ArtifactRef` pass `.artifact_id` through.
+/// `semio_framework_artifact_reference::ArtifactRef` pass `.artifact_id` through.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct InstanceLocation {
     pub plugin_id: String,

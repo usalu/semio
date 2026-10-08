@@ -62,9 +62,9 @@
       "subsetDirectoryName": "🧱️base",
       "vectors": [
         {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
+          "mutationId": "set-entity-arg",
+          "sourceMutationDirectoryName": "🔧set-entity-arg",
+          "mutationDirectoryName": "🔧set-entity-arg",
           "scenarios": [
             {
               "id": "restamps-the-product-long-name",
@@ -74,8 +74,6 @@
         }
       ],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "set-file-description",
         "set-file-name",
         "set-file-schema",
@@ -290,49 +288,6 @@
             "operation": "set-file-schema",
             "bridgeVersion": 1,
             "variant": "SetFileSchema"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "step-ap214-base-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "steputils-step-ap214-base-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "step-ap214-base-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "step-ap214-base-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "steputils-step-ap214-base-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "step-ap214-base-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

@@ -1,0 +1,446 @@
+{
+ "description": "Language-agnostic laws of the mesh.primitive widgets. Meshes are { positions, faces }; mesh outputs are compared by independently computed measures (vertices, faces, edges, boundaryEdges, euler, area, volume, bbox, closed, oriented) and, when stated, by canonical geometry. The TypeScript oracle rebuilds every primitive with three.js and checks the measures with manifold-3d.",
+ "tolerance": 1e-05,
+ "cases": [
+  {
+   "name": "construct default triangle",
+   "kind": "mesh.primitive.construct",
+   "inputs": {},
+   "outputs": {
+    "mesh": {
+     "vertices": 3,
+     "faces": 1,
+     "edges": 3,
+     "boundaryEdges": 3,
+     "area": 0.5
+    }
+   }
+  },
+  {
+   "name": "construct cube from json text",
+   "kind": "mesh.primitive.construct",
+   "inputs": {
+    "data": "{\"vertices\":[[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,0,1],[1,0,1],[1,1,1],[0,1,1]],\"faces\":[[0,3,2,1],[4,5,6,7],[0,1,5,4],[2,3,7,6],[0,4,7,3],[1,2,6,5]]}"
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 8,
+     "faces": 6,
+     "edges": 12,
+     "boundaryEdges": 0,
+     "euler": 2,
+     "area": 6.0,
+     "volume": 1.0,
+     "closed": true,
+     "oriented": true,
+     "bbox": [
+      [
+       0.0,
+       0.0,
+       0.0
+      ],
+      [
+       1,
+       1,
+       1
+      ]
+     ],
+     "positions": [
+      [
+       0.0,
+       0.0,
+       0.0
+      ],
+      [
+       1,
+       0.0,
+       0.0
+      ],
+      [
+       1,
+       1,
+       0.0
+      ],
+      [
+       0.0,
+       1,
+       0.0
+      ],
+      [
+       0.0,
+       0.0,
+       1
+      ],
+      [
+       1,
+       0.0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0.0,
+       1,
+       1
+      ]
+     ],
+     "polygons": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "construct refuses text that is not json",
+   "kind": "mesh.primitive.construct",
+   "inputs": {
+    "data": "not json"
+   },
+   "fault": {
+    "code": "generation3d.geometry.mesh-import",
+    "port": "data"
+   }
+  },
+  {
+   "name": "construct refuses an index outside the vertices",
+   "kind": "mesh.primitive.construct",
+   "inputs": {
+    "data": "{\"vertices\":[[0,0,0],[1,0,0],[0,1,0]],\"faces\":[[0,1,3]]}"
+   },
+   "fault": {
+    "code": "generation3d.geometry.mesh-import",
+    "port": "data"
+   }
+  },
+  {
+   "name": "box 2 by 3 by 4",
+   "kind": "mesh.primitive.box",
+   "inputs": {
+    "width": 2,
+    "height": 3,
+    "depth": 4
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 8,
+     "faces": 6,
+     "edges": 12,
+     "boundaryEdges": 0,
+     "euler": 2,
+     "area": 52,
+     "volume": 24,
+     "closed": true,
+     "oriented": true,
+     "bbox": [
+      [
+       -1,
+       -1.5,
+       -2
+      ],
+      [
+       1,
+       1.5,
+       2
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "plane 2 by 3",
+   "kind": "mesh.primitive.plane",
+   "inputs": {
+    "width": 2,
+    "depth": 3
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 4,
+     "faces": 1,
+     "edges": 4,
+     "boundaryEdges": 4,
+     "area": 6,
+     "volume": 0,
+     "bbox": [
+      [
+       -1,
+       0,
+       -1.5
+      ],
+      [
+       1,
+       0,
+       1.5
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "ico sphere radius 2 subdivided 0 times",
+   "kind": "mesh.primitive.sphere",
+   "inputs": {
+    "radius": 2,
+    "subdivisions": 0
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 12,
+     "faces": 20,
+     "edges": 30,
+     "boundaryEdges": 0,
+     "euler": 2,
+     "area": 38.298165533,
+     "volume": 20.289205681,
+     "closed": true,
+     "oriented": true
+    }
+   },
+   "tolerance": 0.0001
+  },
+  {
+   "name": "ico sphere radius 2 subdivided 1 times",
+   "kind": "mesh.primitive.sphere",
+   "inputs": {
+    "radius": 2,
+    "subdivisions": 1
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 42,
+     "faces": 80,
+     "edges": 120,
+     "boundaryEdges": 0,
+     "euler": 2,
+     "area": 46.663725567,
+     "volume": 29.269697668,
+     "closed": true,
+     "oriented": true
+    }
+   },
+   "tolerance": 0.0001
+  },
+  {
+   "name": "ico sphere radius 2 subdivided 2 times",
+   "kind": "mesh.primitive.sphere",
+   "inputs": {
+    "radius": 2,
+    "subdivisions": 2
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 162,
+     "faces": 320,
+     "edges": 480,
+     "boundaryEdges": 0,
+     "euler": 2,
+     "area": 49.319394381,
+     "volume": 32.37635744,
+     "closed": true,
+     "oriented": true
+    }
+   },
+   "tolerance": 0.0001
+  },
+  {
+   "name": "cylinder radius 1 height 2 with 8 segments",
+   "kind": "mesh.primitive.cylinder",
+   "inputs": {
+    "radius": 1,
+    "height": 2,
+    "segments": 8
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 16,
+     "faces": 10,
+     "edges": 24,
+     "boundaryEdges": 0,
+     "euler": 2,
+     "area": 17.902724085,
+     "volume": 5.656854249,
+     "closed": true,
+     "oriented": true,
+     "bbox": [
+      [
+       -1.0,
+       -1.0,
+       -1.0
+      ],
+      [
+       1.0,
+       1.0,
+       1.0
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "cone radius 1 height 2 with 8 segments",
+   "kind": "mesh.primitive.cone",
+   "inputs": {
+    "radius": 1,
+    "height": 2,
+    "segments": 8
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 9,
+     "faces": 9,
+     "edges": 16,
+     "boundaryEdges": 0,
+     "euler": 2,
+     "area": 9.573079229,
+     "volume": 1.885618083,
+     "closed": true,
+     "oriented": true,
+     "bbox": [
+      [
+       -1.0,
+       -1.0,
+       -1.0
+      ],
+      [
+       1.0,
+       1.0,
+       1.0
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "torus 2 and 0.5 with 16 segments and 8 rings",
+   "kind": "mesh.primitive.torus",
+   "inputs": {
+    "major": 2,
+    "minor": 0.5,
+    "segments": 16,
+    "rings": 8
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 128,
+     "faces": 128,
+     "edges": 256,
+     "boundaryEdges": 0,
+     "euler": 0,
+     "area": 37.858462159,
+     "volume": 8.659137602,
+     "closed": true,
+     "oriented": true,
+     "bbox": [
+      [
+       -2.5,
+       -0.5,
+       -2.5
+      ],
+      [
+       2.5,
+       0.5,
+       2.5
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "torus tube as wide as the ring intersects itself",
+   "kind": "mesh.primitive.torus",
+   "inputs": {
+    "major": 1,
+    "minor": 1
+   },
+   "fault": {
+    "code": "generation3d.geometry.torus-self-intersecting",
+    "port": "minor"
+   }
+  },
+  {
+   "name": "uv sphere radius 1 with 8 segments and 4 rings",
+   "kind": "mesh.primitive.uvSphere",
+   "inputs": {
+    "radius": 1,
+    "segments": 8,
+    "rings": 4
+   },
+   "outputs": {
+    "mesh": {
+     "vertices": 26,
+     "faces": 32,
+     "edges": 56,
+     "boundaryEdges": 0,
+     "euler": 2,
+     "area": 11.013439077,
+     "volume": 3.218951416,
+     "closed": true,
+     "oriented": true,
+     "bbox": [
+      [
+       -1.0,
+       -1,
+       -1.0
+      ],
+      [
+       1.0,
+       1,
+       1.0
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "name": "uv sphere beyond the face capacity",
+   "kind": "mesh.primitive.uvSphere",
+   "inputs": {
+    "radius": 1,
+    "segments": 1024,
+    "rings": 1024
+   },
+   "fault": {
+    "code": "generation3d.geometry.mesh-capacity",
+    "port": "rings"
+   }
+  }
+ ]
+}

@@ -11,7 +11,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v_ecma_376::subsets::base::io::text::diff::{dec_block, dec_bool, dec_str, dec_style, dec_xml_node, decode_option, enc_block, enc_bool, enc_list, enc_str, enc_style, enc_xml_node, encode_option, hex_decode, hex_encode, split_top_level, strip_brackets};
 use crate::standards::v_ecma_376::subsets::base::io::binary::diff::{dec_xml_node_bin, enc_xml_node_bin};
 use crate::standards::v_ecma_376::subsets::base::io::text::diff::{parse_usize};
-use crate::schema::diff::{diff_set_snapshot, DocxBlockPath, DocxDiff, DocxPathSegment, DocxXmlPartDiff, NamedModified, NamedTripleDiff};
+use crate::schema::diff::{DocxBlockPath, DocxDiff, DocxPathSegment, DocxXmlPartDiff, NamedModified, NamedTripleDiff};
 #[cfg(test)]
 use crate::schema::snapshot::DocxDocument;
 use crate::schema::snapshot::{docx_part_is_xml, DocxBlock, DocxStyle, DocxXmlPart};
@@ -94,18 +94,6 @@ pub(crate) fn dec_xml_address_bin(reader: &mut store::ByteReader<'_>) -> Result<
     Ok(DocxXmlAddress { part_path, node_path, expected_name, revision })
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_docx_snapshot_bin(snapshot: &DocxSnapshot, out: &mut Vec<u8>) {
-    write_bytes_lp(out, semio_framework_pack_json::to_json_string(snapshot).as_bytes());
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_docx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxSnapshot, String> {
-    let bytes = read_bytes_lp(reader)?;
-    let text = std::str::from_utf8(&bytes).map_err(|error| error.to_string())?;
-    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
-}
-
 /// 🧪️ FG-wave: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape --
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut. `tag` is the
@@ -114,8 +102,6 @@ pub(crate) fn dec_docx_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Resul
 impl OpBinary for DocxMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { .. }) => TAG_SET_SNAPSHOT,
-            DocxMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
             DocxMutation::InsertBlock(insert_block::InsertBlock { .. }) => TAG_INSERT_BLOCK,
             DocxMutation::RemoveBlock(remove_block::RemoveBlock { .. }) => TAG_REMOVE_BLOCK,
             DocxMutation::SetBlockContent(set_block_content::SetBlockContent { .. }) => TAG_SET_BLOCK_CONTENT,
@@ -136,8 +122,6 @@ impl OpBinary for DocxMutation {
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
-            DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_docx_snapshot_bin(snapshot, &mut out),
-            DocxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => out.extend(protocol::OpBinary::encode_op(patch)?),
             DocxMutation::InsertBlock(insert_block::InsertBlock { path, block }) => {
                 enc_block_path_bin(path, &mut out);
                 enc_block_bin(block, &mut out);
@@ -204,10 +188,11 @@ impl OpBinary for DocxMutation {
                     write_str_lp(&mut out, based_on);
                 }
             }
-            DocxMutation::SetPart(set_part::SetPart { path, content_type, payload }) => {
+            DocxMutation::SetPart(set_part::SetPart { path, content_type, payload, index }) => {
                 write_str_lp(&mut out, path);
                 write_str_lp(&mut out, content_type);
                 write_bytes_lp(&mut out, &store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(payload)));
+                store::pack_rt::write_varint_u64(&mut out, index.map_or(0, |index| index as u64 + 1));
             }
             DocxMutation::RemovePart(remove_part::RemovePart { path }) => write_str_lp(&mut out, path),
         }
@@ -220,11 +205,6 @@ impl OpBinary for DocxMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            TAG_PATCH_SNAPSHOT => Ok(DocxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(reader.read_bytes(reader.remaining()).map_err(|e| protocol::ProtocolError::Malformed { what: "patch-snapshot payload", offset: reader.position() as u64, detail: e.to_string() })?)? })),
-            TAG_SET_SNAPSHOT => {
-                let snapshot = dec_docx_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
-                Ok(DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
-            }
             TAG_INSERT_BLOCK => {
                 let path = dec_block_path_bin(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
                 let block = dec_block_bin(&mut reader).map_err(|e| malformed("op block", reader.position(), e))?;
@@ -315,7 +295,11 @@ impl OpBinary for DocxMutation {
                 let bytes = read_bytes_lp(&mut reader).map_err(|e| malformed("op payload", reader.position(), e))?;
                 let value = store::pack_rt::decode_wire_value(&bytes).map_err(|e| malformed("op payload", reader.position(), e.to_string()))?;
                 let payload = semio_framework_value::FromValue::from_value(value).map_err(|e| malformed("op payload", reader.position(), e.to_string()))?;
-                Ok(DocxMutation::SetPart(set_part::SetPart { path, content_type, payload }))
+                let index = match reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? {
+                    0 => None,
+                    index => Some(index as usize - 1),
+                };
+                Ok(DocxMutation::SetPart(set_part::SetPart { path, content_type, payload, index }))
             }
             TAG_REMOVE_PART => {
                 let path = read_str_lp(&mut reader).map_err(|e| malformed("op path", reader.position(), e))?;
@@ -331,8 +315,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `DocxMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_INSERT_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-block");
 const TAG_REMOVE_BLOCK: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-block");
 const TAG_SET_BLOCK_CONTENT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-block-content");

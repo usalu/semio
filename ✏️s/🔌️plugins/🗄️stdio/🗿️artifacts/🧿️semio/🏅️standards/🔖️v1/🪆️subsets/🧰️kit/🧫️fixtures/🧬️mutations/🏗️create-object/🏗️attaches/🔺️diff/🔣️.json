@@ -1,25 +1,17 @@
 {
   "objects": {
-    "values": [
+    "added": [
       {
-        "childId": "obj-1",
-        "target": {
-          "artifactId": "obj-1",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "object"
-          }
-        }
-      },
-      {
-        "childId": "obj-2",
-        "target": {
-          "artifactId": "obj-2",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "object"
+        "index": 1,
+        "item": {
+          "childId": "obj-2",
+          "target": {
+            "artifactId": "obj-2",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "object"
+            }
           }
         }
       }

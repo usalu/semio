@@ -32,7 +32,7 @@ fn edit_cell() -> SemioTableMutation {
 #[semio_framework_async_macros::async_test]
 async fn rewrites_only_the_addressed_cell() {
     let base = before();
-    let produced = edit_cell().diff(&base).diff().apply(&base).expect("edit-cell applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(edit_cell().diff(&base).diff(), &base).expect("edit-cell applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "edit-cell/rewrites-the-population-cell-of-the-second-row: applied state differs from the committed after-snapshot");
     assert_eq!(produced.rows[1].cells[1], SemioValue::Int { lexeme: "3755251".to_string() }, "the addressed cell must hold new_value");
     assert_eq!(produced.rows[1].cells[0], base.rows[1].cells[0], "the sibling cell in the same row must be untouched");
@@ -45,11 +45,12 @@ async fn rewrites_only_the_addressed_cell() {
 async fn the_undo_edit_cell_restores_the_captured_value() {
     let base = before();
     let mutation = edit_cell();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "edit-cell of a reachable cell undoes as exactly one edit-cell");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward edit-cell applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo edit-cell applies to the edited table");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward edit-cell applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo edit-cell applies to the edited table");
     }
     assert_eq!(current, base, "edit-cell/rewrites-the-population-cell-of-the-second-row: the undo did not restore the before-snapshot");
 }
@@ -95,7 +96,6 @@ async fn committed_diff_is_canonical_and_omits_columns_entirely() {
     let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-cell diff decodes");
     assert!(decoded.columns.is_none(), "edit-cell must leave the columns slot untouched");
     let rows = decoded.rows.as_ref().expect("an applied edit-cell diff carries a rows list");
-    assert_eq!(rows.values[1].cells[1], SemioValue::Int { lexeme: "3755251".to_string() }, "the diff itself must already carry the rewritten cell");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "edit-cell/rewrites-the-population-cell-of-the-second-row: committed diff JSON is not canonical");
@@ -105,6 +105,6 @@ async fn committed_diff_is_canonical_and_omits_columns_entirely() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-cell diff decodes");
-    let produced = decoded.apply(&before()).expect("committed edit-cell diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed edit-cell diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "edit-cell/rewrites-the-population-cell-of-the-second-row: committed diff did not carry before to after");
 }

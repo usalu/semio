@@ -78,9 +78,9 @@ function ensureGuestSlimTypstFontsAsset(): void {
   if (ensureGuestSlimTypstFontsAt(pluginOutRoot, repoRoot)) return;
   const out = join(pluginOutRoot, GUESTSLIM_FONT_RELATIVE);
   mkdirSync(dirname(out), { recursive: true });
-  const status = runCmdStatus("cargo", ["run", "-p", "semio-framework-os-font-assets", "--bin", "dump-guestslim-typst-fonts", "--", out], { cwd: repoRoot, budgetMs: buildBudgetMs() });
+  const status = runCmdStatus("cargo", ["run", "-p", "semio-framework-canvas-font-assets", "--bin", "pack-typst-font-assets", "--", out], { cwd: repoRoot, budgetMs: buildBudgetMs() });
   if (status !== 0 || !existsSync(out)) {
-    throw new Error(`guestslim typst fonts asset missing and dump-guestslim-typst-fonts failed (expected ${out})`);
+    throw new Error(`guestslim typst fonts asset missing and pack-typst-font-assets failed (expected ${out})`);
   }
 }
 

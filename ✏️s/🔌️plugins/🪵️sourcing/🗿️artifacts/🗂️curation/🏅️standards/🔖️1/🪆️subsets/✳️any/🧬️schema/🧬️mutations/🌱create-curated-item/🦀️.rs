@@ -14,11 +14,18 @@ use crate::{CurationSnapshot, CuratedItem};
 pub struct CreateCuratedItem {
     #[dsl(block)]
     pub item: CuratedItem,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub index: Option<u32>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
+/// 🏗️ Builder — appends the item after the existing ones.
 pub fn create_curated_item(item: CuratedItem) -> SourcingMutation {
-    SourcingMutation::CreateCuratedItem(CreateCuratedItem { item })
+    SourcingMutation::CreateCuratedItem(CreateCuratedItem { item, index: None })
+}
+
+/// 📍️ Builder — inserts the item at `index` (an index past the end appends).
+pub fn create_curated_item_at(item: CuratedItem, index: u32) -> SourcingMutation {
+    SourcingMutation::CreateCuratedItem(CreateCuratedItem { item, index: Some(index) })
 }
 
 impl protocol::MutationKind<CurationSnapshot, SourcingMutation> for CreateCuratedItem {

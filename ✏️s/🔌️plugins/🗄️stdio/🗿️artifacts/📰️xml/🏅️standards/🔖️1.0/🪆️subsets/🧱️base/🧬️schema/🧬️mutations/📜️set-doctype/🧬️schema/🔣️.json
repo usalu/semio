@@ -160,43 +160,6 @@
           }
         }
       ]
-    },
-    "SetDoctypeMutation": {
-      "description": "The whole wire of SetDoctypeMutation: the editable apply payload (this document's root) or the inert restore.",
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "phase",
-            "value"
-          ],
-          "properties": {
-            "phase": {
-              "const": "apply"
-            },
-            "value": {
-              "$ref": "#"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "phase",
-            "value"
-          ],
-          "properties": {
-            "phase": {
-              "const": "restore"
-            },
-            "value": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/xml/1.0/base/diff.json"
-            }
-          }
-        }
-      ]
     }
   }
 }

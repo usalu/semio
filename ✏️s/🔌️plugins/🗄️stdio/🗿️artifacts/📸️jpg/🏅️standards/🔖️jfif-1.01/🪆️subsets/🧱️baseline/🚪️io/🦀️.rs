@@ -1,18 +1,27 @@
-//! 🚪️ IO stdio.jpg (jfif-1.01/🧱️baseline) — reuses the 🧾️document subset's `binary` raw-codec DAG
-//! leaf rather than duplicating it (same `JpgSnapshot` type, same catalog DAG edge). Registration
-//! flows through `🎹️composer::register` (the `ComposerEntry` via the standard-level aggregator,
-//! and the `SubsetValidator` directly), not per-leaf `register()` — same pattern `🧾️document/🚪️io`
-//! already established for this artifact.
+//! 🧱️ Native baseline certification with separately owned physical observations.
+/// 🛡️ Certifies a logical image against the native JPEG profile produced by physical lowering.
+pub fn check_baseline_content(snapshot:&crate::JpgSnapshot)->Vec<semio_framework_diagnostic::Diagnostic>{
+    use crate::standards::v_jfif_1_01::subsets::document::io::{encode_jpg,decode_jpg_with_observations,JpgEncodeOptions};
+    match encode_jpg(snapshot,&JpgEncodeOptions::default()).and_then(|bytes|decode_jpg_with_observations(&bytes.as_slice())) {
+        Ok(decoded)=>crate::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_facts(&decoded.observations.baseline_facts()),
+        Err(error)=>vec![semio_framework_diagnostic::Diagnostic::error("stdio.jpg.baseline.native-refused",semio_framework_diagnostic::TextSpan::at(1,1),error.to_string())],
+    }
+}
+/// 🚪️ IO stdio.jpg (jfif-1.01/🧱️baseline) — reuses the 🧾️document subset's `binary` raw-codec DAG
+/// leaf rather than duplicating it (same `JpgSnapshot` type, same catalog DAG edge). Registration
+/// flows through `🎹️composer::register` (the `ComposerEntry` via the standard-level aggregator,
+/// and the `SubsetValidator` directly), not per-leaf `register()` — same pattern `🧾️document/🚪️io`
+/// already established for this artifact.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance;
+    use super::check_baseline_content;
     use crate::standards::v_jfif_1_01::subsets::document::io::JpgComposer as JpgAnyComposer;
     use crate::JpgSnapshot;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use {semio_framework_plugin::register_subset_validator,semio_framework_plugin::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::SubsetValidator,semio_framework_plugin::SubsetValidatorEntry};
+    use {semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
     use std::sync::OnceLock;
 
     const DIALECT_BASELINE: Dialect = Dialect { artifact_kind: "s.stdio.jpg", standard: StandardId("jfif-1.01"), subset: SubsetId("baseline") };
@@ -32,7 +41,7 @@ use semio_framework_diagnostic::TextSpan;
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             let inner = JpgAnyComposer::compose(sources)?;
-            let checks = check_baseline_conformance(&inner.snapshot);
+            let checks = check_baseline_content(&inner.snapshot);
             let (hard, soft): (Vec<Diagnostic>, Vec<Diagnostic>) = checks.into_iter().partition(|d| matches!(d.severity, Severity::Error | Severity::Fatal));
             if !hard.is_empty() {
                 let mut all = hard.clone();
@@ -55,12 +64,20 @@ use semio_framework_diagnostic::TextSpan;
         const DIALECT: Dialect = DIALECT_BASELINE;
 
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
+            if let IoPayload::Binary(bytes)=payload {
+                if bytes.starts_with(&[0xff,0xd8]){
+                    return match crate::standards::v_jfif_1_01::subsets::document::io::inspect_jpg_native_header(&bytes.as_slice()){
+                        Ok(observations)=>crate::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_facts(&observations.baseline_facts()),
+                        Err(error)=>vec![Diagnostic::error("stdio.jpg.baseline.native-header-refused",TextSpan::at(1,1),error.to_string())],
+                    };
+                }
+            }
             let decoded = match payload {
                 IoPayload::Binary(bytes) => <JpgSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
                 IoPayload::Text(text) => <JpgSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
-                Some(snapshot) => check_baseline_conformance(&snapshot),
+                Some(snapshot) => check_baseline_content(&snapshot),
                 None => vec![Diagnostic {
                     code: FaultCode::new("stdio.jpg.baseline.validate-decode-failed"),
                     severity: Severity::Warning,
@@ -98,7 +115,7 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 pub mod derived_construction {
-    use crate::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance;
+    use super::check_baseline_content;
     use crate::standards::v_jfif_1_01::subsets::document::io::JpgBuilder as JpgAnyBuilder;
     use crate::{JpgDiff, JpgMutation, JpgSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
@@ -138,7 +155,7 @@ pub mod derived_construction {
         /// contract of "diagnostics accumulated during mutation, not from validation".
         fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
             let snapshot = self.0.build()?;
-            let hard: Vec<semio_framework_diagnostic::Diagnostic> = check_baseline_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)).collect();
+            let hard: Vec<semio_framework_diagnostic::Diagnostic> = check_baseline_content(&snapshot).into_iter().filter(|d| matches!(d.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)).collect();
             if hard.is_empty() {
                 Ok(snapshot)
             } else {
@@ -154,7 +171,6 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::schema::snapshot::JpgHuffmanClass;
     use crate::standards::v_jfif_1_01::subsets::document::io::JpgAnalyzer as JpgAnyAnalyzer;
     pub use crate::standards::v_jfif_1_01::subsets::document::io::JpgParts;
     use crate::JpgSnapshot;
@@ -163,7 +179,7 @@ use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
     use semio_framework_diagnostic::TextSpan;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use semio_framework_value::ValueError;
 
     /// 🎯️ This subset's dialect coordinate.
@@ -184,7 +200,7 @@ use semio_framework_diagnostic::Severity;
         type Parts = JpgParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             JpgAnyAnalyzer::sniff(source)
         }
 
@@ -192,10 +208,10 @@ use semio_framework_diagnostic::Severity;
             let inner = JpgAnyAnalyzer::analyze(sources);
             let mut diagnostics = inner.diagnostics.clone();
             let mut confidence = inner.confidence;
-            if let Some(snapshot) = &inner.parts.snapshot {
-                let checks = check_baseline_conformance(snapshot);
+            if let Some(observations) = &inner.parts.observations {
+                let checks = check_baseline_facts(&observations.baseline_facts());
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
-                    confidence = IoConfidence::Low;
+                    confidence = semio_framework_plugin::io::Confidence::Low;
                 }
                 diagnostics.extend(checks);
             }

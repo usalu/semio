@@ -4,7 +4,7 @@ export type * from "../../../../../🧬️schema/🧬️mutations/🏗️node-me
 /** ✂️ `unbind-node-mesh` wire twin: the flat `Apply` payload `GltfUnbindNodeMeshPayload` and the phase wire `UnbindNodeMeshMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
 export const parseGltfUnbindNodeMeshPayload = gltfWireObject<GltfUnbindNodeMeshPayload>({ node: gltfWireRequired(gltfWireIndex) });
-export const parseUnbindNodeMeshMutation = gltfWirePhase(parseGltfUnbindNodeMeshPayload, parseGltfDiff);
+export const parseUnbindNodeMeshMutation = gltfWireApplyPhase(parseGltfUnbindNodeMeshPayload);

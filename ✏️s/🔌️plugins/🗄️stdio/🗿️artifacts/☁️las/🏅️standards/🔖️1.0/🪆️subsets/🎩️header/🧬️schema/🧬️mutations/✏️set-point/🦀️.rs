@@ -1,7 +1,4 @@
-//! ✏️ `set-point` — its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! ✏️ `set-point` — its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 //!
 //! ✏️ Replaces a point record wholesale.
 use super::*;
@@ -19,14 +16,18 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetPoint {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "point", kind: "set-point", record: "SetPoint" };
 
     fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
-        agg_diff(&LasMutation::SetPoint(self.clone()), base)
+        let Self { index, point } = self;
+        protocol::MutationOutcome::new(diff::diff_set_point(base, *index, point))
     }
     fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&LasMutation::SetPoint(self.clone()), base)?
-    
-    })
-}
+        let Self { index, .. } = self;
+        Ok({
+            match base.points.get(*index) {
+                Some(p) => vec![LasMutation::SetPoint(set_point::SetPoint { index: *index, point: p.clone() })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set point", "Punkt setzen")
     }

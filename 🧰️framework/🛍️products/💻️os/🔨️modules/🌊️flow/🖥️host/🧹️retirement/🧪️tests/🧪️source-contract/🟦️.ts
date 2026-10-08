@@ -14,12 +14,12 @@ const dagText = fixture.dag.text.repeat(fixture.dag.repeat);
 assert.equal(Buffer.byteLength(dagText), fixture.dag.minimumUtf8Bytes);
 assert.equal(stableStringify({ label: text }), JSON.stringify({ label: text }));
 assert.equal(fixture.scene.retainedVelloRects, 256);
-const canvasSource = await Bun.file(new URL("../../../../../♾️infinite/🖼️canvas/🦀️.rs", import.meta.url)).text();
+const canvasSource = await Bun.file(new URL("../../../../../../../../🔨️modules/🖼️canvas/🦀️.rs", import.meta.url)).text();
 assert(canvasSource.includes("fn retire_vello_fragment"));
 assert(canvasSource.includes("Self::vector_backing_bytes(&encoding.resources.glyph_runs)"));
 assert(canvasSource.indexOf("slot.command_backing_bytes = command.retirement_backing_bytes()") < canvasSource.indexOf("slot.command = Some(ManuallyDrop::new(command))"));
 const sceneConsumers = [
-  ["iconPaintCache", await Bun.file(new URL("../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🦀️.rs", import.meta.url)).text(), "retirement_scene: Cell<Option<infinite::canvas::OpaqueSceneRetirementToken>>"],
+  ["iconPaintCache", await Bun.file(new URL("../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🦀️.rs", import.meta.url)).text(), "retirement_scene: Cell<Option<semio_framework_canvas::OpaqueSceneRetirementToken>>"],
   ["boardWorldCache", await Bun.file(new URL("../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🦀️.rs", import.meta.url)).text(), "opaque_scene_retirement: Cell<Option<OpaqueSceneRetirementToken>>"],
   ["engineCanvasPacket", await Bun.file(new URL("../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs", import.meta.url)).text(), "scene_retirement: Option<canvas::OpaqueSceneRetirementToken>"],
 ] as const;

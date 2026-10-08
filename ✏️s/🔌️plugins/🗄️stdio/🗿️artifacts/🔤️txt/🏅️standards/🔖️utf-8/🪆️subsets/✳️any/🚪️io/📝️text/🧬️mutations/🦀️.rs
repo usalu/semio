@@ -9,14 +9,13 @@ struct TextCodec {
     decode: fn(&str) -> Result<TxtMutation, String>,
 }
 const TEXT_CODECS: &[TextCodec] = &[
-    TextCodec { opcode: set_snapshot::TEXT_OPCODE, try_encode: set_snapshot::try_encode, decode: set_snapshot::decode_mutation },
     TextCodec { opcode: set_trailing_newline::TEXT_OPCODE, try_encode: set_trailing_newline::try_encode, decode: set_trailing_newline::decode_mutation },
     TextCodec { opcode: set_line_ending::TEXT_OPCODE, try_encode: set_line_ending::try_encode, decode: set_line_ending::decode_mutation },
     TextCodec { opcode: insert_line::TEXT_OPCODE, try_encode: insert_line::try_encode, decode: insert_line::decode_mutation },
     TextCodec { opcode: remove_line::TEXT_OPCODE, try_encode: remove_line::try_encode, decode: remove_line::decode_mutation },
     TextCodec { opcode: set_line::TEXT_OPCODE, try_encode: set_line::try_encode, decode: set_line::decode_mutation },
 ];
-pub const TEXT_OPCODES: &[&str] = &[set_snapshot::TEXT_OPCODE, set_trailing_newline::TEXT_OPCODE, set_line_ending::TEXT_OPCODE, insert_line::TEXT_OPCODE, remove_line::TEXT_OPCODE, set_line::TEXT_OPCODE];
+pub const TEXT_OPCODES: &[&str] = &[set_trailing_newline::TEXT_OPCODE, set_line_ending::TEXT_OPCODE, insert_line::TEXT_OPCODE, remove_line::TEXT_OPCODE, set_line::TEXT_OPCODE];
 //#endregion 🔖️Registry
 
 //#region 🔖️Framing
@@ -78,9 +77,6 @@ pub mod insert_line;
 
 #[path = "✏️set-line/🦀️.rs"]
 pub mod set_line;
-
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 
 #[path = "🔚️set-line-ending/🦀️.rs"]
 pub mod set_line_ending;

@@ -26,7 +26,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveProperties {
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.properties.iter().find(|item| item.name == self.name).map(|item| PdfMutation::SetProperties(super::set_properties::SetProperties { properties: item.clone() })).into_iter().collect()
+        base.properties.iter().position(|item| item.name == self.name).map(|index| PdfMutation::SetProperties(super::set_properties::SetProperties { properties: base.properties[index].clone(), index: Some(index) })).into_iter().collect()
     
     })())
 }

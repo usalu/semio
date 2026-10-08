@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "name": null,
   "grid": null,
@@ -20,6 +19,7 @@
   },
   "printTarget": null,
   "backgroundDrawing": null,
+  "drawingTexts": [],
   "referencedModel": null,
   "dataFields": null
 }

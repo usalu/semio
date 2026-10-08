@@ -13,6 +13,7 @@ pub fn inverse(payload: &super::ResizeGrid, base: &Grid2dSnapshot) -> Result<Vec
     let mut restore = vec![resize_grid(base.width, base.height)];
     restore.extend(base.masked.iter().filter(|cell| outside(cell.x, cell.y)).map(|cell| mask_cell(cell.x, cell.y)));
     restore.extend(base.pinned.iter().filter(|cell| outside(cell.x, cell.y)).map(|cell| pin_cell(cell.x, cell.y, cell.tile_id.clone())));
+    restore.reverse();
     restore
 
     })())

@@ -36,12 +36,14 @@ semio_framework_value::artifact_retire_struct!(RemodelingWindowTransient { impor
 semio_framework_plugin::transient_root! {
     state: RemodelingWindowTransient,
     mutation: RemodelingWindowTransientMutation,
+    diff: RemodelingWindowTransientDiff,
     owner: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient",
     kind: "set-window-transient",
     display_name: "Set Remodeling Window Transient",
     payload_schema: "remodeling.windowtransient",
     envelope: "s.remodel.remodeling.windowtransient",
     extension: "remodelingwindowtransient",
+    fields: { import: Option<RemodelingImport> },
 }
 
 semio_framework_plugin::window_transient_owners! {

@@ -20,4 +20,5 @@ type SemioDocumentMutation {
   width: Float
   height: Float
   mime: String
+  at: Int
 }

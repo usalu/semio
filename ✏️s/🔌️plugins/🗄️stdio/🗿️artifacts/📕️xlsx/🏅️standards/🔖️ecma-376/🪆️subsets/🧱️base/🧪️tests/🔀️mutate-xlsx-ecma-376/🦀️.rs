@@ -36,13 +36,9 @@ fn arranged_input(ctx: &Context, spec: &Json) -> Result<Vec<u8>, String> {
 //#region 🔖️SpecHelpers
 /// 🔢️ The `sharedStringCount` a kind moves the pool to, and the value every OTHER declared kind leaves untouched — real
 /// arithmetic on the real fixture's baseline, not a placeholder: the grid kinds never touch the pool, and every cell value
-/// this case's rows write is a literal (`inlineString`/`number`), never a pool reference. `set-snapshot`'s replacement
-/// workbook carries an empty pool, so it moves the count to exactly 0.
-fn shared_string_count_after(current: usize, kind: &str) -> usize {
-    match kind {
-        "set-snapshot" => 0,
-        _ => current,
-    }
+/// this case's rows write is a literal (`inlineString`/`number`), never a pool reference.
+fn shared_string_count_after(current: usize, _kind: &str) -> usize {
+    current
 }
 
 /// 📑️ The three kinds that address the raw `xl/sharedStrings.xml` pool by INDEX rather than the
@@ -128,7 +124,6 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
 /// (`oracle_apply_inverse`, sourcing what the forward kind discarded from the real input), and ASSERTS
 /// the law in role: the restored workbook must project onto exactly what the real input projects
 /// onto — every sheet, every cell, every value, and the restored pool's count, for every kind.
-/// `set-snapshot` is undone by rebuilding the original's own grid through the reference pairing.
 /// The three POOL kinds are projected through `project_shared_string_pool`, so their restored
 /// result is observed rather than tracked, entry by entry.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {

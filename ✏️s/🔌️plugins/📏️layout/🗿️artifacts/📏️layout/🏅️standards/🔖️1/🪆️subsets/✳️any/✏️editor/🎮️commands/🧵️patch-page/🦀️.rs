@@ -58,7 +58,7 @@ fn page_field_mutation(document: &LayoutSnapshot, page: &Page, field: &str, valu
             };
             let trimmed = value.trim();
             let name = if trimmed.is_empty() { "Layer".to_string() } else { trimmed.to_string() };
-            Some(LayoutMutation::CreateLayer(CreateLayer { page_id: id, id: layer_id, name, remove: false }))
+            Some(LayoutMutation::CreateLayer(CreateLayer { page_id: id, id: layer_id, name, remove: false, index: None }))
         }
         "parentPageId" => {
             let trimmed = value.trim();

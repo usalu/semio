@@ -5307,7 +5307,7 @@ async fn kit_in_import_media_upserts_object_and_vortex_kinds_into_meta_kind_cata
 
     let mut next_projection = projection.value().clone();
     for operation in &emit.artifact_mutations {
-        next_projection = protocol::Mutation::<serde_json::Value>::diff(operation, &next_projection).diff().apply(&next_projection).expect("valid mutation diff");
+        next_projection = protocol::apply_diff(protocol::Mutation::<serde_json::Value>::diff(operation, &next_projection).diff(), &next_projection).expect("valid mutation diff");
     }
 
     let next_projection = parse(&next_projection.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutated snapshot JSON");
@@ -5346,7 +5346,7 @@ async fn kit_in_import_media_is_idempotent_on_repeated_delivery() {
         let doc = ArtifactView::new(&doc_projection, &history);
         let emit = Puzzle3dPlayApp::import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
         for operation in &emit.artifact_mutations {
-            current = protocol::Mutation::<serde_json::Value>::diff(operation, &current).diff().apply(&current).expect("valid mutation diff");
+            current = protocol::apply_diff(protocol::Mutation::<serde_json::Value>::diff(operation, &current).diff(), &current).expect("valid mutation diff");
         }
     }
 

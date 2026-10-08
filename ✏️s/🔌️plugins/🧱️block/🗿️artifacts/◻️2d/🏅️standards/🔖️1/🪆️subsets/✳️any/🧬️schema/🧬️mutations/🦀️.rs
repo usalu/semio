@@ -92,9 +92,9 @@ pub const KINDS: &[&str] = &[
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations
 
-pub use super::add_attribute::{add_attribute, AddAttribute};
-pub use super::add_author::{add_author, AddAuthor};
-pub use super::add_compatibility_rule::{add_compatibility_rule, AddCompatibilityRule};
+pub use super::add_attribute::{add_attribute, add_attribute_at, AddAttribute};
+pub use super::add_author::{add_author, add_author_at, AddAuthor};
+pub use super::add_compatibility_rule::{add_compatibility_rule, add_compatibility_rule_at, AddCompatibilityRule};
 pub use super::change_handle_handle_kind::{change_handle_handle_kind, ChangeHandleHandleKind};
 pub use super::change_handle_kind_color::{change_handle_kind_color, ChangeHandleKindColor};
 pub use super::change_handle_kind_default_wire_kind::{change_handle_kind_default_wire_kind, ChangeHandleKindDefaultWireKind};
@@ -105,8 +105,8 @@ pub use super::change_node_kind_icon::{change_node_kind_icon, ChangeNodeKindIcon
 pub use super::change_node_kind_label::{change_node_kind_label, ChangeNodeKindLabel};
 pub use super::change_node_kind_unit::{change_node_kind_unit, ChangeNodeKindUnit};
 pub use super::change_node_kind_variant::{change_node_kind_variant, ChangeNodeKindVariant};
-pub use super::create_handle::{create_handle, CreateHandle};
-pub use super::create_handle_kind::{create_handle_kind, CreateHandleKind};
+pub use super::create_handle::{create_handle, create_handle_at, CreateHandle};
+pub use super::create_handle_kind::{create_handle_kind, create_handle_kind_at, CreateHandleKind};
 pub use super::delete_handle::{delete_handle, DeleteHandle};
 pub use super::delete_handle_kind::{delete_handle_kind, DeleteHandleKind};
 pub use super::move_camera2d::{move_camera2d, MoveCamera2d};

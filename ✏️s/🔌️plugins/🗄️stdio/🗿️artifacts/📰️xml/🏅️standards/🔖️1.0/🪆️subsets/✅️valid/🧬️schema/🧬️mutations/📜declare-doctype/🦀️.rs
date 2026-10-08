@@ -1,6 +1,4 @@
-//! 📜️ `declare-doctype` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 📜️ `declare-doctype` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,14 +14,23 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for DeclareDoctype {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "doctype", kind: "declare-doctype", record: "DeclareDoctype" };
 
     fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as Mutation<XmlSnapshot>>::Diff> {
-        agg_diff(&XmlValidMutation::DeclareDoctype(self.clone()), base)
+        let Self { external_id } = self;
+        match document_element_name(base) {
+            None => rejected("declare-doctype: the document has no document element, so §2.8 gives the DOCTYPE no Name to carry".to_string()),
+            Some(name) => protocol::MutationOutcome::new(doctype_diff(XmlDoctype {
+                prolog_position: base.doc.prolog.len() as u64,
+                name: name.to_string(),
+                external_id: external_id.clone(),
+                declarations: base.doc.doctype.as_ref().map(|d| d.declarations.clone()).unwrap_or_default(),
+            })),
+        }
     }
     fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<XmlValidMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&XmlValidMutation::DeclareDoctype(self.clone()), base)?
-    
-    })
-}
+        Ok(match base.doc.doctype.as_ref() {
+            Some(doctype) => vec![XmlValidMutation::DeclareDoctype(declare_doctype::DeclareDoctype { external_id: doctype.external_id.clone() })],
+            None => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Declare doctype", "Dokumenttyp deklarieren")
     }

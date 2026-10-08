@@ -3,7 +3,7 @@
  * ever bound its port —; the default hub is started once behind an owner lease that racing PROCESSES claim exactly once; a
  * catalog the current hub cannot load is republished (with progress and cancel) instead of booted; strict Ajv over the owned
  * schema `🧬️schema/🔣️.json` classifies every lease record and catalog header the way the product does; and the catalog
- * contract matches the publisher and loader it mirrors. The shared serve fixture `ensureDevServe` (ticket 26/09/23 S18) is
+ * contract matches the publisher and loader it mirrors. The shared development serve owner `ensureDevServe` (ticket 26/09/23 S18) is
  * driven against real processes on a `detect-port` port: it reuses a serve that answers and never stops it, starts one on a
  * free port and frees the port again, stops what it started on cancel, bound or early exit, and refuses a non-serve holder.
  * No hub binary is built or run here. */

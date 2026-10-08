@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test";
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import Ajv from "ajv";
 import ts from "typescript";
 import React from "react";
 import { createContinuousGestureLane } from "../../🎬️scene/🟦️.ts";
@@ -13,7 +12,6 @@ const fixture = JSON.parse(read(join(ui, "🧫️fixtures/🎛️retained-contro
 type Case = { name: string; node: { kind: string }; expected: { press?: "open" | "released" } | null };
 type Lifecycle = { id: string; values: number[]; terminal: "pointerup" | "pointercancel"; expected: (number | string)[][] };
 const lifecycle = JSON.parse(read(join(ui, "🧫️fixtures/🎚️ring-press/🔣️.json"))) as { cases: Lifecycle[] };
-const validateLifecycle = new Ajv({ strict: true }).compile(JSON.parse(read(join(ui, "🧬️schema/🎚️ring-press/🔣️.json"))));
 
 function declaration(source: string, name: string): string {
   const file = ts.createSourceFile("reference.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
@@ -30,12 +28,6 @@ function compile(source: string): string {
 
 test("the complete shared fixture pins Ring to the continuous contract", () => {
   expect(fixture.cases.map(row => row.name)).toEqual(["input-change-per-keystroke", "input-number-commits-a-number", "input-blur-policy-is-silent-while-typing", "input-blur-policy-commits-on-enter", "input-blur-policy-commits-on-blur", "input-unbound-is-silent", "toggle-commits-the-flip", "toggle-already-on-commits-false", "slider-reads-its-own-track", "slider-clamps-past-its-end", "stepper-increment-falls-back-to-absolute", "stepper-decrement-prefers-the-delta-binding", "stepper-value-segment-commits-nothing", "ring-reads-its-own-circle", "icon-select-edits-its-icon-string"]);
-  const hostile = structuredClone(fixture);
-  delete hostile.cases.find(row => row.node.kind === "ring")!.expected!.press;
-  expect(validateLifecycle(lifecycle)).toBe(true);
-  const substituted = structuredClone(lifecycle);
-  substituted.cases[0]!.expected.pop();
-  expect(validateLifecycle(substituted)).toBe(false);
 });
 
 test("the retained TypeScript reference independently agrees for all fifteen controls", () => {

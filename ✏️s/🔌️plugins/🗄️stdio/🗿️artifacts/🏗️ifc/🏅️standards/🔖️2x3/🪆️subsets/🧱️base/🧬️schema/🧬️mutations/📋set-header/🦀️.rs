@@ -1,6 +1,4 @@
-//! 📋️ `set-header` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 📋️ `set-header` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -14,15 +12,13 @@ pub struct SetHeader {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Mutation> for SetHeader {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "header", kind: "set-header", record: "SetHeader" };
 
-    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<<Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::Diff> {
-        agg_diff(&Ifc2x3Mutation::SetHeader(self.clone()), base)
+    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
+        let Self { header } = self;
+        protocol::MutationOutcome::new(Ifc2x3Diff { header: (base.document.header != *header).then(|| header.clone()), ..Default::default() })
     }
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Result<Vec<Ifc2x3Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&Ifc2x3Mutation::SetHeader(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![Ifc2x3Mutation::SetHeader(Self { header: base.document.header.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set header", "Header setzen")
     }

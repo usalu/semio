@@ -1,10 +1,4 @@
-# 🧬️ En1990 diff schema — sparse scalar fields and ordered per-collection row edits.
-
-enum En1990RowOp {
-  INSERT
-  REMOVE
-  REPLACE
-}
+# 🧬️ En1990 diff schema — sparse scalar fields plus keyed row deltas.
 
 type En1990Diff {
   annex: String @state(class: ARTIFACT)
@@ -20,55 +14,159 @@ type En1990Diff {
   inspectionLevel: String @state(class: ARTIFACT)
   kFiDeclared: Float @state(class: ARTIFACT)
   betaComputed: Float @state(class: ARTIFACT)
-  permanents: [En1990PermanentEdit!]! @state(class: ARTIFACT)
-  variables: [En1990VariableEdit!]! @state(class: ARTIFACT)
-  accidentals: [En1990AccidentalEdit!]! @state(class: ARTIFACT)
-  seismics: [En1990SeismicEdit!]! @state(class: ARTIFACT)
-  members: [En1990MemberEdit!]! @state(class: ARTIFACT)
-  bridgeSls: [En1990BridgeSlsEdit!]! @state(class: ARTIFACT)
+  permanents: En1990PermanentDelta! @state(class: ARTIFACT)
+  variables: En1990VariableDelta! @state(class: ARTIFACT)
+  accidentals: En1990AccidentalDelta! @state(class: ARTIFACT)
+  seismics: En1990SeismicDelta! @state(class: ARTIFACT)
+  members: En1990MemberDelta! @state(class: ARTIFACT)
+  bridgeSls: En1990BridgeSlsDelta! @state(class: ARTIFACT)
   effects: [En1990EffectEdit!]! @state(class: ARTIFACT)
 }
 
-type En1990PermanentEdit {
-  op: En1990RowOp!
-  index: Int!
-  id: String!
-  value: En1990PermanentAction
+type En1990PermanentDelta {
+  removed: [String!]!
+  added: [En1990PermanentAddition!]!
+  modified: [En1990PermanentModification!]!
 }
 
-type En1990VariableEdit {
-  op: En1990RowOp!
-  index: Int!
-  id: String!
-  value: En1990VariableAction
+type En1990PermanentAddition {
+  after: String
+  row: En1990PermanentAction!
 }
 
-type En1990AccidentalEdit {
-  op: En1990RowOp!
-  index: Int!
-  id: String!
-  value: En1990AccidentalAction
+type En1990PermanentModification {
+  key: String!
+  patch: En1990PermanentPatch!
 }
 
-type En1990SeismicEdit {
-  op: En1990RowOp!
-  index: Int!
-  id: String!
-  value: En1990SeismicAction
+type En1990PermanentPatch {
+  kind: String
+  gk: Float
 }
 
-type En1990MemberEdit {
-  op: En1990RowOp!
-  index: Int!
-  id: String!
-  value: En1990Member
+type En1990VariableDelta {
+  removed: [String!]!
+  added: [En1990VariableAddition!]!
+  modified: [En1990VariableModification!]!
 }
 
-type En1990BridgeSlsEdit {
-  op: En1990RowOp!
-  index: Int!
-  id: String!
-  value: En1990BridgeSls
+type En1990VariableAddition {
+  after: String
+  row: En1990VariableAction!
+}
+
+type En1990VariableModification {
+  key: String!
+  patch: En1990VariablePatch!
+}
+
+type En1990VariablePatch {
+  category: String
+  qk: Float
+}
+
+type En1990AccidentalDelta {
+  removed: [String!]!
+  added: [En1990AccidentalAddition!]!
+  modified: [En1990AccidentalModification!]!
+}
+
+type En1990AccidentalAddition {
+  after: String
+  row: En1990AccidentalAction!
+}
+
+type En1990AccidentalModification {
+  key: String!
+  patch: En1990AccidentalPatch!
+}
+
+type En1990AccidentalPatch {
+  ad: Float
+}
+
+type En1990SeismicDelta {
+  removed: [String!]!
+  added: [En1990SeismicAddition!]!
+  modified: [En1990SeismicModification!]!
+}
+
+type En1990SeismicAddition {
+  after: String
+  row: En1990SeismicAction!
+}
+
+type En1990SeismicModification {
+  key: String!
+  patch: En1990SeismicPatch!
+}
+
+type En1990SeismicPatch {
+  aEk: Float
+  importanceClass: String
+}
+
+type En1990MemberDelta {
+  removed: [String!]!
+  added: [En1990MemberAddition!]!
+  modified: [En1990MemberModification!]!
+}
+
+type En1990MemberAddition {
+  after: String
+  row: En1990Member!
+}
+
+type En1990MemberModification {
+  key: String!
+  patch: En1990MemberPatch!
+}
+
+type En1990MemberPatch {
+  labelEn: String
+  labelDe: String
+  rdStr: Float
+  rdGeo: Float
+  rdEquStab: Float
+  rdEquDestab: Float
+  rdFat: Float
+  span: Float
+  deflectionW: Float
+  deflectionLimitRatio: Float
+  vibrationFrequency: Float
+  vibrationFrequencyMin: Float
+}
+
+type En1990BridgeSlsDelta {
+  removed: [String!]!
+  added: [En1990BridgeSlsAddition!]!
+  modified: [En1990BridgeSlsModification!]!
+}
+
+type En1990BridgeSlsAddition {
+  after: String
+  row: En1990BridgeSls!
+}
+
+type En1990BridgeSlsModification {
+  key: String!
+  patch: En1990BridgeSlsPatch!
+}
+
+type En1990BridgeSlsPatch {
+  memberId: String
+  deckAcceleration: Float
+  deckAccelerationLimit: Float
+  deckTwist: Float
+  deckTwistLimit: Float
+  bridgeDeflection: Float
+  bridgeDeflectionLimit: Float
+}
+
+enum En1990RowOp {
+  INSERT
+  REMOVE
+  REPLACE
 }
 
 type En1990EffectEdit {

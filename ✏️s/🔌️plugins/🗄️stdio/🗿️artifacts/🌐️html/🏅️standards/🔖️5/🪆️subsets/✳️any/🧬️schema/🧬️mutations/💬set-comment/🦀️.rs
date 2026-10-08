@@ -1,6 +1,4 @@
-//! 💬️ `set-comment` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 💬️ `set-comment` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,14 +14,19 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetComment {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "comment", kind: "set-comment", record: "SetComment" };
 
     fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as Mutation<HtmlSnapshot>>::Diff> {
-        agg_diff(&HtmlMutation::SetComment(self.clone()), base)
+        let Self { path, text } = self;
+        protocol::MutationOutcome::new(diff_at_path(path, HtmlNodeDiff::Comment { text: Some(text.clone()) }))
     }
     fn inverse(&self, base: &HtmlSnapshot) -> Result<Vec<HtmlMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&HtmlMutation::SetComment(self.clone()), base)?
-    
-    })
-}
+        let Self { path, .. } = self;
+        Ok({
+            let old = match node_at(base, path) {
+                Ok(HtmlNode::Comment { text }) => text.clone(),
+                _ => String::new(),
+            };
+            vec![HtmlMutation::SetComment(set_comment::SetComment { path: path.clone(), text: old })]
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set comment", "Kommentar setzen")
     }

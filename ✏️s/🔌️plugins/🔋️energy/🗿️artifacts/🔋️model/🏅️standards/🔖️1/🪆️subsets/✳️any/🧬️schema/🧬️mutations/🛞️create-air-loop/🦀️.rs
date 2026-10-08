@@ -18,11 +18,12 @@ pub struct CreateAirLoop {
     pub return_node_id: u32,
     pub design_supply_air_flow_m3_s: f64,
     pub terminal_zone_ids: Vec<crate::model::EntityId>,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_air_loop(id: crate::model::EntityId, name: String, supply_node_id: u32, return_node_id: u32, design_supply_air_flow_m3_s: f64, terminal_zone_ids: Vec<crate::model::EntityId>) -> EnergyModelMutation {
-    EnergyModelMutation::CreateAirLoop(CreateAirLoop { id, name, supply_node_id, return_node_id, design_supply_air_flow_m3_s, terminal_zone_ids })
+pub fn create_air_loop(id: crate::model::EntityId, name: String, supply_node_id: u32, return_node_id: u32, design_supply_air_flow_m3_s: f64, terminal_zone_ids: Vec<crate::model::EntityId>, index: Option<u32>) -> EnergyModelMutation {
+    EnergyModelMutation::CreateAirLoop(CreateAirLoop { id, name, supply_node_id, return_node_id, design_supply_air_flow_m3_s, terminal_zone_ids, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateAirLoop {

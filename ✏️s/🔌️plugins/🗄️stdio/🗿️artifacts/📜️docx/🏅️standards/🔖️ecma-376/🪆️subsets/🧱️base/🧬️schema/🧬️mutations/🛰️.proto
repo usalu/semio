@@ -3,7 +3,6 @@ package semio.s_stdio_docx.mutation;
 import "s_stdio_xml/snapshot.proto";
 enum DocxMutationKind {
   DOCX_MUTATION_KIND_UNSPECIFIED = 0;
-  DOCX_MUTATION_KIND_SET_SNAPSHOT = 1;
   DOCX_MUTATION_KIND_INSERT_BLOCK = 2;
   DOCX_MUTATION_KIND_REMOVE_BLOCK = 3;
   DOCX_MUTATION_KIND_SET_BLOCK_CONTENT = 4;
@@ -33,4 +32,4 @@ message DocxPartContent {
     bytes binary = 2;
   }
 }
-message DocxSetPart { string path = 1; string content_type = 2; DocxPartContent payload = 3; }
+message DocxSetPart { string path = 1; string content_type = 2; DocxPartContent payload = 3; optional uint64 index = 4; }

@@ -7,7 +7,7 @@ use crate::Fem2dSnapshot;
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteSupport, base: &Fem2dSnapshot) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    base.supports.iter().find(|item| item.id == payload.id).map(|item| vec![Fem2dMutation::CreateSupport(create_support::CreateSupport { support: item.clone() })]).unwrap_or_default()
+    base.supports.iter().enumerate().find(|(_, item)| item.id == payload.id).map(|(at, item)| vec![Fem2dMutation::CreateSupport(create_support::CreateSupport { support: item.clone(), index: Some(at) })]).unwrap_or_default()
 
     })())
 }

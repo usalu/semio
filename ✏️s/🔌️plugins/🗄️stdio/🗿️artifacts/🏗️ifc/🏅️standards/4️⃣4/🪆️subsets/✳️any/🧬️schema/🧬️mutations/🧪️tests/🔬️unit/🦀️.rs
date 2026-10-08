@@ -8,7 +8,7 @@ use protocol::MutationDiff;
 fn missing_entity_target_is_rejected_before_mutation() {
     let base = IfcSnapshot::default();
     let diff = IfcDiff { entities: Some(IfcEntitiesDiff { removed: vec![1], ..Default::default() }), ..Default::default() };
-    let error = diff.apply(&base).expect_err("missing entity target must be rejected");
+    let error = protocol::apply_diff(&diff, &base).expect_err("missing entity target must be rejected");
     assert_eq!(error.code, "mutation.apply.invalid-remove-target");
     assert_eq!(error.target, vec!["entities", "1"]);
     assert_eq!(base, IfcSnapshot::default());
@@ -38,7 +38,7 @@ fn assert_mutation_diff_law(base: &IfcSnapshot, mutation: IfcMutation) {
     let mut applied_snapshot = base.clone();
     let returned_diff = apply_ifc_mutation(&mut applied_snapshot, &mutation);
     assert_eq!(returned_diff, expected_diff, "apply_ifc_mutation must return mutation.diff(base) for {mutation:?}");
-    assert_eq!(expected_diff.diff().apply(base).expect("valid mutation diff"), applied_snapshot, "diff.diff().apply(base) must equal the imperative mutation result for {mutation:?}");
+    assert_eq!(protocol::apply_diff(expected_diff.diff(), base).expect("valid mutation diff"), applied_snapshot, "protocol::apply_diff(diff.diff(), base) must equal the imperative mutation result for {mutation:?}");
 }
 
 #[test]
@@ -46,7 +46,6 @@ fn mutation_diff_law() {
     let base = base_snapshot();
     let mut alt = base.clone();
     alt.header.file_name = vec![IfcValue::String("other.ifc".into())];
-    assert_mutation_diff_law(&base, IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: alt }));
     assert_mutation_diff_law(&base, IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: vec![IfcValue::String("new desc".into())] }));
     assert_mutation_diff_law(&base, IfcMutation::SetFileName(set_file_name::SetFileName { values: vec![IfcValue::String("renamed.ifc".into())] }));
     assert_mutation_diff_law(&base, IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4X3".into())])] }));
@@ -81,9 +80,9 @@ fn inverse_law() {
         assert_eq!(snap, base, "mutation-level inverse must restore base for {m:?}");
 
         let d = m.diff(&base);
-        let mutated = d.diff().apply(&base).expect("valid forward diff");
+        let mutated = protocol::apply_diff(d.diff(), &base).expect("valid forward diff");
         let inv_d = d.diff().inverse(&base);
-        assert_eq!(inv_d.apply(&mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
+        assert_eq!(protocol::apply_diff(&inv_d, &mutated).expect("valid inverse diff"), base, "diff-level inverse must restore base for {m:?}");
     }
 }
 //#endregion 🔖️inverse_law
@@ -91,13 +90,13 @@ fn inverse_law() {
 //#region 🔖️absorb_law
 fn assert_absorb_law(base: &IfcSnapshot, m1: IfcMutation, m2: IfcMutation) {
     let d1 = m1.diff(base);
-    let mid = d1.diff().apply(base).expect("valid first diff");
+    let mid = protocol::apply_diff(d1.diff(), base).expect("valid first diff");
     let d2 = m2.diff(&mid);
-    let sequential = d2.diff().apply(&mid).expect("valid second diff");
+    let sequential = protocol::apply_diff(d2.diff(), &mid).expect("valid second diff");
 
     let mut merged = d1.diff().clone();
     merged.absorb(d2.diff().clone());
-    assert_eq!(merged.apply(base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
+    assert_eq!(protocol::apply_diff(&merged, base).expect("valid absorbed diff"), sequential, "absorb(d1,d2).apply(base) must equal sequential application for {m1:?} + {m2:?}");
 }
 
 #[test]
@@ -143,9 +142,9 @@ fn absorb_law() {
 fn absorb_law_associativity() {
     let base = base_snapshot();
     let d1 = IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: vec![IfcValue::String("one".into())] }).diff(&base);
-    let mid1 = d1.diff().apply(&base).expect("valid first diff");
+    let mid1 = protocol::apply_diff(d1.diff(), &base).expect("valid first diff");
     let d2 = IfcMutation::InsertEntity(insert_entity::InsertEntity { index: 0, entity: entity(100, "IFCSITE", vec![]) }).diff(&mid1);
-    let mid2 = d2.diff().apply(&mid1).expect("valid second diff");
+    let mid2 = protocol::apply_diff(d2.diff(), &mid1).expect("valid second diff");
     let d3 = IfcMutation::SetEntityName(set_entity_name::SetEntityName { id: 100, name: "IFCBUILDING".into() }).diff(&mid2);
 
     let mut left = d1.diff().clone();
@@ -157,8 +156,8 @@ fn absorb_law_associativity() {
     let mut right = d1.diff().clone();
     right.absorb(d23);
 
-    assert_eq!(left.apply(&base).expect("valid left diff"), right.apply(&base).expect("valid right diff"), "absorb must associate");
-    assert_eq!(left.apply(&base).expect("valid associated diff"), d3.diff().apply(&mid2).expect("valid third diff"), "associated absorb must match full sequential application");
+    assert_eq!(protocol::apply_diff(&left, &base).expect("valid left diff"), protocol::apply_diff(&right, &base).expect("valid right diff"), "absorb must associate");
+    assert_eq!(protocol::apply_diff(&left, &base).expect("valid associated diff"), protocol::apply_diff(d3.diff(), &mid2).expect("valid third diff"), "associated absorb must match full sequential application");
 }
 //#endregion 🔖️absorb_law
 
@@ -173,9 +172,9 @@ fn between_roundtrip_law() {
     b.entities.push(entity(200, "IFCBUILDINGSTOREY", vec![IfcValue::Real(3.0)])); // add id 200
 
     let d = IfcDiff::between(&a, &b);
-    assert_eq!(d.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
+    assert_eq!(protocol::apply_diff(&d, &a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
     let d_rev = IfcDiff::between(&b, &a);
-    assert_eq!(d_rev.apply(&b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
+    assert_eq!(protocol::apply_diff(&d_rev, &b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
     assert!(IfcDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 }
 //#endregion 🔖️between_roundtrip_law
@@ -237,9 +236,9 @@ fn field_sweep_covers_every_mutable_field() {
     let b = sweep_b();
 
     let forward = IfcDiff::between(&a, &b);
-    assert_eq!(forward.apply(&a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
+    assert_eq!(protocol::apply_diff(&forward, &a).expect("valid forward diff"), b, "between(a,b).apply(a) must equal b");
     let backward = IfcDiff::between(&b, &a);
-    assert_eq!(backward.apply(&b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
+    assert_eq!(protocol::apply_diff(&backward, &b).expect("valid backward diff"), a, "between(b,a).apply(b) must equal a");
     assert!(IfcDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
     assert!(forward.file_description.is_some(), "file_description must be diffed");
@@ -281,14 +280,12 @@ fn out_of_range_entity_mutation_is_rejected_without_mutating() {
 
 //#region 🔖️op_text_binary_roundtrip_law
 /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `IfcMutation` grammar —
-/// exercises every variant incl. `SetSnapshot`'s whole-snapshot payload and every `IfcValue`
+/// exercises every variant incl. every `IfcValue`
 /// tag (`Unset`/`Derived`/`Integer`/`Real`/`String`/`Enum`/`Reference`/`Aggregate`/`TypedValue`).
 #[test]
 fn op_text_binary_roundtrip_law() {
     let base = base_snapshot();
     let mutations = vec![
-        IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-        IfcMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: vec![IfcValue::String("new desc".into())] }),
         IfcMutation::SetFileName(set_file_name::SetFileName { values: vec![IfcValue::Aggregate(vec![IfcValue::String("a".into()), IfcValue::Unset])] }),
         IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values: vec![] }),
@@ -337,8 +334,6 @@ fn op_text_binary_roundtrip_law() {
 fn kinds_const_matches_enum_variants_in_declaration_order() {
     let base = base_snapshot();
     let one_per_variant = vec![
-        IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-        IfcMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: vec![IfcValue::String("d".into())] }),
         IfcMutation::SetFileName(set_file_name::SetFileName { values: vec![IfcValue::String("n".into())] }),
         IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])] }),
@@ -357,3 +352,21 @@ fn kinds_const_matches_enum_variants_in_declaration_order() {
     }
 }
 //#endregion 🔖️kinds_const
+
+#[semio_framework_async_macros::async_test]
+async fn every_leaf_satisfies_the_inverse_sum_law() {
+    let base = base_snapshot();
+    for mutation in [
+        IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: vec![IfcValue::String("new desc".into())] }),
+        IfcMutation::SetFileName(set_file_name::SetFileName { values: vec![IfcValue::String("renamed.ifc".into())] }),
+        IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4X3".into())])] }),
+        IfcMutation::InsertEntity(insert_entity::InsertEntity { index: 1, entity: entity(9, "IFCSITE", vec![IfcValue::Unset]) }),
+        IfcMutation::RemoveEntity(remove_entity::RemoveEntity { id: 2 }),
+        IfcMutation::SetEntityName(set_entity_name::SetEntityName { id: 6, name: "IFCSLAB".into() }),
+        IfcMutation::SetEntityArg(set_entity_arg::SetEntityArg { id: 6, index: 2, value: IfcValue::String("Wall-02".into()) }),
+        IfcMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id: 6, index: 1, value: IfcValue::Unset }),
+        IfcMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id: 6, index: 0 }),
+    ] {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+}

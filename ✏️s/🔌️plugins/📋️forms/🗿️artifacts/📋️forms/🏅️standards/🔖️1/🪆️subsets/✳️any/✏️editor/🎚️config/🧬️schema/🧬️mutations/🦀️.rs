@@ -9,7 +9,7 @@ mod set_contributions;
 pub use set_contributions::SetContributions;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
-#[mutations(snapshot = FormsConfig, diff = FormsConfig, schema = "forms.config")]
+#[mutations(snapshot = FormsConfig, diff = FormsConfigDiff, schema = "forms.config")]
 pub enum FormsConfigMutation {
     #[dsl(key = "replace-config")]
     ReplaceConfig(ReplaceConfig),

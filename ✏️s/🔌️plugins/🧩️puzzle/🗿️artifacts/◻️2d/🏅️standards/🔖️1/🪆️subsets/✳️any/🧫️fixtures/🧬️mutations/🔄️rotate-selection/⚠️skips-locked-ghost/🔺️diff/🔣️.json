@@ -9,28 +9,24 @@
       {
         "id": "node-a",
         "patch": {
-          "replacement": {
-            "anchor": "fixed",
-            "handles": [
+          "handles": {
+            "added": [],
+            "patched": [
               {
-                "angle": 1.5707963267948966,
-                "handleKind": "handle-kind-a",
-                "id": "handle-1"
+                "id": "handle-1",
+                "patch": {
+                  "angle": 1.5707963267948966
+                }
               },
               {
-                "angle": 3.0707963267948966,
-                "handleKind": "handle-kind-a",
-                "id": "handle-spare"
+                "id": "handle-spare",
+                "patch": {
+                  "angle": 3.0707963267948966
+                }
               }
             ],
-            "iconKind": "icon-alpha",
-            "id": "node-a",
-            "nodeKind": "node-kind-a",
-            "radius": 10.0,
-            "shape": "circle",
-            "text": "Alpha",
-            "x": 0.0,
-            "y": 0.0
+            "removed": [],
+            "reordered": null
           }
         }
       }

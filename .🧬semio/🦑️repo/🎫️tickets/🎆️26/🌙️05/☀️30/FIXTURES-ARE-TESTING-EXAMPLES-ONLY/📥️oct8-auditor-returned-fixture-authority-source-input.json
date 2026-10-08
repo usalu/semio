@@ -1,0 +1,17 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧫️fixtures/🌳️intrinsic/🧬️schema.json",
+    "sha256": "a68244fbedb1191f85602f0370882bf478cb825de3afc1e1ea2cb9398473cb8f",
+    "content": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"const\": {\n    \"version\": 1,\n    \"maximumItems\": 1,\n    \"maximumCopyBytes\": 3,\n    \"maximumDepth\": 64,\n    \"maximumTurns\": 100000,\n    \"cases\": [\n      {\"kind\": \"null\", \"value\": null, \"payloadBytes\": 0},\n      {\"kind\": \"bool\", \"value\": true, \"payloadBytes\": 1},\n      {\"kind\": \"uint\", \"value\": 42, \"payloadBytes\": 8},\n      {\"kind\": \"int\", \"value\": -42, \"payloadBytes\": 8},\n      {\"kind\": \"float\", \"value\": 1.25, \"payloadBytes\": 8},\n      {\"kind\": \"text\", \"value\": \"groß🧬\", \"payloadBytes\": 9},\n      {\"kind\": \"bytes\", \"value\": [0, 127, 255], \"payloadBytes\": 3},\n      {\"kind\": \"array\", \"value\": [true, \"ö\", [42, null]], \"payloadBytes\": 11},\n      {\"kind\": \"object\", \"value\": {\"a\": [false, \"🧬\"], \"ö\": -7}, \"payloadBytes\": 16},\n      {\"kind\": \"reserved-text\", \"value\": \"\", \"capacity\": 128, \"payloadBytes\": 0},\n      {\"kind\": \"reserved-bytes\", \"value\": [], \"capacity\": 17, \"payloadBytes\": 0},\n      {\"kind\": \"reserved-array\", \"value\": [], \"capacity\": 5, \"payloadBytes\": 0},\n      {\"kind\": \"reserved-object\", \"value\": {}, \"capacity\": 5, \"payloadBytes\": 0}\n    ]\n  }\n}\n"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧫️fixtures/🎮️frontier/🧬️schema.json",
+    "sha256": "bde5d198ffd7a96785c7e014de388b5187d5ad8346370d8191e2f4e034d2eec6",
+    "content": "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"const\":{\"version\":1,\"prefixTurns\":[0,1,2,3,8,16],\"maximumItems\":1,\"maximumCopyBytes\":3,\"maximumDepth\":64,\"maximumTurns\":100000}}\n"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/♻️retirement/🧫️fixtures/🧬️schema.json",
+    "sha256": "023e36128a79d2576ee34b9c419ab8994c7a37a69e91d136f9f21d1b0e705063",
+    "content": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"const\": {\n    \"version\": 1,\n    \"maximumItems\": 1,\n    \"maximumCopyBytes\": 3,\n    \"maximumDepth\": 64,\n    \"maximumTurns\": 100000,\n    \"fieldKinds\": [\"Bool\", \"Int\", \"UInt\", \"Float\", \"Text\", \"Bytes64\", \"Enum\", \"Tuple\", \"List\", \"Record\", \"Block\", \"Statements\", \"Map\", \"Value\", \"Wire\", \"Expr\", \"Absent\"],\n    \"shapeKinds\": [\"Bool\", \"Int\", \"UInt\", \"Float\", \"Text\", \"Bytes64\", \"Enum\", \"Tuple\", \"List\", \"Record\", \"Block\", \"Statements\", \"Map\", \"Value\", \"Table\", \"Wire\", \"Quantity\", \"Angle\", \"Ref\", \"Coord\", \"Dir\", \"Dim\", \"Range\", \"Count\", \"Expr\", \"Embed\", \"EmbedFrom\"],\n    \"expressionKinds\": [\"Num\", \"Var\", \"Neg\", \"Binary\", \"Call\"],\n    \"wireNodeOptions\": [0, 1, 2, 3],\n    \"wireEdgeChoices\": [null, [false, 0], [false, 1], [false, 2], [false, 3], [true, 0], [true, 1], [true, 2], [true, 3]],\n    \"wireLabelOptions\": [0, 1, 2, 3],\n    \"emptyFieldCapacity\": 5,\n    \"recursiveDepth\": 16,\n    \"writerPrefixes\": [0, 1, 64, 512, 4096],\n    \"text\": \"groß🧬\",\n    \"intrinsic\": {\"a\": [false, \"🧬\"], \"ö\": -7}\n  }\n}\n"
+  }
+]

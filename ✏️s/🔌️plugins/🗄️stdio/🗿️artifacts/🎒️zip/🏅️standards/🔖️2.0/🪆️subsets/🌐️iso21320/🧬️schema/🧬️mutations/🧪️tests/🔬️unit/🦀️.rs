@@ -11,7 +11,6 @@ fn base_snapshot() -> ZipSnapshot {
 
 fn every_kind() -> Vec<ZipIso21320Mutation> {
     vec![
-        ZipIso21320Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base_snapshot() }),
         ZipIso21320Mutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: "geaendert".into(), comment_utf8: true }),
         ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry: entry("beleg.png", b"png"), before: None }),
         ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry: entry("beleg.txt", b"text"), before: None }),
@@ -75,8 +74,17 @@ fn deleting_the_first_iso_member_restores_its_original_position() {
     use protocol::MutationDiff;
     let snapshot = base_snapshot();
     let mutation = ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name: snapshot.entries[0].name.clone() });
-    let next = mutation.diff(&snapshot).diff().apply(&snapshot).unwrap();
+    let next = protocol::apply_diff(&mutation.diff(&snapshot).diff(), &snapshot).unwrap();
     let inverse = mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
-    assert_eq!(inverse[0].diff(&next).diff().apply(&next).unwrap(), snapshot);
+    assert_eq!(protocol::apply_diff(&inverse[0].diff(&next).diff(), &next).unwrap(), snapshot);
+}
+
+/// ⚖️ `mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff.
+#[semio_framework_async_macros::async_test]
+async fn mutation_inverse_sum_law_holds_for_every_leaf() {
+    let base = base_snapshot();
+    for mutation in every_kind() {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
 }

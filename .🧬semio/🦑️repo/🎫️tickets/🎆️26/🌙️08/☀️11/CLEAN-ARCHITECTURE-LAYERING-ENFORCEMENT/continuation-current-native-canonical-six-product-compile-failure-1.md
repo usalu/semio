@@ -1,0 +1,11 @@
+# Current Native Canonical Six Product Compile Failure
+
+The original whole Product renderer native route, `bun nx run @semio-tech/framework-renderer-wgpu:test-native --skip-nx-cache --excludeTaskDependencies`, reached its actual owner command, waited on the shared artifact lock, and compiled its broader native dependency graph. Terminal 39520 then completed with status 1 before native assertions. Its full output remains in `🗑️generated/current-native-canonical-6/product-whole-2.log`.
+
+The actual dependency compiler failed `semio-framework-os-infinite` with fourteen unresolved UI world-modelling references: `World3dTone`, `World3dHighlight`, `World3dSubElementDefaults`, `world3d_sub_element_paint`, `World3dLabelAlign`, `World3dMarkerShape`, `World3dProjectedArc`, three annotation drawing constants, `project_world3d_annotations`, `WORLD3D_SCALAR_NO_DATA_RGB`, and `world3d_modelling_strings`, including repeated type uses. These are compilation failures, not failing native assertions or a Cargo timeout.
+
+Inspection of current source finds those exact first-party exports explicitly present in General UI's target-neutral component `ui_scene` export block, and the scene crate itself exports its world-modelling owner unconditionally. The current target's `component::ui::*` surface is likewise unconditional. This observation establishes current source only. The boundary audit agent confirms it made no production edits; no source advance is attributed to a particular actor without evidence. A fresh full owning build must determine whether the current exported graph compiles.
+
+The Infinite manifest intentionally keeps the real GPU engine out of its WASI Preview 2 guest dependency table; the scene math and payload contracts are target-neutral. No heavyweight engine feature is enabled as a workaround, no older export body is reconstructed, and no narrowed Product library-only target replaces the original all-targets scope.
+
+The corrected whole Infinite, latest whole General UI, DAG artifact, and Flow owning requests remain independently live. Their actual results are not inferred from this Product dependency failure. The failure remains preserved while the original full Product route is prepared for a fresh verification against the observed current exports.

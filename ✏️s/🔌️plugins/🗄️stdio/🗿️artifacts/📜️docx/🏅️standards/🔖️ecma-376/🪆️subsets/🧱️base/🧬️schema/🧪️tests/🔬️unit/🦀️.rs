@@ -406,7 +406,6 @@ fn canonical_xml_authority_edits_nested_run_without_losing_unknown_markup() {
     fn commit(snapshot: &mut DocxSnapshot, mutation: DocxMutation, inverses: &mut Vec<DocxMutation>) {
         let inverse = Mutation::inverse(&mutation, &*snapshot).expect("valid retained mutation inverse fixture");
         assert_eq!(inverse.len(), 1, "canonical edit has one compact inverse");
-        assert!(!matches!(inverse[0], DocxMutation::SetSnapshot(_)), "canonical edit inverse is not a whole snapshot");
         let outcome = apply_docx_mutation(snapshot, &mutation);
         assert!(outcome.messages().is_empty(), "canonical edit refused: {:?}", outcome.messages());
         inverses.push(inverse.into_iter().next().unwrap());
@@ -478,7 +477,7 @@ fn canonical_xml_authority_edits_nested_run_without_losing_unknown_markup() {
 #[test]
 fn malformed_authored_authority_is_refused_atomically() {
     use crate::schema::diff::DocxDiff;
-    use crate::schema::mutations::{apply_docx_mutation, set_snapshot, DocxMutation};
+    use crate::schema::mutations::{apply_docx_mutation, set_part, DocxMutation};
     use protocol::command::DiffAlgebra;
     use protocol::MutationDiff;
     use semio_s_artifact_stdio_zip::opc::{OpcPart, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
@@ -517,9 +516,10 @@ fn malformed_authored_authority_is_refused_atomically() {
     }
 
     let diff = DocxDiff::between(&valid, &content_type_drift);
-    assert!(diff.apply(&valid).is_err(), "invalid candidate diff must be refused");
+    assert!(protocol::apply_diff(&diff, &valid).is_err(), "invalid candidate diff must be refused");
     let mut source = valid.clone();
-    let outcome = apply_docx_mutation(&mut source, &DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: content_type_drift }));
+    let drifting = valid.xml_parts[0].clone();
+    let outcome = apply_docx_mutation(&mut source, &DocxMutation::SetPart(set_part::SetPart { path: drifting.path.clone(), content_type: "application/xml".into(), payload: set_part::DocxPartContent::Xml { document: drifting.materialize_document_exact().unwrap() }, index: None }));
     assert!(!outcome.messages().is_empty());
     assert_eq!(source, valid, "refused mutation must preserve the exact source snapshot");
 }

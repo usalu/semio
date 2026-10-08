@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use semio_framework_plugin::AnalyzeSource;
+    use semio_framework_plugin::io::AnalyzeSource;
 
     /// 🩹 The 1.7 writer (`encode_pdf`) deliberately does NOT re-emit `PdfSnapshot.objects` (see
     /// its own doc comment — asserted structurally, not byte-for-byte), so a builder-seeded

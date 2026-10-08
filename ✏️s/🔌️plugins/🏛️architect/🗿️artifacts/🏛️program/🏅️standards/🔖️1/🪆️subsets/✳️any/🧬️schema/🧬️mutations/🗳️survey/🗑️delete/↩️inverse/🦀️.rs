@@ -8,8 +8,8 @@ use crate::ProgramSnapshot;
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::DeleteSurvey, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    match base.surveys.iter().find(|row| row.header.id == payload.id) {
-        Some(existing) => vec![ProgramMutation::CreateSurvey(super::super::create_survey::CreateSurvey { survey: existing.clone() })],
+    match base.surveys.iter().position(|row| row.header.id == payload.id) {
+        Some(position) => vec![ProgramMutation::CreateSurvey(super::super::create_survey::CreateSurvey { survey: base.surveys[position].clone(), index: Some(position) })],
         None => Vec::new(),
     }
 

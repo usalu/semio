@@ -5,15 +5,16 @@ async fn raster_config_operation_round_trips_and_backwards_restores_snapshot() {
     let base = RasterConfig { brush_size: 24.0, ..Default::default() };
     let operation = RasterConfigMutation::SetBrushSize { value: 40.0 };
     let forward = operation.diff(&base).diff().clone();
-    assert_eq!(forward.brush_size, 40.0);
+    assert_eq!(forward, RasterConfigDiff { brush_size: Some(40.0), ..Default::default() });
+    let after = protocol::apply_diff(&forward, &base).unwrap();
+    assert_eq!(after.brush_size, 40.0);
     let backwards = operation.inverse(&base).expect("valid retained mutation inverse fixture");
-    assert_eq!(backwards, vec![RasterConfigMutation::Snapshot { config: base.clone() }]);
-    assert_eq!(backwards[0].diff(&forward).diff().clone(), base);
+    assert_eq!(backwards, vec![RasterConfigMutation::SetBrushSize { value: 24.0 }]);
+    assert_eq!(protocol::apply_diff(backwards[0].diff(&after).diff(), &after).unwrap(), base);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn raster_config_operation_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::Snapshot { config: RasterConfig::default() });
     store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetBrushSize { value: 40.0 });
     store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetBrushOpacity { value: 0.5 });
     store::os_store::test_support::assert_op_line_round_trip(&RasterConfigMutation::SetCompositeViewport { viewport: Some(RasterConfigViewportSize { width: 640.0, height: 480.0 }) });
@@ -123,4 +124,24 @@ async fn completed_selection_contract_round_trips_and_survives_style_changes(){
         assert!(selection.validate().is_err(),"{value}");
         let config=RasterConfig::default();assert_eq!(RasterConfigMutation::SetPixelSelection{selection:Some(selection)}.diff(&config).diff(),&config);
     }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn raster_config_inverses_sum_to_the_negative_diff() {
+    use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
+    let base = RasterConfig { composite_viewport: Some(RasterConfigViewportSize { width: 640.0, height: 480.0 }), ..RasterConfig::default() };
+    for mutation in [
+        RasterConfigMutation::SetBrushSize { value: 40.0 },
+        RasterConfigMutation::SetBrushOpacity { value: 0.5 },
+        RasterConfigMutation::SetBrushColor { value: "#112233".into() },
+        RasterConfigMutation::SetBrushHardness { value: 0.25 },
+        RasterConfigMutation::SetPaintTarget { value: "mask".into() },
+        RasterConfigMutation::SetMaskValue { value: 7 },
+        RasterConfigMutation::SetFillTolerance { value: 3 },
+        RasterConfigMutation::SetCompositeViewport { viewport: None },
+        RasterConfigMutation::SetCamera { camera: RasterCamera { x: 1.0, y: -2.0, zoom: 3.0 } },
+    ] {
+        assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<RasterConfig, RasterConfigDiff>(&base, &RasterConfig::default()).await;
 }

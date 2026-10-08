@@ -1,7 +1,5 @@
-//! ➖️ `remove-element` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! ➖️ `remove-element` — authored as its own mutation leaf. It builds its own sparse diff and concrete
+//! inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,15 +14,20 @@ pub struct RemoveElement {
 impl protocol::MutationKind<SvgSnapshot, SvgBasicMutation> for RemoveElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "element", kind: "remove-element", record: "RemoveElement" };
 
-    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<<SvgBasicMutation as Mutation<SvgSnapshot>>::Diff> {
-        agg_diff(&SvgBasicMutation::RemoveElement(self.clone()), base)
+    fn diff(&self, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
+        let Self { parent, index } = self;
+        protocol::MutationOutcome::new(remove_child_diff(parent, *index))
     }
     fn inverse(&self, base: &SvgSnapshot) -> Result<Vec<SvgBasicMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&SvgBasicMutation::RemoveElement(self.clone()), base)?
-    
-    })
-}
+        let Self { parent, index } = self;
+        Ok(match node_at(&base.doc, parent) {
+            Ok(SvgNode::Element { children, .. }) => match children.get(*index) {
+                Some(node) => vec![SvgBasicMutation::InsertBasicElement(insert_basic_element::InsertBasicElement { parent: parent.clone(), index: *index, node: node.clone() })],
+                None => Vec::new(),
+            },
+            _ => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove element", "Element entfernen")
     }

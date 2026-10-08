@@ -35,12 +35,10 @@ Feature: Apply every typed SVG Tiny 1.1 mutation to a real-world Full 1.1 drawin
   before the `semantic-svg-tiny-1-1-v1` profile compares them, never against each other's writing.
 
   Two honest notes on the algebra. `strip-non-tiny` inverts to a whole-document restore on both
-  sides: a strip that removed 335 attributes across a real drawing has no smaller undo, and the
-  subject's own `SvgTinyMutation::inverse` returns exactly that `SetSnapshot`. And `remove-element`
-  is exercised at `[], 0` — the real `<defs id="defs663"/>` — because its inverse is a gated
-  `insert-tiny-element`: in a profile-closed vocabulary you cannot undo the removal of a node the
-  profile itself would refuse, which is a real property of the design and is stated here rather than
-  hidden behind a target chosen to avoid it.
+  sides: the subject's own `SvgTinyMutation::inverse` returns exactly one `restore-non-tiny` leaf
+  carrying every removed element and attribute at its position. And `remove-element` is exercised at
+  `[], 0` — the real `<defs id="defs663"/>` — whose inverse is the gated `insert-tiny-element`; the
+  removal of a node the profile itself would refuse inverts to the ungated `restore-non-tiny` leaf.
 
   Both non-differential laws are asserted IN ROLE, by the handler that plays the role, and are not
   deferred to the oracle-vs-subject comparison: every `inverse-<kind>` row requires apply-then-undo
@@ -65,7 +63,6 @@ Feature: Apply every typed SVG Tiny 1.1 mutation to a real-world Full 1.1 drawin
     And the semantic projection moved
     Examples:
       | id                  | params                                                                                                                                                                                        |
-      | set-snapshot        | {"snapshot": {"schema": "stdio.svg", "doc": {"root": {"kind": "element", "name": "svg", "attrs": [{"name": "xmlns", "value": "http://www.w3.org/2000/svg"}, {"name": "version", "value": "1.1"}, {"name": "baseProfile", "value": "tiny"}, {"name": "id", "value": "wave8-tiny-snapshot-marker"}, {"name": "viewBox", "value": "0 0 2030 1015"}], "children": [{"kind": "element", "name": "rect", "attrs": [{"name": "width", "value": "35"}, {"name": "height", "value": "35"}], "children": []}]}, "declaration": {"version": "1.0", "encoding": "UTF-8"}}}} |
       | stamp-base-profile  | {"baseProfile": "tiny", "version": "1.1"}                                                                                                                                                     |
       | insert-tiny-element | {"parent": [4, 0, 0], "index": 1, "node": {"kind": "element", "name": "rect", "attrs": [{"name": "x", "value": "0"}, {"name": "y", "value": "0"}, {"name": "width", "value": "35"}, {"name": "height", "value": "35"}, {"name": "id", "value": "wave8-tiny-marker"}], "children": []}} |
       | remove-element      | {"parent": [], "index": 0}                                                                                                                                                                    |
@@ -74,7 +71,6 @@ Feature: Apply every typed SVG Tiny 1.1 mutation to a real-world Full 1.1 drawin
       | set-view-box        | {"path": [], "viewBox": {"minX": 0, "minY": 0, "width": 2030, "height": 2030}} |
       | set-transform       | {"path": [4, 0, 0], "transform": [{"op": "translate", "x": 50, "y": 50}, {"op": "rotate", "angle": 45}]} |
       | strip-non-tiny      | {}                                                                                                                                                                                            |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/doc/root/attrs/1/value", "value": "Layer_patched"}} |
 
   @id-inverse
   @level-exhaustive
@@ -88,7 +84,6 @@ Feature: Apply every typed SVG Tiny 1.1 mutation to a real-world Full 1.1 drawin
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                  | params                                                                                                                                                                                        |
-      | set-snapshot        | {"snapshot": {"schema": "stdio.svg", "doc": {"root": {"kind": "element", "name": "svg", "attrs": [{"name": "xmlns", "value": "http://www.w3.org/2000/svg"}, {"name": "version", "value": "1.1"}, {"name": "baseProfile", "value": "tiny"}, {"name": "id", "value": "wave8-tiny-snapshot-marker"}, {"name": "viewBox", "value": "0 0 2030 1015"}], "children": [{"kind": "element", "name": "rect", "attrs": [{"name": "width", "value": "35"}, {"name": "height", "value": "35"}], "children": []}]}, "declaration": {"version": "1.0", "encoding": "UTF-8"}}}} |
       | stamp-base-profile  | {"baseProfile": "tiny", "version": "1.1"}                                                                                                                                                     |
       | insert-tiny-element | {"parent": [4, 0, 0], "index": 1, "node": {"kind": "element", "name": "rect", "attrs": [{"name": "x", "value": "0"}, {"name": "y", "value": "0"}, {"name": "width", "value": "35"}, {"name": "height", "value": "35"}, {"name": "id", "value": "wave8-tiny-marker"}], "children": []}} |
       | remove-element      | {"parent": [], "index": 0}                                                                                                                                                                    |
@@ -97,7 +92,6 @@ Feature: Apply every typed SVG Tiny 1.1 mutation to a real-world Full 1.1 drawin
       | set-view-box        | {"path": [], "viewBox": {"minX": 0, "minY": 0, "width": 2030, "height": 2030}} |
       | set-transform       | {"path": [4, 0, 0], "transform": [{"op": "translate", "x": 50, "y": 50}, {"op": "rotate", "angle": 45}]} |
       | strip-non-tiny      | {}                                                                                                                                                                                            |
-      | patch-snapshot | {"patch": {"operation": "set", "path": "/doc/root/attrs/1/value", "value": "Layer_patched"}} |
 
   @id-identity-round-trip
   @level-long

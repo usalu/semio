@@ -1,0 +1,50 @@
+{
+  "component": "actual neutral component bytes",
+  "descriptor": "actual neutral descriptor bytes",
+  "actor": "export const neutral = 1;",
+  "mutations": [
+    "unauthenticated",
+    "get",
+    "wrong-origin",
+    "wrong-scope",
+    "caller-package",
+    "corrupt-body",
+    "wrong-generation",
+    "wrong-actor-source",
+    "duplicate-asset"
+  ],
+  "childUrls": [
+    {
+      "root": "/workspace",
+      "baseUrl": "http://127.0.0.1:6066/",
+      "prefix": "/@fs/workspace/"
+    },
+    {
+      "root": "C:\\workspace",
+      "baseUrl": "http://127.0.0.1:6066/",
+      "prefix": "/@fs/C:/workspace/"
+    }
+  ],
+  "unfinishedResponses": [
+    {
+      "name": "deadline",
+      "deadlineMs": 20,
+      "cancelAfterMs": null,
+      "observationBoundMs": 500,
+      "expected": "refused"
+    },
+    {
+      "name": "cancellation",
+      "deadlineMs": 1000,
+      "cancelAfterMs": 20,
+      "observationBoundMs": 500,
+      "expected": "refused"
+    }
+  ],
+  "responsePhases": [
+    "finished",
+    "sizes",
+    "body",
+    "allHeaders"
+  ]
+}

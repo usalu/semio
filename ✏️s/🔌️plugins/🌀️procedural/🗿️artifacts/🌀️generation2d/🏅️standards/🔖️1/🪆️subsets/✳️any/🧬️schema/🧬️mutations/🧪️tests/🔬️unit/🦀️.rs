@@ -234,7 +234,7 @@ async fn change_generation_value_diff_absorb_law() {
     let mut base = Generation2dSnapshotRead::new(empty_generation2d_snapshot());
     base.generation.cold_builder_mut().expect("unique cold generation owner").generations.push(FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: Default::default() });
     let d1 = change_generation_value("generation-1".into(), "q1".into(), semio_framework_value::DslValue::float(1.0)).diff(&*base).into_parts().0;
-    let mid = Generation2dSnapshotRead::new(d1.apply(&*base).expect("valid mutation diff"));
+    let mid = Generation2dSnapshotRead::new(protocol::apply_diff(&d1, &*base).expect("valid mutation diff"));
     let d2 = change_generation_value("generation-1".into(), "q1".into(), semio_framework_value::DslValue::float(2.0)).diff(&*mid).into_parts().0;
     assert_mutation_diff_absorb_law_cold(&*base, d1, d2, retire_snapshot, retire_diff).await;
 }
@@ -272,22 +272,6 @@ fn fixture_ops_widget_id_matches_every_widget_kind() {
         let id = widget_id(widget);
         assert!(operations.iter().any(|op| matches!(op, Generation2dMutation::CreateWidget(payload) if widget_id(&payload.widget) == id)));
     }
-}
-
-#[test]
-fn widgets_diff_apply_replaces_by_id_and_removes_by_id() {
-    let mut widgets = vec![Widget::InputNote { id: "a".into(), text: "1".into() }, Widget::InputNote { id: "b".into(), text: "2".into() }];
-    let diff = crate::standards::v1::subsets::any::schema::diff::WidgetsDiff { removed: vec!["b".into()], set: vec![(0, Widget::InputNote { id: "a".into(), text: "replaced".into() })] };
-    crate::standards::v1::subsets::any::schema::diff::apply_widgets_diff(&mut widgets, &diff);
-    assert_eq!(widgets, vec![Widget::InputNote { id: "a".into(), text: "replaced".into() }]);
-}
-
-#[test]
-fn synapses_diff_apply_replaces_by_id_and_removes_by_id() {
-    let mut synapses = vec![SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() }];
-    let diff = crate::standards::v1::subsets::any::schema::diff::SynapsesDiff { removed: vec![], set: vec![(0, SynapseSpec { id: "s1".into(), from: "a".into(), to: "c".into(), from_port: "out".into(), to_port: "in".into() })] };
-    crate::standards::v1::subsets::any::schema::diff::apply_synapses_diff(&mut synapses, &diff);
-    assert_eq!(synapses[0].to, "c");
 }
 //#endregion 🔖️FixtureOpsTests
 

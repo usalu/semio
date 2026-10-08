@@ -5,7 +5,7 @@ fn laws()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtur
 fn sqlite_snapshot_remodeling_actual_factory_owns_parent_capability(){let codec=store::ArtifactCodec::bare::<RemodelingSnapshot,crate::RemodelingMutation>(crate::REMODELING_DOCUMENT_SCHEMA);assert!(codec.snapshot_sqlite.is_some(),"Remodeling parent has no authored relational capability");}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_remodeling_inline_clouds_are_native_tagged_values(){
-    use semio_framework::io::io_mechanism::Serializer;
+    use semio_framework_os_kernel::io::io_mechanism::Serializer;
     use semio_framework::io_schema::IoPayload;
     use semio_framework_value::ToValue;
     use crate::standards::v1::subsets::any::io::{export::serializers::artifacts::json::v_rfc8259::any::RemodelingIntoJson,import::deserializers::artifacts::json::v_rfc8259::any::from_json_text};
@@ -13,7 +13,7 @@ async fn sqlite_snapshot_remodeling_inline_clouds_are_native_tagged_values(){
     for (ordinal,buffer) in fixture["inlineBuffers"].as_array().unwrap().iter().enumerate(){
         let sparse:crate::SparseCloud=serde_json::from_value(serde_json::json!({"points":buffer,"colors":null})).expect("declared finite input samples are a typed tagged buffer");
         let mut snapshot=crate::default_remodeling_scene();snapshot.results.sparse=Some(sparse);
-        let payload=RemodelingIntoJson::serialize(&snapshot, &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.unwrap().value;let IoPayload::Text(text)=payload else{panic!("JSON text expected")};
+        let payload=RemodelingIntoJson::serialize(&snapshot, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.unwrap().value;let IoPayload::Text(text)=payload else{panic!("JSON text expected")};
         let independent:serde_json::Value=serde_json::from_str(&text).unwrap();assert_eq!(independent["results"]["sparse"]["points"],fixture["inlineBufferCanonical"][ordinal]);
         let restored=from_json_text(&text).unwrap();assert_eq!(restored.to_value(),snapshot.to_value());
     }
@@ -36,14 +36,14 @@ fn sqlite_snapshot_remodeling_native_text_binary32_words_match_source_neutral_sp
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_remodeling_declared_json_preserves_every_owned_ieee_word(){
-    use semio_framework::io::io_mechanism::Serializer;
+    use semio_framework_os_kernel::io::io_mechanism::Serializer;
     use semio_framework::io_schema::IoPayload;
     use crate::standards::v1::subsets::any::io::{export::serializers::artifacts::json::v_rfc8259::any::RemodelingIntoJson,import::deserializers::artifacts::json::v_rfc8259::any::from_json_text};
     let fixture=laws();
     for raw in fixture["binary64Words"].as_array().unwrap(){
         let raw=raw.as_str().unwrap();let bits=u64::from_str_radix(raw,16).unwrap();
         let mut expected=crate::default_remodeling_scene();expected.streams.push(crate::MediaStream{sync_offset_ms:f64::from_bits(bits),..Default::default()});
-        let payload=RemodelingIntoJson::serialize(&expected, &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.unwrap().value;
+        let payload=RemodelingIntoJson::serialize(&expected, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.unwrap().value;
         let IoPayload::Text(text)=payload else{panic!("declared JSON serializer must return text")};
         let wire:serde_json::Value=serde_json::from_str(&text).unwrap();assert_eq!(wire["streams"][0]["syncOffsetMs"],serde_json::json!({"bits":raw}));
         let restored=from_json_text(&text).unwrap();assert_eq!(restored.streams[0].sync_offset_ms.to_bits(),bits);
@@ -51,7 +51,7 @@ async fn sqlite_snapshot_remodeling_declared_json_preserves_every_owned_ieee_wor
     for raw in fixture["binary32Words"].as_array().unwrap(){
         let raw=raw.as_str().unwrap();let bits=u32::from_str_radix(raw,16).unwrap();
         let mut expected=crate::default_remodeling_scene();expected.results.sparse=Some(crate::SparseCloud{points:crate::Float32Buffer::Inline{values:vec![f32::from_bits(bits)]},colors:None});
-        let payload=RemodelingIntoJson::serialize(&expected, &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.unwrap().value;
+        let payload=RemodelingIntoJson::serialize(&expected, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.unwrap().value;
         let IoPayload::Text(text)=payload else{panic!("declared JSON serializer must return text")};
         let wire:serde_json::Value=serde_json::from_str(&text).unwrap();assert_eq!(wire["results"]["sparse"]["points"]["values"][0],serde_json::json!({"bits":raw}));
         let restored=from_json_text(&text).unwrap();let samples=restored.results.sparse.unwrap().points.to_f32_vec();assert_eq!(samples[0].to_bits(),bits);
@@ -60,7 +60,7 @@ async fn sqlite_snapshot_remodeling_declared_json_preserves_every_owned_ieee_wor
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_remodeling_declared_json_covers_every_owned_scalar_path(){
-    use semio_framework::io::io_mechanism::Serializer;
+    use semio_framework_os_kernel::io::io_mechanism::Serializer;
     use semio_framework::io_schema::IoPayload;
     use crate::standards::v1::subsets::any::io::{export::serializers::artifacts::json::v_rfc8259::any::RemodelingIntoJson,import::deserializers::artifacts::json::v_rfc8259::any::from_json_text};
     let fixture=laws();
@@ -79,9 +79,9 @@ async fn sqlite_snapshot_remodeling_declared_json_covers_every_owned_scalar_path
         snapshot.results.mesh.watertight=Some(report.clone());snapshot.results.trajectory=Some(crate::CameraTrajectory{poses:vec![crate::CameraPosePreview{rotation_wxyz:[f;4],translation:[f;3],..Default::default()}]});
         snapshot.results.tracks.push(crate::MotionTrackSummary{mean_speed_m_s:f,..Default::default()});
         snapshot.results.qc=Some(crate::QcReportSnapshot{reprojection_rms_px:d,gcp_checkpoint_rmse:Some(d),watertight:Some(report),mean_track_length:f,registered_frame_ratio:f,dense_coverage_ratio:f,..Default::default()});
-        let first=RemodelingIntoJson::serialize(&snapshot, &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.unwrap().value;let IoPayload::Text(text)=first else{panic!("JSON text expected")};let independent:serde_json::Value=serde_json::from_str(&text).unwrap();
+        let first=RemodelingIntoJson::serialize(&snapshot, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.unwrap().value;let IoPayload::Text(text)=first else{panic!("JSON text expected")};let independent:serde_json::Value=serde_json::from_str(&text).unwrap();
         assert_eq!(independent["results"]["tracks"][0]["meanSpeedMS"],serde_json::json!({"bits":format!("{bits32:08x}")}));assert_eq!(independent["results"]["mesh"]["watertight"]["eulerCharacteristic"],i64::MIN.to_string());assert_eq!(independent["results"]["mesh"]["watertight"]["genus"],i64::MAX.to_string());assert_eq!(independent["results"]["dense"]["positions"]["chunkCount"],u64::MAX.to_string());
-        let restored=from_json_text(&text).unwrap();let second=RemodelingIntoJson::serialize(&restored, &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.unwrap().value;let IoPayload::Text(second)=second else{panic!("JSON text expected")};assert_eq!(second,text,"every actual owned scalar path must retain its exact word");
+        let restored=from_json_text(&text).unwrap();let second=RemodelingIntoJson::serialize(&restored, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.unwrap().value;let IoPayload::Text(second)=second else{panic!("JSON text expected")};assert_eq!(second,text,"every actual owned scalar path must retain its exact word");
         let mut malformed=independent.clone();malformed["params"]["ingest"]["minSharpness"]=serde_json::json!({"bits":format!("{bits32:08x}"),"other":0});assert!(from_json_text(&malformed.to_string()).is_err());
         let mut malformed=independent;malformed["results"]["dense"]["positions"]["chunkCount"]=serde_json::json!(u64::MAX);assert!(from_json_text(&malformed.to_string()).is_err());
     }

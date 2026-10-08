@@ -216,6 +216,7 @@ sun: vec4<f32>,
 material: vec4<f32>,
 material_emissive: vec4<f32>,
 shadow: vec4<f32>,
+clip_plane: vec4<f32>,
 }
 
 @group(0) @binding(0) var<uniform> globals: Globals;
@@ -486,8 +487,15 @@ if (globals.material.w > 0.5) {
 return indirect * base_color * (1.0 - metalness) * WORLD3D_RECIPROCAL_PI + direct;
 }
 
+fn world3d_section_clipped(flags: f32, world_position: vec3<f32>) -> bool {
+return (u32(flags) & 32u) != 0u && dot(world_position, globals.clip_plane.xyz) + globals.clip_plane.w < 0.0;
+}
+
 @fragment
 fn fs_main(in: VertexOutput, @builtin(front_facing) front_facing: bool) -> @location(0) vec4<f32> {
+if (world3d_section_clipped(in.flags.x, in.world_position)) {
+    discard;
+}
 if (in.emissive_cutoff.w >= 0.0 && in.color.a < in.emissive_cutoff.w) {
     discard;
 }
@@ -519,6 +527,19 @@ if ((u32(in.flags.x) & 2u) != 0u) {
 }
 let color = world3d_lighting(n, v, in.color.rgb, metalness, roughness, shadow_visibility) + emissive;
 return vec4<f32>(world3d_attachment_output(color), in.color.a);
+}
+
+@fragment
+fn fs_section_stencil(in: VertexOutput) -> @location(0) vec4<f32> {
+if (world3d_section_clipped(in.flags.x, in.world_position)) {
+    discard;
+}
+return vec4<f32>(0.0);
+}
+
+@fragment
+fn fs_section_cap(in: VertexOutput) -> @location(0) vec4<f32> {
+return vec4<f32>(world3d_attachment_output(in.color.rgb), 1.0);
 }
 "#;
 

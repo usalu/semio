@@ -18,16 +18,18 @@ fn block_on_remodel_windows<F: std::future::Future>(future: F) -> F::Output {
 
 fn assert_config_codecs<S, M>(base: &S, mutation: &M)
 where
-    S: ArtifactDsl + ArtifactPack + MutationDiff<S> + Clone + std::fmt::Debug + PartialEq,
-    M: Mutation<S, Diff = S> + OpText + OpBinary + Clone + std::fmt::Debug + PartialEq,
+    S: ArtifactDsl + ArtifactPack + Clone + std::fmt::Debug + PartialEq,
+    M: Mutation<S> + OpText + OpBinary + Clone + std::fmt::Debug + PartialEq,
+    M::Diff: MutationDiff<S>,
 {
-    let after = mutation.diff(base).diff().apply(base).unwrap();
-    let restored = mutation.inverse(base).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+    let after = protocol::apply_diff(mutation.diff(base).diff(), base).unwrap();
+    let restored = mutation.inverse(base).expect("valid retained mutation inverse fixture").into_iter().fold(after.clone(), |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).unwrap());
     assert_eq!(restored, *base);
     assert_eq!(M::parse_op(&mutation.print_op()).unwrap(), *mutation);
     assert_eq!(M::decode_op(&mutation.encode_op().unwrap()).unwrap(), *mutation);
     assert_eq!(S::parse_dsl(&after.print_dsl()).unwrap(), after);
     assert_eq!(S::decode_pack(&after.encode_pack()).unwrap(), after);
+    block_on_remodel_windows(protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(mutation, base));
 }
 
 #[test]

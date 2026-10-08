@@ -4,5 +4,5 @@
     {"json": {"schema": "authored schema"}, "document": "schema = \"authored schema\""}
   ],
   "invalidDocuments": ["schema = 3", "unknown = \"field\"", "schema = \"valid\" trailing"],
-  "diffRecordOwners": ["Puzzle2dDiff", "Puzzle2dStringList", "Puzzle2dNodesDelta", "Puzzle2dNodePatchEntry", "Puzzle2dNodePatch", "Puzzle2dEdgesDelta", "Puzzle2dEdgePatchEntry", "Puzzle2dEdgePatch", "Puzzle2dTargetRegionsDelta", "Puzzle2dTargetRegionPatchEntry", "Puzzle2dTargetRegionPatch"]
+  "diffRecordOwners": ["Puzzle2dDiff", "Puzzle2dNodesDelta", "Puzzle2dNodePatchEntry", "Puzzle2dNodePatch", "Puzzle2dEdgesDelta", "Puzzle2dEdgePatchEntry", "Puzzle2dEdgePatch", "Puzzle2dTargetRegionsDelta", "Puzzle2dTargetRegionPatchEntry", "Puzzle2dTargetRegionPatch"]
 }

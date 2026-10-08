@@ -176,22 +176,9 @@
               "directoryName": "✍️rewrites"
             }
           ]
-        },
-        {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
-          "scenarios": [
-            {
-              "id": "retargets-the-document-onto-a-grayscale-sixteen-bit-variant",
-              "directoryName": "⚫️retargets"
-            }
-          ]
         }
       ],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "set-dimensions",
         "set-colorspace",
         "set-bit-depth",
@@ -438,47 +425,6 @@
             "operation": "set-metadata-entry",
             "bridgeVersion": 1,
             "variant": "SetMetadataEntry"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-image-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "semio-v1-image-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-image-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "semio-v1-image-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
           },
           "oracleRequirements": [
             {

@@ -48,7 +48,7 @@ use crate::hub_sign_in::{
     HubSignInClientClass, HubSignInCredential, HubSignInErrorCode, HUB_CONNECTION_BOOK_STORAGE_KEY_V1,
 };
 use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, RetainedNodeFocusKind, UiDocumentFrameCursor};
-use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig, ProgramBridgeEntry};
+use crate::program_bridge::{resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig, ProgramBridgeEntry};
 use crate::scenes::{toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSurfaceMap, BlockListChromeLabels, Board2dSurface, NodeGraphSurface, SceneChromeLabels, TiledMapSurface, VirtualFileSystemChromeLabels, SCENE_SURFACE_CAPACITY};
 use infinite_world::world::{
     begin_world3d_dynamic_retirement, enqueue_world3d_events, step_world3d_dynamic_retirement, world3d_catalogue_drop_origin, world3d_clear_catalogue_drop_preview, world3d_dynamic_retirement_terminal_is_empty, world3d_update_catalogue_drop_preview,
@@ -3233,13 +3233,19 @@ struct WindowTopologyPublication {
 /// 📌️ `?app=`/`--app`/`appId` PINS the anchor, React's `appId` — a pin the manifest does not
 /// declare is dropped back to the variant's own app, the same "a url is not a place to hard-fail a
 /// shell" rule `?role=`/`?mode=`/`?example=` follow.
-pub fn select_boot_program(programs: &[(&str, &semio_framework::PluginManifest)], plugin_filter: &str, app_role: semio_framework::manifest::AppRole, pinned_app_id: Option<&str>) -> Option<(usize, AppDefinition)> {
-    let registry_plugin_id = resolve_registry_plugin_id(plugin_filter);
-    let requested_app_id = pinned_app_id.filter(|app_id| !app_id.is_empty() && programs.iter().any(|(_, manifest)| manifest.apps.iter().any(|app| app.id == *app_id))).or_else(|| resolve_playground_app_id(plugin_filter));
-    let index = programs.iter().position(|(plugin_id, _)| *plugin_id == registry_plugin_id).or_else(|| requested_app_id.and_then(|app_id| programs.iter().position(|(_, manifest)| manifest.apps.iter().any(|app| app.id == app_id))))?;
+pub fn select_boot_program(programs: &[(&str, &semio_framework::PluginManifest)], request: BootSelectionRequest<'_>, app_role: semio_framework::manifest::AppRole, pinned_app_id: Option<&str>) -> Option<(usize, AppDefinition)> {
+    let requested_app_id = pinned_app_id.filter(|app_id| !app_id.is_empty() && programs.iter().any(|(_, manifest)| manifest.apps.iter().any(|app| app.id == *app_id))).or(request.app_id);
+    let index = programs.iter().position(|(plugin_id, _)| *plugin_id == request.plugin_id).or_else(|| requested_app_id.and_then(|app_id| programs.iter().position(|(_, manifest)| manifest.apps.iter().any(|app| app.id == app_id))))?;
     let manifest = programs[index].1;
     let anchor = requested_app_id.and_then(|app_id| manifest.apps.iter().find(|app| app.id == app_id)).or_else(|| manifest.apps.first())?;
     Some((index, project_boot_app_role(manifest, anchor, app_role).clone()))
+}
+
+/// 🚀️ Resolves a declared plugin and optional app at the boot composition boundary.
+#[derive(Clone, Copy, Debug)]
+pub struct BootSelectionRequest<'a> {
+    pub plugin_id: &'a str,
+    pub app_id: Option<&'a str>,
 }
 
 /// 👁️✏️ Projects the variant's anchor app onto the boot ROLE (`?role=viewer`, `SEMIO_APP_ROLE`,
@@ -3683,6 +3689,7 @@ pub struct ShellState {
     pub plugins: Vec<ProgramBridgeEntry>,
     pub extensions: Vec<ShellExtensionProjection>,
     pub plugin_filter: String,
+    pub host_capability: Option<&'static PluginHostConfig>,
     pub space_mode: bool,
     pub session: Option<ActiveSession>,
     pub window_ui: HashMap<String, UiDocumentLease>,
@@ -7095,7 +7102,8 @@ impl ShellState {
     /// value and only the cancellation root has to be minted.
     pub fn new(plugins: Vec<ProgramBridgeEntry>, plugin_filter: String, locale: Locale, terminology: Terminology) -> Self {
         crate::interpreter::install_ui_engine_locale(locale);
-        let space_mode = is_space_mode(&plugin_filter);
+        let host_capability = resolve_plugin_host_config(&plugin_filter);
+        let space_mode = host_capability.is_some();
         #[cfg(not(target_arch = "wasm32"))]
         let (directory_transport, directory_cancel): (ShellDirectoryTransport, CancelToken) = {
             const DIRECTORY_COMPUTE_CAPACITY: u32 = 4;
@@ -7126,6 +7134,7 @@ impl ShellState {
             plugins,
             extensions: Vec::new(),
             plugin_filter,
+            host_capability,
             space_mode,
             session: None,
             window_ui: HashMap::new(),
@@ -7391,7 +7400,7 @@ impl ShellState {
     /// 🏠️🧳️ This filter's host config (landing/host app-id roles), or `None` when it doesn't offer a
     /// host-style multi-app experience — see `program_bridge::PluginHostConfig`.
     fn host_config(&self) -> Option<&'static PluginHostConfig> {
-        resolve_plugin_host_config(&self.plugin_filter)
+        self.host_capability
     }
 
     /// 🏠️🧳️ The host plugin's own host-role app, self-declaring its `controller_id`/`panel_tabs` — the
@@ -7762,7 +7771,8 @@ impl ShellState {
         } else {
             let selection = {
                 let programs: Vec<(&str, &semio_framework::PluginManifest)> = self.plugins.iter().map(|entry| (entry.plugin_id.as_str(), &entry.manifest)).collect();
-                select_boot_program(&programs, &self.plugin_filter, Self::boot_app_role(), crate::boot_app_id().as_deref())
+                let request = BootSelectionRequest { plugin_id: resolve_registry_plugin_id(&self.plugin_filter), app_id: resolve_playground_app_id(&self.plugin_filter) };
+                select_boot_program(&programs, request, Self::boot_app_role(), crate::boot_app_id().as_deref())
             };
             let Some((index, app)) = selection else {
                 let plugin_id = resolve_registry_plugin_id(&self.plugin_filter).to_string();
@@ -14881,7 +14891,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// Both targets: the table is generated into this crate and the install is [`Self::install_plugin`],
     /// which O2 made target-neutral.
     async fn resolve_activation_owner_app(&mut self, dialect: &semio_framework_artifact_reference::ArtifactDialect, role: semio_framework::manifest::AppRole) -> Option<(String, AppDefinition)> {
-        let owner = crate::program_bridge::resolve_artifact_kind_activation_owner(&dialect.artifact_kind)?;
+        let owner = crate::program_bridge::resolve_artifact_kind_activation_owner(&dialect.artifact_kind, crate::program_bridge::PLUGIN_ARTIFACT_KIND_ACTIVATIONS)?;
         if let Err(error) = self.install_plugin(owner).await {
             Self::debug_log(&format!("[TRACE] wgpu shell os.open-artifact could not install {owner}: {error}"));
             return None;
@@ -16003,6 +16013,7 @@ impl ShellState {
         crate::scenes::seal_vfs_accessibility_candidates(witness.0);
         crate::scenes::seal_block_list_accessibility_candidates(witness.0);
         crate::scenes::seal_event_feed_accessibility_candidates(witness.0);
+        crate::scenes::seal_world3d_accessibility_candidates(witness.0);
         crate::scenes::seal_graph_timeline_accessibility_candidates(witness.0);
         Ok(witness)
     }
@@ -16039,6 +16050,7 @@ impl ShellState {
         crate::scenes::acknowledge_vfs_accessibility_candidates(witness.0);
         crate::scenes::acknowledge_block_list_accessibility_candidates(witness.0);
         crate::scenes::acknowledge_event_feed_accessibility_candidates(witness.0);
+        crate::scenes::acknowledge_world3d_accessibility_candidates(witness.0);
         crate::scenes::acknowledge_graph_timeline_accessibility_candidates(witness.0);
         std::mem::swap(&mut self.retained_hit_windows, &mut self.retained_hit_windows_staging);
         std::mem::swap(&mut self.retained_scene_hits, &mut self.retained_scene_hits_staging);
@@ -16084,6 +16096,7 @@ impl ShellState {
         crate::scenes::discard_vfs_accessibility_candidates(witness.0);
         crate::scenes::discard_block_list_accessibility_candidates(witness.0);
         crate::scenes::discard_event_feed_accessibility_candidates(witness.0);
+        crate::scenes::discard_world3d_accessibility_candidates(witness.0);
         crate::scenes::discard_graph_timeline_accessibility_candidates(witness.0);
         self.presented_input_candidate = None;
         true
@@ -32364,6 +32377,7 @@ pub fn resolve_theme_for_ids(theme_id: &str, appearance_id: &str) -> Theme {
 //#region 🗣️ChromeI18n
 fn scene_chrome_labels(is_de: bool) -> SceneChromeLabels {
     SceneChromeLabels {
+        german: is_de,
         virtual_file_system: VirtualFileSystemChromeLabels {
             name: shell_chrome_string("common.name", is_de),
             no_file_system_nodes: shell_chrome_string("common.noFileSystemNodes", is_de),

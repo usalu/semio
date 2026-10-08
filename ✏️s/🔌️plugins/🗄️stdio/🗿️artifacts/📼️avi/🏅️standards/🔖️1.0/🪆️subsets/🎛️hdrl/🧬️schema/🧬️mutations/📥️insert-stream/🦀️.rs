@@ -1,6 +1,4 @@
-//! ➕️ `insert-stream` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! ➕️ `insert-stream` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,14 +14,13 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for InsertStream {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "stream", kind: "insert-stream", record: "InsertStream" };
 
     fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
-        agg_diff(&AviMutation::InsertStream(self.clone()), base)
+        let Self { index, stream } = self;
+        protocol::MutationOutcome::new(AviDiff { streams: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: stream.clone() }] }), ..AviDiff::default() })
     }
     fn inverse(&self, base: &AviSnapshot) -> Result<Vec<AviMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&AviMutation::InsertStream(self.clone()), base)?
-    
-    })
-}
+        let Self { index, .. } = self;
+        Ok({ vec![AviMutation::RemoveStream(remove_stream::RemoveStream { index: *index })] })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert stream", "Datenstrom einfügen")
     }

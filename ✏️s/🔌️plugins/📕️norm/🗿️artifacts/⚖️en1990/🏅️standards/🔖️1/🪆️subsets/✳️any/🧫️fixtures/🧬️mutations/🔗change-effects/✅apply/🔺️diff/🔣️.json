@@ -12,42 +12,132 @@
   "inspectionLevel": null,
   "kFiDeclared": null,
   "betaComputed": null,
-  "permanents": null,
-  "variables": null,
-  "accidentals": null,
-  "seismics": null,
-  "members": null,
-  "bridgeSls": null,
+  "permanents": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "variables": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "accidentals": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "seismics": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "bridgeSls": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
   "effects": [
     {
-      "memberId": "beam-B1",
-      "actionId": "G-sup",
-      "influence": 1.0
+      "op": "Remove",
+      "index": 5,
+      "id": "",
+      "value": null
     },
     {
-      "memberId": "beam-B1",
-      "actionId": "G-inf",
-      "influence": 1.0
+      "op": "Remove",
+      "index": 4,
+      "id": "",
+      "value": null
     },
     {
-      "memberId": "beam-B1",
-      "actionId": "Q-office",
-      "influence": 1.0
+      "op": "Remove",
+      "index": 3,
+      "id": "",
+      "value": null
     },
     {
-      "memberId": "beam-B1",
-      "actionId": "Q-wind",
-      "influence": 0.5
+      "op": "Remove",
+      "index": 2,
+      "id": "",
+      "value": null
     },
     {
-      "memberId": "beam-B1",
-      "actionId": "A-impact",
-      "influence": 1.0
+      "op": "Remove",
+      "index": 1,
+      "id": "",
+      "value": null
     },
     {
-      "memberId": "beam-B1",
-      "actionId": "E-1",
-      "influence": 1.0
+      "op": "Remove",
+      "index": 0,
+      "id": "",
+      "value": null
+    },
+    {
+      "op": "Insert",
+      "index": 0,
+      "id": "",
+      "value": {
+        "memberId": "beam-B1",
+        "actionId": "G-sup",
+        "influence": 1.0
+      }
+    },
+    {
+      "op": "Insert",
+      "index": 1,
+      "id": "",
+      "value": {
+        "memberId": "beam-B1",
+        "actionId": "G-inf",
+        "influence": 1.0
+      }
+    },
+    {
+      "op": "Insert",
+      "index": 2,
+      "id": "",
+      "value": {
+        "memberId": "beam-B1",
+        "actionId": "Q-office",
+        "influence": 1.0
+      }
+    },
+    {
+      "op": "Insert",
+      "index": 3,
+      "id": "",
+      "value": {
+        "memberId": "beam-B1",
+        "actionId": "Q-wind",
+        "influence": 0.5
+      }
+    },
+    {
+      "op": "Insert",
+      "index": 4,
+      "id": "",
+      "value": {
+        "memberId": "beam-B1",
+        "actionId": "A-impact",
+        "influence": 1.0
+      }
+    },
+    {
+      "op": "Insert",
+      "index": 5,
+      "id": "",
+      "value": {
+        "memberId": "beam-B1",
+        "actionId": "E-1",
+        "influence": 1.0
+      }
     }
   ]
 }

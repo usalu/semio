@@ -1,33 +1,22 @@
 {
   "representations": {
-    "values": [
+    "added": [
       {
-        "target": {
-          "artifactId": "beam-plan",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "drawing"
-          }
-        },
-        "pin": {
-          "kind": "head"
-        },
-        "role": "t1"
-      },
-      {
-        "target": {
-          "artifactId": "beam-section",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "drawing"
-          }
-        },
-        "pin": {
-          "kind": "head"
-        },
-        "role": "t1"
+        "index": 1,
+        "item": {
+          "target": {
+            "artifactId": "beam-section",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "drawing"
+            }
+          },
+          "pin": {
+            "kind": "head"
+          },
+          "role": "t1"
+        }
       }
     ]
   }

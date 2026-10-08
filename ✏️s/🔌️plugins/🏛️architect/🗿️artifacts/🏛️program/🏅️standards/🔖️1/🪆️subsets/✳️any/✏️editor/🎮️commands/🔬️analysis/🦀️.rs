@@ -46,7 +46,7 @@ pub mod run_analysis {
         let result_json = semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&result)));
         next.last_analysis_json = result_json.clone();
         next.last_result_json = result_json;
-        Ok(Emit { artifact_mutations: vec![ProgramMutation::CreateAnalysisRecord(leaves::create_analysis_record::CreateAnalysisRecord { analysis_record: record })], config_mutations: snapshot(next), ..Default::default() })
+        Ok(Emit { artifact_mutations: vec![ProgramMutation::CreateAnalysisRecord(leaves::create_analysis_record::CreateAnalysisRecord { analysis_record: record, index: None })], config_mutations: snapshot(next), ..Default::default() })
     }
 }
 
@@ -82,7 +82,7 @@ pub mod run_report {
         let report = build_report(program, kind);
         let record = report_record_from(program, kind, &report);
         let selected_report_id = record.header.id.clone();
-        let mut emit = Emit { artifact_mutations: vec![ProgramMutation::CreateReportRecord(leaves::create_report_record::CreateReportRecord { report_record: record })], ..Default::default() };
+        let mut emit = Emit { artifact_mutations: vec![ProgramMutation::CreateReportRecord(leaves::create_report_record::CreateReportRecord { report_record: record, index: None })], ..Default::default() };
         if let Some(mutation) = config::addressed_if_report(view, selected_report_id)? {
             emit.window_config_mutations.push(mutation);
         }

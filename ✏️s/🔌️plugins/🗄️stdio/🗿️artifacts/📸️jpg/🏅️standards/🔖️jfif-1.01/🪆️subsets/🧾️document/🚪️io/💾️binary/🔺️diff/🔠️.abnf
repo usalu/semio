@@ -1,4 +1,28 @@
-; abnf stdio.jpg diff (binary representation)
-document = json-payload
-; json-payload = UTF-8 JSON encoding of JpgDiff -- see the sibling JSON Schema facet.
-json-payload = *OCTET
+; Typed native JPEG content diff, no JSON payload.
+document = format flags [width] [height] [pixels] [version] [density] [x-density] [y-density] [thumbnail-change] [segment-collection]
+; flags is little-endian u16; bits 0..8 select the nine fields in this order.
+format = OCTET
+flags = 2OCTET
+width = varint
+height = varint
+pixels = bytes
+version = 2OCTET
+density = %x00 / %x01 / %x02
+x-density = varint
+y-density = varint
+thumbnail-change = %x00 / (%x01 thumbnail)
+thumbnail = 2OCTET bytes
+segment = OCTET bytes
+marker-change = %x00 / (%x01 OCTET)
+data-change = %x00 / (%x01 bytes)
+segment-diff = marker-change data-change
+segment-collection = removed-count *varint modified-count *modified-segment added-count *added-segment
+removed-count = varint
+modified-count = varint
+added-count = varint
+modified-segment = varint segment-diff
+added-segment = varint segment
+bytes = varint *OCTET
+; A bytes length and each collection count select exactly their following payload extent.
+varint = *9(%x80-FF) %x00-7F
+; Unsigned minimal LEB128; a tenth byte is limited to 00 or 01.

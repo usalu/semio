@@ -1,10 +1,13 @@
 {
-  "artifact": null,
   "annex": null,
   "structureKind": null,
   "steelFYPa": null,
   "beams": {
-    "values": []
+    "removed": [
+      0
+    ],
+    "inserted": [],
+    "modified": []
   },
   "columns": null,
   "slabs": null,

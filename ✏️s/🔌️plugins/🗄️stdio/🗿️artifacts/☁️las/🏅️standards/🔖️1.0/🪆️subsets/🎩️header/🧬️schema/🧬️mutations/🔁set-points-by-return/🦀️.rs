@@ -1,7 +1,4 @@
-//! 🔁️ `set-points-by-return` — its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 🔁️ `set-points-by-return` — its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 //!
 //! 🔁️ Sets the Number of Points by Return histogram (return channels 1..=5).
 use super::*;
@@ -18,14 +15,12 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for SetPointsByReturn {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "points-by-return", kind: "set-points-by-return", record: "SetPointsByReturn" };
 
     fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
-        agg_diff(&LasMutation::SetPointsByReturn(self.clone()), base)
+        let Self { counts } = self;
+        protocol::MutationOutcome::new(diff::diff_set_points_by_return(*counts))
     }
     fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&LasMutation::SetPointsByReturn(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![LasMutation::SetPointsByReturn(set_points_by_return::SetPointsByReturn { counts: base.header.points_by_return })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set points by return", "Punktanzahl pro Echo setzen")
     }

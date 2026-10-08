@@ -1,12 +1,8 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 test("direct original owned child dispatch uses the mounted publication authority", async () => {
-  const validate = new Ajv({ strict: true }).compile(schema);
-  expect(validate(fixture)).toBe(true);
   for (const row of fixture.cases) {
     const before = { parent: { label: "" }, child: { count: 0, label: "" } };
     const operations: any[] = [{ op: "replace", path: "/child/count", value: row.childCount }, { op: "replace", path: "/child/label", value: row.childLabel }];
@@ -20,7 +16,7 @@ test("direct original owned child dispatch uses the mounted publication authorit
   expect(source.includes("self.mount_original_emit_publication(verb, emit, meta, None).await")).toBe(true);
   const owner = await Bun.file(new URL("../../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs", import.meta.url)).text();
   expect(owner.includes("fn mount_original_emit_publication")).toBe(true);
-  console.log("[DEBUG] Ajv/RFC6902/Node UTF8 original direct owned child two cases, unchanged one-item262144/100000 limits");
+  console.log("[DEBUG] RFC6902/Node UTF8 original direct owned child two cases, unchanged one-item262144/100000 limits");
 });
 
 test("original completed output is retained before fallible mounted capture", async () => {

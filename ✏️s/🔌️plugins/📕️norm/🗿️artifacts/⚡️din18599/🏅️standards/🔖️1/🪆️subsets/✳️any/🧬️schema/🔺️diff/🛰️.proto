@@ -1,31 +1,97 @@
 syntax = "proto3";
 package semio.s.norm.din18599.diff;
-import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+
+message Din18599ZonesPatch {
+  string id = 1;
+  optional string label_en = 2;
+  optional string label_de = 3;
+  optional double area_m2 = 4;
+  optional double volume_m3 = 5;
+  optional double theta_i_heat_c = 6;
+  optional double theta_i_cool_c = 7;
+  optional uint32 occupants = 8;
+  optional double internal_gains_w_m2 = 9;
+  optional double lighting_power_w_m2 = 10;
+}
+
+message Din18599ZonesRows {
+  repeated string removed = 1;
+  repeated Din18599ZonesPatch modified = 2;
+  repeated string order = 3;
+}
+
+message Din18599ElementsPatch {
+  string id = 1;
+  optional string label_en = 2;
+  optional string label_de = 3;
+  optional string zone_id = 4;
+  optional double area_m2 = 5;
+  optional double u_value_w_m2k = 6;
+  optional double orientation_deg = 7;
+  optional double tilt_deg = 8;
+  optional double g_value = 9;
+  optional double fc = 10;
+}
+
+message Din18599ElementsRows {
+  repeated string removed = 1;
+  repeated Din18599ElementsPatch modified = 2;
+  repeated string order = 3;
+}
+
+message Din18599HeatingPatch {
+  optional double generation_efficiency = 1;
+  optional double distribution_efficiency = 2;
+  optional double storage_efficiency = 3;
+  optional double transfer_efficiency = 4;
+  optional string energy_carrier = 5;
+}
+
+message Din18599DhwPatch {
+  optional double specific_demand_kwh_person_a = 1;
+  optional double storage_loss_kwh_a = 2;
+  optional double distribution_loss_kwh_a = 3;
+  optional string energy_carrier = 4;
+}
+
+message Din18599VentilationPatch {
+  optional double airflow_m3_h = 1;
+  optional double heat_recovery_eta = 2;
+  optional double fan_power_w = 3;
+}
+
+message Din18599CoolingPatchPlantValue {
+}
+
+message Din18599CoolingPatch {
+  optional Din18599CoolingPatchPlantValue plant = 1;
+}
+
+message Din18599LightingPatch {
+  optional double control_factor = 1;
+}
+
+message Din18599RenewablesPatch {
+  optional double pv_area_m2 = 1;
+  optional double pv_efficiency = 2;
+  optional double solar_thermal_kwh_a = 3;
+}
+
+message Din18599ClimatePatch {
+}
+
 message Din18599Diff {
-  // @state artifact
-  optional string use_class = 1;
-  // @state artifact
-  optional double heated_area_m2 = 2;
-  // @state artifact
-  optional uint32 occupants = 3;
-  // @state artifact
-  optional double h_t = 4;
-  // @state artifact
-  optional double h_v = 5;
-  // @state artifact
-  semio.os.store.ArtifactChild climate = 6;
-  // @state artifact
-  optional double internal_gains_w_m2 = 7;
-  // @state artifact
-  optional double solar_gains_kwh = 8;
-  // @state artifact
-  optional double system_losses_kwh = 9;
-  // @state artifact
-  optional double renewable_kwh = 10;
-  // @state artifact
-  optional double annual_limit_kwh = 11;
-  // @state artifact
-  optional string energy_carrier = 12;
-  // @state artifact
-  optional double reference_q_p_kwh = 13;
+  optional double net_floor_area_m2 = 1;
+  optional double heated_volume_m3 = 2;
+  optional double geg_qp_factor = 3;
+  optional double delta_u_wb_w_m2k = 4;
+  optional Din18599ZonesRows zones = 5;
+  optional Din18599ElementsRows elements = 6;
+  optional Din18599HeatingPatch heating = 7;
+  optional Din18599DhwPatch dhw = 8;
+  optional Din18599VentilationPatch ventilation = 9;
+  optional Din18599CoolingPatch cooling = 10;
+  optional Din18599LightingPatch lighting = 11;
+  optional Din18599RenewablesPatch renewables = 12;
+  optional Din18599ClimatePatch climate = 13;
 }

@@ -10,7 +10,7 @@ use crate::standards::v1::subsets::model::schema::mutations::*;
 use crate::standards::v1::subsets::base::schema::geometry::{SemioQuaternion, SemioTransform};
 use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
 use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::model::schema::diff::{diff_set_snapshot, ModelRelationDiff, SemioModelDiff, SemioModelElementDiff, SpatialNodeDiff};
+use crate::standards::v1::subsets::model::schema::diff::{ModelRelationDiff, SemioModelDiff, SemioModelElementDiff, SpatialNodeDiff};
 use crate::standards::v1::subsets::drawing::io::text::snapshot::{parse_f64};
 use crate::standards::v1::subsets::model::io::text::snapshot::{dec_relation};
 use crate::standards::v1::subsets::model::io::text::snapshot::{enc_relation};
@@ -87,9 +87,19 @@ pub(crate) fn dec_semio_model_snapshot(s: &str) -> Result<SemioModelSnapshot, St
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_at(at: Option<usize>) -> String {
+    at.map(|at| format!(" at={at}")).unwrap_or_default()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_at(args: &std::collections::BTreeMap<&str, &str>) -> Result<Option<usize>, String> {
+    args.get("at").map(|at| at.parse::<usize>().map_err(|error| error.to_string())).transpose()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_semio_model_mutation(m: &SemioModelMutation) -> String {
     match m {
-        SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node }) => format!("insert-spatial-node node={}", enc_spatial_node(node)),
+        SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node, at }) => format!("insert-spatial-node node={}{}", enc_spatial_node(node), enc_at(*at)),
         SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id }) => format!("remove-spatial-node id={}", enc_str(id)),
         SemioModelMutation::SetSpatialNode(set_spatial_node::SetSpatialNode { id, kind, name, parent_id, placement }) => format!(
             "set-spatial-node id={} kind={} name={} parent_id={} placement={}",
@@ -99,7 +109,7 @@ pub(crate) fn print_semio_model_mutation(m: &SemioModelMutation) -> String {
             encode_option(parent_id, |inner: &Option<String>| encode_option(inner, |v: &String| enc_str(v))),
             encode_option(placement, enc_transform),
         ),
-        SemioModelMutation::InsertElement(insert_element::InsertElement { element }) => format!("insert-element element={}", enc_element(element)),
+        SemioModelMutation::InsertElement(insert_element::InsertElement { element, at }) => format!("insert-element element={}{}", enc_element(element), enc_at(*at)),
         SemioModelMutation::RemoveElement(remove_element::RemoveElement { id }) => format!("remove-element id={}", enc_str(id)),
         SemioModelMutation::SetElement(set_element::SetElement { id, class, placement, geometry, spatial_id, psets }) => format!(
             "set-element id={} class={} placement={} geometry={} spatial_id={} psets={}",
@@ -110,7 +120,7 @@ pub(crate) fn print_semio_model_mutation(m: &SemioModelMutation) -> String {
             encode_option(spatial_id, |inner: &Option<String>| encode_option(inner, |v: &String| enc_str(v))),
             encode_option(psets, |v: &Vec<PropertySet>| enc_list(v, enc_property_set)),
         ),
-        SemioModelMutation::InsertRelation(insert_relation::InsertRelation { relation }) => format!("insert-relation relation={}", enc_relation(relation)),
+        SemioModelMutation::InsertRelation(insert_relation::InsertRelation { relation, at }) => format!("insert-relation relation={}{}", enc_relation(relation), enc_at(*at)),
         SemioModelMutation::RemoveRelation(remove_relation::RemoveRelation { id }) => format!("remove-relation id={}", enc_str(id)),
         SemioModelMutation::SetRelation(set_relation::SetRelation { id, kind, from, to }) => {
             format!("set-relation id={} kind={} from={} to={}", enc_str(id), encode_option(kind, enc_relation_kind), encode_option(from, |v: &String| enc_str(v)), encode_option(to, |v: &String| enc_str(v)),)
@@ -128,7 +138,7 @@ pub(crate) fn parse_semio_model_mutation(line: &str) -> Result<SemioModelMutatio
         rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("model mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("model mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
-        "insert-spatial-node" => Ok(SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node: dec_spatial_node(arg("node")?)? })),
+        "insert-spatial-node" => Ok(SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node: dec_spatial_node(arg("node")?)?, at: dec_at(&args)? })),
         "remove-spatial-node" => Ok(SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id: dec_str(arg("id")?)? })),
         "set-spatial-node" => Ok(SemioModelMutation::SetSpatialNode(set_spatial_node::SetSpatialNode {
             id: dec_str(arg("id")?)?,
@@ -137,7 +147,7 @@ pub(crate) fn parse_semio_model_mutation(line: &str) -> Result<SemioModelMutatio
             parent_id: decode_option(arg("parent_id")?, |s| decode_option(s, dec_str))?,
             placement: decode_option(arg("placement")?, dec_transform)?,
         })),
-        "insert-element" => Ok(SemioModelMutation::InsertElement(insert_element::InsertElement { element: dec_element(arg("element")?)? })),
+        "insert-element" => Ok(SemioModelMutation::InsertElement(insert_element::InsertElement { element: dec_element(arg("element")?)?, at: dec_at(&args)? })),
         "remove-element" => Ok(SemioModelMutation::RemoveElement(remove_element::RemoveElement { id: dec_str(arg("id")?)? })),
         "set-element" => Ok(SemioModelMutation::SetElement(set_element::SetElement {
             id: dec_str(arg("id")?)?,
@@ -147,7 +157,7 @@ pub(crate) fn parse_semio_model_mutation(line: &str) -> Result<SemioModelMutatio
             spatial_id: decode_option(arg("spatial_id")?, |s| decode_option(s, dec_str))?,
             psets: decode_option(arg("psets")?, |s| dec_list(s, dec_property_set))?,
         })),
-        "insert-relation" => Ok(SemioModelMutation::InsertRelation(insert_relation::InsertRelation { relation: dec_relation(arg("relation")?)? })),
+        "insert-relation" => Ok(SemioModelMutation::InsertRelation(insert_relation::InsertRelation { relation: dec_relation(arg("relation")?)?, at: dec_at(&args)? })),
         "remove-relation" => Ok(SemioModelMutation::RemoveRelation(remove_relation::RemoveRelation { id: dec_str(arg("id")?)? })),
         "set-relation" => {
             Ok(SemioModelMutation::SetRelation(set_relation::SetRelation { id: dec_str(arg("id")?)?, kind: decode_option(arg("kind")?, dec_relation_kind)?, from: decode_option(arg("from")?, dec_str)?, to: decode_option(arg("to")?, dec_str)? }))

@@ -1,0 +1,167 @@
+{
+  "coordinates": [
+    {
+      "path": "entry.ts",
+      "refused": false
+    },
+    {
+      "path": "plumbing/fixtureCount.ts",
+      "refused": false
+    },
+    {
+      "path": "🧫️fixtures/cases.json",
+      "refused": true
+    },
+    {
+      "path": "os/🧫️fixtures/cases.json",
+      "refused": true
+    },
+    {
+      "path": "os/🧪️examples/case.ts",
+      "refused": true
+    },
+    {
+      "path": "🔨️modules/🧫️fixtures/module.ts",
+      "refused": false
+    },
+    {
+      "path": "🔨️modules/🧫️fixtures/🧫️fixtures/case.json",
+      "refused": true
+    }
+  ],
+  "closures": [
+    {
+      "id": "inline-test-import",
+      "files": {
+        "entry.ts": "import { identity } from \"./normal.ts\"; export { identity }; if (import.meta.vitest) { const examples = await import(\"./🧫️fixtures/cases.json\"); console.log(examples); }",
+        "normal.ts": "export const identity = \"production\";",
+        "🧫️fixtures/cases.json": "{\"expected\":\"testing\"}"
+      },
+      "entries": [
+        "entry.ts"
+      ],
+      "paths": [
+        "entry.ts",
+        "normal.ts"
+      ],
+      "refused": false
+    },
+    {
+      "id": "live-fixture-import",
+      "files": {
+        "entry.ts": "import examples from \"./🧫️fixtures/cases.json\"; export { examples };",
+        "🧫️fixtures/cases.json": "{\"expected\":\"testing\"}"
+      },
+      "entries": [
+        "entry.ts"
+      ],
+      "refused": true
+    },
+    {
+      "id": "fixture-entry",
+      "files": {
+        "🧫️examples/entry.ts": "export const identity = \"testing\";"
+      },
+      "entries": [
+        "🧫️examples/entry.ts"
+      ],
+      "refused": true
+    },
+    {
+      "id": "genuine-fixture-domain-word",
+      "files": {
+        "entry.ts": "import { fixtureCount } from \"./plumbing.ts\"; export { fixtureCount };",
+        "plumbing.ts": "export const fixtureCount = 4;"
+      },
+      "entries": [
+        "entry.ts"
+      ],
+      "paths": [
+        "entry.ts",
+        "plumbing.ts"
+      ],
+      "refused": false
+    },
+    {
+      "id": "genuine-framework-fixtures-module",
+      "files": {
+        "entry.ts": "export { identity } from \"./🔨️modules/🧫️fixtures/module.ts\";",
+        "🔨️modules/🧫️fixtures/module.ts": "export const identity = \"framework\";"
+      },
+      "entries": [
+        "entry.ts"
+      ],
+      "paths": [
+        "entry.ts",
+        "🔨️modules/🧫️fixtures/module.ts"
+      ],
+      "refused": false
+    },
+    {
+      "id": "alternate-testing-collection",
+      "files": {
+        "entry.ts": "export { identity } from \"./🧪️examples/example.ts\";",
+        "🧪️examples/example.ts": "export const identity = \"testing\";"
+      },
+      "entries": [
+        "entry.ts"
+      ],
+      "refused": true
+    },
+    {
+      "id": "physical-fixture-alias",
+      "files": {
+        "entry.ts": "export { default as value } from \"./live.json\";",
+        "🧫️fixtures/cases.json": "{\"expected\":\"testing\"}"
+      },
+      "links": {
+        "live.json": "🧫️fixtures/cases.json"
+      },
+      "entries": [
+        "entry.ts"
+      ],
+      "refused": true
+    },
+    {
+      "id": "eliminated-static-test-use",
+      "files": {
+        "entry.ts": "import examples from \"./🧫️fixtures/cases.json\"; export const identity = \"production\"; if (import.meta.vitest) console.log(examples);",
+        "🧫️fixtures/cases.json": "{\"expected\":\"testing\"}"
+      },
+      "entries": [
+        "entry.ts"
+      ],
+      "refused": true
+    },
+    {
+      "id": "type-only-import",
+      "files": {
+        "entry.ts": "import type { Example } from \"./🧫️fixtures/example.ts\"; export const identity = \"production\";",
+        "🧫️fixtures/example.ts": "export type Example = { expected: string };"
+      },
+      "entries": [
+        "entry.ts"
+      ],
+      "paths": [
+        "entry.ts"
+      ],
+      "refused": false
+    },
+    {
+      "id": "live-fixture-side-effect",
+      "files": {
+        "entry.ts": "import \"./🧫️fixtures/example.ts\"; export const identity = \"production\";",
+        "🧫️fixtures/example.ts": "console.log(\"testing\");"
+      },
+      "entries": [
+        "entry.ts"
+      ],
+      "refused": true
+    }
+  ],
+  "contract": {
+    "id": "https://json.schemas.assets.semio-tech.com/os/dev/distribution/component.json",
+    "scopeId": "os.dev.distribution",
+    "leaf": "DistributionSourceCoordinate"
+  }
+}

@@ -8,18 +8,6 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
-      ],
-      "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/2x3/cv20/mutation/set-snapshot/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
         "SetViewDefinition"
       ],
       "properties": {

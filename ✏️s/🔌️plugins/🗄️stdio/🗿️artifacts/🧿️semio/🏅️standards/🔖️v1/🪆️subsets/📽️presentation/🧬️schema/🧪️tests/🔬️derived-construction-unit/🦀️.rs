@@ -31,7 +31,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn mutate_then_absorb_matches_direct_apply() {
         let builder = SemioPresentationBuilderConstruction::empty();
-        let mutation = SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: SlideMaster { id: "m1".into(), shapes: Vec::new() } });
+        let mutation = SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: SlideMaster { id: "m1".into(), shapes: Vec::new() }, at: None });
         let (builder, diff) = builder.mutate(mutation);
         let mutated_snapshot = builder.clone().build().unwrap();
         assert_eq!(mutated_snapshot.masters.len(), 1);

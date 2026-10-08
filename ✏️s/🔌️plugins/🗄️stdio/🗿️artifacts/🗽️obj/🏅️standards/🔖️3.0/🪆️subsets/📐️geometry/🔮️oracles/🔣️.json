@@ -53,7 +53,7 @@
         "linux-arm64",
         "win32-x64"
       ],
-      "rationale": "📖️ A READER, and that is the whole point of registering it separately from `tobj-obj-3-0-mutate`.\n\nThis subset also carries a `🦀️oracle.rs` that COMPUTES what each mutation should produce — its own independent parse/apply/render over a Model type it defines itself. That entry stays registered `cross-semio-implementation` and does not discharge independence on its own, because both halves of such a comparison descend from one reading of the Wavefront OBJ specification.\n\nThis entry is a different mechanism. The expected state for each of the 12 witnessable recipes below is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture hand-authored directly against the grammar (OBJ has no reference WRITER in the Rust ecosystem, the same already-recorded reason `../../🦀️oracle.rs` and the shared `mesh::oracle_create_obj` write the grammar directly too). The real `tobj` 4 then parses BOTH sides with `../🏭️generator/📖️reader/📦️packages/🦀️rust`'s `project` subcommand, and the comparison in `../../🔬️probes/📜️script.ts` is over what it recovered — never over a computed prediction.\n\n`tobj` is a MESH reader: it drops every `v`/`vt`/`vn` row no face resolves, and its material loader here is a no-op. Verified directly against real `tobj` 4 output (not assumed): 10 of the 22 declared kinds are therefore structurally invisible to it (`insert-vertex`/`remove-vertex`/`insert-texcoord`/`remove-texcoord`/`insert-normal`/`remove-normal` — unreferenced by construction — and `set-mtllib`/`set-usemtl`/`set-smoothing-groups`/`set-unknown-statements` — comments, material names and smoothing integers `tobj` never surfaces) and keep an `obj-3-0-mutate-uncarried` oracleRequirement instead of this one, the same convention `gltf@2.0/📐️geometry` uses for its own reader-blind kinds. The other 12 ARE witnessable, each confirmed by actually running the reader on a committed before/after pair: `set-vertex`/`set-texcoord`/`set-normal` on a row a face references (clean in-place value change); `insert-face`/`remove-face`/`set-face` (triangle count or topology moves directly); `set-group`/`remove-group`/`set-object`/`remove-object` (the named `tobj::Model` a face's triangle lands in changes — `tobj` splits models at `g`/`o` boundaries by name, confirmed empirically including the bare-reset-line and no-reset-merge cases); and `no-mutation`/`set-snapshot` (identity and whole-document replace respectively).\n\nSo the judge is a genuinely different implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling `cross-semio-implementation` entry is not.",
+      "rationale": "📖️ A READER, and that is the whole point of registering it separately from `tobj-obj-3-0-mutate`.\n\nThis subset also carries a `🦀️oracle.rs` that COMPUTES what each mutation should produce — its own independent parse/apply/render over a Model type it defines itself. That entry stays registered `cross-semio-implementation` and does not discharge independence on its own, because both halves of such a comparison descend from one reading of the Wavefront OBJ specification.\n\nThis entry is a different mechanism. The expected state for each of the 12 witnessable recipes below is not computed at all — it is COMMITTED, as the `after` half of a byte-reproducible fixture hand-authored directly against the grammar (OBJ has no reference WRITER in the Rust ecosystem, the same already-recorded reason `../../🦀️oracle.rs` and the shared `mesh::oracle_create_obj` write the grammar directly too). The real `tobj` 4 then parses BOTH sides with `../🏭️generator/📖️reader/📦️packages/🦀️rust`'s `project` subcommand, and the comparison in `../../🔬️probes/📜️script.ts` is over what it recovered — never over a computed prediction.\n\n`tobj` is a MESH reader: it drops every `v`/`vt`/`vn` row no face resolves, and its material loader here is a no-op. Verified directly against real `tobj` 4 output (not assumed): 10 of the 22 declared kinds are therefore structurally invisible to it (`insert-vertex`/`remove-vertex`/`insert-texcoord`/`remove-texcoord`/`insert-normal`/`remove-normal` — unreferenced by construction — and `set-mtllib`/`set-usemtl`/`set-smoothing-groups`/`set-unknown-statements` — comments, material names and smoothing integers `tobj` never surfaces) and keep an `obj-3-0-mutate-uncarried` oracleRequirement instead of this one, the same convention `gltf@2.0/📐️geometry` uses for its own reader-blind kinds. The other 12 ARE witnessable, each confirmed by actually running the reader on a committed before/after pair: `set-vertex`/`set-texcoord`/`set-normal` on a row a face references (clean in-place value change); `insert-face`/`remove-face`/`set-face` (triangle count or topology moves directly); `set-group`/`remove-group`/`set-object`/`remove-object` (the named `tobj::Model` a face's triangle lands in changes — `tobj` splits models at `g`/`o` boundaries by name, confirmed empirically including the bare-reset-line and no-reset-merge cases); and `no-mutation` (identity).\n\nSo the judge is a genuinely different implementation of the format, and nothing in this repository predicts the answer it is judging. That is what makes it qualifying where the sibling `cross-semio-implementation` entry is not.",
       "comparisonProfiles": [
         "semantic-obj-3-0-v1"
       ]
@@ -115,7 +115,7 @@
     {
       "id": "semantic-obj-3-0-v1",
       "description": "Wavefront OBJ documents compared by the `tobj` triangle mesh (vertex set, face topology, counts) AND by the document surface a mesh reader cannot see: declared v/vt/vn row counts with their per-component extent and totals, the mtllib reference, the g/o membership spans, the usemtl/s run starts and the retained comment lines. Unlike the shared semantic-mesh-v1 profile, none of those are writer freedom here -- ObjMutation's set-mtllib/set-usemtl/set-smoothing-groups/set-unknown-statements and the four name-keyed g/o kinds mutate exactly that surface, so ignoring it would leave 14 of the 22 declared kinds unobservable. Only byte length and decimal precision remain producer freedom; per-component extents and totals are compared under the mesh tolerance so the two producers' differing decimal formatting never registers as a divergence.",
-      "tolerance": 0.00001,
+      "tolerance": 1e-05,
       "ignoreKeys": [
         "byteLength",
         "fileSize",
@@ -134,22 +134,8 @@
       "capability": "obj-3-0-mutate",
       "standardDirectoryName": "🔖️3.0",
       "subsetDirectoryName": "📐️geometry",
-      "vectors": [
-        {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
-          "scenarios": [
-            {
-              "id": "lifts-the-third-vertex-and-gives-it-an-explicit-w",
-              "directoryName": "🏗️lifts"
-            }
-          ]
-        }
-      ],
+      "vectors": [],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "insert-vertex",
         "remove-vertex",
         "set-vertex",
@@ -180,70 +166,6 @@
       "standardDirectoryName": "🔖️3.0",
       "subsetDirectoryName": "📐️geometry",
       "mutations": [
-        {
-          "id": "set-snapshot",
-          "capability": "obj-3-0-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetSnapshot",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "obj-3-0-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "tobj-obj-3-0-mutate-reader"
-            }
-          ],
-          "carriers": [
-            "obj"
-          ],
-          "invariants": {
-            "local": [
-              "replacement-snapshot-reproduces-exactly-or-reports-no-op"
-            ],
-            "enclosing": [
-              "tobj-mesh-and-independent-document-projection-agree"
-            ]
-          }
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "obj-3-0-mutate",
-          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#PatchSnapshot",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "obj-3-0-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "tobj-obj-3-0-mutate-reader"
-            }
-          ],
-          "carriers": [
-            "obj"
-          ],
-          "invariants": {
-            "local": [
-              "replacement-snapshot-reproduces-exactly-or-reports-no-op"
-            ],
-            "enclosing": [
-              "tobj-mesh-and-independent-document-projection-agree"
-            ]
-          }
-        },
         {
           "id": "insert-vertex",
           "capability": "obj-3-0-mutate",
@@ -970,53 +892,6 @@
       "reproducible": true,
       "family": "structural",
       "notes": "Identity — NoMutation's diff is empty; before and after bytes are byte-identical. tobj must witness zero difference."
-    },
-    {
-      "id": "set-snapshot-applied",
-      "class": "third-party-generated",
-      "target": {
-        "artifact": "s.stdio.obj",
-        "standard": "3.0",
-        "subset": "geometry"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before-obj",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.obj",
-          "mediaType": "model/obj",
-          "sha256": "sha256:ee8eee4b677c7bb337d25dd01b23fa8f76723c42fa8bea45df57dcf7792763f7",
-          "bytes": 109
-        },
-        {
-          "role": "expected-after-obj",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.obj",
-          "mediaType": "model/obj",
-          "sha256": "sha256:8354105427d4bb6797eb81d98d4b26d38f7bdb33ad7443564681b3632f21ac8a",
-          "bytes": 74
-        }
-      ],
-      "generator": {
-        "oracle": "tobj-obj-3-0-mutate-reader",
-        "packageVersion": "4",
-        "engineFamily": "tobj",
-        "engineVersion": "4",
-        "command": "bun ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🏭️generator/📜️script.ts generate --only set-snapshot-applied",
-        "platform": "darwin-arm64"
-      },
-      "provenance": {
-        "source": "generated",
-        "license": "public-domain (synthetic, no third-party content embedded)"
-      },
-      "comparisonProfile": "semantic-obj-3-0-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": "Whole-document replace: a materially different 1-triangle document (fewer vertices, different positions, no shared face) — tobj sees a different vertexCount/triangleCount/positions."
     },
     {
       "id": "set-vertex-applied",

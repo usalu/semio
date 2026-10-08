@@ -134,17 +134,6 @@
         "resize-page",
         "replace-page-text"
       ]
-    },
-    {
-      "id": "pdf-1-4-base-snapshot-operation-contract",
-      "capability": "pdf-1-4-snapshot-operation-contract",
-      "standardDirectoryName": "4️⃣1.4",
-      "subsetDirectoryName": "🧱️base",
-      "vectors": [],
-      "kinds": [
-        "set-snapshot",
-        "patch-snapshot"
-      ]
     }
   ],
   "mutationManifests": [

@@ -1,6 +1,4 @@
-//! 🪡️ `set-linetype` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🪡️ `set-linetype` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,14 +14,21 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetLinetype {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "linetype", kind: "set-linetype", record: "SetLinetype" };
 
     fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
-        agg_diff(&DxfMutation::SetLinetype(self.clone()), base)
+        let Self { name, linetype } = self;
+        protocol::MutationOutcome::new({
+            let old = base.tables.linetypes.iter().find(|l| &l.name == name).cloned().unwrap_or_default();
+            diff_set_linetype(name, linetype_diff_between(&old, linetype))
+        })
     }
     fn inverse(&self, base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&DxfMutation::SetLinetype(self.clone()), base)?
-    
-    })
-}
+        let Self { name, .. } = self;
+        Ok({
+            match base.tables.linetypes.iter().find(|l| &l.name == name) {
+                Some(l) => vec![DxfMutation::SetLinetype(set_linetype::SetLinetype { name: name.clone(), linetype: l.clone() })],
+                None => vec![DxfMutation::RemoveLinetype(remove_linetype::RemoveLinetype { name: name.clone() })],
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set linetype", "Linientyp setzen")
     }

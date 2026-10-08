@@ -1,11 +1,9 @@
-//! 🪪️ `set-product-identity` — one axis of this conformance class, authored as its own mutation leaf.
-//! The class-neutral edit is performed by the shared ladder module; this file names the axis and
-//! routes to it, so each rule has ONE implementation and every class calls it.
+//! 🪪 `set-product-identity` -- replaces every product identity chain rung with the given three, or removes the chain; the base chain is restored rung by rung at its exact positions.
 
-use crate::standards::v_ap214::engine::ladder::ClassEdit;
+use crate::schema::diff::StepDiff;
+use crate::standards::v_ap214::engine::ladder;
 use crate::standards::v_ap214::engine::ladder::ProductIdentity;
-use crate::standards::v_ap214::subsets::cc5::schema::mutations::StepCc5Mutation;
-use crate::standards::v_ap214::subsets::cc5::schema::mutations::{class_diff, class_inverse};
+use crate::standards::v_ap214::subsets::cc5::schema::mutations::{rejected, restored, StepCc5Mutation, CLASS};
 use crate::StepSnapshot;
 
 //#region 🔖️Payload
@@ -18,18 +16,18 @@ pub struct SetProductIdentity {
 impl protocol::MutationKind<StepSnapshot, StepCc5Mutation> for SetProductIdentity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "product-identity", kind: "set-product-identity", record: "SetProductIdentity" };
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepCc5Mutation as protocol::Mutation<StepSnapshot>>::Diff> {
-        class_diff(base, &ClassEdit::ProductIdentity { identity: self.identity.clone() })
+    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
+        protocol::MutationOutcome::new(ladder::product_identity_diff(base, self.identity.as_ref()))
     }
+
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepCc5Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        class_inverse(base, &ClassEdit::ProductIdentity { identity: self.identity.clone() })?
-    
-    })
-}
+        Ok(restored(ladder::chain_restore_rows(base, self.identity.as_ref())))
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set the PRODUCT identity chain", "Produktidentitätskette setzen")
     }
+
     fn target(&self) -> Vec<String> {
         Vec::new()
     }

@@ -7,7 +7,6 @@
 //!
 //! 🧪️ F6: `OpText`/`OpBinary` for `DxfMutation` are **hand-rolled** — `#[derive(dsl::DslOps)]`
 //! confirmed rejected by a real `cargo check` (independent of `DxfDiff`'s own rejection above):
-//! `SetSnapshot{snapshot:DxfSnapshot}` recursively contains `DxfEntity` (no `DslField`), and
 //! `InsertEntity`/`SetEntity`'s `entity: DxfEntity` / `InsertBlock`/`SetBlock`'s `block: DxfBlock`
 //! (which itself contains `Vec<DxfEntity>`) carry the same data-carrying-enum payload DIRECTLY as
 //! a variant field — `error[E0277]: the trait bound 'DxfEntity: DslField' is not satisfied` at
@@ -19,7 +18,7 @@
 
 use crate::schema::diff::{block_diff_between, // 🧪️ P2-FG1: real recursive binary twins backing the upgraded `` impl below (see
     // `🔺️diff/🦀️.rs`'s `#region 🔖️ItemBinaryCodecs`/`#region 🔖️BinaryPrimitives`).
-    diff_insert_block, diff_insert_entity, diff_insert_layer, diff_insert_linetype, diff_insert_style, diff_remove_block, diff_remove_entity, diff_remove_header_var, diff_remove_layer, diff_remove_linetype, diff_remove_style, diff_set_block, diff_set_entity, diff_set_header_var, diff_set_layer, diff_set_linetype, diff_set_snapshot, diff_set_style, entity_diff_between_pub, layer_diff_between, linetype_diff_between, style_diff_between, DxfDiff};
+    diff_insert_block, diff_insert_entity, diff_insert_layer, diff_insert_linetype, diff_insert_style, diff_remove_block, diff_remove_entity, diff_remove_header_var, diff_remove_layer, diff_remove_linetype, diff_remove_style, diff_set_block, diff_set_entity, diff_set_header_var, diff_set_layer, diff_set_linetype, diff_set_style, entity_diff_between_pub, layer_diff_between, linetype_diff_between, style_diff_between, DxfDiff};
 
 
 
@@ -90,10 +89,6 @@ pub mod set_header_var;
 pub mod set_layer;
 #[path = "🪡set-linetype/🦀️.rs"]
 pub mod set_linetype;
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "🖌️set-style/🦀️.rs"]
 pub mod set_style;
 //#endregion 🔖️Leaves
@@ -105,8 +100,6 @@ pub mod set_style;
 #[mutations(snapshot = DxfSnapshot, diff = DxfDiff, schema = "DxfMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum DxfMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
 
     /// 🏷️ Creates or replaces a `$VAR` header entry.
     SetHeaderVar(set_header_var::SetHeaderVar),
@@ -158,7 +151,6 @@ pub enum DxfMutation {
 /// the framework never parses Rust, so this constant plus `kinds_const_matches_enum_variants` below
 /// is what keeps the manifest honest).
 pub const KINDS: &[&str] = &[
-    "set-snapshot", "patch-snapshot",
     "set-header-var",
     "remove-header-var",
     "insert-layer",
@@ -185,7 +177,7 @@ pub const KINDS: &[&str] = &[
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_dxf_mutation(snapshot: &mut DxfSnapshot, mutation: &DxfMutation) -> protocol::MutationOutcome<DxfDiff> {
     let outcome = <DxfMutation as Mutation<DxfSnapshot>>::diff(mutation, snapshot);
-    match MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -196,129 +188,79 @@ pub fn apply_dxf_mutation(snapshot: &mut DxfSnapshot, mutation: &DxfMutation) ->
 //#endregion 🔖️Apply
 
 
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &DxfMutation, base: &DxfSnapshot) -> protocol::MutationOutcome<DxfDiff> {
-    protocol::MutationOutcome::new(match this {
-        DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
-        DxfMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<DxfSnapshot, DxfMutation>>::diff(patch, base),
-
-        DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name, header_var }) => {
-            let existed = base.header_vars.iter().any(|v| &v.name == name);
-            diff_set_header_var(base.header_vars.len(), name, header_var.clone(), existed)
-        }
-        DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name }) => diff_remove_header_var(name),
-
-        DxfMutation::InsertLayer(insert_layer::InsertLayer { index, layer }) => diff_insert_layer(*index, layer.clone()),
-        DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name }) => diff_remove_layer(name),
-        DxfMutation::SetLayer(set_layer::SetLayer { name, layer }) => {
-            let old = base.tables.layers.iter().find(|l| &l.name == name).cloned().unwrap_or_default();
-            diff_set_layer(name, layer_diff_between(&old, layer))
-        }
-
-        DxfMutation::InsertStyle(insert_style::InsertStyle { index, style }) => diff_insert_style(*index, style.clone()),
-        DxfMutation::RemoveStyle(remove_style::RemoveStyle { name }) => diff_remove_style(name),
-        DxfMutation::SetStyle(set_style::SetStyle { name, style }) => {
-            let old = base.tables.styles.iter().find(|s| &s.name == name).cloned().unwrap_or_default();
-            diff_set_style(name, style_diff_between(&old, style))
-        }
-
-        DxfMutation::InsertLinetype(insert_linetype::InsertLinetype { index, linetype }) => diff_insert_linetype(*index, linetype.clone()),
-        DxfMutation::RemoveLinetype(remove_linetype::RemoveLinetype { name }) => diff_remove_linetype(name),
-        DxfMutation::SetLinetype(set_linetype::SetLinetype { name, linetype }) => {
-            let old = base.tables.linetypes.iter().find(|l| &l.name == name).cloned().unwrap_or_default();
-            diff_set_linetype(name, linetype_diff_between(&old, linetype))
-        }
-
-        DxfMutation::InsertEntity(insert_entity::InsertEntity { index, entity }) => diff_insert_entity(*index, entity.clone()),
-        DxfMutation::RemoveEntity(remove_entity::RemoveEntity { index }) => diff_remove_entity(*index),
-        DxfMutation::SetEntity(set_entity::SetEntity { index, entity }) => match base.entities.get(*index) {
-            Some(old) => diff_set_entity(*index, entity_diff_between_pub(old, entity)),
-            None => diff_insert_entity(*index, entity.clone()),
-        },
-
-        DxfMutation::InsertBlock(insert_block::InsertBlock { index, block }) => diff_insert_block(*index, block.clone()),
-        DxfMutation::RemoveBlock(remove_block::RemoveBlock { index }) => diff_remove_block(*index),
-        DxfMutation::SetBlock(set_block::SetBlock { index, block }) => match base.blocks.get(*index) {
-            Some(old) => diff_set_block(*index, block_diff_between(old, block)),
-            None => diff_insert_block(*index, block.clone()),
-        },
-    })
+//#region 🔖️Net
+/// 🧮️ Pairs two positional lists: every differing pair is re-set in place, surplus base items are removed last first and missing
+/// items are inserted at their index.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn net_items<T: PartialEq>(base: &[T], next: &[T], set: impl Fn(usize, &T) -> DxfMutation, insert: impl Fn(usize, &T) -> DxfMutation, remove: impl Fn(usize) -> DxfMutation, leaves: &mut Vec<DxfMutation>) {
+    let paired = base.len().min(next.len());
+    leaves.extend(base.iter().zip(next).enumerate().filter(|(_, (before, after))| before != after).map(|(index, (_, after))| set(index, after)));
+    leaves.extend((paired..base.len()).rev().map(remove));
+    leaves.extend(next.iter().enumerate().skip(paired).map(|(index, item)| insert(index, item)));
 }
 
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &DxfMutation, base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {
-    Ok({
-    match this {
-        DxfMutation::SetSnapshot(_) => vec![DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        DxfMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<DxfSnapshot, DxfMutation>>::inverse(patch, base)?),
-
-        DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name, .. }) => match base.header_vars.iter().find(|v| &v.name == name) {
-            Some(v) => vec![DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: name.clone(), header_var: v.clone() })],
-            None => vec![DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name: name.clone() })],
-        },
-        DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name }) => match base.header_vars.iter().find(|v| &v.name == name) {
-            Some(v) => vec![DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: name.clone(), header_var: v.clone() })],
-            None => Vec::new(),
-        },
-
-        // 🧭️ Reads the name off the mutation's OWN payload, not `base` at `index` — `base`
-        // is pre-insertion state, so `base.tables.layers[index]` (if any) is whatever WAS
-        // there before, never the layer this mutation is about to insert.
-        DxfMutation::InsertLayer(insert_layer::InsertLayer { layer, .. }) => vec![DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name: layer.name.clone() })],
-        DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name }) => match base.tables.layers.iter().find(|l| &l.name == name) {
-            Some(l) => vec![DxfMutation::InsertLayer(insert_layer::InsertLayer { index: base.tables.layers.iter().position(|x| &x.name == name).unwrap_or(base.tables.layers.len()), layer: l.clone() })],
-            None => Vec::new(),
-        },
-        DxfMutation::SetLayer(set_layer::SetLayer { name, .. }) => match base.tables.layers.iter().find(|l| &l.name == name) {
-            Some(l) => vec![DxfMutation::SetLayer(set_layer::SetLayer { name: name.clone(), layer: l.clone() })],
-            None => vec![DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name: name.clone() })],
-        },
-
-        DxfMutation::InsertStyle(insert_style::InsertStyle { style, .. }) => vec![DxfMutation::RemoveStyle(remove_style::RemoveStyle { name: style.name.clone() })],
-        DxfMutation::RemoveStyle(remove_style::RemoveStyle { name }) => match base.tables.styles.iter().find(|s| &s.name == name) {
-            Some(s) => vec![DxfMutation::InsertStyle(insert_style::InsertStyle { index: base.tables.styles.iter().position(|x| &x.name == name).unwrap_or(base.tables.styles.len()), style: s.clone() })],
-            None => Vec::new(),
-        },
-        DxfMutation::SetStyle(set_style::SetStyle { name, .. }) => match base.tables.styles.iter().find(|s| &s.name == name) {
-            Some(s) => vec![DxfMutation::SetStyle(set_style::SetStyle { name: name.clone(), style: s.clone() })],
-            None => vec![DxfMutation::RemoveStyle(remove_style::RemoveStyle { name: name.clone() })],
-        },
-
-        DxfMutation::InsertLinetype(insert_linetype::InsertLinetype { linetype, .. }) => vec![DxfMutation::RemoveLinetype(remove_linetype::RemoveLinetype { name: linetype.name.clone() })],
-        DxfMutation::RemoveLinetype(remove_linetype::RemoveLinetype { name }) => match base.tables.linetypes.iter().find(|l| &l.name == name) {
-            Some(l) => vec![DxfMutation::InsertLinetype(insert_linetype::InsertLinetype { index: base.tables.linetypes.iter().position(|x| &x.name == name).unwrap_or(base.tables.linetypes.len()), linetype: l.clone() })],
-            None => Vec::new(),
-        },
-        DxfMutation::SetLinetype(set_linetype::SetLinetype { name, .. }) => match base.tables.linetypes.iter().find(|l| &l.name == name) {
-            Some(l) => vec![DxfMutation::SetLinetype(set_linetype::SetLinetype { name: name.clone(), linetype: l.clone() })],
-            None => vec![DxfMutation::RemoveLinetype(remove_linetype::RemoveLinetype { name: name.clone() })],
-        },
-
-        DxfMutation::InsertEntity(insert_entity::InsertEntity { index, .. }) => vec![DxfMutation::RemoveEntity(remove_entity::RemoveEntity { index: *index })],
-        DxfMutation::RemoveEntity(remove_entity::RemoveEntity { index }) => match base.entities.get(*index) {
-            Some(e) => vec![DxfMutation::InsertEntity(insert_entity::InsertEntity { index: *index, entity: e.clone() })],
-            None => Vec::new(),
-        },
-        DxfMutation::SetEntity(set_entity::SetEntity { index, .. }) => match base.entities.get(*index) {
-            Some(e) => vec![DxfMutation::SetEntity(set_entity::SetEntity { index: *index, entity: e.clone() })],
-            None => Vec::new(),
-        },
-
-        DxfMutation::InsertBlock(insert_block::InsertBlock { index, .. }) => vec![DxfMutation::RemoveBlock(remove_block::RemoveBlock { index: *index })],
-        DxfMutation::RemoveBlock(remove_block::RemoveBlock { index }) => match base.blocks.get(*index) {
-            Some(b) => vec![DxfMutation::InsertBlock(insert_block::InsertBlock { index: *index, block: b.clone() })],
-            None => Vec::new(),
-        },
-        DxfMutation::SetBlock(set_block::SetBlock { index, .. }) => match base.blocks.get(*index) {
-            Some(b) => vec![DxfMutation::SetBlock(set_block::SetBlock { index: *index, block: b.clone() })],
-            None => Vec::new(),
-        },
+/// 🧮️ Pairs two named lists by position: a pair of the same name is re-set in place, a pair of another name is removed and created
+/// anew at that position, surplus base items are removed last first and missing items are created at their index.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn net_named<T: PartialEq>(base: &[T], next: &[T], name: impl Fn(&T) -> &str, set: impl Fn(&T) -> DxfMutation, create: impl Fn(usize, &T) -> DxfMutation, remove: impl Fn(&str) -> DxfMutation, leaves: &mut Vec<DxfMutation>) {
+    let paired = base.len().min(next.len());
+    for (index, (before, after)) in base.iter().zip(next).enumerate().filter(|(_, (before, after))| before != after) {
+        if name(before) == name(after) {
+            leaves.push(set(after));
+        } else {
+            leaves.push(remove(name(before)));
+            leaves.push(create(index, after));
+        }
     }
-
-    })
+    leaves.extend(base[paired..].iter().rev().map(|item| remove(name(item))));
+    leaves.extend(next.iter().enumerate().skip(paired).map(|(index, item)| create(index, item)));
 }
-//#endregion 🔖️MutationTrait
+
+/// 🧮️ The leaves that carry `base` to exactly `next`: header variables, the three tables and the blocks and entities, each paired by
+/// position (see [`net_items`] / [`net_named`]).
+pub fn net_mutations(base: &DxfSnapshot, next: &DxfSnapshot) -> Vec<DxfMutation> {
+    let mut leaves = Vec::new();
+    net_named(
+        &base.header_vars,
+        &next.header_vars,
+        |var| var.name.as_str(),
+        |var| DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: var.name.clone(), header_var: var.clone(), index: None }),
+        |index, var| DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: var.name.clone(), header_var: var.clone(), index: Some(index) }),
+        |name| DxfMutation::RemoveHeaderVar(remove_header_var::RemoveHeaderVar { name: name.to_string() }),
+        &mut leaves,
+    );
+    net_named(
+        &base.tables.layers,
+        &next.tables.layers,
+        |layer| layer.name.as_str(),
+        |layer| DxfMutation::SetLayer(set_layer::SetLayer { name: layer.name.clone(), layer: layer.clone() }),
+        |index, layer| DxfMutation::InsertLayer(insert_layer::InsertLayer { index, layer: layer.clone() }),
+        |name| DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name: name.to_string() }),
+        &mut leaves,
+    );
+    net_named(
+        &base.tables.styles,
+        &next.tables.styles,
+        |style| style.name.as_str(),
+        |style| DxfMutation::SetStyle(set_style::SetStyle { name: style.name.clone(), style: style.clone() }),
+        |index, style| DxfMutation::InsertStyle(insert_style::InsertStyle { index, style: style.clone() }),
+        |name| DxfMutation::RemoveStyle(remove_style::RemoveStyle { name: name.to_string() }),
+        &mut leaves,
+    );
+    net_named(
+        &base.tables.linetypes,
+        &next.tables.linetypes,
+        |linetype| linetype.name.as_str(),
+        |linetype| DxfMutation::SetLinetype(set_linetype::SetLinetype { name: linetype.name.clone(), linetype: linetype.clone() }),
+        |index, linetype| DxfMutation::InsertLinetype(insert_linetype::InsertLinetype { index, linetype: linetype.clone() }),
+        |name| DxfMutation::RemoveLinetype(remove_linetype::RemoveLinetype { name: name.to_string() }),
+        &mut leaves,
+    );
+    net_items(&base.blocks, &next.blocks, |index, block| DxfMutation::SetBlock(set_block::SetBlock { index, block: block.clone() }), |index, block| DxfMutation::InsertBlock(insert_block::InsertBlock { index, block: block.clone() }), |index| DxfMutation::RemoveBlock(remove_block::RemoveBlock { index }), &mut leaves);
+    net_items(&base.entities, &next.entities, |index, entity| DxfMutation::SetEntity(set_entity::SetEntity { index, entity: entity.clone() }), |index, entity| DxfMutation::InsertEntity(insert_entity::InsertEntity { index, entity: entity.clone() }), |index| DxfMutation::RemoveEntity(remove_entity::RemoveEntity { index }), &mut leaves);
+    leaves
+}
+//#endregion 🔖️Net
 
 //#region OpCodecs
 
@@ -334,8 +276,7 @@ pub(crate) fn agg_inverse(this: &DxfMutation, base: &DxfSnapshot) -> Result<Vec<
 //#region 🔖️DemoCases
 /// 🧪️ P2-FG1: representative `DxfMutation` values — one instance per variant (18 total, plus four
 /// extra `InsertEntity` cases exercising the Polyline/Other/Solid/Insert entity kinds the base
-/// `variants()` fixture didn't reach), incl. a `SetSnapshot` payload nesting a raw-retained
-/// `other_tables` entry and a block with a nested entity — exercises the WHOLE grammar/protocol
+/// `variants()` fixture didn't reach), incl. a `SetBlock` payload nesting a block with a nested entity — exercises the WHOLE grammar/protocol
 /// tree end-to-end. The single source of truth reused by `op_text_binary_roundtrip_law` below AND
 /// by `⚙️engine/🦀️.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law` conformance
 /// tests, so a new variant only needs adding here once.
@@ -357,8 +298,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<DxfMutation> {
     }
 
     vec![
-        DxfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
-        DxfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: demo_snapshot_for_set() }),
         DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: "$ACADVER".into(), header_var: DxfHeaderVar { name: "$ACADVER".into(), group_code: 1, value: DxfValue::Str { value: "AC1015".into() }, extra_group_codes: vec![] } }),
         DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar {
             name: "$NEWVAR".into(),
@@ -394,13 +333,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<DxfMutation> {
             },
         }),
         DxfMutation::InsertEntity(insert_entity::InsertEntity { index: 2, entity: DxfEntity::Other { kind: "3DFACE".into(), group_codes: vec![(10, DxfValue::Double { value: 0.0 })] } }),
-        // 🧭️ `index: 2` (not 3/4): `base_snapshot()` (used by `mutation_diff_law`/`inverse_law`,
-        // the two OTHER generic property tests sharing this fixture) has exactly 2 entities —
-        // `agg_inverse`'s `InsertEntity` arm reads the index literally off the mutation's own
-        // payload (comment above, `#region 🔖️MutationTrait`), which only round-trips when the
-        // requested index is `<= base.len()` (no clamping inside `generic_apply`'s `idx.min(len)`
-        // needed); an out-of-range literal index here would desync `inverse_law` for a fixture
-        // this demo list is also reused by, not a grammar/protocol concern.
         DxfMutation::InsertEntity(insert_entity::InsertEntity { index: 2, entity: DxfEntity::Solid { points: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], layer: "0".into(), unknown_group_codes: vec![] } }),
         DxfMutation::InsertEntity(insert_entity::InsertEntity { index: 2, entity: DxfEntity::Insert { block_name: "B1".into(), position: [1.0, 2.0, 3.0], scale: [1.0, 1.0, 1.0], rotation: 0.0, layer: "0".into(), unknown_group_codes: vec![] } }),
     ]
@@ -414,12 +346,6 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🧪️FixtureCases
-/// 🧪️ Handcrafted `📸️set-snapshot` fixture cases, wired from this tree's own mutations root so
-/// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
-/// directory).
-#[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/⭕️widens/🦀️.rs"]
-mod set_snapshot_widens_the_circle_entity_radius;
 //#endregion 🧪️FixtureCases
 
 #[cfg(test)]

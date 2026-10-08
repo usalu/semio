@@ -2,7 +2,7 @@
 //! collection.
 
 use crate::mutations::{delete_link, LayoutMutation};
-use crate::standards::v1::subsets::any::schema::diff::LayoutLinksDelta;
+use crate::standards::v1::subsets::any::schema::diff::{insertion_order, LayoutLinksDelta};
 use crate::{ImageLink, LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -43,7 +43,7 @@ pub fn diff_create_link(payload: &CreateLink, base: &LayoutSnapshot) -> protocol
     if base.links.iter().any(|link| link.id == payload.link.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A link with id \"{}\" already exists.", payload.link.id), [payload.link.id.clone()]);
     }
-    protocol::MutationOutcome::new(LayoutDiff { links: Some(LayoutLinksDelta { added: vec![payload.link.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(LayoutDiff { links: Some(LayoutLinksDelta { added: vec![payload.link.clone()], reordered: insertion_order(base.links.iter().map(|link| link.id.as_str()), &payload.link.id, payload.index), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🖇️CreateLink
 

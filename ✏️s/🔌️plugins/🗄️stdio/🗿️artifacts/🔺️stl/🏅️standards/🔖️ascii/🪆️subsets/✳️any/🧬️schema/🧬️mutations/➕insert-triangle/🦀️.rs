@@ -1,6 +1,4 @@
-//! ➕️ `insert-triangle` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! ➕️ `insert-triangle` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -17,14 +15,17 @@ impl protocol::MutationKind<StlSnapshot, StlMutation> for InsertTriangle {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "triangle", kind: "insert-triangle", record: "InsertTriangle" };
 
     fn diff(&self, base: &StlSnapshot) -> protocol::MutationOutcome<<StlMutation as Mutation<StlSnapshot>>::Diff> {
-        agg_diff(&StlMutation::InsertTriangle(self.clone()), base)
+        let Self { index, triangle } = self;
+        protocol::MutationOutcome::new(diff::diff_insert_triangle(*index, *triangle))
     }
     fn inverse(&self, base: &StlSnapshot) -> Result<Vec<StlMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&StlMutation::InsertTriangle(self.clone()), base)?
-    
-    })
-}
+        let Self { index, .. } = self;
+        Ok({
+            {
+                vec![StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: (*index).min(base.triangles.len()) })]
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert triangle", "Dreieck einfügen")
     }

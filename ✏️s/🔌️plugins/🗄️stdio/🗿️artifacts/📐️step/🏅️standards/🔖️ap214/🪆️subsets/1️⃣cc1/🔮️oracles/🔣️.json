@@ -62,10 +62,10 @@
       "subsetDirectoryName": "1️⃣cc1",
       "vectors": [],
       "kinds": [
-        "set-snapshot",
         "set-file-schema",
         "set-product-identity",
-        "remove-shape-representation"
+        "remove-shape-representation",
+        "restore-entities"
       ]
     }
   ],
@@ -154,16 +154,17 @@
           ]
         },
         {
-          "id": "set-snapshot",
+          "id": "restore-entities",
           "capability": "step-ap214-cc1-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
-            "applied"
+            "applied",
+            "rejected"
           ],
           "productionDispatch": {
-            "operation": "set-snapshot",
+            "operation": "restore-entities",
             "bridgeVersion": 1,
-            "variant": "SetSnapshot"
+            "variant": "RestoreEntities"
           },
           "oracleRequirements": [
             {
@@ -327,14 +328,14 @@
       "notes": "Replaced #827 PRODUCT's id/name pair (the head of the PRODUCT/PRODUCT_DEFINITION identity chain)."
     },
     {
-      "id": "set-snapshot-applied",
+      "id": "restore-entities-applied",
       "class": "third-party-generated",
       "target": {
         "artifact": "s.stdio.step",
         "standard": "ap214",
         "subset": "cc1"
       },
-      "mutation": "set-snapshot",
+      "mutation": "restore-entities",
       "outcome": "applied",
       "units": {
         "length": "millimetre",
@@ -343,17 +344,17 @@
       "files": [
         {
           "role": "expected-before-step",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.stp",
+          "path": "../🧫️fixtures/🗑️remove-shape-representation-applied/⬅️before.stp",
           "mediaType": "model/step",
           "sha256": "sha256:3cf8d51d396eb6ca6a5f233dd37d126e2d729f884dc602a53075801df801c94a",
           "bytes": 77828
         },
         {
           "role": "expected-after-step",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.stp",
+          "path": "../🧫️fixtures/🗑️remove-shape-representation-applied/➡️after.stp",
           "mediaType": "model/step",
-          "sha256": "sha256:958c99e01072f449db0f16ff151648c66742d404291f9156a805fd4dbbfeb2fb",
-          "bytes": 77837
+          "sha256": "sha256:4380f9f1776c33be3a44a5dc8ccfecf88004756418f434dba233a357c1927ea2",
+          "bytes": 77772
         }
       ],
       "generator": {
@@ -374,7 +375,7 @@
       "comparisonProfile": "semantic-step-v1",
       "reproducible": true,
       "family": "structural",
-      "notes": "Replaced the whole document: header FILE_NAME plus #827 PRODUCT's own name, standing in for a wholesale snapshot replacement (steputils has no bulk-document type; the combined edit is the observable surface)."
+      "notes": "Removed #836 SHAPE_REPRESENTATION outright (bare retain, matching production's RemoveInstance-style semantics — #818 SHAPE_DEFINITION_REPRESENTATION is deliberately left dangling). Written as a restore-entities row of the same entity value, so the independent oracle output for the class-native verb is the same document."
     }
   ],
   "oracleHostPackages": []

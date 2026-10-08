@@ -184,8 +184,6 @@ use crate::standards::v2_0::subsets::any::schema::mutations::unbind_primitive_at
 use crate::standards::v2_0::subsets::any::schema::mutations::unbind_primitive_indices::UnbindPrimitiveIndicesMutation;
 use crate::standards::v2_0::subsets::any::schema::mutations::unbind_primitive_material::UnbindPrimitiveMaterialMutation;
 use crate::standards::v2_0::subsets::any::schema::mutations::unbind_scene_root_node::UnbindSceneRootNodeMutation;
-/// 🧬️ The complete glTF 2.0 semantic mutation vocabulary.
-use crate::standards::v2_0::subsets::any::schema::mutations::set_snapshot::SetSnapshot;
 
 /// 🌉️ The `(kind, params)` row a mutation case states (`delete-camera`, `{"index":0}`) as the [`GltfMutation`] wire form
 /// `{"mutation": "deleteCamera", "payload": {"phase": "apply", "value": params}}`, decoded by the production codec.
@@ -277,38 +275,20 @@ fn proto_optional(value: &DslValue, path: &str) -> FacadeResult<Option<String>> 
 }
 
 fn decode_object(value: &DslValue, optional: fn(&DslValue, &str) -> FacadeResult<Option<String>>, path: &str) -> FacadeResult<ChangeNodeNameMutation> {
-    let root = exact_object(value, &["apply", "restore"], path)?;
-    match (object_field(root, "apply"), object_field(root, "restore")) {
-        (Some(apply), None) => {
-            let apply = exact_object(apply, &["node", "value"], &format!("{path}.apply"))?;
-            let node = match object_field(apply, "node") {
-                Some(node) => json_node(node, &format!("{path}.apply.node"))?,
-                None => return facade_error("node", format!("{path}.apply.node")),
-            };
-            let value = match object_field(apply, "value") {
-                Some(value) => optional(value, &format!("{path}.apply.value"))?,
-                None => return facade_error("nullable", format!("{path}.apply.value")),
-            };
-            Ok(ChangeNodeNameMutation::Apply(GltfChangeNodeNamePayload { node, value }))
-        }
-        (None, Some(restore)) => {
-            let restore = exact_object(restore, &["node", "before", "after"], &format!("{path}.restore"))?;
-            let node = match object_field(restore, "node") {
-                Some(node) => json_node(node, &format!("{path}.restore.node"))?,
-                None => return facade_error("node", format!("{path}.restore.node")),
-            };
-            let before = match object_field(restore, "before") {
-                Some(value) => optional(value, &format!("{path}.restore.before"))?,
-                None => return facade_error("nullable", format!("{path}.restore.before")),
-            };
-            let after = match object_field(restore, "after") {
-                Some(value) => optional(value, &format!("{path}.restore.after"))?,
-                None => return facade_error("nullable", format!("{path}.restore.after")),
-            };
-            Ok(ChangeNodeNameMutation::Restore(GltfChangeNodeNameRestore { node, before, after }))
-        }
-        _ => facade_error("phase", path),
-    }
+    let root = exact_object(value, &["apply"], path)?;
+    let Some(apply) = object_field(root, "apply") else {
+        return facade_error("phase", path);
+    };
+    let apply = exact_object(apply, &["node", "value"], &format!("{path}.apply"))?;
+    let node = match object_field(apply, "node") {
+        Some(node) => json_node(node, &format!("{path}.apply.node"))?,
+        None => return facade_error("node", format!("{path}.apply.node")),
+    };
+    let value = match object_field(apply, "value") {
+        Some(value) => optional(value, &format!("{path}.apply.value"))?,
+        None => return facade_error("nullable", format!("{path}.apply.value")),
+    };
+    Ok(ChangeNodeNameMutation::Apply(GltfChangeNodeNamePayload { node, value }))
 }
 
 pub fn decode_gltf_change_node_name_graphql(value: &DslValue) -> FacadeResult<ChangeNodeNameMutation> {
@@ -337,18 +317,17 @@ fn gltf_bridge_write(snapshot: &GltfSnapshot) -> Result<Vec<u8>, String> {
 
 pub fn gltf_mutated_document(document: &[u8], kind: &str, params_json: &str) -> Result<Vec<u8>, String> {
     let mutation = gltf_row_mutation(kind, params_json)?;
-    let mut snapshot = gltf_bridge_read(document)?;
-    gltf_bridge_apply(kind, "mutation", &mutation, &mut snapshot)?;
-    gltf_bridge_write(&snapshot)
+    let snapshot = gltf_bridge_read(document)?;
+    let mutated = gltf_bridge_apply(kind, "mutation", &mutation, &snapshot)?;
+    gltf_bridge_write(&mutated)
 }
 
 pub fn gltf_inverse_restored_document(document: &[u8], kind: &str, params_json: &str) -> Result<Vec<u8>, String> {
     let mutation = gltf_row_mutation(kind, params_json)?;
     let base = gltf_bridge_read(document)?;
-    let mut restored = base.clone();
-    gltf_bridge_apply(kind, "mutation", &mutation, &mut restored)?;
-    for step in <GltfMutation as protocol::Mutation<GltfSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
-        gltf_bridge_apply(kind, "inverse", &step, &mut restored)?;
+    let mut restored = gltf_bridge_apply(kind, "mutation", &mutation, &base)?;
+    for step in <GltfMutation as protocol::Mutation<GltfSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?.into_iter().rev() {
+        restored = gltf_bridge_apply(kind, "inverse", &step, &restored)?;
     }
     gltf_bridge_write(&restored)
 }

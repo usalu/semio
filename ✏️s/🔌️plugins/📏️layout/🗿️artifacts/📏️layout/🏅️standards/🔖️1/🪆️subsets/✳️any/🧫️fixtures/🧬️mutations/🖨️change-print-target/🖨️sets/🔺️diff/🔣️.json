@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "name": null,
   "grid": null,
@@ -10,8 +9,11 @@
   "parentPages": null,
   "spreads": null,
   "pages": null,
-  "printTarget": "cmyk-coated",
+  "printTarget": {
+    "target": "cmyk-coated"
+  },
   "backgroundDrawing": null,
+  "drawingTexts": [],
   "referencedModel": null,
   "dataFields": null
 }

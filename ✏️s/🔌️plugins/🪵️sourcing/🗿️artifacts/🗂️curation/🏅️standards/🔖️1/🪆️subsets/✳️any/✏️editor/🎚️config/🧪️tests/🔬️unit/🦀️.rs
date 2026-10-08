@@ -22,12 +22,13 @@ fn sample_config() -> SourcingCurationConfig {
 }
 
 /// 🎞️ Every variant's `backwards()` must exactly restore the pre-operation config.
-fn round_trip(config: &SourcingCurationConfig, operation: &SourcingCurationConfigMutation) -> SourcingCurationConfig {
-    let forward = operation.diff(config).into_parts().0;
+async fn round_trip(config: &SourcingCurationConfig, operation: &SourcingCurationConfigMutation) -> SourcingCurationConfig {
+    let forward = protocol::apply_diff(operation.diff(config).diff(), config).expect("the forward diff applies");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(operation, config).await;
     let backwards = operation.inverse(config).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
     for back in &backwards {
-        restored = back.diff(&restored).into_parts().0;
+        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("the inverse diff applies");
     }
     assert_eq!(&restored, config, "backwards() must exactly restore the pre-operation config");
     forward
@@ -36,19 +37,16 @@ fn round_trip(config: &SourcingCurationConfig, operation: &SourcingCurationConfi
 #[semio_framework_async_macros::async_test]
 async fn config_mutations_round_trip_every_variant() {
     let config = sample_config();
-    round_trip(&config, &SourcingCurationConfigMutation::SetFilterQuery { value: "kvh".into() });
-    round_trip(&config, &SourcingCurationConfigMutation::SetFilterModules { module_ids: vec!["windows".into(), "slabs".into()] });
-    round_trip(&config, &SourcingCurationConfigMutation::SetFilterTypology { path: vec!["slabs".into()] });
-    round_trip(&config, &SourcingCurationConfigMutation::SetFilterMinAvailability { value: 12 });
-    round_trip(&config, &SourcingCurationConfigMutation::SetSort { sort: None });
-    round_trip(&config, &SourcingCurationConfigMutation::SetContributions { json: "[]".into() });
-    let snapshot = round_trip(&config, &SourcingCurationConfigMutation::Snapshot { config: SourcingCurationConfig::default() });
-    assert_eq!(snapshot, SourcingCurationConfig::default());
+    round_trip(&config, &SourcingCurationConfigMutation::SetFilterQuery { value: "kvh".into() }).await;
+    round_trip(&config, &SourcingCurationConfigMutation::SetFilterModules { module_ids: vec!["windows".into(), "slabs".into()] }).await;
+    round_trip(&config, &SourcingCurationConfigMutation::SetFilterTypology { path: vec!["slabs".into()] }).await;
+    round_trip(&config, &SourcingCurationConfigMutation::SetFilterMinAvailability { value: 12 }).await;
+    round_trip(&config, &SourcingCurationConfigMutation::SetSort { sort: None }).await;
+    round_trip(&config, &SourcingCurationConfigMutation::SetContributions { json: "[]".into() }).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn config_op_text_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::Snapshot { config: sample_config() });
     store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterQuery { value: "kvh".into() });
     store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterModules { module_ids: vec!["beams".into(), "slabs".into()] });
     store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterTypology { path: vec!["beams".into(), "steel".into()] });

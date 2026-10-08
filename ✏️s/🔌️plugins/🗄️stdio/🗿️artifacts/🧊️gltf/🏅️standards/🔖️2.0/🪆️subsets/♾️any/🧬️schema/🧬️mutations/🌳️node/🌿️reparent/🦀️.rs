@@ -1,4 +1,6 @@
 //! 🧬️ Direct move-node-parent mutation owner: payload, validation, typed diff, inverse, and outcomes.
+use crate::schema::diff::*;
+use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::modules::mutation_support::structure_geometry::{checked_index, checked_position};
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
@@ -33,17 +35,56 @@ pub fn validate(payload: &GltfReparentNodePayload, base: &GltfSnapshot) -> Resul
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfReparentNodePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
-    let mut next = base.clone();
-    for node in &mut next.document.nodes {
-        node.children.retain(|child| *child != payload.child);
+pub fn plan(p: &GltfReparentNodePayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
+    validate(p, base)?;
+    let child = p.child;
+    let mut nodes = Vec::new();
+    for (index, node) in base.document.nodes.iter().enumerate() {
+        let kept: Vec<usize> = node.children.iter().copied().filter(|candidate| *candidate != child).collect();
+        let next = if index == p.parent { with_inserted(&kept, p.position, child) } else { kept };
+        if next != node.children {
+            nodes.push(GltfModified { index, diff: GltfNodeDiff { children: Some(next), ..Default::default() } });
+        }
     }
-    for scene in &mut next.document.scenes {
-        scene.nodes.retain(|node| *node != payload.child);
+    let mut scenes = Vec::new();
+    for (index, scene) in base.document.scenes.iter().enumerate() {
+        if scene.nodes.contains(&child) {
+            scenes.push(GltfModified { index, diff: GltfSceneDiff { nodes: Some(scene.nodes.iter().copied().filter(|candidate| *candidate != child).collect()), ..Default::default() } });
+        }
     }
-    next.document.nodes[payload.parent].children.insert(payload.position, payload.child);
-    Ok(next)
+    Ok(GltfDiff {
+        nodes: (!nodes.is_empty()).then(|| GltfNodesDiff { modified: nodes, ..Default::default() }),
+        scenes: (!scenes.is_empty()).then(|| GltfScenesDiff { modified: scenes, ..Default::default() }),
+        ..Default::default()
+    })
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(p: &GltfReparentNodePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    if validate(p, base).is_err() {
+        return Vec::new();
+    }
+    let child = p.child;
+    let parent_children = &base.document.nodes[p.parent].children;
+    let kept: Vec<usize> = parent_children.iter().copied().filter(|candidate| *candidate != child).collect();
+    let parent_changed = with_inserted(&kept, p.position, child) != *parent_children;
+    let mut rows = Vec::new();
+    if parent_changed {
+        rows.push(super::unbind_node_child::mutation(super::unbind_node_child::GltfUnbindNodeChildPayload { parent: p.parent, child }));
+    }
+    for (parent, node) in base.document.nodes.iter().enumerate() {
+        if let Some(position) = node.children.iter().position(|candidate| *candidate == child) {
+            if parent != p.parent || parent_changed {
+                rows.push(super::bind_node_child::mutation(super::bind_node_child::GltfBindNodeChildPayload { parent, child, position }));
+            }
+        }
+    }
+    for (scene, entry) in base.document.scenes.iter().enumerate() {
+        if let Some(position) = entry.nodes.iter().position(|candidate| *candidate == child) {
+            rows.push(super::bind_scene_root_node::mutation(super::bind_scene_root_node::GltfBindSceneRootNodePayload { scene, node: child, position }));
+        }
+    }
+    rows.reverse();
+    rows
 }
 
 //#region 🧬️DirectMutation
@@ -52,7 +93,11 @@ pub fn apply(payload: &GltfReparentNodePayload, base: &GltfSnapshot) -> Result<G
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum MoveNodeParentMutation {
     Apply(GltfReparentNodePayload),
-    Restore(Box<crate::schema::diff::GltfDiff>),
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutation(payload: GltfReparentNodePayload) -> super::GltfMutation {
+    super::GltfMutation::MoveNodeParent(MoveNodeParentMutation::Apply(payload))
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveNodeParentMutation {
@@ -60,28 +105,18 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for MoveNodeParen
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => match apply(payload, base) {
-                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Self::Apply(payload) => match plan(payload, base) {
+                Ok(diff) => protocol::MutationOutcome::new(diff),
                 Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
-            },
-            Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
-                Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-                Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
             },
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
-            return Vec::new();
+        match self {
+            Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::GltfMutation::MoveNodeParent(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Move Node Parent", "Elternknoten verschieben")

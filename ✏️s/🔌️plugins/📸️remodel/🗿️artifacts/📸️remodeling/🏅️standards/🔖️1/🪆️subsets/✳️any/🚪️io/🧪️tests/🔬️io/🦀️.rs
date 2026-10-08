@@ -8,7 +8,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
 use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-use semio_framework::io::io_mechanism::{Deserializer, Serializer};
+use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
 use semio_framework::io_schema::IoPayload;
 use semio_framework_plugin::mesh_from_kind;
 
@@ -50,7 +50,7 @@ async fn ply_fixture_seeds_four_sparse_points_with_colors() {
 #[semio_framework_async_macros::async_test]
 async fn ply_export_then_import_recovers_the_sparse_cloud() {
     let scene = scene_with_a_sparse_cloud();
-    let exported = export::ply::v1_0::any::RemodelingIntoPly::serialize(&scene, &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("ply export");
+    let exported = export::ply::v1_0::any::RemodelingIntoPly::serialize(&scene, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("ply export");
     let IoPayload::Binary(bytes) = exported.value else { panic!("ply is a binary payload") };
     assert!(bytes.starts_with(b"ply"), "the export must be a real ply file");
     let back = import::ply::v1_0::any::PlyIntoRemodeling::deserialize(&IoPayload::Binary(bytes)).await.expect("ply re-import");
@@ -60,7 +60,7 @@ async fn ply_export_then_import_recovers_the_sparse_cloud() {
 #[semio_framework_async_macros::async_test]
 async fn las_export_then_import_recovers_the_sparse_positions() {
     let scene = scene_with_a_sparse_cloud();
-    let exported = export::las::v1_0::any::RemodelingIntoLas::serialize(&scene, &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("las export");
+    let exported = export::las::v1_0::any::RemodelingIntoLas::serialize(&scene, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("las export");
     let IoPayload::Binary(bytes) = exported.value else { panic!("las is a binary payload") };
     assert_eq!(&bytes[0..4], b"LASF");
     let back = import::las::v1_0::any::LasIntoRemodeling::deserialize(&IoPayload::Binary(bytes)).await.expect("las re-import");
@@ -73,7 +73,7 @@ async fn las_export_then_import_recovers_the_sparse_positions() {
 
 #[semio_framework_async_macros::async_test]
 async fn las_export_refuses_a_scene_with_no_cloud() {
-    let error = export::las::v1_0::any::RemodelingIntoLas::serialize(&default_remodeling_scene(), &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect_err("a cloud-less scene has nothing to write as las");
+    let error = export::las::v1_0::any::RemodelingIntoLas::serialize(&default_remodeling_scene(), &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect_err("a cloud-less scene has nothing to write as las");
     assert!(error.cause.message.contains("results.sparse and results.dense are both absent or empty"), "{}", error.cause.message);
 }
 
@@ -89,7 +89,7 @@ async fn obj_fixture_seeds_a_durable_mesh_that_replays() {
 #[semio_framework_async_macros::async_test]
 async fn obj_export_writes_the_scene_mesh_as_real_obj_text() {
     let scene = default_remodeling_scene();
-    let exported = export::obj::v3_0::any::RemodelingIntoObj::serialize(&scene, &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("obj export of the placeholder box");
+    let exported = export::obj::v3_0::any::RemodelingIntoObj::serialize(&scene, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("obj export of the placeholder box");
     let IoPayload::Text(text) = exported.value else { panic!("obj is a text payload") };
     assert_eq!(text.lines().filter(|line| line.starts_with("v ")).count(), mesh_from_kind("box").vertex_count());
     assert!(text.lines().any(|line| line.starts_with("f ")), "{text}");
@@ -104,7 +104,7 @@ async fn stl_fixture_seeds_a_four_facet_triangle_soup() {
 
 #[semio_framework_async_macros::async_test]
 async fn stl_export_writes_an_ascii_solid() {
-    let exported = export::stl::v_ascii::any::RemodelingIntoStl::serialize(&default_remodeling_scene(), &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("stl export");
+    let exported = export::stl::v_ascii::any::RemodelingIntoStl::serialize(&default_remodeling_scene(), &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("stl export");
     let IoPayload::Text(text) = exported.value else { panic!("ascii stl is a text payload") };
     assert!(text.trim_start().starts_with("solid"), "{text}");
     assert_eq!(text.matches("facet normal").count(), mesh_from_kind("box").triangle_count());
@@ -112,7 +112,7 @@ async fn stl_export_writes_an_ascii_solid() {
 
 #[semio_framework_async_macros::async_test]
 async fn gltf_export_then_import_recovers_the_mesh() {
-    let exported = export::gltf::v2_0::any::RemodelingIntoGltf::serialize(&default_remodeling_scene(), &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("gltf export");
+    let exported = export::gltf::v2_0::any::RemodelingIntoGltf::serialize(&default_remodeling_scene(), &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("gltf export");
     let IoPayload::Binary(bytes) = exported.value else { panic!("glb is a binary payload") };
     assert!(bytes.starts_with(b"glTF"), "the export must be a real glb container");
     let back = import::gltf::v2_0::any::GltfIntoRemodeling::deserialize(&IoPayload::Binary(bytes)).await.expect("glb re-import");
@@ -135,14 +135,14 @@ async fn png_fixture_becomes_a_single_frame_image_sequence() {
 
 #[semio_framework_async_macros::async_test]
 async fn png_export_refuses_a_scene_with_no_raster_or_texture() {
-    let error = export::png::v1_2::any::RemodelingIntoPng::serialize(&default_remodeling_scene(), &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect_err("a raster-less scene has nothing to write as png");
+    let error = export::png::v1_2::any::RemodelingIntoPng::serialize(&default_remodeling_scene(), &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect_err("a raster-less scene has nothing to write as png");
     assert!(error.cause.message.contains("no raster or texture asset is available"), "{}", error.cause.message);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn json_round_trips_the_scene_exactly() {
     let scene = scene_with_a_sparse_cloud();
-    let exported = export::json::v_rfc8259::any::RemodelingIntoJson::serialize(&scene, &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("json export");
+    let exported = export::json::v_rfc8259::any::RemodelingIntoJson::serialize(&scene, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("json export");
     let IoPayload::Text(text) = exported.value else { panic!("json is a text payload") };
     let back = import::json::v_rfc8259::any::JsonIntoRemodeling::deserialize(&IoPayload::Text(text)).await.expect("json import");
     assert_eq!(back.value, scene);
@@ -151,7 +151,7 @@ async fn json_round_trips_the_scene_exactly() {
 #[semio_framework_async_macros::async_test]
 async fn txt_round_trips_the_scene_exactly_through_this_subsets_own_dsl() {
     let scene = scene_with_a_sparse_cloud();
-    let exported = export::txt::v_utf_8::any::RemodelingIntoTxt::serialize(&scene, &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl export");
+    let exported = export::txt::v_utf_8::any::RemodelingIntoTxt::serialize(&scene, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl export");
     let IoPayload::Text(text) = exported.value else { panic!("txt is a text payload") };
     let back = import::txt::v_utf_8::any::TxtIntoRemodeling::deserialize(&IoPayload::Text(text)).await.expect("dsl import");
     assert_eq!(back.value, scene);
@@ -215,7 +215,7 @@ async fn png_export_round_trips_a_stored_texture_asset() {
     let create = crate::mutations::create_asset("tex-1".into(), asset);
     let outcome = <crate::RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(&create, &scene);
     assert!(!outcome.messages().iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)), "create-asset tex-1 rejected: {:?}", outcome.messages());
-    let mut scene = protocol::MutationDiff::apply(outcome.diff(), &scene).expect("create-asset tex-1 applies");
+    let mut scene = protocol::apply_diff(outcome.diff(), &scene).expect("create-asset tex-1 applies");
     scene.results.mesh.texture_asset_id = Some("tex-1".into());
     let result = remodeling_png_export(&scene).expect("png export");
     assert_eq!(result.mime_type, "image/png");

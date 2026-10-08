@@ -19,13 +19,14 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for RemoveLang {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        match support::catalog_entry(base, "Lang") {
-            Some(PdfObject::Str(bytes)) => vec![PdfUaMutation::SetLang(SetLang { lang: String::from_utf8_lossy(bytes).into_owned() })],
-            Some(PdfObject::Text(lang)) => vec![PdfUaMutation::SetLang(SetLang { lang: lang.clone() })],
-            _ => Vec::new(),
-        }
-    })())
+        Ok({
+            let entry_index = support::catalog_entry_position(base, "Lang");
+            match support::catalog_entry(base, "Lang") {
+                Some(PdfObject::Str(bytes)) => vec![PdfUaMutation::SetLang(SetLang { lang: String::from_utf8_lossy(bytes).into_owned(), entry_index })],
+                Some(PdfObject::Text(lang)) => vec![PdfUaMutation::SetLang(SetLang { lang: lang.clone(), entry_index })],
+                _ => Vec::new(),
+            }
+        })
     }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

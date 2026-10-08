@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../../../../.."
 name = "semio-framework-ui-styling"
 version = "0.1.0"
 edition = "2021"

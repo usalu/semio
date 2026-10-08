@@ -9,6 +9,6 @@ pub fn diff(payload: &super::CreateTexture, base: &SemioMeshSnapshot) -> protoco
     if crate::standards::v1::subsets::mesh::schema::diff::texture_at(base, &payload.texture.id).is_some() {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Texture \"{}\" already exists.", payload.texture.id), [payload.texture.id.clone()]);
     }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::mesh::schema::diff::diff_add_texture(base, payload.texture.clone()))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::mesh::schema::diff::diff_add_texture(base, payload.texture.clone(), payload.at))
 }
 //#endregion 🔖️Diff

@@ -1,11 +1,8 @@
 /** 🧬️ StepMutation union — discriminated on `mutation`, mirroring the Rust `StepMutation` enum. */
 
-import type { StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepSnapshot, StepValue } from '../📸️snapshot/🟦️.ts';
-import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
+import type { StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepValue } from '../📸️snapshot/🟦️.ts';
 
 export type StepMutation =
-  | { mutation: 'setSnapshot'; snapshot: StepSnapshot }
-  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
   | { mutation: 'setFileDescription'; fileDescription: StepFileDescription }
   | { mutation: 'setFileName'; fileName: StepFileName }
   | { mutation: 'setFileSchema'; fileSchema: StepFileSchema }

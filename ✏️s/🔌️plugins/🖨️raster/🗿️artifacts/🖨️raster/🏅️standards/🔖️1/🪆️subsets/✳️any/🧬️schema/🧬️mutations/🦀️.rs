@@ -74,7 +74,7 @@ pub fn retire_raster_mutation(mutation: RasterMutation) {
 /// the WASM bridge) — `diff().apply()` in one call, now delegating to the derive's real
 /// `Mutation`/`MutationDiff` impls instead of a hand-written match.
 pub fn apply_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> protocol::MutationApplyResult<RasterSnapshot> {
-    protocol::MutationDiff::apply(protocol::Mutation::diff(mutation, snapshot).diff(), snapshot)
+    protocol::apply_diff(protocol::Mutation::diff(mutation, snapshot).diff(), snapshot)
 }
 
 /// ⚡️ Convenience wrapper mirroring `apply_raster_mutation` — forwards to the derive's real
@@ -94,6 +94,9 @@ pub type RasterStore = store::ArtifactStore<RasterSnapshot, RasterMutation>;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "🧪️tests/⚖️sum-law/🦀️.rs"]
+pub(crate) mod sum_law;
 #[cfg(test)]
 #[path = "🎭️change-layer-mask/🧪️tests/🦀️.rs"]
 mod mask_tests;
@@ -116,12 +119,12 @@ pub(crate) fn retire_bridge_mutations(mutations: Vec<RasterMutation>) {
 /// no-op kind is a RESULT this bridge reports, never an error it swallows.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn bridge_step(snapshot: &RasterSnapshot, mutation: &RasterMutation) -> Result<(RasterSnapshot, Vec<String>), String> {
-    use protocol::{Mutation, MutationDiff};
+    use protocol::Mutation;
     // 🧹️ The outcome's diff is an owner too (a whole replacement artifact, or the layers an
     // insertion carries), so it is cold-retired here rather than dropped.
     let (diff, raised) = <RasterMutation as Mutation<RasterSnapshot>>::diff(mutation, snapshot).into_parts();
     let messages: Vec<String> = raised.iter().map(|message| message.code.0.clone()).collect();
-    let applied = MutationDiff::apply(&diff, snapshot);
+    let applied = protocol::apply_diff(&diff, snapshot);
     <crate::diff::RasterDiff as MutationDiff<RasterSnapshot>>::retire_cold(diff);
     match applied {
         Ok(next) => Ok((next, messages)),

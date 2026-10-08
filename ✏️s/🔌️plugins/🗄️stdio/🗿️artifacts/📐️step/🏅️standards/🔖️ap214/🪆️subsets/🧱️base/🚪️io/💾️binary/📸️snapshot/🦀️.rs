@@ -41,31 +41,5 @@ use crate::schema::snapshot::StepFileSchema;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::schema::snapshot::StepValue;
 
-/// 📸️ Full `StepSnapshot` binary codec — needed by `SetSnapshot`'s `OpBinary` (mutations file
-/// imports this `pub(crate)`), never by `StepDiff` itself (no `snapshot: Option<StepSnapshot>`
-/// full-replace slot exists on the diff), same split [`enc_step_snapshot`]/[`dec_step_snapshot`]
-/// (the TEXT twin) uses.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_step_snapshot_bin(s: &StepSnapshot, out: &mut Vec<u8>) {
-    write_str_bin(out, &s.schema);
-    enc_file_description_bin(&s.header.file_description, out);
-    enc_file_name_bin(&s.header.file_name, out);
-    enc_file_schema_bin(&s.header.file_schema, out);
-    store::pack_rt::write_varint_u64(out, s.entities.len() as u64);
-    for e in &s.entities {
-        enc_entity_bin(e, out);
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_step_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StepSnapshot, String> {
-    let schema = read_str_bin(reader)?;
-    let file_description = dec_file_description_bin(reader)?;
-    let file_name = dec_file_name_bin(reader)?;
-    let file_schema = dec_file_schema_bin(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let entities = (0..count).map(|_| dec_entity_bin(reader)).collect::<Result<Vec<_>, String>>()?;
-    Ok(StepSnapshot { schema, header: crate::schema::snapshot::StepHeader { file_description, file_name, file_schema }, entities })
-}
 }
 pub use diff_codec::*;

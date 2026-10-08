@@ -6,16 +6,9 @@
 //! the whole point: a frame is a STRONG entity, diffed per field, not replaced wholesale.
 use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
 use crate::standards::v1::subsets::image::schema::mutations::set_frame_delay;
-use crate::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
+use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
-
-/// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
-/// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/
-/// `mutation.target-missing`/`mutation.invariant` decision for `set-frame-delay` lives in that file, so the
-/// fixture asserts against it rather than against the guardless enum arm.
-#[path = "../../🔺️diff/🦀️.rs"]
-mod leaf_diff;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⏱️set-frame-delay/⏳️slows/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⏱️set-frame-delay/⏳️slows/📸️snapshot/➡️after/🔣️.json");
@@ -33,21 +26,20 @@ fn mutation() -> SemioImageMutation {
     semio_framework_pack_json::from_json_str(MUTATION,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-frame-delay mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index, delay_ms }) = mutation() else { panic!("set-frame-delay/slows-the-second-frame-down: the committed mutation must be the set-frame-delay variant") };
-    leaf_diff::diff(&before(), index, delay_ms)
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ Only the second frame's delay changes; its pixels and the first frame are untouched.
 #[semio_framework_async_macros::async_test]
 async fn changes_only_the_second_frames_delay() {
     let base = before();
-    let produced = leaf_outcome().diff().apply(&base).expect("set-frame-delay applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(leaf_outcome().diff(), &base).expect("set-frame-delay applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "set-frame-delay/slows-the-second-frame-down: applied state differs from the committed after-snapshot");
     assert_eq!(produced.frames[1].delay_ms, 200, "the addressed frame's delay must become the payload's value");
     assert_eq!(produced.frames[1].rgba8, base.frames[1].rgba8, "a delay change must not rewrite a single pixel");
     assert_eq!(produced.frames[0], base.frames[0], "the untargeted frame must be byte-identical");
     let mut in_place = before();
-    apply_semio_image_mutation(&mut in_place, &mutation());
+    in_place = crate::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -56,12 +48,13 @@ async fn changes_only_the_second_frames_delay() {
 async fn the_undo_set_frame_delay_restores_the_captured_delay() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index: 1, delay_ms: base.frames[1].delay_ms })], "the undo must carry BASE's own delay for that frame");
     let mut current = before();
-    apply_semio_image_mutation(&mut current, &mutation);
-    for step in &undo {
-        apply_semio_image_mutation(&mut current, step);
+    current = crate::applied(&current, &mutation).0;
+    for step in undo.iter().rev() {
+        current = crate::applied(&current, step).0;
     }
     assert_eq!(current, base, "set-frame-delay/slows-the-second-frame-down: the undo did not restore the before-snapshot");
 }
@@ -116,6 +109,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-frame-delay diff decodes");
-    let produced = decoded.apply(&before()).expect("committed set-frame-delay diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed set-frame-delay diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-frame-delay/slows-the-second-frame-down: committed diff did not carry before to after");
 }

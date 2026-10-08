@@ -31,9 +31,10 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
+    use semio_s_artifact_stdio_semio::apply_diff;
     use semio_repo_test_host::law::carrier_is_exact;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::mutations::{apply_semio_video_mutation, inverse_semio_video_mutation, set_snapshot, SemioVideoMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::mutations::{diff_semio_video_mutation, inverse_semio_video_mutation, SemioVideoMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::video::io::text::mutations::{decode_semio_video_mutation_json};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::video::io::text::snapshot::{print_semio_video_dsl};
@@ -118,13 +119,7 @@ mod subject {
         Ok(SemioVideoSnapshot { schema: text(value, "schema")?, streams: list(value, "streams")?.iter().map(stream_of).collect::<Result<Vec<_>, String>>()? })
     }
 
-    /// 🦠️ A committed wire value (`{"mutation": "<camelCaseVariant>", …}`), decoded through this subset's own
-    /// production JSON bridge. `noMutation` is the `no-mutation` baselines' scenario sentinel — the dropped `NoMutation`
-    /// verb's spelling, `no` not being an approved verb — and maps to the identity `set-snapshot(base)`.
     fn mutation_of(wire: &Json, base: &SemioVideoSnapshot) -> Result<SemioVideoMutation, String> {
-        if matches!(wire.get("mutation"), Some(Json::String(tag)) if tag.as_str() == "noMutation") {
-            return Ok(SemioVideoMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }));
-        }
         decode_semio_video_mutation_json(&wire.to_string())
     }
     //#endregion 🔖️FixtureDecoding
@@ -201,16 +196,15 @@ mod subject {
         parse_semio_video_dsl(&source)
     }
 
-    /// 🦠️ The verb the scenario declares, read from the feature's own doc string. `base` is only
-    /// consulted for the `noMutation` sentinel's identity mapping.
     fn declared(ctx: &Context, base: &SemioVideoSnapshot) -> Result<SemioVideoMutation, String> {
         mutation_of(&ctx.doc_json()?, base)
     }
 
     fn run(current: &mut SemioVideoSnapshot, mutation: &SemioVideoMutation, what: &str) -> Result<(), String> {
-        let applied = apply_semio_video_mutation(current, mutation);
+        let applied = diff_semio_video_mutation(mutation, current);
         let refusals = semio_mutation_refusals(&applied);
         if refusals.is_empty() {
+            *current = apply_diff(applied.diff(), current).map_err(|error| format!("the diff could not be applied: {error:?}"))?;
             return Ok(());
         }
         Err(format!("{what}: mutation rejected: {refusals:?}"))
@@ -236,7 +230,7 @@ mod subject {
         let mut current = base.clone();
         run(&mut current, &mutation, ctx.scenario.id.as_str())?;
         let mutated = snapshot_json(&current);
-        for step in &inverse_semio_video_mutation(&mutation, &base).expect("valid retained mutation inverse fixture") {
+        for step in inverse_semio_video_mutation(&mutation, &base).expect("valid retained mutation inverse fixture").iter().rev() {
             run(&mut current, step, ctx.scenario.id.as_str())?;
         }
         if current != base {
@@ -289,7 +283,7 @@ mod subject {
 
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let (clip, clip_report) = carrier_once(ctx, CLIP_DSL, "the committed clip")?;
-        let (declared, _mutation, _after) = vector_of(ctx, "no-mutation")?;
+        let (declared, _mutation, _after) = vector_of(ctx, "insert-sample")?;
         if clip != declared {
             return Err(disagreement("identity-round-trip: the real committed clip artifact does not decode to the before-snapshot every specification vector starts from", &clip, &declared));
         }
@@ -317,8 +311,8 @@ pub fn adapter() -> Adapter {
     #[cfg(feature = "sut")]
     {
         built = built
-            .subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate)
-            .subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse)
+            .subject("mutate", subject::mutate)
+            .subject("inverse", subject::inverse)
             .subject("spec-vector", subject::spec_vector);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }

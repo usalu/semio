@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::kit::schema::snapshot::{demo_kit_snapshot, SemioKitDesign, SemioKitPiece};
+use crate::standards::v1::subsets::kit::schema::snapshot::{demo_kit_snapshot, SemioKitDesign, SemioKitPiece, SemioKitType};
 use protocol::{Mutation, MutationDiff, SemanticMutation};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -30,11 +30,11 @@ fn assert_create_rejected(base: &SemioKitSnapshot, mutation: &SemioKitMutation) 
 /// (📌️important.md Trap #1).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(base: &SemioKitSnapshot, operation: &SemioKitMutation) -> SemioKitSnapshot {
-    let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
+    let forward = protocol::apply_diff(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
     let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
-    for back in &backwards {
-        restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
+    for back in backwards.iter().rev() {
+        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
     }
     // 🔧️ `objects`/`models`/`representations` are documented as id/role-keyed SETS with no
     // user-meaningful display order (same precedent `🕸️graph`'s W2fix established for
@@ -66,7 +66,7 @@ fn round_trip(base: &SemioKitSnapshot, operation: &SemioKitMutation) -> SemioKit
 #[semio_framework_async_macros::async_test]
 async fn create_delete_object_round_trips() {
     let base = fixture();
-    let create = SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "obj-99".into(), target: ref_of("object", "obj-99") });
+    let create = SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "obj-99".into(), target: ref_of("object", "obj-99"), at: None });
     let after = round_trip(&base, &create);
     assert!(after.objects.iter().any(|c| c.child_id == "obj-99"));
 
@@ -80,13 +80,13 @@ async fn delete_object_of_an_absent_id_has_an_empty_inverse() {
     let base = fixture();
     let delete = SemioKitMutation::DeleteObject(delete_object::DeleteObject { child_id: "does-not-exist".into() });
     assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
+    assert_eq!(protocol::apply_diff(delete.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_delete_model_round_trips() {
     let base = fixture();
-    let create = SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-99".into(), target: ref_of("model", "model-99") });
+    let create = SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-99".into(), target: ref_of("model", "model-99"), at: None });
     let after = round_trip(&base, &create);
     assert!(after.models.iter().any(|c| c.child_id == "model-99"));
 
@@ -116,12 +116,12 @@ async fn create_delete_properties_round_trips() {
 async fn child_creates_reject_every_foreign_dialect_without_an_inverse() {
     let base = SemioKitSnapshot::default();
     for mutation in [
-        SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "object-1".into(), target: ref_with("other", "v1", "object", "object-1") }),
-        SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "object-1".into(), target: ref_with("s.stdio.semio", "v2", "object", "object-1") }),
-        SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "object-1".into(), target: ref_of("model", "object-1") }),
-        SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-1".into(), target: ref_with("other", "v1", "model", "model-1") }),
-        SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-1".into(), target: ref_with("s.stdio.semio", "v2", "model", "model-1") }),
-        SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-1".into(), target: ref_of("object", "model-1") }),
+        SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "object-1".into(), target: ref_with("other", "v1", "object", "object-1"), at: None }),
+        SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "object-1".into(), target: ref_with("s.stdio.semio", "v2", "object", "object-1"), at: None }),
+        SemioKitMutation::CreateObject(create_object::CreateObject { child_id: "object-1".into(), target: ref_of("model", "object-1"), at: None }),
+        SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-1".into(), target: ref_with("other", "v1", "model", "model-1"), at: None }),
+        SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-1".into(), target: ref_with("s.stdio.semio", "v2", "model", "model-1"), at: None }),
+        SemioKitMutation::CreateModel(create_model::CreateModel { child_id: "model-1".into(), target: ref_of("object", "model-1"), at: None }),
         SemioKitMutation::CreateProperties(create_properties::CreateProperties { child_id: "value-1".into(), target: ref_with("other", "v1", "value", "value-1") }),
         SemioKitMutation::CreateProperties(create_properties::CreateProperties { child_id: "value-1".into(), target: ref_with("s.stdio.semio", "v2", "value", "value-1") }),
         SemioKitMutation::CreateProperties(create_properties::CreateProperties { child_id: "value-1".into(), target: ref_of("object", "value-1") }),
@@ -133,7 +133,7 @@ async fn child_creates_reject_every_foreign_dialect_without_an_inverse() {
 #[semio_framework_async_macros::async_test]
 async fn bind_unbind_representation_round_trips() {
     let base = fixture();
-    let bind = SemioKitMutation::BindRepresentation(bind_representation::BindRepresentation { target: ref_of("mesh", "extra-repr"), pin: store::LinkPin::Head, role: "chair".into() });
+    let bind = SemioKitMutation::BindRepresentation(bind_representation::BindRepresentation { target: ref_of("mesh", "extra-repr"), pin: store::LinkPin::Head, role: "chair".into(), at: None });
     let after = round_trip(&base, &bind);
     assert_eq!(after.representations.len(), base.representations.len() + 1);
 
@@ -147,7 +147,7 @@ async fn unbind_representation_of_an_out_of_range_index_has_an_empty_inverse() {
     let base = fixture();
     let unbind = SemioKitMutation::UnbindRepresentation(unbind_representation::UnbindRepresentation { index: 99 });
     assert!(unbind.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
-    assert_eq!(unbind.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base);
+    assert_eq!(protocol::apply_diff(unbind.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -161,7 +161,7 @@ async fn change_representation_pin_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn add_remove_rename_type_round_trips() {
     let base = fixture();
-    let add = SemioKitMutation::AddType(add_type::AddType { id: "table".into(), name: "Table".into(), category: "furniture".into() });
+    let add = SemioKitMutation::AddType(add_type::AddType { id: "table".into(), name: "Table".into(), category: "furniture".into(), at: None });
     let after = round_trip(&base, &add);
     assert!(after.types.iter().any(|t| t.id == "table"));
 
@@ -177,7 +177,7 @@ async fn add_remove_rename_type_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn add_remove_edit_design_round_trips() {
     let base = fixture();
-    let add = SemioKitMutation::AddDesign(add_design::AddDesign { id: "office".into(), name: "Office".into() });
+    let add = SemioKitMutation::AddDesign(add_design::AddDesign { id: "office".into(), name: "Office".into(), at: None });
     let after = round_trip(&base, &add);
     assert!(after.designs.iter().any(|d| d.id == "office"));
 
@@ -224,4 +224,39 @@ async fn child_creates_preserve_distinct_local_alias_and_target_identity() {
   SemioKitMutation::CreateModel(create_model::CreateModel{child_id:"local-model".into(),target:ref_of("model","remote-model")}),
   SemioKitMutation::CreateProperties(create_properties::CreateProperties{child_id:"local-value".into(),target:ref_of("value","remote-value")}),
  ] { let after=round_trip(&base,&mutation);let child=match mutation{SemioKitMutation::CreateObject(_)=>(&after.objects[0].child_id,&after.objects[0].target.artifact_id),SemioKitMutation::CreateModel(_)=>(&after.models[0].child_id,&after.models[0].target.artifact_id),SemioKitMutation::CreateProperties(_)=>{let value=after.properties.as_ref().unwrap();(&value.child_id,&value.target.artifact_id)},_=>unreachable!()};assert_ne!(child.0,child.1); }
+}
+
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn three_row_fixture() -> SemioKitSnapshot {
+    let mut base = fixture();
+    for n in 2..=3 {
+        base.types.push(SemioKitType { id: format!("type-{n}"), name: format!("Type {n}"), category: "furniture".into() });
+        base.designs.push(SemioKitDesign { id: format!("design-{n}"), name: format!("Design {n}"), pieces: Vec::new(), connections: Vec::new() });
+        base.objects.push(store::ArtifactChild::new(format!("obj-{n}"), ref_of("object", &format!("obj-{n}"))));
+        base.models.push(store::ArtifactChild::new(format!("model-{n}"), ref_of("model", &format!("model-{n}"))));
+        base.representations.push(store::ArtifactLink { target: ref_of("mesh", &format!("repr-{n}")), pin: store::LinkPin::Head, role: "chair".into() });
+    }
+    base
+}
+
+/// 🎯️ Position law: removing ANY type, design, object, model or representation (first, middle, last) is undone at its original index.
+#[semio_framework_async_macros::async_test]
+async fn removals_invert_at_every_position() {
+    let base = three_row_fixture();
+    assert!(base.types.len() >= 3 && base.designs.len() >= 3 && base.objects.len() >= 3 && base.models.len() >= 3 && base.representations.len() >= 3, "the law needs a middle row everywhere");
+    for item in base.types.iter().filter(|item| item.id != "chair") {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioKitMutation::RemoveType(remove_type::RemoveType { id: item.id.clone() }), &base).await;
+    }
+    for item in &base.designs {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioKitMutation::RemoveDesign(remove_design::RemoveDesign { id: item.id.clone() }), &base).await;
+    }
+    for item in &base.objects {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioKitMutation::DeleteObject(delete_object::DeleteObject { child_id: item.child_id.clone() }), &base).await;
+    }
+    for item in &base.models {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioKitMutation::DeleteModel(delete_model::DeleteModel { child_id: item.child_id.clone() }), &base).await;
+    }
+    for index in 0..base.representations.len() {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioKitMutation::UnbindRepresentation(unbind_representation::UnbindRepresentation { index }), &base).await;
+    }
 }

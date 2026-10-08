@@ -15,19 +15,19 @@ start op
 # change-texture-mime, replace-texture-bytes, move-vertex.
 op = create-mesh | delete-mesh | create-primitive | delete-primitive | set-primitive-topology | replace-primitive-geometry | set-primitive-material | create-material | delete-material | change-material-base-color | change-material-metallic | change-material-roughness | create-texture | delete-texture | change-texture-mime | replace-texture-bytes | move-vertex
 
-create-mesh = "create-mesh" "mesh" "=" mesh
+create-mesh = "create-mesh" "mesh" "=" mesh ("at" "=" INT)?
 delete-mesh = "delete-mesh" "id" "=" hex
-create-primitive = "create-primitive" "mesh-id" "=" hex "primitive" "=" primitive
+create-primitive = "create-primitive" "mesh-id" "=" hex "primitive" "=" primitive ("at" "=" INT)?
 delete-primitive = "delete-primitive" "mesh-id" "=" hex "primitive-id" "=" hex
 set-primitive-topology = "set-primitive-topology" "mesh-id" "=" hex "primitive-id" "=" hex "topology" "=" topology
 replace-primitive-geometry = "replace-primitive-geometry" "mesh-id" "=" hex "primitive-id" "=" hex "positions" "=" "[" point3-list? "]" "normals" "=" "[" point3-list? "]" "uvs" "=" "[" uv-list? "]" "colors" "=" "[" rgba-list? "]" "indices" "=" "[" index-list? "]"
 set-primitive-material = "set-primitive-material" "mesh-id" "=" hex "primitive-id" "=" hex "material-id" "=" option-hex
-create-material = "create-material" "material" "=" material
+create-material = "create-material" "material" "=" material ("at" "=" INT)?
 delete-material = "delete-material" "id" "=" hex
 change-material-base-color = "change-material-base-color" "id" "=" hex "new-base-color" "=" rgba
 change-material-metallic = "change-material-metallic" "id" "=" hex "new-metallic" "=" number
 change-material-roughness = "change-material-roughness" "id" "=" hex "new-roughness" "=" number
-create-texture = "create-texture" "texture" "=" texture
+create-texture = "create-texture" "texture" "=" texture ("at" "=" INT)?
 delete-texture = "delete-texture" "id" "=" hex
 change-texture-mime = "change-texture-mime" "id" "=" hex "new-mime" "=" hex
 replace-texture-bytes = "replace-texture-bytes" "id" "=" hex "new-bytes" "=" hex

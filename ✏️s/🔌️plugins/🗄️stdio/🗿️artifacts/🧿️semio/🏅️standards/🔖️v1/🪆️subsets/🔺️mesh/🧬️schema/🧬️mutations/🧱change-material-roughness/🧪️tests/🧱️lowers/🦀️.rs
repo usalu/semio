@@ -31,7 +31,7 @@ fn mutation() -> SemioMeshMutation {
 #[semio_framework_async_macros::async_test]
 async fn lowers_roughness_without_touching_metallic() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("change-material-roughness applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("change-material-roughness applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "change-material-roughness/lowers-the-roughness-factor-to-a-quarter: applied state differs from the committed after-snapshot");
     assert_eq!(produced.materials[0].roughness, 0.25, "the roughness factor must take the payload's absolute value");
     assert_eq!(produced.materials[0].metallic, base.materials[0].metallic, "the sibling metallic factor is a SEPARATE triad and must not move");
@@ -43,13 +43,14 @@ async fn lowers_roughness_without_touching_metallic() {
 async fn the_undo_change_material_roughness_restores_the_original_factor() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "change-material-roughness undoes as exactly one change-material-roughness");
     let SemioMeshMutation::ChangeMaterialRoughness(restore) = &undo[0] else { panic!("change-material-roughness must undo as itself") };
     assert_eq!(restore.new_roughness, base.materials[0].roughness, "the undo must recapture BASE's own roughness factor");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward change-material-roughness applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo change-material-roughness applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward change-material-roughness applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo change-material-roughness applies");
     }
     assert_eq!(current, base, "change-material-roughness/lowers-the-roughness-factor-to-a-quarter: the undo did not restore the before-snapshot");
 }
@@ -106,6 +107,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-material-roughness diff decodes");
-    let produced = decoded.apply(&before()).expect("committed change-material-roughness diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed change-material-roughness diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-material-roughness/lowers-the-roughness-factor-to-a-quarter: committed diff did not carry before to after");
 }

@@ -1,0 +1,37 @@
+{
+  "created": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧫️fixtures/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🦀️.rs"
+  ],
+  "updated": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+    "📜️script.ts",
+    "📋️project.json",
+    "package.json",
+    ".vscode/launch.json",
+    ".vscode/🧩️launch.seed.jsonc",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/build.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️builder/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📽️projection/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🎚️config/🟦️.ts"
+  ],
+  "bounds": {
+    "nativeProducer6": "passed",
+    "storeSource": "41 passed plus 3 helpers",
+    "runtimeGuard": "74 registered tests passed / 916 assertions; complete source report 223 graphs / 1584 identities refuses 818 unresolved without compiled guest evidence",
+    "ui": "2 source tests passed; native bodies unchanged",
+    "readerGhosts": "Manifest3 / temporal4 / Directory37 actual checks passed",
+    "durableCargoCurrentness": "actual no-optin foreign-cwd Cargo producer plus strict corrected 3-unit consumer; 3 private laws / 46 assertions; historical receipts are not publication proof",
+    "sourceCapability": "SPR capability/dev-only manifests ledger and MD are separate; no normal/default mutation-testing activation"
+  }
+}

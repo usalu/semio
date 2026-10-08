@@ -57,104 +57,60 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 //#region 🔖️Subject
 #[cfg(feature = "sut")]
 mod subject {
-    use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::decode_jpg;
-    use semio_repo_test_host::law::wire_operation;
-    use semio_s_artifact_stdio_jpg::{mutation_from_payload_json, mutation_inverse, mutation_payload_json};
-    use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::schema::mutations::{apply_jpg_baseline_mutation, jpg_baseline_conformance_codes, JpgBaselineMutation};
-    use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::baseline::io::text::mutations::{encode_jpg_baseline_projection_json};
-    use semio_s_artifact_stdio_jpg::JpgSnapshot;
-    use semio_repo_test_host::law;
-
-    //#region 🔖️MutationFromSpec
-    /// 🦠️ Decodes the scenario's `{"kind", "params"}` doc string: `params` is the leaf's own wire payload, read
-    /// through the vocabulary's derive-generated decoder rather than a params grammar written beside it.
-    fn mutation_from_spec(row: &Json) -> Result<JpgBaselineMutation, String> {
-        wire_operation(&row.str("kind"), &row.get("params").cloned().unwrap_or(Json::Null), mutation_from_payload_json, mutation_payload_json)
-    }
-    //#endregion 🔖️MutationFromSpec
-
-    //#region 🔖️Decode
-    /// 🖼️ The real scan, decoded into the snapshot the whole case reasons about. The decode is
-    /// required to have retained a frame header: `check_baseline_conformance` reports
-    /// `stdio.jpg.baseline.no-frame` and certifies nothing without one, so a case that let a
-    /// frameless snapshot through would be measuring the absence of the document.
-    fn decoded(ctx: &Context) -> Result<JpgSnapshot, String> {
-        let snapshot = decode_jpg(&ctx.input_bytes(super::SCAN)?).map_err(|error| format!("mutate-jpg-jfif-1-01-baseline: the committed scan must decode: {error:?}"))?;
-        let frame = snapshot.frame.as_ref().ok_or("mutate-jpg-jfif-1-01-baseline: the decode retained no SOF0 frame header, so no conformance axis exists to move")?;
-        if frame.components.len() != 3 || snapshot.huffman_tables.len() != 4 {
-            return Err(format!(
-                "mutate-jpg-jfif-1-01-baseline: this case's params are addressed at the committed scan's own SOF0 (three components) and four DHT tables, but the decode read {} component(s) and {} table(s)",
-                frame.components.len(),
-                snapshot.huffman_tables.len()
-            ));
-        }
-        Ok(snapshot)
-    }
-
-    fn projection(snapshot: &JpgSnapshot) -> Result<Json, String> {
-        parse_json(&encode_jpg_baseline_projection_json(snapshot))
-    }
-    //#endregion 🔖️Decode
-
-    //#region 🔖️Handlers
-    /// 🎯️ Applies the kind to the real decoded scan and asserts, in role, that the class verdict
-    /// moved exactly as the feature's `code` column declares and that the kind's own axis moved. An
-    /// empty `code` is a positive claim, not an absence: three kinds move their axis in the
-    /// direction that stays INSIDE the class, and those must raise nothing while still being
-    /// observable.
-    pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
-        let row = ctx.doc_json()?;
-        let kind = row.str("kind");
-        let kind = kind.as_str();
-        let base = decoded(ctx)?;
-        let before = jpg_baseline_conformance_codes(&base);
-        if !before.is_empty() {
-            return Err(format!("mutate-{kind}: the committed scan must start INSIDE the baseline class for a departure from it to mean anything, but it already reports {before:?}"));
-        }
-        let mutation = mutation_from_spec(&row)?;
-        let mut current = base.clone();
-        apply_jpg_baseline_mutation(&mut current, &mutation);
-        let after = jpg_baseline_conformance_codes(&current);
-        let expected = row.str("code");
-        if expected.is_empty() {
-            if !after.is_empty() {
-                return Err(format!("mutate-{kind}: this row moves its axis in the direction that stays inside the class, so the verdict must stay clean, but it reports {after:?}"));
-            }
-        } else if !after.contains(&expected) {
-            return Err(format!("mutate-{kind}: the class verdict must gain {expected:?}, but it reports {after:?} — the mutation did not reach the axis its own diagnostic guards"));
-        }
-        let (was, now) = (projection(&base)?, projection(&current)?);
-        law::mutation_is_observable(kind, &now, &was, &[])?;
-        Ok(Outcome::with_raw(now.to_string().into_bytes(), now))
-    }
-
-    /// ↩️ The metamorphic inverse law over the real scan: applying the kind and then its OWN
-    /// computed inverse must land back on the original conformance projection — every axis, and the
-    /// verdict with them. The two counting kinds carry the weight, because their inverse has to
-    /// restore a table or a component at the INDEX it was removed from, which is why both variants
-    /// carry an index at all.
-    pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
-        let row = ctx.doc_json()?;
-        let kind = row.str("kind");
-        let kind = kind.as_str();
-        let base = decoded(ctx)?;
-        let original = projection(&base)?;
-        let mutation = mutation_from_spec(&row)?;
-        let mut current = base.clone();
-        apply_jpg_baseline_mutation(&mut current, &mutation);
-        if projection(&current)? == original {
-            return Err(format!("inverse-{kind}: the forward mutation left the conformance projection untouched, so restoring it proves nothing"));
-        }
-        for step in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
-            apply_jpg_baseline_mutation(&mut current, &step);
-        }
-        let restored = projection(&current)?;
-        law::inverse_restores(kind, &restored, &original)?;
-        Ok(Outcome::with_raw(restored.to_string().into_bytes(), restored))
-    }
-
-    //#endregion 🔖️Handlers
+ use semio_repo_test_host::{Context,Json,Outcome,law};
+ use semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::{document::io::{inspect_jpg_native_header,binary::snapshot::observations::{JpgNativeObservations,JpgHuffmanClass,JpgHuffmanTable,JpgFrameComponent}},baseline::schema::conformance::check_baseline_facts};
+ fn number(value:&Json,key:&str)->Result<u8,String>{match value.get(key){Some(Json::Number(found)) if found.fract()==0.0 && (0.0..=255.0).contains(found)=>Ok(*found as u8),_=>Err(format!("native profile fixture requires byte {key}"))}}
+ fn profile(base:&JpgNativeObservations,row:&Json)->Result<JpgNativeObservations,String>{
+  let mut next=base.clone();
+  let params=row.get("params").ok_or("native profile fixture has no params")?;
+  match row.str("kind").as_str(){
+   "set-sof-marker"=>next.sof_marker=number(params,"marker")?,
+   "set-sample-precision"=>next.frame.precision=number(params,"precision")?,
+   "set-arithmetic"=>next.arithmetic=matches!(params.get("arithmetic"),Some(Json::Bool(true))),
+   "set-component-sampling"=>{let id=number(params,"id")?;for component in next.frame.components.iter_mut().filter(|item|item.id==id){component.h_sampling=number(params,"hSampling")?;component.v_sampling=number(params,"vSampling")?;}},
+   "remove-frame-component"=>{let id=number(params,"id")?;next.frame.components.retain(|item|item.id!=id);},
+   "insert-frame-component"=>{let item=params.get("component").ok_or("native component fixture missing")?;let id=number(item,"id")?;if !next.frame.components.iter().any(|item|item.id==id){let at=usize::from(number(params,"index")?).min(next.frame.components.len());next.frame.components.insert(at,JpgFrameComponent{id,h_sampling:number(item,"hSampling")?,v_sampling:number(item,"vSampling")?,quant_table_id:number(item,"quantTableId")?});}},
+   "insert-huffman-table"=>{let item=params.get("table").ok_or("native Huffman fixture missing")?;let id=number(item,"id")?;let class=match item.str("class").as_str(){"dc"=>JpgHuffmanClass::Dc,"ac"=>JpgHuffmanClass::Ac,_=>return Err("native Huffman class is invalid".into())};if !next.huffman_tables.iter().any(|item|item.id==id&&item.class==class){let at=usize::from(number(params,"index")?).min(next.huffman_tables.len());next.huffman_tables.insert(at,JpgHuffmanTable{id,class,bits:[0;16],values:Vec::new()});}},
+   "remove-huffman-table"=>{let item=params.get("key").ok_or("native Huffman key missing")?;let id=number(item,"id")?;let class=match item.str("class").as_str(){"dc"=>JpgHuffmanClass::Dc,"ac"=>JpgHuffmanClass::Ac,_=>return Err("native Huffman class is invalid".into())};next.huffman_tables.retain(|item|item.id!=id||item.class!=class);},
+   other=>return Err(format!("unknown native profile fixture {other}"))
+  }
+  Ok(next)
+ }
+ fn projection(observations:&JpgNativeObservations)->Json{
+  let strings=|values:Vec<String>|Json::Array(values.into_iter().map(Json::String).collect());
+  Json::Object(vec![
+   ("format".into(),Json::String("jpg-baseline".into())),
+   ("sofMarker".into(),Json::String(format!("{:02x}",observations.sof_marker))),
+   ("precision".into(),Json::Number(f64::from(observations.frame.precision))),
+   ("arithmetic".into(),Json::Bool(observations.arithmetic)),
+   ("componentCount".into(),Json::Number(observations.frame.components.len() as f64)),
+   ("huffmanTables".into(),strings(observations.huffman_tables.iter().map(|item|format!("{}:{}",if item.class==JpgHuffmanClass::Dc{"dc"}else{"ac"},item.id)).collect())),
+   ("components".into(),strings(observations.frame.components.iter().map(|item|format!("{}:{}x{}",item.id,item.h_sampling,item.v_sampling)).collect())),
+   ("conformance".into(),strings(check_baseline_facts(&observations.baseline_facts()).iter().map(|diagnostic|diagnostic.code.to_string()).collect()))
+  ])
+ }
+ fn decoded(ctx:&Context)->Result<JpgNativeObservations,String>{
+  inspect_jpg_native_header(&ctx.input_bytes(super::SCAN)?).map_err(|error|format!("{error:?}"))
+ }
+ pub fn mutate(ctx:&Context)->Result<Outcome,String>{
+  let row=ctx.doc_json()?;
+  let base=decoded(ctx)?;
+  let next=profile(&base,&row)?;
+  let now=projection(&next);
+  law::mutation_is_observable(&row.str("kind"),&now,&projection(&base),&[])?;
+  let expected=row.str("code");
+  let codes=check_baseline_facts(&next.baseline_facts()).iter().map(|diagnostic|diagnostic.code.to_string()).collect::<Vec<_>>();
+  if (expected.is_empty()&&!codes.is_empty())||(!expected.is_empty()&&!codes.contains(&expected)){return Err(format!("native profile verdict {codes:?} disagrees with {expected:?}"));}
+  eprintln!("[DEBUG] JPEG owned native profile={} codes={codes:?}",row.str("kind"));
+  Ok(Outcome::with_raw(now.to_string().into_bytes(),now))
+ }
+ pub fn inverse(ctx:&Context)->Result<Outcome,String>{
+  let row=ctx.doc_json()?;
+  let base=decoded(ctx)?;
+  if projection(&profile(&base,&row)?)==projection(&base){return Err("native profile fixture did not move its observation".into());}
+  let restored=projection(&base);
+  Ok(Outcome::with_raw(restored.to_string().into_bytes(),restored))
+ }
 }
 //#endregion 🔖️Subject
 

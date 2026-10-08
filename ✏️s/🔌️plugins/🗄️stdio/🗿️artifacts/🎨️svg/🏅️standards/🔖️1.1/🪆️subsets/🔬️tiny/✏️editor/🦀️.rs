@@ -1,11 +1,11 @@
 //! ✏️ `svg` editor (tiny) — `ArtifactEditor` surface built on the frozen
 //! `ImageWindowKit` window kit (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.6).
-//! SVG has no pixel buffer: `set-pixel-region` replaces the whole vector snapshot via the artifact's own DSL text round-trip (`parse_dsl`/`SetSnapshot`), the closest real mutation this format declares — not a pixel edit.
+//! SVG has no pixel buffer: `set-pixel-region` carries the current drawing to the one parsed from its DSL text through the artifact's own mutation leaves (`parse_dsl`, `net_mutations`) — not a pixel edit.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
 use crate::editor::svg_tiny::modes::edit;
 use crate::editor::svg_tiny::modes::edit::windows::main;
-use crate::standards::v1_1::subsets::tiny::schema::mutations::{patch_snapshot, set_snapshot, SvgTinyMutation};
+use crate::standards::v1_1::subsets::tiny::schema::mutations::net_mutations;
 use crate::standards::v1_1::subsets::tiny::schema::snapshot::SvgSnapshot;
 use crate::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_TINY_DIALECT};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -173,10 +173,6 @@ impl ArtifactEditor for SvgTinyEditor {
         Ok(snapshot)
     }
 
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(SvgTinyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
-    }
-
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<SvgTinyEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny/✏️editor/🦀️.rs",
@@ -228,7 +224,7 @@ impl ArtifactEditor for SvgTinyEditor {
                 ..Default::default()
             }),
             SvgTinyEditCommand::SetPixelRegion { source } => match <SvgSnapshot as store::ArtifactDsl>::parse_dsl(source) {
-                Ok(snapshot) => Ok(Emit::mutations(vec![SvgTinyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })])),
+                Ok(snapshot) => Ok(net_mutations(doc.snapshot, &snapshot).map_or_else(Emit::default, Emit::mutations)),
                 Err(_) => Ok(Emit::default()),
             },
         }
@@ -250,7 +246,9 @@ impl editing::SnapshotEditingEditor for SvgTinyEditor {
         match command { SvgTinyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_patch(event, snapshot, |patch| SvgTinyMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| SvgTinyMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot })))
+        let next = editing::apply_snapshot_edit(snapshot, event).map_err(|error| Fault::from(error.to_string()))?;
+        let leaves = net_mutations(snapshot, &next).ok_or_else(|| Fault::from("svg: the edit changes a part of the document no mutation leaf of this profile addresses"))?;
+        Ok(Emit { artifact_mutations: leaves, ..Default::default() })
     }
 }
 

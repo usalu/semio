@@ -40,7 +40,7 @@ fn inverse_restores_before() {
     let inverse = inverse_grid2d_mutation(&base, &mutation).expect("valid retained mutation inverse fixture");
     let mut snapshot = base.clone();
     apply_grid2d_mutation(&mut snapshot, &mutation).expect("forward applies");
-    for step in &inverse {
+    for step in inverse.iter().rev() {
         apply_grid2d_mutation(&mut snapshot, step).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "mask-cell/🕳️cuts: inverse did not restore the before-snapshot");
@@ -117,6 +117,12 @@ fn committed_diff_is_canonical() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: Grid2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <Grid2dDiff as protocol::MutationDiff<Grid2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "mask-cell/🕳️cuts: committed diff did not carry before to after");
+}
+
+/// ➕️ The concrete inverse operations' diffs sum to exactly the negative of the forward diff (law L3).
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

@@ -11,24 +11,25 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[value(rename_all = "camelCase")]
 pub struct SetDisplayDocTitle {
     pub display: bool,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub entry_index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfUaMutation> for SetDisplayDocTitle {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "display-doc-title", kind: "set-display-doc-title", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::graph_edit(support::set_catalog_entry_rows(base, "ViewerPreferences", support::single_entry_dict("DisplayDocTitle", PdfObject::Bool(self.display)))))
+        MutationOutcome::new(diff::graph_edit(support::set_catalog_entry_rows(base, "ViewerPreferences", support::single_entry_dict("DisplayDocTitle", PdfObject::Bool(self.display)), self.entry_index)))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        match support::catalog_flag(base, "ViewerPreferences", "DisplayDocTitle") {
-            Some(display) => vec![PdfUaMutation::SetDisplayDocTitle(SetDisplayDocTitle { display })],
-            None => vec![PdfUaMutation::RemoveDisplayDocTitle(RemoveDisplayDocTitle {})],
-        }
-    
-    })())
-}
+        Ok({
+            match support::catalog_flag(base, "ViewerPreferences", "DisplayDocTitle") {
+                Some(display) => vec![PdfUaMutation::SetDisplayDocTitle(SetDisplayDocTitle { display, entry_index: None })],
+                None => vec![PdfUaMutation::RemoveDisplayDocTitle(RemoveDisplayDocTitle {})],
+            }
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/UA display document title to {}", self.display), &format!("PDF/UA-Anzeige des Dokumenttitels auf {} setzen", self.display))

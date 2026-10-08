@@ -7,7 +7,6 @@
     "cy"
   ],
   "scenarios": [
-    "set-snapshot",
     "insert-slide",
     "remove-slide",
     "move-slide",
@@ -17,7 +16,6 @@
     "set-shape-position"
   ],
   "affected": [
-    "set-snapshot",
     "insert-slide",
     "insert-shape",
     "set-shape-position"

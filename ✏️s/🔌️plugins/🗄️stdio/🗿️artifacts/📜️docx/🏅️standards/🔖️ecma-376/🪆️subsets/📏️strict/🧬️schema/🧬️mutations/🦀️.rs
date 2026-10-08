@@ -22,7 +22,6 @@
 
 use crate::standards::v_ecma_376::subsets::base::schema::diff::{DocxDiff, DocxOpcContentTypesDiff, DocxOpcDiff, DocxOpcPartsDiff, DocxOpcRelDiff, DocxOpcRelListDiff, DocxOpcRelationshipsDiff, NamedModified};
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::{DocxSnapshot, DocxXmlPart};
-use protocol::command::DiffAlgebra;
 use protocol::Mutation;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
@@ -74,8 +73,6 @@ pub mod set_relationship_base;
 /// 📐️ Typed conformance-class mutation for `stdio.docx` under ISO/IEC 29500-1
 /// Strict. Every variant addresses ONE axis of the class; none addresses document content.
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
@@ -83,7 +80,6 @@ pub mod set_snapshot;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = DocxSnapshot, diff = DocxDiff, schema = "DocxStrictMutation")]
 pub enum DocxStrictMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
     SetMainNamespace(set_main_namespace::SetMainNamespace),
     SetRelationshipBase(set_relationship_base::SetRelationshipBase),
     SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute),
@@ -97,7 +93,7 @@ pub enum DocxStrictMutation {
 /// 🧾️ Kebab-case spelling of every `DocxStrictMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `docx-ecma-376-strict` (`../../🔣️oracle.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
-pub const KINDS: &[&str] = &["set-snapshot", "set-main-namespace", "set-relationship-base", "set-conformance-attribute", "remove-conformance-attribute", "insert-vml-part", "remove-vml-part", "insert-alternate-content", "remove-alternate-content"];
+pub const KINDS: &[&str] = &["set-main-namespace", "set-relationship-base", "set-conformance-attribute", "remove-conformance-attribute", "insert-vml-part", "remove-vml-part", "insert-alternate-content", "remove-alternate-content"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -106,7 +102,7 @@ pub const KINDS: &[&str] = &["set-snapshot", "set-main-namespace", "set-relation
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_docx_strict_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxStrictMutation) -> protocol::MutationOutcome<DocxDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -115,12 +111,21 @@ pub fn apply_docx_strict_mutation(snapshot: &mut DocxSnapshot, mutation: &DocxSt
     }
 }
 
-/// 🏅️ The one whole-package operation that moves `base` into (`strict`) or out of the strict conformance class: a
-/// `set-snapshot` of [`stamp_conformance_class`]'s stamp — what a class conversion records as one edit.
-pub fn stamp_conformance_class_mutation(base: &DocxSnapshot, strict: bool) -> DocxStrictMutation {
-    DocxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: stamp_conformance_class(base.clone(), strict) })
+/// 🏅️ The concrete mutations that move a package into (`strict`) or out of the strict conformance class: the main namespace, the
+/// `officeDocument` relationship base and the main part's `conformance` attribute, each through its own kind.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn stamp_conformance_class_mutations(strict: bool) -> Vec<DocxStrictMutation> {
+    let index = usize::from(strict);
+    vec![
+        DocxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace: MAIN_NAMESPACES[index].to_string() }),
+        DocxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: RELATIONSHIP_NAMESPACES[index].to_string() }),
+        if strict {
+            DocxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value: "strict".to_string() })
+        } else {
+            DocxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {})
+        },
+    ]
 }
-
 //#endregion 🔖️Apply
 
 //#region 🔖️Helpers
@@ -136,25 +141,6 @@ fn main_part_path(base: &DocxSnapshot) -> Option<String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_part(part: &DocxXmlPart) -> Option<XmlDocument> {
     part.materialize_document_exact().ok()
-}
-
-/// ✍️ Rewrites every attribute value equal to a member of `from` to `to`, through the whole
-/// subtree — a namespace declaration is an ordinary attribute, which is why one walk covers
-/// `xmlns`, `xmlns:r` and whatever prefixed alias a real package happens to use.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn retarget_namespace(node: &mut XmlNode, from: &[&str], to: &str) -> bool {
-    let XmlNode::Element { attrs, children, .. } = node else { return false };
-    let mut changed = false;
-    for attr in attrs.iter_mut() {
-        if from.contains(&attr.value.as_str()) && attr.value != to {
-            attr.value = to.to_string();
-            changed = true;
-        }
-    }
-    for child in children.iter_mut() {
-        changed |= retarget_namespace(child, from, to);
-    }
-    changed
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -187,56 +173,6 @@ pub fn conformance_attribute(base: &DocxSnapshot) -> Option<String> {
     root_attribute(&parse_part(base.xml_part(&main_part_path(base)?)?)?, "conformance")
 }
 
-/// ✍️ Sets — or, with `None`, removes — one attribute on the ROOT element only.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn set_root_attribute(document: &mut XmlDocument, name: &str, value: Option<&str>) -> bool {
-    let Some(XmlNode::Element { attrs, .. }) = document.root.as_mut() else { return false };
-    match (attrs.iter().position(|attr| attr.name == name), value) {
-        (Some(index), Some(value)) => attrs[index].value = value.to_string(),
-        (Some(index), None) => {
-            attrs.remove(index);
-        }
-        (None, Some(value)) => attrs.push(XmlAttr { name: name.to_string(), value: value.to_string() }),
-        (None, None) => return false,
-    }
-    true
-}
-
-fn edit_part(part: &mut DocxXmlPart, edit: impl FnOnce(&mut XmlDocument) -> bool) -> bool {
-    let Ok(mut document) = part.materialize_document_exact() else { return false };
-    if !edit(&mut document) {
-        return false;
-    }
-    part.replace_document(document).is_ok()
-}
-
-/// 🏅️ Stamps a whole snapshot into one conformance class: both namespace families, the
-/// `officeDocument` relationship base, and the main part's own `conformance` attribute. Bijective by
-/// construction, so stamping back is an exact inverse — which is what makes `SetSnapshot` invertible
-/// on this axis.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn stamp_conformance_class(mut snapshot: DocxSnapshot, strict: bool) -> DocxSnapshot {
-    let index = usize::from(strict);
-    for part in &mut snapshot.xml_parts {
-        edit_part(part, |document| {
-            let Some(root) = document.root.as_mut() else { return false };
-            retarget_namespace(root, &MAIN_NAMESPACES, MAIN_NAMESPACES[index]) | retarget_namespace(root, &RELATIONSHIP_NAMESPACES, RELATIONSHIP_NAMESPACES[index])
-        });
-    }
-    for relationships in snapshot.opc.relationships.values_mut() {
-        for relationship in relationships.iter_mut() {
-            let current = relationship.rel_type.to_string_owner();
-            let Some(prefix) = RELATIONSHIP_NAMESPACES.into_iter().find(|prefix| current.starts_with(prefix)) else { continue };
-            relationship.rel_type = semio_s_artifact_stdio_zip::opc::retained::RetainedOpcText::try_from_str(&format!("{}{}", RELATIONSHIP_NAMESPACES[index], &current[prefix.len()..])).expect("conformance relationship type fits retained OPC text ownership");
-        }
-    }
-    if let Some(path) = main_part_path(&snapshot) {
-        if let Some(part) = snapshot.xml_part_mut(&path) {
-            edit_part(part, |document| set_root_attribute(document, "conformance", strict.then_some("strict")));
-        }
-    }
-    snapshot
-}
 //#endregion 🔖️Helpers
 
 //#region 🔖️DiffBuilders
@@ -246,16 +182,6 @@ fn opc_diff(parts: Option<DocxOpcPartsDiff>, content_types: Option<DocxOpcConten
         return DocxDiff::default();
     }
     DocxDiff { opc: Some(DocxOpcDiff { content_types, parts, relationships, comment: None }), ..Default::default() }
-}
-
-/// 🔺️ The diff of retargeting one namespace family across every XML part that declares it.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_retarget_namespace(base: &DocxSnapshot, from: [&str; 2], to: &str) -> DocxDiff {
-    let mut next = base.clone();
-    for part in &mut next.xml_parts {
-        edit_part(part, |document| document.root.as_mut().is_some_and(|root| retarget_namespace(root, &from, to)));
-    }
-    <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, &next)
 }
 
 /// 🔺️ The diff of retargeting the `officeDocument` relationship TYPE base, owner by owner.
@@ -286,33 +212,31 @@ fn diff_retarget_relationship_base(base: &DocxSnapshot, from: [&str; 2], to: &st
     opc_diff(None, None, Some(DocxOpcRelationshipsDiff { modified, ..Default::default() }))
 }
 
+/// 🔺️ The diff of retargeting one namespace family across every XML part that declares it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn diff_retarget_namespace(base: &DocxSnapshot, from: [&str; 2], to: &str) -> DocxDiff {
+    crate::standards::v_ecma_376::subsets::base::schema::mutations::root_edits_diff(base.xml_parts.iter().filter_map(|part| {
+        let document = parse_part(part)?;
+        crate::standards::v_ecma_376::subsets::base::schema::mutations::retarget_attribute_values_diff(document.root.as_ref()?, &from, to).map(|edit| (part.path.clone(), edit))
+    }).collect())
+}
+
 /// 🔺️ The diff of setting — or removing — the main part's root `conformance` attribute.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_conformance_attribute(base: &DocxSnapshot, value: Option<&str>) -> DocxDiff {
     let Some(path) = main_part_path(base) else { return DocxDiff::default() };
-    let mut next = base.clone();
-    let Some(part) = next.xml_part_mut(&path) else { return DocxDiff::default() };
-    if !edit_part(part, |document| set_root_attribute(document, "conformance", value)) {
-        return DocxDiff::default();
-    }
-    <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, &next)
+    let Some(document) = base.xml_part(&path).and_then(parse_part) else { return DocxDiff::default() };
+    crate::standards::v_ecma_376::subsets::base::schema::mutations::root_attribute_diff(&document, "conformance", value).map(|edit| crate::standards::v_ecma_376::subsets::base::schema::mutations::root_edits_diff(vec![(path, edit)])).unwrap_or_default()
 }
 
 /// 🔺️ The diff of adding a legacy VML drawing part together with its content-type override.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_insert_vml_part(base: &DocxSnapshot, path: &str, document: &XmlDocument) -> DocxDiff {
-    let path = path.trim_start_matches('/').to_string();
-    if base.xml_part(&path).is_some() || base.opc.part(&path).is_some() {
+    let path = path.trim_start_matches('/');
+    if base.xml_part(path).is_some() || base.opc.part(path).is_some() {
         return DocxDiff::default();
     }
-    let mut next = base.clone();
-    next.opc.content_types.set_override(&path, VML_CONTENT_TYPE).expect("VML override fits retained OPC ownership");
-    let Ok(part) = DocxXmlPart::try_from_document(path, VML_CONTENT_TYPE.into(), document.clone()) else { return DocxDiff::default() };
-    if next.xml_parts.try_push(part).is_err() {
-        return DocxDiff::default();
-    }
-    next.xml_parts.sort_unstable_by(|left, right| left.path.cmp(&right.path));
-    <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, &next)
+    crate::standards::v_ecma_376::subsets::base::schema::mutations::set_part_diff(base, path, VML_CONTENT_TYPE, &crate::standards::v_ecma_376::subsets::base::schema::mutations::set_part::DocxPartContent::Xml { document: document.clone() }, None).unwrap_or_default()
 }
 
 /// 🔺️ The diff of removing a legacy VML drawing part and its content-type override.
@@ -322,10 +246,12 @@ fn diff_remove_vml_part(base: &DocxSnapshot, path: &str) -> DocxDiff {
     if base.xml_part(path).is_none() {
         return DocxDiff::default();
     }
-    let mut next = base.clone();
-    next.xml_parts.retain(|part| part.path != path);
-    next.opc.edit_package(|package| package.content_types.overrides.retain(|(name, _)| name.trim_start_matches('/') != path)).expect("VML override removal preserves retained OPC ownership");
-    <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, &next)
+    let name = format!("/{path}");
+    let has_override = base.opc.materialize_package_exact().is_ok_and(|opc| opc.content_types.overrides.iter().any(|(existing, _)| *existing == name));
+    DocxDiff {
+        xml_parts: Some(NamedTripleDiff { removed: vec![path.to_string()], ..Default::default() }),
+        opc: has_override.then(|| DocxOpcDiff { content_types: Some(DocxOpcContentTypesDiff { defaults: None, overrides: Some(NamedTripleDiff { removed: vec![name], ..Default::default() }) }), ..Default::default() }),
+    }
 }
 
 /// 🧩️ The canonical markup-compatibility fallback this vocabulary inserts.
@@ -338,86 +264,45 @@ pub fn alternate_content_node() -> XmlNode {
     }
 }
 
+
 /// 🔺️ The diff of appending one markup-compatibility fallback to a part's root element.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_append_alternate_content(base: &DocxSnapshot, path: &str) -> DocxDiff {
-    diff_root_children(base, path, |children| {
-        children.push(alternate_content_node());
-        true
-    })
+    let Some(document) = base.xml_part(path).and_then(parse_part) else { return DocxDiff::default() };
+    crate::standards::v_ecma_376::subsets::base::schema::mutations::root_children_diff(&document, Some(alternate_content_node()), None).map(|edit| crate::standards::v_ecma_376::subsets::base::schema::mutations::root_edits_diff(vec![(path.to_string(), edit)])).unwrap_or_default()
 }
 
 /// 🔺️ The diff of stripping every markup-compatibility fallback from a part's root element.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_strip_alternate_content(base: &DocxSnapshot, path: &str) -> DocxDiff {
-    diff_root_children(base, path, |children| {
-        let before = children.len();
-        children.retain(|child| !matches!(child, XmlNode::Element { name, .. } if name == ALTERNATE_CONTENT_ELEMENT));
-        children.len() != before
-    })
-}
-
-/// 🔺️ The diff of rewriting one part's root children.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn diff_root_children(base: &DocxSnapshot, path: &str, edit: impl FnOnce(&mut Vec<XmlNode>) -> bool) -> DocxDiff {
-    let mut next = base.clone();
-    let Some(part) = next.xml_part_mut(path) else { return DocxDiff::default() };
-    if !edit_part(part, |document| {
-        let Some(XmlNode::Element { children, .. }) = document.root.as_mut() else { return false };
-        edit(children)
-    }) {
-        return DocxDiff::default();
-    }
-    <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, &next)
+    let Some(document) = base.xml_part(path).and_then(parse_part) else { return DocxDiff::default() };
+    crate::standards::v_ecma_376::subsets::base::schema::mutations::root_children_diff(&document, None, Some(ALTERNATE_CONTENT_ELEMENT)).map(|edit| crate::standards::v_ecma_376::subsets::base::schema::mutations::root_edits_diff(vec![(path.to_string(), edit)])).unwrap_or_default()
 }
 //#endregion 🔖️DiffBuilders
 
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &DocxStrictMutation, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
-    protocol::MutationOutcome::new(match this {
-        DocxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <DocxDiff as DiffAlgebra<DocxSnapshot>>::between(base, snapshot),
-        DocxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }) => diff_retarget_namespace(base, MAIN_NAMESPACES, namespace),
-        DocxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target }) => diff_retarget_relationship_base(base, RELATIONSHIP_NAMESPACES, target),
-        DocxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }) => diff_conformance_attribute(base, Some(value)),
-        DocxStrictMutation::RemoveConformanceAttribute(_) => diff_conformance_attribute(base, None),
-        DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, document }) => diff_insert_vml_part(base, path, document),
-        DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => diff_remove_vml_part(base, path),
-        DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path }) => diff_append_alternate_content(base, path),
-        DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path }) => diff_strip_alternate_content(base, path),
-    })
+//#region 🔖️Inverses
+/// ↩️ The mutation that restores the main namespace the package declares.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn namespace_inverse(base: &DocxSnapshot) -> Vec<DocxStrictMutation> {
+    declared_pair_member(base, MAIN_NAMESPACES).map(|namespace| DocxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace })).into_iter().collect()
 }
 
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &DocxStrictMutation, base: &DocxSnapshot) -> Result<Vec<DocxStrictMutation>, semio_framework_value::ValueError> {
-    Ok(vec![match this {
-        DocxStrictMutation::SetSnapshot(_) => DocxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-        DocxStrictMutation::SetMainNamespace(_) => match declared_pair_member(base, MAIN_NAMESPACES) {
-            Some(namespace) => DocxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace }),
-            None => return Ok(Vec::new()),
-        },
-        DocxStrictMutation::SetRelationshipBase(_) => match declared_relationship_base(base, RELATIONSHIP_NAMESPACES) {
-            Some(target) => DocxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target }),
-            None => return Ok(Vec::new()),
-        },
-        DocxStrictMutation::SetConformanceAttribute(_) => match conformance_attribute(base) {
-            Some(value) => DocxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
-            None => DocxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {}),
-        },
-        DocxStrictMutation::RemoveConformanceAttribute(_) => match conformance_attribute(base) {
-            Some(value) => DocxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value }),
-            None => return Ok(Vec::new()),
-        },
-        DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path, .. }) => DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.clone() }),
-        DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path }) => match base.xml_part(path.trim_start_matches('/')) {
-            Some(part) => DocxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.clone(), document: part.materialize_document_exact()? }),
-            None => return Ok(Vec::new()),
-        },
-        DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path }) => DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: path.clone() }),
-        DocxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path }) => DocxStrictMutation::InsertAlternateContent(insert_alternate_content::InsertAlternateContent { path: path.clone() }),
-    }])
+/// ↩️ The mutation that restores the `officeDocument` relationship base the package declares.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn relationship_base_inverse(base: &DocxSnapshot) -> Vec<DocxStrictMutation> {
+    declared_relationship_base(base, RELATIONSHIP_NAMESPACES).map(|target| DocxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target })).into_iter().collect()
 }
-//#endregion 🔖️MutationTrait
+
+/// ↩️ The mutation that restores the main part's `conformance` attribute: its value, or its absence.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn conformance_attribute_inverse(base: &DocxSnapshot, forward_changes: bool) -> Vec<DocxStrictMutation> {
+    match conformance_attribute(base) {
+        Some(value) => vec![DocxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value })],
+        None if forward_changes => vec![DocxStrictMutation::RemoveConformanceAttribute(remove_conformance_attribute::RemoveConformanceAttribute {})],
+        None => Vec::new(),
+    }
+}
+//#endregion 🔖️Inverses
 
 //#region 🧪️Tests
 #[cfg(test)]

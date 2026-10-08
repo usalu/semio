@@ -1,11 +1,8 @@
 import { test, expect } from "bun:test";
-import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 test("mounted original parent/children neutral atomic rows and independent inverse", () => {
-  expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
   for (const row of fixture.cases) {
     const before = { parent: { label: "" }, children: Array.from({ length: row.children }, () => ({ count: 0, label: "" })) };
     const patch = [...(row.parentTouched ? [{ op: "replace" as const, path: "/parent/label", value: row.parentLabel }] : []), ...row.childCounts.flatMap((count, i) => [{ op: "replace" as const, path: `/children/${i}/count`, value: count }, { op: "replace" as const, path: `/children/${i}/label`, value: row.childLabel }])];

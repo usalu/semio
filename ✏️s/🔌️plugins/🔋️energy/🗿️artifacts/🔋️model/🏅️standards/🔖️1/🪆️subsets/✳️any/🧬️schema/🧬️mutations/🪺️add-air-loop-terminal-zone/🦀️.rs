@@ -14,11 +14,12 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 pub struct AddAirLoopTerminalZone {
     pub id: crate::model::EntityId,
     pub zone_id: crate::model::EntityId,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_air_loop_terminal_zone(id: crate::model::EntityId, zone_id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::AddAirLoopTerminalZone(AddAirLoopTerminalZone { id, zone_id })
+pub fn add_air_loop_terminal_zone(id: crate::model::EntityId, zone_id: crate::model::EntityId, index: Option<u32>) -> EnergyModelMutation {
+    EnergyModelMutation::AddAirLoopTerminalZone(AddAirLoopTerminalZone { id, zone_id, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddAirLoopTerminalZone {

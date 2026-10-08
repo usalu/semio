@@ -41,17 +41,18 @@ async fn cad_config_operation_snapshot_round_trips_and_restores_exactly() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️inline-layout/🔣️.json")).expect("neutral config mutation layout fixture");
     let base = CadConfig::default();
     let next = CadConfig { selected_node_ids: serde_json::from_value(fixture["selectedNodeIds"].clone()).expect("neutral selection"), ..CadConfig::default() };
-    let operation = CadConfigMutation::Snapshot { config: Box::new(next.clone()) };
+    let operation = CadConfigMutation::Set { config: Box::new(next.clone()) };
     let forward = operation.diff(&base).diff().clone();
-    assert_eq!(forward, next);
+    assert_eq!(protocol::apply_diff(&forward, &base).unwrap(), next);
+    assert_eq!(forward, CadConfigDiff { selected_node_ids: Some(next.selected_node_ids.clone()), ..Default::default() });
     let backwards = operation.inverse(&base).expect("valid retained mutation inverse fixture");
-    assert_eq!(backwards, vec![CadConfigMutation::Snapshot { config: Box::new(base.clone()) }]);
+    assert_eq!(backwards, vec![CadConfigMutation::Set { config: Box::new(base.clone()) }]);
     assert_eq!(serde_json::to_value(&forward.selected_node_ids).expect("selection JSON oracle"), fixture["selectedNodeIds"]);
     let bytes = protocol::OpBinary::encode_op(&operation).expect("config mutation binary");
     assert_eq!(<CadConfigMutation as protocol::OpBinary>::decode_op(&bytes).expect("config mutation binary round trip"), operation);
     let inline_bytes = size_of::<CadConfigMutation>();
     assert!(inline_bytes <= fixture["maximumInlineBytes"].as_u64().unwrap() as usize, "CAD config mutation exceeds its neutral inline budget");
-    let restored = backwards[0].diff(&forward).diff().clone();
+    let restored = protocol::apply_diff(backwards[0].diff(&next).diff(), &next).unwrap();
     assert_eq!(restored, base);
     store::os_store::test_support::assert_op_line_round_trip(&operation);
 }
@@ -61,7 +62,16 @@ async fn cad_config_set_contributions_round_trips() {
     let base = CadConfig::default();
     let json = r#"[{"pluginId":"cad-extension-spatial-shape","contribution":{"kind":"cadComputer","appId":"cad-play","moduleId":"spatial-shape","label":"Spatial Shape","iconId":"box","computersJson":"{}"}}]"#;
     let operation = CadConfigMutation::SetContributions { json: json.into() };
-    let next = operation.diff(&base).diff().clone();
+    let next = protocol::apply_diff(operation.diff(&base).diff(), &base).unwrap();
     assert_eq!(next.contributions_json, json);
     store::os_store::test_support::assert_op_line_round_trip(&operation);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn cad_config_inverses_sum_to_the_negative_diff() {
+    let base = CadConfig { hovered_reference_id: Some("reference-1".into()), selected_node_ids: vec!["node-0".into()], ..CadConfig::default() };
+    let next = CadConfig { selected_node_ids: vec!["node-1".into(), "node-2".into()], hovered_reference_id: None, active_example_id: Some("example".into()), ..base.clone() };
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&CadConfigMutation::Set { config: Box::new(next.clone()) }, &base).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&CadConfigMutation::SetContributions { json: "[]".into() }, &CadConfig { contributions_json: "[{}]".into(), ..base.clone() }).await;
+    protocol::os_spr::protocol_laws::assert_diff_algebra_between_law::<CadConfig, CadConfigDiff>(&base, &next).await;
 }

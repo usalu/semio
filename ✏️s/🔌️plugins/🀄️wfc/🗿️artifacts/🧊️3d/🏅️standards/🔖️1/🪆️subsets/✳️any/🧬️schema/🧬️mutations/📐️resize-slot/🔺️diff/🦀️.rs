@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ResizeSlot` — one id-keyed replacement at the slot's OWN index.
 //! Guard order: target-missing → invariant → no-op → apply.
 
-use crate::diff::Wfc3dDiff;
+use crate::diff::{Wfc3dDiff, Wfc3dRowPatch, Wfc3dRows, Wfc3dSlotPatch};
 use crate::schema::snapshot::Wfc3dSnapshot;
 
 pub fn diff(payload: &super::ResizeSlot, base: &Wfc3dSnapshot) -> protocol::MutationOutcome<Wfc3dDiff> {
@@ -15,9 +15,5 @@ pub fn diff(payload: &super::ResizeSlot, base: &Wfc3dSnapshot) -> protocol::Muta
     if slot.width == payload.width && slot.height == payload.height && slot.depth == payload.depth {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Slot \"{}\" already has that extent.", payload.id));
     }
-    let mut resized = slot.clone();
-    resized.width = payload.width;
-    resized.height = payload.height;
-    resized.depth = payload.depth;
-    protocol::MutationOutcome::new(Wfc3dDiff { slots_upserted: vec![(index, resized)], ..Default::default() })
+    protocol::MutationOutcome::new(Wfc3dDiff { slots: Wfc3dRows { patched: vec![Wfc3dRowPatch { id: slot.id.clone(), patch: Wfc3dSlotPatch { width: Some(payload.width), height: Some(payload.height), depth: Some(payload.depth), ..Default::default() } }], ..Default::default() }, ..Default::default() })
 }

@@ -15,17 +15,17 @@ union SemioCadMutation =
   | SetBlockEntityLayer
   | SetBlockEntityGeometry
 
-type AddLayer { layer: CadLayer! }
+type AddLayer { layer: CadLayer! at: Int }
 type RemoveLayer { name: String! }
 type SetLayer { name: String! colorIndex: Int lineType: String visible: Boolean }
-type AddBlock { block: CadBlock! }
+type AddBlock { block: CadBlock! at: Int }
 type RemoveBlock { name: String! }
 type SetBlockBasePoint { name: String! basePoint: SemioPoint2! }
-type AddEntity { entity: CadEntityRecord! }
+type AddEntity { entity: CadEntityRecord! at: Int }
 type RemoveEntity { handle: String! }
 type SetEntityLayer { handle: String! layer: String! }
 type SetEntityGeometry { handle: String! entity: CadEntity! }
-type AddBlockEntity { blockName: String! entity: CadEntityRecord! }
+type AddBlockEntity { blockName: String! entity: CadEntityRecord! at: Int }
 type RemoveBlockEntity { blockName: String! handle: String! }
 type SetBlockEntityLayer { blockName: String! handle: String! layer: String! }
 type SetBlockEntityGeometry { blockName: String! handle: String! entity: CadEntity! }

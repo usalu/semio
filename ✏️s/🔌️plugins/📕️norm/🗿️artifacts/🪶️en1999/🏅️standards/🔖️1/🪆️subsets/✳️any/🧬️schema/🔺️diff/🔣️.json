@@ -5,17 +5,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "artifact": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/artifact.json"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "annex": {
       "anyOf": [
         {
@@ -30,7 +19,7 @@
     "materials": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/properties/materials"
+          "$ref": "#/$defs/En1999MaterialsRows"
         },
         {
           "type": "null"
@@ -41,7 +30,7 @@
     "sections": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/properties/sections"
+          "$ref": "#/$defs/En1999SectionsRows"
         },
         {
           "type": "null"
@@ -52,7 +41,7 @@
     "members": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/properties/members"
+          "$ref": "#/$defs/En1999MembersRows"
         },
         {
           "type": "null"
@@ -63,7 +52,7 @@
     "connections": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/properties/connections"
+          "$ref": "#/$defs/En1999ConnectionsRows"
         },
         {
           "type": "null"
@@ -74,7 +63,7 @@
     "fireScenarios": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/properties/fireScenarios"
+          "$ref": "#/$defs/En1999FireScenariosRows"
         },
         {
           "type": "null"
@@ -85,7 +74,7 @@
     "fatigueDetails": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/properties/fatigueDetails"
+          "$ref": "#/$defs/En1999FatigueDetailsRows"
         },
         {
           "type": "null"
@@ -96,7 +85,7 @@
     "coldFormed": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/properties/coldFormed"
+          "$ref": "#/$defs/En1999ColdFormedRows"
         },
         {
           "type": "null"
@@ -107,13 +96,576 @@
     "shells": {
       "anyOf": [
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/properties/shells"
+          "$ref": "#/$defs/En1999ShellsRows"
         },
         {
           "type": "null"
         }
       ],
       "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "En1999ColdFormedRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/ColdFormedSheet"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1999ConnectionsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "weldsThroat",
+        "boltsRows",
+        "boltsBoltsPerRow"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "weldsThroat": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/WeldGroup/properties/throat"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "boltsRows": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/BoltGroup/properties/rows"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "boltsBoltsPerRow": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/BoltGroup/properties/boltsPerRow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1999ConnectionsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "modified",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/AluminiumConnection"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1999ConnectionsPatch"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1999FatigueDetailsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/FatigueDetail"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1999FireScenariosRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/FireScenario"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1999MaterialsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "designation"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "designation": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/AluminiumMaterial/properties/designation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1999MaterialsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "modified",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/AluminiumMaterial"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1999MaterialsPatch"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1999MembersActionsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "nK",
+        "mYK"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "nK": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/MemberAction/properties/nK"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mYK": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/MemberAction/properties/mYK"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1999MembersActionsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modified"
+      ],
+      "properties": {
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1999MembersActionsPatch"
+          }
+        }
+      }
+    },
+    "En1999MembersPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "bucklingLengthY",
+        "bucklingLengthZ",
+        "bucklingLengthT",
+        "ltbLength",
+        "actions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "bucklingLengthY": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/AluminiumMember/properties/bucklingLengthY"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bucklingLengthZ": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/AluminiumMember/properties/bucklingLengthZ"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bucklingLengthT": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/AluminiumMember/properties/bucklingLengthT"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ltbLength": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/AluminiumMember/properties/ltbLength"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/En1999MembersActionsRows"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1999MembersRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "modified",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/AluminiumMember"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1999MembersPatch"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1999SectionsElementsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "thickness"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "thickness": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/PlateElement/properties/thickness"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1999SectionsElementsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modified"
+      ],
+      "properties": {
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1999SectionsElementsPatch"
+          }
+        }
+      }
+    },
+    "En1999SectionsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "elements"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "elements": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/En1999SectionsElementsRows"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1999SectionsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "modified",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/AluminiumSection"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1999SectionsPatch"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1999ShellsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/AluminiumShell"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
     }
   }
 }

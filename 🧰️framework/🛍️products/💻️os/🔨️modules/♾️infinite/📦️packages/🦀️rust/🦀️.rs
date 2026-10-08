@@ -34,9 +34,7 @@ pub use component::*;
 #[path = "../../🌍️world/🦀️.rs"]
 pub mod world;
 
-#[path = "../../🖼️canvas/🦀️.rs"]
-pub mod canvas;
-pub use canvas::*;
+use semio_framework_canvas as canvas;
 
 #[path = "."]
 pub mod board {

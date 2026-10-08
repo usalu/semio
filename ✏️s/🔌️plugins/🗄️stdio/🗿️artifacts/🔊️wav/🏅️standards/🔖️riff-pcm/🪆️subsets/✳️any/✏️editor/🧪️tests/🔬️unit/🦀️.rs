@@ -1,5 +1,4 @@
 use super::*;
-use crate::standards::riff_pcm::subsets::any::schema::mutations::set_snapshot;
 
 /// 🧬️ Registers the document schema wav's declaration contributes — the registered contract every snapshot edit validates
 /// against; a fixture editor runs without the plugin assembly that publishes it.
@@ -53,7 +52,7 @@ async fn data_kind_edit_publishes_the_requested_variant_and_reopens_natively() {
     assert_eq!(next.data, WavData::Pcm8(vec![1, 2]));
     let emit = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("data discriminator edit emits");
     let [mutation] = emit.artifact_mutations.as_slice() else { panic!("data discriminator edit must emit one mutation") };
-    let published = protocol::MutationDiff::apply(<WavMutation as protocol::Mutation<WavSnapshot>>::diff(mutation, &snapshot).diff(), &snapshot).expect("data discriminator mutation applies");
+    let published = protocol::apply_diff(<WavMutation as protocol::Mutation<WavSnapshot>>::diff(mutation, &snapshot).diff(), &snapshot).expect("data discriminator mutation applies");
     assert_eq!(published.data, WavData::Pcm8(vec![1, 2]));
     let native = crate::standards::riff_pcm::subsets::any::io::encode_wav(&published);
     let reopened = crate::standards::riff_pcm::subsets::any::io::decode_wav(&native).expect("edited WAV reopens");
@@ -61,7 +60,7 @@ async fn data_kind_edit_publishes_the_requested_variant_and_reopens_natively() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn chunk_layout_and_pad_bytes_are_visible_and_editable_details() {
+async fn chunk_layout_and_pad_bytes_are_visible_details_and_an_unaddressed_pad_edit_is_refused() {
     register_document_schema();
     let snapshot = WavSnapshot {
         data: WavData::Raw(vec![7]),
@@ -81,28 +80,24 @@ async fn chunk_layout_and_pad_bytes_are_visible_and_editable_details() {
         Some(editing::SnapshotDetailValue::Number(semio_framework_value::Number::UInt(0x7F))),
     );
     let event = editing::SnapshotEditEvent::SetValue { path: "/dataPadByte".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(0x5A)) };
-    let emit = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("pad byte edit emits");
-    let [mutation] = emit.artifact_mutations.as_slice() else { panic!("pad byte edit must emit one mutation") };
-    assert!(matches!(mutation, WavMutation::PatchSnapshot(_)));
-    let edited = protocol::MutationDiff::apply(<WavMutation as protocol::Mutation<WavSnapshot>>::diff(mutation, &snapshot).diff(), &snapshot).expect("pad byte mutation applies");
-    assert_eq!(edited.data_pad_byte, 0x5A);
-    assert_eq!(edited.chunk_order, snapshot.chunk_order);
-    assert_eq!(edited.other_chunks, snapshot.other_chunks);
+    assert!(<WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).is_err(), "a pad byte has no mutation leaf, so its edit is refused instead of dropped");
 }
 
 #[semio_framework_async_macros::async_test]
-async fn sample_edit_set_snapshot_replays_and_inverts_without_losing_siblings() {
+async fn sample_edit_patch_data_replays_and_inverts_without_losing_siblings() {
+    register_document_schema();
     let base = WavSnapshot { data: WavData::Raw(vec![1, 2, 3]), ..WavSnapshot::default() };
     let event = editing::SnapshotEditEvent::SetValue { path: "/data/value/1".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(9)) };
     let next = wavEditor_snapshot_edit(&event, &base).expect("sample edit");
     assert_eq!(next.data, WavData::Raw(vec![1, 9, 3]));
-    let mutation = set_snapshot::SetSnapshot { snapshot: next.clone() };
-    let encoded = <WavMutation as store::OpBinary>::encode_op(&WavMutation::SetSnapshot(mutation.clone())).expect("binary encode");
+    let emit = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &base).expect("sample edit emits");
+    let [mutation] = emit.artifact_mutations.as_slice() else { panic!("sample edit must emit one mutation") };
+    let encoded = <WavMutation as store::OpBinary>::encode_op(mutation).expect("binary encode");
     let decoded = <WavMutation as store::OpBinary>::decode_op(&encoded).expect("binary decode");
     let mut replayed = base.clone();
     crate::standards::riff_pcm::subsets::any::schema::mutations::apply_wav_mutation(&mut replayed, &decoded);
     assert_eq!(replayed, next);
-    for inverse in <set_snapshot::SetSnapshot as protocol::MutationKind<WavSnapshot, WavMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
+    for inverse in <WavMutation as protocol::Mutation<WavSnapshot>>::inverse(mutation, &base).expect("valid retained mutation inverse fixture") {
         crate::standards::riff_pcm::subsets::any::schema::mutations::apply_wav_mutation(&mut replayed, &inverse);
     }
     assert_eq!(replayed, base);
@@ -199,7 +194,7 @@ async fn large_sample_edit_publishes_cancels_undoes_redoes_and_preserves_metadat
     let fmt_event = editing::SnapshotEditEvent::SetValue { path: "/fmt/sampleRate".into(), value: semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(48_000)) };
     let fmt_emit = <WavEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&fmt_event, store.snapshot_ref()).expect("metadata edit emits");
     let [fmt_mutation] = fmt_emit.artifact_mutations.as_slice() else { panic!("metadata edit must emit one mutation") };
-    assert!(matches!(fmt_mutation, WavMutation::PatchSnapshot(_)), "one format field publishes as its path-scoped patch");
+    assert!(matches!(fmt_mutation, WavMutation::SetFmt(_)), "one format field publishes as the format leaf");
     let mut metadata_publication = store
         .begin_apply_batch(
             semio_framework_job::OperationId(3),

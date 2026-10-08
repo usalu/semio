@@ -47,6 +47,23 @@ async fn delete_tiles_removes_the_multi_select_and_reorder_tiles_moves_by_id() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn middle_tile_edits_restore_their_original_index() {
+    let (source, _) = presentation_working_scene(&default_presentation_snapshot());
+    let base = presentation_snapshot_with_tiles(&source, &[tile("t1"), tile("t2"), tile("t3"), tile("t4")]);
+    for mutation in [
+        PresentationMutation::DeleteTile(delete_tile::DeleteTile { id: "t2".into() }),
+        PresentationMutation::DeleteTiles(delete_tiles::DeleteTiles { ids: vec!["t2".into(), "t3".into()] }),
+        PresentationMutation::DeleteTiles(delete_tiles::DeleteTiles { ids: vec!["t1".into(), "t3".into()] }),
+        PresentationMutation::CreateTile(create_tile::CreateTile { index: 2, tile: tile("t5") }),
+        PresentationMutation::ReorderTiles(reorder_tiles::ReorderTiles { id: "t2".into(), to_index: 3 }),
+        PresentationMutation::ReorderTiles(reorder_tiles::ReorderTiles { id: "t3".into(), to_index: 0 }),
+    ] {
+        round_trip(&base, &mutation).await;
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+}
+
+#[semio_framework_async_macros::async_test]
 async fn replace_tiles_and_replace_source_and_resize_source_frame_round_trip() {
     let base = default_presentation_snapshot();
     let seeded = round_trip(&base, &PresentationMutation::ReplaceTiles(replace_tiles::ReplaceTiles { new_tiles: vec![tile("t1"), tile("t2")] })).await;
@@ -78,6 +95,7 @@ async fn create_tile_obeys_the_inverse_and_diff_absorb_laws() {
     let base = presentation_snapshot_with_tiles(&source, &[tile("t1")]);
     let mutation = PresentationMutation::CreateTile(create_tile::CreateTile { index: 1, tile: tile("t2") });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = PresentationMutation::CreateTile(create_tile::CreateTile { index: 2, tile: tile("t3") }).diff(&base).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
@@ -89,6 +107,7 @@ async fn rename_tile_obeys_the_inverse_law() {
     let base = presentation_snapshot_with_tiles(&source, &[tile("t1")]);
     let mutation = PresentationMutation::RenameTile(rename_tile::RenameTile { id: "t1".into(), new_name: "Hero".into() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -102,6 +121,7 @@ async fn replace_source_obeys_the_inverse_and_diff_absorb_laws() {
     source_b.src = "/other.png".into();
     let mutation = PresentationMutation::ReplaceSource(replace_source::ReplaceSource { new_source: source_a });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = PresentationMutation::ReplaceSource(replace_source::ReplaceSource { new_source: source_b }).diff(&base).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;

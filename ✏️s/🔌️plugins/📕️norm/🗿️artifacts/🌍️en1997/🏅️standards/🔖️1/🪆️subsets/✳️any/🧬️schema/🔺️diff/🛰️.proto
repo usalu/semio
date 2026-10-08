@@ -1,52 +1,80 @@
-// 🧬️ EN 1997 diff schema.
 syntax = "proto3";
 package semio.s.norm.en1997.diff;
 
+message En1997LayersPatch {
+  string id = 1;
+  optional double oedometric_modulus = 2;
+  optional double phi_prime_deg = 3;
+}
+
+message En1997LayersRows {
+  repeated string removed = 1;
+  repeated En1997LayersPatch modified = 2;
+  repeated string order = 3;
+}
+
+message En1997FootingsPatch {
+  string id = 1;
+  optional double width = 2;
+  optional double embedment = 3;
+}
+
+message En1997FootingsRows {
+  repeated string removed = 1;
+  repeated En1997FootingsPatch modified = 2;
+  repeated string order = 3;
+}
+
+message En1997PilesPatch {
+  string id = 1;
+  optional double length = 2;
+  optional uint32 count = 3;
+}
+
+message En1997PilesRows {
+  repeated string removed = 1;
+  repeated En1997PilesPatch modified = 2;
+  repeated string order = 3;
+}
+
+message En1997RetainingWallsPatch {
+  string id = 1;
+  optional double base_width = 2;
+}
+
+message En1997RetainingWallsRows {
+  repeated string removed = 1;
+  repeated En1997RetainingWallsPatch modified = 2;
+  repeated string order = 3;
+}
+
+message En1997SlopesPatch {
+  string id = 1;
+  optional double angle_deg = 2;
+}
+
+message En1997SlopesRows {
+  repeated string removed = 1;
+  repeated En1997SlopesPatch modified = 2;
+  repeated string order = 3;
+}
+
+message En1997UpliftCasesRows {
+  repeated string removed = 1;
+  repeated string order = 2;
+}
+
 message En1997Diff {
-  // @state artifact
-  optional En1997Artifact artifact = 1;
-  // @state artifact
-  optional double v_ed_kn = 2;
-  // @state artifact
-  optional double h_ed_kn = 3;
-  // @state artifact
-  optional double footing_area_m2 = 4;
-  // @state artifact
-  optional double phi_deg = 5;
-  // @state artifact
-  optional double c_kpa = 6;
-  // @state artifact
-  optional double gamma_kn_m3 = 7;
-  // @state artifact
-  optional double b_m = 8;
-  // @state artifact
-  optional double d_f_m = 9;
-  // @state artifact
-  optional double e_s_mpa = 10;
-  // @state artifact
-  optional double nu = 11;
-  // @state artifact
-  optional double design_approach = 12;
-  // @state artifact
-  optional double annex = 13;
-  // @state artifact
-  optional double settlement_limit_mm = 14;
-  // @state artifact
-  optional double n_pile_ed_kn = 15;
-  // @state artifact
-  optional double alpha_s = 16;
-  // @state artifact
-  optional double pile_d_m = 17;
-  // @state artifact
-  optional double q_s_kpa = 18;
-  // @state artifact
-  optional double pile_l_m = 19;
-  // @state artifact
-  optional double q_b_kpa = 20;
-  // @state artifact
-  optional double pile_base_area_m2 = 21;
-  // @state artifact
-  optional uint32 pile_n_profiles = 22;
-  // @state artifact
-  optional double z_investigated_m = 23;
+  optional string structure_id = 1;
+  optional uint32 geotechnical_category = 2;
+  optional string design_situation = 3;
+  optional string design_approach = 4;
+  optional double groundwater_level = 5;
+  optional double investigation_depth = 6;
+  optional En1997LayersRows layers = 7;
+  optional En1997FootingsRows footings = 8;
+  optional En1997PilesRows piles = 9;
+  optional En1997RetainingWallsRows retaining_walls = 10;
+  optional En1997SlopesRows slopes = 11;
+  optional En1997UpliftCasesRows uplift_cases = 12;
 }

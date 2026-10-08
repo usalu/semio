@@ -18,50 +18,22 @@ use protocol::{OpBinary, OpText};
 /// varint-framed binary all the way down, reusing `diff`'s `pub(crate)` binary value codecs
 /// (`enc_triangle_bin`/`dec_triangle_bin`) rather than duplicating them — same intra-artifact
 /// reuse pattern this file's own text `enc_snapshot` already establishes over `crate::standards::v_ascii::subsets::any::io::text::diff::enc_triangle`.
-pub(crate) fn enc_snapshot_bin(s: &StlSnapshot, out: &mut Vec<u8>) {
-    crate::standards::v_ascii::subsets::any::io::binary::diff::write_str_bin(out, &s.schema);
-    crate::standards::v_ascii::subsets::any::io::binary::diff::write_str_bin(out, &s.solid_name);
-    store::pack_rt::write_varint_u64(out, s.triangles.len() as u64);
-    for t in &s.triangles {
-        crate::standards::v_ascii::subsets::any::io::binary::diff::enc_triangle_bin(t, out);
-    }
-}
-
-pub(crate) fn dec_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<StlSnapshot, String> {
-    let schema = crate::standards::v_ascii::subsets::any::io::binary::diff::read_str_bin(reader)?;
-    let solid_name = crate::standards::v_ascii::subsets::any::io::binary::diff::read_str_bin(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut triangles = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        triangles.push(crate::standards::v_ascii::subsets::any::io::binary::diff::dec_triangle_bin(reader)?);
-    }
-    Ok(StlSnapshot { schema, solid_name, triangles })
-}
-
 /// 🧪️ P2-FG1-FIX: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from the prior `print_stl_op(self).into_bytes()` text-as-binary shortcut. `tag` is
-/// the `StlMutation` variant's declaration-order ordinal (1=`SetSnapshot` .. 6=
+/// the `StlMutation` variant's declaration-order ordinal (1=`SetSolidName` .. 5=
 /// `SetTriangleVertices`, same order `enum StlMutation` declares them; `0` is retired along with
 /// `NoMutation`, not reused). Every variant's payload is real field-by-field binary
 /// (`write_varint_u64` for `index: usize`, `write_f64_bin`/`enc_vec3_bin`/`enc_vertices_bin`/
 /// `enc_triangle_bin`/`enc_snapshot_bin` for the rest) — `StlMutation`'s payload tree has ZERO
 /// self-recursion, so nothing here is opaque at the Rust layer; only the protocol-dialect file
-/// still frames the payload as one opaque trailing chain (`SetSnapshot`'s `Vec<StlTriangle>` is a
-/// variable-length vector-of-records, the same `protocol-array-of-records` `walk_protocol` gap the
+/// still frames the payload as one opaque trailing chain (`InsertTriangle`'s triangle record is a
+/// variable-shape record, the same `protocol-array-of-records` `walk_protocol` gap the
 /// sibling diff protocol file documents).
 impl OpBinary for StlMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, 0u8];
         let tag: u8 = match self {
-            StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
-                enc_snapshot_bin(snapshot, &mut out);
-                TAG_SET_SNAPSHOT
-            }
-            StlMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => {
-                out.extend(patch.encode_op()?);
-                TAG_PATCH_SNAPSHOT
-            }
             StlMutation::SetSolidName(set_solid_name::SetSolidName { name }) => {
                 crate::standards::v_ascii::subsets::any::io::binary::diff::write_str_bin(&mut out, name);
                 TAG_SET_SOLID_NAME
@@ -94,11 +66,6 @@ impl OpBinary for StlMutation {
         let _format = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
         let tag = reader.read_u8().map_err(|e| protocol::ProtocolError::Malformed { what: "op tag", offset: 1, detail: e.to_string() })?;
         match tag {
-            TAG_SET_SNAPSHOT => {
-                let snapshot = dec_snapshot_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op snapshot", offset: reader.position() as u64, detail: e })?;
-                Ok(StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
-            }
-            TAG_PATCH_SNAPSHOT => semio_s_artifact_stdio_contract::editing::SnapshotPatch::decode_op(&bytes[reader.position()..]).map(|patch| StlMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
             TAG_SET_SOLID_NAME => {
                 let name = crate::standards::v_ascii::subsets::any::io::binary::diff::read_str_bin(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what: "op name", offset: reader.position() as u64, detail: e })?;
                 Ok(StlMutation::SetSolidName(set_solid_name::SetSolidName { name }))
@@ -132,8 +99,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `StlMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_SET_SOLID_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-solid-name");
 const TAG_INSERT_TRIANGLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-triangle");
 const TAG_REMOVE_TRIANGLE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-triangle");

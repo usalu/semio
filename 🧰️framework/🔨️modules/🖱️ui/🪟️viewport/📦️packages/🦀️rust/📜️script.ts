@@ -12,7 +12,7 @@ class NativeScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     const{rest}=resolveTestLevel(segments);
     if(rest.length)throw Error("test-native accepts only an execution level");
-    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-ui-viewport"],cwd:this.root,extraArgs:["--lib","--no-fail-fast"]},readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-ui-viewport"],cwd:this.root,extraArgs:["--all-targets","--no-fail-fast"]},readCargoTestPolicyV1(process.env));
   }
 }
 /** 🪆️ Checks canonical owner bindings against independent schema and SQLite fields. */

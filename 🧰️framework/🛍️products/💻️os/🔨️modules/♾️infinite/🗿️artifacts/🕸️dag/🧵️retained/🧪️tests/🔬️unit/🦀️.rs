@@ -72,20 +72,24 @@ fn dag_opens_as_an_owned_member_through_its_own_pack_codec() {
     let decoded = <DagSnapshot as crate::os_store::ArtifactPack>::decode_pack(&encoded).expect("the member opener's whole-pack decode");
     assert_eq!(decoded.nodes, snapshot.nodes, "the opener's decode round-trips the exact member snapshot");
     let mut cursor = semio_framework_value::retirement::RetireOwned::retirement(decoded);
+    let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 4_096, maximum_release_bytes: 4_096, maximum_depth: 4_096 };
+    assert!(matches!(cursor.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, ..grant }), semio_framework_value::retirement::RetirementStep::BudgetExhausted), "zero items refuse before moving any owner");
     for turn in 0..1_000_000 {
-        match cursor.close_step(4_096) {
+        match cursor.close_step(grant) {
             semio_framework_value::retirement::RetirementStep::Complete if cursor.terminal_is_empty() => break,
             semio_framework_value::retirement::RetirementStep::BudgetExhausted => panic!("the member opener's owner cursor stalled on turn {turn}"),
+            semio_framework_value::retirement::RetirementStep::Failure(error) => panic!("the member opener's owner cursor refused: {error:?}"),
             _ => {}
         }
         assert!(turn < 999_999, "the member opener's owner cursor never reached terminal-empty");
     }
     let mut zero = semio_framework_value::retirement::RetireOwned::retirement(crate::default_dag_document());
-    assert!(matches!(zero.close_step(0), semio_framework_value::retirement::RetirementStep::BudgetExhausted), "a zero grant is exhaustion, never progress");
+    assert!(matches!(zero.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_copy_bytes: 0, ..grant }), semio_framework_value::retirement::RetirementStep::BudgetExhausted), "a zero grant is exhaustion, never progress");
     for turn in 0..1_000_000 {
-        match zero.close_step(4_096) {
+        match zero.close_step(grant) {
             semio_framework_value::retirement::RetirementStep::Complete if zero.terminal_is_empty() => break,
             semio_framework_value::retirement::RetirementStep::BudgetExhausted => panic!("the refused turn left the cursor stuck on turn {turn}"),
+            semio_framework_value::retirement::RetirementStep::Failure(error) => panic!("the refused turn retained a faulty owner: {error:?}"),
             _ => {}
         }
     }

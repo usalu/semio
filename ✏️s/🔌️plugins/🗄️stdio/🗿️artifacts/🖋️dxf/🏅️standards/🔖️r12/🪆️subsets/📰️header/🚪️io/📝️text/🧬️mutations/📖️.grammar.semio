@@ -27,14 +27,12 @@ start document
 # self-recursive — a `block-item`'s own `entity-list` references `dxf-entity`, but no `DxfEntity`
 # variant nests another `DxfEntity` (R12 has no entity-in-entity nesting), so this whole grammar
 # has a fixed maximum depth, genuinely exercised end-to-end (incl. every entity kind, a POLYLINE
-# with vertices, and a `SetSnapshot` payload nesting a block-with-entity) by
+# with vertices, and a `SetBlock` payload nesting a block-with-entity) by
 # `ops_grammar_conformance_law` against real `print_op` output for every `DxfMutation` variant.
-document = set-snapshot | patch-snapshot | set-header-var | remove-header-var | insert-layer | remove-layer | set-layer | insert-style | remove-style | set-style | insert-linetype | remove-linetype | set-linetype | insert-entity | remove-entity | set-entity | insert-block | remove-block | set-block
+document = set-header-var | remove-header-var | insert-layer | remove-layer | set-layer | insert-style | remove-style | set-style | insert-linetype | remove-linetype | set-linetype | insert-entity | remove-entity | set-entity | insert-block | remove-block | set-block
 
-patch-snapshot = "patch-snapshot" "patch" "=" hex
-set-snapshot = "set-snapshot" "snapshot" "=" dxf-snapshot
 
-set-header-var = "set-header-var" "name" "=" hex "header-var" "=" header-var
+set-header-var = "set-header-var" "name" "=" hex "header-var" "=" header-var {"index" "=" INT}?
 remove-header-var = "remove-header-var" "name" "=" hex
 
 insert-layer = "insert-layer" "index" "=" INT "layer" "=" layer-item
@@ -96,6 +94,3 @@ other-table-list = "[" "]" | "[" other-table {"," other-table}* "]"
 
 dxf-tables = "[" layer-list "," style-list "," linetype-list "]"
 
-# `enc_dxf_snapshot`/`dec_dxf_snapshot` — the WHOLE snapshot, only reachable via `SetSnapshot`'s
-# own payload (`🔺️diff/🦀️.rs`'s own doc comment on `enc_dxf_snapshot` names this exactly).
-dxf-snapshot = "[" hex "," header-var-list "," dxf-tables "," other-table-list "," block-list "," entity-list "]"

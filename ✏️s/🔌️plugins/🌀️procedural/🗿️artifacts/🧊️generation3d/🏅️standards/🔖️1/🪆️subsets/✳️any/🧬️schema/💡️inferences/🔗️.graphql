@@ -1,7 +1,8 @@
-# 💡️ Generation3d inference schema — topology (DAG shape of `fixture`'s widget/synapse graph).
+# 💡️ Generation3d inference schema — topology (DAG shape of `fixture`'s widget/synapse graph) and geometry (the evaluation of every widget, summarised).
 
 type Generation3dInference {
   topology: Generation3dTopology! @derived
+  geometry: Generation3dGeometryRecord! @derived
 }
 
 type Generation3dTopology {
@@ -10,4 +11,42 @@ type Generation3dTopology {
   topoOrder: [String!]!
   depth: Int!
   cycleFree: Boolean!
+}
+
+enum Generation3dGeometryQuality {
+  EXACT_ANALYTIC
+  EXACT_NUMERICAL
+  APPROXIMATE
+  MESH_DERIVED_BREP
+  POLYGON_MESH
+  TESSELLATED_MESH
+}
+
+type Generation3dGeometryRecord {
+  widgets: [Generation3dGeometryRecordWidgetsEntry!]!
+  faulted: Int!
+}
+
+type Generation3dGeometryRecordWidgetsEntry {
+  key: String!
+  value: Generation3dWidgetRecord!
+}
+
+type Generation3dWidgetRecord {
+  quality: Generation3dGeometryQuality!
+  fault: Generation3dFaultRecord
+  outputs: [Generation3dOutputRecord!]!
+}
+
+type Generation3dFaultRecord {
+  code: String!
+  en: String!
+  de: String!
+  port: String
+}
+
+type Generation3dOutputRecord {
+  port: String!
+  kind: String!
+  detail: String!
 }

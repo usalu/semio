@@ -1,11 +1,11 @@
 {
-  "artifact": null,
   "manufacturerFile": null,
-  "catalog": null,
+  "products": null,
+  "catalogExtensions": null,
   "editionProfile": null,
   "correctionAsOf": null,
   "strictMode": true,
-  "index": null,
+  "indexEntries": null,
   "geometry": null,
   "curves": null,
   "limits": null

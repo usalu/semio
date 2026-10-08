@@ -292,13 +292,13 @@ fn gis3d_bounded_serialized_bytes<T: semio_framework_value::ToValue>(value: &T) 
 }
 
 fn prepare_gis3d_artifact(base: &GisTerrainSnapshot, mutation: GisTerrainMutation) -> Result<(GisTerrainSnapshot, Vec<GisTerrainMutation>, GisTerrainMutation, usize), String> {
-    use protocol::{Mutation as _, MutationDiff as _};
+    use protocol::Mutation as _;
     if !matches!(&mutation, GisTerrainMutation::ChangeExaggeration(payload) if payload.new_exaggeration.is_finite()) {
         return Err("GIS terrain Artifact preparation only admits ChangeExaggeration".into());
     }
     let retained_bytes = gis3d_bounded_serialized_bytes(base)?;
     let inverse = mutation.inverse(base).map_err(semio_framework_value::ValueError::into_message)?;
-    let post = mutation.diff(base).into_parts().0.apply(base).map_err(|_| "GIS terrain Artifact mutation could not produce its post root".to_string())?;
+    let post = protocol::apply_diff(&mutation.diff(base).into_parts().0, base).map_err(|_| "GIS terrain Artifact mutation could not produce its post root".to_string())?;
     Ok((post, inverse, mutation, retained_bytes))
 }
 

@@ -10,8 +10,6 @@ framing record
 # derives every tag from these records at compile time (`dsl::protocol_record::tag_u8`).
 header fixed 1
 field tag u8
-record set-snapshot tag=1
-field snapshot bytes
 record set-has-header tag=2
 field has_header u8
 record insert-record tag=3
@@ -24,5 +22,3 @@ field record_index varint
 field field_index varint
 field quoted u8
 field value bytes
-record patch-snapshot tag=6
-field patch bytes

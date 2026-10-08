@@ -1,5 +1,5 @@
 use crate::{FormMutation, FormsSnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 #[test]
 fn response_events_match_shared_vectors_and_undo() {
@@ -14,11 +14,11 @@ fn response_events_match_shared_vectors_and_undo() {
         if let Some(error) = case["error"].as_str() {
             assert!(outcome.messages().iter().any(|message| message.code.0 == error), "{}", case["name"]);
         } else {
-            let after = outcome.diff().apply(&before).unwrap();
+            let after = protocol::apply_diff(outcome.diff(), &before).unwrap();
             let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&after.responses)).unwrap();
             assert_eq!(actual, case["after"], "{}", case["name"]);
             let mut undone = after;
-            for inverse in event.inverse(&before).expect("valid retained mutation inverse fixture") { undone = inverse.diff(&undone).diff().apply(&undone).unwrap(); }
+            for inverse in event.inverse(&before).expect("valid retained mutation inverse fixture") { undone = protocol::apply_diff(inverse.diff(&undone).diff(), &undone).unwrap(); }
             assert_eq!(undone.responses, before.responses, "{}", case["name"]);
         }
     }

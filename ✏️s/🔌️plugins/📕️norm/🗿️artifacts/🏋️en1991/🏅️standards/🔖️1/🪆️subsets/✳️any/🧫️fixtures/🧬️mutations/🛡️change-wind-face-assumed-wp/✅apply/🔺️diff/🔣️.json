@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "annex": null,
   "snowZone": null,
   "altitude": null,
@@ -65,24 +64,44 @@
   "assumedSiloPressure": null,
   "assumedSiloPatch": null,
   "assumedSiloWallFriction": null,
-  "floors": null,
-  "selfWeightElements": null,
-  "roofs": null,
+  "floors": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "selfWeightElements": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "roofs": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
   "windFaces": {
-    "values": [
+    "removed": [],
+    "added": [],
+    "modified": [
       {
-        "id": "facade-d",
-        "zone": "D",
-        "z": 8.0,
-        "cPe10": 0.8,
-        "cPe1": 1.0,
-        "cPi": 0.2,
-        "cS": 1.0,
-        "cD": 1.0,
-        "loadedArea": 10.0,
-        "assumedWp": 750.0
+        "key": "facade-d",
+        "patch": {
+          "zone": null,
+          "z": null,
+          "cPe10": null,
+          "cPe1": null,
+          "cPi": null,
+          "cS": null,
+          "cD": null,
+          "loadedArea": null,
+          "assumedWp": 750.0
+        }
       }
     ]
   },
-  "accidentalCases": null
+  "accidentalCases": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

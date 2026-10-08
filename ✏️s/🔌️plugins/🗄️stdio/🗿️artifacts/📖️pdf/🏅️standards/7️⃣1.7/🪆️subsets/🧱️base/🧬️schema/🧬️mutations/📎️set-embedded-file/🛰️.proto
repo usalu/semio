@@ -7,4 +7,5 @@ import "../../🔺️diff/🛰️.proto";
 // 📎️ Direct set-embedded-file protobuf payload.
 message SetEmbeddedFileMutation {
   PdfEmbeddedFile file = 1;
+  optional uint64 index = 2;
 }

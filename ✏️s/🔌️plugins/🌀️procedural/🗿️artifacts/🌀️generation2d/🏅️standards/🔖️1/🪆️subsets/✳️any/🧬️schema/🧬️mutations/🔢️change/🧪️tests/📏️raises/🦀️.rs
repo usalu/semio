@@ -128,7 +128,13 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded = Generation2dDiffRead::new(semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes"));
     let produced = Generation2dSnapshotRead::new(
-        <Generation2dDiff as protocol::MutationDiff<Generation2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot"),
+        protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot"),
     );
     assert_eq!(produced, expected_after(), "change-generation-value/raises-the-height-answer-in-generation-1: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse steps' diffs sum, by `absorb`, to the negative of the forward diff and carry the after-state back to `before`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

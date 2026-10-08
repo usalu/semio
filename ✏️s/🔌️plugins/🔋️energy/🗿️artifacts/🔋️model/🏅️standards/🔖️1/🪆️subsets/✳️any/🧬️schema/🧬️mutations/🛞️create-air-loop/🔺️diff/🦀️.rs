@@ -30,7 +30,11 @@ pub fn diff(payload: &super::CreateAirLoop, base: &EnergyModelSnapshot) -> proto
     if payload.terminal_zone_ids.iter().any(|entry| !base.model.zones.iter().any(|zone| zone.id == *entry)) {
         return protocol::MutationOutcome::error("mutation.target-missing", "A terminal zone list names a zone this model does not have.".to_string(), [payload.id.0.to_string()]);
     }
-    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { air_loops: Rows::inserting(base.model.air_loops.len(), crate::model::ModelAirLoop {
+    let position = payload.index.map_or(base.model.air_loops.len(), |index| index as usize);
+    if position > base.model.air_loops.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} air_loops.", position, base.model.air_loops.len()), [payload.id.0.to_string()]);
+    }
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { air_loops: Rows::inserting(position, crate::model::ModelAirLoop {
         id: payload.id,
         name: payload.name.clone(),
         supply_node_id: payload.supply_node_id,

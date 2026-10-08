@@ -2,52 +2,150 @@
 syntax = "proto3";
 package semio.s.norm.en1990.diff;
 
+message En1990PermanentAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1990PermanentModification {
+  string key = 1;
+  En1990PermanentPatch patch = 2;
+}
+
+message En1990PermanentDelta {
+  repeated string removed = 1;
+  repeated En1990PermanentAddition added = 2;
+  repeated En1990PermanentModification modified = 3;
+}
+
+message En1990PermanentPatch {
+  optional string kind = 1;
+  optional double gk = 2;
+}
+
+message En1990VariableAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1990VariableModification {
+  string key = 1;
+  En1990VariablePatch patch = 2;
+}
+
+message En1990VariableDelta {
+  repeated string removed = 1;
+  repeated En1990VariableAddition added = 2;
+  repeated En1990VariableModification modified = 3;
+}
+
+message En1990VariablePatch {
+  optional string category = 1;
+  optional double qk = 2;
+}
+
+message En1990AccidentalAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1990AccidentalModification {
+  string key = 1;
+  En1990AccidentalPatch patch = 2;
+}
+
+message En1990AccidentalDelta {
+  repeated string removed = 1;
+  repeated En1990AccidentalAddition added = 2;
+  repeated En1990AccidentalModification modified = 3;
+}
+
+message En1990AccidentalPatch {
+  optional double ad = 1;
+}
+
+message En1990SeismicAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1990SeismicModification {
+  string key = 1;
+  En1990SeismicPatch patch = 2;
+}
+
+message En1990SeismicDelta {
+  repeated string removed = 1;
+  repeated En1990SeismicAddition added = 2;
+  repeated En1990SeismicModification modified = 3;
+}
+
+message En1990SeismicPatch {
+  optional double a_ek = 1;
+  optional bytes importance_class = 2;
+}
+
+message En1990MemberAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1990MemberModification {
+  string key = 1;
+  En1990MemberPatch patch = 2;
+}
+
+message En1990MemberDelta {
+  repeated string removed = 1;
+  repeated En1990MemberAddition added = 2;
+  repeated En1990MemberModification modified = 3;
+}
+
+message En1990MemberPatch {
+  optional string label_en = 1;
+  optional string label_de = 2;
+  optional double rd_str = 3;
+  optional double rd_geo = 4;
+  optional double rd_equ_stab = 5;
+  optional double rd_equ_destab = 6;
+  optional double rd_fat = 7;
+  optional double span = 8;
+  optional double deflection_w = 9;
+  optional double deflection_limit_ratio = 10;
+  optional double vibration_frequency = 11;
+  optional double vibration_frequency_min = 12;
+}
+
+message En1990BridgeSlsAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message En1990BridgeSlsModification {
+  string key = 1;
+  En1990BridgeSlsPatch patch = 2;
+}
+
+message En1990BridgeSlsDelta {
+  repeated string removed = 1;
+  repeated En1990BridgeSlsAddition added = 2;
+  repeated En1990BridgeSlsModification modified = 3;
+}
+
+message En1990BridgeSlsPatch {
+  optional string member_id = 1;
+  optional double deck_acceleration = 2;
+  optional double deck_acceleration_limit = 3;
+  optional double deck_twist = 4;
+  optional double deck_twist_limit = 5;
+  optional double bridge_deflection = 6;
+  optional double bridge_deflection_limit = 7;
+}
+
 enum En1990RowOp {
   EN1990_ROW_OP_INSERT = 0;
   EN1990_ROW_OP_REMOVE = 1;
   EN1990_ROW_OP_REPLACE = 2;
-}
-
-message En1990PermanentEdit {
-  En1990RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-}
-
-message En1990VariableEdit {
-  En1990RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-}
-
-message En1990AccidentalEdit {
-  En1990RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-}
-
-message En1990SeismicEdit {
-  En1990RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-}
-
-message En1990MemberEdit {
-  En1990RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-}
-
-message En1990BridgeSlsEdit {
-  En1990RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
 }
 
 message En1990EffectEdit {
@@ -85,17 +183,17 @@ message En1990Diff {
   // @state artifact
   optional double beta_computed = 13;
   // @state artifact
-  repeated En1990PermanentEdit permanents = 14;
+  En1990PermanentDelta permanents = 14;
   // @state artifact
-  repeated En1990VariableEdit variables = 15;
+  En1990VariableDelta variables = 15;
   // @state artifact
-  repeated En1990AccidentalEdit accidentals = 16;
+  En1990AccidentalDelta accidentals = 16;
   // @state artifact
-  repeated En1990SeismicEdit seismics = 17;
+  En1990SeismicDelta seismics = 17;
   // @state artifact
-  repeated En1990MemberEdit members = 18;
+  En1990MemberDelta members = 18;
   // @state artifact
-  repeated En1990BridgeSlsEdit bridge_sls = 19;
+  En1990BridgeSlsDelta bridge_sls = 19;
   // @state artifact
   repeated En1990EffectEdit effects = 20;
 }

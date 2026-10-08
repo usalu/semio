@@ -18,12 +18,6 @@ pub use resize_page::ResizePage;
 #[path = "♻️replace-page-text/🦀️.rs"]
 pub mod replace_page_text;
 pub use replace_page_text::ReplacePageText;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-pub use set_snapshot::SetSnapshot;
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-pub use patch_snapshot::PatchSnapshot;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Aggregate
@@ -36,11 +30,50 @@ pub enum PdfMutation {
     MovePage(MovePage),
     ResizePage(ResizePage),
     ReplacePageText(ReplacePageText),
-    SetSnapshot(SetSnapshot),
-    PatchSnapshot(PatchSnapshot),
 }
 
 //#endregion 🔖️Aggregate
+
+//#region 🔖️Net
+/// 🧮️ The concrete leaves carrying `base` to `next`: a single moved page as one move, the pages that changed in place as a resize
+/// and/or a text replacement each, then the surplus pages removed from the end or inserted at their final positions. Replaying
+/// them through the central applier is the proof the net is exact; a change to the schema marker is left out, so the replay then
+/// refuses the edit.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn net_mutations(base: &PdfSnapshot, next: &PdfSnapshot) -> Vec<PdfMutation> {
+    let (before, after) = (&base.pages, &next.pages);
+    let prefix = before.iter().zip(after).take_while(|(left, right)| left == right).count();
+    let suffix = before[prefix..].iter().rev().zip(after[prefix..].iter().rev()).take_while(|(left, right)| left == right).count();
+    let (old, new) = (&before[prefix..before.len() - suffix], &after[prefix..after.len() - suffix]);
+    if old.len() == new.len() && old.len() >= 2 {
+        let last = old.len() - 1;
+        if old[1..] == new[..last] && old[0] == new[last] {
+            return vec![PdfMutation::MovePage(MovePage { from: prefix, to: prefix + last })];
+        }
+        if old[..last] == new[1..] && old[last] == new[0] {
+            return vec![PdfMutation::MovePage(MovePage { from: prefix + last, to: prefix })];
+        }
+    }
+    let mut leaves = Vec::new();
+    let paired = old.len().min(new.len());
+    for offset in 0..paired {
+        let (previous, page) = (&old[offset], &new[offset]);
+        if previous.width.to_bits() != page.width.to_bits() || previous.height.to_bits() != page.height.to_bits() {
+            leaves.push(PdfMutation::ResizePage(ResizePage { index: prefix + offset, width: page.width, height: page.height }));
+        }
+        if previous.text != page.text {
+            leaves.push(PdfMutation::ReplacePageText(ReplacePageText { index: prefix + offset, text: page.text.clone() }));
+        }
+    }
+    for index in (prefix + paired..prefix + old.len()).rev() {
+        leaves.push(PdfMutation::RemovePage(RemovePage { index }));
+    }
+    for offset in paired..new.len() {
+        leaves.push(PdfMutation::InsertPage(InsertPage { index: prefix + offset, page: new[offset].clone() }));
+    }
+    leaves
+}
+//#endregion 🔖️Net
 
 //#region 🔖️Delegation
 /// 🛡️ Applies `outcome` to `snapshot` atomically through the central applier and converts an apply rejection into a fatal outcome.

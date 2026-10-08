@@ -1,6 +1,4 @@
-//! 🔤️ `insert-shared-string` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🔤️ `insert-shared-string` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -9,20 +7,21 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertSharedString {
     pub(crate) value: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) index: Option<usize>,
 }
 
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for InsertSharedString {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "shared-string", kind: "insert-shared-string", record: "InsertSharedString" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxMutation as Mutation<XlsxSnapshot>>::Diff> {
-        agg_diff(&XlsxMutation::InsertSharedString(self.clone()), base)
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
+        plan_outcome(canonical_edit::insert_shared_string_plan(base, &self.value, self.index))
     }
+
     fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&XlsxMutation::InsertSharedString(self.clone()), base)?
-    
-    })
-}
+        Ok(plan_inverse(canonical_edit::insert_shared_string_plan(base, &self.value, self.index)))
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert shared string", "Gemeinsame Zeichenfolge einfügen")
     }

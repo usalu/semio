@@ -1,0 +1,81 @@
+{
+  "owners": [
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🫳️preflight/🦀️.rs",
+      "functions": [
+        "record_borrowed_preflight_text_exact_full_owners_and_cancellation",
+        "record_borrowed_preflight_pack_exact_compression_spill_and_cumulative_ownership",
+        "record_borrowed_preflight_pack_table_and_statements_exact_ordinary_wire",
+        "record_borrowed_preflight_pack_nested_record_logical_depth",
+        "record_borrowed_preflight_pack_packed_numeric_logical_depth",
+        "record_borrowed_preflight_pack_table_statements_logical_depth",
+        "record_borrowed_preflight_pack_long_forced_reference_column",
+        "record_borrowed_preflight_pack_absent_root_has_no_wire_child_depth",
+        "record_borrowed_preflight_pack_authored_coord_and_direction_exact_original_words",
+        "record_borrowed_preflight_intrinsic_values_match_canonical_bytes_and_controls"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/🔬️schema-hash/💰️storage/🦀️.rs",
+      "functions": [
+        "schema_hash_controlled_full_allocator_requests_and_same_caller_are_admitted"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/🏭️schema/🧪️tests/🦀️.rs",
+      "functions": [
+        "record_borrowed_preflight_long_schema_metadata_hash_parity_and_paged_ordering",
+        "record_borrowed_preflight_long_schema_metadata_equivalence_is_cancellable"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🌱️value/🧪️tests/📦️operation-pages/🦀️.rs",
+      "functions": [
+        "record_operation_pages_emit_exact_canonical_words_and_keep_canceled_prefix_owned",
+        "record_operation_pages_decode_cross_page_bytes_and_utf8_without_flattening_the_source",
+        "intrinsic_operation_pages_emit_and_decode_same_complete_owner_under_actual_policy",
+        "record_operation_pages_real_core_sink_uses_step_funded_backing_and_same_control",
+        "record_operation_pages_borrowed_source_excludes_large_payload_mirrors_and_keeps_literal_wire",
+        "record_operation_pages_borrowed_source_joins_actual_nested_derived_tables_numbers_and_wire",
+        "borrowed_operation_symbols_preserve_first_source_and_all_paid_pages",
+        "borrowed_static_projected_pack_keeps_source_scratch_and_exact_wire",
+        "borrowed_static_projected_pack_nested_authored_shapes_match_original_codec",
+        "borrowed_static_projected_pack_statement_ref_and_unsorted_source_match_original",
+        "borrowed_static_projected_pack_actual_derived_variant_source_matches_original",
+        "borrowed_static_projected_pack_owned_variant_retains_source_until_scratch_settles"
+      ]
+    }
+  ],
+  "actualCompiledList": "🗑️generated/oct8-plugin-artifacts/exact-cargo-laws-rlshkL/00/list.stdout",
+  "package": "semio-framework-pack",
+  "target": {
+    "kind": "lib"
+  },
+  "laws": [
+    "record::borrowed_preflight::schema::tests::record_borrowed_preflight_long_schema_metadata_equivalence_is_cancellable",
+    "record::borrowed_preflight::schema::tests::record_borrowed_preflight_long_schema_metadata_hash_parity_and_paged_ordering",
+    "record::borrowed_preflight_tests::record_borrowed_preflight_intrinsic_values_match_canonical_bytes_and_controls",
+    "record::borrowed_preflight_tests::record_borrowed_preflight_pack_absent_root_has_no_wire_child_depth",
+    "record::borrowed_preflight_tests::record_borrowed_preflight_pack_authored_coord_and_direction_exact_original_words",
+    "record::borrowed_preflight_tests::record_borrowed_preflight_pack_exact_compression_spill_and_cumulative_ownership",
+    "record::borrowed_preflight_tests::record_borrowed_preflight_pack_long_forced_reference_column",
+    "record::borrowed_preflight_tests::record_borrowed_preflight_pack_nested_record_logical_depth",
+    "record::borrowed_preflight_tests::record_borrowed_preflight_pack_packed_numeric_logical_depth",
+    "record::borrowed_preflight_tests::record_borrowed_preflight_pack_table_and_statements_exact_ordinary_wire",
+    "record::borrowed_preflight_tests::record_borrowed_preflight_pack_table_statements_logical_depth",
+    "record::borrowed_preflight_tests::record_borrowed_preflight_text_exact_full_owners_and_cancellation",
+    "record::operation_page_tests::borrowed_operation_symbols_preserve_first_source_and_all_paid_pages",
+    "record::operation_page_tests::borrowed_static_projected_pack_actual_derived_variant_source_matches_original",
+    "record::operation_page_tests::borrowed_static_projected_pack_keeps_source_scratch_and_exact_wire",
+    "record::operation_page_tests::borrowed_static_projected_pack_nested_authored_shapes_match_original_codec",
+    "record::operation_page_tests::borrowed_static_projected_pack_owned_variant_retains_source_until_scratch_settles",
+    "record::operation_page_tests::borrowed_static_projected_pack_statement_ref_and_unsorted_source_match_original",
+    "record::operation_page_tests::intrinsic_operation_pages_emit_and_decode_same_complete_owner_under_actual_policy",
+    "record::operation_page_tests::record_operation_pages_borrowed_source_excludes_large_payload_mirrors_and_keeps_literal_wire",
+    "record::operation_page_tests::record_operation_pages_borrowed_source_joins_actual_nested_derived_tables_numbers_and_wire",
+    "record::operation_page_tests::record_operation_pages_decode_cross_page_bytes_and_utf8_without_flattening_the_source",
+    "record::operation_page_tests::record_operation_pages_emit_exact_canonical_words_and_keep_canceled_prefix_owned",
+    "record::operation_page_tests::record_operation_pages_real_core_sink_uses_step_funded_backing_and_same_control",
+    "record::schema_storage_tests::schema_hash_controlled_full_allocator_requests_and_same_caller_are_admitted"
+  ]
+}

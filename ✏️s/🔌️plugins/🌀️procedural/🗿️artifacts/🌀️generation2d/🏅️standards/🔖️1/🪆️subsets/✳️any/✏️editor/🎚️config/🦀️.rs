@@ -80,20 +80,14 @@ pub fn default_show_mode() -> String {
     "preview".into()
 }
 
-store::impl_whole_record_config!(Generation2dConfig);
+store::config_diff! { record: Generation2dConfig, diff: Generation2dConfigDiff, fields: { show_mode: String, selected_generation_id: Option<String> } }
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
-/// 🧮️ [`Generation2dConfig`]'s operation enum — one variant per settled config write, plus a generic
-/// `Snapshot` every variant's `backwards()` returns (each config tick is its own distinct edit, so
-/// "undo this tick" is "restore the whole-config snapshot from just before it").
+/// 🧮️ [`Generation2dConfig`]'s operation enum — one variant per settled config write; each variant's inverse is the same
+/// variant carrying the base value of exactly the field it owns.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum Generation2dConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: Generation2dConfig,
-    },
     #[dsl(key = "show-mode")]
     SetShowMode { value: String },
     #[dsl(key = "selected-generation")]
@@ -164,22 +158,6 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor {
             schema_version: 1,
-            owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set",
-            semantic_kind: "set-snapshot",
-            display_name: "Set Snapshot",
-            emoji: "⚙️",
-            aggregate_variant: "Snapshot",
-            payload_schema: "🧬️schema/🔣️.json",
-            text_opcode: None,
-            binary_tag: None,
-            invertibility: protocol::MutationInvertibility::ExplicitMutation,
-            diff_participation: protocol::MutationDiffParticipation::Detect,
-            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-            composition: protocol::MutationComposition::Atomic,
-            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-        },
-        protocol::MutationLeafDescriptor {
-            schema_version: 1,
             owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-show-mode",
             semantic_kind: "set-show-mode",
             display_name: "Set Show Mode",
@@ -214,30 +192,26 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Generation2dConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
-            Generation2dConfigMutation::SetShowMode { .. } => &Self::DESCRIPTORS[1],
-            Generation2dConfigMutation::SetSelectedGeneration { .. } => &Self::DESCRIPTORS[2],
+            Generation2dConfigMutation::SetShowMode { .. } => &Self::DESCRIPTORS[0],
+            Generation2dConfigMutation::SetSelectedGeneration { .. } => &Self::DESCRIPTORS[1],
         }
     }
 
-    type Diff = Generation2dConfig;
+    type Diff = Generation2dConfigDiff;
 
-    fn diff(&self, base: &Generation2dConfig) -> protocol::MutationOutcome<Generation2dConfig> {
-        let mut next = base.clone();
-        match self {
-            Generation2dConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
-            Generation2dConfigMutation::SetShowMode { value } => next.show_mode = value.clone(),
-            Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id } => next.selected_generation_id = selected_generation_id.clone(),
-        }
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, base: &Generation2dConfig) -> protocol::MutationOutcome<Generation2dConfigDiff> {
+        protocol::MutationOutcome::new(match self {
+            Generation2dConfigMutation::SetShowMode { value } => Generation2dConfigDiff { show_mode: Some(value.clone()), ..Default::default() },
+            Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id } => Generation2dConfigDiff { selected_generation_id: Some(selected_generation_id.clone()), ..Default::default() },
+        })
     }
 
     fn inverse(&self, base: &Generation2dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Generation2dConfigMutation::Snapshot { config: base.clone() }]
-    
-    })())
-}
+        Ok(vec![match self {
+            Generation2dConfigMutation::SetShowMode { .. } => Generation2dConfigMutation::SetShowMode { value: base.show_mode.clone() },
+            Generation2dConfigMutation::SetSelectedGeneration { .. } => Generation2dConfigMutation::SetSelectedGeneration { selected_generation_id: base.selected_generation_id.clone() },
+        }])
+    }
 }
 //#endregion 🔖️ConfigOperations
 

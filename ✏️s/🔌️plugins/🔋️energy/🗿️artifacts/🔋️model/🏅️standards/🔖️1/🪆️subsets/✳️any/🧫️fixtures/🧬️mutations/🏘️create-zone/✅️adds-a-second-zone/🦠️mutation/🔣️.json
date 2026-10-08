@@ -5,5 +5,6 @@
   "volumeM3": 129.6,
   "multiplier": 1,
   "conditioned": true,
-  "partOfTotalFloorArea": true
+  "partOfTotalFloorArea": true,
+  "index": null
 }

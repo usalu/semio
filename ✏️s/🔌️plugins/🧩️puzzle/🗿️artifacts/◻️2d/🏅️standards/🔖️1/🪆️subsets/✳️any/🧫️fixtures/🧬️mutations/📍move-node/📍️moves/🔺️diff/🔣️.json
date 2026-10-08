@@ -9,24 +9,8 @@
       {
         "id": "b3de3e2e-f93f-4de6-8bcc-e47d1ce9ce36",
         "patch": {
-          "replacement": {
-            "anchor": "fixed",
-            "handles": [
-              {
-                "angle": -1.5707963267948966,
-                "handleKind": "door capsule right",
-                "id": "b3de3e2e-f93f-4de6-8bcc-e47d1ce9ce36:link",
-                "radius": 3.0
-              }
-            ],
-            "iconKind": "capsule_slash",
-            "id": "b3de3e2e-f93f-4de6-8bcc-e47d1ce9ce36",
-            "nodeKind": "Capsule Slash",
-            "radius": 20.0,
-            "text": "cs_sl1_d1_t_f0_b_c1",
-            "x": -151.262,
-            "y": 717.675
-          }
+          "x": -151.262,
+          "y": 717.675
         }
       }
     ],

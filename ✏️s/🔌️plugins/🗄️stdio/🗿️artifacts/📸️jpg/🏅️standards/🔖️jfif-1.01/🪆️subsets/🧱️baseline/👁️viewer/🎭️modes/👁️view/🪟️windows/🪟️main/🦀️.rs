@@ -21,8 +21,8 @@ pub fn render(snapshot: &JpgSnapshot) -> semio_framework_plugin::UiAssemblyResul
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn image_view(snapshot: &JpgSnapshot) -> ImageView {
-    let bytes = encode_jpg(snapshot, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snapshot.frame.as_ref())).ok().unwrap_or_default();
-    ImageView { width: snapshot.width, height: snapshot.height, mime: "image/jpeg".into(), base64: semio_s_artifact_stdio_contract::base64_standard(&bytes) }
+    let bytes = encode_jpg(snapshot, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).ok().unwrap_or_default();
+    ImageView { width: snapshot.image.width, height: snapshot.image.height, mime: "image/jpeg".into(), base64: semio_s_artifact_stdio_contract::base64_standard(&bytes) }
 }
 
 #[cfg(test)]

@@ -1,4 +1,6 @@
 //! 🧬️ Direct change-primitive-extra-data mutation owner: payload, validation, typed diff, inverse, and outcomes.
+use crate::schema::diff::*;
+use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::modules::mutation_support::structure_geometry::checked_index;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::GltfTopLevelMutationRejection;
@@ -25,14 +27,35 @@ pub fn validate(payload: &GltfChangePrimitiveExtraDataPayload, base: &GltfSnapsh
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfChangePrimitiveExtraDataPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
-    let mut next = base.clone();
-    next.document.meshes[payload.mesh].primitives[payload.primitive].extras = match &payload.data {
+fn requested(payload: &GltfChangePrimitiveExtraDataPayload) -> Option<GltfJson> {
+    match &payload.data {
         GltfDataPresence::Absent => None,
         GltfDataPresence::Present { value } => Some(value.clone()),
-    };
-    Ok(next)
+    }
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn presence(value: &Option<GltfJson>) -> GltfDataPresence {
+    match value {
+        None => GltfDataPresence::Absent,
+        Some(value) => GltfDataPresence::Present { value: value.clone() },
+    }
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn plan(p: &GltfChangePrimitiveExtraDataPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
+    validate(p, base)?;
+    let value = requested(p);
+    Ok(GltfDiff { meshes: primitive_patch(p.mesh, p.primitive, GltfPrimitiveDiff { extras: (value != base.document.meshes[p.mesh].primitives[p.primitive].extras).then(|| value), ..Default::default() }), ..Default::default() })
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(p: &GltfChangePrimitiveExtraDataPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    if validate(p, base).is_err() {
+        return Vec::new();
+    }
+    let current = &base.document.meshes[p.mesh].primitives[p.primitive].extras;
+    if current == &requested(p) {
+        return Vec::new();
+    }
+    vec![super::change_primitive_extra_data::mutation(super::change_primitive_extra_data::GltfChangePrimitiveExtraDataPayload { mesh: p.mesh, primitive: p.primitive, data: presence(current) })]
 }
 
 //#region 🧬️DirectMutation
@@ -41,7 +64,11 @@ pub fn apply(payload: &GltfChangePrimitiveExtraDataPayload, base: &GltfSnapshot)
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangePrimitiveExtraDataMutation {
     Apply(GltfChangePrimitiveExtraDataPayload),
-    Restore(Box<crate::schema::diff::GltfDiff>),
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutation(payload: GltfChangePrimitiveExtraDataPayload) -> super::GltfMutation {
+    super::GltfMutation::ChangePrimitiveExtraData(ChangePrimitiveExtraDataMutation::Apply(payload))
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangePrimitiveExtraDataMutation {
@@ -49,28 +76,18 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangePrimiti
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => match apply(payload, base) {
-                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Self::Apply(payload) => match plan(payload, base) {
+                Ok(diff) => protocol::MutationOutcome::new(diff),
                 Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
-            },
-            Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
-                Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-                Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
             },
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
-            return Vec::new();
+        match self {
+            Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::GltfMutation::ChangePrimitiveExtraData(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change Primitive Extra Data", "Zusatzdaten des Primitivs ändern")

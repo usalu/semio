@@ -145,8 +145,8 @@
       "configurationRoot": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript",
       "previousPath": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/vitest.config.ts",
       "ownerPath": "🧰️framework/🔨️modules/◻️2d/🧪️tests/🎚️config/🟦️.ts",
-      "expectedName": "@semio-tech/s-2d-js",
-      "projectionSha256": "a42ef7c02421bd9ee5528cfc89112e5f9446bae370165ca5f40ee78225f652c8"
+      "expectedName": "@semio-tech/framework-2d-js",
+      "projectionSha256": "a7893b6e028f1b439a3ce316eb35cf24ec0eea6d69f60b5390fe2a764b4b8b33"
     },
     {
       "configurationRoot": "🧰️framework/🔨️modules/🎠️kernel",
@@ -194,8 +194,8 @@
       "configurationRoot": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript",
       "previousPath": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/vitest.config.ts",
       "ownerPath": "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🎚️config/🟦️.ts",
-      "expectedName": "@semio-tech/s-3d-js",
-      "projectionSha256": "562aff846a5aba7e94099526893a4aa897c2f9d92b6b448d8ea8f34b902b7488"
+      "expectedName": "@semio-tech/framework-3d-js",
+      "projectionSha256": "84e411316ccebd95e215a80c3f87cfaeb3e45b57349db7f4f099bab8c763229d"
     },
     {
       "configurationRoot": "🧰️framework/🔨️modules/🧬️schema",
@@ -233,10 +233,10 @@
       "projectionSha256": "835755da056edd00181323a8f50fb47bb732c6b9dd81b052a9f674f56e1ae753"
     },
     {
-      "configurationRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript",
-      "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/vitest.config.ts",
-      "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/🧪️tests/🎚️config/🟦️.ts",
-      "expectedName": "@semio-tech/infinite-canvas-react-renderer",
+      "configurationRoot": "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript",
+      "previousPath": "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/vitest.config.ts",
+      "ownerPath": "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/🧪️tests/🎚️config/🟦️.ts",
+      "expectedName": "@semio-tech/canvas-react-renderer",
       "projectionSha256": "da2abbba687cb88246b5ef481715532c5654a28b6e77aea057c70ef857f7a0c6"
     },
     {

@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../../../../.."
 name = "semio-framework-graph-layout-run"
 version = "0.1.0"
 edition = "2021"

@@ -6,6 +6,7 @@ union ProgramMutation = CreateInformationRequirement | DeleteInformationRequirem
 
 type CreateInformationRequirement {
   informationRequirement: JSON!
+  index: Int
 }
 
 type DeleteInformationRequirement {
@@ -23,6 +24,7 @@ type ReplaceInformationRequirement {
 
 type CreateSustainabilityRequirement {
   sustainabilityRequirement: JSON!
+  index: Int
 }
 
 type DeleteSustainabilityRequirement {
@@ -40,6 +42,7 @@ type ReplaceSustainabilityRequirement {
 
 type CreateAccessibilityRequirement {
   accessibilityRequirement: JSON!
+  index: Int
 }
 
 type DeleteAccessibilityRequirement {
@@ -57,6 +60,7 @@ type ReplaceAccessibilityRequirement {
 
 type CreateConflict {
   conflict: JSON!
+  index: Int
 }
 
 type DeleteConflict {
@@ -74,6 +78,7 @@ type ReplaceConflict {
 
 type CreateOptionEvaluation {
   optionEvaluation: JSON!
+  index: Int
 }
 
 type DeleteOptionEvaluation {
@@ -91,6 +96,7 @@ type ReplaceOptionEvaluation {
 
 type CreateFunction {
   function: JSON!
+  index: Int
 }
 
 type DeleteFunction {
@@ -108,6 +114,7 @@ type ReplaceFunction {
 
 type CreateRisk {
   risk: JSON!
+  index: Int
 }
 
 type DeleteRisk {
@@ -125,6 +132,7 @@ type ReplaceRisk {
 
 type CreateDecision {
   decision: JSON!
+  index: Int
 }
 
 type DeleteDecision {
@@ -142,6 +150,7 @@ type ReplaceDecision {
 
 type CreateValidationRecord {
   validationRecord: JSON!
+  index: Int
 }
 
 type DeleteValidationRecord {
@@ -159,6 +168,7 @@ type ReplaceValidationRecord {
 
 type CreatePriorityRecord {
   priorityRecord: JSON!
+  index: Int
 }
 
 type DeletePriorityRecord {
@@ -176,6 +186,7 @@ type ReplacePriorityRecord {
 
 type CreateFlowRequirement {
   flowRequirement: JSON!
+  index: Int
 }
 
 type DeleteFlowRequirement {
@@ -193,6 +204,7 @@ type ReplaceFlowRequirement {
 
 type CreateEnvironmentalRequirement {
   environmentalRequirement: JSON!
+  index: Int
 }
 
 type DeleteEnvironmentalRequirement {
@@ -210,6 +222,7 @@ type ReplaceEnvironmentalRequirement {
 
 type CreateWorkshop {
   workshop: JSON!
+  index: Int
 }
 
 type DeleteWorkshop {
@@ -227,6 +240,7 @@ type ReplaceWorkshop {
 
 type CreateScenario {
   scenario: JSON!
+  index: Int
 }
 
 type DeleteScenario {
@@ -244,6 +258,7 @@ type ReplaceScenario {
 
 type CreateBenchmarkRecord {
   benchmarkRecord: JSON!
+  index: Int
 }
 
 type DeleteBenchmarkRecord {
@@ -261,6 +276,7 @@ type ReplaceBenchmarkRecord {
 
 type CreateActivity {
   activity: JSON!
+  index: Int
 }
 
 type DeleteActivity {
@@ -278,6 +294,7 @@ type ReplaceActivity {
 
 type CreateInfrastructureRequirement {
   infrastructureRequirement: JSON!
+  index: Int
 }
 
 type DeleteInfrastructureRequirement {
@@ -295,6 +312,7 @@ type ReplaceInfrastructureRequirement {
 
 type CreateOrganizationalRequirement {
   organizationalRequirement: JSON!
+  index: Int
 }
 
 type DeleteOrganizationalRequirement {
@@ -312,6 +330,7 @@ type ReplaceOrganizationalRequirement {
 
 type CreateIssue {
   issue: JSON!
+  index: Int
 }
 
 type DeleteIssue {
@@ -329,6 +348,7 @@ type ReplaceIssue {
 
 type CreateApprovalRecord {
   approvalRecord: JSON!
+  index: Int
 }
 
 type DeleteApprovalRecord {
@@ -346,6 +366,7 @@ type ReplaceApprovalRecord {
 
 type CreateStakeholder {
   stakeholder: JSON!
+  index: Int
 }
 
 type DeleteStakeholder {
@@ -363,6 +384,7 @@ type ReplaceStakeholder {
 
 type CreateQualityRecord {
   qualityRecord: JSON!
+  index: Int
 }
 
 type DeleteQualityRecord {
@@ -380,6 +402,7 @@ type ReplaceQualityRecord {
 
 type CreateResilienceRequirement {
   resilienceRequirement: JSON!
+  index: Int
 }
 
 type DeleteResilienceRequirement {
@@ -397,6 +420,7 @@ type ReplaceResilienceRequirement {
 
 type CreateAssumption {
   assumption: JSON!
+  index: Int
 }
 
 type DeleteAssumption {
@@ -414,6 +438,7 @@ type ReplaceAssumption {
 
 type CreateCostRequirement {
   costRequirement: JSON!
+  index: Int
 }
 
 type DeleteCostRequirement {
@@ -431,6 +456,7 @@ type ReplaceCostRequirement {
 
 type CreateDocument {
   document: JSON!
+  index: Int
 }
 
 type DeleteDocument {
@@ -448,6 +474,7 @@ type ReplaceDocument {
 
 type CreateScheduleRequirement {
   scheduleRequirement: JSON!
+  index: Int
 }
 
 type DeleteScheduleRequirement {
@@ -465,6 +492,7 @@ type ReplaceScheduleRequirement {
 
 type CreateGrowthPlan {
   growthPlan: JSON!
+  index: Int
 }
 
 type DeleteGrowthPlan {
@@ -482,6 +510,7 @@ type ReplaceGrowthPlan {
 
 type CreatePerformanceCriterion {
   performanceCriterion: JSON!
+  index: Int
 }
 
 type DeletePerformanceCriterion {
@@ -499,6 +528,7 @@ type ReplacePerformanceCriterion {
 
 type CreateOperationalRequirement {
   operationalRequirement: JSON!
+  index: Int
 }
 
 type DeleteOperationalRequirement {
@@ -516,6 +546,7 @@ type ReplaceOperationalRequirement {
 
 type CreateRequirement {
   requirement: JSON!
+  index: Int
 }
 
 type DeleteRequirement {
@@ -533,6 +564,7 @@ type ReplaceRequirement {
 
 type CreateSiteContext {
   siteContext: JSON!
+  index: Int
 }
 
 type DeleteSiteContext {
@@ -550,6 +582,7 @@ type ReplaceSiteContext {
 
 type CreateTemplateRecord {
   templateRecord: JSON!
+  index: Int
 }
 
 type DeleteTemplateRecord {
@@ -567,6 +600,7 @@ type ReplaceTemplateRecord {
 
 type CreateReportRecord {
   reportRecord: JSON!
+  index: Int
 }
 
 type DeleteReportRecord {
@@ -584,6 +618,7 @@ type ReplaceReportRecord {
 
 type CreateAuditEvent {
   auditEvent: JSON!
+  index: Int
 }
 
 type DeleteAuditEvent {
@@ -601,6 +636,7 @@ type ReplaceAuditEvent {
 
 type CreateKnowledgeRecord {
   knowledgeRecord: JSON!
+  index: Int
 }
 
 type DeleteKnowledgeRecord {
@@ -618,6 +654,7 @@ type ReplaceKnowledgeRecord {
 
 type CreateRegulatoryRequirement {
   regulatoryRequirement: JSON!
+  index: Int
 }
 
 type DeleteRegulatoryRequirement {
@@ -635,6 +672,7 @@ type ReplaceRegulatoryRequirement {
 
 type CreateChangeRecord {
   changeRecord: JSON!
+  index: Int
 }
 
 type DeleteChangeRecord {
@@ -652,6 +690,7 @@ type ReplaceChangeRecord {
 
 type CreateCommunicationRequirement {
   communicationRequirement: JSON!
+  index: Int
 }
 
 type DeleteCommunicationRequirement {
@@ -669,6 +708,7 @@ type ReplaceCommunicationRequirement {
 
 type CreateResource {
   resource: JSON!
+  index: Int
 }
 
 type DeleteResource {
@@ -686,6 +726,7 @@ type ReplaceResource {
 
 type CreateStatusRecord {
   statusRecord: JSON!
+  index: Int
 }
 
 type DeleteStatusRecord {
@@ -703,6 +744,7 @@ type ReplaceStatusRecord {
 
 type CreateProcess {
   process: JSON!
+  index: Int
 }
 
 type DeleteProcess {
@@ -720,6 +762,7 @@ type ReplaceProcess {
 
 type CreateSearchFilter {
   searchFilter: JSON!
+  index: Int
 }
 
 type DeleteSearchFilter {
@@ -737,6 +780,7 @@ type ReplaceSearchFilter {
 
 type CreateAccessRule {
   accessRule: JSON!
+  index: Int
 }
 
 type DeleteAccessRule {
@@ -754,6 +798,7 @@ type ReplaceAccessRule {
 
 type CreatePrivacyRequirement {
   privacyRequirement: JSON!
+  index: Int
 }
 
 type DeletePrivacyRequirement {
@@ -771,6 +816,7 @@ type ReplacePrivacyRequirement {
 
 type CreateRelationship {
   relationship: JSON!
+  index: Int
 }
 
 type DeleteRelationship {
@@ -788,6 +834,7 @@ type ReplaceRelationship {
 
 type CreateQuantityRequirement {
   quantityRequirement: JSON!
+  index: Int
 }
 
 type DeleteQuantityRequirement {
@@ -805,6 +852,7 @@ type ReplaceQuantityRequirement {
 
 type CreateAnalysisRecord {
   analysisRecord: JSON!
+  index: Int
 }
 
 type DeleteAnalysisRecord {
@@ -822,6 +870,7 @@ type ReplaceAnalysisRecord {
 
 type CreateStorageRequirement {
   storageRequirement: JSON!
+  index: Int
 }
 
 type DeleteStorageRequirement {
@@ -839,6 +888,7 @@ type ReplaceStorageRequirement {
 
 type CreateMeetingRecord {
   meetingRecord: JSON!
+  index: Int
 }
 
 type DeleteMeetingRecord {
@@ -856,6 +906,7 @@ type ReplaceMeetingRecord {
 
 type CreateSurvey {
   survey: JSON!
+  index: Int
 }
 
 type DeleteSurvey {
@@ -873,6 +924,7 @@ type ReplaceSurvey {
 
 type CreateDeliveryConstraint {
   deliveryConstraint: JSON!
+  index: Int
 }
 
 type DeleteDeliveryConstraint {
@@ -890,6 +942,7 @@ type ReplaceDeliveryConstraint {
 
 type CreateConstraintRecord {
   constraintRecord: JSON!
+  index: Int
 }
 
 type DeleteConstraintRecord {
@@ -907,6 +960,7 @@ type ReplaceConstraintRecord {
 
 type CreateComplianceRecord {
   complianceRecord: JSON!
+  index: Int
 }
 
 type DeleteComplianceRecord {
@@ -924,6 +978,7 @@ type ReplaceComplianceRecord {
 
 type CreateServiceRequirement {
   serviceRequirement: JSON!
+  index: Int
 }
 
 type DeleteServiceRequirement {
@@ -941,6 +996,7 @@ type ReplaceServiceRequirement {
 
 type CreateEquipment {
   equipment: JSON!
+  index: Int
 }
 
 type DeleteEquipment {
@@ -958,6 +1014,7 @@ type ReplaceEquipment {
 
 type CreateSecurityRequirement {
   securityRequirement: JSON!
+  index: Int
 }
 
 type DeleteSecurityRequirement {
@@ -975,6 +1032,7 @@ type ReplaceSecurityRequirement {
 
 type CreateCollaborationRecord {
   collaborationRecord: JSON!
+  index: Int
 }
 
 type DeleteCollaborationRecord {
@@ -992,6 +1050,7 @@ type ReplaceCollaborationRecord {
 
 type CreateSafetyRequirement {
   safetyRequirement: JSON!
+  index: Int
 }
 
 type DeleteSafetyRequirement {
@@ -1009,6 +1068,7 @@ type ReplaceSafetyRequirement {
 
 type CreateUserProfile {
   userProfile: JSON!
+  index: Int
 }
 
 type DeleteUserProfile {
@@ -1026,6 +1086,7 @@ type ReplaceUserProfile {
 
 type CreateHumanFactorRequirement {
   humanFactorRequirement: JSON!
+  index: Int
 }
 
 type DeleteHumanFactorRequirement {
@@ -1043,6 +1104,7 @@ type ReplaceHumanFactorRequirement {
 
 type CreateFlexibilityRequirement {
   flexibilityRequirement: JSON!
+  index: Int
 }
 
 type DeleteFlexibilityRequirement {
@@ -1060,6 +1122,7 @@ type ReplaceFlexibilityRequirement {
 
 type CreateWayfindingRequirement {
   wayfindingRequirement: JSON!
+  index: Int
 }
 
 type DeleteWayfindingRequirement {
@@ -1077,6 +1140,7 @@ type ReplaceWayfindingRequirement {
 
 type CreateProgramElement {
   programElement: JSON!
+  index: Int
 }
 
 type DeleteProgramElement {
@@ -1094,6 +1158,7 @@ type ReplaceProgramElement {
 
 type ConnectAdjacency {
   adjacency: JSON!
+  index: Int
 }
 
 type DisconnectAdjacency {
@@ -1102,6 +1167,7 @@ type DisconnectAdjacency {
 
 type ConnectTrace {
   trace: JSON!
+  index: Int
 }
 
 type DisconnectTrace {

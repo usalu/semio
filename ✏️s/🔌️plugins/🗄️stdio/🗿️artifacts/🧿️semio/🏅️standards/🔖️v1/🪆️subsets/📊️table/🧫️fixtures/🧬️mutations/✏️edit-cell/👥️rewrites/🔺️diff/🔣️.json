@@ -1,29 +1,23 @@
 {
   "rows": {
-    "values": [
+    "modified": [
       {
-        "cells": [
-          {
-            "kind": "str",
-            "value": "Hannover"
-          },
-          {
-            "kind": "int",
-            "lexeme": "535932"
+        "index": 1,
+        "diff": {
+          "cells": {
+            "modified": [
+              {
+                "index": 1,
+                "diff": {
+                  "value": {
+                    "kind": "int",
+                    "lexeme": "3755251"
+                  }
+                }
+              }
+            ]
           }
-        ]
-      },
-      {
-        "cells": [
-          {
-            "kind": "str",
-            "value": "Berlin"
-          },
-          {
-            "kind": "int",
-            "lexeme": "3755251"
-          }
-        ]
+        }
       }
     ]
   }

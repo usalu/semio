@@ -4,6 +4,10 @@ use crate::diff::En1997Diff;
 use crate::En1997Snapshot;
 
 //#region 🔖️Leaves
+#[path = "🧭️edit-rules/🦀️.rs"]
+mod edit_rules;
+pub use edit_rules::{resolve_edit, EDIT_RULES};
+
 use super::change_annex;
 use super::change_geotechnical_category;
 use super::change_design_situation;
@@ -218,7 +222,7 @@ impl En1997Mutation {
 pub fn apply_en1997_mutation(base: &En1997Snapshot, mutation: &En1997Mutation) -> Result<(En1997Snapshot, Vec<String>), String> {
     let raised = <En1997Mutation as protocol::Mutation<En1997Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = <En1997Diff as protocol::MutationDiff<En1997Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
 /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
@@ -236,3 +240,7 @@ pub fn inverse_en1997_mutation(mutation: &En1997Mutation, base: &En1997Snapshot)
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧫️Vectors
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row;

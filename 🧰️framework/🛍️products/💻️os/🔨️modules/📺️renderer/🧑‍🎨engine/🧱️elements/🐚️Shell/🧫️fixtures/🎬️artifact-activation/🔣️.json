@@ -1,0 +1,1 @@
+{"schema":"os.artifact-activation/v1","rows":[["test.alpha","host"],["test.beta","foreign"],["typed.beta","foreign"]],"relay":{"artifactRef":"test.beta@1/*","role":"editor","expectedOwner":"foreign"}}

@@ -13,8 +13,8 @@ pub struct ReplacePresence {
 
 impl protocol::MutationKind<PresentationPresence, PresentationPresenceMutation> for ReplacePresence {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "presence", kind: "replace-presence", record: "ReplacePresence" };
-    fn diff(&self, _base: &PresentationPresence) -> protocol::MutationOutcome<PresentationPresence> {
-        protocol::MutationOutcome::new(self.presence.clone())
+    fn diff(&self, _base: &PresentationPresence) -> protocol::MutationOutcome<PresentationPresenceDiff> {
+        protocol::MutationOutcome::new(PresentationPresenceDiff {})
     }
     fn inverse(&self, base: &PresentationPresence) -> Result<Vec<PresentationPresenceMutation>, semio_framework_value::ValueError> {
     Ok((|| {
@@ -27,5 +27,17 @@ impl protocol::MutationKind<PresentationPresence, PresentationPresenceMutation> 
     }
     fn target(&self) -> Vec<String> {
         vec!["presence".into()]
+    }
+}
+
+#[cfg(test)]
+mod law_tests {
+    use super::*;
+
+    /// ⚖️ The inverse diffs sum to the negative of the forward diff (L3).
+    #[semio_framework_async_macros::async_test]
+    async fn inverse_diffs_sum_to_the_negative_diff() {
+        let base = PresentationPresence::default();
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&PresentationPresenceMutation::ReplacePresence(ReplacePresence { presence: PresentationPresence::default() }), &base).await;
     }
 }

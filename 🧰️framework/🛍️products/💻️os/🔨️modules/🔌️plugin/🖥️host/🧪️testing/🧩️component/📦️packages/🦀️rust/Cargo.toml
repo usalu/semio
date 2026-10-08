@@ -41,5 +41,6 @@ semio-framework-schema.workspace = true
 semio-framework-value-derive.workspace = true
 
 [dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["mutation-testing"] }
 serde_json.workspace = true
 semio-framework-trace.workspace = true

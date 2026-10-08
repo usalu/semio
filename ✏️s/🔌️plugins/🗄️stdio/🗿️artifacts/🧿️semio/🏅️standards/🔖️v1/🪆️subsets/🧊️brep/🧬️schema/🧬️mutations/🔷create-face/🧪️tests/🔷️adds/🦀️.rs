@@ -33,7 +33,7 @@ fn mutation() -> SemioBrepMutation {
 #[semio_framework_async_macros::async_test]
 async fn adds_the_opposing_face_over_the_existing_loop() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("create-face applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("create-face applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "create-face/adds-an-opposing-face-over-the-same-loop: applied state differs from the committed after-snapshot");
     assert_eq!(produced.faces.len(), base.faces.len() + 1, "create-face adds exactly one face");
     let created = produced.faces.last().expect("the created face is appended — id-keyed collections have no insertion index");
@@ -49,11 +49,12 @@ async fn adds_the_opposing_face_over_the_existing_loop() {
 async fn the_undo_delete_face_removes_the_opposing_face_again() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "create-face undoes as exactly one delete-face");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward create-face applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo delete-face applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward create-face applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo delete-face applies");
     }
     assert_eq!(current, base, "create-face/adds-an-opposing-face-over-the-same-loop: the undo did not restore the before-snapshot");
 }
@@ -110,6 +111,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded = decode_semio_brep_diff_json(DIFF).expect("committed create-face diff decodes");
-    let produced = decoded.apply(&before()).expect("committed create-face diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed create-face diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-face/adds-an-opposing-face-over-the-same-loop: committed diff did not carry before to after");
 }

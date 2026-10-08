@@ -1,25 +1,116 @@
-# 🧬️ Iso16757 diff schema — sparse field delta.
+# 🧬️ Iso16757 diff schema — keyed sparse diff: scalar setters, id/index/key keyed row diffs and per-field section patches.
+
+type Iso16757ProductGroupsPatch {
+  id: String!
+  name: String
+}
+
+type Iso16757ProductGroupsRows {
+  added: [ProductGroup!]!
+  removed: [String!]!
+  modified: [Iso16757ProductGroupsPatch!]!
+  order: [String!]
+}
+
+type Iso16757ProductClassesRows {
+  added: [ProductClass!]!
+  removed: [String!]!
+  order: [String!]
+}
+
+type Iso16757ProductSeriesRows {
+  added: [ProductSeries!]!
+  removed: [String!]!
+  order: [String!]
+}
+
+type Iso16757ProductsPatch {
+  id: String!
+  name: String
+}
+
+type Iso16757ProductsRows {
+  added: [Product!]!
+  removed: [String!]!
+  modified: [Iso16757ProductsPatch!]!
+  order: [String!]
+}
+
+type Iso16757ProductIndexesRows {
+  added: [ProductIndex!]!
+  removed: [String!]!
+  order: [String!]
+}
+
+type Iso16757PropertyDefinitionsRows {
+  added: [PropertyDefinition!]!
+  removed: [String!]!
+  order: [String!]
+}
+
+type Iso16757SubjectsRows {
+  added: [Subject!]!
+  removed: [String!]!
+  order: [String!]
+}
+
+type Iso16757GeometryObjectsEntry {
+  key: String!
+  value: GeometryObject!
+}
+
+type Iso16757GeometryObjectsRows {
+  added: [Iso16757GeometryObjectsEntry!]!
+  removed: [String!]!
+}
+
+type Iso16757SelectionSeriesIdValue {
+  value: String
+}
+
+type Iso16757SelectionConstraintsInserted {
+  index: Int!
+  row: SelectionConstraint!
+}
+
+type Iso16757SelectionConstraintsRows {
+  removed: [Int!]!
+  inserted: [Iso16757SelectionConstraintsInserted!]!
+}
+
+type Iso16757PartNumberInputsEntry {
+  key: String!
+  value: CatalogueValue!
+}
+
+type Iso16757PartNumberInputsRows {
+  added: [Iso16757PartNumberInputsEntry!]!
+  removed: [String!]!
+  modified: [Iso16757PartNumberInputsEntry!]!
+}
+
+type Iso16757ScriptLimitsPatch {
+  maxSteps: Int
+  maxRecursion: Int
+  timeoutMs: Int
+}
 
 type Iso16757Diff {
-  artifact: Iso16757Artifact @state(class: ARTIFACT)
-  catalogue: String @state(class: ARTIFACT)
-  dictionary: String @state(class: ARTIFACT)
-  geometry: String @state(class: ARTIFACT)
-  selection: String @state(class: ARTIFACT)
-  partNumberRule: String @state(class: ARTIFACT)
-  partNumberInputs: [Iso16757StringMapEntry!] @state(class: ARTIFACT)
-  scriptLimits: String @state(class: ARTIFACT)
-  exchangeProcess: String @state(class: ARTIFACT)
+  catalogueName: String @state(class: ARTIFACT)
+  manufacturerName: String @state(class: ARTIFACT)
+  productGroups: Iso16757ProductGroupsRows @state(class: ARTIFACT)
+  productClasses: Iso16757ProductClassesRows @state(class: ARTIFACT)
+  productSeries: Iso16757ProductSeriesRows @state(class: ARTIFACT)
+  products: Iso16757ProductsRows @state(class: ARTIFACT)
+  productIndexes: Iso16757ProductIndexesRows @state(class: ARTIFACT)
+  propertyDefinitions: Iso16757PropertyDefinitionsRows @state(class: ARTIFACT)
+  subjects: Iso16757SubjectsRows @state(class: ARTIFACT)
+  geometryObjects: Iso16757GeometryObjectsRows @state(class: ARTIFACT)
+  selectionClassId: String @state(class: ARTIFACT)
+  selectionSeriesId: Iso16757SelectionSeriesIdValue @state(class: ARTIFACT)
+  selectionConstraints: Iso16757SelectionConstraintsRows @state(class: ARTIFACT)
+  partNumberRule: PartNumberRule @state(class: ARTIFACT)
+  partNumberInputs: Iso16757PartNumberInputsRows @state(class: ARTIFACT)
+  scriptLimits: Iso16757ScriptLimitsPatch @state(class: ARTIFACT)
+  exchangeProcess: ExchangeProcess @state(class: ARTIFACT)
 }
-
-type Iso16757Artifact {
-  catalogue: String
-  dictionary: String
-  geometry: String
-  selection: String
-  partNumberRule: String
-  partNumberInputs: String
-  scriptLimits: String
-  exchangeProcess: String
-}
-type Iso16757StringMapEntry { key: String! value: String! }

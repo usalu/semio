@@ -2,7 +2,7 @@
 
 use super::mutation::RenameStep;
 use crate::schema::diff::forms_diff_from_delta;
-use crate::schema::diff::{FormsStepPatch, FormsStepPatchEntry, FormsStepsDelta};
+use crate::schema::diff::{FormsStepPatch, FormsStepsDelta};
 use crate::{forms_steps, FormsDiff, FormsSnapshot};
 
 //#region 🔖️Diff
@@ -14,6 +14,6 @@ pub fn diff(payload: &RenameStep, base: &FormsSnapshot) -> protocol::MutationOut
     if existing.title == payload.new_title {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Step \"{}\" is already titled \"{}\".", payload.id, payload.new_title));
     }
-    let patch = FormsStepPatch { title: Some(payload.new_title.clone()), ..Default::default() };
-    protocol::MutationOutcome::new(forms_diff_from_delta(&FormsStepsDelta { patched: vec![FormsStepPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }, base))
+    let patch = FormsStepPatch { id: payload.id.clone(), title: Some(payload.new_title.clone()), ..Default::default() };
+    protocol::MutationOutcome::new(forms_diff_from_delta(&FormsStepsDelta { patched: vec![patch], ..Default::default() }, base))
 }

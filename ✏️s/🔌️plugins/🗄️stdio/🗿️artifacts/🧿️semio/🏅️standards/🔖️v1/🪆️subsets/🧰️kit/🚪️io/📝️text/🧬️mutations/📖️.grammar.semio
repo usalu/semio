@@ -11,23 +11,23 @@ start op
 # `📓️taxonomy.md`'s `APPROVED_VERBS`.
 op = create-object | delete-object | create-model | delete-model | create-properties | delete-properties | bind-representation | unbind-representation | change-representation-pin | add-type | remove-type | rename-type | add-design | remove-design | edit-design
 
-create-object = "createObject" ":" hex "," reference
+create-object = "createObject" ":" hex "," reference ("," INT)?
 delete-object = "deleteObject" ":" hex
-create-model = "createModel" ":" hex "," reference
+create-model = "createModel" ":" hex "," reference ("," INT)?
 delete-model = "deleteModel" ":" hex
 create-properties = "createProperties" ":" hex "," reference
 delete-properties = "deleteProperties"
 
-bind-representation = "bindRepresentation" ":" reference "," pin "," hex
+bind-representation = "bindRepresentation" ":" reference "," pin "," hex ("," INT)?
 unbind-representation = "unbindRepresentation" ":" INT
 change-representation-pin = "changeRepresentationPin" ":" INT "," pin
 pin = "[" "h" "]" | "[" "c" "," hex "]" | "[" "s" "," hex "," INT "," hex "]"
 
-add-type = "addType" ":" hex "," hex "," hex
+add-type = "addType" ":" hex "," hex "," hex ("," INT)?
 remove-type = "removeType" ":" hex
 rename-type = "renameType" ":" hex "," hex
 
-add-design = "addDesign" ":" hex "," hex
+add-design = "addDesign" ":" hex "," hex ("," INT)?
 remove-design = "removeDesign" ":" hex
 edit-design = "editDesign" ":" hex "," "[" {piece {"," piece}*}? "]" "," "[" {connection {"," connection}*}? "]"
 piece = "[" hex "," hex "," transform "]"

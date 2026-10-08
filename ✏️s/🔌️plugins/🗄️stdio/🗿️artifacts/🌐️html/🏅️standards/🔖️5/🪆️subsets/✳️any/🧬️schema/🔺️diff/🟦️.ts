@@ -5,8 +5,8 @@ import type { HtmlNode, RawTextKind } from '../📸️snapshot/🟦️.ts';
 export type { HtmlNode, RawTextKind };
 
 /** 🔺️ Diff for `stdio.html`. `doctype` is tri-state (`null` = cleared, absent = unchanged,
- * present = set). No `snapshot`-shaped full-replace field anywhere -- even a `setSnapshot`
- * mutation's diff is the sparse field-by-field delta below. */
+ * present = set). No `snapshot`-shaped full-replace field anywhere -- every diff is the
+ * sparse field-by-field delta below. */
 export interface HtmlDiff {
   doctype?: string | null;
   root?: HtmlNodeDiff;

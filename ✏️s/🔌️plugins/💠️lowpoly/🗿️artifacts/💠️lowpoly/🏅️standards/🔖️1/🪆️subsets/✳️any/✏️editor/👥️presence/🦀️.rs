@@ -22,12 +22,72 @@ impl Default for LowpolyPresence {
     }
 }
 
-impl protocol::MutationDiff<LowpolyPresence> for LowpolyPresence {
-    fn apply(&self, _base: &LowpolyPresence) -> protocol::MutationApplyResult<LowpolyPresence> {
-        Ok(self.clone())
+/// 🔺️ Sparse field delta over [`LowpolyPresence`]: every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct LowpolyPresenceDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub world_camera_position: Option<[f64; 3]>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub world_camera_target: Option<[f64; 3]>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub world_camera_fov: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub paint_utility: Option<String>,
+}
+
+impl protocol::MutationDiff<LowpolyPresence> for LowpolyPresenceDiff {
+    fn apply(&self, base: &LowpolyPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<LowpolyPresence> {
+        let mut next = base.clone();
+        if let Some(value) = &self.world_camera_position {
+            next.world_camera_position = value.clone();
+        }
+        if let Some(value) = &self.world_camera_target {
+            next.world_camera_target = value.clone();
+        }
+        if let Some(value) = &self.world_camera_fov {
+            next.world_camera_fov = value.clone();
+        }
+        if let Some(value) = &self.paint_utility {
+            next.paint_utility = value.clone();
+        }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if other.world_camera_position.is_some() {
+            self.world_camera_position = other.world_camera_position;
+        }
+        if other.world_camera_target.is_some() {
+            self.world_camera_target = other.world_camera_target;
+        }
+        if other.world_camera_fov.is_some() {
+            self.world_camera_fov = other.world_camera_fov;
+        }
+        if other.paint_utility.is_some() {
+            self.paint_utility = other.paint_utility;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<LowpolyPresence> for LowpolyPresenceDiff {
+    fn inverse(&self, base: &LowpolyPresence) -> Self {
+        Self {
+            world_camera_position: self.world_camera_position.as_ref().map(|_| base.world_camera_position.clone()),
+            world_camera_target: self.world_camera_target.as_ref().map(|_| base.world_camera_target.clone()),
+            world_camera_fov: self.world_camera_fov.as_ref().map(|_| base.world_camera_fov.clone()),
+            paint_utility: self.paint_utility.as_ref().map(|_| base.paint_utility.clone()),
+        }
+    }
+    fn between(base: &LowpolyPresence, other: &LowpolyPresence) -> Self {
+        Self {
+            world_camera_position: (base.world_camera_position != other.world_camera_position).then(|| other.world_camera_position.clone()),
+            world_camera_target: (base.world_camera_target != other.world_camera_target).then(|| other.world_camera_target.clone()),
+            world_camera_fov: (base.world_camera_fov != other.world_camera_fov).then(|| other.world_camera_fov.clone()),
+            paint_utility: (base.paint_utility != other.paint_utility).then(|| other.paint_utility.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.world_camera_position.is_none() && self.world_camera_target.is_none() && self.world_camera_fov.is_none() && self.paint_utility.is_none()
     }
 }
 
@@ -81,26 +141,33 @@ impl ArtifactPack for LowpolyPresence {
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub enum LowpolyPresenceMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        presence: LowpolyPresence,
+    #[dsl(key = "world-camera")]
+    SetWorldCamera {
+        #[dsl(coord)]
+        position: [f64; 3],
+        #[dsl(coord)]
+        target: [f64; 3],
+        fov: f64,
+    },
+    #[dsl(key = "paint-utility")]
+    SetPaintUtility {
+        value: String,
     },
 }
 
 impl Mutation<LowpolyPresence> for LowpolyPresenceMutation {
-    type Diff = LowpolyPresence;
+    type Diff = LowpolyPresenceDiff;
 
     /// 🧷️ Provisional per-variant leaf metadata for this hand-written (non-derived) aggregate — one
     /// entry for the sole `Snapshot` variant, mirroring `generation2d`'s identical precedent for its
     /// own hand-written presence aggregate.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
-        owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/👥️set-snapshot",
-        semantic_kind: "set-snapshot",
-        display_name: "Set Snapshot",
+        owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/set-world-camera",
+        semantic_kind: "set-world-camera",
+        display_name: "Set World Camera",
         emoji: "👥️",
-        aggregate_variant: "Snapshot",
+        aggregate_variant: "SetWorldCamera",
         payload_schema: "🧬️schema/🔣️.json",
         text_opcode: None,
         binary_tag: None,
@@ -109,28 +176,44 @@ impl Mutation<LowpolyPresence> for LowpolyPresenceMutation {
         outcome_classes: &[protocol::MutationOutcomeClass::Applied],
         composition: protocol::MutationComposition::Atomic,
         required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }];
+    }]
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/set-paint-utility",
+        semantic_kind: "set-paint-utility",
+        display_name: "Set Paint Utility",
+        emoji: "👥️",
+        aggregate_variant: "SetPaintUtility",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    }]
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            LowpolyPresenceMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Self::SetWorldCamera { .. } => &Self::DESCRIPTORS[0],
+            Self::SetPaintUtility { .. } => &Self::DESCRIPTORS[1],
         }
     }
 
-    /// 📦️ Whole-value snapshot replace — no target to be missing, so a message-free outcome per the
-    /// contract's root-scoped shrink-only allowlist.
-    fn diff(&self, _base: &LowpolyPresence) -> protocol::MutationOutcome<LowpolyPresence> {
+    fn diff(&self, base: &LowpolyPresence) -> protocol::MutationOutcome<LowpolyPresenceDiff> {
         protocol::MutationOutcome::new(match self {
-            Self::Snapshot { presence } => presence.clone(),
+            Self::SetWorldCamera { position, target, fov } => LowpolyPresenceDiff { world_camera_position: (base.world_camera_position != *position).then_some(*position), world_camera_target: (base.world_camera_target != *target).then_some(*target), world_camera_fov: (base.world_camera_fov != *fov).then_some(*fov), ..Default::default() },
+            Self::SetPaintUtility { value } => LowpolyPresenceDiff { paint_utility: (base.paint_utility != *value).then(|| value.clone()), ..Default::default() },
         })
     }
 
     fn inverse(&self, base: &LowpolyPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { presence: base.clone() }]
-    
-    })())
-}
+        Ok(vec![match self {
+            Self::SetWorldCamera { .. } => Self::SetWorldCamera { position: base.world_camera_position, target: base.world_camera_target, fov: base.world_camera_fov },
+            Self::SetPaintUtility { .. } => Self::SetPaintUtility { value: base.paint_utility.clone() },
+        }])
+    }
 }
 
 impl protocol::OpText for LowpolyPresenceMutation {

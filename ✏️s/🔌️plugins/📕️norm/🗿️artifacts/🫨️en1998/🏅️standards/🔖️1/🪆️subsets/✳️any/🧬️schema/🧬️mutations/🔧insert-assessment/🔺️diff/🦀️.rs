@@ -1,8 +1,7 @@
 //! 🔧 `insert-assessment` diff — inserts the row at its position, clamped to the end of the collection; an id the document already holds is a `mutation.duplicate-id`.
 
 use super::InsertAssessment;
-use crate::diff::En1998RowEdit as _;
-use crate::diff::{En1998Diff, En1998AssessmentEdit};
+use crate::diff::{En1998Diff, En1998AssessmentDelta};
 use crate::En1998Snapshot;
 
 pub fn diff(payload: &InsertAssessment, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
@@ -10,5 +9,5 @@ pub fn diff(payload: &InsertAssessment, base: &En1998Snapshot) -> protocol::Muta
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Assessment id {} already exists.", payload.assessment.id), [payload.assessment.id.clone()]);
     }
     let index = payload.index.min(base.assessments.len());
-    protocol::MutationOutcome::new(En1998Diff { assessments: vec![En1998AssessmentEdit::insert(index, payload.assessment.clone())], ..Default::default() })
+    protocol::MutationOutcome::new(En1998Diff { assessments: En1998AssessmentDelta::insertion(&base.assessments, index, payload.assessment.clone()), ..Default::default() })
 }

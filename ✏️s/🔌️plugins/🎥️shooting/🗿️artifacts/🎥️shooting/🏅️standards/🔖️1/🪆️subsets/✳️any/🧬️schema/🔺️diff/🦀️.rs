@@ -222,16 +222,22 @@ where
         let removed: Vec<String> = later.edits.iter().filter_map(|edit| if let ShootingEdit::Remove { id } = edit { Some(id.clone()) } else { None }).collect();
         self.patched.retain(|entry| !removed.contains(&entry.id));
         for edit in later.edits {
-            match (self.edits.last(), &edit) {
-                (Some(ShootingEdit::Add { item, .. }), ShootingEdit::Remove { id }) if item.id() == id => {
-                    self.edits.pop();
-                    self.patched.retain(|entry| &entry.id != id);
+            loop {
+                match (self.edits.last(), &edit) {
+                    (Some(ShootingEdit::Add { item, .. }), ShootingEdit::Remove { id }) if item.id() == id => {
+                        let id = id.clone();
+                        self.edits.pop();
+                        self.patched.retain(|entry| entry.id != id);
+                        break;
+                    }
+                    (Some(ShootingEdit::Move { id: prior, .. }), ShootingEdit::Move { id, .. } | ShootingEdit::Remove { id }) if prior == id => {
+                        self.edits.pop();
+                    }
+                    _ => {
+                        self.edits.push(edit);
+                        break;
+                    }
                 }
-                (Some(ShootingEdit::Move { id: prior, .. }), ShootingEdit::Move { id, .. } | ShootingEdit::Remove { id }) if prior == id => {
-                    self.edits.pop();
-                    self.edits.push(edit);
-                }
-                _ => self.edits.push(edit),
             }
         }
         for entry in later.patched {

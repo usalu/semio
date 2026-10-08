@@ -466,11 +466,7 @@ impl DiffAlgebra<SemioAnimationSnapshot> for SemioAnimationDiff {
     }
 }
 
-/// 🧩 Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &SemioAnimationSnapshot, snapshot: &SemioAnimationSnapshot) -> SemioAnimationDiff {
-    <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(base, snapshot)
-}
+
 //#endregion 🔖️Diff
 
 //#region 🔖️HandcraftedDiffCodec

@@ -7,4 +7,5 @@ export interface SetDictEntryMutation {
   path: PdfPathSegment[];
   key: string;
   value: PdfObject;
+  index?: number | null;
 }

@@ -8,7 +8,8 @@
           "../../alpha"
         ]
       },
-      "valid": true
+      "valid": false,
+      "name": "Original Cross-Owner Declaration Refused"
     },
     {
       "value": {
@@ -18,7 +19,8 @@
           "../../alpha"
         ]
       },
-      "valid": false
+      "valid": false,
+      "name": "Original Duplicate Roots"
     },
     {
       "value": {
@@ -27,14 +29,16 @@
           "alpha"
         ]
       },
-      "valid": false
+      "valid": false,
+      "name": "Original Absolute Script"
     },
     {
       "value": {
         "script": "../runner/📜️script.ts",
         "roots": []
       },
-      "valid": false
+      "valid": false,
+      "name": "Original Empty Roots"
     },
     {
       "value": {
@@ -44,7 +48,538 @@
         ],
         "fallback": true
       },
+      "valid": false,
+      "name": "Original Extra Fallback"
+    },
+    {
+      "name": "Defining Owner Root",
+      "value": {
+        "script": "🏭️bridge/📜️script.ts",
+        "roots": [
+          "."
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "Canonical Nested Scopes",
+      "value": {
+        "script": "runner/📜️script.ts",
+        "roots": [
+          "artifact",
+          "artifact/standard"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "name": "Parent Script",
+      "value": {
+        "script": "../runner/📜️script.ts",
+        "roots": [
+          "."
+        ]
+      },
       "valid": false
+    },
+    {
+      "name": "Alias Script",
+      "value": {
+        "script": "./runner/📜️script.ts",
+        "roots": [
+          "."
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Empty Script Segment",
+      "value": {
+        "script": "runner//📜️script.ts",
+        "roots": [
+          "."
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Directory Script",
+      "value": {
+        "script": "runner/",
+        "roots": [
+          "."
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Windows Drive Script",
+      "value": {
+        "script": "C:runner",
+        "roots": [
+          "."
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Windows UNC Script",
+      "value": {
+        "script": "\\\\server\\share",
+        "roots": [
+          "."
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Backslash Script",
+      "value": {
+        "script": "runner\\script",
+        "roots": [
+          "."
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Dot Script",
+      "value": {
+        "script": ".",
+        "roots": [
+          "."
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Nul Script",
+      "value": {
+        "script": "runner\u0000script",
+        "roots": [
+          "."
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Colon Script",
+      "value": {
+        "script": "runner:script",
+        "roots": [
+          "."
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Parent Scope",
+      "value": {
+        "script": "runner/📜️script.ts",
+        "roots": [
+          "../artifact"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Alias Scope",
+      "value": {
+        "script": "runner/📜️script.ts",
+        "roots": [
+          "./artifact"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Rebound Parent Scope",
+      "value": {
+        "script": "runner/📜️script.ts",
+        "roots": [
+          "artifact/.."
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Empty Scope Segment",
+      "value": {
+        "script": "runner/📜️script.ts",
+        "roots": [
+          "artifact//standard"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Trailing Scope Separator",
+      "value": {
+        "script": "runner/📜️script.ts",
+        "roots": [
+          "artifact/"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Absolute Scope",
+      "value": {
+        "script": "runner/📜️script.ts",
+        "roots": [
+          "/artifact"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Drive Scope",
+      "value": {
+        "script": "runner/📜️script.ts",
+        "roots": [
+          "C:artifact"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "UNC Scope",
+      "value": {
+        "script": "runner/📜️script.ts",
+        "roots": [
+          "\\\\server\\share"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Backslash Scope",
+      "value": {
+        "script": "runner/📜️script.ts",
+        "roots": [
+          "artifact\\standard"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Control Scope",
+      "value": {
+        "script": "runner/📜️script.ts",
+        "roots": [
+          "artifact\nstandard"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "name": "Colon Scope",
+      "value": {
+        "script": "runner/📜️script.ts",
+        "roots": [
+          "artifact:standard"
+        ]
+      },
+      "valid": false
+    }
+  ],
+  "selectionCases": [
+    {
+      "name": "Original Nested Alpha",
+      "providers": [
+        {
+          "script": "runner/📜️script.ts",
+          "roots": [
+            "lower/alpha"
+          ]
+        },
+        {
+          "script": "second/📜️script.ts",
+          "roots": [
+            "lower/bravo"
+          ]
+        }
+      ],
+      "owner": "lower/alpha/nested",
+      "expected": 0
+    },
+    {
+      "name": "Original Exact Bravo",
+      "providers": [
+        {
+          "script": "runner/📜️script.ts",
+          "roots": [
+            "lower/alpha"
+          ]
+        },
+        {
+          "script": "second/📜️script.ts",
+          "roots": [
+            "lower/bravo"
+          ]
+        }
+      ],
+      "owner": "lower/bravo",
+      "expected": 1
+    },
+    {
+      "name": "Original Distinct Prefix",
+      "providers": [
+        {
+          "script": "runner/📜️script.ts",
+          "roots": [
+            "lower/alpha"
+          ]
+        },
+        {
+          "script": "second/📜️script.ts",
+          "roots": [
+            "lower/bravo"
+          ]
+        }
+      ],
+      "owner": "lower/alpha-imposter",
+      "expected": null
+    },
+    {
+      "name": "Original Duplicate Ambiguity",
+      "providers": [
+        {
+          "script": "runner/📜️script.ts",
+          "roots": [
+            "lower/alpha"
+          ]
+        },
+        {
+          "script": "second/📜️script.ts",
+          "roots": [
+            "lower/bravo"
+          ]
+        },
+        {
+          "script": "runner/📜️script.ts",
+          "roots": [
+            "lower/alpha"
+          ]
+        }
+      ],
+      "owner": "lower/alpha",
+      "expected": "ambiguous"
+    },
+    {
+      "name": "Empty Inventory",
+      "providers": [],
+      "owner": "lower/alpha",
+      "expected": null
+    },
+    {
+      "name": "Removed Sibling Contribution",
+      "providers": [
+        {
+          "script": "second/📜️script.ts",
+          "roots": [
+            "lower/bravo"
+          ]
+        }
+      ],
+      "owner": "lower/bravo/nested",
+      "expected": 0
+    },
+    {
+      "name": "Outside All Scopes",
+      "providers": [
+        {
+          "script": "runner/📜️script.ts",
+          "roots": [
+            "lower/alpha"
+          ]
+        },
+        {
+          "script": "second/📜️script.ts",
+          "roots": [
+            "lower/bravo"
+          ]
+        }
+      ],
+      "owner": "upper/alpha",
+      "expected": null
+    },
+    {
+      "name": "Overlapping Independent Owners",
+      "providers": [
+        {
+          "script": "runner/📜️script.ts",
+          "roots": [
+            "lower/alpha"
+          ]
+        },
+        {
+          "script": "nested/📜️script.ts",
+          "roots": [
+            "lower/alpha/nested"
+          ]
+        }
+      ],
+      "owner": "lower/alpha/nested",
+      "expected": "ambiguous"
+    },
+    {
+      "name": "Several Scopes One Contribution",
+      "providers": [
+        {
+          "script": "runner/📜️script.ts",
+          "roots": [
+            "lower/alpha",
+            "lower/alpha/nested"
+          ]
+        }
+      ],
+      "owner": "lower/alpha/nested",
+      "expected": 0
+    },
+    {
+      "name": "Unicode Exact Scope",
+      "providers": [
+        {
+          "script": "runner/📜️script.ts",
+          "roots": [
+            "lower/🗿️artifact"
+          ]
+        }
+      ],
+      "owner": "lower/🗿️artifact/nested",
+      "expected": 0
+    }
+  ],
+  "discoveryCases": [
+    {
+      "name": "Defining Workspace Provider",
+      "files": {
+        "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\nexclude = [\"children/**\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nowner-manifests = [\"children/*/Cargo.toml\"]\nmember-manifests = [\"📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = [\"children/**\"]\n",
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-root\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "children/alpha/Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nmember-manifests = [\"**/📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = []\n[workspace.metadata.semio.mutation-inventory]\nscript = \"🏭️bridge/📜️script.ts\"\nroots = [\".\"]\n",
+        "children/alpha/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-alpha\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "children/alpha/🏭️bridge/📜️script.ts": "console.log('fixture only');\n"
+      },
+      "expected": [
+        {
+          "script": "children/alpha/🏭️bridge/📜️script.ts",
+          "roots": [
+            "children/alpha"
+          ]
+        }
+      ],
+      "refused": false
+    },
+    {
+      "name": "Surviving Sibling Workspace",
+      "files": {
+        "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\nexclude = [\"children/**\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nowner-manifests = [\"children/*/Cargo.toml\"]\nmember-manifests = [\"📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = [\"children/**\"]\n",
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-root\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "children/bravo/Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nmember-manifests = [\"**/📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = []\n[workspace.metadata.semio.mutation-inventory]\nscript = \"🏭️bridge/📜️script.ts\"\nroots = [\".\"]\n",
+        "children/bravo/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-bravo\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "children/bravo/🏭️bridge/📜️script.ts": "console.log('fixture only');\n"
+      },
+      "expected": [
+        {
+          "script": "children/bravo/🏭️bridge/📜️script.ts",
+          "roots": [
+            "children/bravo"
+          ]
+        }
+      ],
+      "refused": false
+    },
+    {
+      "name": "No Provider Contributions",
+      "files": {
+        "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\nexclude = [\"children/**\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nowner-manifests = [\"children/*/Cargo.toml\"]\nmember-manifests = [\"📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = [\"children/**\"]\n",
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-root\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "children/alpha/Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nmember-manifests = [\"**/📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = []\n",
+        "children/alpha/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-alpha\"\nversion = \"0.1.0\"\nedition = \"2021\"\n"
+      },
+      "expected": [],
+      "refused": false
+    },
+    {
+      "name": "Absent Declared Child Scope",
+      "files": {
+        "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\nexclude = [\"children/**\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nowner-manifests = [\"children/*/Cargo.toml\"]\nmember-manifests = [\"📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = [\"children/**\"]\n",
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-root\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "children/alpha/Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nmember-manifests = [\"**/📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = []\n[workspace.metadata.semio.mutation-inventory]\nscript = \"🏭️bridge/📜️script.ts\"\nroots = [\"optional\"]\n",
+        "children/alpha/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-alpha\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "children/alpha/🏭️bridge/📜️script.ts": "console.log('fixture only');\n"
+      },
+      "expected": [],
+      "refused": false
+    },
+    {
+      "name": "Present Nested Scope",
+      "files": {
+        "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\nexclude = [\"children/**\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nowner-manifests = [\"children/*/Cargo.toml\"]\nmember-manifests = [\"📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = [\"children/**\"]\n",
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-root\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "children/alpha/Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nmember-manifests = [\"**/📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = []\n[workspace.metadata.semio.mutation-inventory]\nscript = \"🏭️bridge/📜️script.ts\"\nroots = [\"nested\"]\n",
+        "children/alpha/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-alpha\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "children/alpha/🏭️bridge/📜️script.ts": "console.log('fixture only');\n",
+        "children/alpha/nested/kept.json": "{}\n"
+      },
+      "expected": [
+        {
+          "script": "children/alpha/🏭️bridge/📜️script.ts",
+          "roots": [
+            "children/alpha/nested"
+          ]
+        }
+      ],
+      "refused": false
+    },
+    {
+      "name": "Missing Declared Script",
+      "files": {
+        "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\nexclude = [\"children/**\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nowner-manifests = [\"children/*/Cargo.toml\"]\nmember-manifests = [\"📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = [\"children/**\"]\n",
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-root\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "children/alpha/Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nmember-manifests = [\"**/📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = []\n[workspace.metadata.semio.mutation-inventory]\nscript = \"🏭️bridge/📜️script.ts\"\nroots = [\".\"]\n",
+        "children/alpha/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-alpha\"\nversion = \"0.1.0\"\nedition = \"2021\"\n"
+      },
+      "expected": [],
+      "refused": true
+    },
+    {
+      "name": "Cross Owner Script Refused",
+      "files": {
+        "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\nexclude = [\"children/**\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nowner-manifests = [\"children/*/Cargo.toml\"]\nmember-manifests = [\"📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = [\"children/**\"]\n",
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-root\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "children/alpha/Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nmember-manifests = [\"**/📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = []\n[workspace.metadata.semio.mutation-inventory]\nscript = \"../runner/📜️script.ts\"\nroots = [\".\"]\n",
+        "children/alpha/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-alpha\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "children/alpha/🏭️bridge/📜️script.ts": "console.log('fixture only');\n"
+      },
+      "expected": [],
+      "refused": true
+    },
+    {
+      "name": "Directory Script Refused",
+      "files": {
+        "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\nexclude = [\"children/**\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nowner-manifests = [\"children/*/Cargo.toml\"]\nmember-manifests = [\"📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = [\"children/**\"]\n",
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-root\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "children/alpha/Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nmember-manifests = [\"**/📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = []\n[workspace.metadata.semio.mutation-inventory]\nscript = \"🏭️bridge/📜️script.ts\"\nroots = [\".\"]\n",
+        "children/alpha/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-alpha\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "children/alpha/🏭️bridge/📜️script.ts/kept.json": "{}\n"
+      },
+      "expected": [],
+      "refused": true
+    },
+    {
+      "name": "File Scope Refused",
+      "files": {
+        "Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\nexclude = [\"children/**\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nowner-manifests = [\"children/*/Cargo.toml\"]\nmember-manifests = [\"📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = [\"children/**\"]\n",
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-root\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "children/alpha/Cargo.toml": "[workspace]\nresolver = \"2\"\nmembers = [\"📦️packages/🦀️rust\"]\n[workspace.metadata.semio.repository]\nschema-version = 1\nmember-manifests = [\"**/📦️packages/🦀️rust/Cargo.toml\"]\nexclude-patterns = []\n[workspace.metadata.semio.mutation-inventory]\nscript = \"🏭️bridge/📜️script.ts\"\nroots = [\"scope.json\"]\n",
+        "children/alpha/📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"fixture-alpha\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+        "children/alpha/🏭️bridge/📜️script.ts": "console.log('fixture only');\n",
+        "children/alpha/scope.json": "{}\n"
+      },
+      "expected": [],
+      "refused": true
     }
   ]
 }

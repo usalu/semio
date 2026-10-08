@@ -63,7 +63,7 @@ fn an_applied_hex_dump_is_one_net_byte_range() {
     assert!(emit("deadbeef").artifact_mutations.is_empty(), "an unchanged dump moves nothing");
 }
 
-/// ⚖️ LAW (design §20.3): a document-details edit of the bytes is ONE net `replace-byte-range`, never a whole `set-snapshot`, with
+/// ⚖️ LAW (design §20.3): a document-details edit of the bytes is ONE net `replace-byte-range`, with
 /// no description; an unchanged value moves nothing.
 #[test]
 fn a_document_details_edit_is_one_net_byte_range() {
@@ -75,17 +75,6 @@ fn a_document_details_edit_is_one_net_byte_range() {
     let changed = edit(&next);
     assert!(matches!(changed.artifact_mutations.as_slice(), [BinaryMutation::ReplaceByteRange(range)] if (range.offset, range.remove_len, range.insert.as_slice()) == (1, 1, &[0x00][..])), "{:?}", changed.artifact_mutations);
     assert!(edit(&base).artifact_mutations.is_empty(), "an unchanged value moves nothing");
-}
-
-/// ⚖️ LAW (audit T4): the ONLY whole-document `set-snapshot` the details net leaves emit is another document schema; a byte change
-/// is ONE `replace-byte-range`.
-#[test]
-fn only_another_document_schema_is_a_whole_document_set_snapshot() {
-    let base = BinarySnapshot { bytes: vec![1, 2, 3], ..BinarySnapshot::default() };
-    let bytes = BinarySnapshot { bytes: vec![1, 9, 3], ..base.clone() };
-    assert!(matches!(binary_net_mutations(&base, &bytes).as_slice(), [BinaryMutation::ReplaceByteRange(_)]));
-    let other = BinarySnapshot { schema: "stdio.binary.other-schema".into(), ..base.clone() };
-    assert!(matches!(binary_net_mutations(&base, &other).as_slice(), [BinaryMutation::SetSnapshot(set)] if set.snapshot == other), "another document schema replaces the document");
 }
 
 //#region 🧮️NetLeafLaws
@@ -118,7 +107,7 @@ fn an_applied_hex_dump_is_exactly_the_corpus_net_byte_range() {
         let mut next = source.clone();
         for leaf in &emit.artifact_mutations {
             let outcome = <BinaryMutation as protocol::Mutation<BinarySnapshot>>::diff(leaf, &next);
-            next = protocol::MutationDiff::apply(outcome.diff(), &next).expect("the range applies");
+            next = protocol::apply_diff(outcome.diff(), &next).expect("the range applies");
         }
         assert_eq!(next.bytes, bytes(after), "{id}: the edit lands on the applied bytes");
     }

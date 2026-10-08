@@ -23,7 +23,7 @@ import {
   getActiveCataloguePointerDragData,
 } from "@semio-tech/ui-react";
 import { STYLING_METRICS, syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import { type DemandFrameSchedulerV1, createDemandFrameScheduler, frameDemandingSessionV1 } from "@semio-tech/infinite-canvas-react-renderer";
+import { type DemandFrameSchedulerV1, createDemandFrameScheduler, frameDemandingSessionV1 } from "@semio-tech/canvas-react-renderer";
 import { GestureRecognizer, applyPinchToCamera, type ComponentSceneHostProps, type Board2dScene, type ContextMenuItemSpec } from "@semio-tech/framework";
 import { type Board2dWasmSession, type Board2dPeer, type BoardPeerScope, BoardSessionFactoryContext, createBoardPeerScope } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
@@ -518,7 +518,7 @@ export function puzzle2dWorldToScreen(cameraJson: string, containerSize: { reado
 }
 
 /** 🤏️ The zoom bounds a board camera may never leave — the SAME `ZOOM_MIN`/`ZOOM_MAX` the Rust
- * engine's `clamp_zoom` applies (`♾️infinite/🖼️canvas/🦀️.rs`), read from the generated styling token
+ * engine's `clamp_zoom` applies (`🧰️framework/🔨️modules/🖼️canvas/🦀️.rs`), read from the generated styling token
  * table so a pinch and a wheel can never disagree about the ceiling. */
 export const BOARD_2D_ZOOM_BOUNDS = { min: STYLING_METRICS.camera.zoomMin, max: STYLING_METRICS.camera.zoomMax } as const;
 

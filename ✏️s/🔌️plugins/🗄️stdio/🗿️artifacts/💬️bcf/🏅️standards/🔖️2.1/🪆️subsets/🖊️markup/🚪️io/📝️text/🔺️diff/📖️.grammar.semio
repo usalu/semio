@@ -8,8 +8,8 @@ comment none
 # `../../../🧬️schema/🦀️.rs` (`print_bcf_diff`/`parse_bcf_diff`), replacing the F6-era `*OCTET`
 # hex-dump placeholder. Every keyword/token below is copied verbatim from the real
 # `format!(...)`/`enc_*`/`dec_*` call sites, not invented -- `topics`/`comments`/`viewpoints`/
-# `parts` are ALL guid/name-keyed (`NamedTripleDiff<K,D,T>`, this artifact's own generic
-# name-keyed collection engine, `📖️grammar-recipe.md` §1.4's "name-keyed" shape), and
+# `parts` are ALL index-keyed (`IndexedDiff<T,D>`, this artifact's own generic
+# index-keyed collection engine: removed base indices, `index:diff` modified rows, `index:item` added rows), and
 # `comments`/`viewpoints` recurse one level inside a modified `topics` entry.
 #
 # `hex` (bare `hex`, referenced but deliberately NOT defined as a production) is the framework's
@@ -24,12 +24,13 @@ version-tok = "version" "=" hex
 topics-tok = "topics" "=" topics-diff-body
 parts-tok = "parts" "=" parts-diff-body
 
-# ── `topics` -- name/guid-keyed collection triple (`📖️grammar-recipe.md` §1.4) ───────────────────
+# ── `topics` -- index-keyed collection triple (`📖️grammar-recipe.md` §1.4) ───────────────────
 topics-diff-body = "[" topics-removed-list? "]" ";" "[" topics-modified-list? "]" ";" "[" topics-added-list? "]"
-topics-removed-list = hex {"," hex}*
+topics-removed-list = INT {"," INT}*
 topics-modified-list = topics-modified-item {"," topics-modified-item}*
-topics-modified-item = hex ":" topic-diff
-topics-added-list = topic {"," topic}*
+topics-modified-item = INT ":" topic-diff
+topics-added-list = topics-added-item {"," topics-added-item}*
+topics-added-item = INT ":" topic
 
 # `BcfTopicDiff` -- `[title,description,status,priority,labels,creation-date,creation-author,comments,viewpoints]`.
 topic-diff = "[" opt-hex "," opt-hex "," opt-hex "," opt-hex "," opt-label-list "," opt-hex "," opt-hex "," opt-comments-diff "," opt-viewpoints-diff "]"
@@ -37,19 +38,21 @@ opt-comments-diff = "[" "0" "]" | "[" "1" "," comments-diff-body "]"
 opt-viewpoints-diff = "[" "0" "]" | "[" "1" "," viewpoints-diff-body "]"
 
 comments-diff-body = "[" comments-removed-list? "]" ";" "[" comments-modified-list? "]" ";" "[" comments-added-list? "]"
-comments-removed-list = hex {"," hex}*
+comments-removed-list = INT {"," INT}*
 comments-modified-list = comments-modified-item {"," comments-modified-item}*
-comments-modified-item = hex ":" comment-diff
-comments-added-list = bcf-comment {"," bcf-comment}*
+comments-modified-item = INT ":" comment-diff
+comments-added-list = comments-added-item {"," comments-added-item}*
+comments-added-item = INT ":" bcf-comment
 
 # `BcfCommentDiff` -- `[date,author,text,viewpoint-ref]`.
 comment-diff = "[" opt-hex "," opt-hex "," opt-hex "," opt-opt-hex "]"
 
 viewpoints-diff-body = "[" viewpoints-removed-list? "]" ";" "[" viewpoints-modified-list? "]" ";" "[" viewpoints-added-list? "]"
-viewpoints-removed-list = hex {"," hex}*
+viewpoints-removed-list = INT {"," INT}*
 viewpoints-modified-list = viewpoints-modified-item {"," viewpoints-modified-item}*
-viewpoints-modified-item = hex ":" viewpoint-diff
-viewpoints-added-list = viewpoint {"," viewpoint}*
+viewpoints-modified-item = INT ":" viewpoint-diff
+viewpoints-added-list = viewpoints-added-item {"," viewpoints-added-item}*
+viewpoints-added-item = INT ":" viewpoint
 
 # `BcfViewpointDiff` -- `[camera,components,snapshot]`, all THREE genuinely tri-state
 # (`Option<Option<T>>` -- weak/whole-value-replaced fields, never sub-diffed, per this artifact's
@@ -58,13 +61,14 @@ viewpoint-diff = "[" opt-opt-camera "," opt-opt-components "," opt-opt-hex "]"
 opt-opt-camera = "[" "0" "]" | "[" "1" "," opt-camera "]"
 opt-opt-components = "[" "0" "]" | "[" "1" "," opt-components "]"
 
-# ── `parts` -- name-keyed collection triple, `BcfPartDiff` -- `[data]` (name IS the key, only
+# ── `parts` -- index-keyed collection triple, `BcfPartDiff` -- `[data]` (name IS the key, only
 # `data` can change) ────────────────────────────────────────────────────────────────────────────
 parts-diff-body = "[" parts-removed-list? "]" ";" "[" parts-modified-list? "]" ";" "[" parts-added-list? "]"
-parts-removed-list = hex {"," hex}*
+parts-removed-list = INT {"," INT}*
 parts-modified-list = parts-modified-item {"," parts-modified-item}*
-parts-modified-item = hex ":" part-diff
-parts-added-list = part {"," part}*
+parts-modified-item = INT ":" part-diff
+parts-added-list = parts-added-item {"," parts-added-item}*
+parts-added-item = INT ":" part
 part-diff = "[" opt-hex "]"
 
 # ── Tri-state wrappers (`encode_option`, `📖️grammar-recipe.md` §1.4) ─────────────────────────────

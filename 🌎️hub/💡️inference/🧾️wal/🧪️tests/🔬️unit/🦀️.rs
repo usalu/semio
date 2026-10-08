@@ -168,7 +168,7 @@ pub(super) fn durable_fixture_record(fixture: &serde_json::Value) -> DurableFixt
         let proposal = semio_framework_pack_json::to_json_string(&work.parent).into_bytes();
         let inverse = semio_framework_pack_json::to_json_string(&work.parent_inverse).into_bytes();
         let record = directory::os_store::durable_group::durable_owned_group_journal_test_record_from_edits(
-            directory::os_io::ArtifactRef { artifact_id: document_key.into(), dialect: directory::os_io::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() } },
+            semio_framework_artifact_reference::ArtifactRef { artifact_id: document_key.into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() } },
             durable_edit(1, identity, edit_actor, timestamp, work.parent, work.parent_inverse),
             parent_post,
             durable_edit(2, &format!("{identity}:drawing"), edit_actor, protocol::HybridLogicalTimestamp { logical: 1, ..timestamp }, work.drawing, work.drawing_inverse),

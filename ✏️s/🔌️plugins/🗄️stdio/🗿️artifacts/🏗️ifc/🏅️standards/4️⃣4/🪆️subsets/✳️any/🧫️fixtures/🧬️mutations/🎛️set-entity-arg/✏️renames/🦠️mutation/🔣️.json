@@ -1,0 +1,9 @@
+{
+  "mutation": "setEntityArg",
+  "id": 1,
+  "index": 2,
+  "value": {
+    "kind": "string",
+    "value": "Exterior Wall"
+  }
+}

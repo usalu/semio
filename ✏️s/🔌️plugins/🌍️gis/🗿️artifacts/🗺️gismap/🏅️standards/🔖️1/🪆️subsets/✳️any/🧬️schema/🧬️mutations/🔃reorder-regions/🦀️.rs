@@ -31,11 +31,8 @@ impl MutationKind<GisMapSnapshot, GisMapMutation> for ReorderRegions {
     }
 
     fn inverse(&self, base: &GisMapSnapshot) -> Result<Vec<GisMapMutation>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+        super::inverse::inverse(self, base)
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Reorder region \"{}\" to {}", self.id, self.to_index), &format!("Region \"{}\" an Stelle {} verschieben", self.id, self.to_index))

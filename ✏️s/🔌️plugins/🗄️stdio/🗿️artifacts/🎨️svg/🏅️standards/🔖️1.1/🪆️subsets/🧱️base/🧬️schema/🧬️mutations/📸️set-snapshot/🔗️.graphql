@@ -1,2 +1,0 @@
-# 📸️ Whole SvgSnapshot replacement.
-input SetSnapshot { snapshot: SvgSnapshot! }

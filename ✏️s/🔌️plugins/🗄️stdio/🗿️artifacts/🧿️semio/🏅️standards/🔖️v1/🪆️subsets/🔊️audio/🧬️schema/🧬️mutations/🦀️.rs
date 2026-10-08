@@ -70,7 +70,7 @@ pub enum SemioAudioMutation {
 /// order — what the `🔊️mutate-semio-audio` case's completeness gate counts against and what
 /// `../../🔣️oracle.json`'s catalog repeats. The framework never parses Rust, so
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this declaration honest.
-pub const KINDS: &[&str] = &["set-sample-rate", "set-format", "insert-channel", "remove-channel", "set-channel-samples", "insert-tag", "remove-tag", "set-tag-value", "patch-snapshot"];
+pub const KINDS: &[&str] = &["set-sample-rate", "set-format", "insert-channel", "remove-channel", "set-channel-samples", "insert-tag", "remove-tag", "set-tag-value"];
 //#endregion 🔖️Mutations
 
 /// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private

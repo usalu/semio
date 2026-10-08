@@ -45,8 +45,8 @@ async fn field_sweep_every_field_and_every_collection_shape() {
     assert!(path_diff.segments.is_some());
     assert_eq!(path_diff.style, Some(None)); // tri-state clear on a node-level style ref
 
-    assert_eq!(d.apply(&a).expect("apply must succeed for a well-formed fixture"), b);
-    assert_eq!(<SemioDrawingDiff as DiffAlgebra<SemioDrawingSnapshot>>::between(&b, &a).apply(&b).expect("apply must succeed for a well-formed fixture"), a);
+    assert_eq!(protocol::apply_diff(&d, &a).expect("apply must succeed for a well-formed fixture"), b);
+    assert_eq!(<SemioDrawingDiff as DiffAlgebra<SemioDrawingSnapshot>>protocol::apply_diff(&::between(&b, &a), &b).expect("apply must succeed for a well-formed fixture"), a);
     assert!(<SemioDrawingDiff as DiffAlgebra<SemioDrawingSnapshot>>::between(&a, &a).is_empty());
 }
 
@@ -56,7 +56,7 @@ async fn inverse_law_round_trips() {
     let b = sweep_b();
     let d = SemioDrawingDiff::between(&a, &b);
     let inv = d.inverse(&a);
-    assert_eq!(inv.apply(&d.apply(&a).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture"), a);
+    assert_eq!(protocol::apply_diff(&inv, &protocol::apply_diff(&d, &a).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture"), a);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -69,10 +69,10 @@ async fn absorb_law_composes_two_sequential_diffs() {
 
     let mut d1 = SemioDrawingDiff::between(&a, &mid);
     let d2 = SemioDrawingDiff::between(&mid, &after);
-    let applied_before_absorb = d1.apply(&a).expect("apply must succeed for a well-formed fixture");
+    let applied_before_absorb = protocol::apply_diff(&d1, &a).expect("apply must succeed for a well-formed fixture");
     d1.absorb(d2.clone());
-    assert_eq!(d1.apply(&a).expect("apply must succeed for a well-formed fixture"), d2.apply(&applied_before_absorb).expect("apply must succeed for a well-formed fixture"));
-    assert_eq!(d1.apply(&a).expect("apply must succeed for a well-formed fixture"), after);
+    assert_eq!(protocol::apply_diff(&d1, &a).expect("apply must succeed for a well-formed fixture"), protocol::apply_diff(&d2, &applied_before_absorb).expect("apply must succeed for a well-formed fixture"));
+    assert_eq!(protocol::apply_diff(&d1, &a).expect("apply must succeed for a well-formed fixture"), after);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -12,11 +12,19 @@ use crate::{VcsDiff, VcsSnapshot};
 #[dsl(keyword = "add-tag")]
 pub struct AddTag {
     pub tag: String,
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none", default))]
+    pub index: Option<u32>,
 }
 
-/// 🏗️ Builder — wraps the payload in its dispatch variant.
+/// 🏗️ Builder — appends the tag after the existing ones.
 pub fn add_tag(tag: String) -> VcsDemoMutation {
-    VcsDemoMutation::AddTag(AddTag { tag })
+    VcsDemoMutation::AddTag(AddTag { tag, index: None })
+}
+
+/// 📍️ Builder — inserts the tag at `index` (an index past the end appends).
+pub fn add_tag_at(tag: String, index: u32) -> VcsDemoMutation {
+    VcsDemoMutation::AddTag(AddTag { tag, index: Some(index) })
 }
 
 impl protocol::MutationKind<VcsSnapshot, VcsDemoMutation> for AddTag {

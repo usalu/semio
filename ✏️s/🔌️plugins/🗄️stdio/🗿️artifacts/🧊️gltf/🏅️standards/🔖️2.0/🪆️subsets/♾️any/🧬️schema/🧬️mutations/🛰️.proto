@@ -1,6 +1,5 @@
 syntax = "proto3";
 package stdio.gltf.mutation;
-import "📸️snapshot/📸️set/🛰️.proto";
 import "🏠️default-scene/🔗️bind/🛰️.proto";
 import "🎚️morph-attribute/🔗️bind/🛰️.proto";
 import "📷️node-camera/🔗️bind/🛰️.proto";
@@ -243,6 +242,5 @@ message GltfMutation {
     GltfUnbindSceneRootNodePayloadV1 unbind_scene_root_node = 118;
     GltfUnrequireExtensionMutationV1 remove_required_extension = 119;
     GltfWithdrawUsedExtensionMutationV1 remove_used_extension = 120;
-      SetSnapshot set_snapshot = 121;
   }
 }

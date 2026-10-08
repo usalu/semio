@@ -3,8 +3,8 @@ import type {GltfCreateTexturePayload,CreateTextureMutation} from "../../../../.
 export type * from "../../../../../🧬️schema/🧬️mutations/🎨️texture/🌱️create/🟦️.ts";
 /** 🌱️ `create-texture` wire twin: the flat `Apply` payload `GltfCreateTexturePayload` and the phase wire `CreateTextureMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
-import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireIndex, gltfWireObject, gltfWireRequired, gltfWireOptional, parseGltfTexture } from "../../../📸️snapshot/🔣️json/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
-export const parseGltfCreateTexturePayload = gltfWireObject<GltfCreateTexturePayload>({ position: gltfWireRequired(gltfWireIndex) });
-export const parseCreateTextureMutation = gltfWirePhase(parseGltfCreateTexturePayload, parseGltfDiff);
+export const parseGltfCreateTexturePayload = gltfWireObject<GltfCreateTexturePayload>({ position: gltfWireRequired(gltfWireIndex), texture: gltfWireOptional(parseGltfTexture) });
+export const parseCreateTextureMutation = gltfWireApplyPhase(parseGltfCreateTexturePayload);

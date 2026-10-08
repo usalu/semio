@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "nodes": null,
   "elements": null,
   "regions": null,
@@ -12,25 +11,26 @@
     "patched": [
       {
         "id": "live",
-        "item": {
-          "id": "live",
-          "name": "Live Load",
-          "loads": [
-            {
-              "kind": "nodal",
-              "id": "l6",
-              "nodeId": "p8_l1",
-              "dof": "Ty",
-              "value": -18000.0
-            },
-            {
-              "kind": "area",
-              "id": "l7",
-              "regionId": "r1",
-              "pressure": 1500.0
-            }
-          ],
-          "selfWeight": false
+        "patch": {
+          "name": null,
+          "selfWeight": null,
+          "loads": {
+            "added": [],
+            "removed": [],
+            "patched": [
+              {
+                "id": "l6",
+                "item": {
+                  "kind": "nodal",
+                  "id": "l6",
+                  "nodeId": "p8_l1",
+                  "dof": "Ty",
+                  "value": -18000.0
+                }
+              }
+            ],
+            "reordered": null
+          }
         }
       }
     ],

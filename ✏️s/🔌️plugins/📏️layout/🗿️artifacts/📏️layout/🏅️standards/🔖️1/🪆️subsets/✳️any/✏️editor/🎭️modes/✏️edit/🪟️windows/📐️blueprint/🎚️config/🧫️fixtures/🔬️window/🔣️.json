@@ -9,8 +9,8 @@
   "baseConfig": { "activePageId": "page-1", "activeUtility": "select", "camera": { "x": 0, "y": 0, "zoom": 1 } },
   "baseTransient": { "dropPreview": { "kind": "", "x": 0, "y": 0 }, "engagementInput": "" },
   "configMutations": [
-    { "windowId": "layout-left", "windowKindId": "layout-blueprint", "mutation": { "kind": "snapshot", "config": { "activePageId": "page-left", "activeUtility": "select", "camera": { "x": 12, "y": -8, "zoom": 2 } } } },
-    { "windowId": "layout-right", "windowKindId": "layout-blueprint", "mutation": { "kind": "snapshot", "config": { "activePageId": "page-right", "activeUtility": "select", "camera": { "x": -21, "y": 5, "zoom": 0.75 } } } }
+    { "windowId": "layout-left", "windowKindId": "layout-blueprint", "mutation": { "kind": "update", "patch": { "activePageId": "page-left", "activeUtility": "select", "camera": { "x": 12, "y": -8, "zoom": 2 } } } },
+    { "windowId": "layout-right", "windowKindId": "layout-blueprint", "mutation": { "kind": "update", "patch": { "activePageId": "page-right", "activeUtility": "select", "camera": { "x": -21, "y": 5, "zoom": 0.75 } } } }
   ],
   "transientMutations": [
     { "windowId": "layout-left", "windowKindId": "layout-blueprint", "mutation": { "kind": "snapshot", "transient": { "dropPreview": { "kind": "text", "x": 4, "y": 9 }, "engagementInput": "export png" } } },

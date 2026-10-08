@@ -25,12 +25,62 @@ impl Default for SourcingCurationPresence {
     }
 }
 
-impl protocol::MutationDiff<SourcingCurationPresence> for SourcingCurationPresence {
-    fn apply(&self, _base: &SourcingCurationPresence) -> protocol::MutationApplyResult<SourcingCurationPresence> {
-        Ok(self.clone())
+/// 🔺️ Sparse field delta over [`SourcingCurationPresence`]: every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct SourcingCurationPresenceDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub world_camera_position: Option<[f64; 3]>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub world_camera_target: Option<[f64; 3]>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub world_camera_fov: Option<f64>,
+}
+
+impl protocol::MutationDiff<SourcingCurationPresence> for SourcingCurationPresenceDiff {
+    fn apply(&self, base: &SourcingCurationPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SourcingCurationPresence> {
+        let mut next = base.clone();
+        if let Some(value) = &self.world_camera_position {
+            next.world_camera_position = value.clone();
+        }
+        if let Some(value) = &self.world_camera_target {
+            next.world_camera_target = value.clone();
+        }
+        if let Some(value) = &self.world_camera_fov {
+            next.world_camera_fov = value.clone();
+        }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if other.world_camera_position.is_some() {
+            self.world_camera_position = other.world_camera_position;
+        }
+        if other.world_camera_target.is_some() {
+            self.world_camera_target = other.world_camera_target;
+        }
+        if other.world_camera_fov.is_some() {
+            self.world_camera_fov = other.world_camera_fov;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<SourcingCurationPresence> for SourcingCurationPresenceDiff {
+    fn inverse(&self, base: &SourcingCurationPresence) -> Self {
+        Self {
+            world_camera_position: self.world_camera_position.as_ref().map(|_| base.world_camera_position.clone()),
+            world_camera_target: self.world_camera_target.as_ref().map(|_| base.world_camera_target.clone()),
+            world_camera_fov: self.world_camera_fov.as_ref().map(|_| base.world_camera_fov.clone()),
+        }
+    }
+    fn between(base: &SourcingCurationPresence, other: &SourcingCurationPresence) -> Self {
+        Self {
+            world_camera_position: (base.world_camera_position != other.world_camera_position).then(|| other.world_camera_position.clone()),
+            world_camera_target: (base.world_camera_target != other.world_camera_target).then(|| other.world_camera_target.clone()),
+            world_camera_fov: (base.world_camera_fov != other.world_camera_fov).then(|| other.world_camera_fov.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.world_camera_position.is_none() && self.world_camera_target.is_none() && self.world_camera_fov.is_none()
     }
 }
 
@@ -84,15 +134,18 @@ impl ArtifactPack for SourcingCurationPresence {
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(rename_all = "camelCase")]
 pub enum SourcingCurationPresenceMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        presence: SourcingCurationPresence,
+    #[dsl(key = "world-camera")]
+    SetWorldCamera {
+        #[dsl(coord)]
+        position: [f64; 3],
+        #[dsl(coord)]
+        target: [f64; 3],
+        fov: f64,
     },
 }
 
 impl Mutation<SourcingCurationPresence> for SourcingCurationPresenceMutation {
-    type Diff = SourcingCurationPresence;
+    type Diff = SourcingCurationPresenceDiff;
 
     /// 🧷️ Hand-written (not `#[derive(dsl::Mutations)]`: a single whole-value snapshot replace, not a
     /// `dsl::Mutations`-eligible semantic-document vocabulary). ⚠️ PROVISIONAL: the `owner` path below
@@ -100,29 +153,26 @@ impl Mutation<SourcingCurationPresence> for SourcingCurationPresenceMutation {
     /// entry is a metadata placeholder to satisfy `protocol::Mutation`, matching the sibling
     /// `🎚️config` enum and puzzle's `🖐️5d` precedent.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/set-world-camera", semantic_kind: "set-world-camera", display_name: "Set World Camera", emoji: "📄", aggregate_variant: "SetWorldCamera", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Self::SetWorldCamera { .. } => &Self::DESCRIPTORS[0],
         }
     }
 
-    /// 📦️ Whole-value snapshot replace — no target to be missing, so a message-free outcome per the
-    /// contract's root-scoped shrink-only allowlist.
-    fn diff(&self, _base: &SourcingCurationPresence) -> protocol::MutationOutcome<SourcingCurationPresence> {
+    fn diff(&self, base: &SourcingCurationPresence) -> protocol::MutationOutcome<SourcingCurationPresenceDiff> {
         protocol::MutationOutcome::new(match self {
-            Self::Snapshot { presence } => presence.clone(),
+            Self::SetWorldCamera { position, target, fov } => SourcingCurationPresenceDiff { world_camera_position: (base.world_camera_position != *position).then_some(*position), world_camera_target: (base.world_camera_target != *target).then_some(*target), world_camera_fov: (base.world_camera_fov != *fov).then_some(*fov), ..Default::default() },
         })
     }
 
     fn inverse(&self, base: &SourcingCurationPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { presence: base.clone() }]
-    
-    })())
-}
+        Ok(vec![match self {
+            Self::SetWorldCamera { .. } => Self::SetWorldCamera { position: base.world_camera_position, target: base.world_camera_target, fov: base.world_camera_fov },
+        }])
+    }
 }
 
 impl protocol::OpText for SourcingCurationPresenceMutation {
@@ -249,3 +299,15 @@ impl semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Sourcing
 #[path = "🧪️tests/🔬️retirement/🦀️.rs"]
 mod retirement_tests;
 //#endregion 🧪️RetirementTests
+
+#[cfg(test)]
+mod law_tests {
+    use super::*;
+
+    /// ⚖️ The inverse diffs sum to the negative of the forward diff (L3).
+    #[semio_framework_async_macros::async_test]
+    async fn inverse_diffs_sum_to_the_negative_diff() {
+        let base = SourcingCurationPresence::default();
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SourcingCurationPresenceMutation::SetWorldCamera { position: [1.0, 2.0, 3.0], target: [0.5, 0.0, 0.0], fov: 35.0 }, &base).await;
+    }
+}

@@ -9,7 +9,7 @@
 //! option: nothing picked yet shows the opened document, while the picker's own `No example` row
 //! shows no example at all.
 
-use super::{Generation3dViewConfig, Generation3dViewConfigMutation};
+use super::{Generation3dViewConfigPatch, Generation3dViewConfig, Generation3dViewConfigMutation};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "active-example")]
@@ -22,10 +22,8 @@ pub struct SetActiveExample {
 impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutation> for SetActiveExample {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "active-example", kind: "set-active-example", record: "SetActiveExample" };
 
-    fn diff(&self, base: &Generation3dViewConfig) -> protocol::MutationOutcome<Generation3dViewConfig> {
-        let mut next = base.clone();
-        next.active_example_id.clone_from(&self.value);
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, base: &Generation3dViewConfig) -> protocol::MutationOutcome<Generation3dViewConfigPatch> {
+        protocol::MutationOutcome::new(Generation3dViewConfigPatch { active_example_id: Some(Generation3dActiveExampleChange { id: self.value.clone() }), ..Default::default() })
     }
 
     fn inverse(&self, base: &Generation3dViewConfig) -> Result<Vec<Generation3dViewConfigMutation>, semio_framework_value::ValueError> {

@@ -70,7 +70,7 @@ async fn mutation_diff_law_and_inverse_law_hold_for_every_variant() {
     for m in variants {
         let mut snap = base.clone();
         let diff = <AviMutation as Mutation<AviSnapshot>>::diff(&m, &snap);
-        let expected = diff.diff().apply(&snap).unwrap();
+        let expected = protocol::apply_diff(diff.diff(), &snap).unwrap();
         let returned = apply_avi_mutation(&mut snap, &m);
         assert_eq!(returned, diff, "apply_avi_mutation must return the SAME diff as Mutation::diff for {m:?}");
         assert_eq!(snap, expected, "mutation_diff_law failed for {m:?}");
@@ -97,18 +97,29 @@ async fn remove_stream_then_insert_stream_round_trips() {
     assert_eq!(round, base);
 }
 
+/// ⚖️ `avi_mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff.
 #[semio_framework_async_macros::async_test]
-async fn set_snapshot_still_works_as_a_full_replace() {
-    let base = base_snapshot();
-    let mut next = base.clone();
-    next.main_header.width = 999;
-    let mutation = AviMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: next.clone() });
-    let diff = <AviMutation as Mutation<AviSnapshot>>::diff(&mutation, &base);
-    assert_eq!(diff.diff().apply(&base).unwrap(), next);
-    let inv = <AviMutation as Mutation<AviSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
-    let mut round = next.clone();
-    apply_avi_mutation(&mut round, &inv[0]);
-    assert_eq!(round, base);
+async fn avi_mutation_inverse_sum_law_holds_for_every_leaf() {
+    let mut base = base_snapshot();
+    base.streams[0].chunks.push(AviChunk { fourcc: "00dc".into(), data: vec![4, 5], keyframe: false });
+    base.unknown_chunks.push(RiffChunk { fourcc: "LIST".into(), data: vec![2] });
+    let stream = AviStream { strh: base.streams[0].strh.clone(), strf: base.streams[0].strf.clone(), chunks: vec![], strl_extra: vec![] };
+    for m in [
+        AviMutation::SetMainHeader(set_main_header::SetMainHeader { main_header: AviMainHeader { width: 32, ..base.main_header.clone() } }),
+        AviMutation::SetIdx1Present(set_idx1_present::SetIdx1Present { idx1_present: false }),
+        AviMutation::InsertStream(insert_stream::InsertStream { index: 0, stream: stream.clone() }),
+        AviMutation::InsertStream(insert_stream::InsertStream { index: 1, stream }),
+        AviMutation::RemoveStream(remove_stream::RemoveStream { index: 0 }),
+        AviMutation::SetStreamHeader(set_stream_header::SetStreamHeader { stream_index: 0, strh: AviStreamHeader { rate: 30, ..base.streams[0].strh.clone() } }),
+        AviMutation::SetStreamFormat(set_stream_format::SetStreamFormat { stream_index: 0, strf: AviStreamFormat::Raw { data: vec![9] } }),
+        AviMutation::InsertChunk(insert_chunk::InsertChunk { stream_index: 0, index: 1, chunk: AviChunk { fourcc: "00dc".into(), data: vec![9, 9], keyframe: false } }),
+        AviMutation::RemoveChunk(remove_chunk::RemoveChunk { stream_index: 0, index: 0 }),
+        AviMutation::SetChunkKeyframe(set_chunk_keyframe::SetChunkKeyframe { stream_index: 0, index: 1, keyframe: true }),
+        AviMutation::AddUnknownChunk(add_unknown_chunk::AddUnknownChunk { index: 1, item: RiffChunk { fourcc: "MORE".into(), data: vec![1] } }),
+        AviMutation::RemoveUnknownChunk(remove_unknown_chunk::RemoveUnknownChunk { index: 0 }),
+    ] {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&m, &base).await;
+    }
 }
 
 /// 🧪️ op_text_binary_roundtrip_law
@@ -116,7 +127,6 @@ async fn set_snapshot_still_works_as_a_full_replace() {
 async fn op_text_binary_roundtrip_law() {
     let base = base_snapshot();
     for m in [
-        AviMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
         AviMutation::SetIdx1Present(set_idx1_present::SetIdx1Present { idx1_present: false }),
         AviMutation::RemoveStream(remove_stream::RemoveStream { index: 0 }),
         AviMutation::SetChunkKeyframe(set_chunk_keyframe::SetChunkKeyframe { stream_index: 0, index: 0, keyframe: true }),
@@ -141,8 +151,6 @@ async fn kinds_const_matches_enum_variants_in_declaration_order() {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free) -- see R9
     fn kind_of(m: &AviMutation) -> &'static str {
         match m {
-            AviMutation::SetSnapshot(_) => "set-snapshot",
-            AviMutation::PatchSnapshot(_) => "patch-snapshot",
             AviMutation::SetMainHeader(_) => "set-main-header",
             AviMutation::SetIdx1Present(_) => "set-idx1-present",
             AviMutation::InsertStream(_) => "insert-stream",
@@ -158,8 +166,6 @@ async fn kinds_const_matches_enum_variants_in_declaration_order() {
     }
     let base = base_snapshot();
     let one_per_variant = vec![
-        AviMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-        AviMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         AviMutation::SetMainHeader(set_main_header::SetMainHeader { main_header: base.main_header.clone() }),
         AviMutation::SetIdx1Present(set_idx1_present::SetIdx1Present { idx1_present: false }),
         AviMutation::InsertStream(insert_stream::InsertStream { index: 1, stream: base.streams[0].clone() }),

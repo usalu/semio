@@ -40,7 +40,7 @@ function write(root: string, rel: string, body: string): void {
 
 /** 🧪️ A synthetic repository carrying the real taxonomy, optionally declaring `schema://`. */
 function scaffold(declareResolution = true): string {
-  const root = mkdtempSync(join(tmpdir(), "schema-invariants-"));
+  const root = mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir(), "schema-invariants-"));
   const taxonomy = JSON.parse(readFileSync(join(repoRoot, TAXONOMY_REL_PATH), "utf8")) as Record<string, unknown>;
   if (!declareResolution) delete taxonomy.schemaExportResolution;
   write(root, TAXONOMY_REL_PATH, JSON.stringify(taxonomy));
@@ -770,12 +770,22 @@ describe("🔗️ the fixture resolver speaks schema://", () => {
 describe("🤝️ parity with the catalog generator's own vector", () => {
   const VECTOR = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧬️schema-scope-catalog/🔣️.json";
   const PLACEMENT_CODES = new Set(["schema-placement-forbidden-filename", "schema-placement-outside-module", "schema-contracts-directory-forbidden"]);
-  type GeneratorCase = { id: string; files: Record<string, unknown>; expected: { scopes: Record<string, { path: string; level: string }>; diagnosticCodes: string[]; placementPaths: string[] } };
+  type GeneratorCase = { id: string; files: Record<string, unknown>; expected: { scopes: Record<string, { path: string; level: string }>; diagnosticCodes: string[]; placementPaths: string[]; fixtureAuthorityPaths?: string[] } };
 
   const vector = (): GeneratorCase[] => {
     expect(existsSync(join(repoRoot, VECTOR)), `the catalog generator's vector is expected at ${VECTOR}`).toBe(true);
     return (JSON.parse(readFileSync(join(repoRoot, VECTOR), "utf8")) as { cases: GeneratorCase[] }).cases;
   };
+
+  test("marker-free fixture authority matches the catalog vector and preserves ordinary data", () => {
+    for (const row of vector().filter(row => row.expected.fixtureAuthorityPaths !== undefined)) {
+      const root = scaffold();
+      try {
+        for (const [rel, body] of Object.entries(row.files)) write(root, rel, typeof body === "string" ? body : JSON.stringify(body));
+        expect({ case: row.id, paths: schemaFixtureIsolationDiagnostics(root).map(row => row.path).sort() }).toEqual({ case: row.id, paths: [...row.expected.fixtureAuthorityPaths!].sort() });
+      } finally { discard(root); }
+    }
+  });
 
   test("every generator case places the same files and levels as this harness does", () => {
     for (const row of vector()) {
@@ -796,7 +806,7 @@ describe("🤝️ parity with the catalog generator's own vector", () => {
         discard(root);
       }
     }
-  });
+  }, 30_000);
 });
 
 describe("🩺️ the committed tree is measured by the same checkers", () => {

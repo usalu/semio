@@ -1,4 +1,17 @@
-import { GIS_INFERENCE_PRESENTATION_V1 } from "../../🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🪟️presentation/🟦️.tsx";
-import { bootFrameworkOsDev } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🟦️.ts";
-import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-2d";
-await bootFrameworkOsDev({ brands: [], documentServices: [GIS_INFERENCE_PRESENTATION_V1], backboneWorkerFactory: () => new Worker(new URL("../🧩️service-composition/👷️worker/🟦️.ts", import.meta.url), { type: "module" }), surfaceSessionFactories: PUZZLE_BOARD_SESSION_FACTORIES });
+import type { FrameworkOsBootOptions, FrameworkOsBootExecution } from "@semio-tech/framework-renderer-react";
+import { mountSDevInventoryV1, type SDevMountV1, type SDevOperationV1 } from "../🧩️service-composition/🟦️.ts";
+
+export type SDevBrowserInventoryV1 = {
+  readonly plugins: NonNullable<FrameworkOsBootOptions["plugins"]>;
+  readonly documentServices: NonNullable<FrameworkOsBootExecution["documentServices"]>;
+  readonly surfaceSessionFactories: NonNullable<FrameworkOsBootOptions["surfaceSessionFactories"]>;
+  readonly backboneWorkerFactory?: FrameworkOsBootExecution["backboneWorkerFactory"];
+};
+export interface SDevBrowserHostV1 { mount(installed: SDevBrowserInventoryV1, operation: SDevOperationV1): Promise<SDevMountV1>; }
+export type { SDevMountV1, SDevOperationV1 } from "../🧩️service-composition/🟦️.ts";
+
+/** 🚀 Boots one host with its caller's exact installed inventory, including an empty inventory. */
+export async function bootSDevV1(installed: SDevBrowserInventoryV1, host: SDevBrowserHostV1, operation: SDevOperationV1): Promise<SDevMountV1> {
+  if (!installed || !Array.isArray(installed.plugins) || !Array.isArray(installed.documentServices) || !Array.isArray(installed.surfaceSessionFactories)) throw new Error("s-dev.missing-installed-inventory");
+  return mountSDevInventoryV1([installed], (inventory, context) => host.mount(inventory, context), operation);
+}

@@ -39,8 +39,6 @@ fn sweep_b() -> CsvSnapshot {
 async fn mutation_diff_law() {
     let base = base_snapshot();
     let variants = vec![
-        CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
-        patch_snapshot::test_case(),
         CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: false }),
         CsvMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: record(&[("new", true)]) }),
         CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }),
@@ -48,7 +46,7 @@ async fn mutation_diff_law() {
     ];
     for m in variants {
         let diff = m.diff(&base);
-        let expected = diff.diff().apply(&base).unwrap();
+        let expected = protocol::apply_diff(diff.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
         let returned_diff = apply_csv_mutation(&mut via_apply, &m);
@@ -64,8 +62,6 @@ async fn mutation_diff_law() {
 async fn inverse_law() {
     let base = base_snapshot();
     let variants = vec![
-        CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
-        patch_snapshot::test_case(),
         CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: false }),
         CsvMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: record(&[("new", true)]) }),
         CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }),
@@ -82,8 +78,8 @@ async fn inverse_law() {
 
         // 🔁️ diff-level round trip
         let d = m.diff(&base);
-        let mid = d.diff().apply(&base).unwrap();
-        let back = d.diff().inverse(&base).apply(&mid).unwrap();
+        let mid = protocol::apply_diff(d.diff(), &base).unwrap();
+        let back = protocol::apply_diff(d.diff().inverse(&base), &mid).unwrap();
         assert_eq!(back, base, "diff-level inverse round trip failed for {m:?}");
     }
 }
@@ -96,50 +92,50 @@ async fn absorb_law() {
 
     // 🧩 Insert(2) + Remove(0): the two-op sequence base → mid → after.
     let d1 = CsvMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: record(&[("ins", false)]) }).diff(&base);
-    let mid = d1.diff().apply(&base).unwrap();
+    let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }).diff(&mid);
-    let after = d2.diff().apply(&mid).unwrap();
+    let after = protocol::apply_diff(d2.diff(), &mid).unwrap();
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Remove-before absorb mismatch");
+    assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Insert+Remove-before absorb mismatch");
 
     // 🧩 Insert(2,f) + Insert(2,g): both must survive (fixes the old op-slot LWW bug).
     let d1 = CsvMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: record(&[("f", false)]) }).diff(&base);
-    let mid = d1.diff().apply(&base).unwrap();
+    let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = CsvMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: record(&[("g", false)]) }).diff(&mid);
-    let after = d2.diff().apply(&mid).unwrap();
+    let after = protocol::apply_diff(d2.diff(), &mid).unwrap();
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Insert-same-index absorb mismatch");
+    assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Insert+Insert-same-index absorb mismatch");
     assert_eq!(after.records.len(), base.records.len() + 2, "both inserts must survive");
 
     // 🧩 Add + SetField: patch into the added payload.
     let d1 = CsvMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: record(&[("orig", false)]) }).diff(&base);
-    let mid = d1.diff().apply(&base).unwrap();
+    let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = CsvMutation::SetField(set_field::SetField { record_index: 1, field_index: 0, value: "patched".into(), quoted: true }).diff(&mid);
-    let after = d2.diff().apply(&mid).unwrap();
+    let after = protocol::apply_diff(d2.diff(), &mid).unwrap();
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(composed.apply(&base).unwrap(), after, "Add+SetField absorb mismatch");
+    assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Add+SetField absorb mismatch");
     assert_eq!(after.records[1].fields[0].value, "patched");
 
     // 🧩 Modify + Remove: modifying then removing the same record collapses to a removal.
     let d1 = CsvMutation::SetField(set_field::SetField { record_index: 1, field_index: 0, value: "will-vanish".into(), quoted: false }).diff(&base);
-    let mid = d1.diff().apply(&base).unwrap();
+    let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: 1 }).diff(&mid);
-    let after = d2.diff().apply(&mid).unwrap();
+    let after = protocol::apply_diff(d2.diff(), &mid).unwrap();
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(composed.apply(&base).unwrap(), after, "Modify+Remove absorb mismatch");
+    assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Modify+Remove absorb mismatch");
 
     // 🧩 Associativity over a triple.
     let base = base_snapshot();
     let d1 = CsvMutation::InsertRecord(insert_record::InsertRecord { index: 0, record: record(&[("a", false)]) }).diff(&base);
-    let s1 = d1.diff().apply(&base).unwrap();
+    let s1 = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = CsvMutation::SetField(set_field::SetField { record_index: 0, field_index: 0, value: "a2".into(), quoted: true }).diff(&s1);
-    let s2 = d2.diff().apply(&s1).unwrap();
+    let s2 = protocol::apply_diff(d2.diff(), &s1).unwrap();
     let d3 = CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: 2 }).diff(&s2);
-    let s3 = d3.diff().apply(&s2).unwrap();
+    let s3 = protocol::apply_diff(d3.diff(), &s2).unwrap();
 
     let mut left = d1.diff().clone();
     left.absorb(d2.diff().clone());
@@ -150,9 +146,9 @@ async fn absorb_law() {
     let mut right = d1.diff().clone();
     right.absorb(d23);
 
-    assert_eq!(left.apply(&base).unwrap(), s3);
-    assert_eq!(right.apply(&base).unwrap(), s3);
-    assert_eq!(left.apply(&base).unwrap(), right.apply(&base).unwrap(), "absorb must be associative");
+    assert_eq!(protocol::apply_diff(&left, &base).unwrap(), s3);
+    assert_eq!(protocol::apply_diff(&right, &base).unwrap(), s3);
+    assert_eq!(protocol::apply_diff(&left, &base).unwrap(), protocol::apply_diff(&right, &base).unwrap(), "absorb must be associative");
 }
 //#endregion 🔖️AbsorbLaw
 
@@ -161,14 +157,14 @@ async fn absorb_law() {
 async fn between_roundtrip_law() {
     let a = base_snapshot();
     let b = sweep_b();
-    assert_eq!(CsvDiff::between(&a, &b).apply(&a).unwrap(), b);
-    assert_eq!(CsvDiff::between(&b, &a).apply(&b).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&CsvDiff::between(&a, &b), &a).unwrap(), b);
+    assert_eq!(protocol::apply_diff(&CsvDiff::between(&b, &a), &b).unwrap(), a);
 
     // synthetic: differing field counts within an overlapping index (record replace path).
     let mut c = a.clone();
     c.records[0] = record(&[("only-one-field", false)]);
-    assert_eq!(CsvDiff::between(&a, &c).apply(&a).unwrap(), c);
-    assert_eq!(CsvDiff::between(&c, &a).apply(&c).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&CsvDiff::between(&a, &c), &a).unwrap(), c);
+    assert_eq!(protocol::apply_diff(&CsvDiff::between(&c, &a), &c).unwrap(), a);
 
     assert!(CsvDiff::between(&a, &a).is_empty());
 }
@@ -181,10 +177,10 @@ async fn field_sweep_every_mutable_field_changes() {
     let b = sweep_b();
 
     let d_ab = CsvDiff::between(&a, &b);
-    assert_eq!(d_ab.apply(&a).unwrap(), b, "between(a,b).apply(a) == b");
+    assert_eq!(protocol::apply_diff(&d_ab, &a).unwrap(), b, "between(a,b).apply(a) == b");
 
     let d_ba = CsvDiff::between(&b, &a);
-    assert_eq!(d_ba.apply(&b).unwrap(), a, "between(b,a).apply(b) == a");
+    assert_eq!(protocol::apply_diff(&d_ba, &b).unwrap(), a, "between(b,a).apply(b) == a");
 
     // 🔍 Hand-written per-field assertion: every field of `CsvDiff` is populated.
     assert!(d_ab.has_header.is_some(), "has_header must be populated");
@@ -205,16 +201,12 @@ async fn field_sweep_every_mutable_field_changes() {
 
 //#region 🔖️OpTextBinaryRoundtripLaw
 /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `CsvMutation` grammar —
-/// exercises every variant, incl. a `SetSnapshot` payload whose record fields contain the
+/// exercises every variant, incl. a record payload whose fields contain the
 /// grammar's own reserved separator characters (`,`/`[`/`]`/space) to prove hex-encoding
 /// sidesteps escaping entirely.
 #[semio_framework_async_macros::async_test]
 async fn op_text_binary_roundtrip_law() {
     let mutations = vec![
-        CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
-        patch_snapshot::test_case(),
-        CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: CsvSnapshot { schema: "stdio.csv".into(), has_header: false, records: vec![record(&[("a, tricky [value]", true), ("plain", false)])] } }),
-        CsvMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: true }),
         CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: false }),
         CsvMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: record(&[("new, [tricky]", true)]) }),
@@ -237,8 +229,8 @@ async fn op_text_binary_roundtrip_law() {
 
 //#region 🔖️OpsGrammarConformanceLaw
 /// 🧪️ P2-P1 item 6: `dsl::parse_grammar` + `dsl::Recognizer` recognize REAL `print_op`
-/// output for several real mutations (not just one trivial case), incl. `SetSnapshot`'s own
-/// nested positional-tuple `snapshot-value` production.
+/// output for several real mutations (not just one trivial case), incl. the nested positional-tuple
+/// `record-value` production.
 #[semio_framework_async_macros::async_test]
 async fn ops_grammar_conformance_law() {
     let grammar_text = crate::standards::v_rfc4180::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO;
@@ -250,8 +242,6 @@ async fn ops_grammar_conformance_law() {
         CsvMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: record(&[("new", true)]) }),
         CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }),
         CsvMutation::SetField(set_field::SetField { record_index: 1, field_index: 0, value: "changed".into(), quoted: true }),
-        CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
-        patch_snapshot::test_case(),
     ];
     for m in mutations {
         let printed = m.print_op();
@@ -271,8 +261,6 @@ async fn ops_grammar_conformance_law() {
 async fn kinds_match_enum_and_catalog() {
     fn kind_of(mutation: &CsvMutation) -> &'static str {
         match mutation {
-            CsvMutation::SetSnapshot(_) => "set-snapshot",
-            CsvMutation::PatchSnapshot(_) => "patch-snapshot",
             CsvMutation::SetHasHeader(_) => "set-has-header",
             CsvMutation::InsertRecord(_) => "insert-record",
             CsvMutation::RemoveRecord(_) => "remove-record",
@@ -280,8 +268,6 @@ async fn kinds_match_enum_and_catalog() {
         }
     }
     let samples = [
-        CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: CsvSnapshot::default() }),
-        patch_snapshot::test_case(),
         CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: false }),
         CsvMutation::InsertRecord(insert_record::InsertRecord { index: 0, record: CsvRecord::default() }),
         CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }),
@@ -298,3 +284,20 @@ async fn kinds_match_enum_and_catalog() {
     assert_eq!(declared, KINDS, "the oracle manifest's kinds must match CsvMutation exactly");
 }
 //#endregion 🔖️KindsConformanceLaw
+
+/// ⚖️ `csv_mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff.
+#[semio_framework_async_macros::async_test]
+async fn csv_mutation_inverse_sum_law_holds_for_every_leaf() {
+    let base = base_snapshot();
+    for mutation in [
+        CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: false }),
+        CsvMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: record(&[("new", true)]) }),
+        CsvMutation::InsertRecord(insert_record::InsertRecord { index: 3, record: record(&[("tail", false)]) }),
+        CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }),
+        CsvMutation::RemoveRecord(remove_record::RemoveRecord { index: 2 }),
+        CsvMutation::SetField(set_field::SetField { record_index: 1, field_index: 0, value: "changed".into(), quoted: true }),
+        CsvMutation::SetField(set_field::SetField { record_index: 2, field_index: 1, value: "y".into(), quoted: false }),
+    ] {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+}

@@ -1,4 +1,0 @@
-> bun ./📜️script.ts test-owner-command "✏️s/🧑‍💻dev/📐️cad/📦️packages/🦀️rust/📜️script.ts" source-check
-
-[DEBUG] isolated Nx verification test-owner-command
-[DEBUG] geometry ownership: 23 physical mathematical owners; closed format boundary

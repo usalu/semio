@@ -61,9 +61,6 @@ const SUBSET_IDS: Readonly<Record<string, string>> = { "📰️header": "header"
 const FIXTURE_COORDINATES: Readonly<Record<string, readonly [string, string]>> = {
   "drafting-plate": ["📰️header", "📐️drafting-plate"],
   "no-mutation-no-op": ["📰️header", "⏸️no-mutation-no-op"],
-  "set-snapshot-applied": ["📰️header", "📸️set-snapshot-applied"],
-  "set-snapshot-no-op": ["📰️header", "🪞️set-snapshot-no-op"],
-  "set-snapshot-rejected-duplicate-layer": ["📰️header", "👯️set-snapshot-rejected-duplicate-layer"],
   "set-header-var-applied": ["📰️header", "🏷️set-header-var-applied"],
   "remove-header-var-applied": ["📰️header", "🧹️remove-header-var-applied"],
   "remove-header-var-rejected-missing": ["📰️header", "🔍️remove-header-var-rejected-missing"],
@@ -110,9 +107,6 @@ type Recipe = Readonly<{ id: string; kind: "single" | "pair"; mutation: string |
 const RECIPES: readonly Recipe[] = [
   { id: "drafting-plate", kind: "single", mutation: null, outcome: null, notes: "Pre-existing base document for the cross-semio-implementation oracle's own testing shape. Untouched in content by this retrofit." },
   { id: "no-mutation-no-op", kind: "pair", mutation: "no-mutation", outcome: "no-op", notes: "Identity — before and after are the same document, encoded independently." },
-  { id: "set-snapshot-applied", kind: "pair", mutation: "set-snapshot", outcome: "applied", notes: "Whole-document replace: $INSBASE, a new LAYER, and the circle entity's radius (the subset's own declared 'widens-the-circle-entity-radius' scenario) all change together." },
-  { id: "set-snapshot-no-op", kind: "pair", mutation: "set-snapshot", outcome: "no-op", notes: "Replacement snapshot equals the base — DxfDiff::between is empty." },
-  { id: "set-snapshot-rejected-duplicate-layer", kind: "pair", mutation: "set-snapshot", outcome: "rejected", notes: "Payload snapshot declares a layer name that collides with an existing base layer — invalid-add-target (🔺️diff/🦀️.rs:1571)." },
   { id: "set-header-var-applied", kind: "pair", mutation: "set-header-var", outcome: "applied", notes: "$INSBASE changes value — the one generic $VAR dxf's Header persists unconditionally on an R12 save." },
   { id: "remove-header-var-applied", kind: "pair", mutation: "remove-header-var", outcome: "applied", notes: "$INSBASE resets to the origin." },
   { id: "remove-header-var-rejected-missing", kind: "pair", mutation: "remove-header-var", outcome: "rejected", notes: "Target name is genuinely absent from header_vars — invalid-remove-target, carrier-independent." },

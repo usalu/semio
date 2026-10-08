@@ -1,6 +1,4 @@
-//! 🙈️ `remove-viewpoint` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🙈️ `remove-viewpoint` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -17,14 +15,18 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for RemoveViewpoint {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "viewpoint", kind: "remove-viewpoint", record: "RemoveViewpoint" };
 
     fn diff(&self, base: &BcfSnapshot) -> protocol::MutationOutcome<<BcfMutation as Mutation<BcfSnapshot>>::Diff> {
-        agg_diff(&BcfMutation::RemoveViewpoint(self.clone()), base)
+        let Self { topic_guid, guid } = self;
+        protocol::MutationOutcome::new(wrap_topic_diff(base, topic_guid, BcfTopicDiff { viewpoints: Some(BcfViewpointsDiff { removed: vec![viewpoint_index(base, topic_guid, guid)], modified: Vec::new(), added: Vec::new() }), ..Default::default() }))
     }
     fn inverse(&self, base: &BcfSnapshot) -> Result<Vec<BcfMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&BcfMutation::RemoveViewpoint(self.clone()), base)?
-    
-    })
-}
+        let Self { topic_guid, guid } = self;
+        Ok({
+            match find_viewpoint(base, topic_guid, guid) {
+                Some(v) => vec![BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: topic_guid.clone(), viewpoint: v.clone(), index: Some(viewpoint_index(base, topic_guid, guid)) })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove viewpoint", "Blickpunkt entfernen")
     }

@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../.."
 name = "semio-s-plugin-cad-aec-building-structure"
 version.workspace = true
 edition.workspace = true

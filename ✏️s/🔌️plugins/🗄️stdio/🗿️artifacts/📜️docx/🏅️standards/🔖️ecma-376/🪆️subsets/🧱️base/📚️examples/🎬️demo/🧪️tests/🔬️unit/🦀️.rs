@@ -1,5 +1,6 @@
 use super::*;
-use crate::schema::mutations::set_snapshot;
+use crate::schema::mutations::insert_style;
+use crate::schema::snapshot::DocxStyle;
 use crate::standards::v_ecma_376::subsets::base::schema::inferences::DocxInference;
 use crate::{DocxMutation, DocxSnapshot};
 use protocol::Inference;
@@ -47,8 +48,8 @@ impl SubsetRoundtripSpec for DocxAnyRoundtrip {
         DocxInference::infer(snapshot)
     }
 
-    async fn sample_mutations(snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
-        vec![DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: snapshot.clone() })]
+    async fn sample_mutations(_snapshot: &Self::Snapshot) -> Vec<Self::Mutation> {
+        vec![DocxMutation::InsertStyle(insert_style::InsertStyle { style: DocxStyle { id: "semio-sample".into(), name: "Semio Sample".into(), based_on: None } })]
     }
 
     async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {

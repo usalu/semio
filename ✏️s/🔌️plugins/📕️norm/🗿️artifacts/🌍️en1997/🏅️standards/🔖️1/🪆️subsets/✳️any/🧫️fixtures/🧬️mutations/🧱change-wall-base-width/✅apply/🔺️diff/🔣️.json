@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "structureId": null,
   "geotechnicalCategory": null,
   "designSituation": null,
@@ -11,25 +10,15 @@
   "footings": null,
   "piles": null,
   "retainingWalls": {
-    "values": [
+    "added": [],
+    "removed": [],
+    "modified": [
       {
         "id": "wall-W1",
-        "height": 4.0,
-        "embedment": 1.2,
-        "baseWidth": 2.9,
-        "stemThickness": 0.35,
-        "backfillPhiDeg": 30.0,
-        "backfillGamma": 18000.0,
-        "wallFrictionDeg": 20.0,
-        "earthPressureMode": "active",
-        "wallMovement": "free",
-        "ocr": 1.0,
-        "concreteGamma": 25000.0,
-        "surcharge": 10000.0,
-        "verticalPermanent": 320000.0,
-        "horizontalPermanent": 40000.0
+        "baseWidth": 2.9
       }
-    ]
+    ],
+    "order": null
   },
   "slopes": null,
   "upliftCases": null

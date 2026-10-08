@@ -27,6 +27,25 @@
         "group": "value",
         "order": 10
       }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Position a new instance takes among the instances; the last position when absent.",
+          "de": "Position, die eine neue Instanz unter den Instanzen einnimmt; ohne Angabe die letzte."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "value",
+        "order": 20
+      }
     }
   }
 }

@@ -1,7 +1,7 @@
 //! 🏷️ Authoritative PDF/UA mutation for setting the document title conformance axis.
 
 use super::PdfUaMutation;
-use crate::standards::v1_7::subsets::base::schema::{diff::{PdfDiff, PdfInfoDiff, PdfSet}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{diff::{PdfDiff, PdfInfoDiff, PdfSet}, snapshot::PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -16,7 +16,8 @@ impl MutationKind<PdfSnapshot, PdfUaMutation> for SetInfoTitle {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "info-title", kind: "set-info-title", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let change = (base.info.title.as_deref() != Some(self.title.as_str())).then(|| PdfInfoDiff { title: Some(PdfSet::Set { value: self.title.clone() }), ..Default::default() });
+        let wanted = (!self.title.is_empty()).then(|| self.title.clone());
+        let change = (base.info.title != wanted).then(|| PdfInfoDiff { title: Some(PdfSet::from_option(&wanted)), ..Default::default() });
         MutationOutcome::new(PdfDiff { info: change, ..Default::default() })
     }
 

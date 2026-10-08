@@ -1,22 +1,85 @@
 {
-  "artifact": null,
   "annex": null,
-  "materials": null,
-  "sections": {
-    "values": []
+  "materials": {
+    "removed": [],
+    "added": [],
+    "modified": []
   },
-  "members": null,
-  "loadCases": null,
-  "memberActions": null,
-  "joints": null,
-  "fatigueDetails": null,
-  "fireExposures": null,
-  "coldFormedMembers": null,
-  "platedPanels": null,
-  "siloShells": null,
-  "tensionComponents": null,
-  "bridgeFatigue": null,
-  "towerLegs": null,
-  "piles": null,
-  "craneRunways": null
+  "sections": {
+    "removed": [
+      "sec-heb260"
+    ],
+    "added": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "loadCases": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "memberActions": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "joints": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "fatigueDetails": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "fireExposures": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "coldFormedMembers": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "platedPanels": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "siloShells": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "tensionComponents": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "bridgeFatigue": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "towerLegs": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "piles": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "craneRunways": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

@@ -1,3 +1,5 @@
 {
-  "generationPreviewText": "generation 1: 12 parts"
+  "generationPreviewText": {
+    "text": "generation 1: 12 parts"
+  }
 }

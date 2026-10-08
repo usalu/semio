@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "workshop": null,
   "stockId": null,
   "stockLabel": null,
@@ -17,52 +16,19 @@
       }
     }
   },
-  "stepPayloads": [
-    {
-      "id": "step-1",
-      "label": "Final Rip Cut",
-      "enabled": true,
-      "origin": {
-        "machineId": "saw",
-        "capabilityId": "cut"
-      },
-      "measure": {
-        "measure": "cut",
-        "tool": {
-          "kind": "box",
-          "width": 0.5,
-          "depth": 0.006,
-          "height": 0.1
-        },
-        "pose": {
-          "position": [
-            0.0,
-            0.0,
-            0.0
-          ],
-          "axis": [
-            0.0,
-            0.0,
-            1.0
-          ],
-          "angle": 0.0
-        }
-      }
-    }
-  ],
-  "toolSolids": {
-    "values": [
+  "stepPayloads": {
+    "added": [],
+    "removed": [],
+    "patched": [
       {
-        "childId": "tool-step-1-brep-6195cae6ebec0800",
-        "target": {
-          "artifactId": "tool-step-1-brep-6195cae6ebec0800",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "brep"
-          }
-        }
+        "id": "step-1",
+        "label": "Final Rip Cut",
+        "enabled": null,
+        "measure": null,
+        "origin": null
       }
-    ]
-  }
+    ],
+    "reordered": null
+  },
+  "toolSolids": null
 }

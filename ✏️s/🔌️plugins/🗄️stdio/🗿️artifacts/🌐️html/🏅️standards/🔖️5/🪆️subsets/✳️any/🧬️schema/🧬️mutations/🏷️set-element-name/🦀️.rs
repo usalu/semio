@@ -1,6 +1,4 @@
-//! 🏷️ `set-element-name` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🏷️ `set-element-name` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,14 +14,19 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetElementName {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "element-name", kind: "set-element-name", record: "SetElementName" };
 
     fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as Mutation<HtmlSnapshot>>::Diff> {
-        agg_diff(&HtmlMutation::SetElementName(self.clone()), base)
+        let Self { path, name } = self;
+        protocol::MutationOutcome::new(diff_at_path(path, HtmlNodeDiff::Element(HtmlElementDiff { name: Some(name.clone()), attributes: None, children: None })))
     }
     fn inverse(&self, base: &HtmlSnapshot) -> Result<Vec<HtmlMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&HtmlMutation::SetElementName(self.clone()), base)?
-    
-    })
-}
+        let Self { path, .. } = self;
+        Ok((|| {
+            let prior = match node_at(base, path) {
+                Ok(HtmlNode::Element { name, .. }) => name.clone(),
+                _ => return Vec::new(),
+            };
+            vec![HtmlMutation::SetElementName(set_element_name::SetElementName { path: path.clone(), name: prior })]
+        })())
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set element name", "Elementname setzen")
     }

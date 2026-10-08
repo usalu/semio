@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../.."
 name = "semio-s-artifact-puzzle-2d"
 version.workspace = true
 edition.workspace = true
@@ -17,7 +17,7 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:machine", "dep:semio-framework-async", "dep:semio-framework-os-infinite", "dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene", "dep:wasm-bindgen"]
+component-app-assembly = ["semio-framework-plugin/component-guest", "dep:machine", "dep:semio-framework-async", "dep:semio-framework-os-infinite", "dep:semio-framework-canvas", "dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene", "dep:wasm-bindgen"]
 
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
@@ -39,6 +39,7 @@ semio-framework-graph = { workspace = true }
 semio-framework-hash = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-infinite = { workspace = true, optional = true }
+semio-framework-canvas = { path = "../../../../../../../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust", optional = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
@@ -72,7 +73,7 @@ web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
 [dev-dependencies]
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async-macros = { workspace = true }
 geo = { version = "0.31.0", default-features = false }
 serde = { workspace = true }

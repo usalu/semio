@@ -1,19 +1,21 @@
 {
   "runs": {
-    "values": [
+    "modified": [
       {
-        "language": "en",
-        "content": "semio",
-        "marks": [
-          {
-            "kind": "link",
-            "href": "https://semio.tech"
-          },
-          {
-            "kind": "bold",
-            "href": ""
+        "index": 0,
+        "diff": {
+          "marks": {
+            "added": [
+              {
+                "index": 0,
+                "item": {
+                  "kind": "link",
+                  "href": "https://semio.tech"
+                }
+              }
+            ]
           }
-        ]
+        }
       }
     ]
   }

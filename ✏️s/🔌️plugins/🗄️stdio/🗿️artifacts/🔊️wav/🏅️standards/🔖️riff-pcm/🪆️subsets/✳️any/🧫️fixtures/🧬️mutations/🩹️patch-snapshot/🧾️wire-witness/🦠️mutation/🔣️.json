@@ -1,8 +1,0 @@
-{
-  "mutation": "patchSnapshot",
-  "patch": {
-    "operation": "set",
-    "path": "/fmt/sampleRate",
-    "value": 22050
-  }
-}

@@ -1,0 +1,207 @@
+{
+  "note": "🎯️ Procedural owns this generation3d integration corpus. Dependency ordering and role projection remain shared OS contracts; these exact procedural dialect and plugin coordinates are domain integration inputs, not mandatory OS registry rows.",
+  "cases": [
+    {
+      "id": "dependency-sorts-first",
+      "variant": "generation3d",
+      "programs": [
+        {
+          "pluginId": "flow",
+          "appIds": [
+            "s.flow.flow@1/*#editor"
+          ]
+        },
+        {
+          "pluginId": "procedural",
+          "appIds": [
+            "s.procedural.generation2d@1/*#editor",
+            "s.procedural.generation3d@1/*#editor"
+          ]
+        }
+      ],
+      "expected": {
+        "index": 1,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      }
+    },
+    {
+      "id": "requested-plugin-absent",
+      "variant": "generation3d",
+      "programs": [
+        {
+          "pluginId": "flow",
+          "appIds": [
+            "s.flow.flow@1/*#editor"
+          ]
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "requested-plugin-without-the-declared-app",
+      "variant": "generation3d",
+      "programs": [
+        {
+          "pluginId": "flow",
+          "appIds": [
+            "s.flow.flow@1/*#editor"
+          ]
+        },
+        {
+          "pluginId": "procedural",
+          "appIds": [
+            "s.procedural.generation2d@1/*#editor"
+          ]
+        }
+      ],
+      "expected": {
+        "index": 1,
+        "appId": "s.procedural.generation2d@1/*#editor"
+      }
+    },
+    {
+      "id": "declaring-program-under-another-id",
+      "variant": "generation3d",
+      "programs": [
+        {
+          "pluginId": "flow",
+          "appIds": [
+            "s.flow.flow@1/*#editor"
+          ]
+        },
+        {
+          "pluginId": "procedural-preview",
+          "appIds": [
+            "s.procedural.generation3d@1/*#editor"
+          ]
+        }
+      ],
+      "expected": {
+        "index": 1,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      }
+    },
+    {
+      "id": "single-program-variant",
+      "variant": "puzzle3d",
+      "programs": [
+        {
+          "pluginId": "puzzle",
+          "appIds": [
+            "s.puzzle.puzzle3d@1/*#editor"
+          ]
+        }
+      ],
+      "expected": {
+        "index": 0,
+        "appId": "s.puzzle.puzzle3d@1/*#editor"
+      }
+    },
+    {
+      "id": "viewer-role-projects-onto-the-declared-sibling",
+      "variant": "generation3d",
+      "role": "viewer",
+      "programs": [
+        {
+          "pluginId": "flow",
+          "appIds": [
+            "s.flow.flow@1/*#editor"
+          ]
+        },
+        {
+          "pluginId": "procedural",
+          "appIds": [
+            "s.procedural.generation2d@1/*#editor",
+            "s.procedural.generation3d@1/*#editor",
+            "s.procedural.generation3d@1/*#viewer"
+          ]
+        }
+      ],
+      "expected": {
+        "index": 1,
+        "appId": "s.procedural.generation3d@1/*#viewer"
+      }
+    },
+    {
+      "id": "viewer-role-without-a-sibling-keeps-the-anchor",
+      "variant": "generation3d",
+      "role": "viewer",
+      "programs": [
+        {
+          "pluginId": "flow",
+          "appIds": [
+            "s.flow.flow@1/*#editor"
+          ]
+        },
+        {
+          "pluginId": "procedural",
+          "appIds": [
+            "s.procedural.generation3d@1/*#editor"
+          ]
+        }
+      ],
+      "expected": {
+        "index": 1,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      }
+    },
+    {
+      "id": "viewer-role-never-crosses-dialects",
+      "variant": "generation3d",
+      "role": "viewer",
+      "programs": [
+        {
+          "pluginId": "procedural",
+          "appIds": [
+            "s.procedural.generation3d@1/*#editor",
+            "s.procedural.generation2d@1/*#viewer"
+          ]
+        }
+      ],
+      "expected": {
+        "index": 0,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      }
+    },
+    {
+      "id": "editor-role-is-the-frozen-default",
+      "variant": "generation3d",
+      "role": "editor",
+      "programs": [
+        {
+          "pluginId": "procedural",
+          "appIds": [
+            "s.procedural.generation3d@1/*#editor",
+            "s.procedural.generation3d@1/*#viewer"
+          ]
+        }
+      ],
+      "expected": {
+        "index": 0,
+        "appId": "s.procedural.generation3d@1/*#editor"
+      }
+    }
+  ],
+  "catalog": {
+    "plugins": [
+      {
+        "pluginId": "procedural",
+        "dependsOn": [
+          "flow"
+        ]
+      },
+      {
+        "pluginId": "flow",
+        "dependsOn": []
+      }
+    ],
+    "playgrounds": [
+      {
+        "variant": "generation3d",
+        "pluginId": "procedural",
+        "app": "s.procedural.generation3d@1/*#editor",
+        "aliases": []
+      }
+    ]
+  }
+}

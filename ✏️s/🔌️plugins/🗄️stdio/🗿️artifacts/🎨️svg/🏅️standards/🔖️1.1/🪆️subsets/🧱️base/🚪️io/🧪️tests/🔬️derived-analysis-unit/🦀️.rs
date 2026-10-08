@@ -10,9 +10,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn sniff_recognizes_real_svg_and_rejects_non_svg() {
         let svg = r#"<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="1" height="1"/></svg>"#;
-        assert_eq!(SvgAnalyzerAnalysis::sniff(&AnalyzeSource::Text(svg)), IoConfidence::High);
+        assert_eq!(SvgAnalyzerAnalysis::sniff(&AnalyzeSource::Text(svg)), semio_framework_plugin::io::Confidence::High);
         let not_svg = r#"<note><to>Tove</to></note>"#;
-        assert_ne!(SvgAnalyzerAnalysis::sniff(&AnalyzeSource::Text(not_svg)), IoConfidence::High);
+        assert_ne!(SvgAnalyzerAnalysis::sniff(&AnalyzeSource::Text(not_svg)), semio_framework_plugin::io::Confidence::High);
     }
 
     #[semio_framework_async_macros::async_test]

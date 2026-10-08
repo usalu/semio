@@ -28,7 +28,7 @@ fn mutation() -> LayoutMutation {
 }
 fn applied() -> LayoutSnapshot {
     let base = before();
-    mutation().diff(&base).diff().apply(&base).expect("delete-story applies to its committed before-snapshot")
+    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-story applies to its committed before-snapshot")
 }
 
 /// ▶️ `delete-story` removes the record only — there is no cascade into frames' `story_id`.
@@ -57,7 +57,7 @@ async fn inverse_recreates_story_2_with_its_body() {
     }
     let mut snapshot = applied();
     for step in &inverse {
-        snapshot = step.diff(&snapshot).diff().apply(&snapshot).expect("delete-story/removes-story-2: inverse step applies");
+        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("delete-story/removes-story-2: inverse step applies");
     }
     assert_eq!(snapshot, base, "delete-story/removes-story-2: inverse did not restore the before-snapshot");
 }
@@ -117,6 +117,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-story/removes-story-2: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse steps' diffs sum, by `absorb`, to the negative of the forward diff.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

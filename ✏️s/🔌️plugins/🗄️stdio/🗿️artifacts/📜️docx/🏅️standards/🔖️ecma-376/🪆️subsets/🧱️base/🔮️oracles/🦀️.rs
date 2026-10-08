@@ -38,7 +38,7 @@ use semio_repo_test_host::Json;
 /// production-side `kinds_const_matches_enum_variants_in_declaration_order` proves enum, constant
 /// and manifest never drift apart. Declared here rather than in the case adapter so the adapter,
 /// this module's own law tests and the manifest all read ONE list.
-pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "insert-block", "remove-block", "set-block-content", "set-run-text", "replace-xml-node", "set-run-formatting", "insert-style", "remove-style", "set-style-name", "set-style-based-on", "set-part", "remove-part"];
+pub const KINDS: &[&str] = &["insert-block", "remove-block", "set-block-content", "set-run-text", "replace-xml-node", "set-run-formatting", "insert-style", "remove-style", "set-style-name", "set-style-based-on", "set-part", "remove-part"];
 //#endregion 🔖️Vocabulary
 
 #[cfg(feature = "oracles")]
@@ -1162,37 +1162,20 @@ mod oracles {
 
     //#region 🔖️Routing
     pub fn apply_mutation(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
-        if kind == "patch-snapshot" {
-            let patched = semio_s_plugin_stdio_document_test_oracle::ooxml::patched_xml_parts(input, semio_s_plugin_stdio_document_test_oracle::ooxml::XmlPartsShape::Retained, params.get("patch").ok_or("patch-snapshot carries no patch")?)?;
-            return write_package(&read_package(&patched)?);
-        }
         let mut pkg = read_package(input)?;
         apply_kind(&mut pkg, kind, params)?;
         write_package(&pkg)
     }
 
     /// ↩️ Applies `{kind, params}` and then its computed inverse, in sequence, and returns the
-    /// re-serialized result — the caller compares its projection against the ORIGINAL input's own. A `patch-snapshot`'s
-    /// inverse is a whole `set-snapshot` of its base, so its forward result is re-read and the base itself re-written.
+    /// re-serialized result — the caller compares its projection against the ORIGINAL input's own.
     pub fn apply_mutation_inverse(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
-        if kind == "patch-snapshot" {
-            read_package(&apply_mutation(input, kind, params)?)?;
-            return round_trip(input);
-        }
         let base = read_package(input)?;
         let mut current = apply_mutation(input, kind, params)?;
         for undo in inverse_spec(&base, kind, params)? {
             current = apply_mutation(&current, &undo.str("kind"), undo.get("params").unwrap_or(&Json::Null))?;
         }
         Ok(current)
-    }
-
-    /// 📸️ The whole package replaced by `replacement`: both are read through this oracle's own OPC + WordprocessingML
-    /// reader, and the replacement is written back through its own writer — the reference side of `set-snapshot`, whose
-    /// payload is an entire package rather than a table cell.
-    pub fn replace_package(input: &[u8], replacement: &[u8]) -> Result<Vec<u8>, String> {
-        read_package(input)?;
-        write_package(&read_package(replacement)?)
     }
 
     /// 🔄️ The package read and re-written through this oracle's own reader and writer alone.
@@ -1296,12 +1279,6 @@ pub fn project_docx_ecma_376(bytes: &[u8]) -> Result<Json, String> {
     oracles::project(bytes)
 }
 
-/// 📸️ The whole package replaced by `replacement`, through the reference reader and writer. @see [`oracles::replace_package`].
-#[cfg(feature = "oracles")]
-pub fn oracle_replace_package(input: &[u8], replacement: &[u8]) -> Result<Vec<u8>, String> {
-    oracles::replace_package(input, replacement)
-}
-
 /// 🔄️ The package read and re-written by the reference alone — its side of the identity law.
 #[cfg(feature = "oracles")]
 pub fn oracle_round_trip(input: &[u8]) -> Result<Vec<u8>, String> {
@@ -1321,11 +1298,6 @@ pub fn oracle_apply_mutation_inverse(_input: &[u8], _spec: &Json) -> Result<Vec<
 
 #[cfg(not(feature = "oracles"))]
 pub fn project_docx_ecma_376(_bytes: &[u8]) -> Result<Json, String> {
-    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
-}
-
-#[cfg(not(feature = "oracles"))]
-pub fn oracle_replace_package(_input: &[u8], _replacement: &[u8]) -> Result<Vec<u8>, String> {
     Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
 }
 

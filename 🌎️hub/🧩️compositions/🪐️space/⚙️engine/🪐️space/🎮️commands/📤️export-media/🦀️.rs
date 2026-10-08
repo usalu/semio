@@ -25,7 +25,7 @@ pub fn handle(payload: &ExportMedia, doc: &ArtifactView<'_, WorkflowSnapshot>, _
             let parameters = resolve_future(workflow_parameters_to_os(&projection.parameters));
             let document_json = materialize_os_app_instance_document_json(&payload.document_json, &node.id, &bindings, &parameters);
             let document_value = document_json.parse::<Value>().map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.source"), error.to_string()))?;
-            let format_kind = semio_framework::format_descriptor(&payload.format)
+            let format_kind = directory::io::format_descriptor(&payload.format)
                 .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), error.to_string()))?
                 .map(|descriptor| descriptor.short_id)
                 .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), format!("unknown media format `{}`", payload.format)))?;

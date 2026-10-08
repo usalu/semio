@@ -8,16 +8,9 @@
 //! `Option<Option<T>>` decodes `null` back to the outer `None`).
 use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
 use crate::standards::v1::subsets::image::schema::mutations::set_icc;
-use crate::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
+use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
-
-/// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
-/// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/
-/// `mutation.target-missing`/`mutation.invariant` decision for `set-icc` lives in that file, so the
-/// fixture asserts against it rather than against the guardless enum arm.
-#[path = "../../🔺️diff/🦀️.rs"]
-mod leaf_diff;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨️set-icc/🎨️attaches/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨️set-icc/🎨️attaches/📸️snapshot/➡️after/🔣️.json");
@@ -35,8 +28,7 @@ fn mutation() -> SemioImageMutation {
     semio_framework_pack_json::from_json_str(MUTATION,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-icc mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::SetIcc(set_icc::SetIcc { icc }) = mutation() else { panic!("set-icc/attaches-an-icc-profile-where-there-was-none: the committed mutation must be the set-icc variant") };
-    leaf_diff::diff(&before(), icc)
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ The profile bytes are stored verbatim; nothing else moves.
@@ -44,12 +36,12 @@ fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
 async fn attaches_the_profile_bytes_verbatim() {
     let base = before();
     assert!(base.icc.is_none(), "the fixture's whole point is a base carrying no embedded profile");
-    let produced = leaf_outcome().diff().apply(&base).expect("set-icc applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(leaf_outcome().diff(), &base).expect("set-icc applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "set-icc/attaches-an-icc-profile-where-there-was-none: applied state differs from the committed after-snapshot");
     assert_eq!(produced.icc.as_deref(), Some([0u8, 1, 2, 3].as_slice()), "the profile bytes must be stored byte-for-byte, never re-encoded");
     assert_eq!(produced.frames, base.frames, "attaching a profile must not touch a frame");
     let mut in_place = before();
-    apply_semio_image_mutation(&mut in_place, &mutation());
+    in_place = crate::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -58,12 +50,13 @@ async fn attaches_the_profile_bytes_verbatim() {
 async fn the_undo_set_icc_clears_the_profile_again() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::SetIcc(set_icc::SetIcc { icc: None })], "the undo of an attach is a set-icc carrying BASE's own None — the mutation payload is the FINAL value, not a tri-state");
     let mut current = before();
-    apply_semio_image_mutation(&mut current, &mutation);
-    for step in &undo {
-        apply_semio_image_mutation(&mut current, step);
+    current = crate::applied(&current, &mutation).0;
+    for step in undo.iter().rev() {
+        current = crate::applied(&current, step).0;
     }
     assert_eq!(current, base, "set-icc/attaches-an-icc-profile-where-there-was-none: the undo did not restore the before-snapshot");
 }
@@ -103,7 +96,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-icc diff decodes");
-    let produced = decoded.apply(&before()).expect("committed set-icc diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed set-icc diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-icc/attaches-an-icc-profile-where-there-was-none: committed diff did not carry before to after");
 }
 

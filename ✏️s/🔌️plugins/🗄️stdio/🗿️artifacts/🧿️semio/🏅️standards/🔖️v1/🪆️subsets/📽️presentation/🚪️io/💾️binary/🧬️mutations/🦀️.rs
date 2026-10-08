@@ -8,7 +8,7 @@ mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::presentation::schema::mutations::*;
 use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
-use crate::standards::v1::subsets::presentation::schema::diff::{diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide, diff_remove_layout, diff_remove_master, diff_remove_shape, diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout, diff_set_slide_notes, diff_set_snapshot, diff_set_textbox_blocks, frame_of, SemioPresentationDiff};
+use crate::standards::v1::subsets::presentation::schema::diff::{diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide, diff_remove_layout, diff_remove_master, diff_remove_shape, diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout, diff_set_slide_notes, diff_set_textbox_blocks, frame_of, SemioPresentationDiff};
 use crate::standards::v1::subsets::presentation::io::text::diff::{dec_shape};
 use crate::standards::v1::subsets::presentation::io::text::diff::{enc_shape};
 use crate::standards::v1::subsets::presentation::io::text::diff::{dec_slide};

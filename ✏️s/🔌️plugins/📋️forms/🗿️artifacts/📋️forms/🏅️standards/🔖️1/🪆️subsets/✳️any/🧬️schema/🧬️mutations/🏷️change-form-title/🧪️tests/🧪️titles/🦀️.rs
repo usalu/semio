@@ -102,7 +102,7 @@ async fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-form-title/titles-an-untitled-survey: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(outcome.diff().title, Some(Some("Site Survey".to_string())), "the diff's double-Option title must be an explicit SET, never a clear");
+    assert_eq!(outcome.diff().title, Some(crate::schema::diff::FormsOptionalText { value: Some("Site Survey".to_string()) }), "the diff's optional-text slot title must be an explicit SET, never a clear");
     assert!(outcome.diff().structure.is_none(), "change-form-title must leave the composed structure slot untouched");
     assert!(outcome.diff().results.is_none(), "change-form-title must leave the composed results slot untouched");
 }
@@ -123,6 +123,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: FormsDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <FormsDiff as protocol::MutationDiff<FormsSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-form-title/titles-an-untitled-survey: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

@@ -44,7 +44,7 @@ from __future__ import annotations
 import json
 import struct
 
-from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot, snapshot_patch_inverse
+from semio_repo_test import Adapter, Context, Outcome, digest
 
 # endregion 🔖️Imports
 
@@ -823,7 +823,6 @@ TAG_OF_KIND = {
     "replace-curve": "ReplaceCurve",
     "replace-surface": "ReplaceSurface",
     "move-vertex": "MoveVertex",
-    "patch-snapshot": "PatchSnapshot",
 }
 #: 🗂️ Which collection each simple `delete-<entity>` verb removes from.
 DELETE_SLOT = {"DeleteEdge": "edges", "DeleteFace": "faces", "DeleteShell": "shells", "DeleteSolid": "solids"}
@@ -864,26 +863,24 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     loop-behind` vectors pin. An unaddressable id is a refusal, never a silent no-op."""
     result = clone(document)
     tag, args = tagged(mutation)
-    if tag == "PatchSnapshot":
-        return patched_snapshot(document, args["patch"])
     if tag == "CreateVertex":
         refuse_duplicate(result["vertices"], args["id"], tag, "vertex")
-        result["vertices"].append({"id": args["id"], "point": clone(args["point"]), "tol": args["tol"]})
+        result["vertices"].insert(min(args["at"], len(result["vertices"])) if "at" in args else len(result["vertices"]), {"id": args["id"], "point": clone(args["point"]), "tol": args["tol"]})
     elif tag == "DeleteVertex":
         del result["vertices"][index_of(result["vertices"], args["id"], tag, "vertex")]
         result["edges"] = [edge for edge in result["edges"] if edge["startVertex"] != args["id"] and edge["endVertex"] != args["id"]]
     elif tag == "CreateEdge":
         refuse_duplicate(result["edges"], args["id"], tag, "edge")
-        result["edges"].append({"id": args["id"], "startVertex": args["start_vertex"], "endVertex": args["end_vertex"], "curve": clone(args["curve"]), "tol": args["tol"]})
+        result["edges"].insert(min(args["at"], len(result["edges"])) if "at" in args else len(result["edges"]), {"id": args["id"], "startVertex": args["start_vertex"], "endVertex": args["end_vertex"], "curve": clone(args["curve"]), "tol": args["tol"]})
     elif tag == "CreateFace":
         refuse_duplicate(result["faces"], args["id"], tag, "face")
-        result["faces"].append({"id": args["id"], "outerLoop": args["outer_loop"], "innerLoops": clone(args["inner_loops"]), "surface": clone(args["surface"]), "orientation": args["orientation"], "tol": args["tol"]})
+        result["faces"].insert(min(args["at"], len(result["faces"])) if "at" in args else len(result["faces"]), {"id": args["id"], "outerLoop": args["outer_loop"], "innerLoops": clone(args["inner_loops"]), "surface": clone(args["surface"]), "orientation": args["orientation"], "tol": args["tol"]})
     elif tag == "CreateShell":
         refuse_duplicate(result["shells"], args["id"], tag, "shell")
-        result["shells"].append({"id": args["id"], "faces": clone(args["faces"])})
+        result["shells"].insert(min(args["at"], len(result["shells"])) if "at" in args else len(result["shells"]), {"id": args["id"], "faces": clone(args["faces"])})
     elif tag == "CreateSolid":
         refuse_duplicate(result["solids"], args["id"], tag, "solid")
-        result["solids"].append({"id": args["id"], "shells": clone(args["shells"])})
+        result["solids"].insert(min(args["at"], len(result["solids"])) if "at" in args else len(result["solids"]), {"id": args["id"], "shells": clone(args["shells"])})
     elif tag in DELETE_SLOT:
         slot = DELETE_SLOT[tag]
         del result[slot][index_of(result[slot], args["id"], tag, slot[:-1])]
@@ -896,9 +893,9 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     return result
 
 
-def edge_mutation(edge: dict) -> dict:
-    """➰ The `CreateEdge` that puts one edge back exactly as it was."""
-    return {"CreateEdge": {"id": edge["id"], "start_vertex": edge["startVertex"], "end_vertex": edge["endVertex"], "curve": clone(edge["curve"]), "tol": edge["tol"]}}
+def edge_mutation(edge: dict, at: int) -> dict:
+    """➰ The `CreateEdge` that puts one edge back exactly as it was, at its original index."""
+    return {"CreateEdge": {"at": at, "id": edge["id"], "start_vertex": edge["startVertex"], "end_vertex": edge["endVertex"], "curve": clone(edge["curve"]), "tol": edge["tol"]}}
 
 
 def inverse_mutation(document: dict, mutation: dict) -> list:
@@ -907,34 +904,32 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     geometry it displaced, and the cascading `delete-vertex` by re-creating the vertex AND every
     incident edge it severed."""
     tag, args = tagged(mutation)
-    if tag == "PatchSnapshot":
-        return [{"PatchSnapshot": {"patch": snapshot_patch_inverse(document, args["patch"])}}]
     if tag == "CreateVertex":
         return [{"DeleteVertex": {"id": args["id"]}}]
     if tag == "DeleteVertex":
         vertex = document["vertices"][index_of(document["vertices"], args["id"], tag, "vertex")]
-        steps = [{"CreateVertex": {"id": vertex["id"], "point": clone(vertex["point"]), "tol": vertex["tol"]}}]
-        steps.extend(edge_mutation(edge) for edge in document["edges"] if edge["startVertex"] == args["id"] or edge["endVertex"] == args["id"])
+        steps = [{"CreateVertex": {"at": index_of(document["vertices"], args["id"], tag, "vertex"), "id": vertex["id"], "point": clone(vertex["point"]), "tol": vertex["tol"]}}]
+        steps.extend(edge_mutation(edge, position) for position, edge in enumerate(document["edges"]) if edge["startVertex"] == args["id"] or edge["endVertex"] == args["id"])
         return steps
     if tag == "CreateEdge":
         return [{"DeleteEdge": {"id": args["id"]}}]
     if tag == "DeleteEdge":
-        return [edge_mutation(document["edges"][index_of(document["edges"], args["id"], tag, "edge")])]
+        return [edge_mutation(document["edges"][index_of(document["edges"], args["id"], tag, "edge")], index_of(document["edges"], args["id"], tag, "edge"))]
     if tag == "CreateFace":
         return [{"DeleteFace": {"id": args["id"]}}]
     if tag == "DeleteFace":
         face = document["faces"][index_of(document["faces"], args["id"], tag, "face")]
-        return [{"CreateFace": {"id": face["id"], "outer_loop": face["outerLoop"], "inner_loops": clone(face["innerLoops"]), "surface": clone(face["surface"]), "orientation": face["orientation"], "tol": face["tol"]}}]
+        return [{"CreateFace": {"at": index_of(document["faces"], args["id"], tag, "face"), "id": face["id"], "outer_loop": face["outerLoop"], "inner_loops": clone(face["innerLoops"]), "surface": clone(face["surface"]), "orientation": face["orientation"], "tol": face["tol"]}}]
     if tag == "CreateShell":
         return [{"DeleteShell": {"id": args["id"]}}]
     if tag == "DeleteShell":
         shell = document["shells"][index_of(document["shells"], args["id"], tag, "shell")]
-        return [{"CreateShell": {"id": shell["id"], "faces": clone(shell["faces"])}}]
+        return [{"CreateShell": {"at": index_of(document["shells"], args["id"], tag, "shell"), "id": shell["id"], "faces": clone(shell["faces"])}}]
     if tag == "CreateSolid":
         return [{"DeleteSolid": {"id": args["id"]}}]
     if tag == "DeleteSolid":
         solid = document["solids"][index_of(document["solids"], args["id"], tag, "solid")]
-        return [{"CreateSolid": {"id": solid["id"], "shells": clone(solid["shells"])}}]
+        return [{"CreateSolid": {"at": index_of(document["solids"], args["id"], tag, "solid"), "id": solid["id"], "shells": clone(solid["shells"])}}]
     if tag == "ReplaceCurve":
         edge = document["edges"][index_of(document["edges"], args["edge_id"], tag, "edge")]
         return [{"ReplaceCurve": {"edge_id": edge["id"], "new_curve": clone(edge["curve"])}}]

@@ -69,8 +69,7 @@ pub const BINARY_TAG_REGISTRY: &[(&str, &str, u8)] = &[
     ("SetEncryption", "setEncryption", crate::standards::v1_7::subsets::base::io::binary::mutations::set_encryption::BINARY_TAG),
     ("SetCatalogEntry", "setCatalogEntry", crate::standards::v1_7::subsets::base::io::binary::mutations::set_catalog_entry::BINARY_TAG),
     ("RemoveCatalogEntry", "removeCatalogEntry", crate::standards::v1_7::subsets::base::io::binary::mutations::remove_catalog_entry::BINARY_TAG),
-    ("SetSnapshot", "setSnapshot", crate::standards::v1_7::subsets::base::io::binary::mutations::set_snapshot::BINARY_TAG),
-    ("PatchSnapshot", "patchSnapshot", crate::standards::v1_7::subsets::base::io::binary::mutations::patch_snapshot::BINARY_TAG),
+    ("ReplacePage", "replacePage", crate::standards::v1_7::subsets::base::io::binary::mutations::replace_page::BINARY_TAG),
 ];
 //#endregion 🧾️DerivedRegistry
 
@@ -182,14 +181,8 @@ pub mod set_form;
 #[path = "🗂️set-catalog-entry/🦀️.rs"]
 pub mod set_catalog_entry;
 
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-
 #[path = "🔏️set-mark-info/🦀️.rs"]
 pub mod set_mark_info;
-
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 
 #[path = "🎚️remove-ext-g-state/🦀️.rs"]
 pub mod remove_ext_g_state;
@@ -313,3 +306,6 @@ pub mod set_info;
 
 #[path = "🆔️set-document-id/🦀️.rs"]
 pub mod set_document_id;
+
+#[path = "🪄️replace-page/🦀️.rs"]
+pub mod replace_page;

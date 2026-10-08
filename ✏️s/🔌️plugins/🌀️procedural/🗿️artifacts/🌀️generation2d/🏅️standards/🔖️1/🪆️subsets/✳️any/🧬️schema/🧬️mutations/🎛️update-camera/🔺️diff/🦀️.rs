@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `UpdateCamera` — a real scalar-facet write on the fixture (never a
 //! whole-snapshot capture).
 
-use crate::standards::v1::subsets::any::schema::diff::{diff_snapshot_from_helpers, Generation2dDiff, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{Generation2dDiff};
 use crate::Generation2dSnapshot;
 
 pub fn diff(payload: &super::UpdateCamera, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
@@ -12,5 +12,5 @@ pub fn diff(payload: &super::UpdateCamera, base: &Generation2dSnapshot) -> proto
     if base.host_snapshot.camera == *camera {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Camera is already at the requested position.".to_string());
     }
-    protocol::MutationOutcome::new(diff_snapshot_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff::default(), Some(&camera), None))
+    protocol::MutationOutcome::new(Generation2dDiff { camera: Some(camera.clone()), ..Default::default() })
 }

@@ -214,15 +214,8 @@ pub fn copy_solid(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> Resu
     transform_solid(body, solid, &Affine3::IDENTITY, rec)
 }
 
-/// 🪪️ Exact source correspondence from one detached face copy using the shared topology walk.
-pub(crate) struct FaceCopy {
-    pub faces: Vec<FaceId>,
-    pub edges: HashMap<EdgeId, EdgeId>,
-    pub vertices: HashMap<VertexId, VertexId>,
-}
-
-/// 🧩️ Copies faces one at a time while sharing copied edges and vertices between adjacent faces —
-/// the unit-by-unit form of [`copy_faces`], which is this walk driven over a whole slice.
+/// 🧩️ Copies faces one at a time while sharing copied edges and vertices between adjacent faces — a
+/// detached copy of kept faces whose adjacent copies stay stitched together.
 #[derive(Default)]
 pub(crate) struct FaceCopier {
     ctx: CopyCtx,
@@ -251,19 +244,6 @@ impl FaceCopier {
     pub(crate) fn vertex(&self, vertex: VertexId) -> Option<VertexId> {
         self.ctx.vertices.get(&vertex).copied()
     }
-
-    /// 🪪️ The finished correspondence.
-    pub(crate) fn finish(self) -> FaceCopy {
-        FaceCopy { faces: self.faces, edges: self.ctx.edges, vertices: self.ctx.vertices }
-    }
-}
-
-/// 🧩️ Copies kept faces together so adjacent faces share copied edges and vertices.
-pub(crate) fn copy_faces(body: &mut Body, faces: &[FaceId], rec: &mut OpRecorder) -> Result<FaceCopy, KernelError> {
-    for &face in faces { require_face(body, face)?; }
-    let mut copier = FaceCopier::default();
-    for &face in faces { copier.copy(body, face, rec)?; }
-    Ok(copier.finish())
 }
 
 /// 🔁 Produces a NEW, detached face (not attached to any shell/solid) — the same deep-copy-and-

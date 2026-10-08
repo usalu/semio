@@ -1,6 +1,4 @@
-//! 🏳️ `set-standalone` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🏳️ `set-standalone` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,14 +13,22 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for SetStandalone {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "standalone", kind: "set-standalone", record: "SetStandalone" };
 
     fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as Mutation<XmlSnapshot>>::Diff> {
-        agg_diff(&XmlValidMutation::SetStandalone(self.clone()), base)
+        let Self { standalone } = self;
+        {
+            let next = match (&base.doc.declaration, standalone) {
+                (None, None) => None,
+                (None, Some(value)) => Some(XmlDeclaration { version: "1.0".to_string(), encoding: None, standalone: Some(*value), ..Default::default() }),
+                (Some(declaration), value) => Some(XmlDeclaration { version: declaration.version.clone(), encoding: declaration.encoding.clone(), standalone: *value, quote: declaration.quote }),
+            };
+            protocol::MutationOutcome::new(XmlDiff { prolog: None, epilog: None, declaration: Some(next), doctype: None, root: None })
+        }
     }
     fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<XmlValidMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&XmlValidMutation::SetStandalone(self.clone()), base)?
-    
-    })
-}
+        Ok(match base.doc.declaration.as_ref() {
+            Some(declaration) => vec![XmlValidMutation::SetStandalone(set_standalone::SetStandalone { standalone: declaration.standalone })],
+            None => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set standalone", "Standalone-Deklaration setzen")
     }

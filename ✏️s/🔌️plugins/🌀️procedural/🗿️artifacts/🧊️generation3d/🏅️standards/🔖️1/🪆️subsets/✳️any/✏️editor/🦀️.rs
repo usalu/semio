@@ -182,12 +182,19 @@ pub struct Generation3dInstanceOperationOwner {
     run_link: crate::preview_eval::PreviewEvalRunLink,
     /// 🛠️ Every window's open gumball gesture — ephemeral local tool state, never history; the previews fold it in.
     gumball: transform_commands::GumballGestures,
+    /// 📐️ The instance's geometry engine: the typed inference cache, the retained base and the stepped run of `s.procedural.generation3d.geometry`.
+    geometry: crate::host::geometry_service::GeometryHost,
     closing: bool,
 }
 
 impl Generation3dInstanceOperationOwner {
     pub fn new() -> Self {
-        Self { eval_session: Some(FlowEvalSession::new()), run_link: crate::preview_eval::PreviewEvalRunLink::default(), gumball: transform_commands::GumballGestures::default(), closing: false }
+        Self { eval_session: Some(FlowEvalSession::new()), run_link: crate::preview_eval::PreviewEvalRunLink::default(), gumball: transform_commands::GumballGestures::default(), geometry: Default::default(), closing: false }
+    }
+
+    /// 📐️ The geometry host a run of the contextual `s.procedural.generation3d.geometry` service executes against.
+    pub fn geometry(&self) -> &crate::host::geometry_service::GeometryHost {
+        &self.geometry
     }
 
     fn with_session<R>(&mut self, body: impl FnOnce(&mut FlowEvalSession) -> R) -> Result<R, Fault> {
@@ -1668,7 +1675,7 @@ fn prepare_generation3d_artifact(base: &Generation3dSnapshot, mutation: Generati
     admit_generation3d_artifact_mutation(&mutation)?;
     let inverse = protocol::Mutation::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
     let diff = protocol::Mutation::diff(&mutation, base).into_parts().0;
-    let applied = protocol::MutationDiff::apply(&diff, base);
+    let applied = protocol::apply_diff(&diff, base);
     diff.retire_cold();
     let post = applied.map_err(|_| "generation3d-artifact-diff-apply-failed".to_string())?;
     Ok((post, inverse, mutation))
@@ -1804,7 +1811,7 @@ fn prepare_generation3d_config(base: &Generation3dConfig, mutation: Generation3d
     admit_generation3d_config_mutation(&mutation)?;
     let inverse = protocol::Mutation::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
     let diff = protocol::Mutation::diff(&mutation, base).into_parts().0;
-    let post = protocol::MutationDiff::apply(&diff, base).map_err(|_| "generation3d-config-diff-apply-failed".to_string())?;
+    let post = protocol::apply_diff(&diff, base).map_err(|_| "generation3d-config-diff-apply-failed".to_string())?;
     Ok((post, inverse, mutation))
 }
 

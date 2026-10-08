@@ -25,13 +25,9 @@
 //! committed fixture that means `#13`, a real `ADVANCED_BREP_SHAPE_REPRESENTATION`, falls four rungs
 //! in one edit while keeping its name, its `items` list and its `context_of_items` untouched.
 //!
-//! ⚠️ **A conformance class is not closed under inversion.** Undoing a ladder edit re-introduces
-//! whatever the edit removed, and a class whose entire purpose is to forbid geometry above its own
-//! ceiling cannot own a verb that writes geometry above its own ceiling back. `inverse()` therefore
-//! returns the in-class verb whenever the base's own representation is admissible HERE, and degrades
-//! to `SetSnapshot` when it is not — a real inverse either way (the projection is restored exactly),
-//! but expressed through the only verb this class has for a document outside itself. That asymmetry
-//! is recorded rather than papered over with a promotion verb this class must not have.
+//! ⚠️ **A conformance class is not closed under inversion.** Undoing a ladder edit re-introduces whatever the edit removed, and a class
+//! whose purpose is to forbid geometry above its ceiling cannot own a verb that writes it back. `inverse()` therefore restores every touched
+//! entity through `restore-entities`: an exact absolute write at the original position, deliberately not filtered by the class ceiling.
 //!
 //! @see ../../../🧱️base/🚪️io/🪜️ladder/🦀️.rs — the class-neutral edit implementations all six
 //!      `✳️ccN` vocabularies route through, so each axis has ONE implementation and six callers.
@@ -40,19 +36,19 @@
 use crate::schema::diff::StepDiff;
 #[cfg(test)]
 use crate::standards::v_ap214::engine::ladder::ShapeRepresentationRow;
-use crate::standards::v_ap214::engine::ladder::{self, ClassEdit};
-use crate::standards::v_ap214::subsets::cc2::schema::MAX_RUNG;
+use crate::standards::v_ap214::engine::ladder;
 use crate::StepSnapshot;
-use protocol::command::DiffAlgebra;
 use protocol::Mutation;
 
 pub use crate::standards::v_ap214::subsets::base::schema::mutations::{apply_step_mutation, StepMutation};
 
 //#region 🔖️Vocabulary
 /// 🏷️ How this class names itself in a rejection message.
-const CLASS: &str = "ISO 10303-214 CC2 (bounded wireframe/basic surfaces)";
+pub(crate) const CLASS: &str = "ISO 10303-214 CC2 (bounded wireframe/basic surfaces)";
 
 //#region 🔖️Leaves
+#[path = "↩️restore-entities/🦀️.rs"]
+pub mod restore_entities;
 #[path = "⬇️demote-shape-representation/🦀️.rs"]
 pub mod demote_shape_representation;
 #[path = "🏷️set-file-schema/🦀️.rs"]
@@ -61,40 +57,36 @@ pub mod set_file_schema;
 pub mod set_product_identity;
 #[path = "🪜set-shape-representation/🦀️.rs"]
 pub mod set_shape_representation;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed conformance-class mutation for `stdio.step` at `ap214/2️⃣cc2`.
 ///
-/// ⚠️ `NoMutation` is GONE — `#[derive(dsl::Mutations)]` requires every variant to wrap exactly one
-/// leaf payload and a unit variant wraps none. Its only role was `inverse()`'s "nothing to undo" arm,
-/// now the empty vector. `SetSnapshot` is KEPT: the derive checks `SEMANTICS.verb`, not the kind, and
-/// `set` is approved — so this class's whole-document restore survives intact.
+/// Every inverse restores the touched entities through `restore-entities`, an exact absolute write that is not filtered by the class
+/// ceiling, so undoing a repair can re-introduce the violation the repair removed.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = StepSnapshot, diff = StepDiff, schema = "s.stdio.step.cc2")]
 pub enum StepCc2Mutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
     SetFileSchema(set_file_schema::SetFileSchema),
     SetProductIdentity(set_product_identity::SetProductIdentity),
     SetShapeRepresentation(set_shape_representation::SetShapeRepresentation),
     DemoteShapeRepresentation(demote_shape_representation::DemoteShapeRepresentation),
+    RestoreEntities(restore_entities::RestoreEntities),
 }
 
 /// 📇️ Kebab-case spelling of every `StepCc2Mutation` variant, in declaration order — the
 /// `step-ap214-cc2` catalog in `../../🔣️oracle.json` must match verbatim.
-pub const KINDS: &[&str] = &["set-snapshot", "set-file-schema", "set-product-identity", "set-shape-representation", "demote-shape-representation"];
+pub const KINDS: &[&str] = &["set-file-schema", "set-product-identity", "set-shape-representation", "demote-shape-representation", "restore-entities"];
 
 impl StepCc2Mutation {
     /// 🏷️ This mutation's own kebab-case kind — the single spelling `KINDS`, the catalog and the
     /// feature file's `Examples` row ids are all measured against.
     pub fn kind(&self) -> &'static str {
         match self {
-            StepCc2Mutation::SetSnapshot(_) => "set-snapshot",
             StepCc2Mutation::SetFileSchema(_) => "set-file-schema",
             StepCc2Mutation::SetProductIdentity(_) => "set-product-identity",
             StepCc2Mutation::SetShapeRepresentation(_) => "set-shape-representation",
             StepCc2Mutation::DemoteShapeRepresentation(_) => "demote-shape-representation",
+            StepCc2Mutation::RestoreEntities(_) => "restore-entities",
         }
     }
 }
@@ -107,7 +99,7 @@ impl StepCc2Mutation {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_step_cc2_mutation(snapshot: &mut StepSnapshot, mutation: &StepCc2Mutation) -> protocol::MutationOutcome<StepDiff> {
     let outcome = <StepCc2Mutation as Mutation<StepSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -121,40 +113,32 @@ pub(crate) fn rejected(message: String) -> protocol::MutationOutcome<StepDiff> {
     protocol::MutationOutcome::error("mutation.target-mismatch", message, Vec::<String>::new())
 }
 
+/// ↩️ Wraps the neutral restore rows into this class's single `restore-entities` mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn edited(base: &StepSnapshot, edit: &ClassEdit) -> Result<StepSnapshot, String> {
-    let mut doc = base.to_part21_document();
-    ladder::apply_class_edit(&mut doc, CLASS, MAX_RUNG, edit)?;
-    Ok(StepSnapshot::from_part21_document(&doc))
+pub(crate) fn restored(rows: Vec<ladder::EntityRestore>) -> Vec<StepCc2Mutation> {
+    if rows.is_empty() {
+        return Vec::new();
+    }
+    vec![StepCc2Mutation::RestoreEntities(restore_entities::RestoreEntities { entities: rows })]
+}
+
+/// 🧮️ The leaf mutations that carry `base` to `next`: a changed `FILE_SCHEMA` becomes `set-file-schema` and every entity edit becomes a
+/// `restore-entities` row ordered so no intermediate snapshot holds a dangling reference. `None` when `next` changes the document `schema`, the
+/// file description or the file name, which this class has no verb for, or when the entity edits cannot be ordered.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn net_mutations(base: &StepSnapshot, next: &StepSnapshot) -> Option<Vec<StepCc2Mutation>> {
+    if base.schema != next.schema || base.header.file_description != next.header.file_description || base.header.file_name != next.header.file_name {
+        return None;
+    }
+    let mut leaves = Vec::new();
+    if base.header.file_schema != next.header.file_schema {
+        leaves.push(StepCc2Mutation::SetFileSchema(set_file_schema::SetFileSchema { schemas: next.header.file_schema.schemas.clone() }));
+    }
+    leaves.extend(restored(ladder::net_restore_rows(base, next)?));
+    Some(leaves)
 }
 //#endregion 🔖️Apply
 
-//#region 🔖️ClassEdit
-/// 🎚️ The diff every ladder-axis leaf produces: perform the class-neutral edit, or report the class's
-/// own refusal. One implementation, every leaf a caller.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn class_diff(base: &StepSnapshot, edit: &ClassEdit) -> protocol::MutationOutcome<StepDiff> {
-    match edited(base, edit) {
-        Ok(next) => protocol::MutationOutcome::new(<StepDiff as DiffAlgebra<StepSnapshot>>::between(base, &next)),
-        Err(message) => rejected(message),
-    }
-}
-
-/// ↩️ A real per-axis inverse read off the base wherever this class owns a verb for it, and an
-/// explicit whole-snapshot restore where it does not.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn class_inverse(base: &StepSnapshot, edit: &ClassEdit) -> Result<Vec<StepCc2Mutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    match ladder::invert_class_edit_restoring(&base.to_part21_document(), CLASS, MAX_RUNG, edit) {
-        Some(ClassEdit::FileSchema { schemas }) => vec![StepCc2Mutation::SetFileSchema(set_file_schema::SetFileSchema { schemas })],
-        Some(ClassEdit::ProductIdentity { identity }) => vec![StepCc2Mutation::SetProductIdentity(set_product_identity::SetProductIdentity { identity })],
-        Some(ClassEdit::Representation { id, row }) => vec![StepCc2Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id, representation: row })],
-        _ => vec![StepCc2Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-    }
-
-    })())
-}
-//#endregion 🔖️ClassEdit
 
 //#region 🧪️Tests
 #[cfg(test)]

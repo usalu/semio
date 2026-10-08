@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "objects": {
     "added": [],
     "patched": [
@@ -21,11 +20,14 @@
           "meshContent": "{\"vertices\":[],\"faces\":[]}",
           "name": null,
           "smoothShading": null,
-          "transform": null,
           "meshState": {
             "state": null
-          }
-        }
+          },
+          "position": null,
+          "rotation": null,
+          "scale": null
+        },
+        "meshMotions": []
       }
     ],
     "removed": [],

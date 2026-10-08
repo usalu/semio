@@ -6,7 +6,7 @@
 //! kind rather than rewriting it — a stream's provenance is fixed when the stream is created, and a
 //! verb that silently rewrote it had no inverse in this vocabulary. The frame lands at its canonical
 //! `(index, asset_id)` position so `remove-stream-frame` puts it back exactly where it was.
-use crate::diff::{RemodelingDiff, RemodelingMediaStreamList};
+use crate::diff::{RemodelingDiff, RemodelingRow, MediaStreamPatch, RemodelingMembers};
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
@@ -20,11 +20,6 @@ pub fn diff(payload: &super::AddStreamFrame, base: &RemodelingSnapshot) -> proto
     if stream.frames.contains(&payload.frame) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Stream \"{}\" already has frame {}.", payload.id, payload.frame.index));
     }
-    let mut streams = base.streams.clone();
-    if let Some(stream) = streams.iter_mut().find(|stream| stream.id == payload.id) {
-        let at = crate::mutations::ordered_index(&stream.frames, &(payload.frame.index, payload.frame.asset_id.clone()), |frame| (frame.index, frame.asset_id.clone()));
-        stream.frames.insert(at, payload.frame.clone());
-    }
-    protocol::MutationOutcome::new(RemodelingDiff { streams: Some(RemodelingMediaStreamList { values: streams }), ..Default::default() })
+    protocol::MutationOutcome::new(RemodelingDiff::stream_rows(vec![RemodelingRow::Patch { key: payload.id.clone(), patch: MediaStreamPatch { frames: Some(RemodelingMembers { removed: Vec::new(), added: vec![payload.frame.clone()] }), ..Default::default() } }]))
 }
 //#endregion 🔖️Diff

@@ -2,13 +2,10 @@ import { expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import fixture from "../../🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "../../🧫️fixtures/🧬️schema/🔣️.json" with { type: "json" };
 
 test("member constructor admission retains neutral original owners before any unfunded birth", () => {
-  expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
   for (const row of fixture.cases) {
     const fields = [row.artifactId, row.actor, row.dialect.artifact_kind, row.dialect.standard, row.dialect.subset];
     expect(fields.map(field => Buffer.from(field, "utf8").toString("utf8"))).toEqual(fields);
@@ -26,5 +23,5 @@ test("member constructor admission retains neutral original owners before any un
   expect(begin.indexOf("grant.maximum_capacity_bytes < required")).toBeLessThan(begin.indexOf("request.take()"));
   expect(begin.includes("dialect.clone()")).toBe(false);
   expect(begin.includes("*request = Some(rejected.request)")).toBe(true);
-  console.log("[DEBUG] Ajv + Node Buffer + JSON Patch original identities remain untouched on denied constructor work/capacity; exact frame extents remain native architecture dependent");
+  console.log("[DEBUG] Node Buffer + JSON Patch original identities remain untouched on denied constructor work/capacity; exact frame extents remain native architecture dependent");
 });

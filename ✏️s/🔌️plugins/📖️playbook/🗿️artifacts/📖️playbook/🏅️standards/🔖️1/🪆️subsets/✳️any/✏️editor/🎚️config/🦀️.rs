@@ -78,7 +78,47 @@ impl Default for PlaybookConfig {
     }
 }
 
-store::impl_whole_record_config!(PlaybookConfig);
+impl store::ConfigRecord for PlaybookConfig {}
+
+/// 🔺️ Sparse field delta over [`PlaybookConfig`]: every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct PlaybookConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub contributions_json: Option<String>,
+}
+
+impl protocol::MutationDiff<PlaybookConfig> for PlaybookConfigDiff {
+    fn apply(&self, base: &PlaybookConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<PlaybookConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.contributions_json {
+            next.contributions_json = value.clone();
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.contributions_json.is_some() {
+            self.contributions_json = other.contributions_json;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<PlaybookConfig> for PlaybookConfigDiff {
+    fn inverse(&self, base: &PlaybookConfig) -> Self {
+        Self {
+            contributions_json: self.contributions_json.as_ref().map(|_| base.contributions_json.clone()),
+        }
+    }
+    fn between(base: &PlaybookConfig, other: &PlaybookConfig) -> Self {
+        Self {
+            contributions_json: (base.contributions_json != other.contributions_json).then(|| other.contributions_json.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.contributions_json.is_none()
+    }
+}
+
 //#endregion 🔖️Config
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]

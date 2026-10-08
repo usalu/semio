@@ -24,11 +24,8 @@ impl MutationKind<CadSnapshot, CadMutation> for CreateEnergyModel {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+        super::inverse::inverse(self, base)
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create energy-model child {}", self.child_id), &format!("Energiemodell-Kind {} erstellen", self.child_id))
     }

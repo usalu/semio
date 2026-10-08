@@ -26,7 +26,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveFont {
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.fonts.iter().find(|item| item.id == self.id).map(|item| PdfMutation::SetFont(super::set_font::SetFont { font: item.clone() })).into_iter().collect()
+        base.fonts.iter().position(|item| item.id == self.id).map(|index| PdfMutation::SetFont(super::set_font::SetFont { font: base.fonts[index].clone(), index: Some(index) })).into_iter().collect()
     
     })())
 }

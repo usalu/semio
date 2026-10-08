@@ -4,7 +4,7 @@ export type * from "../../../../../🧬️schema/🧬️mutations/🎥️camera/
 /** 🔀️ `reorder-cameras` wire twin: the flat `Apply` payload `GltfReorderCamerasPayload` and the phase wire `ReorderCamerasMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { gltfWireArray, gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
 export const parseGltfReorderCamerasPayload = gltfWireObject<GltfReorderCamerasPayload>({ order: gltfWireRequired(gltfWireArray(gltfWireIndex)) });
-export const parseReorderCamerasMutation = gltfWirePhase(parseGltfReorderCamerasPayload, parseGltfDiff);
+export const parseReorderCamerasMutation = gltfWireApplyPhase(parseGltfReorderCamerasPayload);

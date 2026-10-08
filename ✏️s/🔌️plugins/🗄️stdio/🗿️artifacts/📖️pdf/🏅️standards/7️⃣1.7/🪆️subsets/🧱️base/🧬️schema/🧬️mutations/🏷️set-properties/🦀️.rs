@@ -13,6 +13,8 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[value(rename_all = "camelCase")]
 pub struct SetProperties {
     pub properties: PdfNamedProperties,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfMutation> for SetProperties {
@@ -20,13 +22,13 @@ impl MutationKind<PdfSnapshot, PdfMutation> for SetProperties {
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
         let _ = base;
-        MutationOutcome::new(diff::diff_set_properties(base, self.properties.clone()))
+        MutationOutcome::new(diff::diff_set_properties(base, self.properties.clone(), self.index))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        match base.properties.iter().find(|item| item.name == self.properties.name) { Some(previous) => vec![PdfMutation::SetProperties(SetProperties { properties: previous.clone() })], None => vec![PdfMutation::RemoveProperties(super::remove_properties::RemoveProperties { name: self.properties.name.clone() })] }
+        match base.properties.iter().find(|item| item.name == self.properties.name) { Some(previous) => vec![PdfMutation::SetProperties(SetProperties { properties: previous.clone(), index: None })], None => vec![PdfMutation::RemoveProperties(super::remove_properties::RemoveProperties { name: self.properties.name.clone() })] }
     
     })())
 }

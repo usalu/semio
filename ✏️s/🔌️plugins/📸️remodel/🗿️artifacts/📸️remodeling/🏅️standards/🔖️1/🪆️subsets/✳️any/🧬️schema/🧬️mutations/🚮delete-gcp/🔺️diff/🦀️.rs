@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `DeleteGcp`. Missing target ⇒ Error; a GCP carrying observations
 //! reports the cascade of its own dependent observations being swept away with it.
-use crate::diff::{RemodelingDiff, RemodelingGcpList};
+use crate::diff::{RemodelingDiff, RemodelingRow};
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
@@ -9,8 +9,7 @@ pub fn diff(payload: &super::DeleteGcp, base: &RemodelingSnapshot) -> protocol::
         return protocol::MutationOutcome::error("mutation.target-missing", format!("GCP \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
     let cascaded_observation_count = gcp.observations.len();
-    let gcps: Vec<_> = base.gcps.iter().filter(|gcp| gcp.id != payload.id).cloned().collect();
-    let outcome = protocol::MutationOutcome::new(RemodelingDiff { gcps: Some(RemodelingGcpList { values: gcps }), ..Default::default() });
+    let outcome = protocol::MutationOutcome::new(RemodelingDiff::gcp_rows(vec![RemodelingRow::Remove { key: payload.id.clone() }]));
     if cascaded_observation_count == 0 {
         outcome
     } else {

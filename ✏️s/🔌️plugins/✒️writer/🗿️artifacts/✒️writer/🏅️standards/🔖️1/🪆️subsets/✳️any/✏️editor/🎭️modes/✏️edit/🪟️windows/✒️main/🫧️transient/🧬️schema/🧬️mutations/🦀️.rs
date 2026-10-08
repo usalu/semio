@@ -1,4 +1,4 @@
-use super::WriterMainWindowTransient;
+use super::{WriterMainWindowTransient, WriterMainWindowTransientDiff, WriterOptionalSelection};
 
 #[path = "📐️set-editor-selection/🦀️.rs"]
 mod set_editor_selection;
@@ -12,7 +12,7 @@ pub use set_engagement_input::SetEngagementInput;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[value(tag = "kind", rename_all = "kebab-case")]
-#[mutations(snapshot = WriterMainWindowTransient, diff = WriterMainWindowTransient, schema = "writer.mainwindowtransient")]
+#[mutations(snapshot = WriterMainWindowTransient, diff = WriterMainWindowTransientDiff, schema = "writer.mainwindowtransient")]
 pub enum WriterMainWindowTransientMutation {
     #[dsl(key = "set-editor-selection")]
     SetEditorSelection(SetEditorSelection),

@@ -53,7 +53,9 @@ pub fn object_patch_diff(before: &LowpolyObject, after: &LowpolyObject) -> Lowpo
     LowpolyObjectPatch {
         name: (before.name != after.name).then(|| after.name.clone()),
         smooth_shading: (before.smooth_shading != after.smooth_shading).then_some(after.smooth_shading),
-        transform: (before.transform != after.transform).then(|| after.transform.clone()),
+        position: (before.transform.position != after.transform.position).then_some(after.transform.position),
+        rotation: (before.transform.rotation != after.transform.rotation).then_some(after.transform.rotation),
+        scale: (before.transform.scale != after.transform.scale).then_some(after.transform.scale),
         mesh: (before.mesh != after.mesh).then(|| after.mesh.clone()),
         mesh_content: (before.mesh_content != after.mesh_content).then(|| after.mesh_content.clone()),
         mesh_state: (before.mesh_state != after.mesh_state).then(|| after.mesh_state.clone()),
@@ -70,16 +72,14 @@ pub fn semantic_mutation_for_patch(id: String, before_transform: &crate::Lowpoly
     if let Some(new_smooth_shading) = patch.smooth_shading {
         return Some(LowpolyMutation::ChangeObjectSmoothShading(crate::mutations::change_object_smooth_shading::ChangeObjectSmoothShading { id, new_smooth_shading }));
     }
-    if let Some(transform) = &patch.transform {
-        if transform.position != before_transform.position {
-            return Some(LowpolyMutation::MoveObject(crate::mutations::move_object::MoveObject { id, new_position: transform.position }));
-        }
-        if transform.rotation != before_transform.rotation {
-            return Some(LowpolyMutation::RotateObject(crate::mutations::rotate_object::RotateObject { id, new_rotation: transform.rotation }));
-        }
-        if transform.scale != before_transform.scale {
-            return Some(LowpolyMutation::ScaleObject(crate::mutations::scale_object::ScaleObject { id, new_scale: transform.scale }));
-        }
+    if let Some(position) = patch.position.filter(|position| *position != before_transform.position) {
+        return Some(LowpolyMutation::MoveObject(crate::mutations::move_object::MoveObject { id, new_position: position }));
+    }
+    if let Some(rotation) = patch.rotation.filter(|rotation| *rotation != before_transform.rotation) {
+        return Some(LowpolyMutation::RotateObject(crate::mutations::rotate_object::RotateObject { id, new_rotation: rotation }));
+    }
+    if let Some(scale) = patch.scale.filter(|scale| *scale != before_transform.scale) {
+        return Some(LowpolyMutation::ScaleObject(crate::mutations::scale_object::ScaleObject { id, new_scale: scale }));
     }
     if before_mesh_workspace != after_mesh_workspace {
         if after_mesh_workspace.is_none() {
@@ -355,12 +355,14 @@ impl semio_framework_value::FromValue for LowpolyTransient {
 semio_framework_plugin::transient_root! {
     state: LowpolyTransient,
     mutation: LowpolyTransientMutation,
+    diff: LowpolyTransientDiff,
     owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🖌️set-snapshot",
     kind: "set-snapshot",
     display_name: "Set Snapshot",
     payload_schema: "🧬️schema/🔣️.json",
     envelope: "lowpoly.transient",
     extension: "lowpoly.transient",
+    whole,
 }
 
 impl LowpolyScratch {

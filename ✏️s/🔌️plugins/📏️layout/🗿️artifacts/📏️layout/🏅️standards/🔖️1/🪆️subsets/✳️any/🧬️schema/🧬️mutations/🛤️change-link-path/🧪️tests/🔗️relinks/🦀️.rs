@@ -28,7 +28,7 @@ fn mutation() -> LayoutMutation {
 }
 fn applied() -> LayoutSnapshot {
     let base = before();
-    mutation().diff(&base).diff().apply(&base).expect("change-link-path applies to its committed before-snapshot")
+    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("change-link-path applies to its committed before-snapshot")
 }
 
 /// ▶️ `change-link-path` patches `path` alone; `hash`/`width`/`height`/`dpi` are NOT re-derived.
@@ -58,7 +58,7 @@ async fn inverse_repoints_link_1_at_the_original_file() {
     }
     let mut snapshot = applied();
     for step in &inverse {
-        snapshot = step.diff(&snapshot).diff().apply(&snapshot).expect("change-link-path/relinks-link-1-to-a-new-file: inverse step applies");
+        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("change-link-path/relinks-link-1-to-a-new-file: inverse step applies");
     }
     assert_eq!(snapshot, base, "change-link-path/relinks-link-1-to-a-new-file: inverse did not restore the before-snapshot");
 }
@@ -118,6 +118,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-link-path/relinks-link-1-to-a-new-file: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse steps' diffs sum, by `absorb`, to the negative of the forward diff.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

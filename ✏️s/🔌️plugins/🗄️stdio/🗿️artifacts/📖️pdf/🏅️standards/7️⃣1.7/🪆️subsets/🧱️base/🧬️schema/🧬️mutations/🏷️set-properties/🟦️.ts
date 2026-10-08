@@ -3,4 +3,5 @@ import type { ObjRef, PdfCcittParameters, PdfDecimal, PdfDictEntry, PdfNamedProp
 export interface SetPropertiesMutation {
   mutation: 'setProperties';
   properties: PdfNamedProperties;
+  index?: number | null;
 }

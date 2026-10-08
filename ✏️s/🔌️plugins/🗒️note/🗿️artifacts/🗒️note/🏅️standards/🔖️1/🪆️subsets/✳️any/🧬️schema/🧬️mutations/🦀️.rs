@@ -101,7 +101,7 @@ pub use crate::standards::v1::subsets::text::schema::mutations::edit_block_text:
 /// ▶️ Applies `mutation` via its diff — the sole apply path now (no hand-written match dispatch).
 pub fn apply_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> protocol::MutationApplyResult<NoteSnapshot> {
     let (diff, _messages) = mutation.diff(snapshot).into_parts();
-    MutationDiff::apply(&diff, snapshot)
+    protocol::apply_diff(&diff, snapshot)
 }
 
 pub fn inverse_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> Result<Vec<NoteMutation>, semio_framework_value::ValueError> {

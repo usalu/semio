@@ -63,7 +63,7 @@ async fn absorb_law_holds_over_curated_ops() {
     let mut d1 = <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&base, &mid);
     let d2 = <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&mid, &after);
     d1.absorb(d2);
-    assert_eq!(d1.apply(&base).expect("apply must succeed for a well-formed fixture"), after);
+    assert_eq!(protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture"), after);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -74,9 +74,9 @@ async fn between_roundtrip_law() {
         ..SemioAnimationSnapshot::default()
     };
     let ab = <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&a, &b);
-    assert_eq!(ab.apply(&a).expect("apply must succeed for a well-formed fixture"), b);
+    assert_eq!(protocol::apply_diff(&ab, &a).expect("apply must succeed for a well-formed fixture"), b);
     let ba = <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&b, &a);
-    assert_eq!(ba.apply(&b).expect("apply must succeed for a well-formed fixture"), a);
+    assert_eq!(protocol::apply_diff(&ba, &b).expect("apply must succeed for a well-formed fixture"), a);
     assert!(<SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&a, &a).is_empty());
 }
 
@@ -92,9 +92,9 @@ async fn inverse_law() {
         s
     };
     let d = <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&base, &next);
-    let mutated = d.apply(&base).expect("apply must succeed for a well-formed fixture");
+    let mutated = protocol::apply_diff(&d, &base).expect("apply must succeed for a well-formed fixture");
     let inv = d.inverse(&base);
-    assert_eq!(inv.apply(&mutated).expect("apply must succeed for a well-formed fixture"), base);
+    assert_eq!(protocol::apply_diff(&inv, &mutated).expect("apply must succeed for a well-formed fixture"), base);
 }
 
 /// 🧪️ field_sweep — the acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable
@@ -136,7 +136,7 @@ async fn field_sweep_covers_every_mutable_field() {
     };
 
     let ab = <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&sweep_a, &sweep_b);
-    assert_eq!(ab.apply(&sweep_a).expect("apply must succeed for a well-formed fixture"), sweep_b);
+    assert_eq!(protocol::apply_diff(&ab, &sweep_a).expect("apply must succeed for a well-formed fixture"), sweep_b);
     let timelines_ab = ab.timelines.as_ref().expect("timelines must differ");
     assert!(!timelines_ab.removed.is_empty(), "sweep must exercise a removed timeline");
     assert!(!timelines_ab.modified.is_empty(), "sweep must exercise a modified timeline");
@@ -156,7 +156,7 @@ async fn field_sweep_covers_every_mutable_field() {
     assert!(keyframe_diff.value.is_some(), "AnimValue variant change must be captured");
 
     let ba = <SemioAnimationDiff as DiffAlgebra<SemioAnimationSnapshot>>::between(&sweep_b, &sweep_a);
-    assert_eq!(ba.apply(&sweep_b).expect("apply must succeed for a well-formed fixture"), sweep_a);
+    assert_eq!(protocol::apply_diff(&ba, &sweep_b).expect("apply must succeed for a well-formed fixture"), sweep_a);
     let timelines_ba = ba.timelines.as_ref().expect("timelines must differ");
     assert!(!timelines_ba.added.is_empty(), "reverse direction must exercise an added timeline");
     assert!(!timelines_ba.modified.is_empty(), "reverse direction must exercise a modified timeline");

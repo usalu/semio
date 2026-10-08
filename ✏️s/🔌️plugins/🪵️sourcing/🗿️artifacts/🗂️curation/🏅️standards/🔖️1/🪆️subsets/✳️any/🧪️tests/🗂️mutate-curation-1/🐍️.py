@@ -130,7 +130,8 @@ def apply_mutation(document, mutation):
         item = mutation["item"]
         if index_of(items, item["objectId"]) is not None:
             raise AssertionError("%s: %r is already curated" % (kind, item["objectId"]))
-        items.append({"objectId": item["objectId"], "count": item["count"]})
+        row = {"objectId": item["objectId"], "count": item["count"]}
+        items.insert(min(mutation["index"], len(items)), row) if "index" in mutation else items.append(row)
     elif kind == "delete-curated-item":
         at = index_of(items, mutation["objectId"])
         if at is None:
@@ -150,9 +151,8 @@ def apply_mutation(document, mutation):
 def inverse_mutation(document, mutation):
     """↩️ The mutation that undoes one application, computed against the document it applies to.
 
-    A deleted item has to come BACK where it was, and this vocabulary has no insert-at-index verb,
-    so the inverse of a delete is only exact for a trailing item — which is why the restoring law
-    below compares position for position rather than membership.
+    A deleted item has to come BACK where it was: the inverse of a delete is `create-curated-item`
+    carrying the item's base index, and the restoring law below compares position for position.
     """
     kind = kind_of(mutation)
     items = document["curated"]
@@ -162,7 +162,7 @@ def inverse_mutation(document, mutation):
     if at is None:
         raise AssertionError("inverse of %s: %r is not curated" % (kind, mutation["objectId"]))
     if kind == "delete-curated-item":
-        return {"mutation": TAGS["create-curated-item"], "item": dict(items[at])}
+        return {"mutation": TAGS["create-curated-item"], "item": dict(items[at]), "index": at}
     return {"mutation": TAGS["change-curated-item-count"], "objectId": mutation["objectId"], "newCount": items[at]["count"]}
 
 

@@ -4,7 +4,7 @@
 //! `guards::node_reference` resolution of `node_id` (`mutation.target-missing`, Error).
 //! `replace-support` calls the SAME guard, so the twins cannot drift apart.
 use super::CreateSupport;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dSupportsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dSupportsDelta, insertion_order};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
@@ -16,6 +16,6 @@ pub fn diff(payload: &CreateSupport, base: &Fem2dSnapshot) -> protocol::Mutation
     if let Some(rejection) = guards::node_reference(base, &payload.support.node_id) {
         return rejection;
     }
-    protocol::MutationOutcome::new(Fem2dDiff { supports: Some(Fem2dSupportsDelta { added: vec![payload.support.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { supports: Some(Fem2dSupportsDelta { added: vec![payload.support.clone()], reordered: insertion_order(base.supports.iter().map(|item| item.id.as_str()), &payload.support.id, payload.index), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

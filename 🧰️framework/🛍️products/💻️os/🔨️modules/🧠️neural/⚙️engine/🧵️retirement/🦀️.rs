@@ -1,7 +1,8 @@
 //! 🧹️ Exact nested-value retirement and explicitly synchronous construction owners.
 
 use super::{Atom, ChannelSpec, Dictionary, EvalChannels, FieldSpec, NeuronSnapshot, OperatorInfo, Schema, TreeSnapshot, Value, ValueType};
-use protocol::value::ordered::{Grant, OrderedMap, Retirement, RetirementStep};
+use protocol::value::ordered::{OrderedMap, Retirement, RetirementStep};
+use semio_framework_value::retained_clone::RetainedCloneGrant;
 use std::collections::{BTreeMap, LinkedList};
 use std::mem::{size_of, ManuallyDrop};
 use std::sync::Arc;
@@ -62,35 +63,37 @@ impl ValueRetirement {
             _ => 0,
         }))
     }
-    /// 🎟️ One byte of credit per turn is all this frontier ever needs: every owner is either
-    /// structural or charged `min(grant, left)` against its live payload, so any positive grant
-    /// makes progress. Named rather than inlined because [`crate::retained::FlowRetirement`] asks
-    /// its nested owners for their close demand (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    /// 📏️ Borrows the next typed owner's exact allocation demand before ownership moves.
     pub fn next_close_byte_demand(&self) -> Result<usize, &'static str> {
-        Ok(usize::from(!self.owners.is_empty()))
+        Ok(match self.owners.front() {
+            Some(Owner::Owned(value)) => value.next_close_byte_demand(),
+            Some(Owner::Map(value)) => value.next_close_byte_demand().map_err(|_| "Neural ordered retirement demand refused")?,
+            Some(_) => 1,
+            None => 0,
+        })
     }
+    /// 📏️ Preserves the logical page while admitting the next indivisible typed cleanup allocation.
+    pub fn next_step_byte_demand(&self, logical_bytes: usize) -> Result<usize, &'static str> { Ok(logical_bytes.max(self.next_close_byte_demand()?)) }
     pub(crate) fn push_map(&mut self, map: OrderedMap<Value>) { let retirement = map.retire(); if !retirement.is_empty() { self.owners.push_back(Owner::Map(retirement)); } }
 
 
-    /// 🎟️ Releases one owner and at most `maximum_bytes` payload bytes. TOTAL under any positive
-    /// grant: `Blocked` means the caller offered no credit at all, never that an owner is too big
-    /// for this page. Every driver in the tree hands a fixed page (1, 64, 4096) and only ever
-    /// closes, so an owner that could refuse a positive grant is an unbreakable spin — see the
-    /// drawdown law in `🧪️tests/🧪️source-contract/🟦️.ts`
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    /// ♻️ Advances one original owner; an undersized typed allocation grant retains it unchanged.
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> ValueRetirementStep {
         if self.owners.is_empty() { return ValueRetirementStep::Complete; }
         if maximum_items == 0 || maximum_bytes == 0 { return ValueRetirementStep::Blocked; }
+        if maximum_bytes < self.next_close_byte_demand().expect("finite Neural owner demand") { return ValueRetirementStep::Blocked; }
         let owner = self.owners.pop_front().expect("checked nonempty neural retirement");
         let mut released_bytes = 0;
         match owner {
             Owner::Owned(mut value)=>{let step=value.close_step(maximum_items,maximum_bytes).expect("typed input payload retirement");if !value.terminal_is_empty() {self.owners.push_front(Owner::Owned(value));}match step {semio_framework_value::SnapshotRetirementStep::Pending {released_bytes:bytes,..}=>released_bytes=bytes,semio_framework_value::SnapshotRetirementStep::Blocked=>return ValueRetirementStep::Blocked,semio_framework_value::SnapshotRetirementStep::Complete=>{}}},
             Owner::Map(mut map) => {
-                let step = map.advance(Grant { maximum_items, maximum_bytes });
+                let step = map.advance(RetainedCloneGrant { maximum_items: maximum_items.min(1), maximum_copy_bytes: maximum_bytes, maximum_capacity_bytes: 0, maximum_release_bytes: maximum_bytes, maximum_depth: map.next_depth_demand() });
                 if !map.is_empty() { self.owners.push_front(Owner::Map(map)); }
                 match step {
                     RetirementStep::OwnedValue(value) => self.owners.push_front(Owner::Value(value)),
                     RetirementStep::Progress { released_bytes: bytes, .. } => released_bytes = bytes,
+                    RetirementStep::ProcessedBytes(_) => return ValueRetirementStep::Pending { released_items: 0, released_bytes: 0 },
+                    RetirementStep::Failure(error) => panic!("Neural ordered retirement refused: {error}"),
                     RetirementStep::Blocked => return ValueRetirementStep::Blocked,
                     RetirementStep::Complete => {}
                 }
@@ -166,16 +169,34 @@ impl ValueRetirement {
 impl Drop for ValueRetirement {
     fn drop(&mut self) { if !std::thread::panicking() { assert!(self.terminal_is_empty(), "neural values must finish explicit domain retirement before drop"); } }
 }
-impl semio_framework_value::retirement::RetirementCursor for ValueRetirement {
-    fn close_step(&mut self,maximum_bytes:usize)->semio_framework_value::retirement::RetirementStep {
-        use semio_framework_value::retirement::RetirementStep;
-        match ValueRetirement::close_step(self,1,maximum_bytes) {ValueRetirementStep::Blocked=>RetirementStep::BudgetExhausted,ValueRetirementStep::Pending {released_bytes,..}=>RetirementStep::Bytes(released_bytes),ValueRetirementStep::Complete=>RetirementStep::Complete}
-    }
-    fn terminal_is_empty(&self)->bool {ValueRetirement::terminal_is_empty(self)}
-    fn next_close_byte_demand(&self)->Option<usize> {(!self.terminal_is_empty()).then_some(1)}
-}
 impl semio_framework_value::retirement::RetireOwned for Dictionary {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {Box::new(ValueRetirement::from_dictionary(self))}
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::RetireOwned::retirement(self.pairs)}
+    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.pairs)}
+    fn controlled_retirement_supported()->bool {true}
+}
+impl semio_framework_value::retirement::RetireOwned for Value {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {match self {Value::Atom(value)=>semio_framework_value::retirement::RetireOwned::retirement(value),Value::Dictionary(value)=>semio_framework_value::retirement::RetireOwned::retirement(value)}}
+    fn retirement_birth_bytes(&self)->Option<usize> {match self {Value::Atom(value)=>semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(value),Value::Dictionary(value)=>semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(value)}}
+    fn controlled_retirement_supported()->bool {true}
+}
+impl semio_framework_value::retirement::RetireOwned for Atom {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {match self {Atom::String(value)=>semio_framework_value::retirement::RetireOwned::retirement(value),Atom::Null|Atom::Boolean(_)|Atom::Integer(_)|Atom::Decimal(_)=>semio_framework_value::retirement::RetireOwned::retirement(())}}
+    fn retirement_birth_bytes(&self)->Option<usize> {match self {Atom::String(value)=>semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(value),Atom::Null|Atom::Boolean(_)|Atom::Integer(_)|Atom::Decimal(_)=>semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&())}}
+    fn controlled_retirement_supported()->bool {true}
+}
+semio_framework_value::artifact_retire_struct!(FieldSpec {key,value,default,label});
+semio_framework_value::artifact_retire_struct!(Schema {id,module,name,icon,summary,fields});
+semio_framework_value::artifact_retire_struct!(ChannelSpec {code,abbreviation,name,full_name,operators,value_types,item_types,default,label,cardinality});
+semio_framework_value::artifact_retire_struct!(OperatorInfo {id,extension,name,abbreviation,icon,summary,inputs,outputs,variadic_input,variadic_output,group});
+impl semio_framework_value::retirement::RetireOwned for super::VariadicSpec {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::RetireOwned::retirement(self.slot_key)}
+    fn retirement_birth_bytes(&self)->Option<usize> {semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.slot_key)}
+    fn controlled_retirement_supported()->bool {true}
+}
+impl semio_framework_value::retirement::RetireOwned for super::Cardinality {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor> {semio_framework_value::retirement::RetireOwned::retirement(())}
+    fn retirement_birth_bytes(&self)->Option<usize> {Some(semio_framework_value::retirement::leaf_birth_bytes::<()>())}
+    fn controlled_retirement_supported()->bool {true}
 }
 //#endregion 🧵️DomainRetirement
 
@@ -195,17 +216,18 @@ impl ColdDictionaryBuilder {
     pub fn insert(&mut self, key: String, value: Value) {
         let dictionary = self.dictionary.as_mut().unwrap();
         let mut update = dictionary.pairs.begin_set(key, value);
-        let grant = Grant { maximum_items: 1, maximum_bytes: 4096 };
-        while !update.is_complete() { update.advance(grant); }
+        while !update.is_complete() { update.advance(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: update.next_capacity_byte_demand().expect("cold dictionary allocation demand"), maximum_release_bytes: 0, maximum_depth: update.next_depth_demand() }).expect("cold dictionary update"); }
         let displaced = std::mem::replace(&mut dictionary.pairs, update.take_result().unwrap());
         let mut retirement = ValueRetirement::default(); retirement.push_map(displaced); retire_value_cold(retirement);
         update.begin_close();
         loop {
-            match update.close_step(grant) {
+            match update.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 0, maximum_release_bytes: update.next_close_byte_demand().expect("cold dictionary release demand"), maximum_depth: update.next_close_depth_demand() }) {
                 RetirementStep::OwnedValue(value) => retire_value_cold(ValueRetirement::from_value(value)),
                 RetirementStep::Complete => break,
                 RetirementStep::Blocked => unreachable!("positive cold builder grant"),
                 RetirementStep::Progress { .. } => {}
+                RetirementStep::ProcessedBytes(_) => {}
+                RetirementStep::Failure(error) => panic!("cold dictionary close refused: {error}"),
             }
         }
         assert!(update.terminal_is_empty());
@@ -216,9 +238,8 @@ impl ColdDictionaryBuilder {
         control.charge(size_of::<String>() + size_of::<Value>() + 4 * size_of::<usize>())?;
         let dictionary = self.dictionary.as_mut().unwrap();
         let mut update = dictionary.pairs.begin_set(key, value.into_value());
-        let grant = Grant { maximum_items: 1, maximum_bytes: 4096 };
         let result = (|| {
-            while !update.is_complete() { update.advance_insert_controlled(grant, control)?; }
+            while !update.is_complete() { update.advance_insert_controlled(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: update.next_capacity_byte_demand()?, maximum_release_bytes: 0, maximum_depth: update.next_depth_demand() }, control)?; }
             let displaced = std::mem::replace(&mut dictionary.pairs, update.take_result().unwrap());
             let mut retirement = ValueRetirement::default();
             retirement.push_map(displaced);
@@ -227,11 +248,13 @@ impl ColdDictionaryBuilder {
         })();
         update.begin_close();
         loop {
-            match update.close_step(grant) {
+            match update.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 0, maximum_release_bytes: update.next_close_byte_demand().expect("native dictionary release demand"), maximum_depth: update.next_close_depth_demand() }) {
                 RetirementStep::OwnedValue(value) => retire_value_cold(ValueRetirement::from_value(value)),
                 RetirementStep::Complete => break,
                 RetirementStep::Blocked => unreachable!("positive native dictionary retirement grant"),
                 RetirementStep::Progress { .. } => {}
+                RetirementStep::ProcessedBytes(_) => {}
+                RetirementStep::Failure(error) => panic!("native dictionary close refused: {error}"),
             }
         }
         assert!(update.terminal_is_empty());
@@ -268,6 +291,13 @@ impl RetainedDictionaryInput {
     pub fn new(value:protocol::value::DslValue)->Self {Self {pending:Some(value),value:None,frames:Vec::new(),update:None,closing_update:false,retirement:Default::default(),cancelled:false,done:false,units:0,phase:"input-bind-value"}}
     /// 📍️ Reports retained binding transitions and the current input phase.
     pub fn progress(&self)->(usize,usize,&'static str) {(self.units,self.units.saturating_add(usize::from(!self.done)),self.phase)}
+    /// 📏️ Borrows the next indivisible allocation without moving its retained input custody.
+    pub fn next_step_byte_demand(&self,logical_bytes:usize)->Result<usize,protocol::value::ValueError> {
+        let demand=if !self.retirement.terminal_is_empty() {self.retirement.next_close_byte_demand().map_err(|message|protocol::value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,message))?}
+        else if let Some(update)=self.update.as_ref() {if self.closing_update {update.next_close_byte_demand()?}else {update.next_capacity_byte_demand()?}}
+        else {0};
+        Ok(logical_bytes.max(demand))
+    }
     /// ⏱️ Binds at most the granted structural transitions and key-comparison bytes.
     pub fn step(&mut self,maximum_units:usize,maximum_bytes:usize)->Result<Option<Dictionary>,protocol::value::ValueError> {
         use protocol::value::{DslValue,FromValue,ValueError};use semio_framework_value::ValueRefusalKind;
@@ -276,8 +306,8 @@ impl RetainedDictionaryInput {
         for _ in 0..maximum_units {
             if !self.retirement.terminal_is_empty() {self.phase="input-bind-retire";self.retirement.close_step(1,maximum_bytes);}
             else if self.update.is_some() {
-                if self.closing_update {self.phase="input-bind-retire";self.close_update(maximum_bytes);}
-                else {self.phase="input-bind-update";let update=self.update.as_mut().unwrap();update.advance(Grant {maximum_items:1,maximum_bytes});if update.is_complete() {let dictionary=&mut self.frames.last_mut().unwrap().dictionary;self.retirement.push_map(std::mem::replace(&mut dictionary.pairs,update.take_result().unwrap()));update.begin_close();self.closing_update=true;}}
+                if self.closing_update {self.phase="input-bind-retire";self.close_update(maximum_bytes)?;}
+                else {self.phase="input-bind-update";let update=self.update.as_mut().unwrap();update.advance(RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:maximum_bytes,maximum_release_bytes:0,maximum_depth:update.next_depth_demand()})?;if update.is_complete() {let dictionary=&mut self.frames.last_mut().unwrap().dictionary;self.retirement.push_map(std::mem::replace(&mut dictionary.pairs,update.take_result().unwrap()));update.begin_close();self.closing_update=true;}}
             } else if let Some(value)=self.value.take() {
                 self.phase="input-bind-value";
                 if let Some(frame)=self.frames.last_mut() {self.update=Some(frame.dictionary.pairs.begin_set(frame.key.take().unwrap(),value));self.closing_update=false;}
@@ -300,8 +330,9 @@ impl RetainedDictionaryInput {
         }
         Ok(None)
     }
-    fn close_update(&mut self,maximum_bytes:usize) {
-        let update=self.update.as_mut().unwrap();match update.close_step(Grant {maximum_items:1,maximum_bytes}) {RetirementStep::OwnedValue(value)=>self.retirement.push_value(value),RetirementStep::Complete=>{assert!(update.terminal_is_empty());self.update=None;self.closing_update=false;},RetirementStep::Blocked|RetirementStep::Progress {..}=>{}}
+    fn close_update(&mut self,maximum_bytes:usize)->Result<(),protocol::value::ValueError> {
+        let update=self.update.as_mut().unwrap();match update.close_step(RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:0,maximum_release_bytes:maximum_bytes,maximum_depth:update.next_close_depth_demand()}) {RetirementStep::OwnedValue(value)=>self.retirement.push_value(value),RetirementStep::Complete=>{assert!(update.terminal_is_empty());self.update=None;self.closing_update=false;},RetirementStep::Blocked|RetirementStep::Progress {..}|RetirementStep::ProcessedBytes(_)=>{},RetirementStep::Failure(error)=>return Err(error)}
+        Ok(())
     }
     /// 🛑️ Records cancellation without releasing any candidate or partial update.
     pub fn cancel(&mut self) {self.cancelled=true;}
@@ -310,7 +341,7 @@ impl RetainedDictionaryInput {
         if maximum_units==0 || maximum_bytes==0 {return ValueRetirementStep::Blocked;}
         self.cancelled=true;
         if !self.retirement.terminal_is_empty() {return self.retirement.close_step(1,maximum_bytes);}
-        if let Some(update)=&mut self.update {if !self.closing_update {update.begin_close();self.closing_update=true;}self.close_update(maximum_bytes);}
+        if let Some(update)=&mut self.update {if !self.closing_update {update.begin_close();self.closing_update=true;}self.close_update(maximum_bytes).expect("Neural retained input close");}
         else if let Some(value)=self.pending.take() {self.retirement.push_owned(value);}
         else if let Some(value)=self.value.take() {self.retirement.push_value(value);}
         else if let Some(frame)=self.frames.pop() {self.retirement.push_dictionary(frame.dictionary);self.retirement.push_owned(frame.entries);if let Some(key)=frame.key {self.retirement.text(key);}}

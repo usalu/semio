@@ -27,12 +27,14 @@ semio_framework_value::artifact_retire_struct!(CadWorldWindowTransient { engagem
 semio_framework_plugin::transient_root! {
     state: CadWorldWindowTransient,
     mutation: CadWorldWindowTransientMutation,
+    diff: CadWorldWindowTransientDiff,
     owner: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🫧️transient",
     kind: "set-window-transient",
     display_name: "Set CAD World Window Transient",
     payload_schema: "cad.worldwindowtransient",
     envelope: "cad.worldwindowtransient",
     extension: "cadworldwindowtransient",
+    fields: { engagement_input: String, engagement_step: String, engagement_pane: Option<String>, engagement_session_json: Option<String>, last_finalized_interaction_id: Option<String> },
 }
 
 semio_framework_plugin::window_transient_owners! {

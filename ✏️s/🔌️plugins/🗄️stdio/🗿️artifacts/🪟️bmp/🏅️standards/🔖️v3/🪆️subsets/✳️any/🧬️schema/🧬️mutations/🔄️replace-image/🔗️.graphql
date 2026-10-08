@@ -1,0 +1,1 @@
+input ReplaceImage { image: BmpImageInput! }

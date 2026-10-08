@@ -1,0 +1,18 @@
+{
+  "name": "@semio-tech/s-dev-composition",
+  "root": "✏️s/🧑‍💻dev",
+  "projectType": "library",
+  "tags": ["lang:typescript", "role:tool"],
+  "targets": {
+    "composition-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {"command": "bun ./📜️script.ts composition-check", "cwd": "✏️s/🧑‍💻dev", "forwardAllArgs": true}
+    },
+    "source-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {"command": "bun ./📜️script.ts source-check", "cwd": "✏️s/🧑‍💻dev", "forwardAllArgs": true}
+    }
+  }
+}

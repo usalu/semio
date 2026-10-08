@@ -50,7 +50,7 @@ use semio_repo_test_host::Json;
 /// and against BOTH DWG catalogs) in declaration order. Duplicated rather than imported: the oracle
 /// crate must never link the production crate, so this side can only compare STRINGS; the check
 /// that a kind exists as a real enum variant is the production-side test's.
-pub const KINDS: [&str; 2] = ["set-snapshot", "set-version-info"];
+pub const KINDS: [&str; 1] = ["set-version-info"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Preamble
@@ -153,30 +153,6 @@ fn write_preamble(document: &mut [u8], preamble: &Preamble) -> Result<(), String
     Ok(())
 }
 
-/// 🌱 A whole DWG document that is nothing but a preamble — byte for byte the shape this artifact's
-/// own `📚️examples/🎬️demo/🖼️assets/🖊️example.dwg` already has (22 bytes: six version characters
-/// then zeros). This is what `set-snapshot` builds when it is given fields rather than a document: a
-/// genuine whole-document replacement, observable as a collapse in `byteLength`, not a field-set
-/// dressed up as one.
-///
-/// The fields the vocabulary cannot address are ZEROED here rather than inherited, and that is the
-/// point of the verb: a fresh preamble-only document has no preview image, so carrying the source
-/// container's `preview_address` into it would point 0x1c0 bytes past the end of a 22-byte file.
-fn stub_document(preamble: &Preamble) -> Result<Vec<u8>, String> {
-    let fresh = Preamble {
-        version: preamble.version.clone(),
-        reserved: [0u8; 5],
-        release_maintenance: 0,
-        marker: 0,
-        preview_address: 0,
-        application_version: 0,
-        maintenance_version: preamble.maintenance_version,
-        codepage: preamble.codepage,
-    };
-    let mut document = vec![0u8; PREAMBLE_ONLY_LEN];
-    write_preamble(&mut document, &fresh)?;
-    Ok(document)
-}
 //#endregion 🔖️Preamble
 
 //#region 🔖️SpecReaders
@@ -284,8 +260,8 @@ pub fn dwgread_agrees(work_dir: &std::path::Path, name: &str, bytes: &[u8], proj
 //#region 🔖️Dispatch
 /// 🚫️ The invariant `spec` breaks on `input`, derived from the artifact's WRITER CONTRACT rather than from its code: a
 /// document longer than its preamble carries object streams, and those are written as R2010 (AC1024) only, so
-/// `set-version-info` to any other stamp there is refused (`written-as-ac1024`). `set-snapshot` collapses the document to
-/// its preamble, which may carry any `AC` + four-digit stamp. `None` means the row is applicable.
+/// `set-version-info` to any other stamp there is refused (`written-as-ac1024`). The 22-byte preamble-only document may
+/// carry any `AC` + four-digit stamp. `None` means the row is applicable.
 pub fn oracle_refusal(input: &[u8], spec: &Json) -> Result<Option<&'static str>, String> {
     let current = read_preamble(input)?;
     Ok(match spec.str("kind").as_str() {
@@ -301,8 +277,6 @@ pub fn oracle_refusal(input: &[u8], spec: &Json) -> Result<Option<&'static str>,
 /// * `set-version-info` sets the three preamble fields IN PLACE, leaving the section map and every
 ///   byte of the body exactly where it was — which is what makes it applicable to a real 148 KB
 ///   R2010 container this repository can decode but nothing here can rebuild.
-/// * `set-snapshot` REPLACES the whole document with a fresh preamble-only stub carrying the fields its
-///   `snapshot` (the `DwgSnapshot` wire) states.
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     if let Some(invariant) = oracle_refusal(input, spec)? {
         return Err(format!("{:?} is refused on this document: it breaks `{invariant}`", spec.str("kind")));
@@ -316,30 +290,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             write_preamble(&mut document, &preamble_from(&params, &current))?;
             Ok(document)
         }
-        "set-snapshot" => {
-            let snapshot = params.get("snapshot").ok_or("set-snapshot: missing `snapshot`")?;
-            let version = match snapshot.get("version") {
-                Some(Json::String(found)) => found.clone(),
-                _ => return Err("set-snapshot: the `DwgSnapshot` wire requires `version`".to_string()),
-            };
-            stub_document(&Preamble { version, maintenance_version: number(snapshot, "maintenanceVersion").unwrap_or(0.0) as u8, codepage: number(snapshot, "codepage").unwrap_or(0.0) as u16, ..current })
-        }
-        "patch-snapshot" => {
-            let patch = params.get("patch").ok_or("patch-snapshot: missing `patch`")?;
-            let field = match (patch.str("operation").as_str(), patch.str("path").as_str()) {
-                ("set", "/version") => "version",
-                ("set", "/maintenanceVersion") => "maintenanceVersion",
-                ("set", "/codepage") => "codepage",
-                (operation, path) => return Err(format!("patch-snapshot {operation} {path} reaches past the preamble this oracle reads")),
-            };
-            let mut fields = vec![
-                ("version".to_string(), Json::String(current.version.clone())),
-                ("maintenanceVersion".to_string(), Json::Number(f64::from(current.maintenance_version))),
-                ("codepage".to_string(), Json::Number(f64::from(current.codepage))),
-            ];
-            fields.iter_mut().filter(|(name, _)| name == field).for_each(|(_, value)| *value = patch.get("value").cloned().unwrap_or(Json::Null));
-            oracle_apply_mutation(input, &Json::Object(vec![("kind".to_string(), Json::String("set-version-info".to_string())), ("params".to_string(), Json::Object(fields))]))
-        }
         kind => Err(format!("mutation kind {kind:?} has no oracle implementation ({} input byte(s))", input.len())),
     }
 }
@@ -348,13 +298,12 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
 //#region 🔖️Inverse
 /// ↩️ Undoes `spec` on `mutated` independently, against the UNMUTATED `base` — matching
 /// `DwgMutation::inverse()`'s own base-relative semantics: `set-version-info` re-sets the three
-/// fields `base` carried (a real `set-version-info` wire payload), and `set-snapshot` restores `base`
-/// itself — which for a proprietary container means its whole byte image, read out of `base` here
-/// and never authored by hand: nothing beyond the preamble is expressible as fields.
+/// fields `base` carried (a real `set-version-info` wire payload) — nothing beyond the preamble is
+/// expressible as fields.
 pub fn oracle_restore(base: &[u8], mutated: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let preamble = read_preamble(base)?;
     match spec.str("kind").as_str() {
-        "set-version-info" | "patch-snapshot" => {
+        "set-version-info" => {
             let params = Json::Object(vec![
                 ("version".to_string(), Json::String(preamble.version)),
                 ("maintenanceVersion".to_string(), Json::Number(f64::from(preamble.maintenance_version))),
@@ -362,7 +311,6 @@ pub fn oracle_restore(base: &[u8], mutated: &[u8], spec: &Json) -> Result<Vec<u8
             ]);
             oracle_apply_mutation(mutated, &Json::Object(vec![("kind".to_string(), Json::String("set-version-info".to_string())), ("params".to_string(), params)]))
         }
-        "set-snapshot" => Ok(base.to_vec()),
         kind => Err(format!("mutation kind {kind:?} has no oracle inverse")),
     }
 }

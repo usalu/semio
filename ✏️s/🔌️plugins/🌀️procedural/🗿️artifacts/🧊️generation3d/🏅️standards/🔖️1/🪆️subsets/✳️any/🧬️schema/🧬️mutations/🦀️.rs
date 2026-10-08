@@ -82,6 +82,9 @@ pub mod delete_widget {
     #[cfg(test)]
     #[path = "❌delete-widget/🧪️tests/🚫️removes/🦀️.rs"]
     mod tests_removes_node_a_and_leaves_wire_ab_dangling;
+    #[cfg(test)]
+    #[path = "❌delete-widget/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+    mod tests_removes_a_middle_row;
 }
 
 #[path = "."]
@@ -124,6 +127,9 @@ pub mod disconnect_synapse {
     #[cfg(test)]
     #[path = "✂️disconnect-synapse/🧪️tests/✂️cuts/🦀️.rs"]
     mod tests_cuts_wire_ab_leaving_both_nodes;
+    #[cfg(test)]
+    #[path = "✂️disconnect-synapse/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+    mod tests_removes_a_middle_row;
 }
 
 #[path = "."]
@@ -208,6 +214,9 @@ pub mod delete_generation {
     #[cfg(test)]
     #[path = "🗑️delete-generation/🧪️tests/🚫️removes/🦀️.rs"]
     mod tests_removes_the_selected_generation_2_and_falls_back;
+    #[cfg(test)]
+    #[path = "🗑️delete-generation/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+    mod tests_removes_a_middle_row;
 }
 
 #[path = "."]
@@ -482,8 +491,8 @@ pub fn generation3d_number_literal(value: f64) -> semio_framework_value::DslValu
     semio_framework_value::DslValue::object([("$schema".to_string(), semio_framework_value::DslValue::String("number".into())), ("value".to_string(), semio_framework_value::DslValue::float(value))])
 }
 
-/// 🪡️ `widget` with `entries` merged into its params: the one way a relative transform leaf writes an operator. `None`
-/// when a param value is not a neural value; the patch and the displaced params are retired cold, never dropped.
+/// 🪡️ `widget` with `entries` merged into its params: the one way a relative transform leaf builds an operator. `None`
+/// when a param value is not a neural value; the patch is retired cold, never dropped.
 pub(crate) fn generation3d_with_params(widget: &semio_framework_artifact_flow_flow::Widget, entries: Vec<(&str, semio_framework_value::DslValue)>) -> Option<semio_framework_artifact_flow_flow::Widget> {
     use semio_framework_artifact_flow_flow::neural::{ColdRetire, Dictionary, Value};
     let mut patch = Dictionary::new();
@@ -496,13 +505,13 @@ pub(crate) fn generation3d_with_params(widget: &semio_framework_artifact_flow_fl
             }
         }
     }
-    let mut next = widget.clone();
-    if let semio_framework_artifact_flow_flow::Widget::Neuron { params, .. } = &mut next {
-        let merged = params.merge(&patch);
-        std::mem::replace(params, merged).retire_cold();
-    }
+    let semio_framework_artifact_flow_flow::Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } = widget else {
+        patch.retire_cold();
+        return Some(widget.clone());
+    };
+    let merged = params.merge(&patch);
     patch.retire_cold();
-    Some(next)
+    Some(semio_framework_artifact_flow_flow::Widget::Neuron { id: id.clone(), neuron_kind: neuron_kind.clone(), params: merged, input_ports: input_ports.clone(), output_ports: output_ports.clone(), preview: *preview })
 }
 
 /// 🪄️ The sparse delta of one relative gumball leaf: every target that is an operator of `kinds` gets the params
@@ -510,7 +519,6 @@ pub(crate) fn generation3d_with_params(widget: &semio_framework_artifact_flow_fl
 /// Missing targets and targets of another kind are skipped (`mutation.partial`); none left is `target-missing` (no
 /// target exists) or `target-mismatch`; an identity gesture is `mutation.no-op`.
 pub(crate) fn generation3d_transform_diff(base: &Generation3dSnapshot, targets: &[String], kinds: &[&str], identity: bool, compose: impl Fn(&semio_framework_value::DslValue) -> Option<Vec<(&'static str, semio_framework_value::DslValue)>>) -> protocol::MutationOutcome<Generation3dDiff> {
-    use crate::standards::v1::subsets::any::schema::diff::{diff_snapshot_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
     if let Err(reason) = generation3d_targets_invariant(targets) {
         return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
     }
@@ -549,12 +557,8 @@ pub(crate) fn generation3d_transform_diff(base: &Generation3dSnapshot, targets: 
         }
         return protocol::MutationOutcome::empty().absorb_messages(messages.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "the gesture is the identity transform").at(targets.to_vec())]));
     }
-    let widgets = WidgetsDiff { removed: Vec::new(), set: composed };
-    let diff = diff_snapshot_from_helpers(base, &widgets, &SynapsesDiff::default(), &LayoutDiff::default(), None, None);
-    for (_, widget) in widgets.set {
-        widget.retire_cold();
-    }
-    protocol::MutationOutcome::new(diff).absorb_messages(messages)
+    let patched = composed.into_iter().map(|(index, widget)| crate::standards::v1::subsets::any::schema::diff::Generation3dWidgetPatchEntry { id: widget_id(&base.host_snapshot.widgets[index]).to_string(), patch: crate::standards::v1::subsets::any::schema::diff::Generation3dWidgetPatch::Replace { widget } }).collect();
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::any::schema::diff::Generation3dDiff { widgets: Some(crate::standards::v1::subsets::any::schema::diff::Generation3dWidgetsDelta { patched, ..Default::default() }), ..Default::default() }).absorb_messages(messages)
 }
 
 /// 🔙️ The exact inverse of one relative gumball leaf: every operator it would compose restored to its BASE widget —
@@ -580,7 +584,7 @@ pub(crate) fn generation3d_transform_inverse(base: &Generation3dSnapshot, target
 /// site, not learn this facet's internal triad-leaf module paths.
 pub fn generation_mutation_to_generation3d(operation: GenerationMutation) -> Generation3dMutation {
     match operation {
-        GenerationMutation::Add { generation } => Generation3dMutation::CreateGeneration(create_generation::CreateGeneration { generation }),
+        GenerationMutation::Add { generation } => Generation3dMutation::CreateGeneration(create_generation::CreateGeneration { generation, index: None }),
         GenerationMutation::Remove { id } => Generation3dMutation::DeleteGeneration(delete_generation::DeleteGeneration { id }),
         GenerationMutation::Rename { id, name } => Generation3dMutation::RenameGeneration(rename_generation::RenameGeneration { id, new_name: name }),
         GenerationMutation::UpdateValues { id, question_id, value } => Generation3dMutation::ChangeGenerationValue(change_generation_value::ChangeGenerationValue { id, question_id, new_value: value }),
@@ -695,7 +699,7 @@ pub fn generation3d_document_replacement(before: &Generation3dSnapshot, after: &
     let roster_equal = before.generation.generations == after.generation.generations;
     if !roster_equal {
         leaves.extend(before.generation.generations.iter().map(|generation| Generation3dMutation::DeleteGeneration(delete_generation::DeleteGeneration { id: generation.id.clone() })));
-        leaves.extend(after.generation.generations.iter().map(|generation| Generation3dMutation::CreateGeneration(create_generation::CreateGeneration { generation: generation.clone() })));
+        leaves.extend(after.generation.generations.iter().map(|generation| Generation3dMutation::CreateGeneration(create_generation::CreateGeneration { generation: generation.clone(), index: None })));
     }
     let left_selected = if roster_equal { before.generation.selected_generation_id.clone() } else { after.generation.generations.last().map(|generation| generation.id.clone()) };
     let selected = after.generation.selected_generation_id.clone();
@@ -744,7 +748,7 @@ pub fn apply_generation3d_mutation(projection: &mut Generation3dSnapshot, mutati
         delta.retire_cold();
         return Err(messages);
     }
-    let applied = protocol::MutationDiff::apply(&delta, &*projection);
+    let applied = protocol::apply_diff(&delta, &*projection);
     delta.retire_cold();
     match applied {
         Ok(next) => {

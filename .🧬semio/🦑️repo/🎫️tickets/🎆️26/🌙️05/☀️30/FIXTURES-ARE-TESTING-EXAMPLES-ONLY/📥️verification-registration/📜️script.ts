@@ -6,6 +6,29 @@ while (!existsSync(join(root, "bun.lock"))) root = dirname(root);
 const ticket = dirname(import.meta.dir);
 const cwd = "${workspaceFolder}/" + relative(root, join(ticket, "📥️isolated-verification")).replaceAll("\\", "/");
 const profiles = [
+  ["🧫️fixtures-testing-only-root-corpus-port-boot-source🧪️", "root-corpus-port-boot-source", 900.753],
+  ["🧫️fixtures-testing-only-plugin-oct8-shared-frontier-native🧪️", "plugin-oct8-shared-frontier-native", 900.750],
+  ["🧫️fixtures-testing-only-plugin-oct8-energy-editor-native🧪️", "plugin-oct8-energy-editor-native", 900.749],
+  ["🧫️fixtures-testing-only-plugin-oct8-pack-observers-native🧪️", "plugin-oct8-pack-observers-native", 900.748],
+  ["🧫️fixtures-testing-only-root-reintroduced-retirement-source🧪️", "root-reintroduced-retirement-source", 900.747],
+  ["🧫️fixtures-testing-only-root-dsl-schema-search-source🧪️", "root-dsl-schema-search-source", 900.746],
+  ["🧫️fixtures-testing-only-root-dsl-schema-search-native🧪️", "root-dsl-schema-search-native", 900.745],
+  ["🧫️fixtures-testing-only-root-schema-harness-full🧪️", "root-schema-harness-full", 900.744],
+  ["🧫️fixtures-testing-only-plugin-oct8-host-traces🧪️", "plugin-oct8-host-traces", 900.743],
+  ["🧫️fixtures-testing-only-root-async-dsl-ghosts🧪️", "root-async-dsl-ghosts", 900.741],
+  ["🧫️fixtures-testing-only-root-play-pane-ghost🧪️", "root-play-pane-ghost", 900.742],
+  ["🧫️fixtures-testing-only-root-admin-graph🧪️", "root-admin-graph", 900.739],
+  ["🧫️fixtures-testing-only-root-schema-harness🧪️", "root-schema-harness", 900.740],
+  ["🧫️fixtures-testing-only-root-final-corpus🧪️", "root-final-corpus", 900.738],
+  ["🧫️fixtures-testing-only-plugin-oct8-catalog-tests🧪️", "plugin-oct8-catalog-tests", 900.737],
+  ["🧫️fixtures-testing-only-root-sequence-oracles🧪️", "root-sequence-oracles", 900.736],
+  ["🧫️fixtures-testing-only-root-dsl-inline-source🧪️", "root-dsl-inline-source", 900.734],
+  ["🧫️fixtures-testing-only-root-dsl-inline-native🧪️", "root-dsl-inline-native", 900.735],
+  ["🧫️fixtures-testing-only-root-remaining-corpus🧪️", "root-remaining-corpus", 900.733],
+  ["🧫️fixtures-testing-only-plugin-oct8-facets-source🧪️", "plugin-oct8-facets-source", 900.731],
+  ["🧫️fixtures-testing-only-plugin-oct8-facets-tests🧪️", "plugin-oct8-facets-tests", 900.732],
+  ["🧫️fixtures-testing-only-root-core-current🧪️", "root-core-current", 900.730],
+  ["🧫️fixtures-testing-only-root-hub-reservation🧪️", "root-hub-reservation", 900.729],
   ["🧫️fixtures-testing-only-root-service-current🧪️", "root-service-current", 900.728],
   ["🧫️fixtures-testing-only-root-dev-mirror-source🧪️", "root-dev-mirror-source", 900.725],
   ["🧫️fixtures-testing-only-root-dev-mirror-process🧪️", "root-dev-mirror-process", 900.726],
@@ -159,7 +182,7 @@ for (const name of ["launch.json", "🧩️launch.seed.jsonc"]) {
   const added = profiles.filter(([name]) => !names.has(name)).map(([name, target, order]) => ({
     name, type: "node-terminal", request: "launch",
     command: `bun "\${workspaceFolder}/node_modules/nx/dist/bin/nx.js" run ticket-fixture-verification:${target} --skip-nx-cache --outputStyle=static`, cwd,
-    env: { NX_DAEMON: "false", NX_ISOLATE_PLUGINS: "false", NX_WORKSPACE_DATA_DIRECTORY: cwd.replace("/📥️isolated-verification", "/🗑️generated/launch-nx-data"), SEMIO_TEST_ARTIFACT_DIR: cwd.replace("/📥️isolated-verification", "/🗑️generated"), FORCE_COLOR: "0" },
+    env: { NX_DAEMON: "false", NX_ISOLATE_PLUGINS: "false", NX_CACHE_DIRECTORY: cwd.replace("/📥️isolated-verification", "/🗑️generated/launch-nx-cache"), NX_WORKSPACE_DATA_DIRECTORY: cwd.replace("/📥️isolated-verification", "/🗑️generated/launch-nx-data"), SEMIO_TEST_ARTIFACT_DIR: cwd.replace("/📥️isolated-verification", "/🗑️generated"), FORCE_COLOR: "0" },
     presentation: { group: "4_gate", order },
   }));
   if (added.length) {
@@ -169,6 +192,23 @@ for (const name of ["launch.json", "🧩️launch.seed.jsonc"]) {
     writeFileSync(path, source.slice(0, at) + insertion + source.slice(at));
   }
   console.log(`[DEBUG] fixture verification profiles ${name} added=${added.length}`);
+  const current = readFileSync(path, "utf8"), parsed = ts.parseJsonText(path, current), config = (parsed.statements[0] as ts.ExpressionStatement).expression as ts.ObjectLiteralExpression;
+  const rows = (config.properties.find(property => ts.isPropertyAssignment(property) && property.name.getText(parsed) === '"configurations"') as ts.PropertyAssignment).initializer as ts.ArrayLiteralExpression;
+  const owned = new Set(profiles.map(([name]) => name)), edits: { at: number; text: string }[] = [];
+  for (const row of rows.elements.filter(ts.isObjectLiteralExpression)) {
+    const identifier = row.properties.filter(ts.isPropertyAssignment).find(property => property.name.getText(parsed) === '"name"');
+    if (!identifier || !owned.has(JSON.parse(identifier.initializer.getText(parsed)))) continue;
+    const environment = row.properties.filter(ts.isPropertyAssignment).find(property => property.name.getText(parsed) === '"env"')?.initializer;
+    if (!environment || !ts.isObjectLiteralExpression(environment) || environment.properties.some(property => ts.isPropertyAssignment(property) && property.name.getText(parsed) === '"NX_CACHE_DIRECTORY"')) continue;
+    edits.push({ at: environment.getStart(parsed) + 1, text: `\n        "NX_CACHE_DIRECTORY": ${JSON.stringify(cwd.replace("/📥️isolated-verification", "/🗑️generated/launch-nx-cache"))},` });
+  }
+  if (edits.length) {
+    if (readFileSync(path, "utf8") !== current) throw Error("Concurrent ticket cache profile edit; retry registration");
+    let updated = current;
+    for (const edit of edits.sort((left, right) => right.at - left.at)) updated = updated.slice(0, edit.at) + edit.text + updated.slice(edit.at);
+    writeFileSync(path, updated);
+    console.log(`[DEBUG] owned ticket cache profiles ${name} updated=${edits.length}`);
+  }
 }
 
 const livePath = join(root, ".vscode/launch.json"), live = ts.parseJsonText(livePath, readFileSync(livePath, "utf8"));

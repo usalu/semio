@@ -1,17 +1,17 @@
 /** 🟦️ DOCX ECMA-376 mutation case — the ORACLE half, `jszip-docx-ecma-376-mutate-reader`. A reader oracle computes
- *  nothing: each mutation row's — and the whole-document `set-snapshot`'s — expected package is its COMMITTED python-docx
+ *  nothing: each mutation row's — — expected package is its COMMITTED python-docx
  *  `➡️after.docx`, and the real README itself is the expected package of every inverse and the identity round trip — handed to the
  *  `docx-ecma-376-jszip-compare-v1` pipeline as `expected-docx`, where the jszip reader reads it and the subject's
  *  `actual-docx`. */
 
 /** 🟦️ DOCX ECMA-376 mutation case — the ORACLE half, `jszip-docx-ecma-376-mutate-reader`. A reader oracle computes
- *  nothing: each mutation row's — and the whole-document `set-snapshot`'s — expected package is its COMMITTED python-docx
+ *  nothing: each mutation row's — — expected package is its COMMITTED python-docx
  *  `➡️after.docx`, and the real README itself is the expected package of every inverse and the identity round trip — handed to the
  *  `docx-ecma-376-jszip-compare-v1` pipeline as `expected-docx`, where the jszip reader reads it and the subject's
  *  `actual-docx`. */
 import { defineTestAdapter, type AdapterContext } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 /** 🟦️ DOCX ECMA-376 mutation case — the ORACLE half, `jszip-docx-ecma-376-mutate-reader`. A reader oracle computes
- *  nothing: each mutation row's — and the whole-document `set-snapshot`'s — expected package is its COMMITTED python-docx
+ *  nothing: each mutation row's — — expected package is its COMMITTED python-docx
  *  `➡️after.docx`, and the real README itself is the expected package of every inverse and the identity round trip — handed to the
  *  `docx-ecma-376-jszip-compare-v1` pipeline as `expected-docx`, where the jszip reader reads it and the subject's
  *  `actual-docx`. */
@@ -27,8 +27,6 @@ export default defineTestAdapter({
   scenarios: {
     mutate: after,
     inverse: readme,
-    "mutate-set-snapshot": after,
-    "inverse-set-snapshot": readme,
     "identity-round-trip": readme,
   },
 });

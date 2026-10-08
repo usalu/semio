@@ -5,17 +5,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "artifact": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/artifact.json"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "annex": {
       "anyOf": [
         {
@@ -61,24 +50,855 @@
       "x-semio-state": "artifact"
     },
     "walls": {
-      "anyOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/properties/walls"
+      "$ref": "#/$defs/En1996WallDelta",
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "En1996OpeningPatch": {
+      "title": "En1996OpeningPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "widthM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallOpening/properties/widthM"
+            },
+            {
+              "type": "null"
             }
+          ]
+        },
+        "heightM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallOpening/properties/heightM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sillHeightM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallOpening/properties/sillHeightM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996OpeningAddition": {
+      "title": "En1996OpeningAddition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after",
+        "row"
+      ],
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallOpening"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996OpeningModification": {
+      "title": "En1996OpeningModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1996OpeningPatch"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996OpeningDelta": {
+      "title": "En1996OpeningDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         },
-        {
-          "type": "null"
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1996OpeningAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1996OpeningModification"
+          }
         }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996ConcentratedPatch": {
+      "title": "En1996ConcentratedPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "forceN": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/ConcentratedLoad/properties/forceN"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bearingAreaM2": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/ConcentratedLoad/properties/bearingAreaM2"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bearingLengthM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/ConcentratedLoad/properties/bearingLengthM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996ConcentratedAddition": {
+      "title": "En1996ConcentratedAddition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after",
+        "row"
       ],
-      "x-semio-state": "artifact"
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/ConcentratedLoad"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996ConcentratedModification": {
+      "title": "En1996ConcentratedModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1996ConcentratedPatch"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996ConcentratedDelta": {
+      "title": "En1996ConcentratedDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1996ConcentratedAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1996ConcentratedModification"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996LoadCasePatch": {
+      "title": "En1996LoadCasePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "designSituation": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallLoadCase/properties/designSituation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "imposedCategory": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallLoadCase/properties/imposedCategory"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "gKSlabN": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallLoadCase/properties/gKSlabN"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "qKImposedPa": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallLoadCase/properties/qKImposedPa"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tributaryAreaM2": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallLoadCase/properties/tributaryAreaM2"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "slabSpanM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallLoadCase/properties/slabSpanM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "qKSnowPa": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallLoadCase/properties/qKSnowPa"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "qPWindPa": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallLoadCase/properties/qPWindPa"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cPe": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallLoadCase/properties/cPe"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hKEarthN": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallLoadCase/properties/hKEarthN"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "concentrated": {
+          "$ref": "#/$defs/En1996ConcentratedDelta"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996LoadCaseAddition": {
+      "title": "En1996LoadCaseAddition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after",
+        "row"
+      ],
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/WallLoadCase"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996LoadCaseModification": {
+      "title": "En1996LoadCaseModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1996LoadCasePatch"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996LoadCaseDelta": {
+      "title": "En1996LoadCaseDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1996LoadCaseAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1996LoadCaseModification"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996WallPatch": {
+      "title": "En1996WallPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "labelEn": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/labelEn"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "labelDe": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/labelDe"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "wallType": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/wallType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "thicknessM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/thicknessM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "heightM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/heightM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lengthM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/lengthM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "supportSides": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/supportSides"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "slabBearingDepthM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/slabBearingDepthM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eccentricityTopM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/eccentricityTopM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "eccentricityBottomM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/eccentricityBottomM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unitGroup": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/unitGroup"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unitMaterial": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/unitMaterial"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fBPa": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/fBPa"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unitLengthM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/unitLengthM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unitWidthM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/unitWidthM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unitHeightM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/unitHeightM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mortarType": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/mortarType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mortarClass": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/mortarClass"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mortarStrengthPa": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/mortarStrengthPa"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bedJointThicknessM": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/bedJointThicknessM"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reinforced": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/reinforced"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "asVerticalM2": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/asVerticalM2"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "asHorizontalM2": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/asHorizontalM2"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fYdPa": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/fYdPa"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fireReiMin": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/fireReiMin"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exposure": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/exposure"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mu": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/mu"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "densityKgM3": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/densityKgM3"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "phiInfinity": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/phiInfinity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "isBasement": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall/properties/isBasement"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "openings": {
+          "$ref": "#/$defs/En1996OpeningDelta"
+        },
+        "loadCases": {
+          "$ref": "#/$defs/En1996LoadCaseDelta"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996WallAddition": {
+      "title": "En1996WallAddition",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "after",
+        "row"
+      ],
+      "properties": {
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "row": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/snapshot.json#/$defs/MasonryWall"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996WallModification": {
+      "title": "En1996WallModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "patch"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/$defs/En1996WallPatch"
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
+    },
+    "En1996WallDelta": {
+      "title": "En1996WallDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1996WallAddition"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1996WallModification"
+          }
+        }
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🟦️typescript"
+      ]
     }
   }
 }

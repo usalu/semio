@@ -5,15 +5,15 @@ op = create vertex | delete vertex | create edge | delete edge | create face | d
    | create shell | delete shell | create solid | delete solid | replace curve | replace surface
    | move vertex ;
 
-create vertex = 'create-vertex', 'id', '=', hex, 'point', '=', point3, 'tol', '=', number ;
+create vertex = 'create-vertex', 'id', '=', hex, 'point', '=', point3, 'tol', '=', number, [ 'at', '=', integer ] ;
 delete vertex = 'delete-vertex', 'id', '=', hex ;
-create edge = 'create-edge', 'id', '=', hex, 'start', '=', hex, 'end', '=', hex, 'curve', '=', curve, 'tol', '=', number ;
+create edge = 'create-edge', 'id', '=', hex, 'start', '=', hex, 'end', '=', hex, 'curve', '=', curve, 'tol', '=', number, [ 'at', '=', integer ] ;
 delete edge = 'delete-edge', 'id', '=', hex ;
-create face = 'create-face', 'id', '=', hex, 'outer', '=', hex, 'inner', '=', hex list, 'surface', '=', surface, 'orientation', '=', bool, 'tol', '=', number ;
+create face = 'create-face', 'id', '=', hex, 'outer', '=', hex, 'inner', '=', hex list, 'surface', '=', surface, 'orientation', '=', bool, 'tol', '=', number, [ 'at', '=', integer ] ;
 delete face = 'delete-face', 'id', '=', hex ;
-create shell = 'create-shell', 'id', '=', hex, 'faces', '=', shell face list ;
+create shell = 'create-shell', 'id', '=', hex, 'faces', '=', shell face list, [ 'at', '=', integer ] ;
 delete shell = 'delete-shell', 'id', '=', hex ;
-create solid = 'create-solid', 'id', '=', hex, 'shells', '=', solid shell list ;
+create solid = 'create-solid', 'id', '=', hex, 'shells', '=', solid shell list, [ 'at', '=', integer ] ;
 delete solid = 'delete-solid', 'id', '=', hex ;
 replace curve = 'replace-curve', 'edge', '=', hex, 'curve', '=', curve ;
 replace surface = 'replace-surface', 'face', '=', hex, 'surface', '=', surface ;

@@ -11,8 +11,6 @@ framing record
 header fixed 2
 field format u8
 field tag u8
-record set-snapshot tag=0
-field payload bytes
 record set-format tag=1
 field payload bytes
 record insert-comment tag=2
@@ -28,6 +26,4 @@ field payload bytes
 record remove-row tag=7
 field payload bytes
 record set-row-property tag=8
-field payload bytes
-record patch-snapshot tag=9
 field payload bytes

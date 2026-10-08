@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::base::schema::geometry::{SemioQuaternion, Sem
 use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
 
 
-use crate::standards::v1::subsets::model::schema::diff::{diff_set_snapshot, ModelRelationDiff, SemioModelDiff, SemioModelElementDiff, SpatialNodeDiff};
+use crate::standards::v1::subsets::model::schema::diff::{ModelRelationDiff, SemioModelDiff, SemioModelElementDiff, SpatialNodeDiff};
 
 
 
@@ -250,15 +250,15 @@ pub(crate) fn fixture() -> SemioModelSnapshot {
 pub(crate) fn demo_mutation_cases() -> Vec<SemioModelMutation> {
     let base = fixture();
     vec![
-        SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node: SpatialNode { id: "s2".into(), kind: SpatialKind::Space, name: "Room".into(), parent_id: None, placement: SemioTransform::identity() } }),
+        SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node: SpatialNode { id: "s2".into(), kind: SpatialKind::Space, name: "Room".into(), parent_id: None, placement: SemioTransform::identity() }, at: None }),
         SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id: "s1".into() }),
         SemioModelMutation::SetSpatialNode(set_spatial_node::SetSpatialNode { id: "s1".into(), kind: Some(SpatialKind::Storey), name: None, parent_id: Some(Some("root".into())), placement: None }),
         SemioModelMutation::InsertElement(insert_element::InsertElement {
-            element: SemioModelElement { id: "e2".into(), class: ElementClass::Beam, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] },
+            element: SemioModelElement { id: "e2".into(), class: ElementClass::Beam, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] }, at: None,
         }),
         SemioModelMutation::RemoveElement(remove_element::RemoveElement { id: "e1".into() }),
         SemioModelMutation::SetElement(set_element::SetElement { id: "e1".into(), class: None, placement: None, geometry: Some(GeometryRef::None), spatial_id: Some(None), psets: None }),
-        SemioModelMutation::InsertRelation(insert_relation::InsertRelation { relation: ModelRelation { id: "r2".into(), kind: RelationKind::Other { label: "custom".into() }, from: "e1".into(), to: "s1".into() } }),
+        SemioModelMutation::InsertRelation(insert_relation::InsertRelation { relation: ModelRelation { id: "r2".into(), kind: RelationKind::Other { label: "custom".into() }, from: "e1".into(), to: "s1".into() }, at: None }),
         SemioModelMutation::RemoveRelation(remove_relation::RemoveRelation { id: "r1".into() }),
         SemioModelMutation::SetRelation(set_relation::SetRelation { id: "r1".into(), kind: Some(RelationKind::ConnectsTo), from: None, to: None }),
         SemioModelMutation::DragElements(drag_elements::DragElements { targets: vec!["e1".into()], offset: [1.5, 2.0, 0.25] }),

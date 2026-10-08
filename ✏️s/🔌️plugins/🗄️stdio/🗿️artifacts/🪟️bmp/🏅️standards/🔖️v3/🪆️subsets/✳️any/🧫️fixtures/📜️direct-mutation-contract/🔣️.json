@@ -3,37 +3,6 @@
   "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
   "mutations": [
     {
-      "kind": "set-snapshot",
-      "variant": "SetSnapshot",
-      "directory": "📸️set-snapshot",
-      "textOpcode": "set-snapshot",
-      "binaryTag": 7,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs"
-      ]
-    },
-    {
-      "kind": "patch-snapshot",
-      "variant": "PatchSnapshot",
-      "directory": "🩹️patch-snapshot",
-      "textOpcode": "patch-snapshot",
-      "binaryTag": 8,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs"
-      ]
-    },
-    {
       "kind": "paint-indexed-region",
       "variant": "PaintIndexedRegion",
       "directory": "🎨️paint-indexed-region",
@@ -45,9 +14,7 @@
         "🧬️schema/🔣️.json",
         "🟦️.ts",
         "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs"
+        "🛰️.proto"
       ]
     },
     {
@@ -62,9 +29,22 @@
         "🧬️schema/🔣️.json",
         "🟦️.ts",
         "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs"
+        "🛰️.proto"
+      ]
+    },
+    {
+      "kind": "replace-image",
+      "variant": "ReplaceImage",
+      "directory": "🔄️replace-image",
+      "textOpcode": "replace-image",
+      "binaryTag": 12,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🧬️schema/🔣️.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto"
       ]
     }
   ]

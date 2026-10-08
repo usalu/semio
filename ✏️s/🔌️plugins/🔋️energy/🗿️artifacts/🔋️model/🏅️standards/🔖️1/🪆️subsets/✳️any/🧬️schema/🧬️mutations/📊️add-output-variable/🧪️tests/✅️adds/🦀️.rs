@@ -18,7 +18,7 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 #[allow(unused_variables, unused_mut)]
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     let model = crate::model::Model { name: "BESTEST 600".into(), ..crate::model::Model::default() };
-    (snapshot(model), super::add_output_variable("Zone Mean Air Temperature".into(), "ZONE ONE".into(), crate::model::OutputReportFrequency::Hourly))
+    (snapshot(model), super::add_output_variable("Zone Mean Air Temperature".into(), "ZONE ONE".into(), crate::model::OutputReportFrequency::Hourly, None))
 }
 
 fn case() -> Case {

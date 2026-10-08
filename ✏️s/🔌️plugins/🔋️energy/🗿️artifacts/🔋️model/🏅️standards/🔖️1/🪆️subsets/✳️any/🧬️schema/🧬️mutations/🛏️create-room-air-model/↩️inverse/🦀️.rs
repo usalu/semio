@@ -11,6 +11,9 @@ pub fn inverse(payload: &super::CreateRoomAirModelAssignment, base: &EnergyModel
     if (base.model.room_air_models.iter().any(|item| item.zone_id == payload.zone_id)) || (!base.model.zones.iter().any(|zone| zone.id == payload.zone_id)) {
         return Vec::new();
     }
+    if payload.index.is_some_and(|index| index as usize > base.model.room_air_models.len()) {
+        return Vec::new();
+    }
     vec![vocabulary::delete_room_air_model_assignment(payload.zone_id)]
 
     })())

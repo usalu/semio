@@ -17,12 +17,14 @@ semio_framework_value::artifact_retire_struct!(ProbeTransient { label, count });
 crate::transient_root! {
     state: ProbeTransient,
     mutation: ProbeTransientMutation,
+    diff: ProbeTransientDiff,
     owner: "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🫧️transient/🧪️tests/🧪️transient-root",
     kind: "set-window-transient",
     display_name: "Set Probe Window Transient",
     payload_schema: "probe.windowtransient",
     envelope: "s.test.probe.windowtransient",
     extension: "probewindowtransient",
+    fields: { label: String, count: u32 },
 }
 
 crate::window_transient_owners! {
@@ -50,6 +52,19 @@ fn the_snapshot_mutation_replaces_the_whole_root_and_inverts_to_the_base() {
     assert_eq!(mutation.inverse(&base).expect("inverts"), vec![ProbeTransientMutation::Snapshot { transient: base }], "the inverse restores the base");
     assert_eq!(mutation.descriptor().semantic_kind, "set-window-transient");
     assert!(ProbeTransientMutation::parse_op(r#"{"kind":"snapshot","transient":{"label":"x","count":1,"count":2}}"#).is_err(), "a repeated member is refused");
+}
+
+/// ⚖️ LAW: the snapshot mutation's diff is sparse — only the slots where the requested root differs from the base — it is empty for an
+/// identical root, and its inverse diff restores exactly those slots.
+#[test]
+fn the_snapshot_diff_sets_only_the_differing_fields() {
+    use protocol::{DiffAlgebra, Mutation};
+    let base = ProbeTransient { label: "drag".into(), count: 1 };
+    let mutation = ProbeTransientMutation::Snapshot { transient: probe() };
+    let diff = mutation.diff(&base).diff().clone();
+    assert_eq!((diff.label.as_ref(), diff.count), (None, Some(3)), "only the changed field is carried");
+    assert_eq!(diff.inverse(&base), ProbeTransientDiff { label: None, count: Some(1) }, "the inverse is the base value of the set slots");
+    assert!(mutation.diff(&probe()).diff().is_empty(), "an identical root changes nothing");
 }
 
 /// ⚖️ LAW: the root's DSL and pack round trip through its semio envelope, an empty body or pack reads the default root, and a

@@ -12,9 +12,7 @@
 //! **Design**: every slide and shape kind is a pure edit of one XML part's own parsed tree, addressed by the wire
 //! address's part path and child-index node path exactly as the vocabulary defines it: an entry or shape inserted at a
 //! vacancy among the `p:sldId` (or shape) siblings, one removed, the slide list reordered, every `a:t` of a shape
-//! rewritten, or its first `a:xfrm` repositioned. `set-snapshot` assembles a whole package from the wire's typed OPC
-//! tables and XML parts, and `patch-snapshot` applies its one pointer operation to this model's own `{xmlParts}` reading
-//! (the XML parts in archive order, as the subject's snapshot lists them). Revisions are the subject's guard and are not
+//! rewritten, or its first `a:xfrm` repositioned, and `replace-xml-node` swaps one addressed XML node for the wire's replacement. Revisions are the subject's guard and are not
 //! re-derived here; a stale row shows as a refused subject result that the comparison then fails. Only the edited parts
 //! are re-serialized; the identity round trip still regenerates every slide part from the typed slide/shape list.
 //!
@@ -34,7 +32,7 @@ use semio_repo_test_host::Json;
 /// production-side `kinds_matches_enum_variants_and_manifest` proves enum, constant and manifest
 /// never drift apart. Declared here rather than in the case adapter so the adapter, this module's
 /// own law tests and the manifest all read ONE list.
-pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "insert-slide", "remove-slide", "move-slide", "insert-shape", "remove-shape", "set-shape-text", "set-shape-position"];
+pub const KINDS: &[&str] = &["insert-slide", "remove-slide", "move-slide", "insert-shape", "remove-shape", "set-shape-text", "set-shape-position", "replace-xml-node"];
 //#endregion 🔖️Vocabulary
 
 #[cfg(feature = "oracles")]
@@ -721,70 +719,11 @@ mod oracles {
         }
     }
 
-    /// 📦️ A whole wire `PptxSnapshot` as a package: its typed content types and relationships as their own XML parts,
-    /// every opaque OPC part's bytes, and every XML part serialized from its tree.
-    fn package_of(snapshot: &Json) -> Result<Package, String> {
-        fn put(pkg: &mut Package, path: String, bytes: Vec<u8>) {
-            pkg.order.push(path.clone());
-            pkg.parts.insert(path, bytes);
-        }
-        fn text(value: Option<&Json>) -> String {
-            match value { Some(Json::String(text)) => text.clone(), _ => String::new() }
-        }
-        let mut pkg = Package::default();
-        let opc = snapshot.get("opc").ok_or("set-snapshot carries no opc")?;
-        let content_types = opc.get("contentTypes").ok_or("set-snapshot carries no content types")?;
-        let pair = |entry: &Json| -> (String, String) { match entry { Json::Array(items) => (text(items.first()), text(items.get(1))), _ => (String::new(), String::new()) } };
-        let mut types = content_types.array("defaults").iter().map(|entry| { let (extension, kind) = pair(entry); XNode::Element { name: "Default".into(), attrs: vec![("Extension".into(), extension), ("ContentType".into(), kind)], children: Vec::new() } }).collect::<Vec<_>>();
-        types.extend(content_types.array("overrides").iter().map(|entry| { let (part, kind) = pair(entry); XNode::Element { name: "Override".into(), attrs: vec![("PartName".into(), part), ("ContentType".into(), kind)], children: Vec::new() } }));
-        put(&mut pkg, "[Content_Types].xml".into(), serialize_document(&XNode::Element { name: "Types".into(), attrs: vec![("xmlns".into(), "http://schemas.openxmlformats.org/package/2006/content-types".into())], children: types })?);
-        if let Some(Json::Object(owners)) = opc.get("relationships") {
-            for (owner, relationships) in owners {
-                let listed: &[Json] = match relationships { Json::Array(items) => items, _ => &[] };
-                let entries = listed.iter().map(|rel| {
-                    let mut attrs = vec![("Id".to_string(), rel.str("id")), ("Type".to_string(), rel.str("relType")), ("Target".to_string(), rel.str("target"))];
-                    if rel.str("targetMode") == "external" {
-                        attrs.push(("TargetMode".into(), "External".into()));
-                    }
-                    XNode::Element { name: "Relationship".into(), attrs, children: Vec::new() }
-                }).collect();
-                let path = if owner.is_empty() { "_rels/.rels".to_string() } else { rels_path_for(owner) };
-                put(&mut pkg, path, serialize_document(&XNode::Element { name: "Relationships".into(), attrs: vec![("xmlns".into(), "http://schemas.openxmlformats.org/package/2006/relationships".into())], children: entries })?);
-            }
-        }
-        for part in opc.array("parts") {
-            let bytes = part.array("bytes").iter().map(|byte| match byte { Json::Number(value) if (0.0..=255.0).contains(value) => Ok(*value as u8), other => Err(format!("part byte {} is no octet", other.to_string())) }).collect::<Result<Vec<u8>, String>>()?;
-            put(&mut pkg, part.str("path"), bytes);
-        }
-        for part in snapshot.array("xmlParts") {
-            let root = part.get("document").and_then(|document| document.get("root")).ok_or_else(|| format!("XML part {} carries no root", part.str("path")))?;
-            put(&mut pkg, part.str("path"), serialize_document(&wire_node(root)?)?);
-        }
-        Ok(pkg)
-    }
-
-    /// 🩹️ The XML parts in archive order — exactly the subject snapshot's `xmlParts` order — as `{path, document: {root}}`.
-    fn xml_parts(pkg: &Package) -> Result<Vec<(String, Json)>, String> {
-        pkg.order.iter().filter(|path| *path != "[Content_Types].xml" && !path.ends_with(".rels") && { let lower = path.to_ascii_lowercase(); lower.ends_with(".xml") || lower.ends_with(".vml") }).map(|path| Ok((path.clone(), node_wire(&pkg.xml(path)?)))).collect()
-    }
-
     /// 🦠️ Applies one declared kind to the package. An unrecognised kind, or a target the package does not hold, is an
     /// error — never a silent no-op.
     fn apply(mut pkg: Package, kind: &str, params: &Json) -> Result<Package, String> {
         let address = || params.get("address").ok_or_else(|| format!("{kind} carries no address"));
         match kind {
-            "set-snapshot" => return package_of(params.get("snapshot").ok_or("set-snapshot carries no snapshot")?),
-            "patch-snapshot" => {
-                let parts = xml_parts(&pkg)?;
-                let reading = Json::Object(vec![("xmlParts".into(), Json::Array(parts.iter().map(|(path, root)| Json::Object(vec![("path".into(), Json::String(path.clone())), ("document".into(), Json::Object(vec![("root".into(), root.clone())]))])).collect()))]);
-                let patched = semio_repo_test_host::law::patched_snapshot(&reading, params.get("patch").ok_or("patch-snapshot carries no patch")?)?;
-                for ((path, before), after) in parts.iter().zip(patched.array("xmlParts")) {
-                    let root = after.get("document").and_then(|document| document.get("root")).ok_or("a patched XML part lost its root")?;
-                    if root != before {
-                        pkg.parts.insert(path.clone(), serialize_document(&wire_node(root)?)?);
-                    }
-                }
-            }
             "insert-slide" => insert_at_vacancy(&mut pkg, params.get("vacancy").ok_or("insert-slide carries no vacancy")?, wire_node(params.get("entry").ok_or("insert-slide carries no entry")?)?, true)?,
             "insert-shape" => insert_at_vacancy(&mut pkg, params.get("vacancy").ok_or("insert-shape carries no vacancy")?, wire_node(params.get("shape").ok_or("insert-shape carries no shape")?)?, false)?,
             "remove-slide" => remove_addressed(&mut pkg, address()?.get("entry").ok_or("a slide address carries no entry")?, &["p:sldId"])?,
@@ -833,6 +772,14 @@ mod oracles {
                     Ok(())
                 })?;
             }
+            "replace-xml-node" => {
+                let (part, path) = located(address()?)?;
+                let node = wire_node(params.get("node").ok_or("replace-xml-node carries no node")?)?;
+                edit_part(&mut pkg, &part, |root| {
+                    *node_at(root, &path)? = node;
+                    Ok(())
+                })?;
+            }
             other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
         }
         Ok(pkg)
@@ -845,7 +792,7 @@ mod oracles {
     }
 
     /// ↩️ Applies `{kind, params}`, re-reads the forward result, and restores the pre-mutation package — every kind's
-    /// own inverse in this vocabulary is a whole `set-snapshot` of its base — so the caller compares that projection
+    /// own inverse restores the base package — so the caller compares that projection
     /// against the ORIGINAL input's own. A forward result the reference cannot re-read fails here.
     pub fn apply_mutation_inverse(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
         read_presentation(&read_zip(&apply_mutation(input, kind, params)?)?)?;

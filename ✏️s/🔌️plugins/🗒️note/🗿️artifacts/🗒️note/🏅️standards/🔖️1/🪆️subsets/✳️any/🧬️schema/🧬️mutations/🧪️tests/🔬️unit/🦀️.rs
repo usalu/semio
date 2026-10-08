@@ -1,6 +1,17 @@
 use super::*;
 use crate::{NoteBlockNode, NoteImageAsset};
-use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law};
+
+/// ⚖️ Both inverse laws at once: sequential replay restores the base, and the inverse rows' diffs sum to the negative diff.
+async fn laws<P, Op>(base: &P, mutation: &Op)
+where
+    P: Clone + PartialEq + std::fmt::Debug,
+    Op: protocol::Mutation<P>,
+{
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(base, mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(mutation, base).await;
+}
+
 use protocol::SemanticMutation;
 
 fn sample_snapshot() -> NoteSnapshot {
@@ -73,10 +84,10 @@ async fn root_scalar_inverse_and_absorb_laws() {
         change_pencil_width(Some(5.0)),
         change_eraser_radius(Some(20.0)),
     ] {
-        assert_mutation_inverse_law(&base, &mutation).await;
+        laws(&base, &mutation).await;
     }
     let d1 = change_grid_spacing(Some(10.0)).diff(&base).into_parts().0;
-    let mid = MutationDiff::apply(&d1, &base).expect("valid mutation diff");
+    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
     let d2 = change_grid_spacing(Some(20.0)).diff(&mid).into_parts().0;
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
@@ -85,9 +96,9 @@ async fn root_scalar_inverse_and_absorb_laws() {
 async fn asset_inverse_law_create_replace_delete() {
     let base = sample_snapshot();
     let asset = NoteImageAsset { mime: "image/jpeg".into(), data: "e".into(), width: None, height: None };
-    assert_mutation_inverse_law(&base, &create_asset("asset-2".into(), asset.clone())).await;
-    assert_mutation_inverse_law(&base, &replace_asset_payload("asset-1".into(), asset.clone())).await;
-    assert_mutation_inverse_law(&base, &delete_asset("asset-1".into())).await;
+    laws(&base, &create_asset("asset-2".into(), asset.clone())).await;
+    laws(&base, &replace_asset_payload("asset-1".into(), asset.clone())).await;
+    laws(&base, &delete_asset("asset-1".into())).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -108,43 +119,61 @@ async fn block_lifecycle_inverse_law_create_delete_duplicate() {
         font_weight: "normal".into(),
         align: "left".into(),
     };
-    assert_mutation_inverse_law(&base, &create_block(new_block.clone(), None, None)).await;
-    assert_mutation_inverse_law(&base, &delete_block("b1".into())).await;
-    assert_mutation_inverse_law(&base, &delete_blocks(vec!["b1".into(), "b3".into()])).await;
+    laws(&base, &create_block(new_block.clone(), None, None)).await;
+    laws(&base, &delete_block("b1".into())).await;
+    laws(&base, &delete_blocks(vec!["b1".into(), "b3".into()])).await;
     let dup = crate::schema::clone_block(&mut crate::schema::NoteIdOwner::new("mutation-test", 0), base.blocks.iter().find(|b| crate::schema::block_id(b) == "b1").unwrap());
-    assert_mutation_inverse_law(&base, &duplicate_block("b1".into(), dup)).await;
+    laws(&base, &duplicate_block("b1".into(), dup)).await;
+}
+
+/// 📍️ Removing or reparenting a MIDDLE sibling is undone in place: the inverse reinserts it at its original index, and a create at an explicit index lands there.
+#[semio_framework_async_macros::async_test]
+async fn middle_row_inverses_restore_the_original_index() {
+    let mut base = sample_snapshot();
+    base.blocks.push(NoteBlockNode::Group { id: "g1".into(), name: "Group".into(), x: 0.0, y: 0.0, width: 200.0, height: 200.0, rotation: 0.0, visible: true, locked: false, children: Vec::new() });
+    laws(&base, &delete_block("b2".into())).await;
+    laws(&base, &delete_blocks(vec!["b2".into(), "b3".into()])).await;
+    laws(&base, &delete_blocks(vec!["b3".into(), "b1".into()])).await;
+    laws(&base, &move_block_to_container("b2".into(), Some("g1".into()), 0)).await;
+    laws(&base, &move_block_to_container("b3".into(), None, 0)).await;
+    let ink = base.blocks.iter().find(|b| crate::schema::block_id(b) == "b2").unwrap().clone();
+    let copy = crate::schema::clone_block(&mut crate::schema::NoteIdOwner::new("mutation-test", 0), &ink);
+    laws(&base, &duplicate_block("b2".into(), copy)).await;
+    let removed = apply_note_mutation(&base, &delete_block("b2".into())).expect("delete applies");
+    let restored = apply_note_mutation(&removed, &create_block(ink, None, Some(1))).expect("create at the original index applies");
+    assert_eq!(restored, base);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn block_reparent_and_drag_inverse_law() {
     let mut base = sample_snapshot();
     base.blocks.push(NoteBlockNode::Group { id: "g1".into(), name: "Group".into(), x: 0.0, y: 0.0, width: 200.0, height: 200.0, rotation: 0.0, visible: true, locked: false, children: Vec::new() });
-    assert_mutation_inverse_law(&base, &move_block_to_container("b1".into(), Some("g1".into()), 0)).await;
-    assert_mutation_inverse_law(&base, &drag_blocks(vec!["b1".into(), "b2".into()], 5.0, -3.0)).await;
+    laws(&base, &move_block_to_container("b1".into(), Some("g1".into()), 0)).await;
+    laws(&base, &drag_blocks(vec!["b1".into(), "b2".into()], 5.0, -3.0)).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn block_field_inverse_laws() {
     let base = sample_snapshot();
-    assert_mutation_inverse_law(&base, &rename_block("b1".into(), "Renamed".into())).await;
-    assert_mutation_inverse_law(&base, &change_block_visible("b1".into(), false)).await;
-    assert_mutation_inverse_law(&base, &change_block_locked("b1".into(), true)).await;
-    assert_mutation_inverse_law(&base, &move_block("b1".into(), 42.0, -8.0)).await;
-    assert_mutation_inverse_law(&base, &resize_block("b1".into(), 120.0, 60.0)).await;
-    assert_mutation_inverse_law(&base, &change_block_font_size("b1".into(), 24.0)).await;
-    assert_mutation_inverse_law(&base, &edit_block_text("b1".into(), vec![crate::NoteTextParagraph { runs: Vec::new() }])).await;
-    assert_mutation_inverse_law(&base, &edit_block_math("b4".into(), "y = mx + b".into())).await;
-    assert_mutation_inverse_law(&base, &change_block_ink_width("b2".into(), 6.0)).await;
-    assert_mutation_inverse_law(&base, &edit_block_ink_stroke("b2".into(), vec![[0.0, 0.0], [1.0, 1.0]], 1.0, 2.0, 10.0, 10.0)).await;
+    laws(&base, &rename_block("b1".into(), "Renamed".into())).await;
+    laws(&base, &change_block_visible("b1".into(), false)).await;
+    laws(&base, &change_block_locked("b1".into(), true)).await;
+    laws(&base, &move_block("b1".into(), 42.0, -8.0)).await;
+    laws(&base, &resize_block("b1".into(), 120.0, 60.0)).await;
+    laws(&base, &change_block_font_size("b1".into(), 24.0)).await;
+    laws(&base, &edit_block_text("b1".into(), vec![crate::NoteTextParagraph { runs: Vec::new() }])).await;
+    laws(&base, &edit_block_math("b4".into(), "y = mx + b".into())).await;
+    laws(&base, &change_block_ink_width("b2".into(), 6.0)).await;
+    laws(&base, &edit_block_ink_stroke("b2".into(), vec![[0.0, 0.0], [1.0, 1.0]], 1.0, 2.0, 10.0, 10.0)).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn table_row_column_inverse_laws() {
     let base = sample_snapshot();
-    assert_mutation_inverse_law(&base, &insert_table_row("b3".into())).await;
-    assert_mutation_inverse_law(&base, &remove_table_row("b3".into())).await;
-    assert_mutation_inverse_law(&base, &insert_table_column("b3".into())).await;
-    assert_mutation_inverse_law(&base, &remove_table_column("b3".into())).await;
+    laws(&base, &insert_table_row("b3".into())).await;
+    laws(&base, &remove_table_row("b3".into())).await;
+    laws(&base, &insert_table_column("b3".into())).await;
+    laws(&base, &remove_table_column("b3".into())).await;
 }
 
 #[semio_framework_async_macros::async_test]

@@ -1,23 +1,39 @@
 use super::*;
+use crate::standards::v1::subsets::base::schema::triples::IndexedTripleDiff;
 use crate::standards::v1::subsets::kit::schema::snapshot::demo_kit_snapshot;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 
-#[semio_framework_async_macros::async_test]
-async fn apply_replaces_touched_fields_only() {
-    let base = demo_kit_snapshot();
-    let diff = SemioKitDiff { properties: Some(None), ..Default::default() };
-    let next = diff.apply(&base).expect("apply must succeed for a well-formed fixture");
-    assert!(next.properties.is_none());
-    assert_eq!(next.types, base.types, "untouched fields must be preserved");
+fn rename_first_type(name: &str) -> SemioKitDiff {
+    use crate::standards::v1::subsets::base::schema::triples::IndexModified;
+    SemioKitDiff { types: Some(IndexedTripleDiff { modified: vec![IndexModified { index: 0, diff: SemioKitTypeDiff { name: Some(name.into()), ..Default::default() } }], ..Default::default() }), ..Default::default() }
 }
 
 #[semio_framework_async_macros::async_test]
-async fn absorb_last_write_wins_per_field() {
-    let mut d1 = SemioKitDiff { properties: Some(None), ..Default::default() };
-    let d2 = SemioKitDiff { objects: Some(SemioKitObjectChildList::default()), ..Default::default() };
-    d1.absorb(d2.clone());
-    assert_eq!(d1.properties, Some(None));
-    assert_eq!(d1.objects, Some(SemioKitObjectChildList::default()));
+async fn apply_touches_only_named_fields() {
+    let base = demo_kit_snapshot();
+    let next = protocol::apply_diff(&rename_first_type("renamed"), &base).expect("apply must succeed for a well-formed fixture");
+    assert_eq!(next.types[0].name, "renamed");
+    assert_eq!(next.types[0].id, base.types[0].id, "untouched row fields must be preserved");
+    assert_eq!(next.designs, base.designs, "untouched collections must be preserved");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn absorb_equals_sequential_apply() {
+    let base = demo_kit_snapshot();
+    let (first, second) = (rename_first_type("one"), rename_first_type("two"));
+    let mut absorbed = first.clone();
+    absorbed.absorb(second.clone());
+    let sequential = protocol::apply_diff(&second, &protocol::apply_diff(&first, &base).unwrap()).unwrap();
+    assert_eq!(protocol::apply_diff(&absorbed, &base).unwrap(), sequential);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_restores_base() {
+    let base = demo_kit_snapshot();
+    let diff = rename_first_type("renamed");
+    let next = protocol::apply_diff(&diff, &base).unwrap();
+    let inverse = protocol::command::DiffAlgebra::inverse(&diff, &base);
+    assert_eq!(protocol::apply_diff(&inverse, &next).unwrap(), base);
 }
 
 #[semio_framework_async_macros::async_test]

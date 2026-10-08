@@ -27,8 +27,8 @@ pub fn decode(bytes: &[u8]) -> Result<JpgMutation, protocol::ProtocolError> {
     let result: Result<JpgMutation, protocol::ProtocolError> = {
         let version = dec_version_bin(&mut reader).map_err(|e| malformed("op version", reader.position(), e))?;
         let density_units = dec_density_units_bin(&mut reader).map_err(|e| malformed("op density-units", reader.position(), e))?;
-        let x_density = reader.read_varint_u64().map_err(|e| malformed("op x-density", reader.position(), e.to_string()))? as u16;
-        let y_density = reader.read_varint_u64().map_err(|e| malformed("op y-density", reader.position(), e.to_string()))? as u16;
+        let x_density = u16::try_from(reader.read_varint_u64().map_err(|e| malformed("op x-density", reader.position(), e.to_string()))?).map_err(|error|malformed("op x-density",reader.position(),error.to_string()))?;
+        let y_density = u16::try_from(reader.read_varint_u64().map_err(|e| malformed("op y-density", reader.position(), e.to_string()))?).map_err(|error|malformed("op y-density",reader.position(),error.to_string()))?;
         let thumbnail = read_opt(&mut reader, dec_thumbnail_bin).map_err(|e| malformed("op thumbnail", reader.position(), e))?;
         Ok(JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation { version, density_units, x_density, y_density, thumbnail }))
     };

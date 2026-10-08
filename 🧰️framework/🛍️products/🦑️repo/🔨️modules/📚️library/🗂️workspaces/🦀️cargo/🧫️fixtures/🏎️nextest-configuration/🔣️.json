@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {"id":"root-profile","directory":"native/artifact","configurations":["."],"expected":".config/nextest.toml"},
+    {"id":"product-profile","directory":"product","configurations":[".","product"],"expected":"product/.config/nextest.toml"},
+    {"id":"isolated-owner-does-not-inherit-product-package-filters","directory":"product/plugin/artifact","configurations":[".","product"],"expected":".config/nextest.toml"},
+    {"id":"artifact-profile","directory":"product/plugin/artifact","configurations":[".","product","product/plugin/artifact"],"expected":"product/plugin/artifact/.config/nextest.toml"},
+    {"id":"sibling-does-not-author","directory":"product/plugin/artifact","configurations":[".","product/other"],"expected":".config/nextest.toml"},
+    {"id":"missing-profile","directory":"native/artifact","configurations":[],"expected":null}
+  ],
+  "periods":{"fundamental":"15s","quick":"300s","long":"900s","exhaustive":"1800s"},
+  "nativePackages":[
+    {"manifest":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust/Cargo.toml","configuration":".config/nextest.toml"},
+    {"manifest":"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🦀️rust/Cargo.toml","configuration":".config/nextest.toml"},
+    {"manifest":"✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/Cargo.toml","configuration":".config/nextest.toml"}
+  ]
+}

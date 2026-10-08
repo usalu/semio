@@ -6,7 +6,7 @@ use protocol::SemanticMutation;
 fn every_mutation() -> Vec<En1995Mutation> {
     let base = En1995Snapshot::compliant_building_beam();
     vec![
-        En1995Mutation::ChangeAnnex(set_snapshot::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
+        En1995Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: crate::document::AnnexChoice::En }),
         En1995Mutation::InsertMember(insert_member::InsertMember { index: 99, member: crate::TimberMember { id: "beam-B9".into(), ..base.members[0].clone() } }),
         En1995Mutation::RemoveMember(remove_member::RemoveMember { index: 0 }),
         En1995Mutation::ChangeMemberLabelEn(change_member_label_en::ChangeMemberLabelEn { member_id: base.members[0].id.clone(), new_value: "Beam B1 (revised)".into() }),
@@ -84,25 +84,27 @@ fn every_declared_kind_has_a_label_and_matches_kinds_len() {
     assert_eq!(every_mutation().len(), KINDS.len());
 }
 
-/// 🔀 `from_snapshot(base, apply(m, base))` reproduces the applied state for every variant, so the
-/// editor's `set-field` / `insert-item` / `remove-item` / `set-snapshot` commands can reach each leaf.
+/// 🧭️ Every set / insert / remove kind of the editor vocabulary is reachable through a declared edit rule, and the rules name only declared kinds.
 #[test]
-fn from_snapshot_reaches_every_variant() {
-    let base = En1995Snapshot::compliant_building_beam();
-    for mutation in every_mutation() {
-        let outcome = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation, &base);
-        assert!(outcome.worst_level().is_none(), "{mutation:?}: {:?}", outcome.messages());
-        let target = protocol::MutationDiff::apply(outcome.diff(), &base).expect("applies");
-        let derived = En1995Mutation::from_snapshot(&base, &target);
-        assert!(!derived.is_empty() || target == base, "{mutation:?} left no trace for from_snapshot");
-        let mut replayed = base.clone();
-        for step in &derived {
-            let step_outcome = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(step, &replayed);
-            assert!(step_outcome.worst_level().is_none(), "{step:?}: {:?}", step_outcome.messages());
-            replayed = protocol::MutationDiff::apply(step_outcome.diff(), &replayed).expect("derived step applies");
-        }
-        assert_eq!(replayed, target, "{mutation:?}: from_snapshot did not reproduce the applied state via {derived:?}");
+fn edit_rules_name_only_declared_kinds() {
+    let rules = EDIT_RULES;
+    for kind in rules.set_field.iter().map(|rule| rule.kind).chain(rules.insert_item.iter().map(|rule| rule.kind)).chain(rules.remove_item.iter().map(|rule| rule.kind)) {
+        assert!(KINDS.contains(&kind), "{kind} is not an En1995 kind");
     }
+}
+
+/// 🧭️ A value-tree edit resolves to exactly the concrete kind its path names.
+#[test]
+fn value_tree_edits_resolve_to_concrete_kinds() {
+    use crate::app_surface::NormEdit;
+    let base = En1995Snapshot::compliant_building_beam();
+    let member = base.members[0].id.clone();
+    let set = NormEdit::SetField { path: format!("members[id={member}].spanM"), value: semio_framework_value::DslValue::float(6.5) };
+    assert_eq!(EDIT_RULES.resolve::<En1995Snapshot, En1995Mutation>(&base, &set), Ok(vec![En1995Mutation::ChangeMemberSpan(change_member_span::ChangeMemberSpan { member_id: member.clone(), new_value: 6.5 })]));
+    let remove = NormEdit::RemoveItem { path: "members".into(), index: 0 };
+    assert_eq!(EDIT_RULES.resolve::<En1995Snapshot, En1995Mutation>(&base, &remove), Ok(vec![En1995Mutation::RemoveMember(remove_member::RemoveMember { index: 0 })]));
+    let unknown = NormEdit::SetField { path: "members[0].id".into(), value: semio_framework_value::DslValue::String("x".into()) };
+    assert!(EDIT_RULES.resolve::<En1995Snapshot, En1995Mutation>(&base, &unknown).is_err());
 }
 
 /// ↩️ The external bridges round-trip every kind through JSON, apply it silently, and invert it exactly.
@@ -162,7 +164,7 @@ fn regen_mutation_vectors() {
     let _ = std::fs::remove_dir_all(fixtures_root());
     for (mutation, (_, dir)) in every_mutation().into_iter().zip(catalog_vector_dirs()) {
         let outcome = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation, &base);
-        let after = protocol::MutationDiff::apply(outcome.diff(), &base).expect("applies");
+        let after = protocol::apply_diff(outcome.diff(), &base).expect("applies");
         let facets = [
             ("📸️snapshot/⬅️before", semio_framework_pack_json::to_json_string(&base)),
             ("📸️snapshot/➡️after", semio_framework_pack_json::to_json_string(&after)),
@@ -192,28 +194,8 @@ fn committed_mutation_vectors_replay_for_every_kind() {
         let outcome = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&mutation, &before);
         assert!(outcome.worst_level().is_none(), "{kind}: {:?}", outcome.messages());
         assert_eq!(outcome.diff(), &decoded!(En1995Diff, &dir, "🔺️diff", kind), "{kind} diff");
-        let after = protocol::MutationDiff::apply(outcome.diff(), &before).expect("applies");
+        let after = protocol::apply_diff(outcome.diff(), &before).expect("applies");
         assert_eq!(after, decoded!(En1995Snapshot, &dir, "📸️snapshot/➡️after", kind), "{kind} after");
         assert!(text_at(&dir, "🎯️outcome").contains("\"applied\""), "{kind} outcome");
-    }
-}
-
-/// 🔀 A whole-example switch (`set-snapshot`) is expressible as a mutation list.
-#[test]
-fn from_snapshot_carries_between_examples() {
-    let pairs = [
-        (En1995Snapshot::compliant_building_beam(), En1995Snapshot::noncompliant_building()),
-        (En1995Snapshot::noncompliant_building(), En1995Snapshot::compliant_bridge()),
-        (En1995Snapshot::compliant_bridge(), En1995Snapshot::noncompliant_bridge()),
-        (En1995Snapshot::noncompliant_bridge(), En1995Snapshot::compliant_building_beam()),
-    ];
-    for (base, target) in pairs {
-        let mut replayed = base.clone();
-        for step in En1995Mutation::from_snapshot(&base, &target) {
-            let outcome = <En1995Mutation as protocol::Mutation<En1995Snapshot>>::diff(&step, &replayed);
-            assert!(outcome.worst_level().is_none(), "{step:?}: {:?}", outcome.messages());
-            replayed = protocol::MutationDiff::apply(outcome.diff(), &replayed).expect("step applies");
-        }
-        assert_eq!(replayed, target);
     }
 }

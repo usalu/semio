@@ -1,24 +1,24 @@
 {
   "artifact": null,
-  "schema": null,
+  "attractions": {
+    "added": [],
+    "patched": [],
+    "removed": [
+      "attraction-1"
+    ],
+    "reordered": null
+  },
   "domain": null,
   "meta": null,
   "objects": {
     "added": [],
+    "patched": [],
     "removed": [
       "object-a"
     ],
-    "patched": [],
     "reordered": null
   },
-  "attractions": {
-    "added": [],
-    "removed": [
-      "attraction-1"
-    ],
-    "patched": [],
-    "reordered": null
-  },
-  "targetVolumes": null,
-  "references": null
+  "references": null,
+  "schema": null,
+  "targetVolumes": null
 }

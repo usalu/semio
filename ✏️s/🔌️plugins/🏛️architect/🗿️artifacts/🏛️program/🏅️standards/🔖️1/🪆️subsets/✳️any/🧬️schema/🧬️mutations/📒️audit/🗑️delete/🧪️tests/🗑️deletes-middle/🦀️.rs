@@ -1,0 +1,113 @@
+//! 🧪️ `delete-audit-event` fixture — `🗑️deletes-middle`.
+//!
+//! Hand-authored source of truth is the JSON quintet beside this file (contract D1, ticket
+//! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Every expectation below is transcribed from THIS
+//! leaf's own `🔺️diff/🦀️.rs`, which removes the middle row of a three-row collection (`removed = [id]`); the inverse recreates it at its original index, so the summed inverse diffs carry the row order too.
+//!
+//! That leaf's own contract line reads: 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [id]`.
+//!
+//! The `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived
+//! from this JSON by `fixtures generate` and are asserted by the shared codec-matrix harness.
+
+use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
+use protocol::Mutation;
+
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📒️audit/🗑️delete/🗑️deletes-middle/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📒️audit/🗑️delete/🗑️deletes-middle/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📒️audit/🗑️delete/🗑️deletes-middle/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📒️audit/🗑️delete/🗑️deletes-middle/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/📒️audit/🗑️delete/🗑️deletes-middle/🎯️outcome/🔣️.json");
+
+fn before() -> ProgramSnapshot {
+    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-audit-event/deletes-audit-event-a: before snapshot decodes")
+}
+
+fn expected_after() -> ProgramSnapshot {
+    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-audit-event/deletes-audit-event-a: after snapshot decodes")
+}
+
+fn mutation() -> ProgramMutation {
+    serde_json::from_str(MUTATION).expect("delete-audit-event/deletes-audit-event-a: mutation decodes")
+}
+
+/// ▶️ delete-audit-event carries the committed before-snapshot to exactly the committed after-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn delete_audit_event_applies_to_committed_after() {
+    let base = before();
+    let outcome = mutation().diff(&base);
+    let applied = protocol::apply_diff(outcome.diff(), &base).expect("delete-audit-event/deletes-audit-event-a: delete-audit-event applies to its committed before-snapshot");
+    assert_eq!(applied, expected_after(), "delete-audit-event/deletes-audit-event-a: applied state differs from the committed after-snapshot");
+}
+
+/// ↩️ Applying delete-audit-event and then its own recorded inverse restores the before-snapshot exactly.
+#[semio_framework_async_macros::async_test]
+async fn delete_audit_event_inverse_restores_before() {
+    let base = before();
+    let forward = mutation();
+    let mut undo = forward.inverse(&base).expect("valid retained mutation inverse fixture");
+    undo.reverse();
+    let mut state = protocol::apply_diff(forward.diff(&base).diff(), &base).expect("delete-audit-event/deletes-audit-event-a: forward diff applies");
+    for step in &undo {
+        state = protocol::apply_diff(step.diff(&state).diff(), &state).expect("delete-audit-event/deletes-audit-event-a: inverse step applies");
+    }
+    assert_eq!(state, base, "delete-audit-event/deletes-audit-event-a: create-audit-event (this leaf's recorded inverse) did not restore the before-snapshot");
+}
+
+/// 🔣️ Both committed snapshots and the committed delete-audit-event payload are canonical: decode then encode
+/// is a fixed point.
+#[semio_framework_async_macros::async_test]
+async fn delete_audit_event_committed_json_is_canonical() {
+    for (side, text) in [("before", BEFORE), ("after", AFTER)] {
+        let decoded: ProgramSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-audit-event/deletes-audit-event-a: snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("delete-audit-event/deletes-audit-event-a: snapshot re-encodes");
+        let original: serde_json::Value = serde_json::from_str(text).expect("delete-audit-event/deletes-audit-event-a: snapshot reparses");
+        assert_eq!(reencoded, original, "delete-audit-event/deletes-audit-event-a: committed {side} snapshot JSON is not canonical");
+    }
+    let reencoded = serde_json::to_value(mutation()).expect("delete-audit-event/deletes-audit-event-a: delete-audit-event payload re-encodes");
+    let original: serde_json::Value = serde_json::from_str(MUTATION).expect("delete-audit-event/deletes-audit-event-a: delete-audit-event payload reparses");
+    assert_eq!(reencoded, original, "delete-audit-event/deletes-audit-event-a: committed delete-audit-event payload JSON is not canonical");
+}
+
+/// 🎯️ The declared outcome holds: delete-audit-event applies cleanly here and raises no diagnostic at all.
+#[semio_framework_async_macros::async_test]
+async fn delete_audit_event_declared_outcome_holds() {
+    let declared: serde_json::Value = serde_json::from_str(OUTCOME).expect("delete-audit-event/deletes-audit-event-a: outcome decodes");
+    assert_eq!(declared.get("status").and_then(serde_json::Value::as_str), Some("applied"), "delete-audit-event/deletes-audit-event-a: this fixture declares an applied outcome");
+    let base = before();
+    let outcome = mutation().diff(&base);
+    assert!(outcome.messages().is_empty(), "delete-audit-event/deletes-audit-event-a: delete-audit-event raised a diagnostic on a fixture that declares a clean apply");
+    assert!(protocol::apply_diff(outcome.diff(), &base).is_ok(), "delete-audit-event/deletes-audit-event-a: delete-audit-event was rejected by apply on its own before-snapshot");
+}
+
+/// 🔺️ The sparse delta delete-audit-event produces is exactly the committed diff — this pins WHICH collection
+/// and which fields the mutation is allowed to touch, not merely that the end state matches.
+#[semio_framework_async_macros::async_test]
+async fn delete_audit_event_produces_committed_diff() {
+    let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(mutation().diff(&before()).diff())).expect("delete-audit-event/deletes-audit-event-a: produced diff encodes");
+    let committed: serde_json::Value = serde_json::from_str(DIFF).expect("delete-audit-event/deletes-audit-event-a: committed diff decodes");
+    assert_eq!(produced, committed, "delete-audit-event/deletes-audit-event-a: the diff delete-audit-event builds differs from the committed 🔺️diff/🔣️.json");
+}
+
+/// 🔣️ The committed diff is itself canonical and decodes to ProgramDiff.
+#[semio_framework_async_macros::async_test]
+async fn delete_audit_event_committed_diff_is_canonical() {
+    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-audit-event/deletes-audit-event-a: committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("delete-audit-event/deletes-audit-event-a: committed diff re-encodes");
+    let original: serde_json::Value = serde_json::from_str(DIFF).expect("delete-audit-event/deletes-audit-event-a: committed diff reparses");
+    assert_eq!(reencoded, original, "delete-audit-event/deletes-audit-event-a: committed diff JSON is not canonical");
+}
+
+/// 🩹 Applying the committed diff straight to the before-snapshot yields the committed
+/// after-snapshot — the diff is a complete description of what delete-audit-event does, not a summary.
+#[semio_framework_async_macros::async_test]
+async fn delete_audit_event_committed_diff_applies_to_after() {
+    let decoded: ProgramDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("delete-audit-event/deletes-audit-event-a: committed diff decodes");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("delete-audit-event/deletes-audit-event-a: committed diff applies to the before-snapshot");
+    assert_eq!(produced, expected_after(), "delete-audit-event/deletes-audit-event-a: the committed diff did not carry before to after");
+}
+
+/// 🧮️ Law L3: the diffs of delete-audit-event's inverse mutations, summed with `absorb`, equal the negative of its forward diff and carry the committed after-snapshot back to the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn delete_audit_event_inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+}

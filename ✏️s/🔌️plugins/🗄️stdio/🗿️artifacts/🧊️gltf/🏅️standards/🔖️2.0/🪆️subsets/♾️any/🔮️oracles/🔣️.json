@@ -123,19 +123,7 @@
       "capability": "gltf-2-0-mutate",
       "standardDirectoryName": "🔖️2.0",
       "subsetDirectoryName": "♾️any",
-      "vectors": [
-        {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set",
-          "mutationDirectoryName": "📸️set",
-          "scenarios": [
-            {
-              "id": "replaces-all",
-              "directoryName": "📸️replaces-all"
-            }
-          ]
-        }
-      ],
+      "vectors": [],
       "kinds": [
         "bind-node-child",
         "bind-scene-root-node",
@@ -143,9 +131,7 @@
         "change-material-double-sided",
         "create-scene",
         "unbind-node-child",
-        "unbind-scene-root-node",
-        "set-snapshot",
-        "patch-snapshot"
+        "unbind-scene-root-node"
       ]
     }
   ],

@@ -16,6 +16,9 @@ pub fn inverse(payload: &super::CreateDaylightZone, base: &EnergyModelSnapshot) 
     {
         return Vec::new();
     }
+    if payload.index.is_some_and(|index| index as usize > base.model.daylight_zones.len()) {
+        return Vec::new();
+    }
     vec![vocabulary::delete_daylight_zone(payload.id)]
 
     })())

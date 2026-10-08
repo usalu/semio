@@ -49,4 +49,5 @@ message SemioFlowMutation {
   repeated string targets = 13;
   double dx = 14;
   double dy = 15;
+  optional uint64 at = 16;
 }

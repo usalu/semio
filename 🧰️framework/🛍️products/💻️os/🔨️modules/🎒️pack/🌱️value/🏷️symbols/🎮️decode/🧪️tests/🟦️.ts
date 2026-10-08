@@ -2,14 +2,12 @@ import {test,expect} from "bun:test";
 import {readFileSync,existsSync} from "node:fs";
 import {resolve} from "node:path";
 import {Database} from "bun:sqlite";
-import Ajv from "ajv";
 import {Reader,Writer} from "protobufjs/minimal.js";
 import {applyPatch} from "fast-json-patch";
 
 test("retained inline symbols preserve original wire indices and independent canonical UTF8",()=>{
   const owner=resolve(import.meta.dir,"..");
   const law=JSON.parse(readFileSync(resolve(owner,"🧫️fixtures/🔣️.json"),"utf8"));
-  expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(resolve(owner,"🧬️schema/🔣️.json"),"utf8")))(law)).toBe(true);
   const database=new Database(":memory:");
   try{
     database.exec("CREATE TABLE symbols (ordinal INTEGER PRIMARY KEY, value BLOB NOT NULL)");

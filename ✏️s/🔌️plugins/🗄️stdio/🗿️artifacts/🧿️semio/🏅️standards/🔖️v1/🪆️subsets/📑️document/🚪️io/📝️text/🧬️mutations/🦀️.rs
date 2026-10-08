@@ -8,7 +8,7 @@ use super::*;
 use crate::standards::v1::subsets::document::schema::mutations::*;
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::document::schema::diff::{diff_block, diff_set_snapshot, BlocksDiff, DocBlockDiff, DocHeadingDiff, DocParagraphDiff, DocQuoteDiff, DocRunDiff, DocTableCellDiff, DocTableRowDiff, ListItemsDiff, RunsDiff, SemioDocumentDiff, TableCellsDiff, TableRowsDiff};
+use crate::standards::v1::subsets::document::schema::diff::{diff_block, BlocksDiff, DocBlockDiff, DocHeadingDiff, DocParagraphDiff, DocQuoteDiff, DocRunDiff, DocTableCellDiff, DocTableRowDiff, ListItemsDiff, RunsDiff, SemioDocumentDiff, TableCellsDiff, TableRowsDiff};
 use crate::standards::v1::subsets::document::io::text::diff::{dec_run_style};
 use crate::standards::v1::subsets::document::io::text::diff::{enc_run_style};
 use crate::standards::v1::subsets::document::io::text::diff::{dec_u8};
@@ -147,6 +147,16 @@ pub(crate) fn dec_snapshot(s: &str) -> Result<SemioDocumentSnapshot, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_at(at: Option<usize>) -> String {
+    at.map(|at| format!(" at={at}")).unwrap_or_default()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_at(args: &std::collections::BTreeMap<&str, &str>) -> Result<Option<usize>, String> {
+    args.get("at").map(|at| at.parse::<usize>().map_err(|error| error.to_string())).transpose()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_document_mutation(m: &SemioDocumentMutation) -> String {
     match m {
         SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path, block }) => format!("insert-block path={} block={}", enc_block_path(path), enc_block(block)),
@@ -160,11 +170,11 @@ pub(crate) fn print_document_mutation(m: &SemioDocumentMutation) -> String {
         SemioDocumentMutation::SetImageBlock(set_image_block::SetImageBlock { path, image_id, alt, width, height }) => {
             format!("set-image-block path={} image-id={} alt={} width={} height={}", enc_block_path(path), enc_str(image_id), enc_str(alt), encode_option(width, |value|enc_f64(*value)), encode_option(height, |value|enc_f64(*value)))
         }
-        SemioDocumentMutation::InsertStyle(insert_style::InsertStyle { style }) => format!("insert-style style={}", enc_style(style)),
+        SemioDocumentMutation::InsertStyle(insert_style::InsertStyle { style, at }) => format!("insert-style style={}{}", enc_style(style), enc_at(*at)),
         SemioDocumentMutation::RemoveStyle(remove_style::RemoveStyle { id }) => format!("remove-style id={}", enc_str(id)),
         SemioDocumentMutation::SetStyleName(set_style_name::SetStyleName { id, name }) => format!("set-style-name id={} name={}", enc_str(id), enc_str(name)),
         SemioDocumentMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id, based_on }) => format!("set-style-based-on id={} based-on={}", enc_str(id), encode_option(based_on, |v| enc_str(v))),
-        SemioDocumentMutation::InsertImage(insert_image::InsertImage { image }) => format!("insert-image image={}", enc_image(image)),
+        SemioDocumentMutation::InsertImage(insert_image::InsertImage { image, at }) => format!("insert-image image={}{}", enc_image(image), enc_at(*at)),
         SemioDocumentMutation::RemoveImage(remove_image::RemoveImage { id }) => format!("remove-image id={}", enc_str(id)),
         SemioDocumentMutation::SetImageBytes(set_image_bytes::SetImageBytes { id, mime, bytes }) => format!("set-image-bytes id={} mime={} bytes={}", enc_str(id), enc_str(mime), hex_encode(bytes)),
     }
@@ -193,11 +203,11 @@ pub(crate) fn parse_document_mutation(line: &str) -> Result<SemioDocumentMutatio
             width: decode_option(arg("width")?, dec_f64)?,
             height: decode_option(arg("height")?, dec_f64)?,
         })),
-        "insert-style" => Ok(SemioDocumentMutation::InsertStyle(insert_style::InsertStyle { style: dec_style(arg("style")?)? })),
+        "insert-style" => Ok(SemioDocumentMutation::InsertStyle(insert_style::InsertStyle { style: dec_style(arg("style")?)?, at: dec_at(&args)? })),
         "remove-style" => Ok(SemioDocumentMutation::RemoveStyle(remove_style::RemoveStyle { id: dec_str(arg("id")?)? })),
         "set-style-name" => Ok(SemioDocumentMutation::SetStyleName(set_style_name::SetStyleName { id: dec_str(arg("id")?)?, name: dec_str(arg("name")?)? })),
         "set-style-based-on" => Ok(SemioDocumentMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id: dec_str(arg("id")?)?, based_on: decode_option(arg("based-on")?, dec_str)? })),
-        "insert-image" => Ok(SemioDocumentMutation::InsertImage(insert_image::InsertImage { image: dec_image(arg("image")?)? })),
+        "insert-image" => Ok(SemioDocumentMutation::InsertImage(insert_image::InsertImage { image: dec_image(arg("image")?)?, at: dec_at(&args)? })),
         "remove-image" => Ok(SemioDocumentMutation::RemoveImage(remove_image::RemoveImage { id: dec_str(arg("id")?)? })),
         "set-image-bytes" => Ok(SemioDocumentMutation::SetImageBytes(set_image_bytes::SetImageBytes { id: dec_str(arg("id")?)?, mime: dec_str(arg("mime")?)?, bytes: hex_decode(arg("bytes")?)? })),
         other => Err(format!("document mutation: unknown keyword {other:?}")),

@@ -51,7 +51,7 @@ import csv
 import io
 import json
 
-from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot, snapshot_patch_inverse
+from semio_repo_test import Adapter, Context, Outcome, digest
 
 # endregion 🔖️Imports
 
@@ -435,7 +435,7 @@ def pack_bytes(document: dict) -> bytes:
 
 
 # region 🔖️Mutations
-KINDS = ("create-column", "delete-column", "rename-column", "reorder-columns", "insert-row", "remove-row", "reorder-rows", "edit-cell", "patch-snapshot")
+KINDS = ("create-column", "delete-column", "rename-column", "reorder-columns", "insert-row", "remove-row", "reorder-rows", "edit-cell")
 
 #: 🏷️ The externally tagged JSON name of each kebab-case kind, as the committed specification
 #: vectors under `…/🧬️mutations/<kind>/🧪️tests/<slug>/🦠️mutation/` spell it.
@@ -448,7 +448,6 @@ TAG_OF_KIND = {
     "remove-row": "RemoveRow",
     "reorder-rows": "ReorderRows",
     "edit-cell": "EditCell",
-    "patch-snapshot": "PatchSnapshot",
 }
 
 
@@ -489,8 +488,6 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     rather than swap; `EditCell` addresses its cell by row index and column NAME."""
     result = clone(document)
     tag, args = tagged(mutation)
-    if tag == "PatchSnapshot":
-        return patched_snapshot(document, args["patch"])
     columns, rows = result["columns"], result["rows"]
     if tag == "CreateColumn":
         if any(column["name"] == args["name"] for column in columns):
@@ -545,8 +542,6 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     cannot be restored by one verb, because `CreateColumn` can only null-pad the rows it reopens, so
     every displaced cell has to be written back by its own `EditCell`."""
     tag, args = tagged(mutation)
-    if tag == "PatchSnapshot":
-        return [{"PatchSnapshot": {"patch": snapshot_patch_inverse(document, args["patch"])}}]
     if tag == "CreateColumn":
         return [{"DeleteColumn": {"name": args["name"]}}]
     if tag == "DeleteColumn":

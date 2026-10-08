@@ -1,6 +1,6 @@
 //! 📬️ Bounded retained publication for archive text edits.
 
-use crate::schema::mutations::{add_entry, patch_snapshot, remove_entry, rename_entry, set_archive_comment, set_entry_data, set_snapshot};
+use crate::schema::mutations::{add_entry, remove_entry, rename_entry, set_archive_comment, set_entry_data};
 use crate::schema::snapshot::{ZipCentralHeaderMetadata, ZipEntry, ZipEntryMetadata, ZipExtraField, ZipLocalHeaderMetadata};
 use crate::{ZipMutation, ZipSnapshot};
 use semio_framework_plugin::plugin_app_close_prelude::store as app_store;
@@ -666,7 +666,6 @@ enum RetiredOwner {
     ExtraFields(Vec<ZipExtraField>),
     ExtraField(ZipExtraField),
     Mutation(ZipMutation),
-    Patch(semio_s_artifact_stdio_contract::editing::SnapshotPatch),
     String(String),
     Bytes(Vec<u8>),
 }
@@ -680,8 +679,10 @@ impl ZipRetirementCursor {
 }
 
 impl semio_framework_value::retirement::RetirementCursor for ZipRetirementCursor {
-    fn close_step(&mut self, maximum_bytes: usize) -> semio_framework_value::retirement::RetirementStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
         use semio_framework_value::retirement::RetirementStep;
+        if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
+        let maximum_bytes = grant.maximum_copy_bytes;
         let Some(owner) = self.0.pop() else { return RetirementStep::Complete };
         match owner {
             RetiredOwner::String(value) => {
@@ -701,7 +702,7 @@ impl semio_framework_value::retirement::RetirementCursor for ZipRetirementCursor
                 if !value.is_empty() {
                     self.push(RetiredOwner::Bytes(value));
                 }
-                RetirementStep::Bytes(bytes)
+                RetirementStep::ProcessedBytes(bytes)
             }
             RetiredOwner::Snapshot(value) => {
                 self.push(RetiredOwner::String(value.comment));
@@ -760,7 +761,6 @@ impl semio_framework_value::retirement::RetirementCursor for ZipRetirementCursor
                 retire_mutation(&mut self.0, mutation);
                 RetirementStep::Bytes(0)
             }
-            RetiredOwner::Patch(patch) => RetirementStep::Child(semio_framework_value::retirement::RetireOwned::retirement(patch)),
         }
     }
     fn terminal_is_empty(&self) -> bool {
@@ -777,8 +777,6 @@ impl Drop for ZipRetirementCursor {
 
 fn retire_mutation(stack: &mut Vec<RetiredOwner>, mutation: ZipMutation) {
     match mutation {
-        ZipMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => stack.push(RetiredOwner::Snapshot(snapshot)),
-        ZipMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => stack.push(RetiredOwner::Patch(patch)),
         ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment, .. }) => stack.push(RetiredOwner::String(comment)),
         ZipMutation::AddEntry(add_entry::AddEntry { entry, before }) => {
             if let Some(before) = before {
@@ -888,7 +886,7 @@ mod tests {
         assert_eq!(copied.entries[1], source.entries[1]);
         assert_eq!(copied.comment, source.comment);
         let outcome = <ZipMutation as protocol::Mutation<ZipSnapshot>>::diff(&mutation, &source);
-        assert_eq!(copied, protocol::MutationDiff::apply(outcome.diff(), &source).expect("independent mutation algebra applies the rename"));
+        assert_eq!(copied, protocol::apply_diff(outcome.diff(), &source).expect("independent mutation algebra applies the rename"));
         post.begin_close();
         assert!(post.terminal_is_empty());
     }
@@ -943,7 +941,7 @@ mod tests {
         let bytes = crate::standards::v2_0::subsets::base::io::encode_zip(&copied).expect("prepared comment snapshot saves");
         assert_eq!(crate::standards::v2_0::subsets::base::io::decode_zip(&bytes).expect("prepared comment snapshot reopens"), copied);
         let outcome = <ZipMutation as protocol::Mutation<ZipSnapshot>>::diff(&mutation, &source);
-        assert_eq!(copied, protocol::MutationDiff::apply(outcome.diff(), &source).expect("independent mutation algebra applies the comment"));
+        assert_eq!(copied, protocol::apply_diff(outcome.diff(), &source).expect("independent mutation algebra applies the comment"));
         post.begin_close();
         assert!(post.terminal_is_empty());
     }

@@ -79,7 +79,7 @@ fn committed_diff_is_canonical() {
 fn committed_diff_applies_to_after() {
     let decoded: PresentationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     assert!(decoded.presentation.is_none(), "a frame-identity resize must leave the composed deck slot unset");
-    let produced = <PresentationDiff as protocol::MutationDiff<PresentationSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "resize-source-frame/no-ops-when-the-frame-is-already-identical: committed diff did not carry before to after");
 }
 
@@ -133,4 +133,10 @@ fn inverse_restores_the_base_frame() {
     assert_eq!(undo.new_frame, payload.new_frame, "the inverse restores the captured base frame, which here equals the requested one");
     let restored = apply_presentation_mutation(&apply_presentation_mutation(&base, &mutation()).expect("forward applies"), &inverse[0]).expect("inverse step applies");
     assert_eq!(restored, base, "resize-source-frame/no-ops-when-the-frame-is-already-identical: inverse did not restore the before-snapshot");
+}
+
+/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

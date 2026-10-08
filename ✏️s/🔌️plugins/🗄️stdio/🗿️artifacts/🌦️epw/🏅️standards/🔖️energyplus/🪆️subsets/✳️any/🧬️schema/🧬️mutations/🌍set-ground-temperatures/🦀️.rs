@@ -1,7 +1,4 @@
-//! 🌍️ `set-ground-temperatures` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 🌍️ `set-ground-temperatures` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -17,14 +14,12 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetGroundTemperatures 
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "ground-temperatures", kind: "set-ground-temperatures", record: "SetGroundTemperatures" };
 
     fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
-        agg_diff(&EpwMutation::SetGroundTemperatures(self.clone()), base)
+        let Self { value } = self;
+        protocol::MutationOutcome::new(EpwDiff { ground_temperatures: Some(value.clone()), ..EpwDiff::default() })
     }
     fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&EpwMutation::SetGroundTemperatures(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![EpwMutation::SetGroundTemperatures(set_ground_temperatures::SetGroundTemperatures { value: base.ground_temperatures.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set ground temperatures", "Bodentemperaturen setzen")
     }

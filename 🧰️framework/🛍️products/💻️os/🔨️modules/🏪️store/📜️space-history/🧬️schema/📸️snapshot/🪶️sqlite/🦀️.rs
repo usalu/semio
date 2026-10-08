@@ -20,8 +20,8 @@ pub(crate) mod admission;
 pub const SQLITE_SNAPSHOT_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: S_SPACE_HISTORY_SCHEMA, standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") };
 /// 📣️ Explicit owner registration publishes the history factory and semantic capability atomically.
 /// Call before registry I/O; generic Store construction and retained hydration do not publish codecs.
-pub fn register_sqlite_snapshot() -> Result<(), crate::os_io::ArtifactAssemblyRegistryError> {
-    crate::os_io::register_native_snapshot_codec(SQLITE_SNAPSHOT_DIALECT, crate::os_store::ArtifactCodec::bare::<SpaceHistorySnapshot, SpaceHistoryMutation>(S_SPACE_HISTORY_SCHEMA))
+pub fn register_sqlite_snapshot() -> Result<(), crate::io::ArtifactAssemblyRegistryError> {
+    crate::io::register_native_snapshot_codec(SQLITE_SNAPSHOT_DIALECT, crate::os_store::ArtifactCodec::bare::<SpaceHistorySnapshot, SpaceHistoryMutation>(S_SPACE_HISTORY_SCHEMA))
 }
 fn schema(control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
     if SpaceHistorySnapshot::SQLITE_SCHEMA.len() > control.limits().max_schema_bytes { Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "space history authored schema byte limit exceeded")) } else { Ok(()) }

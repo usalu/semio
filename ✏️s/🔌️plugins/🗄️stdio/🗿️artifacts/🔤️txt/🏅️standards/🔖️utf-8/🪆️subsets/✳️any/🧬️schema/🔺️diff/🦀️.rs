@@ -1,6 +1,6 @@
 //! 🔺️ TxtDiff — handcrafted sparse diff: line-ending/trailing-newline scalars + an index-keyed
-//! `lines` triple. No `snapshot: Option<TxtSnapshot>` full-replace slot anywhere, incl. SetSnapshot
-//! (its diff is `TxtDiff::between(base, next)`, field-by-field, same as every other mutation).
+//! `lines` triple. No `snapshot: Option<TxtSnapshot>` full-replace slot anywhere: every mutation names the
+//! scalars and line rows it changes.
 
 use crate::schema::snapshot::LineEnding;
 use crate::TxtSnapshot;
@@ -80,6 +80,24 @@ impl TxtLinesDiff {
             survivors.insert(pos, a.text.clone());
         }
         survivors
+    }
+
+    /// 🔁️ The negative triple against the base lines: added rows become removals at their final index, removed rows return at their
+    /// base index, and each modified row restores its base text at the index the row has after this diff.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn inverse(&self, base: &[String]) -> Self {
+        let mut removed_base = self.removed.clone();
+        removed_base.sort_unstable();
+        let mut added_final: Vec<usize> = self.added.iter().map(|a| a.index).collect();
+        added_final.sort_unstable();
+        let after_index = |index: usize| {
+            let survivor = index - removed_base.iter().filter(|removed| **removed < index).count();
+            added_final.iter().fold(survivor, |position, added| if *added <= position { position + 1 } else { position })
+        };
+        let mut modified: Vec<TxtLineModified> = self.modified.iter().filter_map(|m| base.get(m.index).map(|text| TxtLineModified { index: after_index(m.index), text: text.clone() })).collect();
+        modified.sort_by_key(|m| m.index);
+        let added = removed_base.iter().filter_map(|index| base.get(*index).map(|text| TxtLineAdded { index: *index, text: text.clone() })).collect();
+        Self { removed: added_final, modified, added }
     }
 
     /// 🧭️ State delta between two line arrays: pairwise-by-position over `0..min(len)`
@@ -312,12 +330,9 @@ fn validate_txt_lines(base_len: usize, diff: &TxtLinesDiff) -> MutationApplyResu
 }
 
 impl DiffAlgebra<TxtSnapshot> for TxtDiff {
-    /// 🔁️ `self`'s pre-image undo, expressed via `apply`+`between` (both already proven
-    /// correct against `TxtSnapshot`): `next = self.apply(base)`, so `between(next, base)` is
-    /// by definition the diff that restores `base` from `next`.
+    /// 🔁️ The negative diff: each touched scalar restores its base value and the lines triple inverts against the base lines.
     fn inverse(&self, base: &TxtSnapshot) -> Self {
-        let next = self.apply(base).unwrap();
-        Self::between(&next, base)
+        Self { trailing_newline: self.trailing_newline.map(|_| base.trailing_newline), line_ending: self.line_ending.map(|_| base.line_ending), lines: self.lines.as_ref().map(|lines| lines.inverse(&base.lines)) }
     }
 
     fn between(base: &TxtSnapshot, other: &TxtSnapshot) -> Self {

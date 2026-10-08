@@ -4,4 +4,5 @@ export interface SetObjectValueMutation {
   mutation: 'setObjectValue';
   id: ObjRef;
   value: PdfObject;
+  index?: number | null;
 }

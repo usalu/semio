@@ -261,8 +261,7 @@ const BLOCK3D_RETAINED_WORK_ITEMS: usize = 4_096;
 /// (`📚️examples/*/🖼️assets/*/🗣️.dsl.semio`, ~1–2 KB of text) as the single largest document mutation any
 /// of the 23 tools emits, so 64 KiB is a real ceiling rather than a rubber stamp.
 const BLOCK3D_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 65_536;
-/// 🎒️ Real bound for one Config-lane edit: every `Block3dConfigMutation` inverse is a whole-config
-/// `Snapshot` row (`🎚️config/🦀️.rs`'s `Mutation::inverse`), whose largest member is the per-window
+/// 🎒️ Real bound for one Config-lane edit: a field-sparse `Block3dConfigDiff` whose largest member is the per-window
 /// `representation_ids` view — 256 KiB covers that without being unbounded.
 const BLOCK3D_CONFIG_STORE_MAXIMUM_BYTES: usize = 262_144;
 

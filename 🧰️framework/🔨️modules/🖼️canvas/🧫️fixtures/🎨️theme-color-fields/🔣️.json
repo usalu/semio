@@ -1,0 +1,19 @@
+{
+  "modelSchema": "https://semio.tech/framework/canvas/theme-color-fields/v1",
+  "before": [12, 34, 56, 78],
+  "cases": [
+    { "id": "all-channels", "key": "rasterClear", "json": { "rasterClear": [1, 2, 3, 4] }, "fields": { "rasterClear": [1, 2, 3, 4] }, "expected": [1, 2, 3, 4] },
+    { "id": "opaque-rgb", "key": "rasterClear", "json": { "rasterClear": [1, 2, 3] }, "fields": { "rasterClear": [1, 2, 3, 255] }, "expected": [1, 2, 3, 255] },
+    { "id": "transparent-straight-alpha", "key": "rasterClear", "json": { "rasterClear": [1, 2, 3, 0] }, "fields": { "rasterClear": [1, 2, 3, 0] }, "expected": [1, 2, 3, 0] },
+    { "id": "unsigned-clamp", "key": "rasterClear", "json": { "rasterClear": [256, 999, 65536, 256] }, "fields": { "rasterClear": [255, 255, 255, 255] }, "expected": [255, 255, 255, 255] },
+    { "id": "negative-defaults", "key": "rasterClear", "json": { "rasterClear": [-1, -2, -3, -4] }, "fields": { "rasterClear": [0, 0, 0, 255] }, "expected": [0, 0, 0, 255] },
+    { "id": "fractional-defaults", "key": "rasterClear", "json": { "rasterClear": [1.25, 2.5, 3.75, 0.5] }, "fields": { "rasterClear": [0, 0, 0, 255] }, "expected": [0, 0, 0, 255] },
+    { "id": "non-numeric-defaults", "key": "rasterClear", "json": { "rasterClear": ["x", null, true, false] }, "fields": { "rasterClear": [0, 0, 0, 255] }, "expected": [0, 0, 0, 255] },
+    { "id": "trailing-component", "key": "rasterClear", "json": { "rasterClear": [1, 2, 3, 4, 5] }, "fields": { "rasterClear": [1, 2, 3, 4] }, "expected": [1, 2, 3, 4] },
+    { "id": "short-array-retains", "key": "rasterClear", "json": { "rasterClear": [1, 2] }, "fields": {}, "expected": [12, 34, 56, 78] },
+    { "id": "absent-field-retains", "key": "rasterClear", "json": { "labelFill": [1, 2, 3, 4] }, "fields": { "labelFill": [1, 2, 3, 4] }, "expected": [12, 34, 56, 78] },
+    { "id": "non-array-retains", "key": "rasterClear", "json": { "rasterClear": "#ffffff" }, "fields": {}, "expected": [12, 34, 56, 78] },
+    { "id": "non-object-retains", "key": "rasterClear", "json": [1, 2, 3, 4], "fields": {}, "expected": [12, 34, 56, 78] },
+    { "id": "literal-field-name", "key": "custom 🎨", "json": { "custom 🎨": [4, 3, 2, 1] }, "fields": { "custom 🎨": [4, 3, 2, 1] }, "expected": [4, 3, 2, 1] }
+  ]
+}

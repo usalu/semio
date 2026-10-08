@@ -4,4 +4,5 @@ export interface SetTrailerEntryMutation {
   mutation: 'setTrailerEntry';
   key: string;
   value: PdfObject;
+  index?: number | null;
 }

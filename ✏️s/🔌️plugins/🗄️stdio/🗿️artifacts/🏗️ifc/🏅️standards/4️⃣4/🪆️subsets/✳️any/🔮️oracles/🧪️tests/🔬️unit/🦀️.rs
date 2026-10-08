@@ -1,4 +1,4 @@
-use super::{oracle_apply_mutation, oracle_round_trip, oracle_snapshot_payload, project_ifc_4_any};
+use super::{oracle_apply_mutation, oracle_round_trip, project_ifc_4_any};
 use semio_repo_test_host::{parse_json, Json};
 
 const FIXTURE: &[u8] = include_bytes!("../../../🧫️fixtures/🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc");
@@ -85,18 +85,6 @@ fn round_trip_is_not_byte_identical_but_reparses() {
     let output = oracle_round_trip(FIXTURE).expect("identity round trip");
     assert_ne!(output, FIXTURE, "our own writer must not reproduce the source writer's exact bytes");
     assert_eq!(project_ifc_4_any(&output).unwrap(), project_ifc_4_any(FIXTURE).unwrap());
-}
-
-/// 📸️ `set-snapshot` replaces the whole capsule tower with the row's `IfcSnapshot` record, and the untouched
-/// model — read back as a `set-snapshot` payload — restores it exactly, the doubled-apostrophe literals included.
-#[test]
-fn set_snapshot_replaces_the_model_and_the_read_back_snapshot_restores_it() {
-    let mutated = oracle_apply_mutation(FIXTURE, &spec("set-snapshot", row("set-snapshot"))).expect("set-snapshot");
-    let projection = project_ifc_4_any(&mutated).expect("project");
-    assert_eq!(entity_count(&projection), 1.0);
-    assert_eq!(args_of(&projection, 1.0)[2], projected("string", Json::String("Metabolism".to_string())));
-    let restored = oracle_apply_mutation(&mutated, &spec("set-snapshot", oracle_snapshot_payload(FIXTURE).unwrap())).expect("inverse set-snapshot");
-    assert_eq!(project_ifc_4_any(&restored).unwrap(), project_ifc_4_any(FIXTURE).unwrap());
 }
 
 /// 🏗️ `insert-entity`/`remove-entity` on real building entities: adds a fresh `IFCCARTESIANPOINT`,

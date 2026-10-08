@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "streams": null,
@@ -7,67 +6,33 @@
   "durableArtifacts": null,
   "calibration": null,
   "params": {
-    "ingest": {
-      "frameSampleStride": 5,
-      "maxFrames": 200,
-      "downscaleLongEdgePx": 1600,
-      "minSharpness": 0.25
-    },
-    "feature": {
-      "detector": "orb",
-      "targetCount": 4000,
-      "octaves": 4,
-      "edgeThreshold": 10.0
-    },
-    "matching": {
-      "matcher": "brute-force",
-      "ratioTest": 0.75,
-      "crossCheck": true,
-      "sequentialWindow": 8,
-      "maxPairsPerFrame": 16,
-      "loopClosure": true
-    },
-    "sfm": {
-      "ransacIterations": 1000,
-      "ransacThresholdPx": 2.0,
-      "minTrackLength": 3,
-      "baMaxIterations": 50,
-      "robustLoss": "huber",
-      "huberDeltaPx": 1.5
-    },
-    "dense": {
-      "resolution": "medium",
-      "windowRadiusPx": 3,
-      "minViewConsistency": 3,
-      "confidenceThreshold": 0.5,
-      "maxPoints": 500000
-    },
-    "mesh": {
-      "tsdfVoxelSizeMm": 5.0,
-      "tsdfTruncationMm": 20.0,
-      "decimateTargetTriangles": 200000,
-      "smoothingIterations": 2,
-      "textureEnabled": true,
-      "textureSize": 2048,
-      "guaranteeWatertight": true,
-      "holeFillMaxBoundaryVerts": 512,
-      "selfIntersectionCheck": false
-    },
-    "motion": {
-      "enabled": false,
-      "maxTracks": 64,
-      "trackWindowPx": 21,
-      "minTrackQuality": 0.25,
-      "minTrackLengthFrames": 5
-    },
+    "ingest": null,
+    "feature": null,
+    "matching": null,
+    "sfm": null,
+    "dense": null,
+    "mesh": null,
+    "motion": null,
     "geo": {
       "enabled": true,
-      "originLon": 8.5,
-      "originLat": 52.375,
-      "originAlt": 60.0,
-      "gsdM": 0.03125,
-      "dsmCellM": 0.0625,
-      "dtmFilterRadiusM": 1.5,
+      "originLon": {
+        "bits": "4021000000000000"
+      },
+      "originLat": {
+        "bits": "404a300000000000"
+      },
+      "originAlt": {
+        "bits": "404e000000000000"
+      },
+      "gsdM": {
+        "bits": "3d000000"
+      },
+      "dsmCellM": {
+        "bits": "3d800000"
+      },
+      "dtmFilterRadiusM": {
+        "bits": "3fc00000"
+      },
       "orthoMaxPx": 8192
     }
   },

@@ -98,7 +98,7 @@ fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-edge-visible/hides-edge-1: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["edges"]["patched"][0]["patch"]["replacement"]["visible"].as_bool(), Some(false), "change-edge-visible/hides-edge-1: the replacement must carry visible=false");
+    assert_eq!(committed["edges"]["patched"][0]["patch"]["visible"].as_bool(), Some(false), "change-edge-visible/hides-edge-1: the patch must carry visible=false");
     assert!(committed["nodes"].is_null(), "change-edge-visible/hides-edge-1: the nodes delta must stay unset");
 }
 
@@ -116,6 +116,13 @@ fn committed_diff_is_canonical() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff as protocol::MutationDiff<Puzzle2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-edge-visible/hides-edge-1: committed diff did not carry before to after");
+}
+
+/// ➕️ The concrete inverse rows' diffs sum to exactly the negative of the forward diff (law L3): replaying them restores `before`,
+/// the absorbed sum carries the applied state back, and it equals `diff.inverse(before)`.
+#[test]
+fn inverse_sums_to_the_negative_diff() {
+    ::semio_framework_async::poll::resolve_ready(protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()));
 }

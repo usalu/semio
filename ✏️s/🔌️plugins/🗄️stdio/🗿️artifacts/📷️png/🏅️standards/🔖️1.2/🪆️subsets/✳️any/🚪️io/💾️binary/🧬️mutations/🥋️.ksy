@@ -13,7 +13,6 @@ seq:
 enums:
   mutation_kind:
     5: change_gamma
-    17: set_snapshot
+    12: replace_image
     18: patch_pixels
-    19: patch_snapshot
     20: paint_native_samples

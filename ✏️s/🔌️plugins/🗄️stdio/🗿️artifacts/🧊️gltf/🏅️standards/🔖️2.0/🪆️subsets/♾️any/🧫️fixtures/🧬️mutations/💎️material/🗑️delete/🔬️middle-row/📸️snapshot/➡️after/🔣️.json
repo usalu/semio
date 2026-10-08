@@ -1,0 +1,18 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "materials": [
+      {
+        "name": "material0"
+      },
+      {
+        "name": "material2"
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

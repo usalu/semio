@@ -270,3 +270,57 @@ fn mesh_exporter_and_importer_use_short_format_kind_ids_not_media_format() {
     assert_eq!(StlExporter.format_kind(), "stl");
     assert_eq!(StlImporter.format_kind(), "stl");
 }
+
+/// 🧮️ Signed volume by fan-triangulated tetrahedra and whether every directed edge occurs once with its reverse once.
+fn closed_signed_volume(source: &PolygonMeshSource) -> (f64, bool) {
+    let point = |index: u32| source.vertices[index as usize].map(f64::from);
+    let mut volume = 0.0;
+    let mut directed = BTreeMap::<(u32, u32), usize>::new();
+    for face in &source.faces {
+        for corner in 0..face.len() {
+            *directed.entry((face[corner], face[(corner + 1) % face.len()])).or_default() += 1;
+        }
+        for corner in 1..face.len() - 1 {
+            let (a, b, c) = (point(face[0]), point(face[corner]), point(face[corner + 1]));
+            volume += (a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0]) + a[2] * (b[0] * c[1] - b[1] * c[0])) / 6.0;
+        }
+    }
+    (volume, directed.iter().all(|((from, to), count)| *count == 1 && directed.get(&(*to, *from)) == Some(&1)))
+}
+
+#[test]
+fn uv_sphere_source_is_closed_outward_and_converges_to_the_analytic_volume() {
+    let source = PolygonMeshSource::uv_sphere(2.0, 64, 32).unwrap();
+    assert_eq!(source.vertices.len(), 2 + 64 * 31);
+    assert_eq!(source.faces.len(), 64 * 32);
+    let (volume, closed) = closed_signed_volume(&source);
+    assert!(closed);
+    assert!((volume - 4.0 / 3.0 * std::f64::consts::PI * 8.0).abs() / (4.0 / 3.0 * std::f64::consts::PI * 8.0) < 0.01, "{volume}");
+    assert_eq!(source, PolygonMeshSource::uv_sphere(2.0, 64, 32).unwrap());
+    assert!(PolygonMeshSource::uv_sphere(0.0, 8, 4).is_err() && PolygonMeshSource::uv_sphere(1.0, 2, 4).is_err() && PolygonMeshSource::uv_sphere(1.0, 8, 1).is_err() && PolygonMeshSource::uv_sphere(1.0, 1024, 1024).is_err());
+}
+
+#[test]
+fn torus_source_is_closed_outward_and_converges_to_the_analytic_volume() {
+    let source = PolygonMeshSource::torus(2.0, 0.5, 96, 48).unwrap();
+    assert_eq!(source.vertices.len(), 96 * 48);
+    assert_eq!(source.faces.len(), 96 * 48);
+    let (volume, closed) = closed_signed_volume(&source);
+    let analytic = 2.0 * std::f64::consts::PI * std::f64::consts::PI * 2.0 * 0.25;
+    assert!(closed);
+    assert!((volume - analytic).abs() / analytic < 0.01, "{volume} {analytic}");
+    assert!(PolygonMeshSource::torus(0.5, 0.5, 8, 8).is_err() && PolygonMeshSource::torus(1.0, 0.0, 8, 8).is_err() && PolygonMeshSource::torus(1.0, 0.5, 2, 8).is_err());
+}
+
+#[test]
+fn polygon_obj_reader_keeps_polygons_and_resolves_every_index_form() {
+    let text = "# cube face\nv 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\nv 0 0 1\nvt 0 0\nvn 0 0 1\nf 1/1/1 2//1 3 4\nf -1 -2 -3\n";
+    let source = PolygonMeshSource::from_obj(text).unwrap();
+    assert_eq!(source.vertices.len(), 5);
+    assert_eq!(source.faces, vec![vec![0, 1, 2, 3], vec![4, 3, 2]]);
+    assert!(PolygonMeshSource::from_obj("v 0 0\n").is_err());
+    assert!(PolygonMeshSource::from_obj("v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 4\n").is_err());
+    assert!(PolygonMeshSource::from_obj("v 0 0 0\nf 0 0 0\n").is_err());
+    assert!(PolygonMeshSource::from_obj("v nan 0 0\n").is_err());
+    assert!(PolygonMeshSource::from_obj("v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 x 3\n").is_err());
+}

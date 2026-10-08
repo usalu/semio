@@ -1,20 +1,7 @@
 {
   "representations": {
-    "values": [
-      {
-        "target": {
-          "artifactId": "beam-section",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "drawing"
-          }
-        },
-        "pin": {
-          "kind": "head"
-        },
-        "role": "t1"
-      }
+    "removed": [
+      0
     ]
   }
 }

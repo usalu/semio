@@ -57,12 +57,12 @@
           "index": 2
         },
         {
-          "variant": "AssignN",
-          "folder": "↩️assign-n",
+          "variant": "RestoreN",
+          "folder": "↩️restore-n",
           "verb": "restore",
           "entity": "n",
-          "record": "AssignedN",
-          "opcode": "assign-n",
+          "record": "RestoredN",
+          "opcode": "restore-n",
           "fields": {
             "n": "option"
           },
@@ -70,7 +70,7 @@
             "applied"
           ],
           "behavior": "restore",
-          "kind": "assign-n",
+          "kind": "restore-n",
           "index": 3
         }
       ]
@@ -99,12 +99,12 @@
           "index": 0
         },
         {
-          "variant": "AssignN",
-          "folder": "↩️assign-n",
+          "variant": "RestoreN",
+          "folder": "↩️restore-n",
           "verb": "restore",
           "entity": "n",
-          "record": "AssignedN",
-          "opcode": "assign-n",
+          "record": "RestoredN",
+          "opcode": "restore-n",
           "fields": {
             "n": "option",
             "physical_ms": "u64"
@@ -113,7 +113,7 @@
             "applied"
           ],
           "behavior": "restore-timestamped",
-          "kind": "assign-n",
+          "kind": "restore-n",
           "index": 1
         }
       ]
@@ -192,12 +192,12 @@
           "index": 3
         },
         {
-          "variant": "AssignN",
-          "folder": "↩️assign-n",
+          "variant": "RestoreN",
+          "folder": "↩️restore-n",
           "verb": "restore",
           "entity": "n",
-          "record": "AssignedN",
-          "opcode": "assign-n",
+          "record": "RestoredN",
+          "opcode": "restore-n",
           "fields": {
             "n": "option"
           },
@@ -205,7 +205,7 @@
             "applied"
           ],
           "behavior": "restore",
-          "kind": "assign-n",
+          "kind": "restore-n",
           "index": 4
         }
       ]
@@ -234,12 +234,12 @@
           "index": 0
         },
         {
-          "variant": "AssignN",
-          "folder": "↩️assign-n",
+          "variant": "RestoreN",
+          "folder": "↩️restore-n",
           "verb": "restore",
           "entity": "n",
-          "record": "AssignedN",
-          "opcode": "assign-n",
+          "record": "RestoredN",
+          "opcode": "restore-n",
           "fields": {
             "n": "option"
           },
@@ -247,7 +247,7 @@
             "applied"
           ],
           "behavior": "restore",
-          "kind": "assign-n",
+          "kind": "restore-n",
           "index": 1
         }
       ]
@@ -390,7 +390,7 @@
     },
     {
       "family": "demo",
-      "operation": "assignN",
+      "operation": "restoreN",
       "payload": {
         "n": 3
       },
@@ -400,7 +400,7 @@
     },
     {
       "family": "demo",
-      "operation": "assignN",
+      "operation": "restoreN",
       "payload": {
         "n": null
       },
@@ -422,7 +422,7 @@
     },
     {
       "family": "timestamped",
-      "operation": "assignN",
+      "operation": "restoreN",
       "payload": {
         "n": null,
         "physicalMs": 0
@@ -474,7 +474,7 @@
     },
     {
       "family": "severity",
-      "operation": "assignN",
+      "operation": "restoreN",
       "payload": {
         "n": null
       },
@@ -504,7 +504,7 @@
     },
     {
       "family": "validated",
-      "operation": "assignN",
+      "operation": "restoreN",
       "payload": {
         "n": null
       },
@@ -628,7 +628,7 @@
     {"family":"severity","variant":"SetErrorN","payload":{"n":7},"canonical":"set-error-n n=7","rejected":"error-n n=7","tag":2},
     {"family":"severity","variant":"SetFatalN","payload":{"n":7},"canonical":"set-fatal-n n=7","rejected":"fatal-n n=7","tag":3},
     {"family":"validated","variant":"SetN","payload":{"n":7},"canonical":"set-n n=7","rejected":"set-n-validated n=7","tag":0},
-    {"family":"validated","variant":"AssignN","payload":{"n":7},"canonical":"assign-n n=7","rejected":"assign-n-validated n=7","tag":1}
+    {"family":"validated","variant":"RestoreN","payload":{"n":7},"canonical":"restore-n n=7","rejected":"restore-n-validated n=7","tag":1}
   ],
   "decimalU64": [
     {

@@ -1368,6 +1368,38 @@ where
     Ok(Emit { artifact_mutations: net(snapshot, &next), ..Default::default() })
 }
 
+/// 🧮️ [`snapshot_edit_net`] whose leaves are replayed on `snapshot` through the central applier and must land exactly on the edited
+/// snapshot: an edit that changes a field no leaf addresses, or whose leaves a guard refuses, is rejected rather than dropped.
+pub fn snapshot_edit_net_exact<S, M, C, D>(event: &SnapshotEditEvent, snapshot: &S, net: fn(&S, &S) -> Vec<M>) -> Result<Emit<M, C, D>, Fault>
+where
+    S: ArtifactDsl + ToValue + FromValue + Clone + PartialEq,
+    M: Mutation<S>,
+{
+    let next = apply_snapshot_edit(snapshot, event).map_err(snapshot_edit_fault)?;
+    Ok(Emit { artifact_mutations: net_leaves_exact(snapshot, &next, net)?, ..Default::default() })
+}
+
+/// 🧮️ The leaves `net` answers for `snapshot` → `next`, replayed through the central applier; they must land exactly on `next`.
+pub fn net_leaves_exact<S, M>(snapshot: &S, next: &S, net: fn(&S, &S) -> Vec<M>) -> Result<Vec<M>, Fault>
+where
+    S: Clone + PartialEq,
+    M: Mutation<S>,
+{
+    let leaves = net(snapshot, next);
+    let mut running = snapshot.clone();
+    for leaf in &leaves {
+        let (diff, messages) = leaf.diff(&running).into_parts();
+        if let Some(message) = messages.iter().find(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
+            return Err(Fault::new(FaultOrigin::App, FaultCode::new("snapshot-edit.leaf-refused"), format!("{}: {}", message.code.0, message.message)));
+        }
+        running = kernel::apply_diff(&diff, &running).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("snapshot-edit.leaf-unapplicable"), error.to_string()))?;
+    }
+    if running != *next {
+        return Err(Fault::new(FaultOrigin::App, FaultCode::new("snapshot-edit.unaddressed"), "the edit changes a field no mutation addresses"));
+    }
+    Ok(leaves)
+}
+
 /// 🩹️ One snapshot edit as the artifact's leaves (design §20.3 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): every path-scoped
 /// event publishes ONE `patch-snapshot` leaf (`patch`) — its row is labelled by the leaf and time travel edits the value at its pointer
 /// through the snapshot sub-schema there. A whole-source replacement, the one genuine whole-document intent, publishes the replaced
@@ -1381,53 +1413,6 @@ where
     }
     let prepared = prepare_snapshot_patch(snapshot, event).map_err(snapshot_edit_fault)?;
     Ok(Emit { artifact_mutations: vec![patch(prepared)], ..Default::default() })
-}
-
-/// 🩹️ Implements one artifact's path-scoped `patch-snapshot` leaf (`{patch: SnapshotPatch}`): its diff applies the patch
-/// and diffs the result (refusing a patch whose prior value has no exact inverse within the bounded parts), its inverse is the
-/// exact inverse in at most [`SNAPSHOT_PATCH_MAX_INVERSE_PARTS`] parts, its label names operation and pointer in every locale,
-/// its conflict target is the pointer, and `input_schema_at_path` (wired by `#[mutation_leaf(input_schema = …)]`) types the
-/// edited value by the snapshot sub-schema at the pointer, falling back to the leaf's own structural payload schema. An
-/// optional `check: <fn(&Snapshot) -> Result<(), impl Display>>` refuses patched snapshots the artifact's own whole-snapshot
-/// invariant rejects ([`apply_snapshot_patch_checked`]).
-#[macro_export]
-macro_rules! snapshot_patch_leaf {
-    (leaf: $leaf:ident, snapshot: $snapshot:ty, mutation: $mutation:ident, diff: $diff:ty, snapshot_schema: $schema:literal $(,)?) => {
-        $crate::snapshot_patch_leaf! { leaf: $leaf, snapshot: $snapshot, mutation: $mutation, diff: $diff, snapshot_schema: $schema, check: |_: &$snapshot| ::core::result::Result::<(), ::std::convert::Infallible>::Ok(()) }
-    };
-    (leaf: $leaf:ident, snapshot: $snapshot:ty, mutation: $mutation:ident, diff: $diff:ty, snapshot_schema: $schema:literal, check: $check:expr $(,)?) => {
-        impl $leaf {
-            /// 🧬️ The input schema of this operation: the snapshot sub-schema at its pointer, else the leaf payload schema.
-            pub fn input_schema_at_path(&self) -> ::core::option::Option<&'static str> {
-                ::core::option::Option::Some($crate::editing::snapshot_patch_input_schema($schema, &self.patch).unwrap_or(<Self as $crate::kernel::MutationLeaf>::PAYLOAD_SCHEMA))
-            }
-        }
-
-        impl $crate::kernel::MutationKind<$snapshot, $mutation> for $leaf {
-            const SEMANTICS: $crate::kernel::SemanticDescriptor = $crate::kernel::SemanticDescriptor { verb: "edit", entity: "snapshot", kind: "patch-snapshot", record: "PatchSnapshot" };
-
-            fn diff(&self, base: &$snapshot) -> $crate::kernel::MutationOutcome<<$mutation as $crate::kernel::Mutation<$snapshot>>::Diff> {
-                match $crate::editing::apply_snapshot_patch_checked(base, &self.patch, $check).and_then(|next| $crate::editing::inverse_snapshot_patches(base, &self.patch).map(|_| next)) {
-                    ::core::result::Result::Ok(next) => $crate::kernel::MutationOutcome::new(<$diff as $crate::kernel::DiffAlgebra<$snapshot>>::between(base, &next)),
-                    ::core::result::Result::Err(error) => $crate::kernel::MutationOutcome::refuse(error.outcome_code(), ::std::format!("{}: {}", error.code, error.message), [error.path]),
-                }
-            }
-
-            fn inverse(&self, base: &$snapshot) -> Result<::std::vec::Vec<$mutation>, semio_framework_value::ValueError> {
-                $crate::editing::inverse_snapshot_patches(base, &self.patch)
-                    .map(|parts| parts.into_iter().map(|patch| $mutation::PatchSnapshot(Self { patch })).collect())
-                    .map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, ::std::format!("{}: {}", error.code, error.message)))
-            }
-
-            fn label(&self) -> $crate::locale::LocalizedLabel {
-                $crate::editing::snapshot_patch_label(&self.patch)
-            }
-
-            fn target(&self) -> ::std::vec::Vec<::std::string::String> {
-                self.patch.target()
-            }
-        }
-    };
 }
 
 pub fn snapshot_edit_execution_contract() -> ToolExecutionContract {
@@ -1514,10 +1499,10 @@ fn validate_snapshot_edit_publication<S: Clone + PartialEq, M: Mutation<S> + OpB
                 return Err(edit_fault("snapshot-edit.publication-limit", "the edit or its exact undo exceeds the native publication item limit"));
             }
         }
-        let next = mutation.diff(&base).diff().apply(&base).map_err(|error| edit_fault("snapshot-edit.publication-invalid", error.message))?;
+        let next = kernel::apply_diff(mutation.diff(&base).diff(), &base).map_err(|error| edit_fault("snapshot-edit.publication-invalid", error.message))?;
         let mut restored = next.clone();
         for inverse in inverses {
-            restored = inverse.diff(&restored).diff().apply(&restored).map_err(|error| edit_fault("snapshot-edit.inverse-invalid", error.message))?;
+            restored = kernel::apply_diff(inverse.diff(&restored).diff(), &restored).map_err(|error| edit_fault("snapshot-edit.inverse-invalid", error.message))?;
         }
         if restored != base {
             return Err(edit_fault("snapshot-edit.inverse-mismatch", "the native inverse does not restore the exact prior document"));

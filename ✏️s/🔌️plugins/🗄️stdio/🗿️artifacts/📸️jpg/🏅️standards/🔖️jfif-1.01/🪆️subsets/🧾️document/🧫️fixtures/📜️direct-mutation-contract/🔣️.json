@@ -7,6 +7,21 @@
       "variant": "ChangeJfifHeader",
       "directory": "🪪️change-jfif",
       "textOpcode": "change-jfif-header",
+      "binaryTag": 1,
+      "requiredFiles": [
+        "🦀️.rs",
+        "🔣️.json",
+        "🧬️schema/🔣️.json",
+        "🟦️.ts",
+        "🔗️.graphql",
+        "🛰️.proto"
+      ]
+    },
+    {
+      "kind": "insert-other-segment",
+      "variant": "InsertOtherSegment",
+      "directory": "📥️insert-other",
+      "textOpcode": "insert-other-segment",
       "binaryTag": 2,
       "requiredFiles": [
         "🦀️.rs",
@@ -14,17 +29,14 @@
         "🧬️schema/🔣️.json",
         "🟦️.ts",
         "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
+        "🛰️.proto"
       ]
     },
     {
-      "kind": "replace-quant-table",
-      "variant": "ReplaceQuantTable",
-      "directory": "📊️replace-quant",
-      "textOpcode": "replace-quant-table",
+      "kind": "remove-other-segment",
+      "variant": "RemoveOtherSegment",
+      "directory": "🗑️remove-other",
+      "textOpcode": "remove-other-segment",
       "binaryTag": 3,
       "requiredFiles": [
         "🦀️.rs",
@@ -32,17 +44,14 @@
         "🧬️schema/🔣️.json",
         "🟦️.ts",
         "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
+        "🛰️.proto"
       ]
     },
     {
-      "kind": "remove-quant-table",
-      "variant": "RemoveQuantTable",
-      "directory": "🧹️remove-quant",
-      "textOpcode": "remove-quant-table",
+      "kind": "replace-pixels",
+      "variant": "ReplacePixels",
+      "directory": "🔲️replace-pixels",
+      "textOpcode": "replace-pixels",
       "binaryTag": 4,
       "requiredFiles": [
         "🦀️.rs",
@@ -50,17 +59,14 @@
         "🧬️schema/🔣️.json",
         "🟦️.ts",
         "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
+        "🛰️.proto"
       ]
     },
     {
-      "kind": "replace-huffman-table",
-      "variant": "ReplaceHuffmanTable",
-      "directory": "🌳️replace-huffman",
-      "textOpcode": "replace-huffman-table",
+      "kind": "replace-image",
+      "variant": "ReplaceImage",
+      "directory": "🖼️replace-image",
+      "textOpcode": "replace-image",
       "binaryTag": 5,
       "requiredFiles": [
         "🦀️.rs",
@@ -69,99 +75,9 @@
         "🟦️.ts",
         "🔗️.graphql",
         "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
-      ]
-    },
-    {
-      "kind": "remove-huffman-table",
-      "variant": "RemoveHuffmanTable",
-      "directory": "🪓️remove-huffman",
-      "textOpcode": "remove-huffman-table",
-      "binaryTag": 6,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
-      ]
-    },
-    {
-      "kind": "change-restart-interval",
-      "variant": "ChangeRestartInterval",
-      "directory": "🔁️change-restart",
-      "textOpcode": "change-restart-interval",
-      "binaryTag": 7,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
-      ]
-    },
-    {
-      "kind": "insert-other-segment",
-      "variant": "InsertOtherSegment",
-      "directory": "📥️insert-other",
-      "textOpcode": "insert-other-segment",
-      "binaryTag": 8,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
-      ]
-    },
-    {
-      "kind": "remove-other-segment",
-      "variant": "RemoveOtherSegment",
-      "directory": "🗑️remove-other",
-      "textOpcode": "remove-other-segment",
-      "binaryTag": 9,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
-      ]
-    },
-    {
-      "kind": "replace-pixels",
-      "variant": "ReplacePixels",
-      "directory": "🔲️replace-pixels",
-      "textOpcode": "replace-pixels",
-      "binaryTag": 10,
-      "requiredFiles": [
-        "🦀️.rs",
-        "🔣️.json",
-        "🧬️schema/🔣️.json",
-        "🟦️.ts",
-        "🔗️.graphql",
-        "🛰️.proto",
-        "📝️text/🦀️.rs",
-        "💾️binary/🦀️.rs",
-        "🧪️test/🔣️s.json"
+        "🧫️fixtures/🔣️.json",
+        "🧪️tests/🦀️.rs",
+        "🧪️tests/🟦️.ts"
       ]
     }
   ]

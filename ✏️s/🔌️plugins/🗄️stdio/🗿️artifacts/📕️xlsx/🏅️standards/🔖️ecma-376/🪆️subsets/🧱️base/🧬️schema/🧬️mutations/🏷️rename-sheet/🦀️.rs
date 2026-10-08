@@ -1,6 +1,4 @@
-//! 🏷️ `rename-sheet` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🏷️ `rename-sheet` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,15 +14,14 @@ pub struct RenameSheet {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for RenameSheet {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "sheet", kind: "rename-sheet", record: "RenameSheet" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxMutation as Mutation<XlsxSnapshot>>::Diff> {
-        agg_diff(&XlsxMutation::RenameSheet(self.clone()), base)
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
+        plan_outcome(canonical_edit::rename_sheet_plan(base, &self.name, &self.new_name))
     }
+
     fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&XlsxMutation::RenameSheet(self.clone()), base)?
-    
-    })
-}
+        Ok(plan_inverse(canonical_edit::rename_sheet_plan(base, &self.name, &self.new_name)))
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Rename sheet", "Arbeitsblatt umbenennen")
     }

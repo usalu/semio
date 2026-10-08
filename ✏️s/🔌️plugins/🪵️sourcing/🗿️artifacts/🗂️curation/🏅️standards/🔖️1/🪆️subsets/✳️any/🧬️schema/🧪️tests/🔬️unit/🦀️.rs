@@ -138,7 +138,7 @@ async fn curation_document_dsl_round_trips_sample_and_empty() {
 
 #[semio_framework_async_macros::async_test]
 async fn available_modules_tracks_contributed_modules() {
-    assert_eq!(available_modules("[]").len(), 4);
+    assert_eq!(available_modules(crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules("[]")).len(), 4);
     let beams = beams::BeamsModule;
     let entry = semio_framework::ProgramContributionEntry {
         plugin_id: "sourcing-module-beams".into(),
@@ -155,12 +155,12 @@ async fn available_modules_tracks_contributed_modules() {
         )),
     };
     let contributions_json = semio_framework_pack_json::to_json_string(&vec![entry]);
-    let modules = available_modules(&contributions_json);
+    let modules = available_modules(crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules(&contributions_json));
     assert_eq!(modules.len(), 5);
     assert_eq!(modules[0].module_id, "beams");
     assert_eq!(modules[4].module_id, "salvage");
     let duplicate = contributions_json.replace("\"salvage\"", &format!("\"{}\"", beams.module_id()));
-    assert_eq!(available_modules(&duplicate).len(), 4, "a module id an authored module already serves installs nothing");
+    assert_eq!(available_modules(crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules(&duplicate)).len(), 4, "a module id an authored module already serves installs nothing");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -195,4 +195,19 @@ async fn sourcing_contribution_envelope_rejects_depth_string_and_cardinality_plu
     assert!(!sourcing_json_envelope_is_bounded(&string_plus_one));
     let items_plus_one = format!("[{}]", vec!["0"; SOURCING_JSON_MAX_ITEMS].join(","));
     assert!(!sourcing_json_envelope_is_bounded(&items_plus_one));
+}
+
+#[test]
+fn admitted_module_queries_match_the_neutral_typed_roster() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧩️admitted-modules/🔣️.json")).unwrap();
+    let expected: Vec<&str> = fixture["authoredModuleIds"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect();
+    let modules = available_modules(authored_modules());
+    assert_eq!(modules.iter().map(|module| module.module_id.as_str()).collect::<Vec<_>>(), expected);
+    let selected = fixture["selectedModuleId"].as_str().unwrap();
+    assert_eq!(module_for(authored_modules(), selected).unwrap().module_id(), selected);
+    assert_eq!(module_for(Vec::new(), selected).is_some(), fixture["emptyAdmittedRosterFindsModule"].as_bool().unwrap());
+    let native_stock: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📦️expected-stock.json")).unwrap();
+    let expected_ids: Vec<&str> = native_stock.as_array().unwrap().iter().map(|row| row["id"].as_str().unwrap()).collect();
+    assert_eq!(demo_stock().iter().map(|row| row.id.as_str()).collect::<Vec<_>>(), expected_ids);
+    eprintln!("[DEBUG] Admitted sourcing module queries preserve authored order and isolation; independent serde_json stock witness agrees");
 }

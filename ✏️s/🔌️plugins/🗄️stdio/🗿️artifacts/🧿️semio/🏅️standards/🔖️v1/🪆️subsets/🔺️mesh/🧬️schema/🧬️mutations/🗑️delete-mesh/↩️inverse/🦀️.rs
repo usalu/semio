@@ -10,11 +10,7 @@ pub fn inverse(payload: &super::DeleteMesh, base: &SemioMeshSnapshot) -> Result<
     let Some(pos) = base.meshes.iter().position(|m| m.id == payload.id) else {
         return Vec::new();
     };
-    let tail = base.meshes[pos + 1..].to_vec();
-    let mut steps: Vec<SemioMeshMutation> = tail.iter().rev().map(|m| SemioMeshMutation::DeleteMesh(super::DeleteMesh { id: m.id.clone() })).collect();
-    steps.push(SemioMeshMutation::CreateMesh(create_mesh::CreateMesh { mesh: base.meshes[pos].clone() }));
-    steps.extend(tail.into_iter().map(|m| SemioMeshMutation::CreateMesh(create_mesh::CreateMesh { mesh: m })));
-    steps
+    vec![SemioMeshMutation::CreateMesh(create_mesh::CreateMesh { mesh: base.meshes[pos].clone(), at: Some(pos) })]
 
     })())
 }

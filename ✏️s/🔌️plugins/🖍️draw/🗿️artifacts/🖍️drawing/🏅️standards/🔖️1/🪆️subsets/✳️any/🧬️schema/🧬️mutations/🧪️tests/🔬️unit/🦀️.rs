@@ -339,3 +339,19 @@ fn layer_references_read_their_name_and_take_the_canvas_selection() {
     }
 }
 //#endregion ⏪️TimeTravel
+
+/// ⚖️ Ordered-collection law on a MIDDLE row: deleting or moving the middle layer inverts to its original index.
+#[semio_framework_async_macros::async_test]
+async fn deleting_or_moving_a_middle_layer_inverts_at_its_original_index() {
+    let mut base = base_document();
+    base.layers.push(create_drawing_path_layer("Middle", Vec::new().into()));
+    base.layers.push(create_drawing_path_layer("Last", Vec::new().into()));
+    let middle = crate::schema::layer_id(&base.layers[1]).clone();
+    assert_mutation_inverse_sum_law_for(&delete_layer(middle.clone().into()), &base).await;
+    assert_mutation_inverse_sum_law_for(&reorder_layer(middle.into(), None, 0), &base).await;
+    assert_mutation_inverse_sum_law_for(&create_layer(None, Some(1), create_drawing_path_layer("Inserted", Vec::new().into())), &base).await;
+}
+
+async fn assert_mutation_inverse_sum_law_for(mutation: &DrawingMutation, base: &DrawingSnapshot) {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(mutation, base).await;
+}

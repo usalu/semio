@@ -24,13 +24,6 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 use crate::schema::snapshot::PlyValue;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_snapshot(r: &mut dsl::ByteReader<'_>) -> Result<PlySnapshot, dsl::PackRefusal> {
-    let schema = read_bin_str(r)?;
-    let format = read_bin_format(r)?;
-    let comments = read_bin_vec(r, read_bin_str)?;
-    let elements = read_bin_vec(r, read_bin_element)?;
-    Ok(PlySnapshot { schema, format, comments, elements })
-}
 }
 pub use diff_codec::*;
 
@@ -50,15 +43,6 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::schema::snapshot::PlyValue;
-/// 🔣️ `PlySnapshot` real binary — needed by `PlyMutation::SetSnapshot`'s own real binary op frame
-/// (`../🧬️mutations/🦀️.rs`, which imports this the same way it already imports the
-/// text-codec `enc_snapshot`/`dec_snapshot` primitives from this file).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bin_snapshot(w: &mut dsl::ByteWriter, s: &PlySnapshot) {
-    write_bin_str(w, &s.schema);
-    write_bin_format(w, s.format);
-    write_bin_vec(w, &s.comments, |w, c: &String| write_bin_str(w, c));
-    write_bin_vec(w, &s.elements, write_bin_element);
-}
 }
 pub(crate) use residual_diff_helper::*;

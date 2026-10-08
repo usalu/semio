@@ -2,7 +2,7 @@
 
 use super::insert_signature_field::InsertSignatureField;
 use super::PdfHMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -21,11 +21,13 @@ impl MutationKind<PdfSnapshot, PdfHMutation> for RemoveSignatureField {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfHMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        support::signature_field_named(base, &self.name).map(|_| PdfHMutation::InsertSignatureField(InsertSignatureField { name: self.name.clone() })).into_iter().collect()
-    
-    })())
-}
+        Ok({
+            support::signature_field_named(base, &self.name).map(|field| {
+                let fields = support::signature_fields(base);
+                PdfHMutation::InsertSignatureField(InsertSignatureField { name: self.name.clone(), placements: support::placements_of(base, &[field]), field_index: fields.iter().position(|candidate| *candidate == field), entry_index: (fields.len() == 1).then(|| support::catalog_entry_position(base, "AcroForm")).flatten() })
+            }).into_iter().collect()
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove signature field \"{}\"", self.name), &format!("Signaturfeld \"{}\" entfernen", self.name))

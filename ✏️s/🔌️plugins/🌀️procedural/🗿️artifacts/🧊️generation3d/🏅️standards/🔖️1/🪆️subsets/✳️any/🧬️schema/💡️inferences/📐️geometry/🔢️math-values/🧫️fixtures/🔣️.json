@@ -1,0 +1,17 @@
+{
+  "description": "Language-agnostic laws of the math.values geometry widgets: each provides the value it is given. Vectors and points are [x, y, z] arrays, planes are { origin, normal }. TypeScript recomputes every outcome with three's Vector3 and Plane.",
+  "tolerance": 1e-12,
+  "cases": [
+    { "name": "number", "kind": "math.number", "inputs": { "value": 2.5 }, "outputs": { "value": 2.5 } },
+    { "name": "negative number", "kind": "math.number", "inputs": { "value": -1e-3 }, "outputs": { "value": -1e-3 } },
+    { "name": "integer", "kind": "math.integer", "inputs": { "value": 7 }, "outputs": { "value": 7 } },
+    { "name": "negative integer", "kind": "math.integer", "inputs": { "value": -12 }, "outputs": { "value": -12 } },
+    { "name": "angle", "kind": "math.angle", "inputs": { "value": 1.5707963267948966 }, "outputs": { "value": 1.5707963267948966 } },
+    { "name": "length", "kind": "math.length", "inputs": { "value": 3 }, "outputs": { "value": 3 } },
+    { "name": "boolean on", "kind": "math.boolean", "inputs": { "value": true }, "outputs": { "value": true } },
+    { "name": "boolean off", "kind": "math.boolean", "inputs": { "value": false }, "outputs": { "value": false } },
+    { "name": "vector", "kind": "math.vector", "inputs": { "value": [1, -2, 3.5] }, "outputs": { "value": [1, -2, 3.5] } },
+    { "name": "point", "kind": "math.point", "inputs": { "value": [4, 5, -6] }, "outputs": { "value": [4, 5, -6] } },
+    { "name": "plane", "kind": "math.plane", "inputs": { "value": { "origin": [1, 2, 3], "normal": [0, 0, 1] } }, "outputs": { "value": { "origin": [1, 2, 3], "normal": [0, 0, 1] } } }
+  ]
+}

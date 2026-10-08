@@ -7,21 +7,8 @@
       {
         "id": "39e4e640-81a9-4e5f-a9bb-2c39baa9ec0f",
         "patch": {
-          "replacement": {
-            "gap": 0.0,
-            "id": "39e4e640-81a9-4e5f-a9bb-2c39baa9ec0f",
-            "rise": 0.0,
-            "rotation": 0.0,
-            "shift": 0.0,
-            "source": "17d5dec8-87b2-44a9-84ff-93b7e7419bdd:sl0_d3",
-            "sourceTip": "none",
-            "target": "f1b5e882-0d34-40af-aa83-cca07919adab:link",
-            "targetTip": "arrow",
-            "tilt": 0.0,
-            "turn": 0.0,
-            "x": 0.0,
-            "y": 0.0
-          }
+          "sourceTip": "none",
+          "targetTip": "arrow"
         }
       }
     ],

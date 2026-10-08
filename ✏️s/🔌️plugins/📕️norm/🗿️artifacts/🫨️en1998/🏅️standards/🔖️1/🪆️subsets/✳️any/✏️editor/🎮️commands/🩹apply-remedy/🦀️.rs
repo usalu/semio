@@ -1,10 +1,9 @@
-//! Norm command — `apply-remedy` (coerces Exactly→bool when the target leaf is boolean).
+//! Norm command — `apply-remedy` (the shared remedy resolution coerces Exactly→bool when the target leaf is boolean).
 
-use crate::document::{cached_report_for, NormFamily, RemedyBound};
 use crate::editor::en1998::En1998Family;
 use crate::standards::v1::subsets::any::schema::mutations::En1998Mutation;
 use crate::En1998Snapshot;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, NoConfig, NoConfigMutation};
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Payload
@@ -18,33 +17,6 @@ pub struct ApplyRemedy {
 
 //#region 🔖️Handler
 pub fn handle(payload: &ApplyRemedy, doc: &ArtifactView<'_, En1998Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1998Mutation, NoConfigMutation>, Fault> {
-    let report = cached_report_for::<En1998Family>(doc.snapshot).unwrap_or_else(|| <En1998Family as NormFamily>::evaluate(doc.snapshot));
-    let check = report
-        .checks
-        .iter()
-        .find(|c| c.id == payload.check_id)
-        .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-missing-check"), format!("check '{}'", payload.check_id)))?;
-    let remedy = check
-        .remedies
-        .get(payload.remedy_index as usize)
-        .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("norm.apply-remedy-missing-remedy"), format!("remedy {}", payload.remedy_index)))?
-        .clone();
-    let path = remedy.target.path.clone();
-    crate::app_surface::commit_value_tree_edit(
-        doc.snapshot,
-        move |tree| {
-            let current = crate::app_surface::get_value_at_path(tree, &path)?;
-            let value = match current {
-                semio_framework_value::DslValue::Bool(_) => semio_framework_value::DslValue::Bool(remedy.required.value >= 0.5),
-                _ if matches!(remedy.bound, RemedyBound::OneOf) => {
-                    let option = remedy.options.first().cloned().unwrap_or_default();
-                    semio_framework_value::DslValue::String(option)
-                }
-                _ => semio_framework_value::DslValue::float(remedy.required.value),
-            };
-            crate::app_surface::set_value_at_path(tree, &path, value)
-        },
-        |base, target| En1998Mutation::from_snapshot(base, target),
-    )
+    crate::app_surface::dispatch_apply_remedy::<En1998Family, _>(doc.snapshot, &payload.check_id, payload.remedy_index as usize, |document, edit| crate::mutations::EDIT_RULES.resolve(document, edit))
 }
 //#endregion 🔖️Handler

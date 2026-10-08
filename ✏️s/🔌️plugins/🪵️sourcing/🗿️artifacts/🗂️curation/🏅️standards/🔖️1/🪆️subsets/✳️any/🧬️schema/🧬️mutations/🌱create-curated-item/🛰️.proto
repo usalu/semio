@@ -3,6 +3,7 @@ package semio.s.sourcing.curation.mutation;
 
 message CreateCuratedItem {
   CuratedItem item = 1;
+  optional uint32 index = 2;
   message CuratedItem {
     string object_id = 1;
     uint32 count = 2;

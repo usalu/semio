@@ -48,23 +48,8 @@ pub(crate) fn dec_ifc_header(s: &str) -> Result<IfcHeader, String> {
     Ok(IfcHeader { file_description: dec_ifc_value_list(fd)?, file_name: dec_ifc_value_list(fname)?, file_schema: dec_ifc_value_list(fs)? })
 }
 
-pub(crate) fn enc_ifc_snapshot(s: &IfcSnapshot) -> String {
-    let ifc_entity_separator = ",";
-    let entities = s.entities.iter().map(enc_entity).collect::<Vec<_>>().join(ifc_entity_separator);
-    format!("[{},{},[{}]]", enc_str(&s.schema), enc_ifc_header(&s.header), entities)
-}
-
-pub(crate) fn dec_ifc_snapshot(s: &str) -> Result<IfcSnapshot, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [schema, header, entities] = parts.as_slice() else { return Err(format!("ifc snapshot: expected 3 fields, got {}", parts.len())) };
-    let entities = split_top_level(strip_brackets(entities)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_entity).collect::<Result<Vec<_>, String>>()?;
-    Ok(IfcSnapshot { schema: dec_str(schema)?, header: dec_ifc_header(header)?, entities })
-}
-
 pub(crate) fn print_ifc_mutation(m: &IfcMutation) -> String {
     match m {
-        IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_ifc_snapshot(snapshot)),
-        IfcMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values }) => format!("set-file-description values={}", enc_ifc_value_list(values)),
         IfcMutation::SetFileName(set_file_name::SetFileName { values }) => format!("set-file-name values={}", enc_ifc_value_list(values)),
         IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values }) => format!("set-file-schema values={}", enc_ifc_value_list(values)),
@@ -84,8 +69,6 @@ pub(crate) fn parse_ifc_mutation(line: &str) -> Result<IfcMutation, String> {
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     let u64_arg = |k: &str| -> Result<u64, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| IfcMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
-        "set-snapshot" => Ok(IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_ifc_snapshot(arg("snapshot")?)? })),
         "set-file-description" => Ok(IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values: dec_ifc_value_list(arg("values")?)? })),
         "set-file-name" => Ok(IfcMutation::SetFileName(set_file_name::SetFileName { values: dec_ifc_value_list(arg("values")?)? })),
         "set-file-schema" => Ok(IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values: dec_ifc_value_list(arg("values")?)? })),

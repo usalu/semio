@@ -1,6 +1,4 @@
-//! 🧩️ `set-floor-elevation` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 📏️ `set-floor-elevation` -- sets the `IfcBuildingStorey.Elevation` a COBie Floor row carries; the prior elevation (or none) is restored.
 
 use super::*;
 
@@ -15,18 +13,26 @@ pub struct SetFloorElevation {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3CobieMutation> for SetFloorElevation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "floor-elevation", kind: "set-floor-elevation", record: "SetFloorElevation" };
 
-    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<<Ifc2x3CobieMutation as Mutation<Ifc2x3Snapshot>>::Diff> {
-        agg_diff(&Ifc2x3CobieMutation::SetFloorElevation(self.clone()), base)
+    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
+        let Self { storey, elevation } = self;
+        match mvd::argument_diff(base, *storey, &[STOREY], STOREY_ELEVATION_INDEX, mvd::optional(elevation.map(|value| Part21Value::Real(value.into())))) {
+            Ok(diff) => protocol::MutationOutcome::new(diff),
+            Err(message) => rejected(message),
+        }
     }
+
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Result<Vec<Ifc2x3CobieMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&Ifc2x3CobieMutation::SetFloorElevation(self.clone()), base)?
-    
-    })
-}
+        let Self { storey, .. } = self;
+        if !matches!(mvd::standing(base, *storey, &[STOREY]), mvd::Standing::Present { .. }) {
+            return Ok(Vec::new());
+        }
+        Ok(vec![Ifc2x3CobieMutation::SetFloorElevation(SetFloorElevation { storey: *storey, elevation: mvd::argument(base, *storey, STOREY_ELEVATION_INDEX).and_then(Part21Value::as_real) })])
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set floor elevation", "Geschosshöhenkote setzen")
     }
+
     fn target(&self) -> Vec<String> {
         Vec::new()
     }

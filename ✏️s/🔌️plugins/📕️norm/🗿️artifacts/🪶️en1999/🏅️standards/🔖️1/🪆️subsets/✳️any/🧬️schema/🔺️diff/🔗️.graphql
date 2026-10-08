@@ -1,13 +1,110 @@
-# 🧬️ EN 1999 sparse diff GraphQL mirror of `En1999Diff`
+# 🧬️ En1999 diff schema — keyed sparse diff: scalar setters, id/index/key keyed row diffs and per-field section patches.
+
+type En1999MaterialsPatch {
+  id: String!
+  designation: String
+}
+
+type En1999MaterialsRows {
+  added: [AluminiumMaterial!]!
+  removed: [String!]!
+  modified: [En1999MaterialsPatch!]!
+  order: [String!]
+}
+
+type En1999SectionsElementsPatch {
+  id: String!
+  thickness: Float
+}
+
+type En1999SectionsElementsRows {
+  modified: [En1999SectionsElementsPatch!]!
+}
+
+type En1999SectionsPatch {
+  id: String!
+  elements: En1999SectionsElementsRows
+}
+
+type En1999SectionsRows {
+  added: [AluminiumSection!]!
+  removed: [String!]!
+  modified: [En1999SectionsPatch!]!
+  order: [String!]
+}
+
+type En1999MembersActionsPatch {
+  id: String!
+  nK: Float
+  mYK: Float
+}
+
+type En1999MembersActionsRows {
+  modified: [En1999MembersActionsPatch!]!
+}
+
+type En1999MembersPatch {
+  id: String!
+  bucklingLengthY: Float
+  bucklingLengthZ: Float
+  bucklingLengthT: Float
+  ltbLength: Float
+  actions: En1999MembersActionsRows
+}
+
+type En1999MembersRows {
+  added: [AluminiumMember!]!
+  removed: [String!]!
+  modified: [En1999MembersPatch!]!
+  order: [String!]
+}
+
+type En1999ConnectionsPatch {
+  id: String!
+  weldsThroat: Float
+  boltsRows: Int
+  boltsBoltsPerRow: Int
+}
+
+type En1999ConnectionsRows {
+  added: [AluminiumConnection!]!
+  removed: [String!]!
+  modified: [En1999ConnectionsPatch!]!
+  order: [String!]
+}
+
+type En1999FireScenariosRows {
+  added: [FireScenario!]!
+  removed: [String!]!
+  order: [String!]
+}
+
+type En1999FatigueDetailsRows {
+  added: [FatigueDetail!]!
+  removed: [String!]!
+  order: [String!]
+}
+
+type En1999ColdFormedRows {
+  added: [ColdFormedSheet!]!
+  removed: [String!]!
+  order: [String!]
+}
+
+type En1999ShellsRows {
+  added: [AluminiumShell!]!
+  removed: [String!]!
+  order: [String!]
+}
+
 type En1999Diff {
-  artifact: JSON @state(class: ARTIFACT)
-  annex: String @state(class: ARTIFACT)
-  materials: JSON @state(class: ARTIFACT)
-  sections: JSON @state(class: ARTIFACT)
-  members: JSON @state(class: ARTIFACT)
-  connections: JSON @state(class: ARTIFACT)
-  fireScenarios: JSON @state(class: ARTIFACT)
-  fatigueDetails: JSON @state(class: ARTIFACT)
-  coldFormed: JSON @state(class: ARTIFACT)
-  shells: JSON @state(class: ARTIFACT)
+  annex: AnnexChoice @state(class: ARTIFACT)
+  materials: En1999MaterialsRows @state(class: ARTIFACT)
+  sections: En1999SectionsRows @state(class: ARTIFACT)
+  members: En1999MembersRows @state(class: ARTIFACT)
+  connections: En1999ConnectionsRows @state(class: ARTIFACT)
+  fireScenarios: En1999FireScenariosRows @state(class: ARTIFACT)
+  fatigueDetails: En1999FatigueDetailsRows @state(class: ARTIFACT)
+  coldFormed: En1999ColdFormedRows @state(class: ARTIFACT)
+  shells: En1999ShellsRows @state(class: ARTIFACT)
 }

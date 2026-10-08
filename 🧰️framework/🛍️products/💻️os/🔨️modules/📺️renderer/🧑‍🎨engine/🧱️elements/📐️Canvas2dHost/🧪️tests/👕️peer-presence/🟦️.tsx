@@ -9,12 +9,12 @@ import { canvasPointToScreen } from "@semio-tech/framework-replication";
 import fixture from "../../🧫️fixtures/👕️peer-presence/🔣️.json" with { type: "json" };
 import { clearArtifactPresenceRosterV1, clearLocalPresenceWindowViewV1, collectLocalPresenceWindowViewsV1, publishArtifactPresenceRosterV1, publishLocalPresenceActorV1 } from "../../../👕️canvas-presence/🟦️.ts";
 
-vi.mock("@semio-tech/infinite-canvas-react-renderer", async (importOriginal) => {
+vi.mock("@semio-tech/canvas-react-renderer", async (importOriginal) => {
   const actual = (await importOriginal()) as Record<string, unknown>;
   const React = await import("react");
   return {
     ...actual,
-    GraphWasmCanvas: ({ className, sessionFactory }: { readonly className?: string; readonly sessionFactory: () => { setSize(width: number, height: number, ratio: number): void; dispose?(): void } }) => {
+    WasmCanvas: ({ className, sessionFactory }: { readonly className?: string; readonly sessionFactory: () => { setSize(width: number, height: number, ratio: number): void; dispose?(): void } }) => {
       const session = React.useMemo(sessionFactory, [sessionFactory]);
       React.useEffect(() => () => session.dispose?.(), [session]);
       return createElement("canvas", { className, "data-testid": "canvas-input" });

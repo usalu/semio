@@ -3,4 +3,5 @@ import type { ObjRef, PdfCcittParameters, PdfColorSpace, PdfDecimal, PdfDictEntr
 export interface SetImageMutation {
   mutation: 'setImage';
   image: PdfImage;
+  index?: number | null;
 }

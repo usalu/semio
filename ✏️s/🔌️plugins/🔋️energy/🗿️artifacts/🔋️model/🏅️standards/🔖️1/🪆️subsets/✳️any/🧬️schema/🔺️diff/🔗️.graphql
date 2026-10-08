@@ -1,14 +1,9 @@
-# 🧬️ EnergyModel diff schema.
+# 🧬️ EnergyModel diff schema — sparse typed per-entity delta; an absent field means unchanged.
 
 type EnergyModelDiff {
-  artifact: EnergyModelArtifact
-  schema: String
-  model: JSON
-  structure: JSON
-  zones: JSON
+  model: EnergyModelPatch
   referencedModel: EnergyLinkSlotDelta
   weatherLink: EnergyLinkSlotDelta
-  resultsJson: String
 }
 
 # 🔗️ A link slot delta; an absent field means the slot did not change at all.
@@ -17,12 +12,724 @@ type EnergyLinkSlotDelta {
   link: JSON
 }
 
-type EnergyModelArtifact {
-  schema: String!
-  model: JSON!
-  structure: JSON!
-  zones: JSON!
-  referencedModel: JSON
-  weatherLink: JSON
-  resultsJson: String!
+# 🎯️ A change of an optional field: `cleared`, or `assigned` with its value.
+type EnergyOptionChange {
+  kind: String!
+  value: JSON
+}
+
+# 🔢️ One assigned slot of a fixed array.
+type EnergySlotEdit {
+  index: Int!
+  value: JSON!
+}
+
+# ✂️ One removed entry: its base index and key.
+type EnergyRowCut {
+  index: Int!
+  key: JSON!
+}
+
+# ➕️ One inserted entry: its after index and row.
+type EnergyRowPut {
+  index: Int!
+  row: JSON!
+}
+
+# 📋️ A positional edit of an ordered list.
+type EnergyListEdit {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+}
+
+type EnergyZonePatch {
+  id: Int!
+  name: String
+  volume_m3: Float
+  multiplier: Int
+  conditioned: Boolean
+  part_of_total_floor_area: Boolean
+}
+
+type EnergyZoneRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyZonePatch!]
+}
+
+type EnergySpacePatch {
+  id: Int!
+  name: String
+  zone_id: Int
+  floor_area_m2: Float
+}
+
+type EnergySpaceRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergySpacePatch!]
+}
+
+type EnergySurfacePatch {
+  id: Int!
+  name: String
+  zone_id: Int
+  class: String
+  vertices_m: [[Float!]!]
+  construction_id: Int
+  outside_boundary_condition: JSON
+  sun_exposed: Boolean
+  wind_exposed: Boolean
+  multiplier: Int
+}
+
+type EnergySurfaceRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergySurfacePatch!]
+}
+
+type EnergyFenestrationPatch {
+  id: Int!
+  name: String
+  surface_id: Int
+  u_value_w_m2k: Float
+  shgc: Float
+  vlt: Float
+  area_m2: Float
+  height_m: Float
+  sill_height_m: Float
+  frame_conductance_w_k: Float
+  divider_conductance_w_k: Float
+  overhang_depth_m: Float
+  overhang_offset_m: Float
+  fin_depth_m: Float
+  fin_offset_m: Float
+  glazing_construction_id: EnergyOptionChange
+  vertices_m: [[Float!]!]
+}
+
+type EnergyFenestrationRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyFenestrationPatch!]
+}
+
+type EnergyMaterialPatch {
+  id: Int!
+  name: String
+  roughness: String
+  thickness_m: Float
+  conductivity_w_m_k: Float
+  density_kg_m3: Float
+  specific_heat_j_kg_k: Float
+  thermal_absorptance: Float
+  solar_absorptance: Float
+  visible_absorptance: Float
+}
+
+type EnergyMaterialRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyMaterialPatch!]
+}
+
+type EnergyGlazingMaterialPatch {
+  id: Int!
+  name: String
+  thickness_m: Float
+  conductivity_w_m_k: Float
+  solar_transmittance: Float
+  solar_reflectance_front: Float
+  solar_reflectance_back: Float
+  visible_transmittance: Float
+  visible_reflectance_front: Float
+  visible_reflectance_back: Float
+  infrared_transmittance: Float
+  infrared_emissivity_front: Float
+  infrared_emissivity_back: Float
+}
+
+type EnergyGlazingMaterialRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyGlazingMaterialPatch!]
+}
+
+type EnergyGasMaterialPatch {
+  id: Int!
+  name: String
+  thickness_m: Float
+  gas: String
+}
+
+type EnergyGasMaterialRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyGasMaterialPatch!]
+}
+
+type EnergyConstructionPatch {
+  id: Int!
+  name: String
+  layer_material_ids: EnergyListEdit
+}
+
+type EnergyConstructionRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyConstructionPatch!]
+}
+
+type EnergyPeopleGainPatch {
+  id: Int!
+  zone_id: Int
+  schedule_id: Int
+  activity_schedule_id: Int
+  people_per_area: Float
+  sensible_fraction: Float
+  latent_fraction: Float
+  radiant_fraction: Float
+}
+
+type EnergyPeopleGainRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyPeopleGainPatch!]
+}
+
+type EnergyLightingGainPatch {
+  id: Int!
+  zone_id: Int
+  schedule_id: Int
+  watts_per_area: Float
+  radiant_fraction: Float
+  visible_fraction: Float
+  return_air_fraction: Float
+}
+
+type EnergyLightingGainRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyLightingGainPatch!]
+}
+
+type EnergyEquipmentGainPatch {
+  id: Int!
+  zone_id: Int
+  schedule_id: Int
+  watts_per_area: Float
+  radiant_fraction: Float
+  latent_fraction: Float
+}
+
+type EnergyEquipmentGainRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyEquipmentGainPatch!]
+}
+
+type EnergyThermostatPatch {
+  id: Int!
+  zone_id: Int
+  heating_setpoint_schedule_id: Int
+  cooling_setpoint_schedule_id: Int
+  heating_throttle_range_k: Float
+  cooling_throttle_range_k: Float
+}
+
+type EnergyThermostatRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyThermostatPatch!]
+}
+
+type EnergyHumidistatPatch {
+  id: Int!
+  zone_id: Int
+  humidifying_setpoint_schedule_id: Int
+  dehumidifying_setpoint_schedule_id: Int
+  humidifying_throttle_range: Float
+  dehumidifying_throttle_range: Float
+}
+
+type EnergyHumidistatRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyHumidistatPatch!]
+}
+
+type EnergySetpointManagerPatch {
+  id: Int!
+  name: String
+  kind: JSON
+  schedule_id: EnergyOptionChange
+}
+
+type EnergySetpointManagerRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergySetpointManagerPatch!]
+}
+
+type EnergyIdealLoadsSystemPatch {
+  id: Int!
+  zone_id: Int
+  max_heating_supply_air_temp_c: Float
+  min_cooling_supply_air_temp_c: Float
+  max_heating_capacity_w: EnergyOptionChange
+  max_cooling_capacity_w: EnergyOptionChange
+  outdoor_air_per_person_m3_s: Float
+  outdoor_air_per_area_m3_s_m2: Float
+}
+
+type EnergyIdealLoadsSystemRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyIdealLoadsSystemPatch!]
+}
+
+type EnergyZoneEquipmentPatch {
+  id: Int!
+  zone_id: Int
+  equipment_type: String
+  priority: Int
+  heating_capacity_w: Float
+  cooling_capacity_w: Float
+}
+
+type EnergyZoneEquipmentRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyZoneEquipmentPatch!]
+}
+
+type EnergyAirLoopPatch {
+  id: Int!
+  name: String
+  supply_node_id: Int
+  return_node_id: Int
+  design_supply_air_flow_m3_s: Float
+  terminal_zone_ids: EnergyListEdit
+}
+
+type EnergyAirLoopRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyAirLoopPatch!]
+}
+
+type EnergyPlantLoopPatch {
+  id: Int!
+  name: String
+  loop_type: String
+  supply_temperature_c: Float
+  return_temperature_c: Float
+  design_flow_kg_s: Float
+  equipment_ids: EnergyListEdit
+}
+
+type EnergyPlantLoopRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyPlantLoopPatch!]
+}
+
+type EnergyOutdoorAirSystemPatch {
+  id: Int!
+  air_loop_id: Int
+  min_oa_flow_m3_s: Float
+  economizer_enabled: Boolean
+}
+
+type EnergyOutdoorAirSystemRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyOutdoorAirSystemPatch!]
+}
+
+type EnergyInfiltrationPatch {
+  id: Int!
+  zone_id: Int
+  schedule_id: Int
+  method: String
+  design_flow_ach: Float
+  flow_per_exterior_area_m3_s_m2: Float
+  effective_leakage_area_m2: Float
+  discharge_coefficient: Float
+  stack_height_m: Float
+  constant_term_coefficient: Float
+  temperature_term_coefficient: Float
+  velocity_term_coefficient: Float
+  velocity_squared_term_coefficient: Float
+}
+
+type EnergyInfiltrationRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyInfiltrationPatch!]
+}
+
+type EnergyMechanicalVentilationPatch {
+  id: Int!
+  zone_id: Int
+  schedule_id: Int
+  design_flow_m3_s: Float
+  fan_total_efficiency: Float
+  fan_delta_pressure_pa: Float
+}
+
+type EnergyMechanicalVentilationRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyMechanicalVentilationPatch!]
+}
+
+type EnergyShadingSurfacePatch {
+  id: Int!
+  name: String
+  vertices_m: [[Float!]!]
+  transmittance_schedule_id: EnergyOptionChange
+}
+
+type EnergyShadingSurfaceRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyShadingSurfacePatch!]
+}
+
+type EnergySpaceListPatch {
+  id: Int!
+  name: String
+  space_ids: EnergyListEdit
+}
+
+type EnergySpaceListRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergySpaceListPatch!]
+}
+
+type EnergyThermalEnclosurePatch {
+  id: Int!
+  name: String
+  zone_ids: EnergyListEdit
+}
+
+type EnergyThermalEnclosureRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyThermalEnclosurePatch!]
+}
+
+type EnergyAdjacencyPairPatch {
+  surface_a_id: Int!
+  surface_b_id: Int!
+}
+
+type EnergyAdjacencyPairRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyAdjacencyPairPatch!]
+}
+
+type EnergyElectricalLoadCenterPatch {
+  id: Int!
+  name: String
+  generator_ids: EnergyListEdit
+  pv_ids: EnergyListEdit
+  battery_ids: EnergyListEdit
+}
+
+type EnergyElectricalLoadCenterRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyElectricalLoadCenterPatch!]
+}
+
+type EnergyPvSystemPatch {
+  id: Int!
+  dc_capacity_w: Float
+  area_m2: Float
+  tilt_deg: Float
+  azimuth_deg: Float
+  module_efficiency: Float
+  inverter_efficiency: Float
+}
+
+type EnergyPvSystemRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyPvSystemPatch!]
+}
+
+type EnergyBatteryPatch {
+  id: Int!
+  capacity_kwh: Float
+  max_charge_w: Float
+  max_discharge_w: Float
+  round_trip_efficiency: Float
+}
+
+type EnergyBatteryRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyBatteryPatch!]
+}
+
+type EnergyShwSystemPatch {
+  id: Int!
+  heater_capacity_w: Float
+  storage_volume_m3: Float
+  setpoint_c: Float
+  schedule_id: Int
+}
+
+type EnergyShwSystemRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyShwSystemPatch!]
+}
+
+type EnergySolarThermalPatch {
+  id: Int!
+  collector_area_m2: Float
+  efficiency: Float
+  storage_volume_m3: Float
+  tilt_deg: Float
+  azimuth_deg: Float
+}
+
+type EnergySolarThermalRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergySolarThermalPatch!]
+}
+
+type EnergyRefrigerationPatch {
+  id: Int!
+  case_count: Int
+  design_load_w: Float
+  defrost_schedule_id: Int
+}
+
+type EnergyRefrigerationRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyRefrigerationPatch!]
+}
+
+type EnergyWaterSystemPatch {
+  id: Int!
+  fixture_count: Int
+  peak_flow_l_s: Float
+  schedule_id: Int
+}
+
+type EnergyWaterSystemRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyWaterSystemPatch!]
+}
+
+type EnergyFaultPatch {
+  id: Int!
+  target_equipment_id: Int
+  fault_type: String
+  severity: Float
+  start_schedule_id: Int
+}
+
+type EnergyFaultRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyFaultPatch!]
+}
+
+type EnergyOutputVariablePatch {
+  name: String!
+  key: String!
+  reporting_frequency: String
+}
+
+type EnergyOutputVariableRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyOutputVariablePatch!]
+}
+
+type EnergySizingObjectPatch {
+  id: Int!
+  zone_id: Int
+  sizing_type: String
+  design_day_type: String
+}
+
+type EnergySizingObjectRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergySizingObjectPatch!]
+}
+
+type EnergyDaylightZonePatch {
+  id: Int!
+  zone_id: Int
+  illuminance_target_lux: Float
+  glare_limit: Float
+  window_transmittance: Float
+}
+
+type EnergyDaylightZoneRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyDaylightZonePatch!]
+}
+
+type EnergyRoomAirModelPatch {
+  zone_id: Int!
+  model: String
+}
+
+type EnergyRoomAirModelRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyRoomAirModelPatch!]
+}
+
+type EnergyConstantSchedulePatch {
+  id: Int!
+  value: Float
+}
+
+type EnergyConstantScheduleRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyConstantSchedulePatch!]
+}
+
+type EnergyDailySchedulePatch {
+  id: Int!
+  hourly_values: [EnergySlotEdit!]
+  interpolation: String
+  limits: EnergyOptionChange
+}
+
+type EnergyDailyScheduleRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyDailySchedulePatch!]
+}
+
+type EnergyWeeklySchedulePatch {
+  id: Int!
+  daily_schedule_ids: [EnergySlotEdit!]
+}
+
+type EnergyWeeklyScheduleRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyWeeklySchedulePatch!]
+}
+
+type EnergyAnnualSchedulePatch {
+  id: Int!
+  rules: EnergyListEdit
+  default_daily_schedule_id: Int
+  holiday_daily_schedule_id: EnergyOptionChange
+  holiday_dates: EnergyListEdit
+}
+
+type EnergyAnnualScheduleRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyAnnualSchedulePatch!]
+}
+
+type EnergyTimeSeriesSchedulePatch {
+  id: Int!
+  values: [Float!]
+  timestep_seconds: Int
+}
+
+type EnergyTimeSeriesScheduleRows {
+  removed: [EnergyRowCut!]
+  inserted: [EnergyRowPut!]
+  modified: [EnergyTimeSeriesSchedulePatch!]
+}
+
+type EnergySitePatch {
+  latitude_deg: Float
+  longitude_deg: Float
+  elevation_m: Float
+  time_zone_hours: Float
+  north_axis_deg: Float
+}
+
+type EnergyGroundTemperaturePatch {
+  building_surface_c: [EnergySlotEdit!]
+  shallow_c: [EnergySlotEdit!]
+  deep_c: Float
+}
+
+type EnergyRunPeriodPatch {
+  start_month: Int
+  start_day: Int
+  end_month: Int
+  end_day: Int
+  year: Int
+}
+
+type EnergyScheduleSetPatch {
+  constants: EnergyConstantScheduleRows
+  daily: EnergyDailyScheduleRows
+  weekly: EnergyWeeklyScheduleRows
+  annual: EnergyAnnualScheduleRows
+  time_series: EnergyTimeSeriesScheduleRows
+}
+
+type EnergyModelPatch {
+  name: String
+  version: String
+  site: EnergySitePatch
+  zones: EnergyZoneRows
+  spaces: EnergySpaceRows
+  surfaces: EnergySurfaceRows
+  fenestrations: EnergyFenestrationRows
+  materials: EnergyMaterialRows
+  glazing_materials: EnergyGlazingMaterialRows
+  gas_materials: EnergyGasMaterialRows
+  constructions: EnergyConstructionRows
+  people: EnergyPeopleGainRows
+  lighting: EnergyLightingGainRows
+  equipment: EnergyEquipmentGainRows
+  thermostats: EnergyThermostatRows
+  humidistats: EnergyHumidistatRows
+  setpoint_managers: EnergySetpointManagerRows
+  ideal_loads: EnergyIdealLoadsSystemRows
+  zone_equipment: EnergyZoneEquipmentRows
+  air_loops: EnergyAirLoopRows
+  plant_loops: EnergyPlantLoopRows
+  outdoor_air_systems: EnergyOutdoorAirSystemRows
+  infiltrations: EnergyInfiltrationRows
+  mechanical_ventilations: EnergyMechanicalVentilationRows
+  shading_surfaces: EnergyShadingSurfaceRows
+  space_lists: EnergySpaceListRows
+  thermal_enclosures: EnergyThermalEnclosureRows
+  adjacency_pairs: EnergyAdjacencyPairRows
+  airflow_network: EnergyOptionChange
+  electrical_load_centers: EnergyElectricalLoadCenterRows
+  pv_systems: EnergyPvSystemRows
+  battery_storage: EnergyBatteryRows
+  shw_systems: EnergyShwSystemRows
+  solar_thermal_systems: EnergySolarThermalRows
+  refrigeration_systems: EnergyRefrigerationRows
+  water_systems: EnergyWaterSystemRows
+  faults: EnergyFaultRows
+  output_variables: EnergyOutputVariableRows
+  sizing_objects: EnergySizingObjectRows
+  daylight_zones: EnergyDaylightZoneRows
+  room_air_models: EnergyRoomAirModelRows
+  ground_temperature: EnergyGroundTemperaturePatch
+  run_period: EnergyRunPeriodPatch
+  schedules: EnergyScheduleSetPatch
 }

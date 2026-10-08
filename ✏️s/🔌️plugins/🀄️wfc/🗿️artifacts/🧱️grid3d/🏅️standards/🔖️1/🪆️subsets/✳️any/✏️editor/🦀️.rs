@@ -10,7 +10,7 @@
 use crate::editor::grid3d::modes::edit;
 use crate::editor::grid3d::modes::edit::tools::fill as fill_tool;
 use crate::editor::grid3d::modes::edit::windows::{grid, preview};
-use crate::editor::grid3d::window::{addressed_config, config_from_view, Grid3dWindowConfig};
+use crate::editor::grid3d::window::{addressed_config, config_from_view, Grid3dWindowConfig, Grid3dWindowConfigMutation};
 use crate::mutations::{change_cell_sizes, change_periodicity, change_seed, change_tile_media, change_tile_weight, create_rule, create_tile, delete_rule, delete_tile, mask_cell, pin_cell, resize_grid, unmask_cell, unpin_cell};
 use crate::schema::snapshot::{tile_index, Grid3dAxis, Grid3dCell, Grid3dColor, Grid3dDirection, Grid3dMesh, Grid3dPinnedCell, Grid3dRule, Grid3dTile, Grid3dTileMedia};
 use crate::{Grid3dMutation, Grid3dSnapshot, WFC_GRID3D_DIALECT, WFC_GRID3D_DOCUMENT_SCHEMA};
@@ -312,21 +312,11 @@ pub fn grid3d_command_emit(
         }
         Grid3dEditorCommand::SetActiveTile { tile_id } => {
             let view = view_state.ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.window.required"), "wfc.grid3d.window.required"))?;
-            let mut next = window_config;
-            next.active_tile_id.clone_from(tile_id);
-            return Ok(Emit { window_config_mutations: vec![addressed_config(view, next)?], ..Default::default() });
+            return Ok(Emit { window_config_mutations: vec![addressed_config(view, Grid3dWindowConfigMutation::SetActiveTile { tile_id: tile_id.clone() })?], ..Default::default() });
         }
         Grid3dEditorCommand::SetCamera { x, y, z, target_x, target_y, target_z, zoom } => {
             let view = view_state.ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.grid3d.window.required"), "wfc.grid3d.window.required"))?;
-            let mut next = window_config;
-            next.camera_x = *x;
-            next.camera_y = *y;
-            next.camera_z = *z;
-            next.target_x = *target_x;
-            next.target_y = *target_y;
-            next.target_z = *target_z;
-            next.camera_zoom = *zoom;
-            return Ok(Emit { window_config_mutations: vec![addressed_config(view, next)?], ..Default::default() });
+            return Ok(Emit { window_config_mutations: vec![addressed_config(view, Grid3dWindowConfigMutation::SetCamera { camera_x: *x, camera_y: *y, camera_z: *z, target_x: *target_x, target_y: *target_y, target_z: *target_z, zoom: *zoom })?], ..Default::default() });
         }
         Grid3dEditorCommand::SetHover { .. } | Grid3dEditorCommand::WorldPick { .. } => return Ok(Emit::default()),
         Grid3dEditorCommand::Solve => {

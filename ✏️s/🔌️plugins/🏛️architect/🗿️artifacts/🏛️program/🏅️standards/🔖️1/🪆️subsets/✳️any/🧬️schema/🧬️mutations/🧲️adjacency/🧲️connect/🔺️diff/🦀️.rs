@@ -8,7 +8,7 @@ use crate::ProgramDiff;
 use crate::ProgramSnapshot;
 
 /// 🔌️ Error `mutation.target-missing` if either endpoint element is absent (empty diff); Warning
-/// `mutation.no-op` if the edge already carries this exact value (empty diff); else `added = [normalized edge]` if the pair is new,
+/// `mutation.no-op` if the edge already carries this exact value (empty diff); Error `mutation.index-out-of-range` for a new pair whose `index` lies past the end; else `added = [normalized edge]` (plus `reordered` when `index` places it before the end) if the pair is new,
 /// else the edge is replaced under its own id: `removed = [id]`, `added = [value]`, and `reordered` (the base order) unless the edge was last.
 pub fn diff(payload: &ConnectAdjacency, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {
     let (a, b) = normalize_pair(&payload.adjacency.element_a_id, &payload.adjacency.element_b_id);
@@ -23,7 +23,17 @@ pub fn diff(payload: &ConnectAdjacency, base: &ProgramSnapshot) -> protocol::Mut
     value.element_b_id = b.clone();
     value.normalized = true;
     let Some(position) = base.adjacencies.iter().position(|row| row.element_a_id == a && row.element_b_id == b) else {
-        return protocol::MutationOutcome::new(ProgramDiff { adjacencies: Some(ProgramAdjacenciesDelta { added: vec![value], ..Default::default() }), ..Default::default() });
+        let length = base.adjacencies.len();
+        let at = payload.index.unwrap_or(length);
+        if at > length {
+            return protocol::MutationOutcome::error("mutation.index-out-of-range", "The index lies beyond the end of the adjacency list.", [value.header.id.0.clone()]);
+        }
+        let reordered = (at < length).then(|| {
+            let mut order: Vec<String> = base.adjacencies.iter().map(|row| row.header.id.0.clone()).collect();
+            order.insert(at, value.header.id.0.clone());
+            order
+        });
+        return protocol::MutationOutcome::new(ProgramDiff { adjacencies: Some(ProgramAdjacenciesDelta { added: vec![value], reordered, ..Default::default() }), ..Default::default() });
     };
     let id = base.adjacencies[position].header.id.clone();
     value.header.id = id.clone();

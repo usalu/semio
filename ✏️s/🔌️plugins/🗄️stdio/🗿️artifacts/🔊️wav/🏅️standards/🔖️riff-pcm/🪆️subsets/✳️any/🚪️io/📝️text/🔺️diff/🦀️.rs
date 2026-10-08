@@ -169,6 +169,13 @@ pub(crate) fn dec_riff_chunks(s: &str) -> Result<Vec<RiffChunk>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_wav_splice(s: &str) -> Result<WavSplice, String> {
+    let mut parts = s.splitn(3, ',');
+    let (Some(index), Some(remove), Some(insert)) = (parts.next(), parts.next(), parts.next()) else { return Err(format!("wav diff: malformed splice {s:?}")) };
+    Ok(WavSplice { index: index.parse::<u64>().map_err(|error| error.to_string())?, remove: remove.parse::<u64>().map_err(|error| error.to_string())?, insert: dec_wav_data(insert)? })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_wav_diff(d: &WavDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.fmt {
@@ -176,6 +183,9 @@ pub(crate) fn print_wav_diff(d: &WavDiff) -> String {
     }
     if let Some(v) = &d.data {
         tokens.push(format!("data={}", enc_wav_data(v)));
+    }
+    if !d.data_splices.is_empty() {
+        tokens.push(format!("data-splices={}", d.data_splices.iter().map(|splice| format!("{},{},{}", splice.index, splice.remove, enc_wav_data(&splice.insert))).collect::<Vec<_>>().join(";")));
     }
     if let Some(v) = d.fmt_pad_byte {
         tokens.push(format!("fmt-pad-byte={v}"));
@@ -203,6 +213,8 @@ pub(crate) fn parse_wav_diff(line: &str) -> Result<WavDiff, String> {
             d.fmt = Some(dec_wav_fmt(rest)?);
         } else if let Some(rest) = token.strip_prefix("data=") {
             d.data = Some(dec_wav_data(rest)?);
+        } else if let Some(rest) = token.strip_prefix("data-splices=") {
+            d.data_splices = rest.split(';').map(dec_wav_splice).collect::<Result<_, _>>()?;
         } else if let Some(rest) = token.strip_prefix("fmt-pad-byte=") {
             d.fmt_pad_byte = Some(rest.parse::<u8>().map_err(|error| error.to_string())?);
         } else if let Some(rest) = token.strip_prefix("data-pad-byte=") {

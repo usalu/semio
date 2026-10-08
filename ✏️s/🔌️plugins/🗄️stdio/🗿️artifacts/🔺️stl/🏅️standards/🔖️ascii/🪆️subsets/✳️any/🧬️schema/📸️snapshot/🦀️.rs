@@ -55,8 +55,7 @@ impl Default for StlTriangle {
 /// real-world writers do), `triangles` is the ordered facet list, index-keyed for diffing.
 /// 🧪️ F6: no `dsl` derive here either — `StlSnapshot` embeds `StlTriangle` (see its doc comment
 /// for the real, reproduced nested-`[T;N]` grammar bug this artifact's whole `dsl`-derive attempt
-/// hit) — `StlMutation::SetSnapshot`'s payload is hand-encoded via `enc_snapshot`/`dec_snapshot`
-/// in `🧬️mutations::component` instead.
+/// hit) — the mutation payloads hand-encode their triangles instead.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.stl")]

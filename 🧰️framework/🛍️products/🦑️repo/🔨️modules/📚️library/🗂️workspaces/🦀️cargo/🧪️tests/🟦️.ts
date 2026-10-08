@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import TOML from "@iarna/toml";
 import glob from "fast-glob";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { acquireResourceLease } from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { cargoRepositoryPackageSelections, publishCargoWorkspaceMemberships, parseCargoWorkspaceContribution, discoverCargoWorkspaces, cargoWorkspaceMembers, cargoWorkspaceForManifest, selectedCargoArguments, prepareCargoWorkspaceInvocation, cargoCommandRequiresOwnerPreparationV1, publishCargoWorkspaceMembership, parseCargoPreparation, prepareCargoOwners } from "../🟦️.ts";
 const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
@@ -318,4 +318,38 @@ test("membership discovery compiles bounded matchers independent of unrelated le
   expect(matchers).toBeLessThanOrEqual(law.maximumMatchers);
   console.log(`[DEBUG] Cargo membership discovery unrelatedLeaves=${law.noiseFiles} compiledMatchers=${matchers} exactManifests=${actual.length}`);
  } finally {Object.defineProperty(Bun,"Glob",descriptor);}
+});
+
+
+test("explicit root-owned packages remain discoverable beneath a different native workspace",()=>{
+ const row=fixture.overlappingOwners,root=mkdtempSync(join(artifactRoot!,"workspace-overlap-"));put(root,"Cargo.toml",workspace(row.rootMembers).replace('member-manifests='+JSON.stringify(row.rootMembers.map((member:string)=>member+"/Cargo.toml")),'member-manifests='+JSON.stringify(row.rootAdmission)).replace('members='+JSON.stringify(row.rootMembers),'members='+JSON.stringify(row.rootMembers)+'\nexclude=["framework"]'));put(root,"framework/Cargo.toml",workspace(row.frameworkMembers).replace('members='+JSON.stringify(row.frameworkMembers),'members='+JSON.stringify(row.frameworkMembers)+'\nexclude=["product"]'));put(root,"framework/product/Cargo.toml",pkg(row.rootPackage).replace('[package]\n','[package]\nworkspace='+JSON.stringify(row.rootPackageWorkspace)+'\n'));put(root,"framework/product/🦀️.rs","pub fn product(){}\n");put(root,"framework/general/Cargo.toml",pkg(row.frameworkPackage));put(root,"framework/general/🦀️.rs","pub fn general(){}\n");
+ const scopes=discoverCargoWorkspaces(root),packages=scopes.flatMap(scope=>cargoWorkspaceMembers(root,scope));expect(packages.map(row=>[row.name,row.workspace]).sort()).toEqual([[row.frameworkPackage,"framework"],[row.rootPackage,"."]].sort());for(const scope of scopes){const native=cargo(root,scope.manifest);expect(native.status,native.text).toBe(0);const metadata=JSON.parse(native.text);expect(metadata.workspace_members).toHaveLength(1);}
+ expect(selectedCargoArguments(root,["check","-p",row.rootPackage])).toEqual(["check","--manifest-path",join(root,"framework/product/Cargo.toml"),"-p",row.rootPackage]);expect(selectedCargoArguments(root,["check","-p",row.frameworkPackage])).toEqual(["check","--manifest-path",join(root,"framework/general/Cargo.toml"),"-p",row.frameworkPackage]);
+});
+
+
+test("current physical workspace admissions and selected nextest profiles match independent native documents",async()=>{
+ const root=process.cwd(),{repositoryCargoTestPolicyV1}=await import("../../../🟦️.ts"),scopes=discoverCargoWorkspaces(root),packages=scopes.flatMap(scope=>{const members=cargoWorkspaceMembers(root,scope),document=TOML.parse(readFileSync(join(root,scope.manifest),"utf8")) as any;
+  expect(members.map(row=>relative(join(root,scope.directory),join(root,row.directory)).replaceAll("\\","/")||".").sort()).toEqual([...document.workspace.members].sort());return members;});
+ for(const target of fixture.policyPackages){const selected=packages.find(row=>row.name===target.name);expect(selected?.workspace).toBe(target.workspace);const configPath=join(root,target.workspace,".config/nextest.toml"),source=readFileSync(configPath,"utf8"),config=TOML.parse(source) as any;expect(Bun.TOML.parse(source)).toEqual(config);
+  for(const [level,period]of Object.entries(fixture.profilePeriods)){expect(config.profile[level]["slow-timeout"]).toEqual({period,"terminate-after":1});const policy=repositoryCargoTestPolicyV1(join(root,selected!.manifest),root,{...process.env,SEMIO_TEST_LEVEL:level});expect(policy.configPath).toBe(configPath);expect(policy.level).toBe(level);}
+ }
+},30000);
+
+
+test("all-root dependency preparation honors explicit package workspaces beneath native child owners",()=>{
+ const row=fixture.overlappingOwners,root=mkdtempSync(join(artifactRoot!,"workspace-prepare-nested-"));
+ put(root,"Cargo.toml",workspace(row.rootMembers,'[workspace.dependencies]\ngeneral={package="'+row.frameworkPackage+'",path="framework/general"}\n').replace('member-manifests='+JSON.stringify(row.rootMembers.map((m:string)=>m+"/Cargo.toml")),'member-manifests='+JSON.stringify(row.rootAdmission)).replace('[workspace]\n','[workspace]\nexclude=["framework"]\n'));
+ put(root,"framework/Cargo.toml",workspace(row.frameworkMembers).replace('[workspace]\n','[workspace]\nexclude=["product"]\n'));put(root,"framework/product/Cargo.toml",pkg(row.rootPackage,'[dependencies]\ngeneral={workspace=true}\n').replace('[package]\n','[package]\nworkspace="'+row.rootPackageWorkspace+'"\n'));put(root,"framework/product/🦀️.rs","pub fn product() {}\n");put(root,"framework/general/Cargo.toml",pkg(row.frameworkPackage));put(root,"framework/general/🦀️.rs","pub fn general() {}\n");
+ const native=cargo(root,"Cargo.toml");expect(native.status,native.text).toBe(0);expect(JSON.parse(native.text).workspace_members).toHaveLength(1);const tree=Bun.spawnSync(["cargo","tree","--offline","--manifest-path",join(root,"Cargo.toml"),"-p",row.frameworkPackage],{cwd:root,stdout:"pipe",stderr:"pipe"});expect(tree.exitCode,tree.stderr.toString()).toBe(0);expect(tree.stdout.toString()).toContain(row.frameworkPackage);
+ expect(()=>prepareCargoOwners(root,discoverCargoWorkspaces(root).find(scope=>scope.directory===".")!)).not.toThrow();
+});
+
+
+test("named dependency preparation agrees with actual Cargo root graph reachability",()=>{
+ const row=fixture.overlappingOwners,root=mkdtempSync(join(artifactRoot!,"workspace-prepare-reachable-"));
+ put(root,"Cargo.toml",workspace(row.rootMembers,'[workspace.dependencies]\ngeneral={package="'+row.frameworkPackage+'",path="framework/general"}\n').replace('member-manifests='+JSON.stringify(row.rootMembers.map((m:string)=>m+"/Cargo.toml")),'member-manifests='+JSON.stringify(row.rootAdmission)).replace('[workspace]\n','[workspace]\nexclude=["framework"]\n'));
+ put(root,"framework/Cargo.toml",workspace([...row.frameworkMembers,"orphan"]).replace('[workspace]\n','[workspace]\nexclude=["product"]\n'));put(root,"framework/product/Cargo.toml",pkg(row.rootPackage,'[dependencies]\ngeneral={workspace=true}\n').replace('[package]\n','[package]\nworkspace="'+row.rootPackageWorkspace+'"\n'));put(root,"framework/product/🦀️.rs","pub fn product() {}\n");put(root,"framework/general/Cargo.toml",pkg(row.frameworkPackage));put(root,"framework/general/🦀️.rs","pub fn general() {}\n");put(root,"framework/orphan/Cargo.toml",pkg("unreachable-module"));put(root,"framework/orphan/🦀️.rs","pub fn orphan() {}\n");
+ const selected=discoverCargoWorkspaces(root).find(scope=>scope.directory===".")!;
+ for(const selection of fixture.reachablePreparation){const tree=Bun.spawnSync(["cargo","tree","--offline","--manifest-path",join(root,"Cargo.toml"),...selection.names.flatMap((name:string)=>["-p",name])],{cwd:root,stdout:"pipe",stderr:"pipe"});expect(tree.exitCode===0,tree.stderr.toString()).toBe(selection.valid);if(selection.valid)expect(()=>prepareCargoOwners(root,selected,selection.names)).not.toThrow();else expect(()=>prepareCargoOwners(root,selected,selection.names)).toThrow();}
 });

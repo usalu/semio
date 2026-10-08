@@ -75,7 +75,72 @@ impl Default for Wfc2dConfig {
     }
 }
 
-store::impl_whole_record_config!(Wfc2dConfig);
+impl store::ConfigRecord for Wfc2dConfig {}
+
+/// 🔺️ Field-sparse diff of [`Wfc2dConfig`]: each field is an optional absolute value.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Wfc2dConfigDiff {
+    pub camera_x: Option<f64>,
+    pub camera_y: Option<f64>,
+    pub camera_zoom: Option<f64>,
+    pub active_tile_id: Option<String>,
+}
+
+impl protocol::DiffAlgebra<Wfc2dConfig> for Wfc2dConfigDiff {
+    fn inverse(&self, base: &Wfc2dConfig) -> Self {
+        Self {
+            camera_x: self.camera_x.as_ref().map(|_| base.camera_x.clone()),
+            camera_y: self.camera_y.as_ref().map(|_| base.camera_y.clone()),
+            camera_zoom: self.camera_zoom.as_ref().map(|_| base.camera_zoom.clone()),
+            active_tile_id: self.active_tile_id.as_ref().map(|_| base.active_tile_id.clone()),
+        }
+    }
+    fn between(base: &Wfc2dConfig, other: &Wfc2dConfig) -> Self {
+        Self {
+            camera_x: (base.camera_x != other.camera_x).then(|| other.camera_x.clone()),
+            camera_y: (base.camera_y != other.camera_y).then(|| other.camera_y.clone()),
+            camera_zoom: (base.camera_zoom != other.camera_zoom).then(|| other.camera_zoom.clone()),
+            active_tile_id: (base.active_tile_id != other.active_tile_id).then(|| other.active_tile_id.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.camera_x.is_none() && self.camera_y.is_none() && self.camera_zoom.is_none() && self.active_tile_id.is_none()
+    }
+}
+
+impl protocol::MutationDiff<Wfc2dConfig> for Wfc2dConfigDiff {
+    fn apply(&self, base: &Wfc2dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Wfc2dConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.camera_x {
+            next.camera_x.clone_from(value);
+        }
+        if let Some(value) = &self.camera_y {
+            next.camera_y.clone_from(value);
+        }
+        if let Some(value) = &self.camera_zoom {
+            next.camera_zoom.clone_from(value);
+        }
+        if let Some(value) = &self.active_tile_id {
+            next.active_tile_id.clone_from(value);
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, later: Self) {
+        if later.camera_x.is_some() {
+            self.camera_x = later.camera_x;
+        }
+        if later.camera_y.is_some() {
+            self.camera_y = later.camera_y;
+        }
+        if later.camera_zoom.is_some() {
+            self.camera_zoom = later.camera_zoom;
+        }
+        if later.active_tile_id.is_some() {
+            self.active_tile_id = later.active_tile_id;
+        }
+    }
+}
 
 /// 🀄️ The tile a pin gesture in this pane assigns: the armed id when it names a real tile, else the
 /// document's first tile — never an empty id that `pin-slot` would refuse.

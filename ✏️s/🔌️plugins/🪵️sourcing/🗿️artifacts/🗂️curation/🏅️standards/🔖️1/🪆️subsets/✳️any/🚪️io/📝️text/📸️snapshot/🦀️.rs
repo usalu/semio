@@ -192,7 +192,7 @@ pub(crate) fn contributed_sourcing_modules(contributions_json: &str) -> Vec<Cont
 /// each contributed module whose id no module already serves — a `sourcing-module-beams` extension
 /// re-contributing the authored `beams` module installs nothing, it does not duplicate it.
 pub fn sourcing_modules(contributions_json: &str) -> Vec<SourcingModules> {
-    let mut modules: Vec<SourcingModules> = vec![beams::BeamsModule.into(), windows::WindowsModule.into(), slabs::SlabsModule.into(), reuse::ReuseModule.into()];
+    let mut modules: Vec<SourcingModules> = authored_modules();
     for module in contributed_sourcing_modules(contributions_json) {
         if modules.len() >= SOURCING_MAXIMUM_MODULES {
             break;

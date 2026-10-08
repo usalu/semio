@@ -4,34 +4,83 @@
   "title": "JackDiff",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "name", "manifestId", "manifest", "camera", "content", "rootNodeId", "query"],
+  "required": [
+    "schema",
+    "name",
+    "manifest",
+    "camera",
+    "content",
+    "query"
+  ],
   "properties": {
-    "schema": { "type": ["string", "null"], "x-semio-state": "artifact" },
-    "name": { "type": ["string", "null"], "x-semio-state": "artifact" },
-    "manifestId": { "type": ["string", "null"], "x-semio-state": "artifact" },
+    "schema": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "name": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "manifestId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
     "manifest": {
       "anyOf": [
-        { "type": "null" },
-        { "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/artifact.json#/$defs/Manifest" }
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/artifact.json#/$defs/Manifest"
+        }
       ],
       "x-semio-state": "artifact"
     },
     "camera": {
       "anyOf": [
-        { "type": "null" },
-        { "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/artifact.json#/$defs/Camera" }
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/artifact.json#/$defs/Camera"
+        }
       ],
       "x-semio-state": "artifact"
     },
     "content": {
       "anyOf": [
-        { "type": "null" },
-        { "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json" }
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json"
+        }
       ],
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
     },
-    "rootNodeId": { "type": ["string", "null"], "x-semio-state": "artifact" },
-    "query": { "type": ["string", "null"], "x-semio-state": "artifact" }
+    "rootNodeId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    },
+    "query": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-state": "artifact"
+    }
   }
 }

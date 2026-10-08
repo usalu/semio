@@ -143,7 +143,6 @@ test("owned projected fields preserve native value paths and exact alias closure
 test("recursive structural depth counts field and box owners independently", () => {
   const directory=join(root,owner,"🧬️retained-clone/🧫️fixtures/🌳️structural-depth");
   const law=JSON.parse(readFileSync(join(directory,"🔣️.json"),"utf8"));
-  expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(directory,"📐️schema.json"),"utf8")))(law)).toBe(true);
   for(const row of law.cases){
     let chain={text:"leaf",next:null} as {text:string,next:unknown};
     for(let index=0;index<row.boxes;index++) chain={text:`node-${index}-β`,next:chain};

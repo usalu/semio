@@ -1,9 +1,11 @@
 {
   "columns": {
-    "values": [
+    "modified": [
       {
-        "name": "town",
-        "kind": "str"
+        "index": 0,
+        "diff": {
+          "name": "town"
+        }
       }
     ]
   }

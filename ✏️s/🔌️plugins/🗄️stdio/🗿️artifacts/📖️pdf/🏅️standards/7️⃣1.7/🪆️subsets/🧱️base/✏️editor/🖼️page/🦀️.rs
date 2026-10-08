@@ -7,7 +7,7 @@
 
 use crate::standards::v1_7::subsets::base::schema::diff::PdfPageBox;
 use crate::standards::v1_7::subsets::base::schema::mutations::{
-    insert_object::InsertObject, insert_page::InsertPage, move_page::MovePage, remove_catalog_entry::RemoveCatalogEntry, remove_object::RemoveObject, remove_embedded_file::RemoveEmbeddedFile, remove_named_destination::RemoveNamedDestination, remove_page::RemovePage, remove_trailer_entry::RemoveTrailerEntry, set_annotation::SetAnnotation, set_embedded_file::SetEmbeddedFile, set_acro_form::SetAcroForm, set_document_id::SetDocumentId, set_color_space::SetColorSpace, set_catalog_entry::SetCatalogEntry, set_encryption::SetEncryption, set_ext_g_state::SetExtGState, set_font::SetFont, set_form::SetForm, set_snapshot::SetSnapshot, set_trailer_entry::SetTrailerEntry, set_open_action::SetOpenAction, set_output_intents::SetOutputIntents, set_pattern::SetPattern, set_properties::SetProperties, set_image::SetImage, set_info::SetInfo, set_language::SetLanguage, set_mark_info::SetMarkInfo, set_metadata::SetMetadata, set_named_destination::SetNamedDestination, set_object_value::SetObjectValue, set_optional_content::SetOptionalContent, set_outlines::SetOutlines, set_page_box::SetPageBox, set_page_content::SetPageContent, set_page_labels::SetPageLabels, set_page_layout::SetPageLayout, set_page_media_box::SetPageMediaBox, set_page_mode::SetPageMode, set_page_rotation::SetPageRotation, set_page_user_unit::SetPageUserUnit, set_shading::SetShading, set_viewer_preferences::SetViewerPreferences, PdfMutation,
+    insert_object::InsertObject, insert_page::InsertPage, move_page::MovePage, remove_catalog_entry::RemoveCatalogEntry, remove_object::RemoveObject, remove_embedded_file::RemoveEmbeddedFile, remove_named_destination::RemoveNamedDestination, remove_page::RemovePage, replace_page::ReplacePage, remove_trailer_entry::RemoveTrailerEntry, set_annotation::SetAnnotation, set_embedded_file::SetEmbeddedFile, set_acro_form::SetAcroForm, set_document_id::SetDocumentId, set_color_space::SetColorSpace, set_catalog_entry::SetCatalogEntry, set_encryption::SetEncryption, set_ext_g_state::SetExtGState, set_font::SetFont, set_form::SetForm, set_trailer_entry::SetTrailerEntry, set_open_action::SetOpenAction, set_output_intents::SetOutputIntents, set_pattern::SetPattern, set_properties::SetProperties, set_image::SetImage, set_info::SetInfo, set_language::SetLanguage, set_mark_info::SetMarkInfo, set_metadata::SetMetadata, set_named_destination::SetNamedDestination, set_object_value::SetObjectValue, set_optional_content::SetOptionalContent, set_outlines::SetOutlines, set_page_box::SetPageBox, set_page_content::SetPageContent, set_page_labels::SetPageLabels, set_page_layout::SetPageLayout, set_page_media_box::SetPageMediaBox, set_page_mode::SetPageMode, set_page_rotation::SetPageRotation, set_page_user_unit::SetPageUserUnit, set_shading::SetShading, set_viewer_preferences::SetViewerPreferences, PdfMutation,
 };
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfAction, PdfAnnotation, PdfAnnotationKind, PdfAppearance, PdfAppearanceEntry, PdfBaseEncoding, PdfBorderStyle, PdfCharProc, PdfColorSpace, PdfDate, PdfDestination, PdfDestinationFit, PdfDictEntry, PdfEmbeddedFile, PdfEncryption, PdfEncryptionAlgorithm, PdfExtGState, PdfFileSpecification, PdfFont, PdfLineCap, PdfLineJoin, PdfFontDescriptor, PdfFontKind, PdfFontProgram, PdfFormField, PdfFormFieldKind, PdfFunction, PdfFormXObject, PdfImage, PdfImageCodec, PdfImageMask, PdfMarkInfo, PdfMarkupAnnotation, PdfMatrix, PdfNamedColorSpace, PdfNamedDestination, PdfNamedProperties, PdfObject, PdfOpenAction, PdfOutputIntent, PdfPattern, PdfPatternKind, PdfSimpleEncoding, PdfOp, PdfOptionalContent, PdfOptionalContentGroup, PdfOutlineItem, PdfPage, PdfPageLabelRange, PdfPageLabelStyle, PdfPageLayout, PdfPageMode, PdfShadingKind, PdfTextArrayItem, PdfTextString, PdfTransparencyGroup, PdfViewerPreferences, PDF_IDENTITY_MATRIX};
 use crate::PdfSnapshot;
@@ -554,8 +554,8 @@ pub fn apply_payload(snapshot: &PdfSnapshot, action: &str, payload: &str) -> Res
         "set-image-mask" => set_image_mask(snapshot, &object, &text, &extra),
         "set-form-content" => set_form_content(snapshot, &object, &text, x, y, width, height),
         "set-page-transition" => set_page_transition(snapshot, page, &text, &extra, x),
-        "set-catalog-entry" => set_named_object(&object, &text, "a catalog entry needs a key", |key| PdfMutation::RemoveCatalogEntry(RemoveCatalogEntry { key }), |key, value| PdfMutation::SetCatalogEntry(SetCatalogEntry { key, value })),
-        "set-trailer-entry" => set_named_object(&object, &text, "a trailer entry needs a key", |key| PdfMutation::RemoveTrailerEntry(RemoveTrailerEntry { key }), |key, value| PdfMutation::SetTrailerEntry(SetTrailerEntry { key, value })),
+        "set-catalog-entry" => set_named_object(&object, &text, "a catalog entry needs a key", |key| PdfMutation::RemoveCatalogEntry(RemoveCatalogEntry { key }), |key, value| PdfMutation::SetCatalogEntry(SetCatalogEntry { key, value, index: None })),
+        "set-trailer-entry" => set_named_object(&object, &text, "a trailer entry needs a key", |key| PdfMutation::RemoveTrailerEntry(RemoveTrailerEntry { key }), |key, value| PdfMutation::SetTrailerEntry(SetTrailerEntry { key, value, index: None })),
         "set-annotation-appearance" => set_annotation_appearance(snapshot, page, &object, &text),
         "set-glyph" => set_glyph(snapshot, &object, &text, x, y, width, height),
         "set-indirect-object" => set_indirect_object(snapshot, x, y, &text),
@@ -756,7 +756,7 @@ fn insert_object(snapshot: &PdfSnapshot, action: &str, page_index: usize, x: f64
         "insert-image" => {
             let id = format!("Im{}", snapshot.images.len() + 1);
             let image = PdfImage::rgb8(&id, 8, 8, vec![180; 8 * 8 * 3]);
-            extra.push(PdfMutation::SetImage(SetImage { image }));
+            extra.push(PdfMutation::SetImage(SetImage { image, index: None }));
             content.extend([PdfOp::Save, PdfOp::Transform { matrix: [width.max(1.0), 0.0, 0.0, height.max(1.0), x, y] }, PdfOp::PaintXObject { name: id }, PdfOp::Restore]);
         }
         other => return Err(fault(format!("unknown pdf page action '{other}'"))),
@@ -793,7 +793,7 @@ fn replace_image_samples(snapshot: &PdfSnapshot, object_id: &str, width: f64, he
         image.codec = PdfImageCodec::Raw;
         image.bits_per_component = 8;
         image.color_space = Some(color_space);
-        return Ok(vec![PdfMutation::SetImage(SetImage { image })]);
+        return Ok(vec![PdfMutation::SetImage(SetImage { image, index: None })]);
     }
     let page = snapshot.pages.get(object.page).ok_or_else(|| fault("pdf page is gone"))?;
     let mut content = page.content.clone();
@@ -831,7 +831,7 @@ fn font_for_base(snapshot: &PdfSnapshot, base_font: &str) -> (String, Option<Pdf
         return (font.id.clone(), None);
     }
     let id = format!("F{}", snapshot.fonts.len() + 1);
-    (id.clone(), Some(PdfMutation::SetFont(SetFont { font: PdfFont::standard(id, base_font) })))
+    (id.clone(), Some(PdfMutation::SetFont(SetFont { font: PdfFont::standard(id, base_font), index: None })))
 }
 
 fn set_outline(snapshot: &PdfSnapshot, page: usize, index: f64, title: &str) -> Result<Vec<PdfMutation>, Fault> {
@@ -945,14 +945,14 @@ fn set_embedded_file(snapshot: &PdfSnapshot, id: &str, file_name: &str, contents
         return Ok(vec![PdfMutation::RemoveEmbeddedFile(RemoveEmbeddedFile { id: id.to_string() })]);
     }
     let previous = snapshot.embedded_files.iter().find(|file| file.id == id);
-    Ok(vec![PdfMutation::SetEmbeddedFile(SetEmbeddedFile { file: PdfEmbeddedFile { id: id.to_string(), file_name: file_name.to_string(), description: previous.and_then(|file| file.description.clone()), mime_type: previous.and_then(|file| file.mime_type.clone()), data: contents.as_bytes().to_vec(), creation_date: previous.and_then(|file| file.creation_date.clone()), modification_date: previous.and_then(|file| file.modification_date.clone()), relationship: previous.and_then(|file| file.relationship.clone()), listed: true } })])
+    Ok(vec![PdfMutation::SetEmbeddedFile(SetEmbeddedFile { file: PdfEmbeddedFile { id: id.to_string(), file_name: file_name.to_string(), description: previous.and_then(|file| file.description.clone()), mime_type: previous.and_then(|file| file.mime_type.clone()), data: contents.as_bytes().to_vec(), creation_date: previous.and_then(|file| file.creation_date.clone()), modification_date: previous.and_then(|file| file.modification_date.clone()), relationship: previous.and_then(|file| file.relationship.clone()), listed: true }, index: None })])
 }
 
 fn set_named_destination(name: &str, page: usize) -> Result<Vec<PdfMutation>, Fault> {
     if name.is_empty() {
         return Err(fault("a named destination needs a name"));
     }
-    Ok(vec![PdfMutation::SetNamedDestination(SetNamedDestination { destination: PdfNamedDestination { name: name.to_string(), destination: PdfDestination::Page { page: page as u32, fit: PdfDestinationFit::Fit } } })])
+    Ok(vec![PdfMutation::SetNamedDestination(SetNamedDestination { destination: PdfNamedDestination { name: name.to_string(), destination: PdfDestination::Page { page: page as u32, fit: PdfDestinationFit::Fit } }, index: None })])
 }
 
 fn set_page_label(snapshot: &PdfSnapshot, page: usize, style: &str, prefix: &str, start: f64) -> Result<Vec<PdfMutation>, Fault> {
@@ -977,7 +977,7 @@ fn set_page_label(snapshot: &PdfSnapshot, page: usize, style: &str, prefix: &str
 
 fn set_mark_info(marked: f64, user_properties: f64, suspects: f64) -> Vec<PdfMutation> {
     let info = PdfMarkInfo { marked: marked >= 0.5, user_properties: user_properties >= 0.5, suspects: suspects >= 0.5 };
-    vec![PdfMutation::SetMarkInfo(SetMarkInfo { info: (info != PdfMarkInfo::default()).then_some(info) })]
+    vec![PdfMutation::SetMarkInfo(SetMarkInfo { info: (info != PdfMarkInfo::default()).then_some(info), entry_index: None })]
 }
 
 fn set_info_field(snapshot: &PdfSnapshot, field: &str, value: &str) -> Result<Vec<PdfMutation>, Fault> {
@@ -1106,7 +1106,7 @@ fn set_font_program(snapshot: &PdfSnapshot, id: &str, kind: &str, hex: &str) -> 
     let data = decode_hex(hex)?;
     let program = font_program(kind, data)?;
     font.kind = place_font_program(font.kind, program)?;
-    Ok(vec![PdfMutation::SetFont(SetFont { font })])
+    Ok(vec![PdfMutation::SetFont(SetFont { font, index: None })])
 }
 
 fn font_program(kind: &str, data: Vec<u8>) -> Result<PdfFontProgram, Fault> {
@@ -1156,7 +1156,7 @@ fn set_image_mask(snapshot: &PdfSnapshot, address: &str, kind: &str, value: &str
         "stencil" | "soft" => return Err(fault("a mask needs an image id")),
         other => return Err(fault(format!("unknown image mask '{other}'"))),
     }
-    Ok(vec![PdfMutation::SetImage(SetImage { image })])
+    Ok(vec![PdfMutation::SetImage(SetImage { image, index: None })])
 }
 
 fn image_by_address(snapshot: &PdfSnapshot, address: &str) -> Result<PdfImage, Fault> {
@@ -1188,13 +1188,13 @@ fn set_form_content(snapshot: &PdfSnapshot, id: &str, text: &str, x: f64, y: f64
         }
         None => PdfFormXObject::new(id, [x, y, x + width.max(1.0), y + height.max(1.0)], content),
     };
-    Ok(vec![PdfMutation::SetForm(SetForm { form })])
+    Ok(vec![PdfMutation::SetForm(SetForm { form, index: None })])
 }
 
 fn set_page_extra(snapshot: &PdfSnapshot, page: usize, kind: &str, text: &str, extra: &str, x: f64, y: f64) -> Result<Vec<PdfMutation>, Fault> {
     require_page(snapshot, page)?;
-    let mut next = snapshot.clone();
-    let target = &mut next.pages[page];
+    let mut next = snapshot.pages[page].clone();
+    let target = &mut next;
     match kind {
         "thumbnail" => target.thumbnail = none_if_empty(text),
         "metadata" => target.metadata = none_if_empty(text),
@@ -1225,7 +1225,7 @@ fn set_page_extra(snapshot: &PdfSnapshot, page: usize, kind: &str, text: &str, e
         }
         other => return Err(fault(format!("unknown page extra '{other}'"))),
     }
-    Ok(vec![PdfMutation::SetSnapshot(SetSnapshot { snapshot: next })])
+    Ok(vec![PdfMutation::ReplacePage(ReplacePage { index: page, page: next })])
 }
 
 fn annotation_at(snapshot: &PdfSnapshot, page: usize, object_id: &str) -> Result<(usize, PdfAnnotation), Fault> {
@@ -1641,8 +1641,8 @@ fn set_annotation_style(snapshot: &PdfSnapshot, page: usize, object_id: &str, as
 
 fn set_page_transition(snapshot: &PdfSnapshot, page: usize, style: &str, direction: &str, duration: f64) -> Result<Vec<PdfMutation>, Fault> {
     require_page(snapshot, page)?;
-    let mut next = snapshot.clone();
-    let target = &mut next.pages[page];
+    let mut next = snapshot.pages[page].clone();
+    let target = &mut next;
     target.transition = if style.is_empty() {
         None
     } else {
@@ -1657,7 +1657,7 @@ fn set_page_transition(snapshot: &PdfSnapshot, page: usize, style: &str, directi
     } else if duration > 0.0 {
         target.duration = Some(duration);
     }
-    Ok(vec![PdfMutation::SetSnapshot(SetSnapshot { snapshot: next })])
+    Ok(vec![PdfMutation::ReplacePage(ReplacePage { index: page, page: next })])
 }
 
 fn set_named_object(key: &str, value: &str, missing: &str, remove: impl FnOnce(String) -> PdfMutation, set: impl FnOnce(String, PdfObject) -> PdfMutation) -> Result<Vec<PdfMutation>, Fault> {
@@ -1690,7 +1690,7 @@ fn set_glyph(snapshot: &PdfSnapshot, id: &str, name: &str, x: f64, y: f64, width
         }
         _ => return Err(fault("glyph procedures belong to a Type 3 font")),
     }
-    Ok(vec![PdfMutation::SetFont(SetFont { font })])
+    Ok(vec![PdfMutation::SetFont(SetFont { font, index: None })])
 }
 
 fn set_indirect_object(snapshot: &PdfSnapshot, number: f64, generation: f64, name: &str) -> Result<Vec<PdfMutation>, Fault> {
@@ -1702,7 +1702,7 @@ fn set_indirect_object(snapshot: &PdfSnapshot, number: f64, generation: f64, nam
         return Err(fault("pdf object is gone"));
     }
     let value = PdfObject::Name(name.to_string());
-    let mutation = if snapshot.objects.iter().any(|object| object.id == id) { PdfMutation::SetObjectValue(SetObjectValue { id, value }) } else { PdfMutation::InsertObject(InsertObject { id, value }) };
+    let mutation = if snapshot.objects.iter().any(|object| object.id == id) { PdfMutation::SetObjectValue(SetObjectValue { id, value, index: None }) } else { PdfMutation::InsertObject(InsertObject { id, value, index: None }) };
     Ok(vec![mutation])
 }
 
@@ -1715,7 +1715,7 @@ fn set_mesh_data(snapshot: &PdfSnapshot, id: &str, decode_text: &str, hex: &str)
     if !decode_text.is_empty() {
         *decode = decode_text.split(',').map(|item| item.trim().parse::<f64>().map_err(|_| fault("mesh decode is comma-separated numbers"))).collect::<Result<Vec<_>, _>>()?;
     }
-    Ok(vec![PdfMutation::SetShading(SetShading { shading })])
+    Ok(vec![PdfMutation::SetShading(SetShading { shading, index: None })])
 }
 
 fn line_cap(number: f64) -> Result<PdfLineCap, Fault> {
@@ -1766,7 +1766,7 @@ fn set_resource_detail(snapshot: &PdfSnapshot, id: &str, aspect: &str, value: &s
                 "matte" => image.matte = if value.is_empty() || value == "clear" { None } else { Some(csv_numbers(value)?) },
                 other => return Err(fault(format!("an image has no '{other}'"))),
             }
-            Ok(vec![PdfMutation::SetImage(SetImage { image })])
+            Ok(vec![PdfMutation::SetImage(SetImage { image, index: None })])
         }
         "graphics" => {
             let mut state = snapshot.ext_g_states.iter().find(|item| item.id == id).cloned().unwrap_or_else(|| PdfExtGState { id: id.to_string(), ..PdfExtGState::default() });
@@ -1781,7 +1781,7 @@ fn set_resource_detail(snapshot: &PdfSnapshot, id: &str, aspect: &str, value: &s
                 "flatness" => state.flatness = clear_number(value, x),
                 other => return Err(fault(format!("a graphics state has no '{other}'"))),
             }
-            Ok(vec![PdfMutation::SetExtGState(SetExtGState { state })])
+            Ok(vec![PdfMutation::SetExtGState(SetExtGState { state, index: None })])
         }
         "font" => {
             let mut font = snapshot.fonts.iter().find(|font| font.id == id).cloned().ok_or_else(|| fault(format!("pdf font '{id}' is gone")))?;
@@ -1804,7 +1804,7 @@ fn set_resource_detail(snapshot: &PdfSnapshot, id: &str, aspect: &str, value: &s
                 "bbox" => slot.font_bbox = [x, y, x + width, y + height],
                 other => return Err(fault(format!("a font descriptor has no '{other}'"))),
             }
-            Ok(vec![PdfMutation::SetFont(SetFont { font })])
+            Ok(vec![PdfMutation::SetFont(SetFont { font, index: None })])
         }
         "form" => {
             let mut form = snapshot.forms.iter().find(|form| form.id == id).cloned().ok_or_else(|| fault(format!("pdf form '{id}' is gone")))?;
@@ -1824,7 +1824,7 @@ fn set_resource_detail(snapshot: &PdfSnapshot, id: &str, aspect: &str, value: &s
                 }
                 other => return Err(fault(format!("a form has no '{other}'"))),
             }
-            Ok(vec![PdfMutation::SetForm(SetForm { form })])
+            Ok(vec![PdfMutation::SetForm(SetForm { form, index: None })])
         }
         "shading" => {
             let mut shading = snapshot.shadings.iter().find(|item| item.id == id).cloned().ok_or_else(|| fault(format!("pdf shading '{id}' is gone")))?;
@@ -1834,7 +1834,7 @@ fn set_resource_detail(snapshot: &PdfSnapshot, id: &str, aspect: &str, value: &s
                 "bbox" => shading.bbox = if x < 0.0 { None } else { Some([x, y, x + width, y + height]) },
                 other => return Err(fault(format!("a shading has no '{other}'"))),
             }
-            Ok(vec![PdfMutation::SetShading(SetShading { shading })])
+            Ok(vec![PdfMutation::SetShading(SetShading { shading, index: None })])
         }
         "layers" => {
             let mut content = snapshot.optional_content.clone().unwrap_or_default();
@@ -1859,7 +1859,7 @@ fn set_graphics_state(snapshot: &PdfSnapshot, id: &str, blend: &str, fill_alpha:
     if !blend.is_empty() {
         state.blend_mode = Some(vec![blend.to_string()]);
     }
-    Ok(vec![PdfMutation::SetExtGState(SetExtGState { state })])
+    Ok(vec![PdfMutation::SetExtGState(SetExtGState { state, index: None })])
 }
 
 fn set_pattern(snapshot: &PdfSnapshot, id: &str, shading: &str, x: f64, y: f64, width: f64, height: f64) -> Result<Vec<PdfMutation>, Fault> {
@@ -1876,7 +1876,7 @@ fn set_pattern(snapshot: &PdfSnapshot, id: &str, shading: &str, x: f64, y: f64, 
         return Err(fault(format!("pdf shading '{shading}' is gone")));
     };
     let matrix = snapshot.patterns.iter().find(|item| item.id == id).map(|item| item.matrix).unwrap_or(PDF_IDENTITY_MATRIX);
-    Ok(vec![PdfMutation::SetPattern(SetPattern { pattern: PdfPattern { id: id.to_string(), matrix, kind, extra: Vec::new() } })])
+    Ok(vec![PdfMutation::SetPattern(SetPattern { pattern: PdfPattern { id: id.to_string(), matrix, kind, extra: Vec::new() }, index: None })])
 }
 
 fn set_color_space(snapshot: &PdfSnapshot, name: &str, kind: &str, separation: &str) -> Result<Vec<PdfMutation>, Fault> {
@@ -1892,7 +1892,7 @@ fn set_color_space(snapshot: &PdfSnapshot, name: &str, kind: &str, separation: &
         other => return Err(fault(format!("unknown color space '{other}'"))),
     };
     let _ = snapshot;
-    Ok(vec![PdfMutation::SetColorSpace(SetColorSpace { color_space: PdfNamedColorSpace { name: name.to_string(), color_space } })])
+    Ok(vec![PdfMutation::SetColorSpace(SetColorSpace { color_space: PdfNamedColorSpace { name: name.to_string(), color_space }, index: None })])
 }
 
 fn set_properties(snapshot: &PdfSnapshot, name: &str, key: &str, value: &str) -> Result<Vec<PdfMutation>, Fault> {
@@ -1906,7 +1906,7 @@ fn set_properties(snapshot: &PdfSnapshot, name: &str, key: &str, value: &str) ->
     } else {
         properties.entries.push(entry);
     }
-    Ok(vec![PdfMutation::SetProperties(SetProperties { properties })])
+    Ok(vec![PdfMutation::SetProperties(SetProperties { properties, index: None })])
 }
 
 fn set_font_metrics(snapshot: &PdfSnapshot, id: &str, encoding_name: &str, widths_text: &str, first: f64, ascent: f64) -> Result<Vec<PdfMutation>, Fault> {
@@ -1919,7 +1919,7 @@ fn set_font_metrics(snapshot: &PdfSnapshot, id: &str, encoding_name: &str, width
         }
         _ => return Err(fault("font metrics apply to a simple font")),
     }
-    Ok(vec![PdfMutation::SetFont(SetFont { font })])
+    Ok(vec![PdfMutation::SetFont(SetFont { font, index: None })])
 }
 
 fn write_simple_metrics(base_font: &str, slot: &mut PdfSimpleEncoding, first_char: &mut u32, slot_widths: &mut Vec<f64>, descriptor: &mut Option<PdfFontDescriptor>, encoding: Option<PdfSimpleEncoding>, widths: Option<Vec<f64>>, first: f64, ascent: f64) {
@@ -2022,7 +2022,7 @@ fn edit_shading(snapshot: &PdfSnapshot, object: &PageObject, action: &str, x: f6
             *bbox = [x0, y0, x1, y1];
         }
     }
-    Ok(vec![PdfMutation::SetShading(SetShading { shading })])
+    Ok(vec![PdfMutation::SetShading(SetShading { shading, index: None })])
 }
 
 fn image_color_space(width: u32, height: u32, bytes: usize) -> Result<PdfColorSpace, Fault> {
@@ -2049,7 +2049,7 @@ fn ensure_font(snapshot: &PdfSnapshot) -> (String, Option<PdfMutation>) {
         return (font.id.clone(), None);
     }
     let font = PdfFont::standard("F1", "Helvetica");
-    ("F1".into(), Some(PdfMutation::SetFont(SetFont { font })))
+    ("F1".into(), Some(PdfMutation::SetFont(SetFont { font, index: None })))
 }
 
 fn replace_shown_text(content: &mut [PdfOp], index: usize, text: &str) {

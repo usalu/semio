@@ -11,7 +11,7 @@ pub mod derived_composition {
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use {semio_framework_plugin::register_subset_validator,semio_framework_plugin::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::SubsetValidator,semio_framework_plugin::SubsetValidatorEntry};
+    use {semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
     use std::sync::OnceLock;
 
     const DIALECT_STRICT: Dialect = Dialect { artifact_kind: "s.stdio.docx", standard: StandardId("ecma-376"), subset: SubsetId("strict") };
@@ -97,7 +97,6 @@ pub use derived_composition::*;
 
 pub mod derived_construction {
     #[cfg(test)]
-    use crate::schema::mutations::set_snapshot;
     use crate::schema::snapshot::{DocxDocument, DocxParagraph, DocxRun, DocxXmlPart};
     use crate::standards::v_ecma_376::subsets::strict::schema::conformance::{check_strict_conformance, STRICT_REL_BASE};
     use crate::{DocxDiff, DocxMutation, DocxSnapshot};
@@ -163,18 +162,19 @@ use semio_framework_diagnostic::Severity;
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::schema::mutations::apply_docx_mutation(&mut self.snapshot, &mutation);
+            let (next, diff) = store::apply_outcome(&self.snapshot, protocol::Mutation::diff(&mutation, &self.snapshot));
+            self.snapshot = next;
             (self, diff)
         }
 
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <DocxDiff as protocol::MutationDiff<DocxSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             Ok(self)
         }
 
         /// 🛡️ The real construction gate: re-runs `check_strict_conformance` unconditionally,
         /// regardless of which path produced the in-flight snapshot (typed `add_paragraph`,
-        /// `from_binary`, a raw `SetSnapshot` mutation) -- a hard violation can never leave `build()`
+        /// `from_binary`, a raw `UpsertInstance`-style mutation) -- a hard violation can never leave `build()`
         /// as `Ok`.
         fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
             let hard: Vec<Diagnostic> = check_strict_conformance(&self.snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).collect();
@@ -200,7 +200,7 @@ use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use semio_s_artifact_stdio_zip::opc::resolve_relationship_target;
 
     /// 🎯️ This subset's dialect coordinate.
@@ -219,7 +219,7 @@ use semio_framework_diagnostic::TextSpan;
         type Parts = DocxParts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             DocxAnyAnalyzer::sniff(source)
         }
 
@@ -230,7 +230,7 @@ use semio_framework_diagnostic::TextSpan;
             if let Some(snapshot) = &inner.parts.snapshot {
                 let checks = check_strict_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
-                    confidence = IoConfidence::Low;
+                    confidence = semio_framework_plugin::io::Confidence::Low;
                 }
                 diagnostics.extend(checks);
             }

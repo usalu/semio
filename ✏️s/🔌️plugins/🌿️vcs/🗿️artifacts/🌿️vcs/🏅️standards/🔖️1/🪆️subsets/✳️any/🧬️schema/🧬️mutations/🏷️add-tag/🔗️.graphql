@@ -1,4 +1,5 @@
 # 🏷️ Direct add-tag payload.
 input AddTagInput {
   tag: String!
+  index: Int
 }

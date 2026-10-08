@@ -13,16 +13,17 @@ Roots (repo-relative):
 One Rust module per catalogue category, one registration table per module, keyed by catalogue kind id. Nothing else is touched except one mounting line pair in `GEO/🗃️registry/🦀️.rs` (section 2).
 
 ```rust
-use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
+use super::super::prelude::*; // the category module is a child of `registry`, itself a child of `geometry`
+
+fn box_outputs(inputs: &WidgetInputs) -> Result<Outputs, WidgetFault> {
+    let (w, d, h) = (inputs.number("width")?, inputs.number("depth")?, inputs.number("height")?);
+    let mut session = KernelSession::new();
+    let handle = session.brep().box_prim_sync(w, d, h).map_err(|error| kernel_fault(&error))?;
+    Ok(outputs([("shape", GeometryValue::shape(session.export(&handle)?))]))
+}
 
 fn box_(kind: &'static Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
-    finish(kind, (|| {
-        let (w, d, h) = (inputs.number("width")?, inputs.number("depth")?, inputs.number("height")?);
-        let mut session = KernelSession::new();
-        let handle = session.brep().box_prim_sync(w, d, h).map_err(kernel_fault)?;
-        let shape = session.export(&handle)?;
-        Ok(outputs([("shape", GeometryValue::shape(shape))]))
-    })())
+    finish(kind, box_outputs(&inputs))
 }
 
 pub const COMPUTES: &[ComputeEntry] = &[ComputeEntry { id: "brep.primitive.box", start: box_ }];
@@ -44,7 +45,7 @@ Module files (one `🦀️.rs` per folder, tests in `🧪️tests/🔬️unit/�
 | Category | Folder under `GEO/` | Owner |
 |---|---|---|
 | math-values | `🔢️math-values` | G (seed) |
-| brep-primitive | `🧊️brep-primitive` | G (seed: box, sphere) |
+| brep-primitive | `🧊️brep-primitive` | G seeded box and sphere; O2 adds cylinder, cone, torus, convexHull to the same table |
 | math-arithmetic | `🧮️math-arithmetic` | O1 |
 | math-vector | `➡️math-vector` | O1 |
 | math-list | `📚️math-list` | O1 |
@@ -83,7 +84,7 @@ Registration: `GEO/🗃️registry/🦀️.rs` mounts the category modules and l
 const TABLES: &[&[ComputeEntry]] = &[math_values::COMPUTES, brep_primitive::COMPUTES /* , yours */];
 ```
 
-Add your two lines (the `mod` and the `TABLES` element) with a targeted edit; do not reorder or reformat. The registry builds one `BTreeMap<&str, StartFn>` at first use and refuses (test) duplicate ids, unknown ids, and ids of another category's table.
+The seed modules `🔢️math-values` and `🧊️brep-primitive` are working templates (fixture in `🧫️fixtures/🔣️.json`, Rust test in `🧪️tests/🔬️unit/🦀️.rs` through `🧪️tests/🧰️oracle-support/🦀️.rs`, three.js oracle in `🧪️tests/🔬️unit/🟦️.ts`). Add your two lines (the `mod` and the `TABLES` element) with a targeted edit; do not reorder or reformat. The registry builds one `BTreeMap<&str, StartFn>` at first use and refuses (test) duplicate ids, unknown ids, and ids of another category's table.
 
 ## 3. Value types (`geometry::value`)
 
@@ -197,6 +198,8 @@ pub fn finish_with_quality(kind: &'static Kind, result: Result<(Outputs, Quality
 pub fn failed(fault: WidgetFault, quality: Quality) -> Box<dyn WidgetJob>;
 ```
 
+Cargo workspace: the generation3d crate now has its own workspace, so run cargo inside `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d`.
+
 Fuel accounting: one unit is "about one cheap kernel step" (one face tessellated, one boolean pair, one mesh batch). `Working` consumes the whole grant; `Done` consumes one unit and leaves the rest of the grant to the next widget. A job must return within the interactive wall budget for the grant it received, so map `fuel` to the kernel job's own `budget` (`ShapeTessellationJob::step(budget)`). `cancel()` must release kernel sessions; after `Done` the job is dropped. Progress is reported as `Working { progress }` and summed by the engine into the `widget-step` progress unit.
 
 Kernel helpers (same module):
@@ -249,7 +252,9 @@ Cycles: every widget on or downstream of a cycle gets fault `generation3d.geomet
 
 | Piece | State |
 |---|---|
-| Framework stepped driver + typed cache | pending |
-| `geometry::{value, inputs, compute, registry}` | pending |
-| Seed computes (math-values, brep-primitive box/sphere) | pending |
-| Engine + service | pending |
+| Framework stepped driver + typed cache (`protocol::{infer_field_step, try_infer_field, InferenceCursor, ComputeStep, InferencePending, InferenceFault, InferenceError}`) | compiles, 26/26 `os_inference` tests pass (run) |
+| `geometry::{value, inputs, compute, registry, widgets}` and `prelude` | written to this contract; NOT yet compiled: the dependency graph (neural-engine retirement API, os-flow, os-infinite) is mid-edit by peers. Names are final; if a compile shows drift, this row says so |
+| Seed computes (`math-values` 8 kinds, `brep-primitive` box and sphere) | written, not yet compiled; fixture-driven TS oracle tests pass (6/6, run) |
+| Engine (`engine::{GeometryEngine, GeometryHost, CacheMode}`) + service (`service::geometry_inference_service`) | written, not yet compiled |
+
+Compute lanes: write against the signatures above; the first green `cargo check -p semio-s-artifact-procedural-generation3d --lib` run from the generation3d workspace will be recorded here.

@@ -14,11 +14,12 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 pub struct ConnectSurfaces {
     pub surface_a_id: crate::model::EntityId,
     pub surface_b_id: crate::model::EntityId,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn connect_surfaces(surface_a_id: crate::model::EntityId, surface_b_id: crate::model::EntityId) -> EnergyModelMutation {
-    EnergyModelMutation::ConnectSurfaces(ConnectSurfaces { surface_a_id, surface_b_id })
+pub fn connect_surfaces(surface_a_id: crate::model::EntityId, surface_b_id: crate::model::EntityId, index: Option<u32>) -> EnergyModelMutation {
+    EnergyModelMutation::ConnectSurfaces(ConnectSurfaces { surface_a_id, surface_b_id, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ConnectSurfaces {

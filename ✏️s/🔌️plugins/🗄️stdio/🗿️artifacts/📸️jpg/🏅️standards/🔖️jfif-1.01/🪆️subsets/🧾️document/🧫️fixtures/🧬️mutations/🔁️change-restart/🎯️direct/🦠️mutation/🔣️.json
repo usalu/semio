@@ -1,6 +1,0 @@
-{
-  "mutation": "change-restart-interval",
-  "payload": {
-    "restartInterval": 8
-  }
-}

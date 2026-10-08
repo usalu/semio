@@ -27,6 +27,7 @@ path = "../../🔨️modules/🏪️store/📦️codec/🪶️snapshot-capabilit
 protocol-laws = ["record-codec-laws"]
 record-codec-laws = ["semio-framework-pack/corruption-testing"]
 durable-group-testing = []
+mutation-testing = []
 default = ["deflate"]
 deflate = ["semio-framework-replication/deflate", "semio-framework-pack/deflate"]
 # 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet terra-directory-and-run): the native
@@ -163,6 +164,7 @@ path = "../../🔨️modules/🧬️semio/🏗️bootstrap/🦀️.rs"
 required-features = ["native-bin"]
 
 [dev-dependencies]
+semio-framework = { workspace = true }
 semio-framework-schema = { workspace = true }
 blake3 = "1.8.2"
 semio-framework-pack = { workspace = true, features = ["corruption-testing"] }

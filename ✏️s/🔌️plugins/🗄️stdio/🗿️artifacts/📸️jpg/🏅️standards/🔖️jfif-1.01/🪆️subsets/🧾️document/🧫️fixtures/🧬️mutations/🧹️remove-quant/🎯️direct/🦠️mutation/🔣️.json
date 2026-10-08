@@ -1,6 +1,0 @@
-{
-  "mutation": "remove-quant-table",
-  "payload": {
-    "id": 1
-  }
-}

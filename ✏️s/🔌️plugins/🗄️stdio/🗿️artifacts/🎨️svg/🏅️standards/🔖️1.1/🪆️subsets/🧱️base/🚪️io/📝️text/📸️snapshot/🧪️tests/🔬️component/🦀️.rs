@@ -68,7 +68,7 @@ async fn owned_snapshot_codecs_preserve_literal_declarations_and_external_ingres
         assert_eq!(artifact.set_snapshot(invalid.clone()).expect_err("raw artifact replacement"), expected, "{}", case["id"]);
         assert_eq!(artifact, before, "{} replacement must be atomic", case["id"]);
         let diff = crate::SvgDiff { declaration: Some(invalid.doc.declaration.clone()), root: Some(crate::schema::diff::SvgNodeDiff::Replace { node: invalid.doc.root.clone() }), ..Default::default() };
-        assert!(<crate::SvgDiff as MutationDiff<SvgSnapshot>>::apply(&diff, &crate::schema::empty_svg_snapshot()).is_err(), "{} diff ingress", case["id"]);
+        assert!(protocol::apply_diff(&diff, &crate::schema::empty_svg_snapshot()).is_err(), "{} diff ingress", case["id"]);
         assert_eq!(write_svg_xml(&invalid.doc).expect_err("writer boundary"), expected, "{}", case["id"]);
     }
 

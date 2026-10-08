@@ -1,0 +1,5 @@
+# Actual WGPU Browser Source Catalog Closure
+
+The workspace selects the authored Repo library taxonomy as its browser generator authority. Actual scene production imports and exports world3d modelling, but that source was absent from browserProfile.sourceModulePaths and its inputPatterns contract. The exact source path was added once to both authored lists. No generated blanket append was used. The modelling payload schemas and implementation remain unchanged; independent review confirmed genuine production lanes and no fixture import.
+
+Existing registered owner test owns every static relative browser runtime import failed before the edit and passed afterward: actual1test/0fail/30skipped, Nx0/9.8s, terminal64184. Preimage 📥️oct8-runtime-browser-profile-preimage.json; receipts 🗑️generated/oct8-runtime-browser-catalog-red.log and oct8-runtime-browser-catalog-green.log. Full real browser compilation is separately rerunning as part of the runtime graph, so this focused source test is not claimed as a bundled runtime receipt.

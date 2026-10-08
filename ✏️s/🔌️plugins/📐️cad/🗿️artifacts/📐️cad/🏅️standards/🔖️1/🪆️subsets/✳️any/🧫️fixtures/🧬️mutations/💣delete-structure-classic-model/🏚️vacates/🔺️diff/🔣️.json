@@ -1,11 +1,12 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "shapeModel": null,
   "buildingModel": null,
   "energyModel": null,
-  "structureClassicModel": null,
+  "structureClassicModel": {
+    "child": null
+  },
   "drawings": null,
   "breps": null,
   "referencesByModelDefinitionId": null,

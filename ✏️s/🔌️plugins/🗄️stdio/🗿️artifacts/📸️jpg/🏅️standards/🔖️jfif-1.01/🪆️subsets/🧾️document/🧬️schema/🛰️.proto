@@ -1,8 +1,4 @@
 syntax = "proto3";
-package semio.s_stdio_jpg.artifact;
-message JpgArtifact {
-  string schema = 1;
-  uint32 width = 2;
-  uint32 height = 3;
-  bytes pixels = 4;
-}
+package semio.s_stdio_jpg;
+import "📸️snapshot/🛰️.proto";
+message JpgArtifact {string schema = 1; semio.s_stdio_jpg.snapshot.JpgImage image = 2;}

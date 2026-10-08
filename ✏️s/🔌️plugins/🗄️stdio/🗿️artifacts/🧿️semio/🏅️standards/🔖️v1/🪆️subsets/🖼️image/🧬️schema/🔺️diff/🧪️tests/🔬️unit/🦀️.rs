@@ -85,7 +85,7 @@ async fn absorb_law_holds_over_curated_ops() {
     let mut d1 = <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&base, &mid);
     let d2 = <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&mid, &after);
     d1.absorb(d2);
-    assert_eq!(d1.apply(&base).expect("apply must succeed for a well-formed fixture"), after);
+    assert_eq!(protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture"), after);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -93,9 +93,9 @@ async fn between_roundtrip_law() {
     let a = SemioImageSnapshot { width: 4, height: 4, frames: vec![frame(1, 16)], ..SemioImageSnapshot::default() };
     let b = SemioImageSnapshot { width: 4, height: 4, frames: vec![frame(1, 16), frame(2, 4)], colorspace: SemioColorspace::Grayscale, ..SemioImageSnapshot::default() };
     let ab = <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&a, &b);
-    assert_eq!(ab.apply(&a).expect("apply must succeed for a well-formed fixture"), b);
+    assert_eq!(protocol::apply_diff(&ab, &a).expect("apply must succeed for a well-formed fixture"), b);
     let ba = <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&b, &a);
-    assert_eq!(ba.apply(&b).expect("apply must succeed for a well-formed fixture"), a);
+    assert_eq!(protocol::apply_diff(&ba, &b).expect("apply must succeed for a well-formed fixture"), a);
     assert!(<SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&a, &a).is_empty());
 }
 
@@ -112,9 +112,9 @@ async fn inverse_law() {
         s
     };
     let d = <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&base, &next);
-    let mutated = d.apply(&base).expect("apply must succeed for a well-formed fixture");
+    let mutated = protocol::apply_diff(&d, &base).expect("apply must succeed for a well-formed fixture");
     let inv = d.inverse(&base);
-    assert_eq!(inv.apply(&mutated).expect("apply must succeed for a well-formed fixture"), base);
+    assert_eq!(protocol::apply_diff(&inv, &mutated).expect("apply must succeed for a well-formed fixture"), base);
 }
 
 /// 🧪️ field_sweep — THE acceptance criterion: `sweep_a`/`sweep_b` differ in every mutable
@@ -153,7 +153,7 @@ async fn field_sweep() {
     };
 
     let ab = <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&sweep_a, &sweep_b);
-    assert_eq!(ab.apply(&sweep_a).expect("apply must succeed for a well-formed fixture"), sweep_b);
+    assert_eq!(protocol::apply_diff(&ab, &sweep_a).expect("apply must succeed for a well-formed fixture"), sweep_b);
     assert!(ab.width.is_some());
     assert!(ab.height.is_some());
     assert!(ab.colorspace.is_some());
@@ -169,7 +169,7 @@ async fn field_sweep() {
     assert!(!metadata_ab.added.is_empty(), "metadata: added not exercised");
 
     let ba = <SemioImageDiff as DiffAlgebra<SemioImageSnapshot>>::between(&sweep_b, &sweep_a);
-    assert_eq!(ba.apply(&sweep_b).expect("apply must succeed for a well-formed fixture"), sweep_a);
+    assert_eq!(protocol::apply_diff(&ba, &sweep_b).expect("apply must succeed for a well-formed fixture"), sweep_a);
     assert_eq!(ba.icc, Some(Some(vec![1, 2, 3])), "icc None->Some must be tri-state Some(Some(_))");
     let frames_ba = ba.frames.as_ref().expect("frames must differ");
     assert!(!frames_ba.removed.is_empty(), "reverse direction must exercise a removed frame (a is shorter)");

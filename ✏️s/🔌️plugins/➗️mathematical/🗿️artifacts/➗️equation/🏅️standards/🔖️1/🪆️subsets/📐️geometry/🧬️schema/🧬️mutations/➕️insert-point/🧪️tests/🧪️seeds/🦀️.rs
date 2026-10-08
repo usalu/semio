@@ -57,7 +57,7 @@ fn produced() -> protocol::MutationOutcome<EquationDiff> {
 async fn applies_to_committed_after() {
     let base = before();
     assert!(base.geometry.points.is_empty(), "seeds-the-empty-cloud-with-its-first-point's base cloud must be empty for `index: 0` to be the exact end of the cloud");
-    let applied = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(produced().diff(), &base).expect("insert-point applies to its committed before-snapshot");
+    let applied = protocol::apply_diff(produced().diff(), &base).expect("insert-point applies to its committed before-snapshot");
     assert_eq!(applied, expected_after(), "insert-point/seeds-the-empty-cloud-with-its-first-point: applied state differs from committed after-snapshot");
     assert_eq!(applied.geometry.points, after_geometry().points, "the inserted point must land verbatim at the payload's coordinates");
     assert_eq!(applied.equation, base.equation, "insert-point is geometry-scoped — it never touches the inline equation slot");
@@ -70,10 +70,10 @@ async fn inverse_restores_before() {
     let base = before();
     let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![EquationMutation::RemovePoint(RemovePoint { index: 0 })], "insert-point inverts to a remove-point at the same index, got {inverse:?}");
-    let mut snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(produced().diff(), &base).expect("forward applies");
+    let mut snapshot = protocol::apply_diff(produced().diff(), &base).expect("forward applies");
     for step in &inverse {
         let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(step, &snapshot);
-        snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(outcome.diff(), &snapshot).expect("inverse step applies");
+        snapshot = protocol::apply_diff(outcome.diff(), &snapshot).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "insert-point/seeds-the-empty-cloud-with-its-first-point: inverse did not restore the before-snapshot");
 }
@@ -133,7 +133,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the insert, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let produced_snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(&expected_diff(), &before()).expect("committed diff applies to the before-snapshot");
+    let produced_snapshot = protocol::apply_diff(&expected_diff(), &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced_snapshot, expected_after(), "insert-point/seeds-the-empty-cloud-with-its-first-point: committed diff did not carry before to after");
 }
 
@@ -149,8 +149,14 @@ async fn an_out_of_range_index_clamps_instead_of_rejecting() {
     assert_eq!(messages.len(), 1, "a clamped insert raises exactly one diagnostic, got {messages:?}");
     assert_eq!(messages[0].code.0, "mutation.clamped", "an out-of-range insert index is clamped, never reported as target-missing");
     assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Warning, "clamping is a Warning — insert-point has no Error or Fatal branch at all");
-    let clamped = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(outcome.diff(), &base).expect("a clamped insert still applies");
+    let clamped = protocol::apply_diff(outcome.diff(), &base).expect("a clamped insert still applies");
     assert_eq!(clamped.geometry.points, after_geometry().points, "clamping lands the point at the end of the cloud — here the same single slot index 0 names");
     let semantics = <EquationMutation as protocol::SemanticMutation<EquationSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("insert", "point", "insert-point", "InsertedPoint"), "the fixture must be bound to insert-point's own descriptor");
+}
+
+/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

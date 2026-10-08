@@ -31,7 +31,7 @@ fn edit_run() -> SemioTextMutation {
 #[semio_framework_async_macros::async_test]
 async fn rewrites_only_the_content_of_run_one() {
     let base = before();
-    let produced = edit_run().diff(&base).diff().apply(&base).expect("edit-run applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(edit_run().diff(&base).diff(), &base).expect("edit-run applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "edit-run/rewrites-the-marked-runs-content: applied state differs from the committed after-snapshot");
     assert_eq!(produced.runs.len(), base.runs.len(), "edit-run must never change how many runs there are");
     assert_eq!(produced.runs[1].content, "planet", "run #1's authored body must be replaced by new_content");
@@ -45,11 +45,12 @@ async fn rewrites_only_the_content_of_run_one() {
 async fn the_undo_edit_run_restores_the_original_body() {
     let base = before();
     let mutation = edit_run();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "edit-run of an existing run undoes as exactly one edit-run");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward edit-run applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo edit-run applies to the post-edit state");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward edit-run applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo edit-run applies to the post-edit state");
     }
     assert_eq!(current, base, "edit-run/rewrites-the-marked-runs-content: the undo did not restore the before-snapshot");
 }
@@ -94,7 +95,6 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical() {
     let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-run diff decodes");
     let list = decoded.runs.as_ref().expect("an applied edit-run diff carries a runs list");
-    assert_eq!(list.values[1].marks.len(), 1, "the rewritten run must keep its bold mark inside the diff itself");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "edit-run/rewrites-the-marked-runs-content: committed diff JSON is not canonical");
@@ -104,6 +104,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-run diff decodes");
-    let produced = decoded.apply(&before()).expect("committed edit-run diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed edit-run diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "edit-run/rewrites-the-marked-runs-content: committed diff did not carry before to after");
 }

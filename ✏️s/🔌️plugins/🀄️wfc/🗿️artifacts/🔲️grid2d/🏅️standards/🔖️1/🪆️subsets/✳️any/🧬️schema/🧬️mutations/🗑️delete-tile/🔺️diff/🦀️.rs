@@ -11,7 +11,7 @@ pub fn diff(payload: &super::DeleteTile, base: &Grid2dSnapshot) -> protocol::Mut
     let rules_removed: Vec<String> = base.rules.iter().filter(|rule| rule.tile_a_id == payload.id || rule.tile_b_id == payload.id).map(|rule| rule.id.clone()).collect();
     let pinned_removed: Vec<String> = base.pinned.iter().filter(|cell| cell.tile_id == payload.id).map(|cell| cell_id(cell.x, cell.y)).collect();
     let cascaded = rules_removed.len() + pinned_removed.len();
-    let outcome = protocol::MutationOutcome::new(Grid2dDiff { tiles_removed: vec![payload.id.clone()], rules_removed, pinned_removed, ..Default::default() });
+    let outcome = protocol::MutationOutcome::new(Grid2dDiff { tiles: Grid2dRows { removed: vec![payload.id.clone()], ..Default::default() }, rules: Grid2dRows { removed: rules_removed, ..Default::default() }, pinned: Grid2dRows { removed: pinned_removed, ..Default::default() }, ..Default::default() });
     if cascaded == 0 {
         outcome
     } else {

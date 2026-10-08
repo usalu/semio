@@ -76,17 +76,17 @@ fn archive_diffs_preserve_explicit_member_order_and_exact_inverse() {
     let mut reversed = snapshot.clone();
     reversed.entries.reverse();
     let diff = crate::schema::diff::ZipDiff::between(&snapshot, &reversed);
-    assert_eq!(diff.apply(&snapshot).unwrap(), reversed);
-    assert_eq!(diff.inverse(&snapshot).apply(&reversed).unwrap(), snapshot);
+    assert_eq!(protocol::apply_diff(&diff, &snapshot).unwrap(), reversed);
+    assert_eq!(protocol::apply_diff(&diff.inverse(&snapshot), &reversed).unwrap(), snapshot);
     let rename = crate::schema::diff::diff_rename_entry(&reversed.entries[0].name, "renamed.txt");
-    let expected = rename.apply(&reversed).unwrap();
+    let expected = protocol::apply_diff(&rename, &reversed).unwrap();
     let mut combined = diff;
     combined.absorb(rename);
-    assert_eq!(combined.apply(&snapshot).unwrap(), expected);
+    assert_eq!(protocol::apply_diff(&combined, &snapshot).unwrap(), expected);
     for order in row["entryOrdering"]["invalidOrders"].as_array().unwrap() {
         let value = serde_json::json!({"entries": {"order": order}});
         let diff: crate::schema::diff::ZipDiff = semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        assert!(diff.apply(&snapshot).is_err());
+        assert!(protocol::apply_diff(&diff, &snapshot).is_err());
     }
 }
 
@@ -108,10 +108,10 @@ fn removing_each_archive_member_undoes_to_its_exact_original_position() {
     let snapshot: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for entry in &snapshot.entries {
         let mutation = ZipMutation::RemoveEntry(crate::schema::mutations::remove_entry::RemoveEntry { name: entry.name.clone() });
-        let next = mutation.diff(&snapshot).diff().apply(&snapshot).unwrap();
+        let next = protocol::apply_diff(&mutation.diff(&snapshot).diff(), &snapshot).unwrap();
         let inverse = mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture");
         assert_eq!(inverse.len(), 1);
-        assert_eq!(inverse[0].diff(&next).diff().apply(&next).unwrap(), snapshot);
+        assert_eq!(protocol::apply_diff(&inverse[0].diff(&next).diff(), &next).unwrap(), snapshot);
     }
 }
 
@@ -124,7 +124,7 @@ fn archive_insertions_use_the_neutral_following_member_anchor() {
     let mutation = ZipMutation::AddEntry(crate::schema::mutations::add_entry::AddEntry { entry, before: Some(row["insertion"]["before"].as_str().unwrap().into()) });
     assert_eq!(ZipMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
     assert_eq!(ZipMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
-    let next = mutation.diff(&snapshot).diff().apply(&snapshot).unwrap();
+    let next = protocol::apply_diff(&mutation.diff(&snapshot).diff(), &snapshot).unwrap();
     let mut expected = row["snapshot"].clone();
     expected["entries"].as_array_mut().unwrap().insert(row["insertion"]["index"].as_u64().unwrap() as usize, row["insertion"]["entry"].clone());
     let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&next)).unwrap();
@@ -167,7 +167,7 @@ fn cp437_comment_edit_promotes_saves_reopens_and_undoes_exactly() {
     let emit = edit_node(&source, COMMENT_NODE_ID, "edited 🎒", &text_revision(&source.comment)).unwrap();
     let mutation = emit.artifact_mutations.into_iter().next().expect("comment mutation");
     assert_eq!(mutation, ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: "edited 🎒".into(), comment_utf8: true }));
-    let next = mutation.diff(&source).diff().apply(&source).unwrap();
+    let next = protocol::apply_diff(&mutation.diff(&source).diff(), &source).unwrap();
     let encoded = crate::standards::v2_0::subsets::base::io::encode_zip(&next).unwrap();
     let oracle = zip::ZipArchive::new(std::io::Cursor::new(&encoded)).unwrap();
     assert_eq!(oracle.comment(), "edited 🎒".as_bytes());
@@ -175,7 +175,7 @@ fn cp437_comment_edit_promotes_saves_reopens_and_undoes_exactly() {
     assert_eq!(reopened, next);
 
     let inverse = mutation.inverse(&source).expect("valid retained mutation inverse fixture").into_iter().next().expect("comment inverse");
-    let restored = inverse.diff(&reopened).diff().apply(&reopened).unwrap();
+    let restored = protocol::apply_diff(&inverse.diff(&reopened).diff(), &reopened).unwrap();
     let restored_bytes = crate::standards::v2_0::subsets::base::io::encode_zip(&restored).unwrap();
     let restored_oracle = zip::ZipArchive::new(std::io::Cursor::new(&restored_bytes)).unwrap();
     assert_eq!(restored_oracle.comment(), &[0x82]);
@@ -204,7 +204,7 @@ fn archive_rename_survives_reordering_and_matches_independent_json_oracle() {
     let emit = edit_node(&snapshot, &node, replacement, &text_revision(original_name)).unwrap();
     assert_eq!(emit.artifact_mutations.len(), 1);
     let mutation = &emit.artifact_mutations[0];
-    let next = MutationDiff::apply(mutation.diff(&snapshot).diff(), &snapshot).unwrap();
+    let next = protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).unwrap();
     let mut expected = input.clone();
     let entry = expected["entries"].as_array_mut().unwrap().iter_mut().find(|entry| entry["name"] == original_name).unwrap();
     entry["name"] = replacement.into();
@@ -212,7 +212,7 @@ fn archive_rename_survives_reordering_and_matches_independent_json_oracle() {
     assert_eq!(actual, expected);
     let inverse = mutation.inverse(&snapshot).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1);
-    assert_eq!(MutationDiff::apply(inverse[0].diff(&next).diff(), &next).unwrap(), snapshot);
+    assert_eq!(protocol::apply_diff(inverse[0].diff(&next).diff(), &next).unwrap(), snapshot);
     assert!(edit_node(&next, &node, "stale.txt", &text_revision(original_name)).is_err());
 }
 
@@ -232,7 +232,7 @@ fn archive_edits_refuse_ambiguous_stale_and_colliding_names() {
     duplicate.entries.push(snapshot.entries[0].clone());
     assert!(edit_node(&duplicate, &node, "unique.txt", &text_revision(&snapshot.entries[0].name)).is_err());
     let comment = edit_node(&snapshot, COMMENT_NODE_ID, row["emptyComment"].as_str().unwrap(), &text_revision(&snapshot.comment)).unwrap();
-    let next = MutationDiff::apply(comment.artifact_mutations[0].diff(&snapshot).diff(), &snapshot).unwrap();
+    let next = protocol::apply_diff(comment.artifact_mutations[0].diff(&snapshot).diff(), &snapshot).unwrap();
     assert!(next.comment.is_empty());
     assert!(edit_node(&next, COMMENT_NODE_ID, "stale comment", &text_revision(&snapshot.comment)).is_err());
     assert_eq!(next.entries, snapshot.entries);

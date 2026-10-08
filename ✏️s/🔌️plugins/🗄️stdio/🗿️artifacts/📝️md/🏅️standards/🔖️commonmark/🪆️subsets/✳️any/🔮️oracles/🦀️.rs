@@ -253,15 +253,6 @@ mod live {
         let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
         match spec.str("kind").as_str() {
             "" => return Err("mutation spec carries no `kind`".to_string()),
-            "set-snapshot" => {
-                for child in root.children().collect::<Vec<_>>() {
-                    child.detach();
-                }
-                let snapshot = params.get("snapshot").ok_or("set-snapshot: params carry no 'snapshot'")?;
-                for block_json in snapshot.array("blocks") {
-                    root.append(build_block(arena, &block_json)?);
-                }
-            }
             "insert-block" => {
                 let path = decode_path(&params)?;
                 let index = json_usize(&params, "index")?;
@@ -474,7 +465,7 @@ mod live {
     /// ↩️ The spec for the mutation that undoes `spec`, computed from the ORIGINAL document's own
     /// INDEPENDENT `comrak` projection — the same restore-the-prior-value law `MdMutation::inverse`
     /// implements (`InsertBlock` ↔ `RemoveBlock`, `ReplaceBlock`/`SetInlines` restore the prior
-    /// value, `SetSnapshot` restores the whole prior document), computed here from data rather than
+    /// value), computed here from data rather than
     /// through that trait: this oracle module has no reachable path to the subject's own
     /// `protocol::Mutation` impl, and mirroring its algebra independently keeps the two
     /// implementations honestly separate.
@@ -485,7 +476,6 @@ mod live {
         let path = params.get("path").cloned().unwrap_or(Json::Array(Vec::new()));
 
         let (inverse_kind, inverse_params) = match kind.as_str() {
-            "set-snapshot" => ("set-snapshot".to_string(), Json::Object(vec![("snapshot".to_string(), original)])),
             "insert-block" => {
                 let index = json_usize(&params, "index")?;
                 ("remove-block".to_string(), Json::Object(vec![("path".to_string(), path), ("index".to_string(), Json::Number(index as f64))]))

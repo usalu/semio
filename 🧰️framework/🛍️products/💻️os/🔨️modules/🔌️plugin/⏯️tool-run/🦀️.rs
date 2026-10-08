@@ -1318,7 +1318,7 @@ impl<M:Send+'static> ToolRunMemberEmissionOwner for ToolRunMemberEmissionState<M
         if maximum_items==0||maximum_bytes==0{return Ok(PluginCloseStep::Pending{released_items:0,released_bytes:0});}
         if self.current.is_some(){return Ok(PluginCloseStep::AwaitingInput{reason:"decoded member mutation retains its exact Store retirement issuer"});}
         if let Some(error)=self.retirement_refusal.as_ref(){
-            let bytes=error.message.capacity();
+            let bytes=match &error.message{std::borrow::Cow::Borrowed(_)=>0,std::borrow::Cow::Owned(message)=>message.capacity()};
             if bytes>maximum_bytes{return Ok(PluginCloseStep::Pending{released_items:0,released_bytes:0});}
             self.retirement_refusal.take();return Ok(PluginCloseStep::Pending{released_items:1,released_bytes:bytes});
         }

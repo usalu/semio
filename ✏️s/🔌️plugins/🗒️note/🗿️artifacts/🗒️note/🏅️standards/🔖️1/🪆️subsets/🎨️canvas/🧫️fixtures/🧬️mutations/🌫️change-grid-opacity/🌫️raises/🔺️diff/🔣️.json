@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "title": null,
@@ -7,7 +6,9 @@
   "gridVisible": null,
   "gridSpacing": null,
   "gridSubdivisions": null,
-  "gridOpacity": 0.75,
+  "gridOpacity": {
+    "value": 0.75
+  },
   "snapEnabled": null,
   "snapGridSpacing": null,
   "pencilWidth": null,

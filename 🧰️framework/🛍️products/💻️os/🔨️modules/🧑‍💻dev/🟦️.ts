@@ -59,10 +59,12 @@ if (typeof document !== "undefined" && document.getElementById("root") != null &
   const plugins = boot.plugins;
   if (renderer !== "wgpu") {
     const { bootFrameworkOs } = await import("@semio-tech/framework-renderer-react");
-    void bootFrameworkOs({ plugin: pluginFilter, plugins, surfaceSessionFactories: options.surfaceSessionFactories, appId, appRole, locks, defaults, brand }, { backboneWorkerFactory: options.backboneWorkerFactory, documentServices: options.documentServices }).catch((error) => {
+    return bootFrameworkOs({ plugin: pluginFilter, plugins, surfaceSessionFactories: options.surfaceSessionFactories, appId, appRole, locks, defaults, brand }, { backboneWorkerFactory: options.backboneWorkerFactory, documentServices: options.documentServices }).catch((error) => {
       console.error("[TRACE] os-dev react boot failed", error);
+      throw error;
     });
   }
 }
+return { dispose() {} };
 
 }

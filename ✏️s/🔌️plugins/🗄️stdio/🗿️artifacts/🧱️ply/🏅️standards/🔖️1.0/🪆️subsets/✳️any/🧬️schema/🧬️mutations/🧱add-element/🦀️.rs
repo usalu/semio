@@ -1,6 +1,4 @@
-//! 🧱️ `add-element` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🧱️ `add-element` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,14 +14,13 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for AddElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "element", kind: "add-element", record: "AddElement" };
 
     fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
-        agg_diff(&PlyMutation::AddElement(self.clone()), base)
+        let Self { index, element } = self;
+        protocol::MutationOutcome::new(diff_add_element(*index, element.clone()))
     }
     fn inverse(&self, base: &PlySnapshot) -> Result<Vec<PlyMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&PlyMutation::AddElement(self.clone()), base)?
-    
-    })
-}
+        let Self { element, .. } = self;
+        Ok({ vec![PlyMutation::RemoveElement(remove_element::RemoveElement { name: element.name.clone() })] })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Add element", "Element hinzufügen")
     }

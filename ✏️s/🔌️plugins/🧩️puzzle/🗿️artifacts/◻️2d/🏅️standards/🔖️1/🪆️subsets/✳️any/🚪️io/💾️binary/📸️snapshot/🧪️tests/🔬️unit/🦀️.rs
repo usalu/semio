@@ -1,3 +1,4 @@
+use crate::Puzzle2dSnapshot;
 use crate::standards::v1::subsets::any::io::binary::snapshot::*;
 use crate::standards::v1::subsets::any::io::text::snapshot as dsl;
 

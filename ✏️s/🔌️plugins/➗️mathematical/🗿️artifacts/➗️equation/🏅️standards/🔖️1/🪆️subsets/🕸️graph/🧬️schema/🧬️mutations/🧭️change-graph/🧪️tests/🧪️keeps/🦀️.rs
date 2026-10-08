@@ -39,7 +39,7 @@ fn produced() -> protocol::MutationOutcome<EquationDiff> {
 async fn applies_to_committed_after() {
     let base = before();
     assert!(base.graph.directed, "change-graph-directed/keeps-an-already-directed-graph-directed: the base graph must already be directed for this fixture to reach the no-op guard");
-    let applied = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(produced().diff(), &base).expect("an empty diff still applies cleanly");
+    let applied = protocol::apply_diff(produced().diff(), &base).expect("an empty diff still applies cleanly");
     assert_eq!(applied, expected_after(), "change-graph-directed/keeps-an-already-directed-graph-directed: applied state differs from committed after-snapshot");
     assert_eq!((applied.notation, applied.results, applied.computed), (base.notation, base.results, base.computed), "a no-op change-graph-directed must not mint a fresh notation/results/computed triple");
 }
@@ -52,10 +52,10 @@ async fn inverse_restores_before() {
     let forward = mutation();
     let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&forward, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![EquationMutation::ChangeGraphDirected(ChangeGraphDirected { new_directed: true })], "change-graph-directed inverts to the flag BASE carried, got {inverse:?}");
-    let mut snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(produced().diff(), &base).expect("forward applies");
+    let mut snapshot = protocol::apply_diff(produced().diff(), &base).expect("forward applies");
     for step in &inverse {
         let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(step, &snapshot);
-        snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(outcome.diff(), &snapshot).expect("inverse step applies");
+        snapshot = protocol::apply_diff(outcome.diff(), &snapshot).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "change-graph-directed/keeps-an-already-directed-graph-directed: inverse did not restore the before-snapshot");
 }
@@ -119,7 +119,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: EquationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced_snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced_snapshot = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced_snapshot, expected_after(), "change-graph-directed/keeps-an-already-directed-graph-directed: committed diff did not carry before to after");
 }
 
@@ -137,4 +137,10 @@ async fn flipping_the_flag_the_other_way_regenerates_the_whole_child_triple() {
     assert!(diff.equation.is_none(), "change-graph-directed never touches the inline equation slot");
     let semantics = <EquationMutation as protocol::SemanticMutation<EquationSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("change", "graph", "change-graph-directed", "ChangedGraphDirected"), "the fixture must be bound to change-graph-directed's own descriptor");
+}
+
+/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

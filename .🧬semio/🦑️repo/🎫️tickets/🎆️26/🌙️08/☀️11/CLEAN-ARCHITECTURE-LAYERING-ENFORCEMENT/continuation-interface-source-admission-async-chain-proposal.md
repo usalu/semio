@@ -1,0 +1,5 @@
+# Source Admission Async Chain Proposal
+
+Ticket-only normalizer body is based on exact core13 candidate with full physical/current candidate preimages retained. Inventory, captured-source inventory, prepared source options/collection, multi-scope capture, transaction authority reads, lease acquisition/release, callback witness checks and repository-finally closure now await canonical Git process ports. Required process operation is threaded through inventory/apply options and the canonical admission helper requires its third process capability argument. Nested release callbacks were transformed explicitly.
+
+This remains an unexecuted chain proposal. Every original caller, fixture and AST-extracted authority law must adopt required capability and await resulting values; compiled/runtime closure has not been claimed. Lease-retirement cancellation capacity needs explicit qualification; cancelled discovery cannot silently stand in for a fresh authority release phase. Original rosters/deadlines and full before/after owner boundaries remain required.

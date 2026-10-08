@@ -11,7 +11,6 @@ start document
 # ownership boundary to fix). One keyword line, space-separated `key=value` tokens, every variant's
 # args ALWAYS present (no sparse omission, unlike the sibling diff grammar). Every keyword/field-key
 # token below is copied verbatim from `print_stl_op`'s real match arms, not invented:
-#   set-snapshot snapshot=[<hex>,<hex>,[<triangle>,...]]
 #   set-solid-name name=<hex>
 #   insert-triangle index=<INT> triangle=[<vec3>,<vertices>]
 #   remove-triangle index=<INT>
@@ -25,20 +24,14 @@ start document
 # gets its own bracket (the depth marker `dsl`'s own flat `Shape::Tuple` printer is missing), which
 # is exactly what sidesteps that bug: `split_top_level`'s bracket-depth-aware comma split recovers
 # nesting unambiguously.
-document = set-snapshot | patch-snapshot | set-solid-name | insert-triangle | remove-triangle | set-triangle-normal | set-triangle-vertices
+document = set-solid-name | insert-triangle | remove-triangle | set-triangle-normal | set-triangle-vertices
 
-patch-snapshot = "patch-snapshot" "patch" "=" hex
-set-snapshot = "set-snapshot" "snapshot" "=" snapshot-value
 set-solid-name = "set-solid-name" "name" "=" hex
 insert-triangle = "insert-triangle" "index" "=" INT "triangle" "=" triangle-value
 remove-triangle = "remove-triangle" "index" "=" INT
 set-triangle-normal = "set-triangle-normal" "index" "=" INT "normal" "=" vec3-value
 set-triangle-vertices = "set-triangle-vertices" "index" "=" INT "vertices" "=" vertices-value
 
-# `enc_snapshot`: `[hex(schema),hex(solid_name),[triangle,triangle,...]]` — the one type
-# `🔺️diff::component`'s own primitives don't need (only `SetSnapshot`'s payload does), defined in
-# `🧬️mutations::component`'s own `enc_snapshot`/`dec_snapshot`.
-snapshot-value = "[" hex "," hex "," "[" triangle-list? "]" "]"
 triangle-list = triangle-value {"," triangle-value}*
 
 # `enc_triangle`/`enc_vertices`/`enc_vec3` — copied verbatim from `🔺️diff::component`'s own value

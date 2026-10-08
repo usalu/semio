@@ -8,17 +8,9 @@
 //! would encode an inconsistent `width*height*4` after-state.
 use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
 use crate::standards::v1::subsets::image::schema::mutations::set_dimensions;
-use crate::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
+use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
-
-/// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: `🦀️.rs` mounts only
-/// `📸️set-snapshot`'s triad for this subset, and the enum-level `Mutation::diff` deliberately
-/// carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/`mutation.target-missing`/
-/// `mutation.invariant` decision for `set-dimensions` lives in that file, so the fixture asserts against it
-/// rather than against the guardless enum arm.
-#[path = "../../🔺️diff/🦀️.rs"]
-mod leaf_diff;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️set-dimensions/↔️widens/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️set-dimensions/↔️widens/📸️snapshot/➡️after/🔣️.json");
@@ -36,21 +28,20 @@ fn mutation() -> SemioImageMutation {
     semio_framework_pack_json::from_json_str(MUTATION,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-dimensions mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width, height }) = mutation() else { panic!("set-dimensions/widens-the-frameless-canvas-to-four-by-two: the committed mutation must be the set-dimensions variant") };
-    leaf_diff::diff(&before(), width, height)
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ Both dimensions change; colorspace, bit depth and metadata ride along untouched.
 #[semio_framework_async_macros::async_test]
 async fn widens_and_heightens_the_canvas() {
     let base = before();
-    let produced = leaf_outcome().diff().apply(&base).expect("set-dimensions applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(leaf_outcome().diff(), &base).expect("set-dimensions applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "set-dimensions/widens-the-frameless-canvas-to-four-by-two: applied state differs from the committed after-snapshot");
     assert_eq!((produced.width, produced.height), (4, 2), "both dimensions must take the payload's absolute values");
     assert_eq!(produced.colorspace, base.colorspace, "set-dimensions must not touch the recorded source colorspace");
     assert_eq!(produced.metadata, base.metadata, "set-dimensions must not touch the metadata");
     let mut in_place = before();
-    apply_semio_image_mutation(&mut in_place, &mutation());
+    in_place = crate::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -59,12 +50,13 @@ async fn widens_and_heightens_the_canvas() {
 async fn the_undo_set_dimensions_restores_the_original_canvas() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width: 2, height: 1 })], "the undo must carry BASE's own dimensions, not a delta");
     let mut current = before();
-    apply_semio_image_mutation(&mut current, &mutation);
-    for step in &undo {
-        apply_semio_image_mutation(&mut current, step);
+    current = crate::applied(&current, &mutation).0;
+    for step in undo.iter().rev() {
+        current = crate::applied(&current, step).0;
     }
     assert_eq!(current, base, "set-dimensions/widens-the-frameless-canvas-to-four-by-two: the undo did not restore the before-snapshot");
 }
@@ -104,7 +96,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-dimensions diff decodes");
-    let produced = decoded.apply(&before()).expect("committed set-dimensions diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed set-dimensions diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-dimensions/widens-the-frameless-canvas-to-four-by-two: committed diff did not carry before to after");
 }
 

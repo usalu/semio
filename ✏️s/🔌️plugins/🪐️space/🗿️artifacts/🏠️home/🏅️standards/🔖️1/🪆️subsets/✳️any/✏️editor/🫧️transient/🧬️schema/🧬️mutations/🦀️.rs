@@ -17,8 +17,22 @@ pub enum HomeTransientMutation {
 
 
 
+/// 🫧️ The directory projection is derived hub state published one bounded page at a time, so its diff IS the folded projection
+/// (copy-on-write rows behind `Arc`s) and is never inverted: the page lane declares itself non-invertible.
+impl protocol::DiffAlgebra<HomeTransient> for HomeTransient {
+    fn inverse(&self, base: &HomeTransient) -> Self {
+        base.clone()
+    }
+    fn between(_base: &HomeTransient, other: &HomeTransient) -> Self {
+        other.clone()
+    }
+    fn is_empty(&self) -> bool {
+        false
+    }
+}
+
 impl protocol::MutationDiff<HomeTransient> for HomeTransient {
-    fn apply(&self, _base: &HomeTransient) -> protocol::MutationApplyResult<HomeTransient> {
+    fn apply(&self, _base: &HomeTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<HomeTransient> {
         Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {

@@ -41,7 +41,7 @@ use semio_framework_value::ToValue;
                     let kind = find_adjacency(program, &a, &b).map_or(AdjacencyKind::Preferred, |row| row.kind.clone());
                     let adjacency = new_adjacency(program, &a, &b, kind);
                     adjacencies.push(adjacency.clone());
-                    emitted.push(ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency }));
+                    emitted.push(ProgramMutation::ConnectAdjacency(leaves::connect_adjacency::ConnectAdjacency { adjacency, index: None }));
                 }
                 semio_framework_tool_machine::NodeGraphEditRow::Disconnect { synapse_id } => {
                     if !adjacencies.iter().any(|adjacency| adjacency.header.id.0 == synapse_id) {

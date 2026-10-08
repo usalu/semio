@@ -1,0 +1,1707 @@
+{
+  "examples": [
+    {
+      "id": "test-function",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "#[test] fn example(){ let _ = include_str!(\"🧫️fixtures/input.json\"); }",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": false,
+      "unresolved": false
+    },
+    {
+      "id": "cfg-test-module",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "#[cfg(test)] #[path=\"helper.rs\"] mod examples;",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": false,
+      "unresolved": false
+    },
+    {
+      "id": "cfg-not-test-module",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "#[cfg(not(test))] #[path=\"helper.rs\"] mod examples;",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "cfg-any-inactive",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "#[cfg(any(test,feature=\"testing\"))] mod examples { const DATA:&str=include_str!(\"🧫️fixtures/input.json\"); }",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": false,
+      "unresolved": false
+    },
+    {
+      "id": "cfg-any-active",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "#[cfg(any(test,feature=\"testing\"))] mod examples { const DATA:&str=include_str!(\"🧫️fixtures/input.json\"); }",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+      },
+      "features": [
+        "testing"
+      ],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "nested-test",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "mod live { #[cfg(test)] mod examples { const DATA:&str=include_str!(\"🧫️fixtures/input.json\"); } }",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": false,
+      "unresolved": false
+    },
+    {
+      "id": "unconditional-text",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "pub const DATA:&str=include_str!(\"🧫️fixtures/input.json\");",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "unconditional-bytes",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "pub const DATA:&[u8]=include_bytes!(r#\"🧫️fixtures/input.json\"#);",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "manifest-concat",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "pub const DATA:&str=include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"),\"/🧫️fixtures/input.json\"));",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");",
+        "/owner/🧫️fixtures/input.json": "{}"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "/owner",
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "computed-resource",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "const DATA:&str=include_str!(resource_path!());",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": false,
+      "unresolved": true
+    },
+    {
+      "id": "real-Fixture-named-payload",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "#[path=\"FixturePayload.rs\"] mod payload;",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": false,
+      "unresolved": false
+    },
+    {
+      "id": "comments-and-literals",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "// include_str!(\"🧫️fixtures/input.json\")\npub const NAME:&str = \"include_str!(fixture)\";",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": false,
+      "unresolved": false
+    },
+    {
+      "id": "static-import",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "import input from \"./🧫️fixtures/input.json\";",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "reexport",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "export {default} from \"./🧫️fixtures/input.json\";",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "dynamic-import",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "export const input = import(\"./🧫️fixtures/input.json\");",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "require",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "export const input = require(\"./🧫️fixtures/input.json\");",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "alias",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "import input from \"@input\";",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {
+        "@input": "src/🧫️fixtures/input.json"
+      },
+      "generated": {},
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "virtual",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "import input from \"virtual:input\";",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {
+        "virtual:input": "src/🧫️fixtures/input.json"
+      },
+      "generated": {},
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "url",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "const input = new URL(\"./🧫️fixtures/input.json\", import.meta.url);",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "read-literal",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "import {readFileSync} from \"node:fs\"; readFileSync(\"./🧫️fixtures/input.json\");",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": true,
+      "unresolved": false,
+      "workingDirectory": "src"
+    },
+    {
+      "id": "computed-import",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "const name=\"input\"; import(name);",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": false,
+      "unresolved": true
+    },
+    {
+      "id": "computed-resource",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "import {readFileSync} from \"node:fs\"; readFileSync(path);",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": false,
+      "unresolved": true,
+      "workingDirectory": "src"
+    },
+    {
+      "id": "generated-origin",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "import input from \"./generated.ts\";",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;",
+        "src/generated.ts": "export const input=1;"
+      },
+      "aliases": {},
+      "generated": {
+        "src/generated.ts": [
+          "src/🧫️fixtures/input.json"
+        ]
+      },
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "real-fixture-name",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "import {FixturePayload} from \"./FixturePayload.ts\";",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": false,
+      "unresolved": false
+    },
+    {
+      "id": "source-comment",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "// import(\"./🧫️fixtures/input.json\")\nexport const name=\"fixture\";",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": false,
+      "unresolved": false
+    },
+    {
+      "id": "aliased-read",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "import {readFileSync as load} from \"node:fs\";load(\"./🧫️fixtures/input.json\");",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": true,
+      "unresolved": false,
+      "workingDirectory": "src"
+    },
+    {
+      "id": "computed-url",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "const input=new URL(join(root,\"input\"),import.meta.url);",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": false,
+      "unresolved": true
+    },
+    {
+      "id": "concatenated-url",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "const input=new URL(\"./🧫️fixtures/\"+name,import.meta.url);",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": false,
+      "unresolved": true
+    },
+    {
+      "id": "concatenated-read",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "import{readFileSync}from\"node:fs\";readFileSync(\"./🧫️fixtures/\"+name);",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": false,
+      "unresolved": true,
+      "workingDirectory": "src"
+    },
+    {
+      "id": "local-macro-resource",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "macro_rules! data { () => {pub const DATA:&str=include_str!(\"🧫️fixtures/input.json\");} } data!();",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "unknown-expanded-macro",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "external_module!();",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": false,
+      "unresolved": true
+    },
+    {
+      "id": "production-vitest-exclusion",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "if(import.meta.vitest){await import(\"./🧫️fixtures/input.json\");} export const runtime=1;",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": false,
+      "unresolved": false,
+      "productionTests": "excluded"
+    },
+    {
+      "id": "test-vitest-inclusion",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "if(import.meta.vitest){await import(\"./🧫️fixtures/input.json\");} export const runtime=1;",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "mounted-asset-fixture-owner",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "const input=new URL(\"./runtime.json\",import.meta.url);",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": true,
+      "unresolved": false,
+      "assetOwners": {
+        "src/runtime.json": "src/🧫️fixtures/input.json"
+      }
+    },
+    {
+      "id": "mounted-asset-real-owner",
+      "roots": [
+        "src/main.ts"
+      ],
+      "files": {
+        "src/main.ts": "const input=new URL(\"./runtime.json\",import.meta.url);",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.ts": "export const FixturePayload = 1;",
+        "assets/runtime.json": "{}"
+      },
+      "aliases": {},
+      "generated": {},
+      "forbidden": false,
+      "unresolved": false,
+      "assetOwners": {
+        "src/runtime.json": "assets/runtime.json"
+      }
+    },
+    {
+      "id": "inner-crate-test",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "#![cfg(test)]\npub const DATA:&str=include_str!(\"🧫️fixtures/input.json\");",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": false,
+      "unresolved": false
+    },
+    {
+      "id": "inner-inline-test",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "mod examples {#![cfg(test)]\npub const DATA:&str=include_str!(\"🧫️fixtures/input.json\");}",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": false,
+      "unresolved": false
+    },
+    {
+      "id": "collection-🧫️examples",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "pub const DATA:&str=include_str!(\"🧫️examples/input.json\");",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");",
+        "src/🧫️examples/input.json": "{}"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "collection-🧪️fixtures",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "pub const DATA:&str=include_str!(\"🧪️fixtures/input.json\");",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");",
+        "src/🧪️fixtures/input.json": "{}"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "collection-🧪️examples",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "pub const DATA:&str=include_str!(\"🧪️examples/input.json\");",
+        "src/🧫️fixtures/input.json": "{}",
+        "src/FixturePayload.rs": "pub struct FixturePayload;",
+        "src/helper.rs": "pub const DATA:&str = include_str!(\"🧫️fixtures/input.json\");",
+        "src/🧪️examples/input.json": "{}"
+      },
+      "features": [],
+      "cfg": [],
+      "environment": {},
+      "manifestDirectory": "src",
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "dynamic-owned",
+      "roots": [
+        "src/entry.ts"
+      ],
+      "files": {
+        "src/entry.ts": "export async function run(url:string){return import(url)}",
+        "modules/runtime.js": "export const runtime = 1;"
+      },
+      "dynamicImports": {
+        "src/entry.ts": [
+          {
+            "path": "modules/runtime.js",
+            "sha256": "d926316c95295321b148a6f1748a181d400de61b333988d1c5cf9f93eb7a8006",
+            "sourceSha256": "b75d876cd65185c05c282ac89222e0a42ee0389036b5dd6c9bac8f8374b4e649",
+            "callsiteIndex": 0
+          }
+        ]
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": false,
+      "inputMismatch": false
+    },
+    {
+      "id": "dynamic-fixture-owned",
+      "roots": [
+        "src/entry.ts"
+      ],
+      "files": {
+        "src/entry.ts": "export async function run(url:string){return import(url)}",
+        "🧫️fixtures/runtime.js": "export const runtime = 1;"
+      },
+      "dynamicImports": {
+        "src/entry.ts": [
+          {
+            "path": "🧫️fixtures/runtime.js",
+            "sha256": "d926316c95295321b148a6f1748a181d400de61b333988d1c5cf9f93eb7a8006",
+            "sourceSha256": "b75d876cd65185c05c282ac89222e0a42ee0389036b5dd6c9bac8f8374b4e649",
+            "callsiteIndex": 0
+          }
+        ]
+      },
+      "features": [],
+      "forbidden": true,
+      "unresolved": false,
+      "inputMismatch": false
+    },
+    {
+      "id": "dynamic-stale-owned",
+      "roots": [
+        "src/entry.ts"
+      ],
+      "files": {
+        "src/entry.ts": "export async function run(url:string){return import(url)}",
+        "modules/runtime.js": "export const runtime = 1;"
+      },
+      "dynamicImports": {
+        "src/entry.ts": [
+          {
+            "path": "modules/runtime.js",
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "sourceSha256": "b75d876cd65185c05c282ac89222e0a42ee0389036b5dd6c9bac8f8374b4e649",
+            "callsiteIndex": 0
+          }
+        ]
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": false,
+      "inputMismatch": true
+    },
+    {
+      "id": "captured-macro",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "macro_rules! resource {($path:expr)=>{include_str!($path)}} pub const DATA:&str=resource!(\"🧫️fixtures/input.json\");",
+        "src/🧫️fixtures/input.json": "{}"
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": true
+    },
+    {
+      "id": "multi-arm-macro",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "macro_rules! resource {()=>{include_str!(\"🧫️fixtures/input.json\")};($other:expr)=>{\"\"};} pub const DATA:&str=resource!();",
+        "src/🧫️fixtures/input.json": "{}"
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": true
+    },
+    {
+      "id": "rust-fs-literal",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "pub fn payload()->Vec<u8>{std::fs::read(\"🧫️fixtures/input.json\").unwrap()}",
+        "🧫️fixtures/input.json": "{}"
+      },
+      "features": [],
+      "forbidden": true,
+      "unresolved": false,
+      "workingDirectory": ".",
+      "compilerInputOracle": false
+    },
+    {
+      "id": "rust-fs-aliased",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "use std::fs::read as load; pub fn run(path:&str){let _=load(path);}",
+        "🧫️fixtures/input.json": "{}"
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": true
+    },
+    {
+      "id": "rust-fs-module-alias",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "use std::fs as files; pub fn run(path:&str){let _=files::read_dir(path);}",
+        "🧫️fixtures/input.json": "{}"
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": true
+    },
+    {
+      "id": "rust-fs-unknown-cwd",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "pub fn run(){let _=std::fs::read(\"🧫️fixtures/input.json\");}",
+        "🧫️fixtures/input.json": "{}"
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": true
+    },
+    {
+      "id": "rust-fs-file-alias",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "use std::fs::File as Input; pub fn run(path:&str){let _=Input::open(path);}"
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": true
+    },
+    {
+      "id": "rust-fs-domain-name",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "mod fs {pub fn read(_: &str){}} pub fn run(){fs::read(\"🧫️fixtures/input.json\");}"
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": false
+    },
+    {
+      "id": "rust-fs-stdlib-glob",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "use std::fs::*; pub fn run(path:&str){let _=read(path);}"
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": true
+    },
+    {
+      "id": "mutation-testing-production-excluded",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "#[cfg(any(test,feature=\"mutation-testing\"))] pub const DATA:&str=include_str!(\"🧫️fixtures/input.json\");",
+        "src/🧫️fixtures/input.json": "{}"
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": false
+    },
+    {
+      "id": "mutation-testing-runtime-forbidden",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "#[cfg(any(test,feature=\"mutation-testing\"))] pub const DATA:&str=include_str!(\"🧫️fixtures/input.json\");",
+        "src/🧫️fixtures/input.json": "{}"
+      },
+      "features": [
+        "mutation-testing"
+      ],
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "absolute-out-dir-owner",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "features": [],
+      "cfg": [],
+      "rootDirectory": "/workspace",
+      "environment": {
+        "OUT_DIR": "/workspace/out"
+      },
+      "files": {
+        "src/lib.rs": "pub const DATA:&str=include_str!(concat!(env!(\"OUT_DIR\"),\"/value.json\"));",
+        "out/value.json": "{}"
+      },
+      "forbidden": false,
+      "unresolved": false,
+      "compilerInputOracle": false
+    },
+    {
+      "id": "windows-out-dir-owner",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "features": [],
+      "cfg": [],
+      "rootDirectory": "C:/workspace",
+      "environment": {
+        "OUT_DIR": "C:/workspace/out"
+      },
+      "files": {
+        "src/lib.rs": "pub const DATA:&str=include_str!(concat!(env!(\"OUT_DIR\"),\"/value.json\"));",
+        "out/value.json": "{}"
+      },
+      "forbidden": false,
+      "unresolved": false,
+      "compilerInputOracle": false
+    },
+    {
+      "id": "domain-fixtures-module",
+      "roots": [
+        "🔨️modules/🧫️fixtures/lib.rs"
+      ],
+      "features": [],
+      "cfg": [],
+      "files": {
+        "🔨️modules/🧫️fixtures/lib.rs": "pub const DOMAIN:u8=1;"
+      },
+      "forbidden": false,
+      "unresolved": false
+    },
+    {
+      "id": "bundled-module-url-mount",
+      "roots": [
+        "src/host.ts"
+      ],
+      "features": [],
+      "cfg": [],
+      "files": {
+        "src/host.ts": "export const worker=new URL(\"../worker.js/entry.js\",import.meta.url);",
+        "src/worker.ts": "export const value=1;"
+      },
+      "moduleUrls": {
+        "src/host.ts": "https://runtime.invalid/library.js/entry.js"
+      },
+      "resourceMounts": {
+        "/worker.js": "generated/worker"
+      },
+      "assetOwners": {
+        "generated/worker/entry.js": "src/worker.ts"
+      },
+      "forbidden": false,
+      "unresolved": false
+    },
+    {
+      "id": "bundled-module-url-fixture",
+      "roots": [
+        "src/host.ts"
+      ],
+      "features": [],
+      "cfg": [],
+      "files": {
+        "src/host.ts": "export const worker=new URL(\"../worker.js/entry.js\",import.meta.url);",
+        "🧫️fixtures/worker.js": "export const value=1;"
+      },
+      "moduleUrls": {
+        "src/host.ts": "https://runtime.invalid/library.js/entry.js"
+      },
+      "resourceMounts": {
+        "/worker.js": "generated/worker"
+      },
+      "assetOwners": {
+        "generated/worker/entry.js": "🧫️fixtures/worker.js"
+      },
+      "forbidden": true,
+      "unresolved": false
+    },
+    {
+      "id": "bundled-module-url-unmounted",
+      "roots": [
+        "src/host.ts"
+      ],
+      "features": [],
+      "cfg": [],
+      "files": {
+        "src/host.ts": "export const worker=new URL(\"../worker.js/entry.js\",import.meta.url);",
+        "src/worker.ts": "export const value=1;"
+      },
+      "moduleUrls": {
+        "src/host.ts": "https://runtime.invalid/library.js/entry.js"
+      },
+      "resourceMounts": {},
+      "assetOwners": {
+        "generated/worker/entry.js": "src/worker.ts"
+      },
+      "forbidden": false,
+      "unresolved": true
+    },
+    {
+      "id": "rust-logical-negation-is-not-macro",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "features": [],
+      "cfg": [],
+      "files": {
+        "src/lib.rs": "pub fn check(value:bool)->bool { if !(value) { return !value; } while !value { break; } value }"
+      },
+      "forbidden": false,
+      "unresolved": false
+    },
+    {
+      "id": "dynamic-exact-callsite-only",
+      "roots": [
+        "src/entry.ts"
+      ],
+      "files": {
+        "src/entry.ts": "export async function run(first:string,second:string){await import(first);return import(second)}",
+        "modules/runtime.js": "export const runtime = 1;"
+      },
+      "dynamicImports": {
+        "src/entry.ts": [
+          {
+            "path": "modules/runtime.js",
+            "sha256": "d926316c95295321b148a6f1748a181d400de61b333988d1c5cf9f93eb7a8006",
+            "sourceSha256": "0e364d2b95fa6be6b99c52e62f1e908f81ff97066f2d5de14baf3b43a06b8c46",
+            "callsiteIndex": 0
+          }
+        ]
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": true,
+      "inputMismatch": false
+    },
+    {
+      "id": "dynamic-outside-callsite",
+      "roots": [
+        "src/entry.ts"
+      ],
+      "files": {
+        "src/entry.ts": "export async function run(first:string,second:string){await import(first);return import(second)}",
+        "modules/runtime.js": "export const runtime = 1;"
+      },
+      "dynamicImports": {
+        "src/entry.ts": [
+          {
+            "path": "modules/runtime.js",
+            "sha256": "d926316c95295321b148a6f1748a181d400de61b333988d1c5cf9f93eb7a8006",
+            "sourceSha256": "0e364d2b95fa6be6b99c52e62f1e908f81ff97066f2d5de14baf3b43a06b8c46",
+            "callsiteIndex": 2
+          }
+        ]
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": true,
+      "inputMismatch": false
+    },
+    {
+      "id": "dynamic-changed-caller",
+      "roots": [
+        "src/entry.ts"
+      ],
+      "files": {
+        "src/entry.ts": "export async function run(first:string,second:string){await import(first);return import(second)}",
+        "modules/runtime.js": "export const runtime = 1;"
+      },
+      "dynamicImports": {
+        "src/entry.ts": [
+          {
+            "path": "modules/runtime.js",
+            "sha256": "d926316c95295321b148a6f1748a181d400de61b333988d1c5cf9f93eb7a8006",
+            "sourceSha256": "b75d876cd65185c05c282ac89222e0a42ee0389036b5dd6c9bac8f8374b4e649",
+            "callsiteIndex": 0
+          }
+        ]
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": true,
+      "inputMismatch": true
+    },
+    {
+      "id": "dynamic-unbound-caller",
+      "roots": [
+        "src/entry.ts"
+      ],
+      "files": {
+        "src/entry.ts": "export async function run(url:string){return import(url)}",
+        "modules/runtime.js": "export const runtime = 1;"
+      },
+      "dynamicImports": {
+        "src/entry.ts": [
+          {
+            "path": "modules/runtime.js",
+            "sha256": "d926316c95295321b148a6f1748a181d400de61b333988d1c5cf9f93eb7a8006"
+          }
+        ]
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": true,
+      "inputMismatch": false,
+      "ownerAdmission": false
+    },
+    {
+      "id": "rust-resource-read-owned",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "pub fn run(path: &str) -> Vec<u8> { std::fs::read(path).unwrap() }",
+        "assets/runtime.json": "{\"runtime\":true}",
+        "🧫️fixtures/runtime.json": "{\"runtime\":true}"
+      },
+      "resourceReads": {
+        "src/lib.rs": [
+          {
+            "sourceSha256": "f6c0ea2bae057e682010e89dbee6403a14ec8b5db6318c96b65ead17ee19174c",
+            "callsiteOffset": 45,
+            "inputs": [
+              {
+                "path": "assets/runtime.json",
+                "sha256": "ea6f12f50f859e224f09271a5fcd774ec17f623da82405e2592d7c1b334d3b2c",
+                "kind": "file"
+              }
+            ]
+          }
+        ]
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": false,
+      "inputMismatch": false,
+      "compilerInputOracle": false
+    },
+    {
+      "id": "rust-resource-read-callsite-only",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "pub fn run(first: &str, second: &str) { std::fs::read(first).unwrap(); std::fs::read(second).unwrap(); }",
+        "assets/runtime.json": "{\"runtime\":true}",
+        "🧫️fixtures/runtime.json": "{\"runtime\":true}"
+      },
+      "resourceReads": {
+        "src/lib.rs": [
+          {
+            "sourceSha256": "a2b7cd3c8ba34d950867ea09e8bc8b8fa8b061f8302979737c2e4358036f4832",
+            "callsiteOffset": 49,
+            "inputs": [
+              {
+                "path": "assets/runtime.json",
+                "sha256": "ea6f12f50f859e224f09271a5fcd774ec17f623da82405e2592d7c1b334d3b2c",
+                "kind": "file"
+              }
+            ]
+          }
+        ]
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": true,
+      "inputMismatch": false,
+      "compilerInputOracle": false
+    },
+    {
+      "id": "rust-resource-read-changed-source",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "pub fn run(first: &str, second: &str) { std::fs::read(first).unwrap(); std::fs::read(second).unwrap(); }",
+        "assets/runtime.json": "{\"runtime\":true}",
+        "🧫️fixtures/runtime.json": "{\"runtime\":true}"
+      },
+      "resourceReads": {
+        "src/lib.rs": [
+          {
+            "sourceSha256": "f6c0ea2bae057e682010e89dbee6403a14ec8b5db6318c96b65ead17ee19174c",
+            "callsiteOffset": 49,
+            "inputs": [
+              {
+                "path": "assets/runtime.json",
+                "sha256": "ea6f12f50f859e224f09271a5fcd774ec17f623da82405e2592d7c1b334d3b2c",
+                "kind": "file"
+              }
+            ]
+          }
+        ]
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": true,
+      "inputMismatch": true,
+      "compilerInputOracle": false
+    },
+    {
+      "id": "rust-resource-read-fixture",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "pub fn run(path: &str) -> Vec<u8> { std::fs::read(path).unwrap() }",
+        "assets/runtime.json": "{\"runtime\":true}",
+        "🧫️fixtures/runtime.json": "{\"runtime\":true}"
+      },
+      "resourceReads": {
+        "src/lib.rs": [
+          {
+            "sourceSha256": "f6c0ea2bae057e682010e89dbee6403a14ec8b5db6318c96b65ead17ee19174c",
+            "callsiteOffset": 45,
+            "inputs": [
+              {
+                "path": "🧫️fixtures/runtime.json",
+                "sha256": "ea6f12f50f859e224f09271a5fcd774ec17f623da82405e2592d7c1b334d3b2c",
+                "kind": "file"
+              }
+            ]
+          }
+        ]
+      },
+      "features": [],
+      "forbidden": true,
+      "unresolved": false,
+      "inputMismatch": false,
+      "compilerInputOracle": false
+    },
+    {
+      "id": "rust-resource-read-directory",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "pub fn run(path: &str) { for _ in std::fs::read_dir(path).unwrap() {} }",
+        "assets/runtime.json": "{\"runtime\":true}",
+        "🧫️fixtures/runtime.json": "{\"runtime\":true}"
+      },
+      "resourceReads": {
+        "src/lib.rs": [
+          {
+            "sourceSha256": "c5398e44a3904206721ee570fc22e5063ccbcca1aa15a62c3e8b249b72fea58a",
+            "callsiteOffset": 43,
+            "inputs": [
+              {
+                "path": "assets",
+                "sha256": "d9c3fe0cca6da8f2067cdf8acd3c2602a0db800a9f085b735a4c4c6f3e474d4c",
+                "kind": "directory"
+              }
+            ]
+          }
+        ]
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": false,
+      "inputMismatch": false,
+      "compilerInputOracle": false,
+      "directoryInputs": {
+        "assets": "d9c3fe0cca6da8f2067cdf8acd3c2602a0db800a9f085b735a4c4c6f3e474d4c"
+      },
+      "directoryHashes": {
+        "assets": "d9c3fe0cca6da8f2067cdf8acd3c2602a0db800a9f085b735a4c4c6f3e474d4c"
+      }
+    },
+    {
+      "id": "rust-resource-read-directory-drift",
+      "roots": [
+        "src/lib.rs"
+      ],
+      "files": {
+        "src/lib.rs": "pub fn run(path: &str) { for _ in std::fs::read_dir(path).unwrap() {} }",
+        "assets/runtime.json": "{\"runtime\":true}",
+        "🧫️fixtures/runtime.json": "{\"runtime\":true}"
+      },
+      "resourceReads": {
+        "src/lib.rs": [
+          {
+            "sourceSha256": "c5398e44a3904206721ee570fc22e5063ccbcca1aa15a62c3e8b249b72fea58a",
+            "callsiteOffset": 43,
+            "inputs": [
+              {
+                "path": "assets",
+                "sha256": "d9c3fe0cca6da8f2067cdf8acd3c2602a0db800a9f085b735a4c4c6f3e474d4c",
+                "kind": "directory"
+              }
+            ]
+          }
+        ]
+      },
+      "features": [],
+      "forbidden": false,
+      "unresolved": false,
+      "inputMismatch": true,
+      "compilerInputOracle": false,
+      "directoryInputs": {
+        "assets": "d9c3fe0cca6da8f2067cdf8acd3c2602a0db800a9f085b735a4c4c6f3e474d4c"
+      },
+      "directoryHashes": {
+        "assets": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  ],
+  "resourceObservations": [
+    {
+      "id": "owned-svg-copy",
+      "rows": [
+        {
+          "kind": "directory",
+          "path": "assets",
+          "entries": [
+            {
+              "path": "assets/logo.svg",
+              "kind": "file",
+              "symlinkTarget": null
+            }
+          ],
+          "operation": {
+            "source": "producer.rs",
+            "line": 1,
+            "name": "read_dir"
+          }
+        },
+        {
+          "kind": "copy",
+          "path": "assets/logo.svg",
+          "output": "out/logo.svg"
+        }
+      ],
+      "files": {
+        "assets/logo.svg": "<svg/>",
+        "out/logo.svg": "<svg/>"
+      },
+      "forbidden": false,
+      "inputMismatch": false
+    },
+    {
+      "id": "fixture-svg-copy",
+      "rows": [
+        {
+          "kind": "copy",
+          "path": "assets/🧫️fixtures/logo.svg",
+          "output": "out/logo.svg"
+        }
+      ],
+      "files": {
+        "assets/🧫️fixtures/logo.svg": "<svg/>",
+        "out/logo.svg": "<svg/>"
+      },
+      "forbidden": true,
+      "inputMismatch": false
+    },
+    {
+      "id": "changed-original",
+      "rows": [
+        {
+          "kind": "copy",
+          "path": "assets/logo.svg",
+          "output": "out/logo.svg"
+        }
+      ],
+      "files": {
+        "assets/logo.svg": "<svg id=changed/>",
+        "out/logo.svg": "<svg/>"
+      },
+      "forbidden": false,
+      "inputMismatch": true
+    }
+  ],
+  "cargoObservationSelections": [
+    {
+      "id": "current-exact",
+      "args": [
+        "check",
+        "--manifest-path",
+        "Cargo.toml",
+        "--lib",
+        "--target",
+        "wasm32-wasip2",
+        "-p",
+        "owner",
+        "--features",
+        "owner/live"
+      ],
+      "current": true,
+      "selected": true
+    },
+    {
+      "id": "stale-exact",
+      "args": [
+        "check",
+        "--manifest-path",
+        "Cargo.toml",
+        "--lib",
+        "--target",
+        "wasm32-wasip2",
+        "-p",
+        "owner",
+        "--features",
+        "owner/live"
+      ],
+      "current": false,
+      "selected": false
+    },
+    {
+      "id": "wrong-defaults",
+      "args": [
+        "check",
+        "--manifest-path",
+        "Cargo.toml",
+        "--lib",
+        "--target",
+        "wasm32-wasip2",
+        "-p",
+        "owner",
+        "--features",
+        "owner/live",
+        "--no-default-features"
+      ],
+      "current": true,
+      "selected": false
+    },
+    {
+      "id": "wrong-package",
+      "args": [
+        "check",
+        "--manifest-path",
+        "Cargo.toml",
+        "--lib",
+        "--target",
+        "wasm32-wasip2",
+        "-p",
+        "other",
+        "--features",
+        "owner/live"
+      ],
+      "current": true,
+      "selected": false
+    }
+  ],
+  "cargoCurrentnessProgram": {
+    "package": "runtime-graph-live-oracle",
+    "feature": "live",
+    "files": {
+      "Cargo.toml": "[workspace]\n[package]\nname=\"runtime-graph-live-oracle\"\nversion=\"0.0.0\"\nedition=\"2021\"\n[lib]\npath=\"lib.rs\"\n[features]\nlive=[]\n",
+      "lib.rs": "#[cfg(feature=\"live\")] pub const LIVE: bool = true;\n"
+    }
+  },
+  "browserArtifacts": [
+    {
+      "path": "mounted/library.js",
+      "compiled": "export const value=1;",
+      "mounted": "export const value=1;",
+      "current": true
+    },
+    {
+      "path": "mounted/library.js",
+      "compiled": "export const value=1;",
+      "mounted": "export const value=2;",
+      "current": false
+    },
+    {
+      "path": "mounted/library.js",
+      "compiled": "export const value=1;",
+      "mounted": null,
+      "current": false
+    }
+  ],
+  "trunkOutputs": {
+    "raw": "compiled raw wasm",
+    "outputs": {
+      "native/owner.js": "export default async()=>{}",
+      "native/owner_bg.wasm": "compiled transformed wasm"
+    }
+  },
+  "compilerChecksums": {
+    "baseDirectory": "/workspace",
+    "path": "src/owner.rs",
+    "source": "pub const VALUE:u8=7;",
+    "changed": "pub const VALUE:u8=8;"
+  },
+  "compilerResourceProgram": {
+    "files": {
+      "input.txt": "observed native bytes",
+      "nested/asset.json": "{\"value\":7}"
+    },
+    "observedValue": 7
+  },
+  "compilerResourceOwnerGroups": [
+    {
+      "name": "same-operation-union",
+      "groups": [
+        {
+          "owners": {
+            "helper.rs": [
+              {
+                "sourceSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "callsiteOffset": 7,
+                "inputs": [
+                  {
+                    "path": "a.txt",
+                    "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                    "kind": "file"
+                  }
+                ]
+              }
+            ]
+          },
+          "directories": {}
+        },
+        {
+          "owners": {
+            "helper.rs": [
+              {
+                "sourceSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "callsiteOffset": 7,
+                "inputs": [
+                  {
+                    "path": "b.txt",
+                    "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                    "kind": "file"
+                  }
+                ]
+              }
+            ]
+          },
+          "directories": {}
+        }
+      ],
+      "paths": [
+        "a.txt",
+        "b.txt"
+      ],
+      "refused": false
+    },
+    {
+      "name": "same-input-digest-conflict",
+      "groups": [
+        {
+          "owners": {
+            "helper.rs": [
+              {
+                "sourceSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "callsiteOffset": 7,
+                "inputs": [
+                  {
+                    "path": "a.txt",
+                    "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+                    "kind": "file"
+                  }
+                ]
+              }
+            ]
+          },
+          "directories": {}
+        },
+        {
+          "owners": {
+            "helper.rs": [
+              {
+                "sourceSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "callsiteOffset": 7,
+                "inputs": [
+                  {
+                    "path": "a.txt",
+                    "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+                    "kind": "file"
+                  }
+                ]
+              }
+            ]
+          },
+          "directories": {}
+        }
+      ],
+      "paths": [],
+      "refused": true
+    }
+  ],
+  "actorProducerChanges": [
+    {
+      "name": "current",
+      "accepted": true
+    },
+    {
+      "name": "missing-input",
+      "accepted": false
+    },
+    {
+      "name": "foreign-input",
+      "accepted": false
+    },
+    {
+      "name": "changed-policy",
+      "accepted": false
+    },
+    {
+      "name": "noncanonical-policy",
+      "accepted": false
+    },
+    {
+      "name": "changed-compiler",
+      "accepted": false
+    },
+    {
+      "name": "changed-runtime",
+      "accepted": false
+    }
+  ],
+  "actorProducerProgram": {
+    "component": "(component (core module $m (func (export \"value\") (result i32) i32.const 7)) (core instance $i (instantiate $m)) (func (export \"value\") (result u32) (canon lift (core func $i \"value\"))))",
+    "value": 7
+  },
+  "actorChildCalls": [
+    {
+      "source": "await import(other);await import(moduleUrl);",
+      "index": 1,
+      "unresolved": 1
+    },
+    {
+      "source": "await import(moduleUrl);",
+      "index": 0,
+      "unresolved": 0
+    },
+    {
+      "source": "await import(other);",
+      "index": null,
+      "unresolved": 1
+    },
+    {
+      "source": "await import(moduleUrl);await import(moduleUrl);",
+      "index": null,
+      "unresolved": 1
+    }
+  ],
+  "actorCargoChanges": [
+    {
+      "name": "exact",
+      "accepted": true
+    },
+    {
+      "name": "wrong-args",
+      "accepted": false
+    },
+    {
+      "name": "test-unit",
+      "accepted": false
+    },
+    {
+      "name": "wrong-package",
+      "accepted": false
+    },
+    {
+      "name": "wrong-stage",
+      "accepted": false
+    },
+    {
+      "name": "wrong-digest",
+      "accepted": false
+    },
+    {
+      "name": "failed",
+      "accepted": false
+    },
+    {
+      "name": "testing-feature",
+      "accepted": false
+    },
+    {
+      "name": "implicit-root",
+      "accepted": false
+    },
+    {
+      "name": "foreign-unit-manifest",
+      "accepted": false
+    }
+  ],
+  "actorCargoWorkspace": {
+    "member": "actor",
+    "package": "neutral-actor",
+    "manifest": "hub/actor/Cargo.toml"
+  }
+}

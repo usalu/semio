@@ -12,7 +12,7 @@ export async function proveDevLocalHubProviderContract(repoRoot: string, artifac
   const brokerSchema = JSON.parse(readFileSync(new URL("../../../../📇️directory/🎫️local-session/🗄️broker/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const ajv = new Ajv({ strict: true }).addKeyword("x-semio-formats").addSchema(brokerSchema);
   const validate = ajv.compile(schema);
-  const processOracle = ajv.compile({ const: fixture.processCases.map((row: { name: string; outcome: string; expectedAlive: boolean }) => ({ name: row.name, outcome: row.outcome, expectedAlive: row.expectedAlive })) });
+  const expectedOutcomes = fixture.processCases.map((row: { name: string; outcome: string; expectedAlive: boolean }) => ({ name: row.name, outcome: row.outcome, expectedAlive: row.expectedAlive }));
   for (const row of fixture.cases) {
     let accepted = true;
     try { parseDevLocalHubProviderV1(row.value); } catch { accepted = false; }
@@ -50,7 +50,7 @@ export async function proveDevLocalHubProviderContract(repoRoot: string, artifac
     assert.notEqual(pendingOwner, null, "cancellation exercised an actual child");
     assert.ok(Date.now() - beforeCancel < 5_000, "cancellation cleanup is bounded");
     outcomes.push({ name: "cancelled-startup", outcome: up ? "spawned" : "refused", expectedAlive: pendingOwner !== null && world.alive(pendingOwner) });
-    assert.ok(processOracle(outcomes), "actual processes agree with neutral lifecycle vectors");
+    assert.deepEqual(outcomes, expectedOutcomes, "actual processes agree with neutral lifecycle vectors");
     const alreadyCancelled = new AbortController(); alreadyCancelled.abort();
     assert.equal(await world.spawnOwner("http://127.0.0.1:8787", dataDir, alreadyCancelled.signal), null);
     console.log(`dev-local-hub-provider-contract: vectors=${fixture.cases.length} ajv+typescript=1 owner-process=observed missing-executable=controlled cancelled-owner=closed`);

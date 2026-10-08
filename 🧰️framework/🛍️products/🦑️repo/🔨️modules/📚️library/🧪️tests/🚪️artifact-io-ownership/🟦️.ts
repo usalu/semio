@@ -53,7 +53,7 @@ test("native codecs exclude host document-store and publication authority",async
  await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",library)),"out/tree-sitter-rust.wasm")));
  try{for(const row of fixture.cases){
   const tree=parser.parse(row.source)!;expect(tree.rootNode.hasError()).toBe(false);const names=new Set<string>();
-  const walk=(node:Parser.SyntaxNode):void=>{if(["identifier","type_identifier"].includes(node.type)&&/^(?:ArtifactStore|DocumentStoreOwners|\w*PublicationLease)$/u.test(node.text))names.add(node.text);if(!["string_literal","raw_string_literal","line_comment","block_comment"].includes(node.type))for(const child of node.namedChildren)walk(child);};walk(tree.rootNode);tree.delete();
+  const walk=(node:Parser.SyntaxNode):void=>{if(["identifier","type_identifier"].includes(node.type)&&/^(?:ArtifactStore|DocumentStoreOwners|ArtifactEnvelope(?:Snapshot|Mutation|Vcs)FieldAuthority|\w*(?:PublicationLease|ProjectionAdoptionTarget))$/u.test(node.text))names.add(node.text);if(!["string_literal","raw_string_literal","line_comment","block_comment"].includes(node.type))for(const child of node.namedChildren)walk(child);};walk(tree.rootNode);tree.delete();
   expect([...names].sort()).toEqual(row.host);
   const directory=join(root,"artifact/🚪️io/💾️binary/🧬️mutations");mkdirSync(directory,{recursive:true});writeFileSync(join(directory,"🦀️.rs"),row.source);
   const found=artifactIoArchitectureBreaches(root,["artifact"],taxonomy).filter(breach=>breach.kind==="artifact-io/io-host-authority");
@@ -304,4 +304,23 @@ test("TypeScript schema rejects the complete IO namespace independently",()=>{
  expect(artifactIoArchitectureBreaches(root,["artifact"],taxonomy).some(breach=>breach.scope===join(owner,"🟦️.ts").slice(root.length+1)&&breach.kind==="artifact-io/schema-codec-dependency")).toBe(row.forbidden&&!testOnly);
  }}finally{rmSync(root,{recursive:true,force:true});}
  console.log("[DEBUG] complete TypeScript IO namespace oracle=TypeScript AST");
+});
+
+test("TypeScript root implementations and IO semantic definitions have actual owners", () => {
+ const vector=JSON.parse(readFileSync(join(library,"🧫️fixtures/🚪️artifact-io-typescript-owners/🔣️.json"),"utf8")) as {cases:{owner:"root"|"io";source:string;forbidden:string[]}[]};
+ const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("SEMIO_TEST_ARTIFACT_DIR must name ticket output");mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"typescript-owned-source-"));
+ try{for(const row of vector.cases){
+  const file=ts.createSourceFile("owner.ts",row.source,ts.ScriptTarget.Latest,true),defined:string[]=[];
+  for(const statement of file.statements){
+   if(!ts.isFunctionDeclaration(statement)&&!ts.isClassDeclaration(statement)&&!ts.isVariableStatement(statement))continue;
+   if(!statement.modifiers?.some(modifier=>modifier.kind===ts.SyntaxKind.ExportKeyword))continue;
+   if(ts.isVariableStatement(statement))defined.push(...statement.declarationList.declarations.flatMap(item=>ts.isIdentifier(item.name)?[item.name.text]:[]));
+   else if(statement.name)defined.push(statement.name.text);
+  }
+  const expected=defined.filter(name=>row.owner==="root"?/(?:To|From)(?:Native)?Json(?:Text|Value|Projection)?$/u.test(name):/^(?:apply\w*(?:Diff|Mutation)|diff[A-Z]\w*)$/u.test(name)&&!/(?:To|From)Json$/u.test(name)).sort();expect(expected).toEqual(row.forbidden);
+  const path=row.owner==="root"?"artifact/🟦️.ts":"artifact/🚪️io/📝️text/🔺️diff/🟦️.ts",scope=join(root,path);mkdirSync(dirname(scope),{recursive:true});writeFileSync(scope,row.source);
+  const found=artifactIoArchitectureBreaches(root,["artifact"],taxonomy).filter(breach=>breach.kind===(row.owner==="root"?"artifact-io/root-codec-implementation":"artifact-io/io-semantic-implementation"));expect(found.length).toBe(row.forbidden.length?1:0);if(found[0])for(const name of row.forbidden)expect(found[0].reason).toContain(name);
+  rmSync(join(root,"artifact"),{recursive:true,force:true});
+ }}finally{rmSync(root,{recursive:true,force:true});}
+ console.log("[DEBUG] Actual TypeScript owner definitions agree with independent compiler AST");
 });

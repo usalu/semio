@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/update/schema.json",
+  "title": "Ordered Mutation Admission",
+  "$defs": {
+    "Operation": {
+      "oneOf": [
+        {"type": "object", "required": ["kind", "key", "value"], "properties": {"kind": {"const": "set"}, "key": {"type": "string"}, "value": {}}, "additionalProperties": false},
+        {"type": "object", "required": ["kind", "key"], "properties": {"kind": {"const": "remove"}, "key": {"type": "string"}}, "additionalProperties": false}
+      ],
+      "description": "An immutable ordered mutation retains its original source and already admitted first-party input owners until result transfer and explicit close."
+    },
+    "Demand": {
+      "type": "object",
+      "required": ["copyBytes", "capacityBytes", "depth"],
+      "properties": {"copyBytes": {"type": "integer", "minimum": 0}, "capacityBytes": {"type": "integer", "minimum": 0}, "depth": {"type": "integer", "minimum": 0}},
+      "additionalProperties": false,
+      "description": "One metadata event or bounded comparison fragment exposes its minimum work, exact aligned node/entry births and retained structural depth before movement. No mutation advance releases a final allocation: obsolete rotation roots remain in explicit close custody. Zero items, insufficient copy or one-short birth grants are inert. Insufficient depth refuses before mutation. Capacity and release remain distinct from logical key visits."
+    }
+  }
+}

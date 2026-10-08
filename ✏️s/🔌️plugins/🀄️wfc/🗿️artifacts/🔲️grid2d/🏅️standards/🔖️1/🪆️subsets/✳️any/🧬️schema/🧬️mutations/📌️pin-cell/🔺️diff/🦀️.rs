@@ -1,8 +1,7 @@
 //! 🔺️ Sparse diff builder for `PinCell` — a row-major upsert into `pinned`, refusing an
 //! out-of-bounds cell, an unknown tile, or a cell the mask has already cut out of the problem.
 
-use crate::diff::Grid2dDiff;
-use crate::mutations::ordered_cell_index;
+use crate::diff::{Grid2dDiff, Grid2dPinnedPatch, Grid2dRowPatch, Grid2dRows};
 use crate::schema::snapshot::{in_bounds, Grid2dSnapshot, WfcPinnedCell2d};
 
 pub fn diff(payload: &super::PinCell, base: &Grid2dSnapshot) -> protocol::MutationOutcome<Grid2dDiff> {
@@ -19,10 +18,7 @@ pub fn diff(payload: &super::PinCell, base: &Grid2dSnapshot) -> protocol::Mutati
     let cell = WfcPinnedCell2d { x: payload.x, y: payload.y, tile_id: payload.tile_id.clone() };
     match base.pinned.iter().position(|existing| existing.x == payload.x && existing.y == payload.y) {
         Some(index) if base.pinned[index] == cell => protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Cell ({}, {}) is already pinned to \"{}\".", payload.x, payload.y, payload.tile_id)),
-        Some(index) => protocol::MutationOutcome::new(Grid2dDiff { pinned_upserted: vec![(index, cell)], ..Default::default() }),
-        None => {
-            let at = ordered_cell_index(&base.pinned, payload.x, payload.y, |existing| (existing.y, existing.x));
-            protocol::MutationOutcome::new(Grid2dDiff { pinned_upserted: vec![(at, cell)], ..Default::default() })
-        }
+        Some(_) => protocol::MutationOutcome::new(Grid2dDiff { pinned: Grid2dRows { patched: vec![Grid2dRowPatch { id: target, patch: Grid2dPinnedPatch { tile_id: Some(payload.tile_id.clone()) } }], ..Default::default() }, ..Default::default() }),
+        None => protocol::MutationOutcome::new(Grid2dDiff { pinned: Grid2dRows { added: vec![cell], ..Default::default() }, ..Default::default() }),
     }
 }

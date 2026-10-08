@@ -146,7 +146,9 @@ struct SharedTextRetirement {
 }
 
 impl semio_framework_value::retirement::RetirementCursor for SharedTextRetirement {
-    fn close_step(&mut self, maximum_bytes: usize) -> semio_framework_value::retirement::RetirementStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
+        if grant.maximum_items == 0 { return semio_framework_value::retirement::RetirementStep::BudgetExhausted; }
+        let maximum_bytes = grant.maximum_copy_bytes;
         let Some(value) = self.value.as_ref() else { return semio_framework_value::retirement::RetirementStep::Complete };
         if Arc::strong_count(value) > 1 {
             self.value.take();
@@ -157,12 +159,13 @@ impl semio_framework_value::retirement::RetirementCursor for SharedTextRetiremen
             if maximum_bytes == 0 { return semio_framework_value::retirement::RetirementStep::BudgetExhausted; }
             let bytes = maximum_bytes.min(self.remaining);
             self.remaining -= bytes;
-            return semio_framework_value::retirement::RetirementStep::Bytes(bytes);
+            return semio_framework_value::retirement::RetirementStep::ProcessedBytes(bytes);
         }
         self.value.take();
         semio_framework_value::retirement::RetirementStep::Complete
     }
     fn terminal_is_empty(&self) -> bool { self.value.is_none() && self.remaining == 0 }
+    fn next_work_byte_demand(&self) -> usize { usize::from(self.remaining != 0) }
 }
 
 impl Drop for SharedTextRetirement {
@@ -187,7 +190,8 @@ struct SharedChunksRetirement {
 }
 
 impl semio_framework_value::retirement::RetirementCursor for SharedChunksRetirement {
-    fn close_step(&mut self, _maximum_bytes: usize) -> semio_framework_value::retirement::RetirementStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
+        if grant.maximum_items == 0 { return semio_framework_value::retirement::RetirementStep::BudgetExhausted; }
         if let Some(owner) = self.owner.take() {
             match Arc::try_unwrap(owner) {
                 Ok(chunks) => *self.chunks = Some(chunks),
@@ -238,7 +242,8 @@ struct SharedTryValuesRetirement {
 }
 
 impl semio_framework_value::retirement::RetirementCursor for SharedTryValuesRetirement {
-    fn close_step(&mut self, _maximum_bytes: usize) -> semio_framework_value::retirement::RetirementStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
+        if grant.maximum_items == 0 { return semio_framework_value::retirement::RetirementStep::BudgetExhausted; }
         let Some(root) = self.root.take() else { return semio_framework_value::retirement::RetirementStep::Complete };
         match Arc::try_unwrap(root) {
             Ok(values) => semio_framework_value::retirement::RetirementStep::Child(values.retirement()),
@@ -301,12 +306,14 @@ pub mod schema;
 semio_framework_plugin::transient_root! {
     state: FormsTryWindowTransient,
     mutation: FormsTryWindowTransientMutation,
+    diff: FormsTryWindowTransientDiff,
     owner: "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📝️blueprint/🪟️windows/▶️try/🫧️transient",
     kind: "set-window-transient",
     display_name: "Set Forms Try Window Transient",
     payload_schema: "forms.try-window-transient",
     envelope: "s.forms.forms.try-window-transient",
     extension: "formstrywindowtransient",
+    fields: { try_values: FormsTryValues },
 }
 
 semio_framework_plugin::window_transient_owners! {

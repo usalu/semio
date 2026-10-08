@@ -1,0 +1,358 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "$id": "https://json.schemas.assets.semio-tech.com/framework/canvas/draw-list/schema.json",
+ "title": "Canvas Draw List",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "version",
+  "truncated",
+  "commands"
+ ],
+ "properties": {
+  "version": {
+   "const": 1
+  },
+  "truncated": {
+   "type": "boolean"
+  },
+  "commands": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/Command"
+   }
+  }
+ },
+ "$defs": {
+  "Number": {
+   "type": "number"
+  },
+  "Rule": {
+   "type": "integer",
+   "minimum": 0,
+   "maximum": 1
+  },
+  "Cap": {
+   "type": "integer",
+   "minimum": 0,
+   "maximum": 2
+  },
+  "Blend": {
+   "type": "integer",
+   "minimum": 0,
+   "maximum": 15
+  },
+  "Affine": {
+   "type": "array",
+   "minItems": 6,
+   "maxItems": 6,
+   "items": {
+    "$ref": "#/$defs/Number"
+   }
+  },
+  "Color": {
+   "type": "array",
+   "minItems": 4,
+   "maxItems": 4,
+   "items": {
+    "type": "integer",
+    "minimum": 0,
+    "maximum": 255
+   }
+  },
+  "Shape": {
+   "oneOf": [
+    {
+     "type": "array",
+     "minItems": 5,
+     "maxItems": 5,
+     "items": [
+      {
+       "const": "r"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      }
+     ]
+    },
+    {
+     "type": "array",
+     "minItems": 9,
+     "maxItems": 9,
+     "items": [
+      {
+       "const": "rr"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      }
+     ]
+    },
+    {
+     "type": "array",
+     "minItems": 4,
+     "maxItems": 4,
+     "items": [
+      {
+       "const": "ci"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      }
+     ]
+    },
+    {
+     "type": "array",
+     "minItems": 5,
+     "maxItems": 5,
+     "items": [
+      {
+       "const": "ln"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      }
+     ]
+    },
+    {
+     "type": "array",
+     "minItems": 9,
+     "maxItems": 9,
+     "items": [
+      {
+       "const": "cb"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      }
+     ]
+    },
+    {
+     "type": "array",
+     "minItems": 2,
+     "maxItems": 2,
+     "items": [
+      {
+       "const": "p"
+      },
+      {
+       "type": "array",
+       "description": "Flat opcode/coordinate stream: move0 or line1 followed by2 coordinates, quadratic2 followed by4, cubic3 followed by6, close4. The owning codec validates instruction boundaries.",
+       "items": {
+        "$ref": "#/$defs/Number"
+       }
+      }
+     ]
+    }
+   ]
+  },
+  "Command": {
+   "oneOf": [
+    {
+     "type": "array",
+     "minItems": 5,
+     "maxItems": 5,
+     "items": [
+      {
+       "const": "f"
+      },
+      {
+       "$ref": "#/$defs/Rule"
+      },
+      {
+       "$ref": "#/$defs/Color"
+      },
+      {
+       "$ref": "#/$defs/Affine"
+      },
+      {
+       "$ref": "#/$defs/Shape"
+      }
+     ]
+    },
+    {
+     "type": "array",
+     "minItems": 9,
+     "maxItems": 9,
+     "items": [
+      {
+       "const": "s"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Cap"
+      },
+      {
+       "$ref": "#/$defs/Cap"
+      },
+      {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/Number"
+       }
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Color"
+      },
+      {
+       "$ref": "#/$defs/Affine"
+      },
+      {
+       "$ref": "#/$defs/Shape"
+      }
+     ]
+    },
+    {
+     "type": "array",
+     "minItems": 5,
+     "maxItems": 5,
+     "items": [
+      {
+       "const": "i"
+      },
+      {
+       "type": "integer",
+       "minimum": 0
+      },
+      {
+       "type": "integer",
+       "minimum": 0
+      },
+      {
+       "type": "string",
+       "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/][AQgw]==|[A-Za-z0-9+/]{2}[AEIMQUYcgkosw048]=)?$"
+      },
+      {
+       "$ref": "#/$defs/Affine"
+      }
+     ]
+    },
+    {
+     "type": "array",
+     "minItems": 6,
+     "maxItems": 6,
+     "items": [
+      {
+       "const": "pl"
+      },
+      {
+       "$ref": "#/$defs/Rule"
+      },
+      {
+       "$ref": "#/$defs/Blend"
+      },
+      {
+       "$ref": "#/$defs/Number"
+      },
+      {
+       "$ref": "#/$defs/Affine"
+      },
+      {
+       "$ref": "#/$defs/Shape"
+      }
+     ]
+    },
+    {
+     "type": "array",
+     "minItems": 4,
+     "maxItems": 4,
+     "items": [
+      {
+       "const": "pc"
+      },
+      {
+       "$ref": "#/$defs/Rule"
+      },
+      {
+       "$ref": "#/$defs/Affine"
+      },
+      {
+       "$ref": "#/$defs/Shape"
+      }
+     ]
+    },
+    {
+     "type": "array",
+     "minItems": 1,
+     "maxItems": 1,
+     "items": [
+      {
+       "const": "po"
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

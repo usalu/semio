@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "nxName", "entry", "moduleEdges"],
+  "properties": {
+    "name": {"type": "string", "minLength": 1},
+    "nxName": {"type": "string", "minLength": 1},
+    "entry": {"type": "string", "minLength": 1},
+    "moduleEdges": {"type": "array", "items": {"type": "string", "minLength": 1}}
+  }
+}

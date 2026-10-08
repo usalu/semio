@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json",
+  "title": "Ordered Ownership Retirement",
+  "$defs": {
+    "SharedInput": {
+      "type": "object",
+      "required": ["source", "grant"],
+      "properties": {
+        "source": {"enum": ["ownedPayload", "uniqueArc"]},
+        "grant": {"$ref": "#/$defs/Grant"}
+      },
+      "additionalProperties": false,
+      "description": "A unique Arc admission preserves the original allocation only when exclusive strong ownership and absence of Weak aliases are proven together. Refused admission returns the input unchanged. Subsequent immutable first-party aliases expose no Weak or raw ownership. Payload birth and whole header release have independent exact grant receipts."
+    },
+    "Grant": {
+      "type": "object",
+      "required": ["maximumItems", "maximumCopyBytes", "maximumCapacityBytes", "maximumReleaseBytes", "maximumDepth"],
+      "properties": {
+        "maximumItems": {"type": "integer", "minimum": 0},
+        "maximumCopyBytes": {"type": "integer", "minimum": 0},
+        "maximumCapacityBytes": {"type": "integer", "minimum": 0},
+        "maximumReleaseBytes": {"type": "integer", "minimum": 0},
+        "maximumDepth": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false,
+      "description": "Distinct caller authorities govern retained metadata events, logical copies, exact new scaffold births, whole physical releases and frontier depth. A shared alias release does not earn physical allocation credit. Last node/entry/key/value owners expose their real next allocation demand before movement. Owned values transfer to their defining controlled retirement authority. Key length visits are not physical backing releases."
+    },
+    "Progress": {
+      "type": "object",
+      "required": ["copiedItems", "copiedBytes", "retainedCapacityBytes", "releasedBytes", "complete"],
+      "properties": {
+        "copiedItems": {"type": "integer", "minimum": 0},
+        "copiedBytes": {"type": "integer", "minimum": 0},
+        "retainedCapacityBytes": {"type": "integer", "minimum": 0},
+        "releasedBytes": {"type": "integer", "minimum": 0},
+        "complete": {"type": "boolean"}
+      },
+      "additionalProperties": false,
+      "description": "Actual allocator requests and frees equal the independently observed capacity/release receipts for the step. Zero items and one-short physical grants are inert. Terminal disposal has no remaining allocation or payload custody. Borrowed ranked views never dispose their original source."
+    }
+  }
+}

@@ -4,7 +4,7 @@
 //!
 //! The oracle performs each kind by independent GLB/JSON-tree manipulation
 //! (`../../../♾️any/🔮️oracles/🦀️.rs`); the subject fully parses the committed `⬅️before.gltf` into
-//! `GltfSnapshot`, dispatches through the leaf's own typed `apply()`, and re-serializes from the
+//! `GltfSnapshot`, dispatches through the central applier, and re-serializes from the
 //! model alone. The feature's spec names the input fixture and the inverse: either the kinds that
 //! undo the mutation, applied the same way on both sides, or — for a kind whose payload cannot
 //! carry what it removed — the top-level members restored from the original document.
@@ -79,7 +79,7 @@ mod subject {
     use super::{inverse_specs, mutable_input, restored_members};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{create_buffer,create_buffer_view,delete_buffer,delete_buffer_view,move_buffer,move_buffer_view,reorder_buffer_views,reorder_buffers};
+    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{apply_gltf_mutation,create_buffer,create_buffer_view,delete_buffer,delete_buffer_view,move_buffer,move_buffer_view,reorder_buffer_views,reorder_buffers};
 
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
     use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::project_gltf;
@@ -112,17 +112,17 @@ mod subject {
     //#endregion 🔖️Params
 
     //#region 🔖️Dispatch
-    /// 📐️ One kind through its leaf's own typed `apply()`.
+    /// 📐️ One kind through the central applier.
     fn apply_kind(before: &GltfSnapshot, kind: &str, params: &Json) -> Result<GltfSnapshot, String> {
         match kind {
-            "create-buffer" => create_buffer::apply(&create_buffer::GltfCreateBufferPayload { position: num(params, "position")?, bytes: bytes(params, "bytes")? }, before).map_err(|error| error.detail),
-            "create-buffer-view" => create_buffer_view::apply(&create_buffer_view::GltfCreateBufferViewPayload { position: num(params, "position")?, buffer: num(params, "buffer")?, byte_offset: num(params, "byteOffset")?, byte_length: num(params, "byteLength")? }, before).map_err(|error| error.detail),
-            "delete-buffer" => delete_buffer::apply(&delete_buffer::GltfDeleteBufferPayload { index: num(params, "index")? }, before).map_err(|error| error.detail),
-            "delete-buffer-view" => delete_buffer_view::apply(&delete_buffer_view::GltfDeleteBufferViewPayload { index: num(params, "index")? }, before).map_err(|error| error.detail),
-            "move-buffer" => move_buffer::apply(&move_buffer::GltfMoveBufferPayload { index: num(params, "index")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "move-buffer-view" => move_buffer_view::apply(&move_buffer_view::GltfMoveBufferViewPayload { index: num(params, "index")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "reorder-buffer-views" => reorder_buffer_views::apply(&reorder_buffer_views::GltfReorderBufferViewsPayload { order: order(params, "order")? }, before).map_err(|error| error.detail),
-            "reorder-buffers" => reorder_buffers::apply(&reorder_buffers::GltfReorderBuffersPayload { order: order(params, "order")? }, before).map_err(|error| error.detail),
+            "create-buffer" => apply_gltf_mutation(before, &create_buffer::mutation(create_buffer::GltfCreateBufferPayload { position: num(params, "position")?, bytes: bytes(params, "bytes")?, buffer: None })),
+            "create-buffer-view" => apply_gltf_mutation(before, &create_buffer_view::mutation(create_buffer_view::GltfCreateBufferViewPayload { position: num(params, "position")?, buffer: num(params, "buffer")?, byte_offset: num(params, "byteOffset")?, byte_length: num(params, "byteLength")?, buffer_view: None })),
+            "delete-buffer" => apply_gltf_mutation(before, &delete_buffer::mutation(delete_buffer::GltfDeleteBufferPayload { index: num(params, "index")? })),
+            "delete-buffer-view" => apply_gltf_mutation(before, &delete_buffer_view::mutation(delete_buffer_view::GltfDeleteBufferViewPayload { index: num(params, "index")? })),
+            "move-buffer" => apply_gltf_mutation(before, &move_buffer::mutation(move_buffer::GltfMoveBufferPayload { index: num(params, "index")?, position: num(params, "position")? })),
+            "move-buffer-view" => apply_gltf_mutation(before, &move_buffer_view::mutation(move_buffer_view::GltfMoveBufferViewPayload { index: num(params, "index")?, position: num(params, "position")? })),
+            "reorder-buffer-views" => apply_gltf_mutation(before, &reorder_buffer_views::mutation(reorder_buffer_views::GltfReorderBufferViewsPayload { order: order(params, "order")? })),
+            "reorder-buffers" => apply_gltf_mutation(before, &reorder_buffers::mutation(reorder_buffers::GltfReorderBuffersPayload { order: order(params, "order")? })),
             other => Err(format!("unrecognised mutation kind {other:?}")),
         }
     }

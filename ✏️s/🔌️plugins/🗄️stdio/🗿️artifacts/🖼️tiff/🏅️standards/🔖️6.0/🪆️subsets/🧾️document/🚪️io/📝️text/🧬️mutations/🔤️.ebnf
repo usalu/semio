@@ -1,6 +1,6 @@
 (* Direct text registry; payload productions are owned by each leaf. *)
 mutation = opcode, { " ", argument } ;
-opcode = "change-byte-order" | "insert-ifd" | "remove-ifd" | "replace-tag" | "remove-tag" | "paint-region" | "set-snapshot" | "patch-snapshot" ;
+opcode = "change-byte-order" | "insert-ifd" | "remove-ifd" | "replace-tag" | "remove-tag" | "paint-region" | "replace-samples" ;
 argument = name, "=", value ;
 name = letter, { letter | digit | "-" } ;
 value = character, { character } ;

@@ -78,7 +78,6 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
     Then the independent implementation and the subject agree on the resulting snapshot
     Examples:
       | id                  | mutation                                                                                                                                                                                                   |
-      | set-snapshot        | {"mutation":"setSnapshot","snapshot":{"schema":"stdio.semio.audio","sampleRate":44100,"format":"f32","channels":[{"samples":[0.0,1.0]}],"tags":[{"key":"TIT2","value":"Bauen mit Bestand (Ausschnitt)"}]}} |
       | set-sample-rate     | {"mutation":"setSampleRate","sampleRate":48000}                                                                                                                                                            |
       | set-format          | {"mutation":"setFormat","format":"pcm24"}                                                                                                                                                                  |
       | insert-channel      | {"mutation":"insertChannel","index":1,"channel":{"samples":[-1.0,-0.8359375,-0.71875,-0.71875]}}                                                                                                           |
@@ -87,18 +86,6 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
       | insert-tag          | {"mutation":"insertTag","index":0,"tag":{"key":"TALB","value":"33. Projektetage"}}                                                                                                                         |
       | remove-tag          | {"mutation":"removeTag","index":0}                                                                                                                                                                         |
       | set-tag-value       | {"mutation":"setTagValue","index":1,"value":"Bauen mit Bestand, Ausschnitt 1"}                                                                                                                             |
-      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/sampleRate", "value": 22050}} |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real recording
-    Given the real recording shared://🔊️mutate-semio-audio/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
-    When the no-mutation mutation is applied to the recording parsed from it
-      """
-      {"mutation":"noMutation"}
-      """
-    Then the independent implementation and the subject agree on the resulting snapshot
 
   @id-inverse
   @level-exhaustive
@@ -112,7 +99,6 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
     Then both sides restore the recording and agree on the mutated and the restored snapshot
     Examples:
       | id                  | mutation                                                                                                                                                                                                   |
-      | set-snapshot        | {"mutation":"setSnapshot","snapshot":{"schema":"stdio.semio.audio","sampleRate":44100,"format":"f32","channels":[{"samples":[0.0,1.0]}],"tags":[{"key":"TIT2","value":"Bauen mit Bestand (Ausschnitt)"}]}} |
       | set-sample-rate     | {"mutation":"setSampleRate","sampleRate":48000}                                                                                                                                                            |
       | set-format          | {"mutation":"setFormat","format":"pcm24"}                                                                                                                                                                  |
       | insert-channel      | {"mutation":"insertChannel","index":1,"channel":{"samples":[-1.0,-0.8359375,-0.71875,-0.71875]}}                                                                                                           |
@@ -121,18 +107,6 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
       | insert-tag          | {"mutation":"insertTag","index":0,"tag":{"key":"TALB","value":"33. Projektetage"}}                                                                                                                         |
       | remove-tag          | {"mutation":"removeTag","index":0}                                                                                                                                                                         |
       | set-tag-value       | {"mutation":"setTagValue","index":1,"value":"Bauen mit Bestand, Ausschnitt 1"}                                                                                                                             |
-      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/sampleRate", "value": 22050}} |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing no-mutation restores the real recording
-    Given the real recording shared://🔊️mutate-semio-audio/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
-    When the no-mutation mutation is applied to the recording parsed from it and each side undoes it with its own computed inverse
-      """
-      {"mutation":"noMutation"}
-      """
-    Then both sides restore the recording and agree on the mutated and the restored snapshot
 
   @id-spec-vector
   @level-exhaustive
@@ -143,8 +117,6 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id | fixture |
-      | no-mutation | ⏸️no-mutation |
-      | set-snapshot | 📸️set-snapshot |
       | set-sample-rate | 🎚️set-sample-rate |
       | set-format | 💽️set-format |
       | insert-channel | 🎙️insert-channel |
@@ -159,7 +131,7 @@ Feature: Apply every typed semio AUDIO mutation to a real recording, against an 
   @mode-round-trip
   Scenario: Re-emit the committed encodings of the reference tone and of the real recording
     Given the real committed audio artifact asset://🎵️tone/🗣️.dsl.semio
-    And the committed specification vector shared://🔊️mutate-semio-audio/⏸️no-mutation/🦠️mutation/🔣️.json whose before-snapshot is that artifact decoded
+    And the committed specification vector shared://🔊️mutate-semio-audio/✂️remove-tag/🦠️mutation/🔣️.json whose before-snapshot is that artifact decoded
     And the real recording shared://🔊️mutate-semio-audio/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
     When each implementation parses both artifacts, prints them back and parses the printed text again
     Then both reproduce the two files byte for byte and agree on both documents and on the digests of what they emitted

@@ -1,0 +1,17 @@
+# All Owned Plugin Authored Endpoints
+
+The retained input `📥️oct8-plugin-all-owned-authored-endpoints.json` explicitly enumerates every previously curated owned endpoint plus all current plugin preimage source edits, authority retirements, policy owner moves and four new genuine Hub producer owner endpoints. Each row cites its exact ownership input or durable report. Read-only concurrent publication observations are excluded. No Git diff or other active owner’s Canvas/workspace changes were adopted.
+
+Counts: {'authoredEndpoints': 1347, 'ticketInputEndpoints': 3, 'currentAuthoredFiles': 587, 'absentAuthoredEndpoints': 760}. Current file presence and SHA are observations only; they do not attribute concurrent bytes to this lane or imply missing endpoint retirement was authored by this lane after later edits. Historical endpoint actions remain distinct from current physical state. Paths containing semantic generated-source schema names are authored contracts; no generated shipped bundle/component/compiler receipts are mixed into this union. Private ticket executable inputs are in a separate section.
+
+New Hub producer schema, helper, tests and plain vectors; freshRun/source-epoch and actual browser actor producer; generic native collector/relay and current fresh package-workspace caller are explicitly included. Runtime’s new central workspace policy, std Rust resource observer and selected actor adapter remain Runtime-owned. Root’s Dev source closure and canonical schema ID repair remain Root-owned. Actual produced/mounted/staged output rosters will be retained separately after normal production terminal.
+
+Explicit native frontier preimages were also added: Pack Cow observer, Energy current API/import/editor seam, Shared retained grants/physical caller laws and Natural precise close demand. These are authored inputs; the separately named concurrent close-demand and current-demand source observations remain excluded. Final counts: {'authoredEndpoints': 1377, 'ticketInputEndpoints': 4, 'currentAuthoredFiles': 617, 'absentAuthoredEndpoints': 760}.
+
+## Ticket-Relative Preimage Correction
+
+Two historical native/private helper preimages used `📥️current-plugin-facets/📜️script.ts` relative to this ticket. That spelling was mistakenly treated as a repository source alias in the first handback. It has been removed from authoredEndpoints and its exact original evidence merged into the existing full ticket-owned script record under ticketInputEndpoints. No invented root source is retained. Historical path correction is explicit in JSON. Corrected final counts: {'authoredEndpoints': 1376, 'ticketInputEndpoints': 4, 'currentAuthoredFiles': 617, 'absentAuthoredEndpoints': 759}.
+
+Protected normal publication source freeze adds four new publication endpoints plus the existing Hub sweep to the curated union:1381 authored endpoints, four ticket executable input endpoints. Current six source hashes and schema scope are retained in `📥️oct8-protected-sweep-settled-source-inputs.json`; native outputs and observation rosters remain excluded.
+
+Semantic placement correction removes former collection helper/schema and creates their genuine Dev verification owner at `🔎️verification/🧾️publication`, keeping tests/examples in the collection. Curated union now1383 endpoints (622current files/761absent endpoints) plus4ticket executable inputs. Exact new/removed endpoints and current hashes are in the refreshed source ledger; full actual inventory admits os.dev.verification.publication.

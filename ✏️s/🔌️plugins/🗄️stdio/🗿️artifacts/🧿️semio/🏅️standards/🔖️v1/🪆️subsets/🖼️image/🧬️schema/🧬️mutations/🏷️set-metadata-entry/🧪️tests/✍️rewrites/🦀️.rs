@@ -8,16 +8,9 @@
 //! new value string.
 use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
 use crate::standards::v1::subsets::image::schema::mutations::set_metadata_entry;
-use crate::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
+use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
-
-/// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
-/// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.target-missing`
-/// decision for `set-metadata-entry` lives in that file, so the fixture asserts against it rather than against
-/// the guardless enum arm.
-#[path = "../../🔺️diff/🦀️.rs"]
-mod leaf_diff;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️set-metadata-entry/✍️rewrites/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️set-metadata-entry/✍️rewrites/📸️snapshot/➡️after/🔣️.json");
@@ -35,22 +28,21 @@ fn mutation() -> SemioImageMutation {
     semio_framework_pack_json::from_json_str(MUTATION,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-metadata-entry mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key, value }) = mutation() else { panic!("set-metadata-entry/rewrites-the-existing-author-entry: the committed mutation must be the set-metadata-entry variant") };
-    leaf_diff::diff(&before(), key, value)
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ The existing entry's value is rewritten in place — no second `Author` entry appears.
 #[semio_framework_async_macros::async_test]
 async fn rewrites_the_author_entry_in_place() {
     let base = before();
-    let produced = leaf_outcome().diff().apply(&base).expect("set-metadata-entry applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(leaf_outcome().diff(), &base).expect("set-metadata-entry applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "set-metadata-entry/rewrites-the-existing-author-entry: applied state differs from the committed after-snapshot");
     assert_eq!(produced.metadata.len(), base.metadata.len(), "rewriting an EXISTING key must not append a duplicate entry");
     assert_eq!(produced.metadata[0].key, "Author", "the entry keeps its name key");
     assert_eq!(produced.metadata[0].value, "Ueli Saluz", "the entry's value must become the payload's value");
     assert_eq!(produced.frames, base.frames, "metadata edits must not touch a frame");
     let mut in_place = before();
-    apply_semio_image_mutation(&mut in_place, &mutation());
+    in_place = crate::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -60,12 +52,13 @@ async fn rewrites_the_author_entry_in_place() {
 async fn the_undo_set_metadata_entry_restores_the_old_value() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
-    assert_eq!(undo, vec![SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Author".to_string(), value: "semio".to_string() })], "an existing key undoes as a set carrying BASE's own value, never as a remove");
+    assert_eq!(undo, vec![SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Author".to_string(), value: "semio".to_string(), at: None })], "an existing key undoes as a set carrying BASE's own value, never as a remove");
     let mut current = before();
-    apply_semio_image_mutation(&mut current, &mutation);
-    for step in &undo {
-        apply_semio_image_mutation(&mut current, step);
+    current = crate::applied(&current, &mutation).0;
+    for step in undo.iter().rev() {
+        current = crate::applied(&current, step).0;
     }
     assert_eq!(current, base, "set-metadata-entry/rewrites-the-existing-author-entry: the undo did not restore the before-snapshot");
 }
@@ -120,6 +113,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-metadata-entry diff decodes");
-    let produced = decoded.apply(&before()).expect("committed set-metadata-entry diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed set-metadata-entry diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-metadata-entry/rewrites-the-existing-author-entry: committed diff did not carry before to after");
 }

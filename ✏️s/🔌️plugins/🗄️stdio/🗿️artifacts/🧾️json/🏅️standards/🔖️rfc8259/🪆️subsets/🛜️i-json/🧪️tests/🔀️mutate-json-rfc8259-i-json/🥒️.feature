@@ -26,7 +26,7 @@ Feature: Apply every typed RFC 7493 I-JSON mutation to a real-world document
       names exist, which is precisely what the clause forbids.
     - `set-string` — §2.4. Writes a string over a string and refuses a Unicode noncharacter.
 
-  The remaining five (`set-snapshot`, `upsert-member`, `remove-member`, `insert-array-element`,
+  The remaining four (`upsert-member`, `remove-member`, `insert-array-element`,
   `remove-array-element`) are INHERITED from ✳️any unchanged, because RFC 7493
   says nothing about arrays and nothing about member insertion or deletion beyond uniqueness. That is
   the honest finding for them and it is recorded here rather than dressed up as a difference.
@@ -59,7 +59,6 @@ Feature: Apply every typed RFC 7493 I-JSON mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                   | params                                                                                                                                              |
-      | set-snapshot         | {"snapshot": {"schema": "stdio.json", "value": {"kind": "object", "members": [{"key": "schema", "value": {"kind": "string", "value": "spatial.modelspace"}}, {"key": "revision", "value": {"kind": "number", "lexeme": "1"}}, {"key": "models", "value": {"kind": "array", "items": [{"kind": "object", "members": [{"key": "id", "value": {"kind": "string", "value": "replaced"}}, {"key": "model", "value": {"kind": "object", "members": [{"key": "schema", "value": {"kind": "string", "value": "spatial.model"}}, {"key": "revision", "value": {"kind": "number", "lexeme": "1"}}]}}]}]}}]}}} |
       | set-top-level        | {"root": {"kind": "object", "members": [{"key": "schema", "value": {"kind": "string", "value": "spatial.modelspace"}}, {"key": "revision", "value": {"kind": "number", "lexeme": "5"}}, {"key": "models", "value": {"kind": "array", "items": []}}]}} |
       | upsert-member        | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}], "key": "revision", "value": {"kind": "number", "lexeme": "99"}} |
       | remove-member        | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "objects"}, {"kind": "index", "value": 0}], "key": "typology"} |
@@ -81,7 +80,6 @@ Feature: Apply every typed RFC 7493 I-JSON mutation to a real-world document
     Then the oracle and the subject agree on the semantic projection
     Examples:
       | id                   | params                                                                                                                                              |
-      | set-snapshot         | {"snapshot": {"schema": "stdio.json", "value": {"kind": "object", "members": [{"key": "schema", "value": {"kind": "string", "value": "spatial.modelspace"}}, {"key": "revision", "value": {"kind": "number", "lexeme": "1"}}, {"key": "models", "value": {"kind": "array", "items": [{"kind": "object", "members": [{"key": "id", "value": {"kind": "string", "value": "replaced"}}, {"key": "model", "value": {"kind": "object", "members": [{"key": "schema", "value": {"kind": "string", "value": "spatial.model"}}, {"key": "revision", "value": {"kind": "number", "lexeme": "1"}}]}}]}]}}]}}} |
       | set-top-level        | {"root": {"kind": "object", "members": [{"key": "schema", "value": {"kind": "string", "value": "spatial.modelspace"}}, {"key": "revision", "value": {"kind": "number", "lexeme": "5"}}, {"key": "models", "value": {"kind": "array", "items": []}}]}} |
       | upsert-member        | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}], "key": "revision", "value": {"kind": "number", "lexeme": "99"}} |
       | remove-member        | {"path": [{"kind": "key", "value": "models"}, {"kind": "index", "value": 0}, {"kind": "key", "value": "model"}, {"kind": "key", "value": "objects"}, {"kind": "index", "value": 0}], "key": "typology"} |

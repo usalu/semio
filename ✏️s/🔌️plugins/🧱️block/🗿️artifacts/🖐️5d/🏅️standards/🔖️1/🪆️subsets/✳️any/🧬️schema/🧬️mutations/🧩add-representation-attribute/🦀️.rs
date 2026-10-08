@@ -17,11 +17,17 @@ pub struct AddRepresentationAttribute {
     pub id: String,
     #[dsl(block)]
     pub attribute: BlockAttribute,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 pub fn add_representation_attribute(id: String, attribute: BlockAttribute) -> Block5dMutation {
-    Block5dMutation::AddRepresentationAttribute(AddRepresentationAttribute { id, attribute })
+    Block5dMutation::AddRepresentationAttribute(AddRepresentationAttribute { id, attribute, index: None })
+}
+
+/// 📍️ Builder — like [`add_representation_attribute`] but inserts the row at `index`.
+pub fn add_representation_attribute_at(id: String, attribute: BlockAttribute, index: u32) -> Block5dMutation {
+    Block5dMutation::AddRepresentationAttribute(AddRepresentationAttribute { id, attribute, index: Some(index) })
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for AddRepresentationAttribute {

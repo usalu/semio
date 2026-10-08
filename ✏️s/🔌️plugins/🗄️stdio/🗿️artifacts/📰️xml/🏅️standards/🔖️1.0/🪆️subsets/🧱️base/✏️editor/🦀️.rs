@@ -288,7 +288,7 @@ fn xml_any_emit(command: &XmlAnyEditorCommand, snapshot: &XmlSnapshot, canonical
         if &next == snapshot {
             return Ok(Emit::default());
         }
-        return Ok(Emit { artifact_mutations: vec![XmlMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot: next })], ..Default::default() });
+        return Ok(Emit { artifact_mutations: semio_s_artifact_stdio_contract::editing::net_leaves_exact(snapshot, &next, crate::schema::mutations::net_mutations)?, ..Default::default() });
     }
     let path = decode_node_id(node_id).map_err(|detail| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xml.invalid-node-path"), detail))?;
     let root = snapshot.doc.root.as_ref().ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.xml.missing-root"), "The XML document has no root node to edit."))?;
@@ -298,7 +298,7 @@ fn xml_any_emit(command: &XmlAnyEditorCommand, snapshot: &XmlSnapshot, canonical
     if text == value {
         return Ok(Emit::default());
     }
-    Ok(Emit { artifact_mutations: vec![XmlMutation::SetText(SetTextMutation::Apply(SetTextPayload { path: XmlNodePath(path), text: value.clone() }))], ..Default::default() })
+    Ok(Emit { artifact_mutations: vec![XmlMutation::SetText(SetTextPayload { path: XmlNodePath(path), text: value.clone() })], ..Default::default() })
 }
 
 #[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
@@ -404,8 +404,8 @@ impl ArtifactEditor for XmlAnyEditor {
         XmlSnapshot::import_utf8(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
     }
 
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(XmlMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot }))
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
@@ -582,7 +582,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for XmlAnyE
     }
 
     fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| XmlMutation::PatchSnapshot(crate::schema::mutations::patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| XmlMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot })))
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::schema::mutations::net_mutations)
     }
 }
 //#endregion 🔖️Editor

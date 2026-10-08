@@ -126,9 +126,9 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// why this calls `subset_validator_entry_of` directly instead of reusing the private cache in
 /// `🧱️baseline/🚪️io`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn declared_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
-    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
-    ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<standards::v6_0::subsets::baseline::io::TiffBaselineValidator>()]).as_slice()
+fn declared_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
+    ENTRIES.get_or_init(|| vec![semio_framework_plugin::io::subset_validator_entry_of::<standards::v6_0::subsets::baseline::io::TiffBaselineValidator>()]).as_slice()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — moved
@@ -200,7 +200,7 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v6_0::subsets::document::io::io_registry as v6_0;
-    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
+    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -280,10 +280,8 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod top_level;
                         pub use top_level::*;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
-                        pub mod set_snapshot;
-                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
-                        pub mod patch_snapshot;
+                        #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🧮️replace-samples/🦀️.rs"]
+                        pub mod replace_samples;
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📥️insert-ifd/🦀️.rs"]
                         pub mod insert_ifd;
                         #[path = "🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📤️remove-ifd/🦀️.rs"]

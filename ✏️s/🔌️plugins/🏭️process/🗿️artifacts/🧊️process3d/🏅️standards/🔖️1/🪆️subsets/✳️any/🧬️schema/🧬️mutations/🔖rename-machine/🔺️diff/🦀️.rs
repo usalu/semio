@@ -3,8 +3,8 @@
 //! absent, Warning `no-op` when the new label equals the old (machine `label` is a non-unique
 //! display string, not a key, so no `duplicate-id` case applies here).
 
-use crate::diff::Process3dDiff;
-use crate::{Process3dSnapshot, Workshop};
+use crate::diff::{Process3dDiff, Process3dMachinePatch, Process3dMachinesDelta};
+use crate::Process3dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RenameMachine, base: &Process3dSnapshot) -> protocol::MutationOutcome<Process3dDiff> {
@@ -14,10 +14,6 @@ pub fn diff(payload: &super::RenameMachine, base: &Process3dSnapshot) -> protoco
     if existing.label == payload.new_label {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Machine \"{}\" is already named \"{}\".", payload.id, payload.new_label));
     }
-    let mut machines = base.workshop.machines.clone();
-    if let Some(machine) = machines.iter_mut().find(|machine| machine.id == payload.id) {
-        machine.label = payload.new_label.clone();
-    }
-    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Workshop { machines }), ..Default::default() })
+    protocol::MutationOutcome::new(Process3dDiff { workshop: Some(Process3dMachinesDelta { patched: vec![Process3dMachinePatch { id: payload.id.clone(), label: Some(payload.new_label.clone()), ..Default::default() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

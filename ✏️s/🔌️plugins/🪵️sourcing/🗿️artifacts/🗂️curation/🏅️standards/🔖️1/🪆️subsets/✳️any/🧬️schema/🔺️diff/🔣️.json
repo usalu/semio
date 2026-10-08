@@ -6,17 +6,6 @@
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "artifact": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/sourcing/curation/artifact.json"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "catalog": {
       "anyOf": [
         {

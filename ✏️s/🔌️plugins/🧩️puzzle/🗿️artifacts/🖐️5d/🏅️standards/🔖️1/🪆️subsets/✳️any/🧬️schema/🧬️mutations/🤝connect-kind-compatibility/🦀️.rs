@@ -17,11 +17,12 @@ pub struct ConnectKindCompatibility {
     pub bidirectional: bool,
     pub important: bool,
     pub specificity: Puzzle5dCompatSpecificity,
+    pub index: Option<usize>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn connect_kind_compatibility(source: String, target: String, bidirectional: bool, important: bool, specificity: Puzzle5dCompatSpecificity) -> Puzzle5dMutation {
-    Puzzle5dMutation::ConnectKindCompatibility(ConnectKindCompatibility { source, target, bidirectional, important, specificity })
+pub fn connect_kind_compatibility(source: String, target: String, bidirectional: bool, important: bool, specificity: Puzzle5dCompatSpecificity, index: Option<usize>) -> Puzzle5dMutation {
+    Puzzle5dMutation::ConnectKindCompatibility(ConnectKindCompatibility { source, target, bidirectional, important, specificity, index })
 }
 
 impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for ConnectKindCompatibility {

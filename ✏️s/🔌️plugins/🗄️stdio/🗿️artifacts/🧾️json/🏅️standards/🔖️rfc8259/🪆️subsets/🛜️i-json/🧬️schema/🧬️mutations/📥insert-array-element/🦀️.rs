@@ -1,6 +1,4 @@
-//! 📥 `insert-array-element` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 📥 `insert-array-element` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -17,14 +15,16 @@ impl protocol::MutationKind<JsonSnapshot, JsonIJsonMutation> for InsertArrayElem
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "array-element", kind: "insert-array-element", record: "InsertArrayElement" };
 
     fn diff(&self, base: &JsonSnapshot) -> protocol::MutationOutcome<<JsonIJsonMutation as Mutation<JsonSnapshot>>::Diff> {
-        agg_diff(&JsonIJsonMutation::InsertArrayElement(self.clone()), base)
+        let Self { path, index, value } = self;
+        delegated(Ok(JsonMutation::InsertArrayElement(InsertArrayElementPayload { path: path.clone(), index: *index, value: value.clone() })), base)
     }
     fn inverse(&self, base: &JsonSnapshot) -> Result<Vec<JsonIJsonMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&JsonIJsonMutation::InsertArrayElement(self.clone()), base)?
-    
-    })
-}
+        let Self { path, index, .. } = self;
+        Ok(match resolve(&base.value, path) {
+            Some(JsonValue::Array { items }) => vec![JsonIJsonMutation::RemoveArrayElement(remove_array_element::RemoveArrayElement { path: path.clone(), index: (*index).min(items.len()) })],
+            _ => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert array element", "Array-Element einfügen")
     }

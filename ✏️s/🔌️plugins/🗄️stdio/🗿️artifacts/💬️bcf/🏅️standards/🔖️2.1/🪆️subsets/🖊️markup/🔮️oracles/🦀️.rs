@@ -869,7 +869,7 @@ mod oracles {
         })
     }
 
-    /// 📸️ The whole document as the `BcfSnapshot` wire — `set-snapshot`'s payload.
+    /// 📸️ The whole document as the `BcfSnapshot` wire.
     fn doc_to_json(doc: &ODoc) -> Json {
         obj(vec![
             ("schema", Json::String("stdio.bcf".to_string())),
@@ -890,16 +890,19 @@ mod oracles {
     /// to an already-decoded document. An unrecognised kind, or a named topic/comment/viewpoint that
     /// does not exist, is an error — never a silent no-op.
     fn apply_kind(doc: &mut ODoc, kind: &str, params: &Json) -> Result<(), String> {
+        let index_param = || match params.get("index") {
+            Some(Json::Number(index)) => Some(*index as usize),
+            _ => None,
+        };
         match kind {
-            "set-snapshot" => *doc = doc_from_json(&params.get("snapshot").cloned().ok_or("set-snapshot: missing `snapshot`")?)?,
-            "patch-snapshot" => *doc = doc_from_json(&semio_repo_test_host::law::patched_snapshot(&doc_to_json(doc), params.get("patch").ok_or("patch-snapshot: missing `patch`")?)?)?,
             "set-version" => doc.version = params.str("version"),
             "insert-topic" => {
                 let topic = topic_from_json(&params.get("topic").cloned().unwrap_or(Json::Null))?;
                 if doc.topics.iter().any(|existing| existing.guid == topic.guid) {
                     return Err(format!("insert-topic: a topic named {:?} already exists", topic.guid));
                 }
-                doc.topics.push(topic);
+                let at = index_param().unwrap_or(doc.topics.len()).min(doc.topics.len());
+                doc.topics.insert(at, topic);
             }
             "remove-topic" => {
                 let guid = params.str("guid");
@@ -941,7 +944,8 @@ mod oracles {
                 if topic.comments.iter().any(|existing| existing.guid == comment.guid) {
                     return Err(format!("insert-comment: a comment named {:?} already exists", comment.guid));
                 }
-                topic.comments.push(comment);
+                let at = index_param().unwrap_or(topic.comments.len()).min(topic.comments.len());
+                topic.comments.insert(at, comment);
             }
             "remove-comment" => {
                 let topic_guid = params.str("topicGuid");
@@ -981,7 +985,8 @@ mod oracles {
                 if topic.viewpoints.iter().any(|existing| existing.guid == viewpoint.guid) {
                     return Err(format!("insert-viewpoint: a viewpoint named {:?} already exists", viewpoint.guid));
                 }
-                topic.viewpoints.push(viewpoint);
+                let at = index_param().unwrap_or(topic.viewpoints.len()).min(topic.viewpoints.len());
+                topic.viewpoints.insert(at, viewpoint);
             }
             "remove-viewpoint" => {
                 let topic_guid = params.str("topicGuid");
@@ -1029,11 +1034,10 @@ mod oracles {
         let find_viewpoint = |topic_guid: &str, guid: &str| find_topic(topic_guid).and_then(|topic| topic.viewpoints.iter().find(|viewpoint| viewpoint.guid == guid));
 
         Ok(Some(match kind {
-            "set-snapshot" | "patch-snapshot" => spec("set-snapshot", obj(vec![("snapshot", doc_to_json(base))])),
             "set-version" => spec("set-version", obj(vec![("version", Json::String(base.version.clone()))])),
             "insert-topic" => spec("remove-topic", obj(vec![("guid", Json::String(params.get("topic").map(|topic| topic.str("guid")).unwrap_or_default()))])),
             "remove-topic" => match find_topic(&params.str("guid")) {
-                Some(topic) => spec("insert-topic", obj(vec![("topic", topic_to_json(topic))])),
+                Some(topic) => spec("insert-topic", obj(vec![("topic", topic_to_json(topic)), ("index", Json::Number(base.topics.iter().position(|candidate| candidate.guid == topic.guid).unwrap_or_default() as f64))])),
                 None => return Ok(None),
             },
             "set-topic-markup" => {
@@ -1066,7 +1070,7 @@ mod oracles {
             }
             "insert-comment" => spec("remove-comment", obj(vec![("topicGuid", Json::String(params.str("topicGuid"))), ("guid", Json::String(params.get("comment").map(|comment| comment.str("guid")).unwrap_or_default()))])),
             "remove-comment" => match find_comment(&params.str("topicGuid"), &params.str("guid")) {
-                Some(comment) => spec("insert-comment", obj(vec![("topicGuid", Json::String(params.str("topicGuid"))), ("comment", comment_to_json(comment))])),
+                Some(comment) => spec("insert-comment", obj(vec![("topicGuid", Json::String(params.str("topicGuid"))), ("comment", comment_to_json(comment)), ("index", Json::Number(find_topic(&params.str("topicGuid")).and_then(|topic| topic.comments.iter().position(|candidate| candidate.guid == comment.guid)).unwrap_or_default() as f64))])),
                 None => return Ok(None),
             },
             "set-comment" => {
@@ -1097,7 +1101,7 @@ mod oracles {
             }
             "insert-viewpoint" => spec("remove-viewpoint", obj(vec![("topicGuid", Json::String(params.str("topicGuid"))), ("guid", Json::String(params.get("viewpoint").map(|viewpoint| viewpoint.str("guid")).unwrap_or_default()))])),
             "remove-viewpoint" => match find_viewpoint(&params.str("topicGuid"), &params.str("guid")) {
-                Some(viewpoint) => spec("insert-viewpoint", obj(vec![("topicGuid", Json::String(params.str("topicGuid"))), ("viewpoint", viewpoint_to_json(viewpoint))])),
+                Some(viewpoint) => spec("insert-viewpoint", obj(vec![("topicGuid", Json::String(params.str("topicGuid"))), ("viewpoint", viewpoint_to_json(viewpoint)), ("index", Json::Number(find_topic(&params.str("topicGuid")).and_then(|topic| topic.viewpoints.iter().position(|candidate| candidate.guid == viewpoint.guid)).unwrap_or_default() as f64))])),
                 None => return Ok(None),
             },
             "set-viewpoint-camera" => {

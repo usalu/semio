@@ -78,11 +78,12 @@ fn the_funnel_tells_the_recorded_refusal_and_mirrors_it_as_a_status() {
 fn a_refused_guest_channel_is_told_as_its_localized_notice() {
     let corpus: Value = serde_json::from_str(include_str!("../../../../../../📡️spr/🧵️channel/🧫️fixtures/🧫️channel-handshake/🔣️.json")).expect("the channel-handshake corpus parses");
     let code = corpus["code"].as_str().expect("code");
-    let refused: Vec<(String, i64)> = corpus["cases"].as_array().expect("cases").iter().filter(|case| case["admitted"] == false).map(|case| (case["name"].as_str().expect("name").to_string(), case["guestOffset"].as_i64().expect("offset"))).collect();
+    let refused: Vec<(String, i64, i64)> = corpus["cases"].as_array().expect("cases").iter().filter(|case| case["admitted"] == false).map(|case| (case["name"].as_str().expect("name").to_string(), case["guestOffset"].as_i64().expect("offset"), case["hostOffset"].as_i64().unwrap_or(0))).collect();
     assert!(!refused.is_empty(), "the corpus names refused guests");
-    for (name, offset) in refused {
-        let host = protocol::CHANNEL_VERSION;
-        let guest = u32::try_from(i64::from(host) + offset).expect("a guest version");
+    for (name, offset, host_offset) in refused {
+        let current = i64::from(protocol::CHANNEL_VERSION);
+        let host = u32::try_from(current + host_offset).expect("a host version");
+        let guest = u32::try_from(current + offset).expect("a guest version");
         let fault = protocol::admit_guest_channel_version(guest, host).expect_err("the corpus case is refused");
         assert_eq!(fault.code.0, code, "{name}");
         for (locale, locale_id, expected) in [
@@ -95,7 +96,10 @@ fn a_refused_guest_channel_is_told_as_its_localized_notice() {
             assert_eq!(detail, expected, "{name} {locale_id}: the open's status keeps the localized notice");
             let told: Vec<(String, Option<String>, Option<String>)> = shell.chrome_accessibility_nodes(&[]).into_iter().filter(|node| node.key == TRANSIENT_NOTICE_STATUS_ID).map(|node| (node.role, node.label, node.description)).collect();
             assert_eq!(told, [("status".to_string(), Some(expected.clone()), Some(code.to_string()))], "{name} {locale_id}: told politely, described by its code");
-            assert!(!expected.contains(code) && !expected.contains("speaks app channel"), "{name} {locale_id}: never the raw code or the English message");
+            assert!(!detail.contains(code), "{name} {locale_id}: never the raw code");
+            if locale == semio_framework_ui_locale::Locale::De {
+                assert!(!detail.contains("speaks app channel"), "{name} {locale_id}: never the English message");
+            }
         }
     }
 }

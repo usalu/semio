@@ -4,8 +4,8 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🧭topology/`).
 
+use super::geometry::{infer_geometry, GeometryInput};
 use super::topology::compute_generation3d_topology;
-use crate::Generation3dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Inference
@@ -17,28 +17,33 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct Generation3dInference {
     #[derived]
     pub topology: Generation3dTopology,
+    #[derived]
+    pub geometry: Generation3dGeometryRecord,
 }
 
-impl protocol::Inference<Generation3dSnapshot> for Generation3dInference {
-    fn infer(snapshot: &Generation3dSnapshot) -> Result<Self, semio_framework_value::ValueError> {
+impl<'a> protocol::Inference<GeometryInput<'a>> for Generation3dInference {
+    fn infer(snapshot: &GeometryInput<'_>) -> Result<Self, semio_framework_value::ValueError> {
         Ok({
-        Self { topology: compute_generation3d_topology(snapshot) }
+        Self { topology: compute_generation3d_topology(snapshot.snapshot), geometry: Generation3dGeometryRecord::of(&infer_geometry(snapshot)) }
     
         })
     }
 }
 
-impl protocol::InferenceSpec<Generation3dSnapshot> for Generation3dInference {
+impl<'a> protocol::InferenceSpec<GeometryInput<'a>> for Generation3dInference {
     fn inference_schema_id() -> &'static str {
         "s.procedural.generation3d.inference"
     }
     fn schema_version() -> u32 {
-        1
+        3
     }
     /// 🗺️ `topology` reads the widget ids and the synapse endpoints only: a layout, camera, schema or generation edit
     /// never reaches it (`protocol::DiffRegions` of `Generation3dDiff` names those regions apart).
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.procedural.generation3d.inference.topology", reads: &["hostSnapshot/widgets", "hostSnapshot/synapses"] }]
+        &[
+            protocol::InferenceFieldSpec { id: "s.procedural.generation3d.inference.topology", reads: &["hostSnapshot/widgets", "hostSnapshot/synapses"] },
+            protocol::InferenceFieldSpec { id: "s.procedural.generation3d.inference.geometry", reads: &["hostSnapshot/widgets", "hostSnapshot/synapses"] },
+        ]
     }
 }
 //#endregion 🔖️Inference
@@ -65,5 +70,6 @@ mod tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+pub use super::geometry::{Generation3dFaultRecord, Generation3dGeometryRecord, Generation3dOutputRecord, Generation3dWidgetRecord};
 pub use super::topology::Generation3dTopology;
 //#endregion 🔁️Re-exports

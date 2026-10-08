@@ -366,9 +366,17 @@ impl protocol::DiffBinary for PlyDiff {
 fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
     let mut w = dsl::ByteWriter::new();
     write_bin_option(&mut w, &self.format, |w, f| write_bin_format(w, *f));
-    write_bin_option(&mut w, &self.comments, |w, v: &Vec<String>| {
+    write_bin_option(&mut w, &self.comments, |w, v: &PlyCommentsDiff| {
         let mut inner = dsl::ByteWriter::new();
-        write_bin_vec(&mut inner, v, |w, c: &String| write_bin_str(w, c));
+        write_bin_vec(&mut inner, &v.removed, |w, index: &usize| w.write_varint_u64(*index as u64));
+        write_bin_vec(&mut inner, &v.modified, |w, m: &IndexedModified<String>| {
+            w.write_varint_u64(m.index as u64);
+            write_bin_str(w, &m.diff);
+        });
+        write_bin_vec(&mut inner, &v.added, |w, a: &IndexedAdded<String>| {
+            w.write_varint_u64(a.index as u64);
+            write_bin_str(w, &a.item);
+        });
         write_bin_blob(w, &inner.into_bytes());
     });
     write_bin_option(&mut w, &self.elements, |w, v| write_bin_blob(w, &enc_elements_diff_bin(v)));
@@ -380,7 +388,10 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     let comments = read_bin_option(&mut r, |r| {
         let blob = read_bin_blob(r)?;
         let mut inner = dsl::ByteReader::new(&blob);
-        read_bin_vec(&mut inner, read_bin_str)
+        let removed = read_bin_vec(&mut inner, |r| Ok(r.read_varint_u64()? as usize))?;
+        let modified = read_bin_vec(&mut inner, |r| Ok(IndexedModified { index: r.read_varint_u64()? as usize, diff: read_bin_str(r)? }))?;
+        let added = read_bin_vec(&mut inner, |r| Ok(IndexedAdded { index: r.read_varint_u64()? as usize, item: read_bin_str(r)? }))?;
+        Ok(PlyCommentsDiff { removed, modified, added })
     })
     .map_err(|error| diff_pack_err(&error))?;
     let elements = read_bin_option(&mut r, |r| dec_elements_diff_bin(&read_bin_blob(r)?)).map_err(|error| diff_pack_err(&error))?;

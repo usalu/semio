@@ -1,13 +1,10 @@
 {
   "artifact": null,
-  "schema": null,
   "domain": "engineering",
-  "label": null,
-  "meta": null,
-  "kindCatalogs": null,
-  "kindCatalogsExtra": null,
-  "kindCompatibility": null,
-  "parts": null,
   "fasteners": null,
+  "kindCompatibility": null,
+  "meta": null,
+  "parts": null,
+  "schema": null,
   "targetVolumes": null
 }

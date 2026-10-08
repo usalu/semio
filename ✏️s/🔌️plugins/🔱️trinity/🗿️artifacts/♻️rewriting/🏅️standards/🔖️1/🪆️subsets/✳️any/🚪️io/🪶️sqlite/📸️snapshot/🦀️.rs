@@ -12,10 +12,10 @@ impl ArtifactSqliteSnapshot for RewritingSnapshot {
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{backing::project(self,control)}
  fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{backing::reconstruct(database,control)}
- fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   native::decode(payload,control)
  }
- fn encode_sqlite_snapshot_native(&self,format:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{
+ fn encode_sqlite_snapshot_native(&self,format:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io::IoPayload,ValueError>{
   encoding::preflight(self,control)?;
   store::encode_sqlite_snapshot_record_native(format,"trinity.rewriting",Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)
  }

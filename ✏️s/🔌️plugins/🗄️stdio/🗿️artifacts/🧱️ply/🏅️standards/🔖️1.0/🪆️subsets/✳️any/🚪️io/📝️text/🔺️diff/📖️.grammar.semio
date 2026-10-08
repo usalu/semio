@@ -5,9 +5,9 @@ start diff
 # 🎫️26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION FG3: real one-line
 # `print_diff`/`parse_diff` form this artifact's hand-rolled `DiffCodec` (../🦀️.rs
 # `print_ply_diff`/`parse_ply_diff`) emits — space-separated `name=value` token per changed
-# top-level field (absent token = unchanged): `format`, `comments` (whole-vec REPLACE, NOT
-# tri-state — token PRESENCE itself is the `Option` tag, there is no separate `[0]`/`[1,...]`
-# wrapper around it, unlike gif89a's own tri-state fields), `elements` (the real NAME-keyed
+# top-level field (absent token = unchanged): `format`, `comments` (the INDEX-keyed
+# removed/modified/added triple — token PRESENCE itself is the `Option` tag, there is no separate
+# `[0]`/`[1,...]` wrapper around it, unlike gif89a's own tri-state fields), `elements` (the real NAME-keyed
 # removed/modified triple + INDEX-keyed added triple — `PlyElementsDiff`'s own actual shape, see
 # this artifact's `f6-ply-report.md` for why `elements` deliberately deviates from a uniform
 # index-keyed triple). Kept on ONE physical line, matching this dialect's own sequence-parsing
@@ -19,8 +19,12 @@ diff = format-clause? comments-clause? elements-clause?
 format-clause = "format" "=" format-tag
 format-tag = "a" | "l" | "b"
 
-comments-clause = "comments" "=" "[" comment-list? "]"
-comment-list = hex {"," hex}*
+comments-clause = "comments" "=" comments-triple
+comments-triple = "{" "[" comments-removed-list? "]" ";" "[" comments-modified-list? "]" ";" "[" comments-added-list? "]" "}"
+comments-removed-list = INT {"," INT}*
+comments-modified-list = comments-entry {"," comments-entry}*
+comments-added-list = comments-entry {"," comments-entry}*
+comments-entry = INT ":" hex
 
 elements-clause = "elements" "=" elements-triple
 elements-triple = "{" "[" elements-removed-list? "]" ";" "[" elements-modified-list? "]" ";" "[" elements-added-list? "]" "}"

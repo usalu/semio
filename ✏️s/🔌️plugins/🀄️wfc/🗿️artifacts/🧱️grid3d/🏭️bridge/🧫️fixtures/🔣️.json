@@ -1,0 +1,20 @@
+{
+  "artifact": "s.wfc.grid3d",
+  "producedBy": "semio-wfc-mutation-bridge",
+  "excludedOwnerSegments": [
+    "👁️viewer",
+    "✏️editor"
+  ],
+  "aggregates": [
+    "Grid3dMutation"
+  ],
+  "coordinates": [
+    {
+      "artifact": "s.wfc.grid3d",
+      "standard": "1",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/🏅️standards/🔖️1/🪆️subsets/✳️any"
+    }
+  ]
+}

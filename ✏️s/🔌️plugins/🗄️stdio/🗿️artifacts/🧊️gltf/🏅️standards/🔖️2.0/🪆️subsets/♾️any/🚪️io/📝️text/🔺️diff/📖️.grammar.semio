@@ -87,7 +87,16 @@ primitive-value = "[" attr-pairs "," int-opt "," int-opt "," int-opt "," morph-t
 primitive-list = "[" "]" | "[" primitive-value {"," primitive-value}* "]"
 primitive-list-opt = "[" "0" "]" | "[" "1" "," primitive-list "]"
 mesh-value = "[" primitive-list "," f64-list "," str-opt "," json-opt "," json-opt "]"
-mesh-diff-value = "[" primitive-list-opt "," f64-list-opt "," str-triopt "," json-triopt "," json-triopt "]"
+primitives-collection = "[" removed-list? "]" ";" "[" primitives-modified-list? "]" ";" "[" primitives-added-list? "]"
+primitives-modified-list = primitives-modified {"," primitives-modified}*
+primitives-modified = INT ":" primitive-diff-value
+primitives-added-list = primitives-added {"," primitives-added}*
+primitives-added = INT ":" primitive-value
+primitives-collection-opt = "[" "0" "]" | "[" "1" "," primitives-collection "]"
+attr-pairs-opt = "[" "0" "]" | "[" "1" "," attr-pairs "]"
+morph-target-list-opt = "[" "0" "]" | "[" "1" "," morph-target-list "]"
+primitive-diff-value = "[" attr-pairs-opt "," tri-int "," tri-int "," tri-int "," morph-target-list-opt "," json-triopt "," json-triopt "]"
+mesh-diff-value = "[" primitives-collection-opt "," f64-list-opt "," str-triopt "," json-triopt "," json-triopt "]"
 
 sparse-indices-value = "[" INT "," INT "," component-type "]"
 sparse-values-value = "[" INT "," INT "]"
@@ -117,6 +126,7 @@ material-diff-value = "[" str-triopt "," pbr-triopt "," normal-tex-triopt "," oc
 buffer-value = "[" INT "," str-opt "," str-opt "," json-opt "," json-opt "]"
 buffer-diff-value = "[" int-opt "," str-triopt "," str-triopt "," json-triopt "," json-triopt "]"
 buffer-view-value = "[" INT "," INT "," INT "," int-opt "," int-opt "," str-opt "," json-opt "," json-opt "]"
+buffer-view-diff-value = "[" int-opt "," int-opt "," int-opt "," tri-int "," tri-int "," str-triopt "," json-triopt "," json-triopt "]"
 #endregion
 
 #region TextureImageSamplerSkin
@@ -124,6 +134,9 @@ texture-value = "[" int-opt "," int-opt "," str-opt "," json-opt "," json-opt "]
 image-value = "[" str-opt "," str-opt "," int-opt "," str-opt "," json-opt "," json-opt "]"
 sampler-value = "[" int-opt "," int-opt "," INT "," INT "," str-opt "," json-opt "," json-opt "]"
 skin-value = "[" int-opt "," int-opt "," usize-list "," str-opt "," json-opt "," json-opt "]"
+texture-diff-value = "[" tri-int "," tri-int "," str-triopt "," json-triopt "," json-triopt "]"
+image-diff-value = "[" str-triopt "," str-triopt "," tri-int "," str-triopt "," json-triopt "," json-triopt "]"
+skin-diff-value = "[" tri-int "," tri-int "," usize-list-opt "," str-triopt "," json-triopt "," json-triopt "]"
 #endregion
 
 #region Animation
@@ -133,6 +146,9 @@ animation-sampler-value = "[" INT "," interpolation "," INT "," json-opt "," jso
 channel-list = "[" "]" | "[" animation-channel-value {"," animation-channel-value}* "]"
 animation-sampler-list = "[" "]" | "[" animation-sampler-value {"," animation-sampler-value}* "]"
 animation-value = "[" channel-list "," animation-sampler-list "," str-opt "," json-opt "," json-opt "]"
+channel-list-opt = "[" "0" "]" | "[" "1" "," channel-list "]"
+animation-sampler-list-opt = "[" "0" "]" | "[" "1" "," animation-sampler-list "]"
+animation-diff-value = "[" channel-list-opt "," animation-sampler-list-opt "," str-triopt "," json-triopt "," json-triopt "]"
 #endregion
 
 #region Camera
@@ -194,7 +210,7 @@ accessors-added = INT ":" accessor-value
 
 buffer-views-clause = "buffer-views" "=" "[" removed-list? "]" ";" "[" buffer-views-modified-list? "]" ";" "[" buffer-views-added-list? "]"
 buffer-views-modified-list = buffer-views-modified {"," buffer-views-modified}*
-buffer-views-modified = INT ":" buffer-view-value
+buffer-views-modified = INT ":" buffer-view-diff-value
 buffer-views-added-list = buffer-views-added {"," buffer-views-added}*
 buffer-views-added = INT ":" buffer-view-value
 
@@ -224,13 +240,13 @@ materials-added = INT ":" material-value
 # production.
 textures-clause = "textures" "=" "[" removed-list? "]" ";" "[" textures-modified-list? "]" ";" "[" textures-added-list? "]"
 textures-modified-list = textures-modified {"," textures-modified}*
-textures-modified = INT ":" texture-value
+textures-modified = INT ":" texture-diff-value
 textures-added-list = textures-added {"," textures-added}*
 textures-added = INT ":" texture-value
 
 images-clause = "images" "=" "[" removed-list? "]" ";" "[" images-modified-list? "]" ";" "[" images-added-list? "]"
 images-modified-list = images-modified {"," images-modified}*
-images-modified = INT ":" image-value
+images-modified = INT ":" image-diff-value
 images-added-list = images-added {"," images-added}*
 images-added = INT ":" image-value
 
@@ -242,13 +258,13 @@ samplers-added = INT ":" sampler-value
 
 skins-clause = "skins" "=" "[" removed-list? "]" ";" "[" skins-modified-list? "]" ";" "[" skins-added-list? "]"
 skins-modified-list = skins-modified {"," skins-modified}*
-skins-modified = INT ":" skin-value
+skins-modified = INT ":" skin-diff-value
 skins-added-list = skins-added {"," skins-added}*
 skins-added = INT ":" skin-value
 
 animations-clause = "animations" "=" "[" removed-list? "]" ";" "[" animations-modified-list? "]" ";" "[" animations-added-list? "]"
 animations-modified-list = animations-modified {"," animations-modified}*
-animations-modified = INT ":" animation-value
+animations-modified = INT ":" animation-diff-value
 animations-added-list = animations-added {"," animations-added}*
 animations-added = INT ":" animation-value
 

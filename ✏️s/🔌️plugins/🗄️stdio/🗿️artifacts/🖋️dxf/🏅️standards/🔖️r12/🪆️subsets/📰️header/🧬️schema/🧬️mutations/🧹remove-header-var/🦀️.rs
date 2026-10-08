@@ -1,6 +1,4 @@
-//! 🧹️ `remove-header-var` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🧹️ `remove-header-var` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,14 +13,18 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for RemoveHeaderVar {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "header-var", kind: "remove-header-var", record: "RemoveHeaderVar" };
 
     fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
-        agg_diff(&DxfMutation::RemoveHeaderVar(self.clone()), base)
+        let Self { name } = self;
+        protocol::MutationOutcome::new(diff_remove_header_var(name))
     }
     fn inverse(&self, base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&DxfMutation::RemoveHeaderVar(self.clone()), base)?
-    
-    })
-}
+        let Self { name } = self;
+        Ok({
+            match base.header_vars.iter().position(|v| &v.name == name) {
+                Some(at) => vec![DxfMutation::SetHeaderVar(set_header_var::SetHeaderVar { name: name.clone(), header_var: base.header_vars[at].clone(), index: Some(at) })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove header var", "Header-Variable entfernen")
     }

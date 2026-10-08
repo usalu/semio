@@ -13,6 +13,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct CreateNode {
     #[dsl(block)]
     pub node: CadNode,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<u32>,
 }
 
 impl MutationKind<CadSnapshot, CadMutation> for CreateNode {
@@ -22,16 +24,13 @@ impl MutationKind<CadSnapshot, CadMutation> for CreateNode {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+        super::inverse::inverse(self, base)
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create node \"{}\"", self.node.label), &format!("Knoten \"{}\" erstellen", self.node.label))
     }
     fn target(&self) -> Vec<String> {
         vec![self.node.id.clone()]
     }
-}
+, index: None }
 //#endregion 🔖️Mutation

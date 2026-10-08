@@ -1,0 +1,10 @@
+{
+  "units": [0, 1, 3, 256],
+  "capacityOffsets": [-1, 0, 1],
+  "cancelledOffsets": [0, 1, 3, 256],
+  "formats": ["Body", "Document"],
+  "expectedNode": "雪😀",
+  "maximumOwnedBytes": 4194304,
+  "maximumDepth": 128,
+  "maximumItems": 100000
+}

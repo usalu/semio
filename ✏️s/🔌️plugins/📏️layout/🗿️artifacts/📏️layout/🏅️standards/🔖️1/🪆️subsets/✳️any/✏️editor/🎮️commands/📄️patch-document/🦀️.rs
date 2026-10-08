@@ -47,7 +47,7 @@ fn detail_mutation(document: &LayoutSnapshot, field: &str, value: &str) -> Optio
             index += 1;
         };
         let name = value.trim();
-        return Some(LayoutMutation::CreateCharacterStyle(CreateCharacterStyle { id, name: (!name.is_empty()).then(|| name.to_string()) }));
+        return Some(LayoutMutation::CreateCharacterStyle(CreateCharacterStyle { id, name: (!name.is_empty()).then(|| name.to_string()), index: None }));
     }
     let (id, key) = split_field(field)?;
     if let Some(style) = document.paragraph_styles.iter().find(|style| style.id == id) {

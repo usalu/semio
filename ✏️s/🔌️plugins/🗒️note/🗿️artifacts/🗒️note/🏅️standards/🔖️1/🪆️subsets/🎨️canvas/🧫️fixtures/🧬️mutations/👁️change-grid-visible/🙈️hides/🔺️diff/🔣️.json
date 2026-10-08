@@ -1,10 +1,11 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "title": null,
   "blocks": null,
-  "gridVisible": false,
+  "gridVisible": {
+    "value": false
+  },
   "gridSpacing": null,
   "gridSubdivisions": null,
   "gridOpacity": null,

@@ -1,0 +1,11 @@
+syntax = "proto3";
+package stdio.tiff.mutation;
+
+message ReplaceSamplesWord { uint32 lo = 1; uint32 hi = 2; }
+
+message ReplaceSamplesMutation {
+  uint64 ifd_index = 1;
+  uint64 block = 2;
+  uint64 offset = 3;
+  repeated ReplaceSamplesWord samples = 4;
+}

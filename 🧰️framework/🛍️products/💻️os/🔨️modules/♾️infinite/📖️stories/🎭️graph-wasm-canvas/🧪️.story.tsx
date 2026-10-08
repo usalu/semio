@@ -1,15 +1,15 @@
 // #region 🧲️Header
 // 💻️ 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📖️stories/🎭️graph-wasm-canvas/🧪️.story.tsx
-// Specs: Host `GraphWasmCanvas` (`framework/product/os/module/infinite/canvas/react-renderer/index.tsx`) against a pure-JS mock `GraphWasmSession` — no real WASM session, no puzzle-2d program.
-// Summary: `GraphWasmCanvas` only depends on the small `GraphWasmSession` interface (`attachCanvas`/`setSize`/`renderFrame`/pointer hooks); the mock here paints a deterministic checkerboard + a pointer-tracked marker onto the raw `<canvas>` 2D context so the story proves the reconciler-free host wiring (attach → resize → RAF loop → pointer events) without pulling in any leaf bundle's `cdylib`.
+// Specs: Host `WasmCanvas` (`framework/product/os/module/infinite/canvas/react-renderer/index.tsx`) against a pure-JS mock `WasmCanvasSession` — no real WASM session, no puzzle-2d program.
+// Summary: `WasmCanvas` only depends on the small `WasmCanvasSession` interface (`attachCanvas`/`setSize`/`renderFrame`/pointer hooks); the mock here paints a deterministic checkerboard + a pointer-tracked marker onto the raw `<canvas>` 2D context so the story proves the reconciler-free host wiring (attach → resize → RAF loop → pointer events) without pulling in any leaf bundle's `cdylib`.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState, type ReactElement } from "react";
 
-import { GraphWasmCanvas } from "@semio-tech/infinite-canvas-react-renderer";
-import type { CanvasInputModifiers, GraphWasmSession } from "@semio-tech/infinite-canvas-react-renderer";
+import { WasmCanvas } from "@semio-tech/canvas-react-renderer";
+import type { CanvasInputModifiers, WasmCanvasSession } from "@semio-tech/canvas-react-renderer";
 
 //#region MockSession
 const STORY_CHECKER_CELL_PX = 32;
@@ -17,8 +17,8 @@ const STORY_CHECKER_COLOR_A = "#1d4ed8";
 const STORY_CHECKER_COLOR_B = "#93c5fd";
 const STORY_POINTER_COLOR = "#f97316";
 
-/** 🕸️ Pure-JS stand-in for a leaf bundle's `cdylib` session: paints a deterministic checkerboard sized to the logical canvas plus a marker at the last pointer position — enough to exercise `GraphWasmCanvas`'s attach/resize/RAF/pointer wiring with zero WASM. */
-function createMockGraphWasmSession(onPointerCount: (count: number) => void): GraphWasmSession {
+/** 🕸️ Pure-JS stand-in for a leaf bundle's `cdylib` session: paints a deterministic checkerboard sized to the logical canvas plus a marker at the last pointer position — enough to exercise `WasmCanvas`'s attach/resize/RAF/pointer wiring with zero WASM. */
+function createMockWasmCanvasSession(onPointerCount: (count: number) => void): WasmCanvasSession {
   let ctx: CanvasRenderingContext2D | null = null;
   let logicalWidth = 0;
   let logicalHeight = 0;
@@ -85,13 +85,13 @@ function createMockGraphWasmSession(onPointerCount: (count: number) => void): Gr
 //#endregion MockSession
 
 //#region StoryHost
-function GraphWasmCanvasStoryHost({ enablePointer }: { readonly enablePointer: boolean }): ReactElement {
+function WasmCanvasStoryHost({ enablePointer }: { readonly enablePointer: boolean }): ReactElement {
   const [pointerCount, setPointerCount] = useState(0);
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
       <div className="semio-graph-wasm-canvas-story" style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
-        <GraphWasmCanvas sessionFactory={() => createMockGraphWasmSession(setPointerCount)} enablePointer={enablePointer} />
+        <WasmCanvas sessionFactory={() => createMockWasmCanvasSession(setPointerCount)} enablePointer={enablePointer} />
       </div>
       <pre data-testid="graph-wasm-canvas-debug" style={{ margin: 0, padding: 4, fontSize: 11 }}>
         {JSON.stringify({ pointerEvents: pointerCount })}
@@ -102,13 +102,13 @@ function GraphWasmCanvasStoryHost({ enablePointer }: { readonly enablePointer: b
 //#endregion StoryHost
 
 const meta = {
-  title: "♾️infinite/GraphWasmCanvas",
-  component: GraphWasmCanvasStoryHost,
+  title: "♾️infinite/WasmCanvas",
+  component: WasmCanvasStoryHost,
   parameters: {
     layout: "fullscreen",
   },
   tags: ["autodocs"],
-} satisfies Meta<typeof GraphWasmCanvasStoryHost>;
+} satisfies Meta<typeof WasmCanvasStoryHost>;
 
 export default meta;
 

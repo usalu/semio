@@ -42,7 +42,7 @@ async fn applies_to_committed_after() {
         panic!("replays-the-identical-empty-point-cloud's committed mutation must be a replace-points");
     };
     assert_eq!(base.geometry.points, payload.points, "the committed payload must be exactly the point cloud BASE resolves to, or the no-op guard is never reached");
-    let applied = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(produced().diff(), &base).expect("an empty diff still applies cleanly");
+    let applied = protocol::apply_diff(produced().diff(), &base).expect("an empty diff still applies cleanly");
     assert_eq!(applied, expected_after(), "replace-points/replays-the-identical-empty-point-cloud: applied state differs from committed after-snapshot");
     assert_eq!((applied.notation, applied.results, applied.computed), (base.notation, base.results, base.computed), "a no-op replace-points must not mint a fresh notation/results/computed triple");
 }
@@ -54,10 +54,10 @@ async fn inverse_restores_before() {
     let base = before();
     let inverse = <EquationMutation as protocol::Mutation<EquationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![EquationMutation::ReplacePoints(ReplacePoints { points: Vec::new() })], "replace-points inverts to a replace-points carrying BASE's whole prior cloud, got {inverse:?}");
-    let mut snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(produced().diff(), &base).expect("forward applies");
+    let mut snapshot = protocol::apply_diff(produced().diff(), &base).expect("forward applies");
     for step in &inverse {
         let outcome = <EquationMutation as protocol::Mutation<EquationSnapshot>>::diff(step, &snapshot);
-        snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(outcome.diff(), &snapshot).expect("inverse step applies");
+        snapshot = protocol::apply_diff(outcome.diff(), &snapshot).expect("inverse step applies");
     }
     assert_eq!(snapshot, base, "replace-points/replays-the-identical-empty-point-cloud: inverse did not restore the before-snapshot");
 }
@@ -113,7 +113,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: EquationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced_snapshot = <EquationDiff as protocol::MutationDiff<EquationSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced_snapshot = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced_snapshot, expected_after(), "replace-points/replays-the-identical-empty-point-cloud: committed diff did not carry before to after");
 }
 
@@ -130,4 +130,10 @@ async fn one_added_point_is_a_real_replacement() {
     assert!(outcome.diff().equation.is_none(), "replace-points never touches the inline equation slot");
     let semantics = <EquationMutation as protocol::SemanticMutation<EquationSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("replace", "points", "replace-points", "ReplacedPoints"), "the fixture must be bound to replace-points' own descriptor — note the PLURAL entity");
+}
+
+/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

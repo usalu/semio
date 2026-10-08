@@ -34,7 +34,7 @@ pub fn build_minimal_strict_docx(document: DocxDocument) -> DocxSnapshot {
 /// the strict `xmlns:w` value and an added `conformance="strict"` root attribute.
 /// ✍️ Renders only the `Paragraph` blocks of `doc.body` (strict conformance's ergonomic
 /// construction path is paragraph/run-only, same scope as before this ticket's table/style
-/// enrichment; a `Table` block reaching this builder via `SetSnapshot`/raw `mutate` still survives
+/// enrichment; a `Table` block reaching this builder via raw `mutate` still survives
 /// losslessly through the shared `✳️any` engine's `document_to_xml`, this fn is only the TYPED
 /// convenience path for `add_paragraph`/`add_text_paragraph`/`add_runs`).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

@@ -9,8 +9,8 @@ pub fn inverse(payload: &super::RemoveRepresentationAttribute, base: &Block3dSna
     let Some(existing) = base.representations.iter().find(|item| item.id == payload.id) else {
         return Vec::new();
     };
-    match existing.attributes.iter().find(|attribute| attribute.key == payload.key) {
-        Some(attribute) => vec![super::super::add_representation_attribute::add_representation_attribute(payload.id.clone(), attribute.clone())],
+    match existing.attributes.iter().enumerate().find(|(_, attribute)| attribute.key == payload.key) {
+        Some((position, attribute)) => vec![super::super::add_representation_attribute::add_representation_attribute_at(payload.id.clone(), attribute.clone(), position as u32)],
         None => Vec::new(),
     }
 

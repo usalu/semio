@@ -24,7 +24,7 @@ pub fn handle(payload: &AddCombination, doc: &ArtifactView<'_, Fem3dSnapshot>, _
         Ok(parsed) => {
             let terms: std::collections::BTreeMap<String, f64> = parsed.into_iter().collect();
             let id = crate::app_surface::next_id(snapshot.combinations.iter().map(|c| c.id.clone()), "c");
-            Ok(Emit::mutations(vec![Fem3dMutation::CreateCombination(create_combination::CreateCombination { combination: crate::FemCombination { id, name: payload.name.clone(), terms } })]))
+            Ok(Emit::mutations(vec![Fem3dMutation::CreateCombination(create_combination::CreateCombination { combination: crate::FemCombination { id, name: payload.name.clone(), terms }, index: None })]))
         }
         Err(_) => Ok(Emit::default()),
     }

@@ -1,6 +1,4 @@
-//! 🗑️ `remove-sample` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🗑️ `remove-sample` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -17,14 +15,16 @@ pub struct RemoveSample {
 impl protocol::MutationKind<Mp4Snapshot, Mp4Mutation> for RemoveSample {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "sample", kind: "remove-sample", record: "RemoveSample" };
     fn diff(&self, base: &Mp4Snapshot) -> protocol::MutationOutcome<<Mp4Mutation as Mutation<Mp4Snapshot>>::Diff> {
-        agg_diff(&Mp4Mutation::RemoveSample(self.clone()), base)
+        let Self { track_index, index } = self;
+        protocol::MutationOutcome::new({
+            let count = base.tracks.get(*track_index).map_or(0, |track| track.samples.len().saturating_sub(1) as u32);
+            sample_diff_for(*track_index, IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }, Some(vec![count]))
+        })
     }
     fn inverse(&self, base: &Mp4Snapshot) -> Result<Vec<Mp4Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&Mp4Mutation::RemoveSample(self.clone()), base)?
-    
-    })
-}
+        let Self { track_index, index } = self;
+        Ok({ base.tracks.get(*track_index).and_then(|track| track.samples.get(*index)).map(|sample| Mp4Mutation::InsertSample(insert_sample::InsertSample { track_index: *track_index, index: *index, sample: sample.clone() })).into_iter().collect() })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove sample", "Sample entfernen")
     }

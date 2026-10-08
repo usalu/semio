@@ -143,7 +143,7 @@ pub(crate) mod context {
 use super::*;
 use crate::editor::architect::catalog::analysis_kind_from_str;
 use crate::registers::{AdjacencyKind, AnalysisKind};
-use crate::standards::v1::subsets::any::schema::inferences::export_registers_csv;
+use crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::export_registers_csv;
 use semio_framework_plugin::PluginApp;
 use serde_json::json;
 

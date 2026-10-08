@@ -28,6 +28,25 @@
         "group": "value",
         "order": 10
       }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Where the tag is inserted; absent appends.",
+          "de": "Wo das Tag eingefügt wird; fehlt die Angabe, wird angehängt."
+        },
+        "group": "value",
+        "order": 20,
+        "step": 1
+      }
     }
   }
 }

@@ -20,7 +20,7 @@ impl Default for JpgEncodeOptions {
 
 impl JpgEncodeOptions {
     /// 📐️ Projects an observed native frame into an explicit export profile.
-    pub fn from_frame(frame:Option<&super::super::observations::JpgFrameHeader>)->Self {
+    pub fn from_frame(frame:Option<&super::observations::JpgFrameHeader>)->Self {
         let Some(frame)=frame.filter(|frame|!frame.components.is_empty()) else{return Self::default();};
         Self{quality:90,components:frame.components.iter().map(|component|JpgEncodeComponent{id:component.id,h_sampling:component.h_sampling,v_sampling:component.v_sampling}).collect()}
     }

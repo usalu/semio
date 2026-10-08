@@ -40,7 +40,7 @@ export function assertGeneration3dSemanticWire(): number {
   const read = (path: string) => JSON.parse(readFileSync(resolve(root, path), "utf8"));
   const corpus: { cases: { keyword: string; tag: number; source: string; mutation: Record<string, unknown> }[] } = read("🧫️fixtures/🧬️semantic-wire/🔣️.json");
   const ajv = new Ajv({ strict: true, allErrors: true }).addKeyword({ keyword: "x-semio-ui", metaSchema: { type: "object" } }).addKeyword({ keyword: "x-semio-invariant", metaSchema: { type: "array", items: { type: "object" } } }).addKeyword({ keyword: "x-semio-inverse-rows", metaSchema: { type: "object" } });
-  assert.equal(corpus.cases.length, 15);
+  assert.equal(corpus.cases.length, 16);
   const tags = new Map([...readFileSync(resolve(root, "📡️.protocol.semio"), "utf8").matchAll(/^record (\S+) tag=(\d+)$/gm)].map(match => [match[1], Number(match[2])]));
   let checks = 0;
   for (const row of corpus.cases) {
@@ -71,6 +71,6 @@ export function assertGeneration3dSemanticWire(): number {
   assert.throws(() => parseRotateTransforms(zeroAxis), /axis-nonzero/, "the twin refuses the declared invariant");
   assert.equal(new Set(corpus.cases.map((row) => row.keyword)).size, 6);
   assert.equal(new Set(corpus.cases.map((row) => row.tag)).size, 6);
-  assert.deepEqual([...new Set(corpus.cases.filter((row) => row.keyword === "change-widget-input").map((row) => row.mutation.type))], ["number", "text", "boolean", "point", "vector", "numberList", "textList", "booleanList", "pointList", "vectorList"], "every widget-input type has a vector");
+  assert.deepEqual([...new Set(corpus.cases.filter((row) => row.keyword === "change-widget-input").map((row) => row.mutation.type))], ["number", "text", "boolean", "point", "vector", "plane", "numberList", "textList", "booleanList", "pointList", "vectorList"], "every widget-input type has a vector");
   return checks + 8;
 }

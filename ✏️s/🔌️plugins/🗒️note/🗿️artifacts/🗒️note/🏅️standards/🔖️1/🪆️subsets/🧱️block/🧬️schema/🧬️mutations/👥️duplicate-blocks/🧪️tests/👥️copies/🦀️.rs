@@ -100,7 +100,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "duplicate-blocks/copies-ink-and-table-with-shifting-indices: committed diff did not carry before to after");
 }
 
@@ -115,4 +115,10 @@ async fn second_copy_lands_ahead_of_its_own_source_from_index_skew() {
     assert_eq!(find_block_location(&applied.blocks, "blk-ink-copy"), Some((None, 2)), "the first copy lands at its source index + 1");
     assert_eq!(find_block_location(&applied.blocks, "blk-table-copy"), Some((None, 3)), "the second copy uses its BASE index + 1 against an already-grown list");
     assert_eq!(find_block_location(&applied.blocks, "blk-table"), Some((None, 4)), "so the second copy ends up ahead of its own source — the batch-insert skew this leaf owns");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

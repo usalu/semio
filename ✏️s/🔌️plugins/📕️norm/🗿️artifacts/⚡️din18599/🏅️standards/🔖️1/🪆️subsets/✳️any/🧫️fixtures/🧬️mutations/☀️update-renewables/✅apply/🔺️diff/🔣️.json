@@ -17,8 +17,8 @@
   "lighting": null,
   "renewables": {
     "pvAreaM2": 19.8,
-    "pvEfficiency": 0.18,
-    "solarThermalKwhA": 1200.0
+    "pvEfficiency": null,
+    "solarThermalKwhA": null
   },
   "climate": null,
   "climateTable": null

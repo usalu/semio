@@ -3,13 +3,13 @@
 pub use semio_framework_artifact_space_collection::{
     artifact_backbone_uri, collection_backbone_uri, collection_package_from_schema, empty_collection_snapshot, entry_path, folder_path,
     package_descriptor as collection_package_descriptor, reconcile_collection_integrity, resolve_entry_by_path, ArtifactBody, CollectionArtifactPackage,
-    CollectionDiff, CollectionEntry, CollectionFolder, CollectionMutation, CollectionPackageSchemaError, CollectionSnapshot, MovedToContainer, RenamedItem,
-    ReplacedEntryBody, COLLECTION_ARTIFACT_DEFINITION_SCHEMA, S_COLLECTION_SCHEMA,
+    CollectionDiff, CollectionEntriesDelta, CollectionEntry, CollectionEntryPatch, CollectionFolder, CollectionFolderPatch, CollectionFoldersDelta, CollectionMutation,
+    CollectionOptionalLink, CollectionPackageSchemaError, CollectionSnapshot, COLLECTION_ARTIFACT_DEFINITION_SCHEMA, S_COLLECTION_SCHEMA,
 };
 pub use semio_framework_artifact_space_space::{
     can_write, empty_space_snapshot, package_descriptor as space_package_descriptor, reconcile_space_atelier_invariant, space_backbone_uri,
-    space_package_from_schema, space_role_of, CollectionRef, InstalledExtension, SpaceArtifactPackage, SpaceDiff, SpaceKind, SpaceMutation,
-    SpacePackageSchemaError, SpaceRole, SpaceSnapshot, SpaceUser, SpaceVisibility, SPACE_ARTIFACT_DEFINITION_SCHEMA, S_SPACE_SCHEMA,
+    space_package_from_schema, space_role_of, CollectionRef, InstalledExtension, SpaceArtifactPackage, SpaceCollectionPatch, SpaceCollectionsDelta, SpaceDiff, SpaceExtensionPatch, SpaceExtensionsDelta, SpaceKind,
+    SpaceMutation, SpaceOptionalAvatar, SpacePackageSchemaError, SpaceProgramPatch, SpaceProgramsDelta, SpaceRole, SpaceSnapshot, SpaceUser, SpaceUserPatch, SpaceUsersDelta, SpaceVisibility, SPACE_ARTIFACT_DEFINITION_SCHEMA, S_SPACE_SCHEMA,
 };
 
 use serde::{Deserialize, Serialize};

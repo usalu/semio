@@ -188,4 +188,36 @@ mod change_delta_u_wb_rule;
 mod change_net_floor_area_m2_rule;
 #[path = "../../📦change-heated-volume-m3/🧪️tests/🚫rule/🦀️.rs"]
 mod change_heated_volume_m3_rule;
+#[path = "../../☀️update-renewables/🧪️tests/✅apply/🦀️.rs"]
+mod vector_update_renewables_apply;
+#[path = "../../⚖️change-geg-qp-factor/🧪️tests/✅apply/🦀️.rs"]
+mod vector_change_geg_qp_factor_apply;
+#[path = "../../❄️update-cooling/🧪️tests/✅apply/🦀️.rs"]
+mod vector_update_cooling_apply;
+#[path = "../../🌉change-delta-u-wb/🧪️tests/✅apply/🦀️.rs"]
+mod vector_change_delta_u_wb_apply;
+#[path = "../../🌡️change-element-u/🧪️tests/✅apply/🦀️.rs"]
+mod vector_change_element_u_apply;
+#[path = "../../🌬️update-ventilation/🧪️tests/✅apply/🦀️.rs"]
+mod vector_update_ventilation_apply;
+#[path = "../../🎛️change-automation-class/🧪️tests/✅apply/🦀️.rs"]
+mod vector_change_automation_class_apply;
+#[path = "../../🏠️change-building-category/🧪️tests/✅apply/🦀️.rs"]
+mod vector_change_building_category_apply;
+#[path = "../../💡update-lighting/🧪️tests/✅apply/🦀️.rs"]
+mod vector_update_lighting_apply;
+#[path = "../../📦change-heated-volume-m3/🧪️tests/✅apply/🦀️.rs"]
+mod vector_change_heated_volume_m3_apply;
+#[path = "../../🔥specify-heating-system/🧪️tests/✅apply/🦀️.rs"]
+mod vector_specify_heating_system_apply;
+#[path = "../../🗺️replace-zones/🧪️tests/✅apply/🦀️.rs"]
+mod vector_replace_zones_apply;
+#[path = "../../🚿specify-dhw-system/🧪️tests/✅apply/🦀️.rs"]
+mod vector_specify_dhw_system_apply;
+#[path = "../../🧩replace-elements/🧪️tests/✅apply/🦀️.rs"]
+mod vector_replace_elements_apply;
+#[path = "../../🧮change-method/🧪️tests/✅apply/🦀️.rs"]
+mod vector_change_method_apply;
+#[path = "../../🧱change-attachment/🧪️tests/✅apply/🦀️.rs"]
+mod vector_change_attachment_apply;
 //#endregion 🧫️CanonicalVectorTests

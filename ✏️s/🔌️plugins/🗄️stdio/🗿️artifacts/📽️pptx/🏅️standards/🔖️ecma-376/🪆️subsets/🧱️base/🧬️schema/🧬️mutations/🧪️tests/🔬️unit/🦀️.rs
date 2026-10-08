@@ -105,7 +105,7 @@ fn canonical_addressed_edits_preserve_rich_unknown_xml_and_exact_inverse() {
             assert!(serialized.contains(token.as_str().expect("preserved token")), "{token} was not preserved");
         }
         assert_quick_xml(&serialized);
-        let restored = outcome.diff().inverse(&base).apply(&edited).expect("inverse diff");
+        let restored = protocol::apply_diff(&outcome.diff().inverse(&base), &edited).expect("inverse diff");
         assert_eq!(restored, base);
         let mut inverse_restored = edited.clone();
         for inverse in Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
@@ -167,4 +167,28 @@ fn operation_codecs_and_kind_catalog_cover_canonical_payloads() {
         assert_eq!(PptxMutation::parse_op(&mutation.print_op()).expect("text operation roundtrip"), mutation);
         assert_eq!(PptxMutation::decode_op(&mutation.encode_op().expect("binary operation encode")).expect("binary operation decode"), mutation);
     }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn every_demo_kind_satisfies_the_inverse_sum_law() {
+    let base = demo_fixture();
+    for mutation in demo_mutation_cases() {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn removing_a_middle_slide_or_shape_is_restored_at_its_original_index() {
+    let text_box = |text: &str| PptxShape::TextBox { text_frame: vec![PptxParagraph::text(text)], position: PptxTransform::default() };
+    let base = crate::standards::v_ecma_376::subsets::base::schema::construction::minimal::build_minimal_pptx(crate::schema::snapshot::PptxPresentation {
+        slides: vec![
+            PptxSlide { shapes: vec![text_box("a0"), text_box("a1"), text_box("a2")] },
+            PptxSlide { shapes: vec![text_box("b0")] },
+            PptxSlide { shapes: vec![text_box("c0")] },
+        ],
+    });
+    let slides = xml_address::pptx_slides(&base).expect("canonical slides");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&PptxMutation::RemoveSlide(remove_slide::RemoveSlide { address: slides[1].address.clone() }), &base).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&PptxMutation::RemoveShape(remove_shape::RemoveShape { address: slides[0].shapes[1].address.clone() }), &base).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&PptxMutation::MoveSlide(move_slide::MoveSlide { address: slides[1].address.clone(), destination_index: 2 }), &base).await;
 }

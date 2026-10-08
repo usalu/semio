@@ -18,11 +18,12 @@ pub struct CreateZoneEquipment {
     pub priority: u8,
     pub heating_capacity_w: f64,
     pub cooling_capacity_w: f64,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_zone_equipment(id: crate::model::EntityId, zone_id: crate::model::EntityId, equipment_type: crate::model::ZoneEquipmentType, priority: u8, heating_capacity_w: f64, cooling_capacity_w: f64) -> EnergyModelMutation {
-    EnergyModelMutation::CreateZoneEquipment(CreateZoneEquipment { id, zone_id, equipment_type, priority, heating_capacity_w, cooling_capacity_w })
+pub fn create_zone_equipment(id: crate::model::EntityId, zone_id: crate::model::EntityId, equipment_type: crate::model::ZoneEquipmentType, priority: u8, heating_capacity_w: f64, cooling_capacity_w: f64, index: Option<u32>) -> EnergyModelMutation {
+    EnergyModelMutation::CreateZoneEquipment(CreateZoneEquipment { id, zone_id, equipment_type, priority, heating_capacity_w, cooling_capacity_w, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateZoneEquipment {

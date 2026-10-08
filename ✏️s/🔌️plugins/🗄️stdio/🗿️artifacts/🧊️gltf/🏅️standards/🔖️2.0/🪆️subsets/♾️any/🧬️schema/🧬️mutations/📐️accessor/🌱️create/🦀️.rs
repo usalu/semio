@@ -1,4 +1,5 @@
 //! 🧬️ Direct create-accessor mutation owner: payload, validation, typed diff, inverse, and outcomes.
+use crate::schema::diff::*;
 use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfAccessorType, GltfComponentType};
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level_collections::*;
@@ -13,24 +14,36 @@ pub struct GltfCreateAccessorPayload {
     pub component_type: GltfComponentType,
     pub count: usize,
     pub kind: GltfAccessorType,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub accessor: Option<Box<GltfAccessor>>,
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate(payload: &GltfCreateAccessorPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
     if payload.position > base.document.accessors.len() {
         return Err(reject("gltf.mutation.insert-out-of-range", "document/accessors", "position must be within the collection"));
     }
+    let lengths = GltfLengths::after_insert(base, GltfTopLevelFamily::Accessors);
+    if let Some(record) = &payload.accessor {
+        if !(record.component_type == payload.component_type && record.count == payload.count && record.kind == payload.kind) {
+            return Err(reject("gltf.mutation.record-mismatch", "document/accessors", "the record must carry the fields the payload names"));
+        }
+        check_accessor(record, &lengths)?;
+    }
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfCreateAccessorPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
-    let mut next = base.clone();
-    repair(&mut next.document, GltfTopLevelFamily::Accessors, &Change::Insert(payload.position))?;
-    next.document.accessors.insert(
-        payload.position,
-        GltfAccessor { buffer_view: None, byte_offset: 0, component_type: payload.component_type, normalized: false, count: payload.count, kind: payload.kind, max: None, min: None, sparse: None, name: None, extensions: None, extras: None },
-    );
-    Ok(next)
+pub fn plan(p: &GltfCreateAccessorPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
+    validate(p, base)?;
+    let mut diff = rewire(base, GltfTopLevelFamily::Accessors, &mut after_insert(p.position));
+    diff.accessors.get_or_insert_with(Default::default).added.push(GltfAdded { index: p.position, item: p.accessor.as_deref().cloned().unwrap_or_else(|| GltfAccessor { buffer_view: None, byte_offset: 0, component_type: p.component_type, normalized: false, count: p.count, kind: p.kind, max: None, min: None, sparse: None, name: None, extensions: None, extras: None }) });
+    Ok(diff)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(p: &GltfCreateAccessorPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    if validate(p, base).is_err() {
+        return Vec::new();
+    }
+    vec![super::delete_accessor::mutation(super::delete_accessor::GltfDeleteAccessorPayload { index: p.position })]
 }
 
 //#region 🧬️DirectMutation
@@ -39,7 +52,11 @@ pub fn apply(payload: &GltfCreateAccessorPayload, base: &GltfSnapshot) -> Result
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum CreateAccessorMutation {
     Apply(GltfCreateAccessorPayload),
-    Restore(Box<crate::schema::diff::GltfDiff>),
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutation(payload: GltfCreateAccessorPayload) -> super::GltfMutation {
+    super::GltfMutation::CreateAccessor(CreateAccessorMutation::Apply(payload))
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateAccessorMutation {
@@ -47,28 +64,18 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateAccesso
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => match apply(payload, base) {
-                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Self::Apply(payload) => match plan(payload, base) {
+                Ok(diff) => protocol::MutationOutcome::new(diff),
                 Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
-            },
-            Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
-                Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-                Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
             },
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
-            return Vec::new();
+        match self {
+            Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::GltfMutation::CreateAccessor(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Create Accessor", "Accessor erstellen")

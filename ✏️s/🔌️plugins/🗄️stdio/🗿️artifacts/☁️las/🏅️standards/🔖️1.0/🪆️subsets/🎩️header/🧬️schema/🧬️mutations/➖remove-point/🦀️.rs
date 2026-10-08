@@ -1,7 +1,4 @@
-//! ➖️ `remove-point` — its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! ➖️ `remove-point` — its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 //!
 //! ➖️ Removes the point record at `index` — an out-of-range index is rejected by apply with the snapshot untouched.
 use super::*;
@@ -18,14 +15,18 @@ impl protocol::MutationKind<LasSnapshot, LasMutation> for RemovePoint {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "point", kind: "remove-point", record: "RemovePoint" };
 
     fn diff(&self, base: &LasSnapshot) -> protocol::MutationOutcome<<LasMutation as Mutation<LasSnapshot>>::Diff> {
-        agg_diff(&LasMutation::RemovePoint(self.clone()), base)
+        let Self { index } = self;
+        protocol::MutationOutcome::new(diff::diff_remove_point(base, *index))
     }
     fn inverse(&self, base: &LasSnapshot) -> Result<Vec<LasMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&LasMutation::RemovePoint(self.clone()), base)?
-    
-    })
-}
+        let Self { index } = self;
+        Ok({
+            match base.points.get(*index) {
+                Some(p) => vec![LasMutation::InsertPoint(insert_point::InsertPoint { index: *index, point: p.clone() })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove point", "Punkt entfernen")
     }

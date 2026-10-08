@@ -1,6 +1,4 @@
-//! 🚮️ `remove-element` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🚮️ `remove-element` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,14 +13,18 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for RemoveElement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "element", kind: "remove-element", record: "RemoveElement" };
 
     fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
-        agg_diff(&PlyMutation::RemoveElement(self.clone()), base)
+        let Self { name } = self;
+        protocol::MutationOutcome::new(diff_remove_element(name))
     }
     fn inverse(&self, base: &PlySnapshot) -> Result<Vec<PlyMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&PlyMutation::RemoveElement(self.clone()), base)?
-    
-    })
-}
+        let Self { name } = self;
+        Ok({
+            match base.elements.iter().position(|e| &e.name == name) {
+                Some(idx) => vec![PlyMutation::AddElement(add_element::AddElement { index: idx, element: base.elements[idx].clone() })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove element", "Element entfernen")
     }

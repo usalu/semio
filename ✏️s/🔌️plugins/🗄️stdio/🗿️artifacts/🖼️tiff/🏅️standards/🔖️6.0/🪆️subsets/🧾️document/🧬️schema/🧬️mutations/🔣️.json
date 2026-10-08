@@ -13,38 +13,6 @@
       ],
       "properties": {
         "mutation": {
-          "const": "set-snapshot"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/set-snapshot/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
-          "const": "patch-snapshot"
-        },
-        "payload": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/patch-snapshot/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mutation",
-        "payload"
-      ],
-      "properties": {
-        "mutation": {
           "const": "insert-ifd"
         },
         "payload": {
@@ -113,6 +81,22 @@
         },
         "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/paint-region/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "payload"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replace-samples"
+        },
+        "payload": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutation/replace-samples/schema.json"
         }
       }
     }

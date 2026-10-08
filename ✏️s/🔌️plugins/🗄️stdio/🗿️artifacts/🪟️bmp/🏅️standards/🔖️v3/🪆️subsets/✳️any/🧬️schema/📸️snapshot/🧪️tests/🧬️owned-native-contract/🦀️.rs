@@ -30,8 +30,8 @@ fn neutral_native_sample_paints_preserve_metadata_and_inverse() {
         let mut metadata = next.image.clone(); metadata.pixels = base.image.pixels.clone(); assert_eq!(metadata,base.image);
         match &next.image.pixels { BmpPixels::Indexed { indices } => assert_eq!(serde_json::json!(indices),row["expectedIndices"]),BmpPixels::Direct { samples } => assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(samples)).unwrap(),row["expectedSamples"]) }
         assert_eq!(progress.first(),Some(&(0,region.height as usize))); assert_eq!(progress.last(),Some(&(region.height as usize,region.height as usize)));
-        let diff = BmpDiff::between(&base,&next); assert_eq!(diff.apply(&base).unwrap(),next); assert_eq!(diff.inverse(&base).apply(&next).unwrap(),base);
-        let mut composed = BmpDiff::default(); composed.absorb(diff.clone()); assert_eq!(composed.apply(&base).unwrap(),next);
+        let diff = BmpDiff::between(&base,&next); assert_eq!(protocol::apply_diff(&diff, &base).unwrap(),next); assert_eq!(protocol::apply_diff(&diff.inverse(&base), &next).unwrap(),base);
+        let mut composed = BmpDiff::default(); composed.absorb(diff.clone()); assert_eq!(protocol::apply_diff(&composed, &base).unwrap(),next);
         let error = paint_indexed_region_controlled(&base,"stale",region,0,&mut |_,_|true).unwrap_err(); assert!(error.contains("stale"));
         eprintln!("[DEBUG] bmp owned native case={} samples={} inverse=exact",row["name"],base.image.width * base.image.height);
     }

@@ -1,6 +1,4 @@
-//! 🔶️ `set-face` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🔶️ `set-face` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 //! `#[derive(dsl::DslRecord)]` gives this leaf its own `DslField` impl with the SAME field spec
 //! `record_codegen` built when these fields lived inline in the enum variant — the aggregate's
 //! tuple variant is a single-field newtype, so `#[derive(dsl::DslOps)]`'s `DslVariants` derive
@@ -24,14 +22,21 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetFace {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "face", kind: "set-face", record: "SetFace" };
 
     fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
-        agg_diff(&ObjMutation::SetFace(self.clone()), base)
+        let Self { index, face } = self;
+        protocol::MutationOutcome::new({
+            let old = base.faces.get(*index).cloned().unwrap_or_default();
+            diff_set_face(*index, face_diff_between(&old, face))
+        })
     }
     fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&ObjMutation::SetFace(self.clone()), base)?
-    
-    })
-}
+        let Self { index, .. } = self;
+        Ok({
+            match base.faces.get(*index) {
+                Some(v) => vec![ObjMutation::SetFace(set_face::SetFace { index: *index, face: v.clone() })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set face", "Fläche setzen")
     }

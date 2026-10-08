@@ -5,7 +5,7 @@
 //! is fixed here, in passing, matching the class of bug `📓️w4-sequence-report.md`'s CSV fix found).
 
 use crate::{writer_text, WriterSnapshot};
-use semio_framework::io::io_mechanism::{ArchiveChildren, Serializer};
+use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
 use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 

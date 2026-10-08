@@ -1,12 +1,23 @@
-# 🔺️ Canonical Layout diff and its full nested artifact replacement.
+# 🔺️ Canonical sparse Layout diff: keyed rows, owned-field patches and positional list rows.
 
-type FormDictionaryChange { dictionary: FormDictionary }
+type GridPatch { baselineGrid: Float baselineOffset: Float snapToBaseline: Boolean }
+type PrintTargetChange { target: String }
+enum DataFieldsPresence { CREATED DELETED REPLACED }
+type LayoutDataFieldsDelta { presence: DataFieldsPresence entries: LayoutDataEntriesDelta }
+type LayoutDataEntriesDelta { added: [FormDictionaryEntry!]! removed: [String!]! patched: [LayoutDataEntryPatchEntry!]! reordered: [String!] }
+type LayoutDataEntryPatchEntry { id: String! item: FormDictionaryEntry! }
+type LayoutDrawingTextRow { index: Int! text: String! }
+type TextStyleRunRow { index: Int! run: TextStyleRun! }
+type TextStyleRunsDelta { len: Int rows: [TextStyleRunRow!]! }
+type PageGuideRow { index: Int! guide: LayoutRect! }
+type PageGuidesDelta { len: Int rows: [PageGuideRow!]! }
+type PageOverridePatchEntry { id: String! item: PageOverride! }
+type PageOverridesDelta { added: [PageOverride!]! removed: [String!]! patched: [PageOverridePatchEntry!]! reordered: [String!] }
 
 type LayoutDiff {
-  artifact: LayoutArtifact @state(class: ARTIFACT)
   schema: String @state(class: ARTIFACT)
   name: String @state(class: ARTIFACT)
-  grid: GridSettings @state(class: ARTIFACT)
+  grid: GridPatch @state(class: ARTIFACT)
   paragraphStyles: LayoutParagraphStylesDelta @state(class: ARTIFACT)
   characterStyles: LayoutCharacterStylesDelta @state(class: ARTIFACT)
   stories: LayoutStoriesDelta @state(class: ARTIFACT)
@@ -14,9 +25,10 @@ type LayoutDiff {
   parentPages: LayoutParentPagesDelta @state(class: ARTIFACT)
   spreads: LayoutSpreadsDelta @state(class: ARTIFACT)
   pages: LayoutPagesDelta @state(class: ARTIFACT)
-  printTarget: String @state(class: ARTIFACT)
-  dataFields: FormDictionaryChange @state(class: ARTIFACT)
+  printTarget: PrintTargetChange @state(class: ARTIFACT)
+  dataFields: LayoutDataFieldsDelta @state(class: ARTIFACT)
   backgroundDrawing: LayoutDrawingChild @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
+  drawingTexts: [LayoutDrawingTextRow!]! @state(class: ARTIFACT)
   referencedModel: ArtifactLink @state(class: ARTIFACT) @link(roles: ["model"])
 }
 
@@ -76,11 +88,12 @@ type ParagraphStylePatch { name: String fontFamily: String fontSize: Float fontW
 type CharacterStylePatch { name: String fontFamily: String fontSize: Float fontWeight: Int italic: Boolean color: [Float!] tracking: Float }
 type ParentPagePatch { name: String width: Float height: Float }
 type SpreadPatch { name: String }
-type TextStoryPatch { content: String style_runs: [TextStyleRun!] }
+type TextStoryPatch { content: String style_runs: TextStyleRunsDelta }
 type ImageLinkPatch { path: String width: Int height: Int dpi: Int color_profile: String }
-type PagePatch { name: String width: Float height: Float margin_top: Float margin_right: Float margin_bottom: Float margin_left: Float columns_count: Int columns_gutter: Float frame_added: PageFrameAdded frame_removed: String frames_patched: [PageFramePatched!]! layer_patched: PageLayerPatched parent_page_id: String guides: [LayoutRect!] overrides: [PageOverride!] layer_added: Layer layer_removed: String frame_layer: PageFrameLayer frame_order: [String!] }
+type PagePatch { name: String width: Float height: Float margin_top: Float margin_right: Float margin_bottom: Float margin_left: Float columns_count: Int columns_gutter: Float frame_added: PageFrameAdded frame_removed: String frames_patched: [PageFramePatched!]! layer_patched: PageLayerPatched parent_page_id: String guides: PageGuidesDelta overrides: PageOverridesDelta layer_added: PageLayerAdded layer_removed: String frame_layer: PageFrameLayer frame_order: [String!] }
 type PageLayerPatched { layer_id: String! name: String visible: Boolean locked: Boolean }
 type PageFrameLayer { frame_id: String! layer_id: String! }
+type PageLayerAdded { layer: Layer! index: Int }
 type PageFrameAdded { frame: Frame! index: Int layer_id: String }
 type PageFramePatched { frame_id: String! patch: FramePatch! }
 type FramePatch { x: Float y: Float width: Float height: Float rotation: Float fill: [Float!] stroke: [Float!] wrap_mode: String columns: Int locked: Boolean visible: Boolean story_id: String thread_next: String inset_x: Float inset_y: Float inset_width: Float inset_height: Float }

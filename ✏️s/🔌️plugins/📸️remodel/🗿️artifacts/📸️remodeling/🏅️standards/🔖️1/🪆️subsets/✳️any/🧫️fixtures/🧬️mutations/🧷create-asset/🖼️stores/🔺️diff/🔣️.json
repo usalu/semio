@@ -1,133 +1,52 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "streams": null,
   "assets": {
-    "asset-a": {
-      "childId": "remodeling-asset-45070beb0101de64",
-      "target": {
-        "artifactId": "asset-a-image",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "image"
+    "rows": [
+      {
+        "row": "insert",
+        "entity": {
+          "key": "asset-b",
+          "child": {
+            "childId": "remodeling-asset-0097f564e9451b76",
+            "target": {
+              "artifactId": "asset-b-image",
+              "dialect": {
+                "artifactKind": "s.stdio.semio",
+                "standard": "v1",
+                "subset": "image"
+              }
+            }
+          }
         }
       }
-    },
-    "asset-b": {
-      "childId": "remodeling-asset-0097f564e9451b76",
-      "target": {
-        "artifactId": "asset-b-image",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "image"
-        }
-      }
-    },
-    "asset-dsm": {
-      "childId": "remodeling-asset-a462ec9257d3fccf",
-      "target": {
-        "artifactId": "asset-dsm-image",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "image"
-        }
-      }
-    },
-    "asset-spare": {
-      "childId": "remodeling-asset-a6becb587255f206",
-      "target": {
-        "artifactId": "asset-spare-image",
-        "dialect": {
-          "artifactKind": "s.stdio.semio",
-          "standard": "v1",
-          "subset": "image"
-        }
-      }
-    }
+    ]
   },
   "durableArtifacts": {
-    "remodeling-asset-0097f564e9451b76": {
-      "kind": "image",
-      "mime": "image/jpeg",
-      "width": 640,
-      "height": 480,
-      "chunks": [
-        [
-          102,
-          114,
-          97,
-          109,
-          101,
-          45,
-          98
+    "rows": [
+      {
+        "row": "append",
+        "id": "remodeling-asset-0097f564e9451b76",
+        "header": {
+          "kind": "image",
+          "mime": "image/jpeg",
+          "width": 640,
+          "height": 480
+        },
+        "chunks": [
+          [
+            102,
+            114,
+            97,
+            109,
+            101,
+            45,
+            98
+          ]
         ]
-      ]
-    },
-    "remodeling-asset-45070beb0101de64": {
-      "kind": "image",
-      "mime": "image/jpeg",
-      "width": 640,
-      "height": 480,
-      "chunks": [
-        [
-          102,
-          114,
-          97,
-          109,
-          101,
-          45,
-          97
-        ]
-      ]
-    },
-    "remodeling-asset-a462ec9257d3fccf": {
-      "kind": "image",
-      "mime": "image/tiff",
-      "width": 128,
-      "height": 128,
-      "chunks": [
-        [
-          116,
-          111,
-          121,
-          45,
-          100,
-          115,
-          109,
-          45,
-          116,
-          105,
-          108,
-          101
-        ]
-      ]
-    },
-    "remodeling-asset-a6becb587255f206": {
-      "kind": "image",
-      "mime": "image/png",
-      "width": 64,
-      "height": 64,
-      "chunks": [
-        [
-          115,
-          112,
-          97,
-          114,
-          101,
-          45,
-          114,
-          97,
-          115,
-          116,
-          101,
-          114
-        ]
-      ]
-    }
+      }
+    ]
   },
   "calibration": null,
   "params": null,

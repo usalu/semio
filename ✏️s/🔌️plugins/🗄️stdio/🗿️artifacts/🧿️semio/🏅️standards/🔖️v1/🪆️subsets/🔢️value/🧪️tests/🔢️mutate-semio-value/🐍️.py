@@ -49,7 +49,7 @@ from __future__ import annotations
 # region 🔖️Imports
 import json
 
-from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
+from semio_repo_test import Adapter, Context, Outcome, digest
 
 # endregion 🔖️Imports
 
@@ -292,7 +292,7 @@ def pack_bytes(document: dict) -> bytes:
 
 
 # region 🔖️Mutations
-KINDS = ("no-mutation", "set-snapshot", "patch-snapshot", "set-value", "set-map-entry", "remove-map-entry", "insert-list-item", "remove-list-item", "set-node", "remove-node")
+KINDS = ("set-value", "set-map-entry", "remove-map-entry", "insert-list-item", "remove-list-item", "set-node", "remove-node")
 
 TAG_OF_KIND = {kind: kind.split("-")[0] + "".join(word.capitalize() for word in kind.split("-")[1:]) for kind in KINDS}
 
@@ -373,12 +373,6 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     sequence rather than one verb."""
     result = clone(document)
     tag = tagged(mutation)
-    if tag == "noMutation":
-        return result
-    if tag == "patchSnapshot":
-        return patched_snapshot(document, mutation["patch"])
-    if tag == "setSnapshot":
-        return clone(mutation["snapshot"])
     if tag == "setValue":
         replace_at(result, mutation["path"], mutation["value"], tag)
         return result
@@ -388,7 +382,7 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
             raise AssertionError("setMapEntry addresses a %s, not a map" % target["kind"])
         found = next((entry for entry in target["entries"] if entry["key"] == mutation["key"]), None)
         if found is None:
-            target["entries"].append({"key": mutation["key"], "value": clone(mutation["value"])})
+            target["entries"].insert(min(mutation["at"], len(target["entries"])) if "at" in mutation else len(target["entries"]), {"key": mutation["key"], "value": clone(mutation["value"])})
         else:
             found["value"] = clone(mutation["value"])
         return result
@@ -422,7 +416,7 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     if tag == "setNode":
         at = node_index(result, mutation["id"]["value"])
         if at is None:
-            result["nodes"].append({"id": clone(mutation["id"]), "value": clone(mutation["value"])})
+            result["nodes"].insert(min(mutation["at"], len(result["nodes"])) if "at" in mutation else len(result["nodes"]), {"id": clone(mutation["id"]), "value": clone(mutation["value"])})
         else:
             result["nodes"][at]["value"] = clone(mutation["value"])
         return result
@@ -434,20 +428,9 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
 
 
 def inverse_mutation(document: dict, mutation: dict) -> list:
-    """↩️ The undo of one verb against the state it was applied to, as a SEQUENCE.
-
-    ⚖️ `set-map-entry` appends an absent key and `set-node` appends an absent id, so restoring a
-    REMOVED member at its original position takes one `set-map-entry` per member that followed it —
-    a real property of the vocabulary, which is why `remove-map-entry`'s undo is a sequence and why
-    `remove-list-item` and `remove-node` address the last member of their collection here and in the
-    committed vectors."""
+    """↩️ The undo of one verb against the state it was applied to. A removed member comes back through
+    `set-map-entry`/`set-node` carrying the removed index (`at`), so its original position is restored exactly."""
     tag = tagged(mutation)
-    if tag == "noMutation":
-        return []
-    if tag == "patchSnapshot":
-        return [{"mutation": "setSnapshot", "snapshot": clone(document)}]
-    if tag == "setSnapshot":
-        return [{"mutation": "setSnapshot", "snapshot": clone(document)}]
     if tag == "setValue":
         return [{"mutation": "setValue", "path": clone(mutation["path"]), "value": clone(descend(document["root"], mutation["path"], tag))}]
     if tag == "setMapEntry":
@@ -461,7 +444,7 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
         at = next((index for index, entry in enumerate(target["entries"]) if entry["key"] == mutation["key"]), None)
         if at is None:
             raise AssertionError("removeMapEntry names the absent key %r" % mutation["key"])
-        return reposition_map(target, at, mutation["path"])
+        return [{"mutation": "setMapEntry", "path": clone(mutation["path"]), "key": mutation["key"], "value": clone(target["entries"][at]["value"]), "at": at}]
     if tag == "insertListItem":
         return [{"mutation": "removeListItem", "path": clone(mutation["path"]), "index": mutation["index"]}]
     if tag == "removeListItem":
@@ -475,16 +458,7 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     at = node_index(document, mutation["id"]["value"])
     if at is None:
         raise AssertionError("removeNode names the absent node %r" % mutation["id"]["value"])
-    return [{"mutation": "setNode", "id": clone(mutation["id"]), "value": clone(document["nodes"][at]["value"])}]
-
-
-def reposition_map(target: dict, at: int, path: list) -> list:
-    """↩️ Restoring a map member at position `at` when the only writing verb appends: drop every
-    member that followed it, then write it and them back in order."""
-    tail = target["entries"][at:]
-    undo = [{"mutation": "removeMapEntry", "path": clone(path), "key": entry["key"]} for entry in tail[1:]]
-    undo += [{"mutation": "setMapEntry", "path": clone(path), "key": entry["key"], "value": clone(entry["value"])} for entry in tail]
-    return undo
+    return [{"mutation": "setNode", "id": clone(mutation["id"]), "value": clone(document["nodes"][at]["value"]), "at": at}]
 
 
 # endregion 🔖️Mutations
@@ -688,7 +662,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
 def adapter() -> Adapter:
     """🧭️ Registration entry point the host calls. Handlers are registered under the Scenario Outline base
     ids, which the host resolves for every Examples row, and plain scenarios under their own ids."""
-    return Adapter("python").oracle("mutate", mutate).oracle("no-mutation-baseline-mutate", mutate).oracle("inverse", inverse).oracle("no-mutation-baseline-inverse", inverse).oracle("spec-vector", spec_vector).oracle("payload-fidelity", payload_fidelity).oracle("identity-round-trip", identity_round_trip)
+    return Adapter("python").oracle("mutate", mutate).oracle("inverse", inverse).oracle("spec-vector", spec_vector).oracle("payload-fidelity", payload_fidelity).oracle("identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

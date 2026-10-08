@@ -593,3 +593,6 @@ pub fn ensure_gumball_node(editor: &mut crate::standards::v1::subsets::any::sche
 }
 }
 pub use snapshot_codec::*;
+
+#[path = "🗂️catalogue/🦀️.rs"]
+pub mod catalogue;

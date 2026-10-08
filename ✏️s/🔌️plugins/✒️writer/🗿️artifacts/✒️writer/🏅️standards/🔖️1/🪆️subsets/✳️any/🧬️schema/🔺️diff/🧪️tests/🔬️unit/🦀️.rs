@@ -33,6 +33,6 @@ async fn writer_diff_encode_decode_round_trips_and_matches_text() {
 async fn diff_set_text_mints_a_document_handle_and_caches_its_text() {
     let base = WriterSnapshot::default();
     let diff = diff_set_text("hio", "jack", "plaintext");
-    let next = diff.apply(&base).expect("valid mutation diff");
+    let next = protocol::apply_diff(&diff, &base).expect("valid mutation diff");
     assert_eq!(crate::writer_text(&next), "hio");
 }

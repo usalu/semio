@@ -16,11 +16,17 @@ use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
 pub struct AddCompatibilityRule {
     #[dsl(block)]
     pub rule: BlockCompatibilityRule,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 pub fn add_compatibility_rule(rule: BlockCompatibilityRule) -> Block5dMutation {
-    Block5dMutation::AddCompatibilityRule(AddCompatibilityRule { rule })
+    Block5dMutation::AddCompatibilityRule(AddCompatibilityRule { rule, index: None })
+}
+
+/// 📍️ Builder — like [`add_compatibility_rule`] but inserts the row at `index`.
+pub fn add_compatibility_rule_at(rule: BlockCompatibilityRule, index: u32) -> Block5dMutation {
+    Block5dMutation::AddCompatibilityRule(AddCompatibilityRule { rule, index: Some(index) })
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for AddCompatibilityRule {

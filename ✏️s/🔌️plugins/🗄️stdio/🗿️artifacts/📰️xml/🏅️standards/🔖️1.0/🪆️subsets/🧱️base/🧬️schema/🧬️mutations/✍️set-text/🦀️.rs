@@ -1,50 +1,32 @@
 //! 🧬️ Direct set-text mutation owner.
 use crate::schema::diff::{diff_at_path, XmlDiff, XmlNodeDiff};
+use crate::schema::snapshot::XmlNode;
 use crate::schema::mutation_support::XmlNodePath;
 use crate::XmlSnapshot;
-
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-pub struct SetTextPayload {
+pub struct SetTextMutation {
     pub path: XmlNodePath,
     pub text: String,
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
-#[mutation_leaf(contract = ::protocol, payload = Apply)]
-#[value(tag = "phase", content = "value", rename_all = "camelCase")]
-pub enum SetTextMutation {
-    Apply(SetTextPayload),
-    /// 📦️ Boxed on purpose: `XmlDiff` is the largest thing this leaf can hold, and an inline
-    /// variant of that size pushes the whole leaf past the neutral inline-ownership budget
-    /// (`🧫️fixtures/📦️inline-layout/🔣️.json`, 128 B) every ephemeral transfer of it is measured
-    /// against — same boxing the sibling `🧊️gltf` leaves use for their own `Restore` arm.
-    Restore(Box<XmlDiff>),
-}
+pub type SetTextPayload = SetTextMutation;
 
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetTextMutation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "text", kind: "set-text", record: "SetText" };
 
-    fn diff(&self, _base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
-        match self {
-            Self::Apply(payload) => protocol::MutationOutcome::new(diff_at_path(&payload.path.0, XmlNodeDiff::Text { text: Some(payload.text.clone()) })),
-            Self::Restore(diff) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-        }
+    fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
+        protocol::MutationOutcome::new(diff_at_path(&self.path.0, XmlNodeDiff::Text { text: Some(self.text.clone()) }))
     }
 
     fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<super::XmlMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<XmlSnapshot, super::XmlMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::is_empty(outcome.diff()) {
-            return Vec::new();
-        }
-        let inverse = <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::XmlMutation::SetText(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+        Ok(match self.path.resolve(base.doc.root.as_ref()) {
+            Some(XmlNode::Text { text }) => vec![super::XmlMutation::SetText(Self { path: self.path.clone(), text: text.clone() })],
+            _ => Vec::new(),
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set Text", "Text setzen")

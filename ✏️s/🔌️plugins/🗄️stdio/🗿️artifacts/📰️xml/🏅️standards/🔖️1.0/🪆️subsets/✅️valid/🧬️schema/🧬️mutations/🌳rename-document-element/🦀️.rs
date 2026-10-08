@@ -1,6 +1,4 @@
-//! 🌳️ `rename-document-element` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🌳️ `rename-document-element` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,14 +13,23 @@ impl protocol::MutationKind<XmlSnapshot, XmlValidMutation> for RenameDocumentEle
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "rename", entity: "document-element", kind: "rename-document-element", record: "RenameDocumentElement" };
 
     fn diff(&self, base: &XmlSnapshot) -> protocol::MutationOutcome<<XmlValidMutation as Mutation<XmlSnapshot>>::Diff> {
-        agg_diff(&XmlValidMutation::RenameDocumentElement(self.clone()), base)
+        let Self { name } = self;
+        match (document_element_name(base), base.doc.doctype.as_ref()) {
+            (None, _) => rejected("rename-document-element: the document has no document element to rename".to_string()),
+            (Some(_), None) => rejected("rename-document-element: the document has no DOCTYPE to keep in step with the new name — declare one first".to_string()),
+            (Some(_), Some(doctype)) => {
+                let mut diff = diff_at_path(&[], XmlNodeDiff::Element(XmlElementDiff { name: Some(name.clone()), attributes: None, children: None }));
+                diff.doctype = Some(Some(XmlDoctype { prolog_position: doctype.prolog_position, name: name.clone(), external_id: doctype.external_id.clone(), declarations: doctype.declarations.clone() }));
+                protocol::MutationOutcome::new(diff)
+            }
+        }
     }
     fn inverse(&self, base: &XmlSnapshot) -> Result<Vec<XmlValidMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&XmlValidMutation::RenameDocumentElement(self.clone()), base)?
-    
-    })
-}
+        Ok(match document_element_name(base) {
+            Some(name) => vec![XmlValidMutation::RenameDocumentElement(rename_document_element::RenameDocumentElement { name: name.to_string() })],
+            None => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Rename document element", "Dokumentelement umbenennen")
     }

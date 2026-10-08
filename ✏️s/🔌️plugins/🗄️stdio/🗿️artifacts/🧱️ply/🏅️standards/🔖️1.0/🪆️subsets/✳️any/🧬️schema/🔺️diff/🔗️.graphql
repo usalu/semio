@@ -49,9 +49,23 @@ type PlyElementsDiff {
   added: [PlyElementAdded!]
 }
 
+type PlyCommentModified {
+  index: Int!
+  diff: String!
+}
+type PlyCommentAdded {
+  index: Int!
+  item: String!
+}
+type PlyCommentsDiff {
+  removed: [Int!]
+  modified: [PlyCommentModified!]
+  added: [PlyCommentAdded!]
+}
+
 """ 🔺️ Diff for `stdio.ply`. `schema` is an identity field and never appears here. """
 type PlyDiff {
   format: PlyFormat
-  comments: [String!]
+  comments: PlyCommentsDiff
   elements: PlyElementsDiff
 }

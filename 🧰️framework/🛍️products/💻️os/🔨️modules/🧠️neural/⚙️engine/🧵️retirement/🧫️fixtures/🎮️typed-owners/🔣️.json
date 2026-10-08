@@ -1,0 +1,27 @@
+{
+  "grants": [
+    1,
+    3,
+    64
+  ],
+  "cases": [
+    {
+      "id": "ascii-spare",
+      "text": "text",
+      "reservedCapacity": 257
+    },
+    {
+      "id": "unicode-spare",
+      "text": "雪🌊",
+      "reservedCapacity": 513
+    }
+  ],
+  "expected": {
+    "zeroItems": "inert",
+    "oneShortCapacity": "inert",
+    "oneShortRelease": "inert",
+    "transfer": "samePointer",
+    "physical": "originalPlusAdmittedScaffolds",
+    "logical": "utf8KeysAndOwnedStrings"
+  }
+}

@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../.."
 name = "semio-s-artifact-stdio-bmp"
 version.workspace = true
 edition.workspace = true
@@ -46,6 +46,7 @@ semio-s-artifact-stdio-contract = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 hex = "0.4.3"
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async-macros = { workspace = true }

@@ -1,3 +1,4 @@
+use crate::FormsSnapshot;
 use crate::standards::v1::subsets::any::io::binary::snapshot::*;
 use crate::standards::v1::subsets::any::io::text::snapshot as dsl;
 use crate::{forms_children_from_steps, FormStep, FORMS_DOCUMENT_SCHEMA};

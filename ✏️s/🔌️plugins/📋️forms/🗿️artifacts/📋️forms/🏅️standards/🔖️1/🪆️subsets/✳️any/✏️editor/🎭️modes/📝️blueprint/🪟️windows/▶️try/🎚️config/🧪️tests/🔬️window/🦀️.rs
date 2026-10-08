@@ -294,21 +294,21 @@ fn forms_try_window_ownership_keeps_same_kind_windows_and_document_bytes_isolate
 #[test]
 fn forms_try_window_ownership_mutations_match_neutral_fixture_and_codecs() {
     use crate::editor::forms::modes::blueprint::windows::try_wizard::transient::FormsTryWindowTransientMutation;
-    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use protocol::{Mutation, OpBinary, OpText};
 
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).expect("Forms Try ownership fixture JSON");
     let base_config: FormsTryWindowConfig = semio_framework_pack_json::from_json_str(&fixture["windows"]["left"]["config"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Forms Try base config");
     let config_mutation: FormsTryWindowConfigMutation = semio_framework_pack_json::from_json_str(&fixture["leftMutations"]["advance"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Forms Try config mutation");
-    let after_config = config_mutation.diff(&base_config).diff().apply(&base_config).expect("apply Forms Try config mutation");
-    let restored_config = config_mutation.inverse(&base_config).expect("valid retained mutation inverse fixture").into_iter().fold(after_config, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("restore Forms Try config"));
+    let after_config = protocol::apply_diff(config_mutation.diff(&base_config).diff(), &base_config).expect("apply Forms Try config mutation");
+    let restored_config = config_mutation.inverse(&base_config).expect("valid retained mutation inverse fixture").into_iter().fold(after_config, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).expect("restore Forms Try config"));
     assert_eq!(restored_config, base_config);
     assert_eq!(FormsTryWindowConfigMutation::parse_op(&config_mutation.print_op()).expect("Forms Try config text codec"), config_mutation);
     assert_eq!(FormsTryWindowConfigMutation::decode_op(&config_mutation.encode_op().expect("Forms Try config binary encode")).expect("Forms Try config binary decode"), config_mutation);
 
     let base_transient: FormsTryWindowTransient = semio_framework_pack_json::from_json_str(&fixture["windows"]["left"]["transient"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Forms Try base transient");
     let transient_mutation: FormsTryWindowTransientMutation = semio_framework_pack_json::from_json_str(&fixture["leftMutations"]["stage"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("Forms Try transient mutation");
-    let after_transient = transient_mutation.diff(&base_transient).diff().apply(&base_transient).expect("apply Forms Try transient mutation");
-    let restored_transient = transient_mutation.inverse(&base_transient).expect("valid retained mutation inverse fixture").into_iter().fold(after_transient, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("restore Forms Try transient"));
+    let after_transient = protocol::apply_diff(transient_mutation.diff(&base_transient).diff(), &base_transient).expect("apply Forms Try transient mutation");
+    let restored_transient = transient_mutation.inverse(&base_transient).expect("valid retained mutation inverse fixture").into_iter().fold(after_transient, |state, inverse| protocol::apply_diff(inverse.diff(&state).diff(), &state).expect("restore Forms Try transient"));
     assert_eq!(restored_transient, base_transient);
     assert_eq!(FormsTryWindowTransientMutation::parse_op(&transient_mutation.print_op()).expect("Forms Try transient text codec"), transient_mutation);
     assert_eq!(FormsTryWindowTransientMutation::decode_op(&transient_mutation.encode_op().expect("Forms Try transient binary encode")).expect("Forms Try transient binary decode"), transient_mutation);

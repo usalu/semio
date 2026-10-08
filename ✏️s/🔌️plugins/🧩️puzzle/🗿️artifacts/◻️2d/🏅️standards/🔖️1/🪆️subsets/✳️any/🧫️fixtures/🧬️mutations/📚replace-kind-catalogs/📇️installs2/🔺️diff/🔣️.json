@@ -1,150 +1,49 @@
 {
   "artifact": null,
-  "schema": null,
   "camera": null,
-  "nodes": null,
   "edges": null,
-  "targetRegions": null,
   "meta": {
-    "manifestId": "nakagin",
-    "kindCompatibility": [
-      {
-        "source": "core circular bottom",
-        "target": "core circular top",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "core rectangular bottom",
-        "target": "core rectangular top",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "door capsule right",
-        "target": "door tambour right",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "door capsule left",
-        "target": "door tambour left",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "door tambour left",
-        "target": "door capsule left",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "door tambour left",
-        "target": "platform left",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "door tambour right",
-        "target": "door capsule right",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "door tambour right",
-        "target": "platform right",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "platform right",
-        "target": "door tambour right",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "platform left",
-        "target": "door tambour left",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "roof circular bottom",
-        "target": "roof circular top",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "roof rectangular bottom",
-        "target": "roof rectangular top",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "tambour circular bottom",
-        "target": "tambour circular top",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      },
-      {
-        "source": "tambour rectangular bottom",
-        "target": "tambour rectangular top",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      }
-    ],
     "kindCatalogs": {
-      "nodes": [],
+      "edges": [],
       "handles": [
         {
-          "id": "door capsule right",
+          "color": "#c8552a",
           "compatibleWith": [
             "door tambour right"
           ],
+          "defaultWireKind": "wire.link",
           "description": "Right-hand capsule door",
           "icon": "capsule",
-          "color": "#c8552a",
-          "defaultWireKind": "wire.link"
+          "id": "door capsule right"
         },
         {
-          "id": "door tambour right",
+          "color": "#2a6ec8",
           "compatibleWith": [
             "door capsule right",
             "platform right"
           ],
+          "defaultWireKind": "wire.link",
           "description": "Right-hand tambour door",
           "icon": "tambour",
-          "color": "#2a6ec8",
-          "defaultWireKind": "wire.link"
+          "id": "door tambour right"
         },
         {
-          "id": "door tambour left",
+          "color": "#2ac888",
           "compatibleWith": [
             "door capsule left",
             "platform left"
           ],
+          "defaultWireKind": "wire.link",
           "description": "Left-hand tambour door",
           "icon": "tambour",
-          "color": "#2ac888",
-          "defaultWireKind": "wire.link"
+          "id": "door tambour left"
         }
       ],
-      "edges": [],
+      "nodes": [],
       "wires": []
     }
-  }
+  },
+  "nodes": null,
+  "schema": null,
+  "targetRegions": null
 }

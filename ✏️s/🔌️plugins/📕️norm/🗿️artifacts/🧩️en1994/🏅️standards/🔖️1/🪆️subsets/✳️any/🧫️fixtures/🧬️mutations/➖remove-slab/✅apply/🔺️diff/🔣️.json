@@ -1,12 +1,15 @@
 {
-  "artifact": null,
   "annex": null,
   "structureKind": null,
   "steelFYPa": null,
   "beams": null,
   "columns": null,
   "slabs": {
-    "values": []
+    "removed": [
+      0
+    ],
+    "inserted": [],
+    "modified": []
   },
   "fireRating": null,
   "insulationThicknessM": null,

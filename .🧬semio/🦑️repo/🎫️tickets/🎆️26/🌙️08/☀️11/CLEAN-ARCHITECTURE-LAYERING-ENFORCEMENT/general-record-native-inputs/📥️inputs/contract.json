@@ -15,5 +15,69 @@
   "maximumUnits": 1000000000,
   "maximumOwnedBytes": 16777216,
   "maximumCaptureBytes": 67108864,
-  "budgetMs": 600000
+  "budgetMs": 600000,
+  "scopes": {
+    "owning": {
+      "arguments": [
+        "--all-targets"
+      ],
+      "allOwnerTargets": true,
+      "packageName": "semio-framework-dsl-record",
+      "lawNames": [
+        "sqlite_snapshot_native_text_controls_schema_intrinsics",
+        "sqlite_snapshot_native_text_controls_wire_ownership",
+        "sqlite_snapshot_native_text_admits_quoted_semantic_keys",
+        "sqlite_snapshot_native_pack_controls_expression_materialization",
+        "sqlite_snapshot_native_text_controls_record_list_boundaries"
+      ]
+    },
+    "decoding": {
+      "arguments": [
+        "--test",
+        "native_decoding"
+      ],
+      "allOwnerTargets": false,
+      "packageName": "semio-framework-dsl-record",
+      "lawNames": [
+        "sqlite_snapshot_native_text_controls_schema_intrinsics",
+        "sqlite_snapshot_native_text_controls_wire_ownership",
+        "sqlite_snapshot_native_text_admits_quoted_semantic_keys",
+        "sqlite_snapshot_native_pack_controls_expression_materialization",
+        "sqlite_snapshot_native_text_controls_record_list_boundaries"
+      ]
+    },
+    "value-retirement": {
+      "packageName": "semio-framework-value",
+      "arguments": [
+        "--lib",
+        "native_recursive_intrinsic_retirement"
+      ],
+      "allOwnerTargets": false,
+      "lawNames": [
+        "retirement::tests::native_recursive_intrinsic_retirement_admits_each_constructor_and_physical_release"
+      ]
+    },
+    "value-owning": {
+      "packageName": "semio-framework-value",
+      "arguments": [
+        "--all-targets"
+      ],
+      "allOwnerTargets": true,
+      "lawNames": [
+        "retirement::tests::native_recursive_intrinsic_retirement_admits_each_constructor_and_physical_release"
+      ]
+    },
+    "record-retirement": {
+      "packageName": "semio-framework-dsl-record",
+      "arguments": [
+        "--test",
+        "native_retirement"
+      ],
+      "allOwnerTargets": false,
+      "lawNames": [
+        "native_record_retirement_admits_finite_owned_family",
+        "native_record_writer_cancellation_transfers_original_typed_frontier"
+      ]
+    }
+  }
 }

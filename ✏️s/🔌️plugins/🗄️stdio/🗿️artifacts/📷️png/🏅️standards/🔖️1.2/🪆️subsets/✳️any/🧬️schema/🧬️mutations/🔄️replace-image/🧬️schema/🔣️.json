@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutation/replace-image/schema.json",
+  "title": "ReplaceImage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "image"
+  ],
+  "properties": {
+    "image": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/snapshot.json#/definitions/image",
+      "x-semio-ui": {
+        "label": {
+          "en": "Native image",
+          "de": "Natives Bild"
+        },
+        "group": "image",
+        "order": 10
+      }
+    }
+  }
+}

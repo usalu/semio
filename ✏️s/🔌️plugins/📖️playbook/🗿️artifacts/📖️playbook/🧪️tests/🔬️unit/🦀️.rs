@@ -104,7 +104,7 @@ fn an_undecodable_blocks_param_is_a_named_fault() {
 /// in reverse order, which must restore the base exactly (step order included).
 #[test]
 fn child_leaf_vectors_hold_and_every_edit_undoes_exactly() {
-    use protocol::{Mutation, MutationDiff};
+    use protocol::Mutation;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️child-leaves/🔣️.json")).expect("child-leaf vectors");
     let cases = fixture["cases"].as_array().expect("cases");
@@ -137,12 +137,12 @@ fn child_leaf_vectors_hold_and_every_edit_undoes_exactly() {
         let mut inverses: Vec<Vec<SemioFlowMutation>> = Vec::new();
         for leaf in &leaves {
             inverses.push(leaf.inverse(&applied).expect("leaf inverse"));
-            applied = MutationDiff::apply(leaf.diff(&applied).diff(), &applied).unwrap_or_else(|error| panic!("{name}: {error}"));
+            applied = protocol::apply_diff(leaf.diff(&applied).diff(), &applied).unwrap_or_else(|error| panic!("{name}: {error}"));
         }
         let after: Vec<PlaybookStep> = serde_json::from_value(case["after"].clone()).expect("after steps");
         assert_eq!(steps_from_flow_content(&applied).expect("decodable after"), after, "{name}: steps after the edit");
         for inverse in inverses.into_iter().rev().flatten() {
-            applied = MutationDiff::apply(inverse.diff(&applied).diff(), &applied).unwrap_or_else(|error| panic!("{name} undo: {error}"));
+            applied = protocol::apply_diff(inverse.diff(&applied).diff(), &applied).unwrap_or_else(|error| panic!("{name} undo: {error}"));
         }
         assert_eq!(steps_from_flow_content(&applied).expect("decodable undo"), base, "{name}: undo restores the base, order included");
     }

@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/store/testing/demo/mutation/restore-n/schema.json",
+  "title": "RestoreN",
+  "propertyNames": {
+    "enum": [
+      "operation",
+      "n"
+    ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation"
+  ],
+  "properties": {
+    "operation": {
+      "const": "restoreN"
+    },
+    "n": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/testing/schema.json#/$defs/NullableI32"
+    }
+  }
+}

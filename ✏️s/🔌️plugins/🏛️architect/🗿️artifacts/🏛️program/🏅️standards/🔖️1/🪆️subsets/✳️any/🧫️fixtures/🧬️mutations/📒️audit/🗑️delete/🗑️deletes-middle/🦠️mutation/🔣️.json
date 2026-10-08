@@ -1,0 +1,4 @@
+{
+  "mutation": "deleteAuditEvent",
+  "id": "audit-event-a"
+}

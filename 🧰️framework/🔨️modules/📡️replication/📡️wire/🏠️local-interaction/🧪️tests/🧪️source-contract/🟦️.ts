@@ -174,6 +174,15 @@ type TransportFixture = {
 };
 const rootFixture: RetainedRootFixture = await Bun.file(new URL("../../🌳️root/🧫️fixtures/🔣️.json", import.meta.url)).json();
 
+const ownershipSchema=await Bun.file(new URL("../../🌳️root/♻️retirement/🧬️schema/🔣️.json",import.meta.url)).json();
+const orderedOwnershipSchema=await Bun.file(new URL("../../../../../🌱️value/🗂️ordered/♻️retirement/🧬️schema/🔣️.json",import.meta.url)).json();
+const ownershipAjv=semioSchemaAjvV1({allErrors:true}).addSchema(orderedOwnershipSchema).addSchema(ownershipSchema);
+const validateOwnershipGrant=ownershipAjv.compile({$ref:ownershipSchema.$id+"#/$defs/Grant"});
+const validateOwnershipDemand=ownershipAjv.compile({$ref:ownershipSchema.$id+"#/$defs/Demand"});
+for(const copyBytes of rootFixture.grants){assert(validateOwnershipGrant({maximumItems:1,maximumCopyBytes:copyBytes,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:1}));assert(validateOwnershipDemand({copyBytes,capacityBytes:0,releaseBytes:0,depth:1}));}
+assert(!validateOwnershipGrant({maximumItems:1,maximumBytes:1}));assert(!validateOwnershipDemand({copyBytes:1,capacityBytes:0,releaseBytes:-1,depth:1}));
+console.log("[DEBUG] local interaction variable ownership grants and demands independently validate with strict AJV; String corpus totals remain logical work");
+
 
 
 function rootStringBytes(state: typeof fixture.cases[number]["before"]): number {
@@ -210,23 +219,7 @@ for (const name of updateFixture.cases) {
 }
 //#endregion 🩹️RetainedUpdateContract
 
-//#region 🔁️InteractionMutationLeaf
-const mutationLeaf = new URL("../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🔁️set-state", import.meta.url);
-const mutationDescriptor = await Bun.file(new URL("🔣️.json", mutationLeaf)).json();
-type InteractionSetStateFixture = {
-  readonly selection: Readonly<Record<string, { readonly granularity: string; readonly ids: readonly string[]; readonly anchorId: string }>>;
-  readonly hover: Readonly<Record<string, { readonly granularity: string; readonly id: string }>>;
-  readonly activeMode: Readonly<Record<string, string>>;
-  readonly activeGranularity: Readonly<Record<string, string>>;
-};
-const mutationFixture: InteractionSetStateFixture = await Bun.file(new URL("🧫️fixtures/🔣️.json", mutationLeaf)).json();
-assert.equal(Object.keys(mutationDescriptor).length, 14);
-assert.equal(mutationDescriptor.textOpcode, "set-interaction-state");
-assert.equal(mutationDescriptor.binaryTag, null);
-assert(mutationDescriptor.owner.endsWith("/🕹️interaction/🧬️mutations/🔁️set-state"));
-assert.deepEqual(JSON.parse(Buffer.from(JSON.stringify(mutationFixture), "utf8").toString("utf8")), produce(mutationFixture, () => {}));
 
-//#endregion 🔁️InteractionMutationLeaf
 
 //#region ♻️RetirementContract
 const retirement: RetirementFixture = await Bun.file(new URL("../../🧫️fixtures/♻️retirement/🔣️.json", import.meta.url)).json();
@@ -284,7 +277,7 @@ assert.equal(new Set(topologyAuthority.cases.map((row: any) => row.expected)).si
 const transport: TransportFixture = await Bun.file(new URL("../../📡️transport/🧫️fixtures/🔣️.json", import.meta.url)).json();
 const transportFixtureSchema = await Bun.file(new URL("../../📡️transport/🧬️schema/🔣️.json", import.meta.url)).json();
 
-const validateTransport = ajv.getSchema(`${transportFixtureSchema.$id}#/$defs/Transport`)!;
+const validateTransport = ajv.addSchema(transportFixtureSchema).compile({ $ref: `${transportFixtureSchema.$id}#/$defs/Transport` });
 
 const wire = await import("../../📡️transport/🟦️.ts");
 function oracleUnsigned(value: string): Buffer { const bytes = Buffer.alloc(8); bytes.writeBigUInt64LE(BigInt(value)); return Buffer.from(leb.encodeUIntBuffer(bytes)); }

@@ -9,7 +9,7 @@
       "capabilities": [
         "procedural-generation3d-1-any-editor-config-mutate"
       ],
-      "rationale": "`Generation3dConfigMutation` is the config state lane of `s.procedural.generation3d`'s ✏️editor/🎚️config surface: it holds the LOD tier, the preview shading mode, the flow-graph canvas camera, the 3d preview camera, the sun and the selected generation. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-snapshot`, `set-sun`, `set-show-mode`, `set-preview-camera`, `set-lod-mode`, `set-camera`, `set-selected-generation`) changes exactly its own part of `Generation3dConfig`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
+      "rationale": "`Generation3dConfigMutation` is the config state lane of `s.procedural.generation3d`'s ✏️editor/🎚️config surface: it holds the LOD tier, the preview shading mode, the flow-graph canvas camera, the 3d preview camera, the sun and the selected generation. This is this repository's own editor state record, not a published format, so no third party implements it. What is under test is that each kind (`set-sun`, `set-show-mode`, `set-preview-camera`, `set-lod-mode`, `set-camera`, `set-selected-generation`) changes exactly its own part of `Generation3dConfig`, that a kind declaring `no-op` leaves a record that already holds its value untouched with a warned `mutation.no-op`, and that every kind's computed inverse, read off the pre-mutation record, restores it exactly. Confidence comes from one committed, handcrafted (before, mutation, after, diff, outcome) vector per kind and declared outcome class under `../🧫️fixtures/`, exercised end to end through the production dispatch bridge, and from the inverse law as a metamorphic property.",
       "substitutes": [
         "specification-vectors",
         "metamorphic-laws"
@@ -45,7 +45,6 @@
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "✳️any",
       "kinds": [
-        "set-snapshot",
         "set-sun",
         "set-show-mode",
         "set-preview-camera",
@@ -64,25 +63,6 @@
       "subset": "any",
       "surface": "✏️editor/🎚️config",
       "mutations": [
-        {
-          "id": "set-snapshot",
-          "capability": "procedural-generation3d-1-any-editor-config-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "procedural-generation3d-1-any-editor-config-mutate",
-              "qualifyingKind": "third-party-library"
-            }
-          ]
-        },
         {
           "id": "set-sun",
           "capability": "procedural-generation3d-1-any-editor-config-mutate",
@@ -203,70 +183,6 @@
     }
   ],
   "testEvidence": [
-    {
-      "id": "set-snapshot-applied",
-      "class": "handcrafted",
-      "target": {
-        "artifact": "s.procedural.generation3d",
-        "standard": "1",
-        "subset": "any",
-        "surface": "✏️editor/🎚️config"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "unitless"
-      },
-      "files": [
-        {
-          "role": "expected-before",
-          "path": "../🧫️fixtures/⚙️set/✅️set/📸️snapshot/⬅️before/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:be3d23f29d95eb23b4692a1e547e5efa0edb7b6eb761ee70171099eb034390cb",
-          "bytes": 350
-        },
-        {
-          "role": "mutation",
-          "path": "../🧫️fixtures/⚙️set/✅️set/🦠️mutation/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:c19041d6dda5f69df81086b6fbfc3e664c58c2a5b58ccd33ad30207487abfee9",
-          "bytes": 497
-        },
-        {
-          "role": "expected-after",
-          "path": "../🧫️fixtures/⚙️set/✅️set/📸️snapshot/➡️after/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:a43190764d46af62244f26c3585b60edb9ad562f263ac0cedd9c94aa52c515c3",
-          "bytes": 364
-        },
-        {
-          "role": "expected-diff",
-          "path": "../🧫️fixtures/⚙️set/✅️set/🔺️diff/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:a43190764d46af62244f26c3585b60edb9ad562f263ac0cedd9c94aa52c515c3",
-          "bytes": 364
-        },
-        {
-          "role": "declared-outcome",
-          "path": "../🧫️fixtures/⚙️set/✅️set/🎯️outcome/🔣️.json",
-          "mediaType": "application/json",
-          "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
-          "bytes": 44
-        }
-      ],
-      "provenance": {
-        "source": "authored",
-        "license": "public-domain (handcrafted by this repository)",
-        "attribution": "Handcrafted before/mutation/after vector authored against this state lane's own schema; the diff and diagnostics are the production dispatch's, reviewed against the after-snapshot.",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "ordered-json-v1",
-      "reproducible": true,
-      "family": "config-state-lane",
-      "notes": "Restoring a saved config replaces every field at once."
-    },
     {
       "id": "set-sun-applied",
       "class": "handcrafted",

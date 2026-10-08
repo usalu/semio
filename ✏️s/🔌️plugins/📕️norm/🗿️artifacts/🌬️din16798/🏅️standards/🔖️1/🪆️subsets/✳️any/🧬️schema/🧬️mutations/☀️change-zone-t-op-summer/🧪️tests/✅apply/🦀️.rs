@@ -23,3 +23,9 @@ async fn applies_change_zone_t_op_summer() {
 fn sample_mutation(base: &Din16798Snapshot) -> Din16798Mutation {
     Din16798Mutation::ChangeZoneTOpSummer(change_zone_t_op_summer::ChangeZoneTOpSummer { zone_id: base.zones[0].id.clone(), new_t_op_summer_c: base.zones[0].t_op_summer_c + 0.5 })
 }
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    let base = Din16798Snapshot::default();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&sample_mutation(&base), &base).await;
+}

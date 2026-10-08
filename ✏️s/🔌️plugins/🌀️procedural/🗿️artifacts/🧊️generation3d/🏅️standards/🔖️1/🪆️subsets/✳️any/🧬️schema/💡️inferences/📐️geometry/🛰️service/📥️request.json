@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/procedural/generation3d/geometry.request.json",
+  "title": "Generation3dGeometryRequest",
+  "description": "Evaluates every widget of a generation3d snapshot to typed geometry. State the snapshot in full, or name the artifact so the gateway binds its document. A run is resumed by handing the previous result back as the previous state.",
+  "type": "object",
+  "additionalProperties": false,
+  "oneOf": [
+    { "required": ["snapshot"] },
+    { "required": ["document"] }
+  ],
+  "properties": {
+    "snapshot": {
+      "type": "object",
+      "description": "A Generation3dSnapshot (s.procedural.generation3d): the flow host snapshot of widgets and synapses, and the generation play state.",
+      "required": ["hostSnapshot", "generation"]
+    },
+    "document": {
+      "type": "object",
+      "description": "The artifact to evaluate, bound by the gateway from the artifact id; a caller never states these bytes.",
+      "additionalProperties": false,
+      "required": ["pack", "spr"],
+      "properties": {
+        "pack": { "type": "string", "contentEncoding": "base64" },
+        "spr": { "type": "string", "contentEncoding": "base64" }
+      }
+    },
+    "generation": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The id of the generation whose values override the slider, note, image and variable widgets."
+    }
+  }
+}

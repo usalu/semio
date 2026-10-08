@@ -1,0 +1,33 @@
+{
+  "mutation": "replaceElements",
+  "newElements": [
+    {
+      "id": "wall-n",
+      "labelEn": "North wall",
+      "labelDe": "Nordwand",
+      "kind": "Wall",
+      "zoneId": "zone-living",
+      "areaM2": 42.0,
+      "uValueWM2k": 0.2,
+      "orientationDeg": 0.0,
+      "tiltDeg": 90.0,
+      "gValue": 0.6,
+      "fc": 1.0,
+      "adjacency": "Outdoor"
+    },
+    {
+      "id": "wall-s",
+      "labelEn": "South wall",
+      "labelDe": "Südwand",
+      "kind": "Wall",
+      "zoneId": "zone-living",
+      "areaM2": 42.0,
+      "uValueWM2k": 0.2,
+      "orientationDeg": 180.0,
+      "tiltDeg": 90.0,
+      "gValue": 0.6,
+      "fc": 1.0,
+      "adjacency": "Outdoor"
+    }
+  ]
+}

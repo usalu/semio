@@ -4,25 +4,23 @@ package semio.s.fem.fem3d.diff;
 // 🧬️ Fem3d diff schema
 message Fem3dDiff {
   // @state artifact
-  optional Fem3dArtifact artifact = 1;
+  optional Fem3dNodesDelta nodes = 1;
   // @state artifact
-  optional Fem3dNodesDelta nodes = 2;
+  optional Fem3dElementsDelta elements = 2;
   // @state artifact
-  optional Fem3dElementsDelta elements = 3;
+  optional Fem3dMaterialsDelta materials = 3;
   // @state artifact
-  optional Fem3dMaterialsDelta materials = 4;
+  optional Fem3dSectionsDelta sections = 4;
   // @state artifact
-  optional Fem3dSectionsDelta sections = 5;
+  optional Fem3dSolidsDelta solids = 5;
   // @state artifact
-  optional Fem3dSolidsDelta solids = 6;
+  optional Fem3dSupportsDelta supports = 6;
   // @state artifact
-  optional Fem3dSupportsDelta supports = 7;
+  optional Fem3dLoadCasesDelta load_cases = 7;
   // @state artifact
-  optional Fem3dLoadCasesDelta load_cases = 8;
+  optional Fem3dCombinationsDelta combinations = 8;
   // @state artifact
-  optional Fem3dCombinationsDelta combinations = 9;
-  // @state artifact
-  optional FemAnalysisSettings analysis = 10;
+  optional Fem3dAnalysisPatch analysis = 9;
 }
 
 message Fem3dNodesDelta {
@@ -106,7 +104,25 @@ message Fem3dLoadCasesDelta {
 
 message Fem3dLoadCasesPatchEntry {
   string id = 1;
-  FemLoadCase item = 2;
+  Fem3dLoadCasePatch patch = 2;
+}
+
+message Fem3dLoadCasePatch {
+  optional string name = 1;
+  optional bool self_weight = 2;
+  optional Fem3dLoadsDelta loads = 3;
+}
+
+message Fem3dLoadsDelta {
+  repeated FemLoad added = 1;
+  repeated string removed = 2;
+  repeated Fem3dLoadsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem3dLoadsPatchEntry {
+  string id = 1;
+  FemLoad item = 2;
 }
 
 message Fem3dCombinationsDelta {
@@ -121,3 +137,8 @@ message Fem3dCombinationsPatchEntry {
   FemCombination item = 2;
 }
 
+message Fem3dAnalysisPatch {
+  optional uint32 modal_count = 1;
+  optional uint32 buckling_count = 2;
+  optional double deformation_scale = 3;
+}

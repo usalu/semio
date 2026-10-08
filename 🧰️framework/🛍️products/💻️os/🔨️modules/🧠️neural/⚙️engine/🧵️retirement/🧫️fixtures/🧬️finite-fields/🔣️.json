@@ -1,0 +1,75 @@
+{
+  "copyGrants": [
+    1,
+    3,
+    64
+  ],
+  "schema": {
+    "id": "sample",
+    "module": "fixture",
+    "name": "Sample",
+    "icon": "emoji:🧪️",
+    "summary": "Nested retained ownership",
+    "fields": [
+      {
+        "key": "nested",
+        "value": {
+          "kind": "list",
+          "of": {
+            "kind": "schema",
+            "of": "sample"
+          }
+        },
+        "default": {
+          "nested": {
+            "label": "retained 🌊"
+          }
+        },
+        "label": "Nested"
+      }
+    ]
+  },
+  "operator": {
+    "id": "fixture.echo",
+    "extension": "fixture",
+    "name": "Echo",
+    "abbreviation": "E",
+    "icon": "emoji:🧪️",
+    "summary": "Owned operator payload",
+    "inputs": [
+      {
+        "code": "I",
+        "abbreviation": "In",
+        "name": "input",
+        "fullName": "Input",
+        "operators": [
+          "alpha"
+        ],
+        "valueTypes": [
+          "sample"
+        ],
+        "itemTypes": [
+          "item"
+        ],
+        "default": {
+          "label": "channel 🌊"
+        },
+        "label": "Channel",
+        "cardinality": "?"
+      }
+    ],
+    "outputs": [],
+    "variadicInput": {
+      "slotKey": "slot",
+      "min": 1,
+      "max": 7
+    },
+    "group": [
+      "Tests"
+    ]
+  },
+  "expected": {
+    "schemaStringBytes": 99,
+    "operatorStringBytes": 120
+  }
+}

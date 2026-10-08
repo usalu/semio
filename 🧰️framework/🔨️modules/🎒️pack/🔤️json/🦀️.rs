@@ -23,6 +23,13 @@
 
 use std::fmt;
 
+#[cfg(test)]
+#[path = "../../⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]
+pub(crate) mod test_allocation;
+#[cfg(test)]
+#[global_allocator]
+static TEST_ALLOCATION_OBSERVER:test_allocation::RequestedAllocator=test_allocation::RequestedAllocator;
+
 use semio_framework_value::{DslValue, FromValue, ValueError, ValueRefusalKind};
 pub use semio_framework_value::ToValue;
 
@@ -975,14 +982,36 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
     }
 }
 
-impl semio_framework_value::retirement::RetireOwned for Number {fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::leaf(self)}}
-impl semio_framework_value::retirement::RetireOwned for Object {fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.0)}}
+impl semio_framework_value::retirement::RetireOwned for Number {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::leaf(self)}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::leaf_birth_bytes::<Self>())}
+    fn controlled_retirement_supported()->bool{true}
+}
+impl semio_framework_value::retirement::RetireOwned for Object {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::retirement::RetireOwned::retirement(self.0)}
+    fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::RetireOwned::retirement_birth_bytes(&self.0)}
+    fn controlled_retirement_supported()->bool{true}
+}
 impl semio_framework_value::retirement::RetireOwned for Value {
     fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;match self {Self::String(value)=>value.retirement(),Self::Array(value)=>value.retirement(),Self::Object(value)=>value.retirement(),Self::Number(value)=>leaf(value),Self::Bool(value)=>leaf(value),Self::Null=>leaf(())}}
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;match self {Self::String(value)=>value.retirement_birth_bytes(),Self::Array(value)=>value.retirement_birth_bytes(),Self::Object(value)=>value.retirement_birth_bytes(),Self::Number(value)=>value.retirement_birth_bytes(),Self::Bool(value)=>value.retirement_birth_bytes(),Self::Null=>().retirement_birth_bytes()}}
+    fn controlled_retirement_supported()->bool{true}
 }
-impl<V:JsonParsedValue> semio_framework_value::retirement::RetireOwned for JsonFrame<V> {fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::artifact_retirement_sequence!(self.values,self.entries,self.key,self.array,self.members)}}
-impl semio_framework_value::retirement::RetireOwned for JsonLexeme {fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;match self {Self::String(value)=>value.output.retirement(),Self::Number(value)=>leaf(value)}}}
-impl<V:JsonParsedValue> semio_framework_value::retirement::RetireOwned for JsonGrammarCursor<V> {fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::artifact_retirement_sequence!(self.frames,self.lexeme,self.pending,self.result,self.retired,self.obsolete)}}
+impl<V:JsonParsedValue> semio_framework_value::retirement::RetireOwned for JsonFrame<V> {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;sequence(vec![deferred(self.values),deferred(self.entries),deferred(self.key),deferred(self.array),deferred(self.members)])}
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;sequence_birth_bytes(&[deferred_birth_bytes_for(&self.values),deferred_birth_bytes_for(&self.entries),deferred_birth_bytes_for(&self.key),deferred_birth_bytes_for(&self.array),deferred_birth_bytes_for(&self.members)])}
+    fn controlled_retirement_supported()->bool{V::controlled_retirement_supported()}
+}
+impl semio_framework_value::retirement::RetireOwned for JsonLexeme {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;match self {Self::String(value)=>value.output.retirement(),Self::Number(value)=>leaf(value)}}
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;match self {Self::String(value)=>value.output.retirement_birth_bytes(),Self::Number(_)=>Some(leaf_birth_bytes::<NumberScan>())}}
+    fn controlled_retirement_supported()->bool{true}
+}
+impl<V:JsonParsedValue> semio_framework_value::retirement::RetireOwned for JsonGrammarCursor<V> {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;sequence(vec![deferred(self.frames),deferred(self.lexeme),deferred(self.pending),deferred(self.result),deferred(self.retired),deferred(self.obsolete)])}
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;sequence_birth_bytes(&[deferred_birth_bytes_for(&self.frames),deferred_birth_bytes_for(&self.lexeme),deferred_birth_bytes_for(&self.pending),deferred_birth_bytes_for(&self.result),deferred_birth_bytes_for(&self.retired),deferred_birth_bytes_for(&self.obsolete)])}
+    fn controlled_retirement_supported()->bool{V::controlled_retirement_supported()}
+}
 
 struct JsonMemberOrder {phase:u8,build:usize,end:usize,root:usize,child:usize,offset:usize,continuation:u8}
 impl JsonMemberOrder {
@@ -1004,20 +1033,45 @@ struct JsonProjectionIterator<T> {values:std::vec::IntoIter<T>,allocation:usize}
 impl<T> JsonProjectionIterator<T> {fn new(values:Vec<T>)->Self {let allocation=values.capacity().saturating_mul(std::mem::size_of::<T>());Self {values:values.into_iter(),allocation}}fn next(&mut self)->Option<T>{self.values.next()}fn len(&self)->usize{self.values.len()}}
 struct JsonProjectionIteratorRetirement<T:semio_framework_value::retirement::RetireOwned> {values:std::mem::ManuallyDrop<std::vec::IntoIter<T>>,remaining:usize,released:bool}
 impl<T:semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetirementCursor for JsonProjectionIteratorRetirement<T> {
-    fn close_step(&mut self,maximum_bytes:usize)->semio_framework_value::retirement::RetirementStep {
+    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep {
         use semio_framework_value::retirement::RetirementStep;
-        if self.released{return RetirementStep::Complete;}if maximum_bytes==0{return RetirementStep::BudgetExhausted;}
+        if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}if self.released{return RetirementStep::Complete;}
         if let Some(value)=self.values.next_back(){return RetirementStep::Child(value.retirement());}
-        if self.remaining>0{let bytes=maximum_bytes.min(self.remaining);self.remaining-=bytes;return RetirementStep::Bytes(bytes);}
-        unsafe{std::mem::ManuallyDrop::drop(&mut self.values)};self.released=true;RetirementStep::Complete
+        if self.remaining>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted;}
+        let bytes=std::mem::take(&mut self.remaining);unsafe{std::mem::ManuallyDrop::drop(&mut self.values)};self.released=true;if bytes==0{RetirementStep::Complete}else{RetirementStep::Bytes(bytes)}
     }
     fn terminal_is_empty(&self)->bool{self.released}
+    fn next_close_byte_demand(&self)->Option<usize>{Some(if !self.released&&self.values.len()==0{self.remaining}else{0})}
+    fn next_birth_bytes(&self,_:usize)->Option<usize>{if self.released||self.values.len()==0{Some(0)}else{self.values.as_slice().last()?.retirement_birth_bytes()}}
+    fn terminal_release_bytes(&self)->Option<usize>{self.released.then_some(std::mem::size_of::<Self>())}
 }
 impl<T:semio_framework_value::retirement::RetireOwned> Drop for JsonProjectionIteratorRetirement<T> {fn drop(&mut self){assert!(std::thread::panicking()||self.released,"JSON projection backing retired before terminal-empty");}}
-impl<T:semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for JsonProjectionIterator<T> {fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(JsonProjectionIteratorRetirement {values:std::mem::ManuallyDrop::new(self.values),remaining:self.allocation,released:false})}}
+impl<T:semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for JsonProjectionIterator<T> {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(JsonProjectionIteratorRetirement {values:std::mem::ManuallyDrop::new(self.values),remaining:self.allocation,released:false})}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<JsonProjectionIteratorRetirement<T>>())}
+    fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}
+}
 struct JsonProjectionFrame {values:JsonProjectionIterator<Value>,entries:JsonProjectionIterator<(String,Value)>,array:Vec<DslValue>,object:Vec<(String,DslValue)>,key:Option<String>,is_object:bool,order:Option<JsonMemberOrder>,admitted:bool}
+struct JsonCompletedFrameRetirement {frame:std::mem::ManuallyDrop<JsonProjectionFrame>,phase:u8}
+impl JsonCompletedFrameRetirement {
+    fn new(frame:JsonProjectionFrame)->Result<Self,(ValueError,JsonProjectionFrame)>{if frame.values.len()!=0||frame.entries.len()!=0||!frame.array.is_empty()||!frame.object.is_empty()||frame.key.is_some(){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"completed JSON input frame still owns an untransferred value"),frame));}Ok(Self{frame:std::mem::ManuallyDrop::new(frame),phase:0})}
+    fn release_demand(&self)->usize{match self.phase{0=>self.frame.values.allocation,1=>self.frame.entries.allocation,2=>self.frame.array.capacity()*std::mem::size_of::<DslValue>(),3=>self.frame.object.capacity()*std::mem::size_of::<(String,DslValue)>(),_=>0}}
+}
+impl semio_framework_value::retirement::RetirementCursor for JsonCompletedFrameRetirement {
+    fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}if self.phase==4{return RetirementStep::Complete;}let bytes=self.release_demand();if bytes>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted;}match self.phase{0=>drop(std::mem::replace(&mut self.frame.values,JsonProjectionIterator::new(Vec::new()))),1=>drop(std::mem::replace(&mut self.frame.entries,JsonProjectionIterator::new(Vec::new()))),2=>drop(std::mem::take(&mut self.frame.array)),3=>drop(std::mem::take(&mut self.frame.object)),_=>unreachable!()}self.phase+=1;if bytes==0{RetirementStep::Advanced}else{RetirementStep::Bytes(bytes)}}
+    fn terminal_is_empty(&self)->bool{self.phase==4}
+    fn next_close_byte_demand(&self)->Option<usize>{Some(self.release_demand())}
+    fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
+    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
+}
+impl Drop for JsonCompletedFrameRetirement {fn drop(&mut self){if self.phase!=4{assert!(std::thread::panicking(),"completed JSON input frame must release its original backing before drop");return;}unsafe{std::mem::ManuallyDrop::drop(&mut self.frame);}}}
+impl semio_framework_value::retirement::RetireOwned for JsonCompletedFrameRetirement {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(self)}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self>())}
+    fn controlled_retirement_supported()->bool{true}
+}
 /// 🎒️ Moves a parsed JSON candidate into admitted canonical values without payload clones.
-pub struct JsonValueProjection {pending:Option<Value>,output:Option<DslValue>,frames:Vec<JsonProjectionFrame>,ordered:bool,retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>}
+pub struct JsonValueProjection {pending:Option<Value>,output:Option<DslValue>,frames:Vec<JsonProjectionFrame>,ordered:bool,retirement:Option<JsonCompletedFrameRetirement>}
 impl JsonValueProjection {
     /// 🌱️ Takes ownership of the existing parsed candidate.
     pub fn new(value:Value)->Self {Self {pending:Some(value),output:None,frames:Vec::new(),ordered:false,retirement:None}}
@@ -1030,7 +1084,7 @@ impl JsonValueProjection {
         if maximum_bytes==0{return Ok(None);}
         for _ in 0..maximum_units {
             control.checkpoint()?;control.step()?;
-            if let Some(retirement)=&mut self.retirement {retirement.close_step(1,maximum_bytes)?;if retirement.terminal_is_empty(){self.retirement=None;}continue;}
+            if let Some(retirement)=&mut self.retirement {use semio_framework_value::retirement::RetirementCursor;let grant=semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:0,maximum_release_bytes:retirement.release_demand(),maximum_depth:retirement.next_depth_demand()?};if let semio_framework_value::retirement::RetirementStep::Failure(error)=retirement.close_step(grant){return Err(error);}if retirement.terminal_is_empty(){self.retirement=None;}continue;}
             if let Some(frame)=self.frames.last_mut().filter(|frame|!frame.admitted){if frame.is_object{frame.object=control.allocate_vec(frame.entries.len())?;}else{frame.array=control.allocate_vec(frame.values.len())?;}frame.admitted=true;continue;}
             if self.pending.as_ref().is_some_and(|value|matches!(value,Value::Array(_)|Value::Object(_)))&&self.frames.capacity()==0{self.frames=control.allocate_vec(MAX_DEPTH as usize+2)?;continue;}
             if let Some(value)=self.output.take() {if let Some(frame)=self.frames.last_mut() {if frame.is_object {frame.object.push((frame.key.take().unwrap(),value));}else {frame.array.push(value);}}else {return Ok(Some(value));}}
@@ -1045,14 +1099,22 @@ impl JsonValueProjection {
             } else if let Some(frame)=self.frames.last_mut() {
                 if frame.is_object {if let Some((key,value))=frame.entries.next() {frame.key=Some(key);self.pending=Some(value);continue;}if self.ordered {let order=frame.order.get_or_insert_with(||JsonMemberOrder::new(frame.object.len()));if !order.step(&mut frame.object) {continue;}}}
                 else if let Some(value)=frame.values.next() {self.pending=Some(value);continue;}
-                let mut frame=self.frames.pop().unwrap();self.output=Some(if frame.is_object {DslValue::Object(std::mem::take(&mut frame.object))}else {DslValue::Array(std::mem::take(&mut frame.array))});self.retirement=Some(semio_framework_value::retirement::owned_retirement(frame));
+                let mut frame=self.frames.pop().unwrap();self.output=Some(if frame.is_object {DslValue::Object(std::mem::take(&mut frame.object))}else {DslValue::Array(std::mem::take(&mut frame.array))});self.retirement=Some(match JsonCompletedFrameRetirement::new(frame){Ok(owner)=>owner,Err((error,frame))=>{self.frames.push(frame);return Err(error);}});
             } else {return Ok(None);}
         }
         Ok(None)
     }
 }
-impl semio_framework_value::retirement::RetireOwned for JsonProjectionFrame {fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{semio_framework_value::artifact_retirement_sequence!(self.values,self.entries,self.array,self.object,self.key)}}
-impl semio_framework_value::retirement::RetireOwned for JsonValueProjection {fn retirement(mut self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;let residual=self.retirement.take().map(erased_cursor);let children=semio_framework_value::artifact_retirement_sequence!(self.pending,self.output,self.frames);match residual {Some(residual)=>sequence(vec![residual,children]),None=>children}}}
+impl semio_framework_value::retirement::RetireOwned for JsonProjectionFrame {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;sequence(vec![deferred(self.values),deferred(self.entries),deferred(self.array),deferred(self.object),deferred(self.key)])}
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;sequence_birth_bytes(&[deferred_birth_bytes_for(&self.values),deferred_birth_bytes_for(&self.entries),deferred_birth_bytes_for(&self.array),deferred_birth_bytes_for(&self.object),deferred_birth_bytes_for(&self.key)])}
+    fn controlled_retirement_supported()->bool{true}
+}
+impl semio_framework_value::retirement::RetireOwned for JsonValueProjection {
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::*;sequence(vec![deferred(self.pending),deferred(self.output),deferred(self.frames),deferred(self.retirement)])}
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;sequence_birth_bytes(&[deferred_birth_bytes_for(&self.pending),deferred_birth_bytes_for(&self.output),deferred_birth_bytes_for(&self.frames),deferred_birth_bytes_for(&self.retirement)])}
+    fn controlled_retirement_supported()->bool{true}
+}
 //#endregion 🔖️Parser
 
 //#region 🔖️Writer
@@ -1749,8 +1811,16 @@ impl<S:JsonWriteSource> JsonWriteCursor<S> {
     }
 }
 
-impl semio_framework_value::retirement::RetireOwned for JsonWriteFrame { fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { semio_framework_value::retirement::leaf(self) } }
-impl<S:JsonWriteSource+semio_framework_value::retirement::RetireOwned+'static> semio_framework_value::retirement::RetireOwned for JsonWriteCursor<S> { fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { semio_framework_value::artifact_retirement_sequence!(self.source, self.frames, self.path, self.writer.output) } }
+impl semio_framework_value::retirement::RetireOwned for JsonWriteFrame {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { semio_framework_value::retirement::leaf(self) }
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::leaf_birth_bytes::<Self>())}
+    fn controlled_retirement_supported()->bool{true}
+}
+impl<S:JsonWriteSource+semio_framework_value::retirement::RetireOwned+'static> semio_framework_value::retirement::RetireOwned for JsonWriteCursor<S> {
+    fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> { use semio_framework_value::retirement::*;sequence(vec![deferred(self.source),deferred(self.frames),deferred(JsonProjectionIterator::new(self.path)),deferred(self.writer.output)]) }
+    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::*;sequence_birth_bytes(&[deferred_birth_bytes_for(&self.source),deferred_birth_bytes_for(&self.frames),deferred_birth_bytes::<JsonProjectionIterator<usize>>(),deferred_birth_bytes_for(&self.writer.output)])}
+    fn controlled_retirement_supported()->bool{S::controlled_retirement_supported()}
+}
 
 struct ControlledWriter { bytes: usize, output: Option<String> }
 impl ControlledWriter {

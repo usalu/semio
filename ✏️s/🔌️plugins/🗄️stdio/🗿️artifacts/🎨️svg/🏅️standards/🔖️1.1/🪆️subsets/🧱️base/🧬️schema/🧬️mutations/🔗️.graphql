@@ -1,4 +1,3 @@
-# set-snapshot/SetSnapshot: 📸️set-snapshot/🔗️.graphql
 # 🧬 Transparent SvgMutation descriptor roster.
 # set-declaration/SetDeclaration
 # set-doctype/SetDoctype
@@ -19,7 +18,6 @@ enum SvgMutationKind {
   SET_TEXT
   SET_VIEW_BOX
   SET_TRANSFORM
-  SET_SNAPSHOT
 }
 scalar MutationPayload
 input SvgMutationInput { kind: SvgMutationKind!, payload: MutationPayload! }

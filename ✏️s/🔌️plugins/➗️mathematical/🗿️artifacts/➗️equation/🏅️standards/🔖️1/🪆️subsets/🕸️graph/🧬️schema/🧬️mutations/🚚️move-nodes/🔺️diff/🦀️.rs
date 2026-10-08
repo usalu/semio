@@ -2,6 +2,7 @@
 //! skipped (`mutation.partial`).
 
 use crate::standards::v1::subsets::graph::schema::mutations::set_node_positions::equation_targets_invariant;
+use crate::diff::{EquationNodePatch, EquationNodesDelta};
 use crate::{EquationDiff, EquationSnapshot};
 
 //#region 🔖️Diff
@@ -14,8 +15,8 @@ pub fn diff(payload: &super::MoveNodes, base: &EquationSnapshot) -> protocol::Mu
     if !payload.dx.is_finite() || !payload.dy.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "a node offset must be finite", payload.ids.clone());
     }
-    let mut graph = base.graph.clone();
-    let missing: Vec<String> = payload.ids.iter().filter(|id| !graph.nodes.iter().any(|node| &node.id == *id)).cloned().collect();
+    let nodes = &base.graph.nodes;
+    let missing: Vec<String> = payload.ids.iter().filter(|id| !nodes.iter().any(|node| &node.id == *id)).cloned().collect();
     if missing.len() == payload.ids.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} node(s) exists.", payload.ids.len()), missing);
     }
@@ -23,13 +24,11 @@ pub fn diff(payload: &super::MoveNodes, base: &EquationSnapshot) -> protocol::Mu
     if (payload.dx, payload.dy) == (0.0, 0.0) {
         return protocol::MutationOutcome::empty().absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "The drag offset is zero.").at(payload.ids.clone())]));
     }
-    for node in graph.nodes.iter_mut().filter(|node| payload.ids.contains(&node.id)) {
-        node.x += payload.dx;
-        node.y += payload.dy;
-    }
-    if graph.nodes.iter().filter(|node| payload.ids.contains(&node.id)).any(|node| !node.x.is_finite() || !node.y.is_finite()) {
+    let patched: Vec<EquationNodePatch> = nodes.iter().filter(|node| payload.ids.contains(&node.id)).map(|node| EquationNodePatch { id: node.id.clone(), x: Some(node.x + payload.dx), y: Some(node.y + payload.dy), ..Default::default() }).collect();
+    if patched.iter().any(|patch| patch.x.is_some_and(|x| !x.is_finite()) || patch.y.is_some_and(|y| !y.is_finite())) {
         return protocol::MutationOutcome::error("mutation.target-mismatch", "The moved position leaves the finite canvas.", payload.ids.clone());
     }
-    protocol::MutationOutcome::new(crate::equation_state_diff(graph, base.geometry.clone())).absorb_messages(partial)
+    let diff = EquationDiff { nodes: Some(EquationNodesDelta { patched, ..Default::default() }), ..Default::default() };
+    protocol::MutationOutcome::new(crate::equation_state_diff(diff, base)).absorb_messages(partial)
 }
 //#endregion 🔖️Diff

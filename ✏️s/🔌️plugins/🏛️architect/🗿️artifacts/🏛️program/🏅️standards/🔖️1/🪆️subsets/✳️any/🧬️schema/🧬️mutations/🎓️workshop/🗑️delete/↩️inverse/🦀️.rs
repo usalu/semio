@@ -8,8 +8,8 @@ use crate::ProgramSnapshot;
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::DeleteWorkshop, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    match base.workshops.iter().find(|row| row.header.id == payload.id) {
-        Some(existing) => vec![ProgramMutation::CreateWorkshop(super::super::create_workshop::CreateWorkshop { workshop: existing.clone() })],
+    match base.workshops.iter().position(|row| row.header.id == payload.id) {
+        Some(position) => vec![ProgramMutation::CreateWorkshop(super::super::create_workshop::CreateWorkshop { workshop: base.workshops[position].clone(), index: Some(position) })],
         None => Vec::new(),
     }
 

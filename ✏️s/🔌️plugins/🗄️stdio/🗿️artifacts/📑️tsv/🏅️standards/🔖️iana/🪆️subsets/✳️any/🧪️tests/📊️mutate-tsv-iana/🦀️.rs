@@ -50,11 +50,6 @@ fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
         _ => None,
     };
     match forward.str("kind").as_str() {
-        "set-snapshot" | "patch-snapshot" => {
-            let grid = read_grid(original)?;
-            let snapshot = json_object(vec![("schema", Json::String("stdio.tsv".to_string())), ("records", rows_json(&grid.records)), ("trailingNewline", Json::Bool(grid.trailing_newline)), ("lineEnding", Json::String(grid.line_ending))]);
-            Ok(kind_spec("set-snapshot", json_object(vec![("snapshot", snapshot)])))
-        }
         "set-trailing-newline" => {
             let grid = read_grid(original)?;
             Ok(kind_spec("set-trailing-newline", json_object(vec![("trailingNewline", Json::Bool(grid.trailing_newline))])))

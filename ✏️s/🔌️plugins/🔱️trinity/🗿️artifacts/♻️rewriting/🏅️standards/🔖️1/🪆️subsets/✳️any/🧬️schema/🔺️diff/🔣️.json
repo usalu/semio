@@ -105,7 +105,7 @@
           "type": "null"
         },
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/properties/workingGraph"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/jack/diff.json"
         }
       ],
       "x-semio-state": "artifact"
@@ -116,7 +116,7 @@
           "type": "null"
         },
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/properties/lhs"
+          "$ref": "#/$defs/LhsPatch"
         }
       ],
       "x-semio-state": "artifact"
@@ -127,10 +127,110 @@
           "type": "null"
         },
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/properties/rhs"
+          "$ref": "#/$defs/RhsPatch"
         }
       ],
       "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "PatternPatch": {
+      "title": "PatternPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "leftVar": {
+          "type": "string"
+        },
+        "leftKind": {
+          "type": "string"
+        },
+        "edgeVar": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "edgeKind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rightVar": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rightKind": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "LhsPatch": {
+      "title": "LhsPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "pattern": {
+          "$ref": "#/$defs/PatternPatch"
+        },
+        "whereClause": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "RhsPatch": {
+      "title": "RhsPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "create": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/properties/rhs/properties/create"
+        },
+        "delete": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/properties/rhs/properties/delete"
+        },
+        "set": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/properties/rhs/properties/set"
+        },
+        "merge": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/properties/rhs/properties/merge"
+        },
+        "parameters": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/artifact.json#/properties/rhs/properties/parameters"
+        }
+      }
     }
   }
 }

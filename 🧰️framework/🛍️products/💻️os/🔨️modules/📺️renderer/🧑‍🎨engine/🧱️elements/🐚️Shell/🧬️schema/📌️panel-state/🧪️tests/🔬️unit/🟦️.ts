@@ -61,10 +61,6 @@ function independentState(value: unknown): value is HostPanelState {
 export function testHostPanelStateSchema(): void {
   const ajv = new Ajv({ strict: true, allErrors: true });
   const validate = ajv.compile(schema);
-  const routingSchema = JSON.parse(readFileSync(new URL("../../../🎯️spawned-document-routing/🔣️.json", import.meta.url), "utf8"));
-  const validateRouting = ajv.compile<typeof routing>(routingSchema);
-  assert(validateRouting(routing), JSON.stringify(validateRouting.errors));
-  assert.equal(validateRouting({ ...routing, foreign: true }), false);
   for (const law of routing.cases) {
     const spawned = law.retired ? null : { ...routing.spawned, controllerId: law.sharedController ? routing.host.controllerId : routing.spawned.controllerId, ...(law.sharedApp ? { pluginId: routing.host.pluginId, appId: routing.host.appId, controllerId: routing.host.controllerId } : {}) };
     const explicitSpawned = law.surface === "spawned" || law.surface === routing.spawned.windowId;

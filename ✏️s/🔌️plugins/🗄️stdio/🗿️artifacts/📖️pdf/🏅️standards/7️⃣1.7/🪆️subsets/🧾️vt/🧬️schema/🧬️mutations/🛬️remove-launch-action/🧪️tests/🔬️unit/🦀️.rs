@@ -13,6 +13,12 @@ fn removes_the_matching_launch_target() {
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    let base = applied(&support::document(), &PdfVtMutation::InsertLaunchAction(InsertLaunchAction { target: "render.bat".to_string() }));
+    let base = applied(&support::document(), &PdfVtMutation::InsertLaunchAction(InsertLaunchAction { target: "render.bat".to_string(), placements: Vec::new() }));
+    assert_mutation_inverse_sum_law(&PdfVtMutation::RemoveLaunchAction(RemoveLaunchAction { target: "render.bat".to_string() }), &base).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_restores_a_middle_row() {
+    let base = support::with_tail(&applied(&support::document(), &PdfVtMutation::InsertLaunchAction(InsertLaunchAction { target: "render.bat".to_string(), placements: Vec::new() })));
     assert_mutation_inverse_sum_law(&PdfVtMutation::RemoveLaunchAction(RemoveLaunchAction { target: "render.bat".to_string() }), &base).await;
 }

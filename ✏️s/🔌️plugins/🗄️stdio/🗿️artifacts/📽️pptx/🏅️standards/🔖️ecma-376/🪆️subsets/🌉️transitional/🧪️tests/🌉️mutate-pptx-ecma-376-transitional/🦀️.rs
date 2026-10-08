@@ -81,13 +81,13 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     round_trip_preserves(&projection, &project_package(&input)?)?;
     Ok(Outcome::with_raw(output, projection))
 }
-/// 🏅️ The reference half of the whole-package class stamp (`set-snapshot` of the package's own strict stamp): the
+/// 🏅️ The reference half of the whole-package class stamp (the independent engine's own strict stamp): the
 /// independent engine stamps the real package strict, and the conformance-class projection has to move.
 fn stamp_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let output = oracle_stamp(&input, true)?;
     let projection = project_package(&output)?;
-    mutation_is_observable("set-snapshot", &projection, &project_package(&input)?, &[])?;
+    mutation_is_observable("stamp-strict-class", &projection, &project_package(&input)?, &[])?;
     Ok(Outcome::with_raw(output, projection))
 }
 
@@ -96,7 +96,7 @@ fn stamp_inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
     let input = mutable_input(ctx)?;
     let restored = oracle_stamp(&oracle_stamp(&input, true)?, false)?;
     let projection = project_package(&restored)?;
-    inverse_restores("set-snapshot", &projection, &project_package(&input)?)?;
+    inverse_restores("stamp-strict-class", &projection, &project_package(&input)?)?;
     Ok(Outcome::with_raw(restored, projection))
 }
 //#endregion 🔖️Oracle
@@ -108,7 +108,7 @@ mod subject {
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::export::serializers::encode_pptx;
     use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_pptx;
-    use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::transitional::schema::mutations::{apply_pptx_transitional_mutation, stamp_conformance_class_mutation, PptxTransitionalMutation};
+    use semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::transitional::schema::mutations::{apply_pptx_transitional_mutation, stamp_conformance_class_mutations, PptxTransitionalMutation};
     use semio_s_artifact_stdio_pptx::{mutation_from_payload_json, mutation_inverse, mutation_payload_json, PptxSnapshot};
     use semio_s_artifact_stdio_pptx_test_oracle::standards::v_ecma_376::subsets::transitional::project_package;
     use semio_repo_test_host::law::wire_operation;
@@ -161,19 +161,27 @@ mod subject {
         outcome_of(&applied_and_undone(base, &mutation_from_spec(&spec)?))
     }
 
-    /// 🏅️ The whole-package class stamp recorded as one `set-snapshot` of this repository's own stamp.
+    /// 🏅️ The whole-package class stamp recorded as the concrete namespace, relationship-base and conformance-attribute mutations.
     pub fn stamp(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;
-        let stamp = stamp_conformance_class_mutation(&snapshot, true);
-        apply_pptx_transitional_mutation(&mut snapshot, &stamp);
+        for stamp in stamp_conformance_class_mutations(true) {
+            apply_pptx_transitional_mutation(&mut snapshot, &stamp);
+        }
         outcome_of(&snapshot)
     }
 
-    /// ↩️ The class stamp undone by `set-snapshot`'s own inverse.
+    /// ↩️ The class stamp undone by the production inverse of each stamp mutation, replayed in reverse.
     pub fn stamp_inverse(ctx: &Context) -> Result<Outcome, String> {
-        let base = decode(&mutable_input(ctx)?)?;
-        let stamp = stamp_conformance_class_mutation(&base, true);
-        outcome_of(&applied_and_undone(base, &stamp))
+        let mut snapshot = decode(&mutable_input(ctx)?)?;
+        let mut undos = Vec::new();
+        for stamp in stamp_conformance_class_mutations(true) {
+            undos.push(mutation_inverse(&stamp, &snapshot).expect("valid retained mutation inverse fixture"));
+            apply_pptx_transitional_mutation(&mut snapshot, &stamp);
+        }
+        for undo in undos.into_iter().rev().flatten() {
+            apply_pptx_transitional_mutation(&mut snapshot, &undo);
+        }
+        outcome_of(&snapshot)
     }
 
     /// 🔁️ Full semantic parse, re-serialized from the model alone — copying, splicing or patching
@@ -191,18 +199,18 @@ mod subject {
 //#endregion 🔖️Subject
 
 //#region 🔖️Registration
-/// 🧭️ Registration entry point the generated host calls. The class stamp is the `set-snapshot` kind's own plain scenario
+/// 🧭️ Registration entry point the generated host calls. The class stamp is its own plain scenario
 /// pair, registered under its exact ids next to the outline bases.
 pub fn adapter() -> Adapter {
     let mut built = Adapter::new("rust");
-    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("mutate-set-snapshot", stamp_oracle).oracle("inverse-set-snapshot", stamp_inverse_oracle).oracle("identity-round-trip", round_trip_oracle);
+    built = built.oracle("mutate", mutate_oracle).oracle("inverse", inverse_oracle).oracle("mutate-stamp-strict-class", stamp_oracle).oracle("inverse-stamp-strict-class", stamp_inverse_oracle).oracle("identity-round-trip", round_trip_oracle);
     #[cfg(feature = "sut")]
     {
         built = built
             .subject("mutate", subject::mutate)
             .subject("inverse", subject::inverse)
-            .subject("mutate-set-snapshot", subject::stamp)
-            .subject("inverse-set-snapshot", subject::stamp_inverse)
+            .subject("mutate-stamp-strict-class", subject::stamp)
+            .subject("inverse-stamp-strict-class", subject::stamp_inverse)
             .subject("identity-round-trip", subject::identity_round_trip);
     }
     built

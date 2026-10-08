@@ -18,7 +18,7 @@ const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutati
 #[allow(unused_variables, unused_mut)]
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     let model = crate::model::Model { name: "BESTEST 600".into(), ..crate::model::Model::default() };
-    (snapshot(model), super::create_space(crate::model::EntityId(2), "SPACE ONE".into(), crate::model::EntityId(9), 48.0))
+    (snapshot(model), super::create_space(crate::model::EntityId(2), "SPACE ONE".into(), crate::model::EntityId(9), 48.0, None))
 }
 
 fn case() -> Case {

@@ -6,5 +6,6 @@
   "supplyTemperatureC": 80.0,
   "returnTemperatureC": 60.0,
   "designFlowKgS": 2.0,
-  "equipmentIds": []
+  "equipmentIds": [],
+  "index": null
 }

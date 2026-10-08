@@ -22,7 +22,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.zones.push(zone(2, "ZONE TWO"));
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 20.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 27.0 });
-    (snapshot(model), super::create_air_loop(crate::model::EntityId(17), "MAIN AIR LOOP".to_string(), 1, 2, 1.2, vec![crate::model::EntityId(2), crate::model::EntityId(1)]))
+    (snapshot(model), super::create_air_loop(crate::model::EntityId(17), "MAIN AIR LOOP".to_string(), 1, 2, 1.2, vec![crate::model::EntityId(2), crate::model::EntityId(1)], None))
 }
 
 fn case() -> Case {

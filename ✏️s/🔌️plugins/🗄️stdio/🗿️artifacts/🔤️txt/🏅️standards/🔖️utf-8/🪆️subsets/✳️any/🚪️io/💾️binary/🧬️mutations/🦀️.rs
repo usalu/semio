@@ -12,7 +12,6 @@ struct BinaryCodec {
     decode: fn(&[u8]) -> Result<TxtMutation, String>,
 }
 const BINARY_CODECS: &[BinaryCodec] = &[
-    BinaryCodec { tag: set_snapshot::BINARY_TAG, try_encode: set_snapshot::try_encode, decode: set_snapshot::decode_mutation },
     BinaryCodec { tag: set_trailing_newline::BINARY_TAG, try_encode: set_trailing_newline::try_encode, decode: set_trailing_newline::decode_mutation },
     BinaryCodec { tag: set_line_ending::BINARY_TAG, try_encode: set_line_ending::try_encode, decode: set_line_ending::decode_mutation },
     BinaryCodec { tag: insert_line::BINARY_TAG, try_encode: insert_line::try_encode, decode: insert_line::decode_mutation },
@@ -20,7 +19,6 @@ const BINARY_CODECS: &[BinaryCodec] = &[
     BinaryCodec { tag: set_line::BINARY_TAG, try_encode: set_line::try_encode, decode: set_line::decode_mutation },
 ];
 pub const BINARY_TAGS: &[(&str, u32)] = &[
-    (crate::standards::v_utf_8::subsets::any::io::text::mutations::set_snapshot::TEXT_OPCODE, set_snapshot::BINARY_TAG),
     (crate::standards::v_utf_8::subsets::any::io::text::mutations::set_trailing_newline::TEXT_OPCODE, set_trailing_newline::BINARY_TAG),
     (crate::standards::v_utf_8::subsets::any::io::text::mutations::set_line_ending::TEXT_OPCODE, set_line_ending::BINARY_TAG),
     (crate::standards::v_utf_8::subsets::any::io::text::mutations::insert_line::TEXT_OPCODE, insert_line::BINARY_TAG),
@@ -63,9 +61,6 @@ pub mod insert_line;
 
 #[path = "✏️set-line/🦀️.rs"]
 pub mod set_line;
-
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 
 #[path = "🔚️set-line-ending/🦀️.rs"]
 pub mod set_line_ending;

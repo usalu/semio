@@ -4,7 +4,7 @@ export type * from "../../../../../🧬️schema/🧬️mutations/📣️used/�
 /** ➖️ `remove-used-extension` wire twin: the flat `Apply` payload `GltfWithdrawUsedExtensionPayload` and the phase wire `RemoveUsedExtensionMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { gltfWireObject, gltfWireRequired, gltfWireString } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
 export const parseGltfWithdrawUsedExtensionPayload = gltfWireObject<GltfWithdrawUsedExtensionPayload>({ extension: gltfWireRequired(gltfWireString) });
-export const parseRemoveUsedExtensionMutation = gltfWirePhase(parseGltfWithdrawUsedExtensionPayload, parseGltfDiff);
+export const parseRemoveUsedExtensionMutation = gltfWireApplyPhase(parseGltfWithdrawUsedExtensionPayload);

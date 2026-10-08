@@ -82,7 +82,103 @@ impl Default for SourcingCurationConfig {
     }
 }
 
-store::impl_whole_record_config!(SourcingCurationConfig);
+impl store::ConfigRecord for SourcingCurationConfig {}
+
+/// 🧱️ Carries the optional sort as a present slot, so clearing it stays distinct from leaving it untouched on every wire.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct SourcingOptionalSort {
+    pub value: Option<TableSort>,
+}
+
+/// 🔺️ Sparse field delta over [`SourcingCurationConfig`]: every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct SourcingCurationConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub filters_query: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub filters_module_ids: Option<Vec<String>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub filters_typology_path: Option<Vec<String>>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub filters_min_availability: Option<u32>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub filters_sort: Option<SourcingOptionalSort>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub contributions_json: Option<String>,
+}
+
+impl protocol::MutationDiff<SourcingCurationConfig> for SourcingCurationConfigDiff {
+    fn apply(&self, base: &SourcingCurationConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SourcingCurationConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.filters_query {
+            next.filters.query = value.clone();
+        }
+        if let Some(value) = &self.filters_module_ids {
+            next.filters.module_ids = value.clone();
+        }
+        if let Some(value) = &self.filters_typology_path {
+            next.filters.typology_path = value.clone();
+        }
+        if let Some(value) = self.filters_min_availability {
+            next.filters.min_availability = value;
+        }
+        if let Some(value) = &self.filters_sort {
+            next.filters.sort = value.value.clone();
+        }
+        if let Some(value) = &self.contributions_json {
+            next.contributions_json = value.clone();
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.filters_query.is_some() {
+            self.filters_query = other.filters_query;
+        }
+        if other.filters_module_ids.is_some() {
+            self.filters_module_ids = other.filters_module_ids;
+        }
+        if other.filters_typology_path.is_some() {
+            self.filters_typology_path = other.filters_typology_path;
+        }
+        if other.filters_min_availability.is_some() {
+            self.filters_min_availability = other.filters_min_availability;
+        }
+        if other.filters_sort.is_some() {
+            self.filters_sort = other.filters_sort;
+        }
+        if other.contributions_json.is_some() {
+            self.contributions_json = other.contributions_json;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<SourcingCurationConfig> for SourcingCurationConfigDiff {
+    fn inverse(&self, base: &SourcingCurationConfig) -> Self {
+        Self {
+            filters_query: self.filters_query.as_ref().map(|_| base.filters.query.clone()),
+            filters_module_ids: self.filters_module_ids.as_ref().map(|_| base.filters.module_ids.clone()),
+            filters_typology_path: self.filters_typology_path.as_ref().map(|_| base.filters.typology_path.clone()),
+            filters_min_availability: self.filters_min_availability.map(|_| base.filters.min_availability),
+            filters_sort: self.filters_sort.as_ref().map(|_| SourcingOptionalSort { value: base.filters.sort.clone() }),
+            contributions_json: self.contributions_json.as_ref().map(|_| base.contributions_json.clone()),
+        }
+    }
+    fn between(base: &SourcingCurationConfig, other: &SourcingCurationConfig) -> Self {
+        Self {
+            filters_query: (base.filters.query != other.filters.query).then(|| other.filters.query.clone()),
+            filters_module_ids: (base.filters.module_ids != other.filters.module_ids).then(|| other.filters.module_ids.clone()),
+            filters_typology_path: (base.filters.typology_path != other.filters.typology_path).then(|| other.filters.typology_path.clone()),
+            filters_min_availability: (base.filters.min_availability != other.filters.min_availability).then_some(other.filters.min_availability),
+            filters_sort: (base.filters.sort != other.filters.sort).then(|| SourcingOptionalSort { value: other.filters.sort.clone() }),
+            contributions_json: (base.contributions_json != other.contributions_json).then(|| other.contributions_json.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.filters_query.is_none() && self.filters_module_ids.is_none() && self.filters_typology_path.is_none() && self.filters_min_availability.is_none() && self.filters_sort.is_none() && self.contributions_json.is_none()
+    }
+}
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
@@ -91,16 +187,10 @@ store::impl_whole_record_config!(SourcingCurationConfig);
 /// variant's `backwards()` returns. Since a config-only dispatch is a plain `Apply`, each tick is its own
 /// distinct, real config edit, and "undo this tick" is exactly
 /// "restore the whole-config snapshot from just before it" — no per-field reverse-patch bookkeeping
-/// needed. `Mutation::Diff` is the WHOLE `SourcingCurationConfig` (not a granular patch type): `diff()`
-/// returns "the full config after this op", and `store::impl_whole_record_config!` supplies the
-/// `MutationDiff<SourcingCurationConfig>` that returns that snapshot verbatim, ignoring `base`.
+/// needed. `Mutation::Diff` is the sparse `SourcingCurationConfigDiff` (hand-written above): `diff()` sets the slots
+/// where the requested config differs from the base.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum SourcingCurationConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: SourcingCurationConfig,
-    },
     #[dsl(key = "filter-query")]
     SetFilterQuery { value: String },
     #[dsl(key = "filter-modules")]
@@ -163,7 +253,7 @@ impl protocol::OpBinary for SourcingCurationConfigMutation {
 //#endregion 🔖️OpCodec
 
 impl Mutation<SourcingCurationConfig> for SourcingCurationConfigMutation {
-    type Diff = SourcingCurationConfig;
+    type Diff = SourcingCurationConfigDiff;
 
     /// 🧷️ Hand-written (not `#[derive(dsl::Mutations)]`: this is a plain whole-config-record
     /// mutation enum, not a `dsl::Mutations`-eligible semantic-document vocabulary — see
@@ -173,7 +263,6 @@ impl Mutation<SourcingCurationConfig> for SourcingCurationConfigMutation {
     /// every entry is a metadata placeholder to satisfy `protocol::Mutation`, matching puzzle's
     /// `🖐️5d` and stdio's `🔊️wav`/`🏗️ifc` precedent for enums in the same situation.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🔍️set-filter-query", semantic_kind: "set-filter-query", display_name: "Set Filter Query", emoji: "🔍️", aggregate_variant: "SetFilterQuery", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧩️set-filter-modules", semantic_kind: "set-filter-modules", display_name: "Set Filter Modules", emoji: "🧩️", aggregate_variant: "SetFilterModules", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🌳️set-filter-typology", semantic_kind: "set-filter-typology", display_name: "Set Filter Typology", emoji: "🌳️", aggregate_variant: "SetFilterTypology", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
@@ -184,41 +273,36 @@ impl Mutation<SourcingCurationConfig> for SourcingCurationConfigMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            SourcingCurationConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
-            SourcingCurationConfigMutation::SetFilterQuery { .. } => &Self::DESCRIPTORS[1],
-            SourcingCurationConfigMutation::SetFilterModules { .. } => &Self::DESCRIPTORS[2],
-            SourcingCurationConfigMutation::SetFilterTypology { .. } => &Self::DESCRIPTORS[3],
-            SourcingCurationConfigMutation::SetFilterMinAvailability { .. } => &Self::DESCRIPTORS[4],
-            SourcingCurationConfigMutation::SetSort { .. } => &Self::DESCRIPTORS[5],
-            SourcingCurationConfigMutation::SetContributions { .. } => &Self::DESCRIPTORS[6],
+            SourcingCurationConfigMutation::SetFilterQuery { .. } => &Self::DESCRIPTORS[0],
+            SourcingCurationConfigMutation::SetFilterModules { .. } => &Self::DESCRIPTORS[1],
+            SourcingCurationConfigMutation::SetFilterTypology { .. } => &Self::DESCRIPTORS[2],
+            SourcingCurationConfigMutation::SetFilterMinAvailability { .. } => &Self::DESCRIPTORS[3],
+            SourcingCurationConfigMutation::SetSort { .. } => &Self::DESCRIPTORS[4],
+            SourcingCurationConfigMutation::SetContributions { .. } => &Self::DESCRIPTORS[5],
         }
     }
 
-    /// 📦️ Whole-config field-setter/snapshot — every variant addresses the single always-present
-    /// `SourcingCurationConfig` by value, so there is no target to be missing; message-free outcome
-    /// per the contract's root-scoped shrink-only allowlist.
-    fn diff(&self, base: &SourcingCurationConfig) -> protocol::MutationOutcome<SourcingCurationConfig> {
-        let mut next = base.clone();
-        match self {
-            SourcingCurationConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
-            SourcingCurationConfigMutation::SetFilterQuery { value } => next.filters.query = value.clone(),
-            SourcingCurationConfigMutation::SetFilterModules { module_ids } => next.filters.module_ids = module_ids.clone(),
-            SourcingCurationConfigMutation::SetFilterTypology { path } => next.filters.typology_path = path.clone(),
-            SourcingCurationConfigMutation::SetFilterMinAvailability { value } => next.filters.min_availability = *value,
-            SourcingCurationConfigMutation::SetSort { sort } => next.filters.sort = sort.clone(),
-            SourcingCurationConfigMutation::SetContributions { json } => {
-                next.contributions_json = json.clone();
-            }
-        }
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, base: &SourcingCurationConfig) -> protocol::MutationOutcome<SourcingCurationConfigDiff> {
+        protocol::MutationOutcome::new(match self {
+            Self::SetFilterQuery { value } => SourcingCurationConfigDiff { filters_query: (base.filters.query != *value).then(|| value.clone()), ..Default::default() },
+            Self::SetFilterModules { module_ids } => SourcingCurationConfigDiff { filters_module_ids: (base.filters.module_ids != *module_ids).then(|| module_ids.clone()), ..Default::default() },
+            Self::SetFilterTypology { path } => SourcingCurationConfigDiff { filters_typology_path: (base.filters.typology_path != *path).then(|| path.clone()), ..Default::default() },
+            Self::SetFilterMinAvailability { value } => SourcingCurationConfigDiff { filters_min_availability: (base.filters.min_availability != *value).then_some(*value), ..Default::default() },
+            Self::SetSort { sort } => SourcingCurationConfigDiff { filters_sort: (base.filters.sort != *sort).then(|| SourcingOptionalSort { value: sort.clone() }), ..Default::default() },
+            Self::SetContributions { json } => SourcingCurationConfigDiff { contributions_json: (base.contributions_json != *json).then(|| json.clone()), ..Default::default() },
+        })
     }
 
     fn inverse(&self, base: &SourcingCurationConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![SourcingCurationConfigMutation::Snapshot { config: base.clone() }]
-    
-    })())
-}
+        Ok(vec![match self {
+            Self::SetFilterQuery { .. } => Self::SetFilterQuery { value: base.filters.query.clone() },
+            Self::SetFilterModules { .. } => Self::SetFilterModules { module_ids: base.filters.module_ids.clone() },
+            Self::SetFilterTypology { .. } => Self::SetFilterTypology { path: base.filters.typology_path.clone() },
+            Self::SetFilterMinAvailability { .. } => Self::SetFilterMinAvailability { value: base.filters.min_availability },
+            Self::SetSort { .. } => Self::SetSort { sort: base.filters.sort.clone() },
+            Self::SetContributions { .. } => Self::SetContributions { json: base.contributions_json.clone() },
+        }])
+    }
 }
 //#endregion 🔖️ConfigOperations
 

@@ -61,9 +61,9 @@
       "subsetDirectoryName": "🔒️strict",
       "vectors": [],
       "kinds": [
-        "set-snapshot",
         "set-main-namespace",
         "set-relationships-namespace",
+        "set-relationship-base",
         "set-conformance-attribute",
         "remove-conformance-attribute",
         "insert-vml-part",
@@ -214,16 +214,16 @@
           ]
         },
         {
-          "id": "set-snapshot",
+          "id": "set-relationship-base",
           "capability": "xlsx-ecma-376-strict-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
             "applied"
           ],
           "productionDispatch": {
-            "operation": "set-snapshot",
+            "operation": "set-relationship-base",
             "bridgeVersion": 1,
-            "variant": "SetSnapshot"
+            "variant": "SetRelationshipBase"
           },
           "oracleRequirements": [
             {
@@ -258,56 +258,6 @@
     }
   ],
   "testEvidence": [
-    {
-      "id": "set-snapshot-applied",
-      "class": "third-party-generated",
-      "target": {
-        "artifact": "s.stdio.xlsx",
-        "standard": "ecma-376",
-        "subset": "strict"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "unitless",
-        "angle": "degree"
-      },
-      "files": [
-        {
-          "role": "expected-before-xlsx",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.xlsx",
-          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          "sha256": "sha256:e9d36125478496457a721f2b6e072b53c2ec134ca8cb29eb33b073e578d0339e",
-          "bytes": 4823
-        },
-        {
-          "role": "expected-after-xlsx",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.xlsx",
-          "mediaType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          "sha256": "sha256:cd07b253ec928b6568d0cda5cad15e8e71f106bf2d90fba5552df63fea62da8c",
-          "bytes": 5256
-        }
-      ],
-      "provenance": {
-        "source": "generated",
-        "license": "MIT (openpyxl)",
-        "attribution": "Written by openpyxl 3.1.5's own Workbook.save()",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "exact-bytes-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": "Whole-workbook snapshot replace: an unrelated valid workbook (different cell content, an extra sheet) substituted wholesale.",
-      "generator": {
-        "oracle": "openpyxl-xlsx-ecma-376-strict-mutate-reader",
-        "packageVersion": "3.1.5",
-        "engineFamily": "openpyxl",
-        "engineVersion": "3.1.5",
-        "command": "uv run python3 🔨️f2-gen-xlsx-structural-fixtures.py (openpyxl Workbook object model + .save())",
-        "platform": "darwin-arm64"
-      }
-    },
     {
       "id": "set-conformance-attribute-applied",
       "class": "handcrafted",

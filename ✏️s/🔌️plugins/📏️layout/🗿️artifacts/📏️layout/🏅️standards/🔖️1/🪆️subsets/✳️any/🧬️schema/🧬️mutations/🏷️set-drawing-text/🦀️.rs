@@ -1,6 +1,7 @@
 //! 🏷️ `set-drawing-text` — replaces one text label on the imported plan.
 
 use crate::mutations::LayoutMutation;
+use crate::standards::v1::subsets::any::schema::diff::LayoutDrawingTextRow;
 use crate::{LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -67,44 +68,20 @@ fn collect_text(node: &DrawNode, out: &mut Vec<String>) {
     }
 }
 
-fn replace_indexed(node: &mut DrawNode, index: &mut u32, text: &str) -> Option<String> {
-    match node {
-        DrawNode::Text { value, .. } => {
-            if *index == 0 {
-                return Some(std::mem::replace(value, text.to_string()));
-            }
-            *index -= 1;
-            None
-        }
-        DrawNode::Group { children, .. } => {
-            for child in children.iter_mut() {
-                if let Some(previous) = replace_indexed(child, index, text) {
-                    return Some(previous);
-                }
-            }
-            None
-        }
-        DrawNode::Path { .. } | DrawNode::Image { .. } => None,
-    }
-}
-
 pub fn diff_set_drawing_text(payload: &SetDrawingText, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     if payload.text.chars().count() > 256 {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Drawing text is at most 256 characters.", std::iter::empty::<String>());
     }
-    let Some(child) = base.background_drawing.as_ref() else {
+    if base.background_drawing.is_none() {
         return protocol::MutationOutcome::error("mutation.target-missing", "The document has no imported plan.", std::iter::empty::<String>());
-    };
-    let mut content = child.content.clone();
-    let mut cursor = payload.index;
-    let Some(previous) = content.layers.iter_mut().find_map(|layer| replace_indexed(&mut layer.root, &mut cursor, &payload.text)) else {
+    }
+    let Some(previous) = drawing_labels(base).into_iter().nth(payload.index as usize) else {
         return protocol::MutationOutcome::error("mutation.target-missing", "The imported plan has no text at that index.", std::iter::empty::<String>());
     };
     if previous == payload.text {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "The drawing text is already that value.");
     }
-    let minted = crate::background_drawing_child_handle("edit", &content);
-    protocol::MutationOutcome::new(LayoutDiff { background_drawing: Some(Some(minted)), ..Default::default() })
+    protocol::MutationOutcome::new(LayoutDiff { drawing_texts: vec![LayoutDrawingTextRow { index: payload.index, text: payload.text.clone() }], ..Default::default() })
 }
 
 pub fn inverse_set_drawing_text(payload: &SetDrawingText, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {

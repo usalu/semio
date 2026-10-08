@@ -4,14 +4,14 @@
 //! follow, so the document never keeps a reference to a leaf that is gone. The accepted branch drops
 //! the durable leaf the handle owned together with the `assets` entry, which is what makes
 //! `create-asset` its exact inverse.
-use crate::diff::RemodelingDiff;
+use crate::diff::{RemodelingContentDelta, RemodelingContentRow, RemodelingDiff, RemodelingRow, RemodelingRows};
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::DeleteAsset, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
-    if !base.assets.contains_key(&payload.key) {
+    let Some(handle) = base.assets.get(&payload.key) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Asset \"{}\" does not exist.", payload.key), [payload.key.clone()]);
-    }
+    };
     let mut referencing: Vec<String> = base.streams.iter().filter(|stream| stream.frames.iter().any(|frame| frame.asset_id == payload.key)).map(|stream| stream.id.clone()).collect();
     if base.results.mesh.texture_asset_id.as_deref() == Some(payload.key.as_str()) {
         referencing.push("results.mesh.textureAssetId".to_string());
@@ -26,11 +26,11 @@ pub fn diff(payload: &super::DeleteAsset, base: &RemodelingSnapshot) -> protocol
     if !referencing.is_empty() {
         return protocol::MutationOutcome::error("mutation.target-referenced", format!("Asset \"{}\" is still referenced by {} place(s) in the document.", payload.key, referencing.len()), referencing);
     }
-    let mut assets = base.assets.clone();
-    let mut durable_artifacts = base.durable_artifacts.clone();
-    if let Some(handle) = assets.remove(&payload.key) {
-        durable_artifacts.remove(&handle.child_id);
-    }
-    protocol::MutationOutcome::new(RemodelingDiff { assets: Some(assets), durable_artifacts: Some(durable_artifacts), ..Default::default() })
+    let content = base.durable_artifacts.contains_key(&handle.child_id).then(|| vec![RemodelingContentRow::Truncate { id: handle.child_id.clone(), from: 0 }]);
+    protocol::MutationOutcome::new(RemodelingDiff {
+        assets: Some(RemodelingRows { rows: vec![RemodelingRow::Remove { key: payload.key.clone() }] }),
+        durable_artifacts: content.map(|rows| RemodelingContentDelta { rows }),
+        ..Default::default()
+    })
 }
 //#endregion 🔖️Diff

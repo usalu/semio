@@ -7,7 +7,7 @@ use super::super::*;
 pub fn inverse(payload: &super::RemoveImage, base: &SemioDocumentSnapshot) -> Result<Vec<SemioDocumentMutation>, semio_framework_value::ValueError> {
     let super::RemoveImage { id } = payload;
     Ok(match image_at(base, id) {
-        Some(image) => vec![SemioDocumentMutation::InsertImage(insert_image::InsertImage { image: image.clone() })],
+        Some(image) => vec![SemioDocumentMutation::InsertImage(insert_image::InsertImage { image: image.clone(), at: base.images.iter().position(|i| i.id == *id) })],
         None => Vec::new(),
     })
 }

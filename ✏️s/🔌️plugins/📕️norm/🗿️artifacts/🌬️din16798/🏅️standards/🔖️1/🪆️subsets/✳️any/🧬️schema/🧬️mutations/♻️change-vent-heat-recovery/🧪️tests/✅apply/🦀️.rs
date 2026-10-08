@@ -23,3 +23,9 @@ async fn applies_change_vent_heat_recovery() {
 fn sample_mutation(base: &Din16798Snapshot) -> Din16798Mutation {
     Din16798Mutation::ChangeVentHeatRecovery(change_vent_heat_recovery::ChangeVentHeatRecovery { vent_id: base.vent_systems[0].id.clone(), new_heat_recovery_eta: (base.vent_systems[0].heat_recovery_eta - 0.05_f64).max(0.1) })
 }
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    let base = Din16798Snapshot::default();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&sample_mutation(&base), &base).await;
+}

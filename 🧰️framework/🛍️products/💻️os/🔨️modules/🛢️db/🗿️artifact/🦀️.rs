@@ -33,8 +33,8 @@
 //! real, documented limitation, not a workaround: a legitimate application-level `null` value is
 //! indistinguishable from a delete under this convention. `envelope_from_operation` (new this
 //! revision) is the generic ingestion boundary that actually exercises `protocol::Mutation`/
-//! `MutationDiff` (`diff`/`apply`/`mutation_id`/`dependencies`/`author_id`/`timestamp`) to build
-//! an envelope in this same convention from a typed operation — the one place in the `db` family
+//! `MutationDiff` (`diff`/`mutation_id`/`dependencies`/`author_id`/`timestamp`, the diff applied once through
+//! `protocol::apply_diff`) to build an envelope in this same convention from a typed operation, persisting only the changed fields — the one place in the `db` family
 //! below `db_artifact` allowed to interpret operation semantics at all (per the contract's hard
 //! dependency rule).
 
@@ -212,11 +212,12 @@ fn entries_touched(entries: &[(String, Option<DslValue>)]) -> db_state::TouchedS
 //#region 🔖️Bridge
 /// 🌉️ The generic ingestion boundary: builds an `MutationEnvelope` (in this crate's own
 /// path-value diff convention) from a typed `protocol::Mutation<P>` against a serializable
-/// projection `P`, writing the whole post-state at `path`. Genuinely exercises `Mutation`/
-/// `MutationDiff`'s trait methods (`diff`/`apply`/`mutation_id`/`dependencies`/`author_id`/
-/// `timestamp`) — see the module doc's design-choice note on why this crate is allowed to. A
-/// caller wanting per-sub-path granularity builds the JSON object directly via
-/// `CommandBatch::new`/`entries_to_value` instead of this whole-projection convenience.
+/// projection `P`. The operation's diff is applied once through [`protocol::apply_diff`]; the envelope then persists only what
+/// that diff changed — one `path/field` entry per top-level field of `P` whose value differs (a removed field is a tombstone),
+/// the inverse carrying the base value of exactly those fields — never the whole post- or base projection. A projection that is
+/// not a record is one entity: its single entry sits at `path`. Genuinely exercises `Mutation`/`MutationDiff`'s trait methods
+/// (`diff`/`mutation_id`/`dependencies`/`author_id`/`timestamp`) — see the module doc's design-choice note on why this crate is
+/// allowed to.
 pub async fn envelope_from_operation<P, Op>(
     document: protocol::ArtifactId,
     path: &str,
@@ -232,8 +233,7 @@ where
 {
     let diff = op.diff(base);
     let post = protocol::apply_diff(diff.diff(), base).map_err(|error| DbError::InvalidArgument(error.to_string()))?;
-    let forward = semio_framework_value::DslValue::Object(vec![(path.to_string(), semio_framework_value::ToValue::to_value(&post))]);
-    let backward = semio_framework_value::DslValue::Object(vec![(path.to_string(), semio_framework_value::ToValue::to_value(base))]);
+    let (forward, backward) = changed_entries(path, &semio_framework_value::ToValue::to_value(base), &semio_framework_value::ToValue::to_value(&post));
     let schema = protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string());
     Ok(protocol::MutationEnvelope {
         mutation_id: op.mutation_id().unwrap_or(default_mutation_id),
@@ -247,6 +247,30 @@ where
         timestamp: op.timestamp().unwrap_or(default_timestamp),
         transaction: None, verb: None, line: None,
     })
+}
+
+/// 🔺️ The pathmap entries a base→post change writes, as `(forward, inverse)`: per differing top-level field of two record
+/// values `path/field` (absent after = `Null` tombstone, absent before = `Null` in the inverse), else the one entity at `path`.
+fn changed_entries(path: &str, base: &DslValue, post: &DslValue) -> (DslValue, DslValue) {
+    let (DslValue::Object(before), DslValue::Object(after)) = (base, post) else {
+        return (DslValue::Object(vec![(path.to_string(), post.clone())]), DslValue::Object(vec![(path.to_string(), base.clone())]));
+    };
+    let mut forward = Vec::new();
+    let mut backward = Vec::new();
+    for (key, value) in after {
+        let prior = before.iter().find(|(name, _)| name == key).map(|(_, prior)| prior);
+        if prior != Some(value) {
+            forward.push((format!("{path}/{key}"), value.clone()));
+            backward.push((format!("{path}/{key}"), prior.cloned().unwrap_or(DslValue::Null)));
+        }
+    }
+    for (key, prior) in before {
+        if !after.iter().any(|(name, _)| name == key) {
+            forward.push((format!("{path}/{key}"), DslValue::Null));
+            backward.push((format!("{path}/{key}"), prior.clone()));
+        }
+    }
+    (DslValue::Object(forward), DslValue::Object(backward))
 }
 //#endregion 🔖️Bridge
 

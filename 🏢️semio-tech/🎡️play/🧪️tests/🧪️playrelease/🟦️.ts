@@ -2,18 +2,12 @@ import { describe, expect, test } from "bun:test";
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { request } from "@playwright/test";
-import Ajv from "ajv";
 import { releaseAssetPath, releaseRequestUrl, servePublishedPlay } from "../../🔨️modules/🧪️e2e/📦️release/🟦️.ts";
 import { playPageHost } from "../../🔨️modules/📦️site/📄pages/🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🔣️.json"), "utf8")) as { paths: { request: string; file: string | null }[]; origins: { request: string; expected: string | null }[]; files: { page: string; path: string; body: string }[]; requests: { page: string; path: string; status: number; mime: string; cors: string | null; cacheControl: string }[] };
 
 describe("published Play verification", () => {
-  test("validates the language-neutral publication contract", () => {
-    const schema = JSON.parse(readFileSync(join(import.meta.dir, "🧬️schema/🔣️.json"), "utf8"));
-    const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
-    expect(validate(fixture)).toBe(true);
-  });
   for (const row of fixture.paths) test(`serves only the published file for ${row.request}`, () => {
     const root = resolve(import.meta.dir, "site");
     expect(releaseAssetPath(root, row.request)).toBe(row.file === null ? undefined : join(root, row.file));

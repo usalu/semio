@@ -56,14 +56,16 @@ fn scene_view(fixture: &IntegerCarrierFixture) -> ViewModel {
 #[semio_framework_async_macros::async_test]
 async fn both_doors_carry_the_view_context_as_the_same_exact_pack_bytes() {
     let fixture = fixture();
-    let bytes = dsl::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&scene_view(&fixture)));
+    let mut accepted = |_| true;
+    let bytes = pack::record::intrinsic::encode_body(&semio_framework_value::ToValue::to_value(&scene_view(&fixture)), &pack::record::EncodeOptions::default(), &mut semio_framework_value::NativeEncodeControl::new(16 * 1024 * 1024, &mut accepted)).expect("the fixture context encodes");
     assert_eq!(hex(&bytes), fixture.pack_hex, "the wgpu door's `view_state_pack_base64` and the React door's `encodePackValue` must agree byte for byte");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn the_guest_decodes_every_integer_field_exactly() {
     let fixture = fixture();
-    let value = dsl::pack_rt::decode_wire_value(&unhex(&fixture.pack_hex)).expect("the fixture pack decodes");
+    let mut accepted = |_| true;
+    let value = pack::record::intrinsic::decode_body(&unhex(&fixture.pack_hex), &pack::record::DecodeOptions::default(), &mut semio_framework_value::NativeDecodeControl::new(16 * 1024 * 1024, &mut accepted)).expect("the fixture pack decodes");
     for path in &fixture.integer_paths {
         let mut cursor = &value;
         for key in path {

@@ -15,11 +15,17 @@ use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
 pub struct AddRepresentationTag {
     pub id: String,
     pub tag: String,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 pub fn add_representation_tag(id: String, tag: String) -> Block5dMutation {
-    Block5dMutation::AddRepresentationTag(AddRepresentationTag { id, tag })
+    Block5dMutation::AddRepresentationTag(AddRepresentationTag { id, tag, index: None })
+}
+
+/// 📍️ Builder — like [`add_representation_tag`] but inserts the row at `index`.
+pub fn add_representation_tag_at(id: String, tag: String, index: u32) -> Block5dMutation {
+    Block5dMutation::AddRepresentationTag(AddRepresentationTag { id, tag, index: Some(index) })
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for AddRepresentationTag {

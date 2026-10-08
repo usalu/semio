@@ -42,7 +42,7 @@ from __future__ import annotations
 import json
 import struct
 
-from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
+from semio_repo_test import Adapter, Context, Outcome, digest
 
 # endregion 🔖️Imports
 
@@ -679,9 +679,6 @@ def pack_bytes(document: dict) -> bytes:
 
 # region 🔖️Mutations
 TAG_TO_KIND = {
-    "noMutation": "no-mutation",
-    "setSnapshot": "set-snapshot",
-    "patchSnapshot": "patch-snapshot",
     "insertSlide": "insert-slide",
     "removeSlide": "remove-slide",
     "setSlideLayout": "set-slide-layout",
@@ -744,14 +741,6 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     """
     kind = kind_of(mutation)
     result = clone(document)
-    if kind == "patch-snapshot":
-        return patched_snapshot(document, mutation["patch"])
-    if kind == "no-mutation":
-        return result
-    if kind == "set-snapshot":
-        replacement = clone(mutation["snapshot"])
-        replacement["schema"] = document["schema"]
-        return replacement
     if kind == "insert-slide":
         index = int(mutation["index"])
         if index < 0 or index > len(result["slides"]):
@@ -795,7 +784,7 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
         master = clone(mutation["master"])
         existing = named(result["masters"], master["id"])
         if existing is None:
-            result["masters"].append(master)
+            result["masters"].insert(min(int(mutation["at"]), len(result["masters"])) if "at" in mutation else len(result["masters"]), master)
         else:
             result["masters"][result["masters"].index(existing)] = master
         return result
@@ -808,7 +797,7 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
         layout = clone(mutation["layout"])
         existing = named(result["layouts"], layout["id"])
         if existing is None:
-            result["layouts"].append(layout)
+            result["layouts"].insert(min(int(mutation["at"]), len(result["layouts"])) if "at" in mutation else len(result["layouts"]), layout)
         else:
             result["layouts"][result["layouts"].index(existing)] = layout
         return result
@@ -827,12 +816,6 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
 def inverse_mutation(document: dict, mutation: dict) -> dict:
     """↩️ The verb's own inverse against the deck it is about to be applied to."""
     kind = kind_of(mutation)
-    if kind == "no-mutation":
-        return {"mutation": "noMutation"}
-    if kind == "patch-snapshot":
-        return {"mutation": "setSnapshot", "snapshot": clone(document)}
-    if kind == "set-snapshot":
-        return {"mutation": "setSnapshot", "snapshot": clone(document)}
     if kind == "insert-slide":
         return {"mutation": "removeSlide", "index": int(mutation["index"])}
     if kind == "remove-slide":
@@ -870,7 +853,7 @@ def inverse_mutation(document: dict, mutation: dict) -> dict:
         previous = named(document["masters"], mutation["id"])
         if previous is None:
             raise AssertionError("remove-master addresses %r, which the deck does not carry" % mutation["id"])
-        return {"mutation": "insertMaster", "master": clone(previous)}
+        return {"mutation": "insertMaster", "master": clone(previous), "at": document["masters"].index(previous)}
     if kind == "insert-layout":
         previous = named(document["layouts"], mutation["layout"]["id"])
         if previous is None:
@@ -880,7 +863,7 @@ def inverse_mutation(document: dict, mutation: dict) -> dict:
         previous = named(document["layouts"], mutation["id"])
         if previous is None:
             raise AssertionError("remove-layout addresses %r, which the deck does not carry" % mutation["id"])
-        return {"mutation": "insertLayout", "layout": clone(previous)}
+        return {"mutation": "insertLayout", "layout": clone(previous), "at": document["layouts"].index(previous)}
     layout = named(document["layouts"], mutation["id"])
     if layout is None:
         raise AssertionError("set-layout-master addresses %r, which the deck does not carry" % mutation["id"])
@@ -1001,7 +984,7 @@ def adapter() -> Adapter:
     """🧭️ Registration entry point the Python host calls. Handlers are registered under the Scenario
     Outline base ids, which the host resolves for every Examples row, and plain scenarios under their
     own ids."""
-    return Adapter("python").oracle("mutate", mutate).oracle("no-mutation-baseline-mutate", mutate).oracle("inverse", inverse).oracle("no-mutation-baseline-inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
+    return Adapter("python").oracle("mutate", mutate).oracle("inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

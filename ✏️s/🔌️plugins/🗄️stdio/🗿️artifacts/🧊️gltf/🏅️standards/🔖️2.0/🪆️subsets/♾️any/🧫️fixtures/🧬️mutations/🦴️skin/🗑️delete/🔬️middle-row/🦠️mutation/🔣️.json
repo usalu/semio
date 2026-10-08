@@ -1,0 +1,9 @@
+{
+  "mutation": "deleteSkin",
+  "payload": {
+    "phase": "apply",
+    "value": {
+      "index": 1
+    }
+  }
+}

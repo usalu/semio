@@ -1,7 +1,7 @@
 //! 🔺️ Diff fragment yielded by `EditBlockInkStroke`. Error `target-missing` when the block is
 //! absent or not an ink block, Warning `no-op` when the stroke is unchanged.
 use super::EditBlockInkStroke;
-use crate::schema::diff::note_block_patch_diff;
+use crate::schema::diff::NoteBlockPatch;
 use crate::NoteDiff;
 use crate::NoteSnapshot;
 
@@ -16,14 +16,6 @@ pub fn diff(payload: &EditBlockInkStroke, base: &NoteSnapshot) -> protocol::Muta
     if points == &payload.new_points && *x == payload.new_x && *y == payload.new_y && *width == payload.new_width && *height == payload.new_height {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Block \"{}\" ink stroke is unchanged.", payload.id));
     }
-    let mut updated = block.clone();
-    if let crate::NoteBlockNode::Ink { points, x, y, width, height, .. } = &mut updated {
-        *points = payload.new_points.clone();
-        *x = payload.new_x;
-        *y = payload.new_y;
-        *width = payload.new_width;
-        *height = payload.new_height;
-    }
-    protocol::MutationOutcome::new(note_block_patch_diff(&payload.id, &updated))
+    protocol::MutationOutcome::new(NoteDiff::block_patches([(payload.id.clone(), NoteBlockPatch { points: Some(payload.new_points.clone()), x: Some(payload.new_x), y: Some(payload.new_y), width: Some(payload.new_width), height: Some(payload.new_height), ..Default::default() })]))
 }
 //#endregion 🔖️Diff

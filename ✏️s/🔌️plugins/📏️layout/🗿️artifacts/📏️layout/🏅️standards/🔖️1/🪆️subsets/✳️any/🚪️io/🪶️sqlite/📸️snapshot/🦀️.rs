@@ -68,7 +68,7 @@ impl<'a,'c,'p> Reader<'a,'c,'p>{
 }
 struct Owned(Option<LayoutSnapshot>);
 impl Owned{fn new(value:LayoutSnapshot)->Self{Self(Some(value))}fn value(&mut self)->&mut LayoutSnapshot{self.0.as_mut().unwrap()}fn take(mut self)->LayoutSnapshot{self.0.take().unwrap()}}
-impl Drop for Owned{fn drop(&mut self){if let Some(mut value)=self.0.take(){if let Some(child)=value.background_drawing.take(){<SemioDrawingSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(child.content);}if let Some(dictionary)=value.data_fields.take(){<FormDictionary as semio_framework_value::FromValue>::retire_decoded(dictionary);}drop(value);}}}
+impl Drop for Owned{fn drop(&mut self){if let Some(value)=self.0.take(){retire(value);}}}
 fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<LayoutSnapshot,ValueError>{
  let mut r=Reader::new(database,control)?;let doc=r.take("layout_document",1)?;let grid=r.take("layout_grid",1)?;let mut owner=Owned::new(crate::standards::v1::subsets::any::schema::snapshot::empty_layout_snapshot());let s=owner.value();s.schema=r.text(doc,1)?;s.name=r.text(doc,2)?;s.print_target=r.optional_text(doc,3)?;if r.rows.contains("layout_form_dictionary",1)?{s.data_fields=Some(dictionary::reconstruct(&mut r)?);}s.grid=GridSettings{baseline_grid:r.real(grid,1)?,baseline_offset:r.real(grid,2)?,snap_to_baseline:Reader::boolean(grid,3)?};
  let source=r.list("layout_paragraph_style",1,1,2)?;s.paragraph_styles=transfer::reserve(source.len(),r.control)?;for row in source{s.paragraph_styles.push(ParagraphStyle{id:r.text(row,3)?,name:r.text(row,4)?,font_family:r.text(row,5)?,font_size:r.real(row,6)?,font_weight:Reader::unsigned(row,7)?,leading:r.real(row,8)?,tracking:r.real(row,9)?,alignment:r.text(row,10)?});}
@@ -87,7 +87,7 @@ impl store::ArtifactSqliteSnapshot for LayoutSnapshot{
  const SQLITE_SCHEMA:&'static str=SCHEMA;
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,control)}
  fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{reconstruct(database,control)}
- fn retire_sqlite_snapshot(mut self){if let Some(child)=self.background_drawing.take(){crate::standards::v1::subsets::any::schema::snapshot::drawing_child::retire(child);}if let Some(dictionary)=self.data_fields.take(){<FormDictionary as semio_framework_value::FromValue>::retire_decoded(dictionary);}drop(self);}
+ fn retire_sqlite_snapshot(self){crate::standards::v1::subsets::any::schema::snapshot::retire(self);}
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   control.check_rows(2)?;
   store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|{let owner=semio_framework_value::DecodedValue::new(Self::__dsl_from_record_controlled(record,native)?,retire);if let Some(dictionary)=&owner.get().data_fields{dictionary.validate_controlled(native)?;}Ok(owner.take())},control)
@@ -104,7 +104,7 @@ impl store::ArtifactSqliteSnapshot for LayoutSnapshot{
  }
 }
 
-pub fn retire(value:LayoutSnapshot){<LayoutSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(value);}
+use crate::standards::v1::subsets::any::schema::snapshot::retire;
 
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]

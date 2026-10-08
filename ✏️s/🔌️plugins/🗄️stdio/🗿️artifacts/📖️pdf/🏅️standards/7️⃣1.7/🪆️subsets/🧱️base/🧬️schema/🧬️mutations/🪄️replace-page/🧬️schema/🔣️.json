@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/mutation/replace-page/schema.json",
+  "title": "ReplacePage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index",
+    "page"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "replacePage",
+      "description": "Aggregate discriminator spliced in by PdfMutation; absent when the payload stands alone."
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "description": {
+          "en": "Index of the page that is replaced, counted from 0.",
+          "de": "Index der Seite, die ersetzt wird, ab 0 gezählt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "page": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/PdfPage",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "description": {
+          "en": "Size and content of the page that takes its place.",
+          "de": "Größe und Inhalt der Seite, die an ihre Stelle tritt."
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -15,7 +15,17 @@
     "spreads": [],
     "pages": [],
     "printTarget": null,
-    "dataFields": {"entries":[{"questionId":"project","value":{"kind":"text","value":"sprachneutral"}}]},
+    "dataFields": {
+      "entries": [
+        {
+          "questionId": "project",
+          "value": {
+            "kind": "text",
+            "value": "sprachneutral"
+          }
+        }
+      ]
+    },
     "backgroundDrawing": {
       "handle": {
         "childId": "background-drawing-canonical-fixture",
@@ -82,7 +92,6 @@
     }
   },
   "diff": {
-    "artifact": null,
     "schema": null,
     "name": null,
     "grid": null,
@@ -94,7 +103,65 @@
     "spreads": null,
     "pages": null,
     "printTarget": null,
-    "dataFields": null,
+    "dataFields": {
+      "presence": "replaced",
+      "entries": {
+        "added": [
+          {
+            "questionId": "unsigned",
+            "value": {
+              "kind": "unsigned",
+              "high": 4294967295,
+              "low": 4294967295
+            }
+          },
+          {
+            "questionId": "bytes",
+            "value": {
+              "kind": "bytes",
+              "value": [
+                0,
+                128,
+                255
+              ]
+            }
+          }
+        ],
+        "removed": [
+          "project"
+        ],
+        "patched": [
+          {
+            "id": "signed",
+            "item": {
+              "questionId": "signed",
+              "value": {
+                "kind": "signed",
+                "high": 4294967295,
+                "low": 4294967295
+              }
+            }
+          },
+          {
+            "id": "float",
+            "item": {
+              "questionId": "float",
+              "value": {
+                "kind": "float",
+                "high": 2147483648,
+                "low": 0
+              }
+            }
+          }
+        ],
+        "reordered": [
+          "unsigned",
+          "bytes",
+          "signed",
+          "float"
+        ]
+      }
+    },
     "backgroundDrawing": {
       "handle": {
         "childId": "background-drawing-canonical-fixture",
@@ -117,6 +184,7 @@
         "layers": []
       }
     },
-    "referencedModel": null
+    "referencedModel": null,
+    "drawingTexts": []
   }
 }

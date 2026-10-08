@@ -149,7 +149,7 @@ async fn law_dsl_pack_bidirectional_holds_for_a_hand_built_sample() {
 
 //#region 🔖️Corrupt
 // 🚫️async: E1 pure adapter consumed by `fuzz_truncation`/`fuzz_bit_flips`'s sync `impl Fn`
-// decoder slot — bridges via `os_io::resolve_ready` (the same sanctioned pattern already used
+// decoder slot — bridges via `io::resolve_ready` (the same sanctioned pattern already used
 // by SPR's `fuzz_truncation_never_panics_history_reader_open` law), see R9/E5.
 fn decode_closure(spec: RecordSpec) -> impl Fn(&[u8]) -> Result<(), String> {
     move |bytes: &[u8]| crate::os_pack::decode_document(bytes, &spec, &crate::os_pack::DecodeOptions::default()).map(|_| ()).map_err(|e| e.to_string())

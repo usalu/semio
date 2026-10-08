@@ -8,12 +8,12 @@ async fn sqlite_snapshot_layout_actual_declaration_publishes_exact_native_codec(
     assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<LayoutSnapshot>()));
     let snapshot=crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};
-    let payload=store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot));
+    let payload=store::io::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot));
     let database=(provider.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut store::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,store::sqlite_snapshot::SqliteDatabaseLimits::default())).unwrap().value;
     assert!(database.table("layout_document").is_ok());
 }
 #[test]
-fn sqlite_snapshot_layout_declared_owner_capability(){let snapshot=crate::standards::v1::subsets::any::io::text::snapshot::default_document();let provider=<LayoutSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().expect("Layout must publish its complete typed semantic SQLite capability");let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};let payload=store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot));let result=(provider.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut store::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,store::sqlite_snapshot::SqliteDatabaseLimits::default())).unwrap();assert!(result.value.table("layout_document").is_ok());}
+fn sqlite_snapshot_layout_declared_owner_capability(){let snapshot=crate::standards::v1::subsets::any::io::text::snapshot::default_document();let provider=<LayoutSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().expect("Layout must publish its complete typed semantic SQLite capability");let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.layout.layout".into(),standard:"1".into(),subset:"*".into()};let payload=store::io::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot));let result=(provider.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut store::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,store::sqlite_snapshot::SqliteDatabaseLimits::default())).unwrap();assert!(result.value.table("layout_document").is_ok());}
 
 fn component_fixture()->crate::LayoutDrawingChild {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas,DrawLayer,DrawNode,SemioPoint2};
@@ -101,13 +101,13 @@ fn sqlite_snapshot_layout_complete_owned_fields_words_and_literals_cross_both_na
     for(index,bits)in fixture["float64Bits"].as_array().unwrap().iter().enumerate(){
         let word=u64::from_str_radix(bits.as_str().unwrap(),16).unwrap();let color=u32::from_str_radix(fixture["float32Bits"][index].as_str().unwrap(),16).unwrap();let expected=complete_fixture(f64::from_bits(word),f32::from_bits(color));
         for encoding in [store::sqlite_snapshot::SnapshotEncoding::Binary,store::sqlite_snapshot::SnapshotEncoding::Text]{
-            let payload=match encoding{store::sqlite_snapshot::SnapshotEncoding::Binary=>store::os_io::IoPayload::Binary(expected.encode_pack()),store::sqlite_snapshot::SnapshotEncoding::Text=>store::os_io::IoPayload::Text(expected.print_dsl())};
+            let payload=match encoding{store::sqlite_snapshot::SnapshotEncoding::Binary=>store::io::IoPayload::Binary(expected.encode_pack()),store::sqlite_snapshot::SnapshotEncoding::Text=>store::io::IoPayload::Text(expected.print_dsl())};
             let mut callback=|_|true;let mut control=store::sqlite_snapshot::SqliteSnapshotControl::new(&mut callback,store::sqlite_snapshot::SqliteDatabaseLimits::default());
             let database=(codec.export)(LAYOUT_DOCUMENT_SCHEMA,&dialect,&payload,&mut control).unwrap().value;
             assert_eq!(database.table("layout_frame").unwrap().rows.len(),6);assert_eq!(database.table("layout_image_link").unwrap().rows[0].text(12).unwrap(),fixture["imageArtifactKind"].as_str().unwrap());
             assert_eq!(database.table("layout_scalar64").unwrap().rows[0].integer(2).unwrap() as u64,word);
             let result=(codec.import)(LAYOUT_DOCUMENT_SCHEMA,&dialect,database,encoding,&mut control).unwrap().value;
-            let restored=match result{store::os_io::IoPayload::Binary(bytes)=>LayoutSnapshot::decode_pack(&bytes).unwrap(),store::os_io::IoPayload::Text(text)=>LayoutSnapshot::parse_dsl(&text).unwrap()};
+            let restored=match result{store::io::IoPayload::Binary(bytes)=>LayoutSnapshot::decode_pack(&bytes).unwrap(),store::io::IoPayload::Text(text)=>LayoutSnapshot::parse_dsl(&text).unwrap()};
             assert_eq!(restored.grid.baseline_grid.to_bits(),word);assert_eq!(restored.character_styles[0].color.unwrap()[0].to_bits(),color);assert_eq!(restored.stories[0].style_runs[0].start,expected.stories[0].style_runs[0].start);assert_eq!(restored.links,expected.links);assert_eq!(restored.background_drawing.as_ref(),expected.background_drawing.as_ref());assert_eq!(restored.referenced_model,expected.referenced_model);assert_eq!(restored.data_fields,expected.data_fields);
             assert!(restored.encode_pack()==expected.encode_pack(),"complete derived owner fields must survive relational reconstruction");
         }

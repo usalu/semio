@@ -8,7 +8,7 @@ use crate::EnergyModelSnapshot;
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
 pub fn inverse(payload: &super::DeleteFenestration, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    let Some(existing) = base.model.fenestrations.iter().find(|item| item.id == payload.id) else {
+    let Some((index, existing)) = base.model.fenestrations.iter().enumerate().find(|(_, item)| item.id == payload.id) else {
         return Vec::new();
     };
     // 🔶️ The store replays an inverse in REVERSE order (`ArtifactStore::replay_mutations`), so a
@@ -37,7 +37,8 @@ pub fn inverse(payload: &super::DeleteFenestration, base: &EnergyModelSnapshot) 
         existing.fin_depth_m,
         existing.fin_offset_m,
         existing.glazing_construction_id,
-    ));
+            Some(index as u32),
+        ));
     steps
 
     })())

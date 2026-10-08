@@ -123,9 +123,9 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// this is a fresh `subset_validator_entry_of::<XmlValidValidator>()` call rather than a reuse of
 /// `subsets::valid::io::derived_composition`'s private `validator_entry()`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pilot_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
-    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
-    ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<standards::v1_0::subsets::valid::io::XmlValidValidator>()]).as_slice()
+fn pilot_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
+    ENTRIES.get_or_init(|| vec![semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_0::subsets::valid::io::XmlValidValidator>()]).as_slice()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -197,7 +197,7 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v1_0::subsets::base::io::io_registry as v1_0;
-    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
+    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();

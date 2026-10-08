@@ -31,8 +31,7 @@ async fn diff_codec_text_binary_roundtrip_law() {
 }
 
 #[test]
-fn archive_comment_only_diff_and_snapshot_replay_preserve_exact_text() {
-    use crate::schema::mutations::{set_snapshot, XlsxMutation};
+fn archive_comment_only_diff_preserves_exact_text() {
     use protocol::{MutationDiff, OpBinary, OpText};
 use semio_framework_value::ToValue;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🎒️zip/📦️opc/🧫️fixtures/💬️archive-comment/🔣️.json")).unwrap();
@@ -43,18 +42,14 @@ use semio_framework_value::ToValue;
     let diff = XlsxDiff::between(&before, &after);
     assert!(!diff.is_empty(), "a comment-only edit is a persisted change");
     for replay in [XlsxDiff::parse_diff(&diff.print_diff()).unwrap(), XlsxDiff::decode_diff(&diff.encode_diff().unwrap()).unwrap()] {
-        assert_eq!(replay.apply(&before).unwrap(), after);
-        assert_eq!(replay.inverse(&before).apply(&after).unwrap(), before);
+        assert_eq!(protocol::apply_diff(&replay, &before).unwrap(), after);
+        assert_eq!(protocol::apply_diff(&replay.inverse(&before), &after).unwrap(), before);
     }
     let mut cleared = after.clone();
     cleared.opc.comment = fixture["cleared"].as_str().unwrap().into();
     let mut combined = diff;
     combined.absorb(XlsxDiff::between(&after, &cleared));
-    assert_eq!(combined.apply(&before).unwrap(), cleared, "an empty comment remains an explicit edit");
-    let mutation = XlsxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: after.clone() });
-    for replay in [XlsxMutation::parse_op(&mutation.print_op()).unwrap(), XlsxMutation::decode_op(&mutation.encode_op().unwrap()).unwrap()] {
-        assert_eq!(replay, mutation, "complete snapshot replay preserves the archive comment");
-    }
+    assert_eq!(protocol::apply_diff(&combined, &before).unwrap(), cleared, "an empty comment remains an explicit edit");
     let oracle: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&after.to_value())).unwrap();
     assert_eq!(oracle["opc"]["comment"], fixture["after"]);
 }

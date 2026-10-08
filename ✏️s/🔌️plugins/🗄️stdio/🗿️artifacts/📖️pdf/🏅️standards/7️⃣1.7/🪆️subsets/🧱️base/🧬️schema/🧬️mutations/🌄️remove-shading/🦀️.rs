@@ -26,7 +26,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveShading {
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.shadings.iter().find(|item| item.id == self.id).map(|item| PdfMutation::SetShading(super::set_shading::SetShading { shading: item.clone() })).into_iter().collect()
+        base.shadings.iter().position(|item| item.id == self.id).map(|index| PdfMutation::SetShading(super::set_shading::SetShading { shading: base.shadings[index].clone(), index: Some(index) })).into_iter().collect()
     
     })())
 }

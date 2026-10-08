@@ -9,9 +9,9 @@ import type { RemoveElementPayload } from './🗑️remove-element/🟦️.ts';
 import type { SetAttributePayload } from './🏷️set-attribute/🟦️.ts';
 import type { SetTextPayload } from './✍️set-text/🟦️.ts';
 export type XmlMutation =
-  | { readonly mutation: 'setDeclaration'; readonly payload: { readonly phase: 'apply'; readonly value: SetDeclarationPayload } }
-  | { readonly mutation: 'setDoctype'; readonly payload: { readonly phase: 'apply'; readonly value: SetDoctypePayload } }
-  | { readonly mutation: 'insertElement'; readonly payload: { readonly phase: 'apply'; readonly value: InsertElementPayload } }
-  | { readonly mutation: 'removeElement'; readonly payload: { readonly phase: 'apply'; readonly value: RemoveElementPayload } }
-  | { readonly mutation: 'setAttribute'; readonly payload: { readonly phase: 'apply'; readonly value: SetAttributePayload } }
-  | { readonly mutation: 'setText'; readonly payload: { readonly phase: 'apply'; readonly value: SetTextPayload } };
+  | { readonly mutation: 'setDeclaration'; readonly payload: SetDeclarationPayload }
+  | { readonly mutation: 'setDoctype'; readonly payload: SetDoctypePayload }
+  | { readonly mutation: 'insertElement'; readonly payload: InsertElementPayload }
+  | { readonly mutation: 'removeElement'; readonly payload: RemoveElementPayload }
+  | { readonly mutation: 'setAttribute'; readonly payload: SetAttributePayload }
+  | { readonly mutation: 'setText'; readonly payload: SetTextPayload };

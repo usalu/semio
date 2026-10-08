@@ -16,7 +16,7 @@ pub(crate) fn verify<S:store::ArtifactSqliteSnapshot+Clone+PartialEq+Debug>(
   let mut input_callback=|_|true;
   let mut input_control=SqliteSnapshotControl::new(&mut input_callback,SqliteDatabaseLimits::default());
   assert_eq!(S::decode_sqlite_snapshot_native(&encoded,&mut input_control).unwrap(),*long,"actual native specimen preserves every typed owner field before preflight observation");
-  let output_bytes=match encoded{store::os_io::IoPayload::Binary(bytes)=>bytes.len(),store::os_io::IoPayload::Text(text)=>text.len()};
+  let output_bytes=match encoded{store::io::IoPayload::Binary(bytes)=>bytes.len(),store::io::IoPayload::Text(text)=>text.len()};
   assert!(output_bytes>0);
   let defaults=SqliteDatabaseLimits::default();
   let mut callback=|_|true;
@@ -42,7 +42,7 @@ pub(crate) fn verify<S:store::ArtifactSqliteSnapshot+Clone+PartialEq+Debug>(
    let(result,observed)=observe(&mut ||long.preflight_sqlite_snapshot_encoding(encoding,&mut small));
    let error=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::OwnershipLimit);
    let admitted=maximum-small.allocation_remaining_bytes();
-   assert_eq!(observed,admitted+error.message.capacity(),"failed scratch admission owns only admitted scratch and its explicit typed refusal message");
+   assert_eq!(observed,admitted+match &error.message { std::borrow::Cow::Borrowed(_) => 0, std::borrow::Cow::Owned(message) => message.capacity() },"failed scratch admission owns only admitted scratch and its explicit typed refusal message");
    let maximum=requests.checked_mul(2).unwrap();
    let mut callback=|_|true;
    let mut cumulative=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits{max_allocation_bytes:maximum,..defaults});
@@ -67,7 +67,7 @@ pub(crate) fn verify<S:store::ArtifactSqliteSnapshot+Clone+PartialEq+Debug>(
   let(result,observed)=observe(&mut ||long.preflight_sqlite_snapshot_encoding(encoding,&mut canceled));
   let error=result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::Canceled);
   assert_eq!(canceled.allocation_remaining_bytes(),defaults.max_allocation_bytes);
-  assert_eq!(observed,error.message.capacity(),"start refusal must allocate no traversal or payload backing");
+  assert_eq!(observed,match &error.message { std::borrow::Cow::Borrowed(_) => 0, std::borrow::Cow::Owned(message) => message.capacity() },"start refusal must allocate no traversal or payload backing");
   drop(canceled);assert!(start);
   let mut interior=false;
   let mut callback=|event:SqliteSnapshotProgress|{

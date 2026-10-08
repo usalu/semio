@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import {completeCargoPreparationObservationV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { terminateOwnedChildTree } from "../../../../../🧰️framework/🔨️modules/🏃️process/🪓️termination/🟦️.ts";
@@ -964,6 +965,7 @@ class CompositionScript extends BundleScript {
     if (segments.length === 1 && segments[0] === "prepare") {
       const result = prepareStdioComposition(this.repoRoot, resolve(this.root, "../.."));
       console.log(`stdio composition: contributions=${result.contributions} apps=${result.apps} receipts=${result.receipts}`);
+      completeCargoPreparationObservationV1();
       return;
     }
     if (segments.length !== 2 || !["removal-check", "removal-test-check"].includes(segments[0]!) || !isAbsolute(segments[1]!)) throw new Error("composition prepare|removal-check|removal-test-check <absolute-snapshot>");

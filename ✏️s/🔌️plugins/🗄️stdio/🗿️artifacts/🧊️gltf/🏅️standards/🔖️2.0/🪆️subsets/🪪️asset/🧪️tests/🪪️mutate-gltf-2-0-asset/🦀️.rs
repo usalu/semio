@@ -118,7 +118,7 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{add_required_extension,add_used_extension,change_asset_descriptive_metadata,change_asset_extension_data,change_asset_extra_data,change_asset_version,change_document_extension_data,change_document_extra_data,move_required_extension,move_used_extension,remove_required_extension,remove_used_extension,reorder_required_extensions,reorder_used_extensions};
+    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{apply_gltf_mutation,add_required_extension,add_used_extension,change_asset_descriptive_metadata,change_asset_extension_data,change_asset_extra_data,change_asset_version,change_document_extension_data,change_document_extra_data,move_required_extension,move_used_extension,remove_required_extension,remove_used_extension,reorder_required_extensions,reorder_used_extensions};
 use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutations::{gltf_inverse_restored_document};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::{GltfJson, GltfSnapshot};
     use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::project_gltf;
@@ -183,26 +183,26 @@ use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutati
     //#endregion 🔖️Params
 
     //#region 🔖️Dispatch
-    /// 📐️ Full parse → typed leaf `apply()` → re-serialize from the model alone — the
+    /// 📐️ Full parse → typed leaf mutation through the central applier → re-serialize from the model alone — the
     /// no-byte-pass-through rule this wave exists to enforce. Dispatches through each of the 14
     /// leaves' own real `apply()` directly, the same simple typed-payload shape every camera/skin/
     /// animation leaf exposes.
     fn apply_kind(before: &GltfSnapshot, kind: &str, params: &Json) -> Result<GltfSnapshot, String> {
         match kind {
-            "add-required-extension" => add_required_extension::apply(&add_required_extension::GltfRequireExtensionPayload { extension: str_field(params, "extension")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "add-used-extension" => add_used_extension::apply(&add_used_extension::GltfDeclareUsedExtensionPayload { extension: str_field(params, "extension")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "remove-used-extension" => remove_used_extension::apply(&remove_used_extension::GltfWithdrawUsedExtensionPayload { extension: str_field(params, "extension")? }, before).map_err(|error| error.detail),
-            "remove-required-extension" => remove_required_extension::apply(&remove_required_extension::GltfUnrequireExtensionPayload { extension: str_field(params, "extension")? }, before).map_err(|error| error.detail),
-            "move-used-extension" => move_used_extension::apply(&move_used_extension::GltfMoveUsedExtensionPayload { extension: str_field(params, "extension")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "move-required-extension" => move_required_extension::apply(&move_required_extension::GltfMoveRequiredExtensionPayload { extension: str_field(params, "extension")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "reorder-used-extensions" => reorder_used_extensions::apply(&reorder_used_extensions::GltfReorderUsedExtensionsPayload { order: string_array(params, "order")? }, before).map_err(|error| error.detail),
-            "reorder-required-extensions" => reorder_required_extensions::apply(&reorder_required_extensions::GltfReorderRequiredExtensionsPayload { order: string_array(params, "order")? }, before).map_err(|error| error.detail),
-            "change-asset-descriptive-metadata" => change_asset_descriptive_metadata::apply(&change_asset_descriptive_metadata::GltfChangeAssetDescriptiveMetadataPayload { generator: optional_str_field(params, "generator"), copyright: optional_str_field(params, "copyright"), min_version: optional_str_field(params, "minVersion") }, before).map_err(|error| error.detail),
-            "change-asset-version" => change_asset_version::apply(&change_asset_version::GltfChangeAssetVersionPayload { version: str_field(params, "version")? }, before).map_err(|error| error.detail),
-            "change-asset-extension-data" => change_asset_extension_data::apply(&change_asset_extension_data::GltfChangeAssetExtensionDataPayload { data: optional_gltf_json(params, "data") }, before).map_err(|error| error.detail),
-            "change-asset-extra-data" => change_asset_extra_data::apply(&change_asset_extra_data::GltfChangeAssetExtraDataPayload { data: optional_gltf_json(params, "data") }, before).map_err(|error| error.detail),
-            "change-document-extension-data" => change_document_extension_data::apply(&change_document_extension_data::GltfChangeDocumentExtensionDataPayload { data: optional_gltf_json(params, "data") }, before).map_err(|error| error.detail),
-            "change-document-extra-data" => change_document_extra_data::apply(&change_document_extra_data::GltfChangeDocumentExtraDataPayload { data: optional_gltf_json(params, "data") }, before).map_err(|error| error.detail),
+            "add-required-extension" => apply_gltf_mutation(before, &add_required_extension::mutation(add_required_extension::GltfRequireExtensionPayload { extension: str_field(params, "extension")?, position: num(params, "position")? })),
+            "add-used-extension" => apply_gltf_mutation(before, &add_used_extension::mutation(add_used_extension::GltfDeclareUsedExtensionPayload { extension: str_field(params, "extension")?, position: num(params, "position")? })),
+            "remove-used-extension" => apply_gltf_mutation(before, &remove_used_extension::mutation(remove_used_extension::GltfWithdrawUsedExtensionPayload { extension: str_field(params, "extension")? })),
+            "remove-required-extension" => apply_gltf_mutation(before, &remove_required_extension::mutation(remove_required_extension::GltfUnrequireExtensionPayload { extension: str_field(params, "extension")? })),
+            "move-used-extension" => apply_gltf_mutation(before, &move_used_extension::mutation(move_used_extension::GltfMoveUsedExtensionPayload { extension: str_field(params, "extension")?, position: num(params, "position")? })),
+            "move-required-extension" => apply_gltf_mutation(before, &move_required_extension::mutation(move_required_extension::GltfMoveRequiredExtensionPayload { extension: str_field(params, "extension")?, position: num(params, "position")? })),
+            "reorder-used-extensions" => apply_gltf_mutation(before, &reorder_used_extensions::mutation(reorder_used_extensions::GltfReorderUsedExtensionsPayload { order: string_array(params, "order")? })),
+            "reorder-required-extensions" => apply_gltf_mutation(before, &reorder_required_extensions::mutation(reorder_required_extensions::GltfReorderRequiredExtensionsPayload { order: string_array(params, "order")? })),
+            "change-asset-descriptive-metadata" => apply_gltf_mutation(before, &change_asset_descriptive_metadata::mutation(change_asset_descriptive_metadata::GltfChangeAssetDescriptiveMetadataPayload { generator: optional_str_field(params, "generator"), copyright: optional_str_field(params, "copyright"), min_version: optional_str_field(params, "minVersion") })),
+            "change-asset-version" => apply_gltf_mutation(before, &change_asset_version::mutation(change_asset_version::GltfChangeAssetVersionPayload { version: str_field(params, "version")? })),
+            "change-asset-extension-data" => apply_gltf_mutation(before, &change_asset_extension_data::mutation(change_asset_extension_data::GltfChangeAssetExtensionDataPayload { data: optional_gltf_json(params, "data") })),
+            "change-asset-extra-data" => apply_gltf_mutation(before, &change_asset_extra_data::mutation(change_asset_extra_data::GltfChangeAssetExtraDataPayload { data: optional_gltf_json(params, "data") })),
+            "change-document-extension-data" => apply_gltf_mutation(before, &change_document_extension_data::mutation(change_document_extension_data::GltfChangeDocumentExtensionDataPayload { data: optional_gltf_json(params, "data") })),
+            "change-document-extra-data" => apply_gltf_mutation(before, &change_document_extra_data::mutation(change_document_extra_data::GltfChangeDocumentExtraDataPayload { data: optional_gltf_json(params, "data") })),
             other => Err(format!("unrecognised mutation kind {other:?}")),
         }
     }

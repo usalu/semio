@@ -49,7 +49,7 @@ impl protocol::InferenceSpec<JpgSnapshot> for JpgInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.stdio.jpg.inference.dimensions", reads: &["width", "height", "frame"] }]
+        &[protocol::InferenceFieldSpec { id: "s.stdio.jpg.inference.dimensions", reads: &["width", "height"] }]
     }
 }
 //#endregion 🔖️Inference

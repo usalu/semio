@@ -1700,6 +1700,7 @@ pub struct RetainedPackSegmentCursor {
     payload_seen: u64,
     raw_seen: u64,
     crc: crate::codec::Crc32cCursor,
+    payload_crc: crate::codec::Crc32cCursor,
     stored_crc: [u8; 4],
     segments: u64,
     total: u64,
@@ -1727,6 +1728,7 @@ impl RetainedPackSegmentCursor {
             payload_seen: 0,
             raw_seen: 0,
             crc: crate::codec::Crc32cCursor::new(),
+            payload_crc: crate::codec::Crc32cCursor::new(),
             stored_crc: [0; 4],
             segments: 0,
             total: 0,
@@ -1737,6 +1739,12 @@ impl RetainedPackSegmentCursor {
             fault: None,
             closed: false,
         })
+    }
+
+    /// 🔁️ Replays a verified terminal source while retaining admitted inflater backing.
+    pub fn replay(&mut self)->Result<(),PackRefusal>{
+        if self.closed||self.fault.is_some()||self.pending.is_some()||!matches!(self.phase,RetainedPackSegmentPhase::Complete){return Err(PackRefusal::RetainedMalformed{kind:ValueRefusalKind::InvariantViolated,what:"retained-segment",offset:self.total,detail:"replay requires verified completion"})}
+        self.phase=RetainedPackSegmentPhase::Header(0);self.payload_seen=0;self.raw_seen=0;self.crc=crate::codec::Crc32cCursor::new();self.payload_crc=crate::codec::Crc32cCursor::new();self.stored_crc=[0;4];self.segments=0;self.total=0;self.trailer_seen=0;Ok(())
     }
 
     pub fn preflight(&self)->Result<(),RetainedPackSegmentAdmission<'_>>{
@@ -1841,6 +1849,7 @@ impl RetainedPackSegmentCursor {
                 self.payload_seen = 0;
                 self.raw_seen = 0;
                 self.crc = crate::codec::Crc32cCursor::new();
+                self.payload_crc = crate::codec::Crc32cCursor::new();
                 self.crc.update_page(&[value]);
                 self.phase = RetainedPackSegmentPhase::Flags;
                 Ok(None)
@@ -1897,6 +1906,7 @@ impl RetainedPackSegmentCursor {
                     let Some((_, value)) = self.take_byte()? else { return Ok(None) };
                     self.crc.update_page(&[value]);
                     let index = self.raw_seen;
+                    self.payload_crc.update_page(&[value]);
                     self.payload_seen += 1;
                     self.raw_seen += 1;
                     return Ok(Some(RetainedPackSegmentEvent::RawByte { segment: self.segment, index, value }));
@@ -1906,6 +1916,7 @@ impl RetainedPackSegmentCursor {
                     if self.payload_seen < self.segment.stored_len && self.inflater.as_ref().expect("compressed segment has inflater").can_admit() {
                         let Some((_, value)) = self.take_byte()? else { return Ok(None) };
                         self.crc.update_page(&[value]);
+                        self.payload_crc.update_page(&[value]);
                         self.inflater.as_mut().expect("compressed segment has inflater").admit_byte(value).expect("preflight established exact handback");
                         self.payload_seen += 1;
                     }
@@ -2009,6 +2020,11 @@ impl RetainedPackSegmentCursor {
         {
             None
         }
+    }
+
+    /// 🧾️ Borrows the verified stored payload checksum independently of framing bytes.
+    pub fn verified_payload_crc32c(&self,segment:RetainedPackSegmentHeader)->Option<u32>{
+        (self.fault.is_none()&&self.segment==segment&&matches!(self.phase,RetainedPackSegmentPhase::Kind|RetainedPackSegmentPhase::Trailer)).then(||self.payload_crc.finish())
     }
 
     pub fn next_release_allocation_bytes(&self) -> Option<usize> {

@@ -21,5 +21,6 @@
   "interzoneSurfaceId": null,
   "sunExposed": true,
   "windExposed": true,
-  "multiplier": 1
+  "multiplier": 1,
+  "index": null
 }

@@ -99,7 +99,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-grid-opacity/raises-grid-opacity: committed diff did not carry before to after");
 }
 
@@ -114,4 +114,10 @@ async fn opacity_rises_and_stays_inside_the_unit_band() {
     assert!((0.0..=1.0).contains(&opacity), "the applied opacity must satisfy this leaf's own 0..=1 band");
     assert_eq!(applied.grid_visible, Some(true), "fading the grid is not the same as hiding it");
     assert_eq!(applied.grid_spacing, Some(32.0), "fading the grid must not resize it");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

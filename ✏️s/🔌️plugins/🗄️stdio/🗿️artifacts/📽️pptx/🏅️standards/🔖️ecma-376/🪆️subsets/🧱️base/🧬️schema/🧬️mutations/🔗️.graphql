@@ -20,7 +20,6 @@ type PptxXmlVacancyAddress { container: PptxXmlAddress!, index: Int! }
 # 🧬️ Revision-addressed PresentationML mutation command.
 type PptxMutation {
   mutation: String!
-  snapshot: PptxSnapshot
   address: PptxXmlAddress
   slideAddress: PptxSlideAddress
   shapeAddress: PptxShapeAddress
@@ -30,4 +29,5 @@ type PptxMutation {
   destinationIndex: Int
   text: String
   position: PptxTransform
+  node: PptxXmlNode
 }

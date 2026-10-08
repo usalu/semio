@@ -8,8 +8,8 @@ use crate::ProgramSnapshot;
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::DeletePriorityRecord, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    match base.priorities.iter().find(|row| row.header.id == payload.id) {
-        Some(existing) => vec![ProgramMutation::CreatePriorityRecord(super::super::create_priority_record::CreatePriorityRecord { priority_record: existing.clone() })],
+    match base.priorities.iter().position(|row| row.header.id == payload.id) {
+        Some(position) => vec![ProgramMutation::CreatePriorityRecord(super::super::create_priority_record::CreatePriorityRecord { priority_record: base.priorities[position].clone(), index: Some(position) })],
         None => Vec::new(),
     }
 

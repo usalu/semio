@@ -7,12 +7,9 @@ use crate::RasterSnapshot;
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::ReorderLayers, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    match locate_layer(&base.layers, &payload.layer_id) {
+    Ok(match locate_layer(&base.layers, &payload.layer_id) {
         Some((parent_id, index)) => vec![RasterMutation::ReorderLayers(super::ReorderLayers { layer_id: payload.layer_id.clone(), parent_id, index })],
         None => Vec::new(),
-    }
-
-    })())
+    })
 }
 //#endregion 🔖️Inverse

@@ -1,7 +1,6 @@
 // stdio.avi mutations 📝️text facet — same shape as ../🟦️.ts.
 /** 🧬️ AviMutation — named-variant vocabulary. Mirrors 🦀️.rs field-for-field. */
 export type AviMutation =
-  | { mutation: "setSnapshot"; snapshot: import("./🟦️").AviSnapshot }
   | { mutation: "setMainHeader"; mainHeader: import("./🟦️").AviMainHeader }
   | { mutation: "setIdx1Present"; idx1Present: boolean }
   | { mutation: "insertStream"; index: number; stream: import("./🟦️").AviStream }

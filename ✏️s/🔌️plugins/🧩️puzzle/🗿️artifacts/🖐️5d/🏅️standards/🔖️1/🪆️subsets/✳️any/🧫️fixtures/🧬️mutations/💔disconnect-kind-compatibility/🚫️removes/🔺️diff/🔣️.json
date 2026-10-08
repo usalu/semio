@@ -1,15 +1,20 @@
 {
   "artifact": null,
-  "schema": null,
   "domain": null,
-  "label": null,
-  "meta": null,
-  "kindCatalogs": null,
-  "kindCatalogsExtra": null,
-  "kindCompatibility": {
-    "values": []
-  },
-  "parts": null,
   "fasteners": null,
+  "kindCompatibility": {
+    "added": [],
+    "patched": [],
+    "removed": [
+      {
+        "source": "grip-kind-a",
+        "target": "grip-kind-b"
+      }
+    ],
+    "reordered": null
+  },
+  "meta": null,
+  "parts": null,
+  "schema": null,
   "targetVolumes": null
 }

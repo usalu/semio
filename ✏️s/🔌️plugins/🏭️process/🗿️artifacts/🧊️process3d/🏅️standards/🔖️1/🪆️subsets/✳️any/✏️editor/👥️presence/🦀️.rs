@@ -25,12 +25,72 @@ impl Default for Process3dPresence {
     }
 }
 
-impl protocol::MutationDiff<Process3dPresence> for Process3dPresence {
-    fn apply(&self, _base: &Process3dPresence) -> protocol::MutationApplyResult<Process3dPresence> {
-        Ok(self.clone())
+/// 🔺️ Sparse field delta over [`Process3dPresence`]: every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Process3dPresenceDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub engagement_input: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera_position: Option<[f64; 3]>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera_target: Option<[f64; 3]>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera_fov: Option<f64>,
+}
+
+impl protocol::MutationDiff<Process3dPresence> for Process3dPresenceDiff {
+    fn apply(&self, base: &Process3dPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Process3dPresence> {
+        let mut next = base.clone();
+        if let Some(value) = &self.engagement_input {
+            next.engagement_input = value.clone();
+        }
+        if let Some(value) = &self.camera_position {
+            next.camera_position = value.clone();
+        }
+        if let Some(value) = &self.camera_target {
+            next.camera_target = value.clone();
+        }
+        if let Some(value) = &self.camera_fov {
+            next.camera_fov = value.clone();
+        }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if other.engagement_input.is_some() {
+            self.engagement_input = other.engagement_input;
+        }
+        if other.camera_position.is_some() {
+            self.camera_position = other.camera_position;
+        }
+        if other.camera_target.is_some() {
+            self.camera_target = other.camera_target;
+        }
+        if other.camera_fov.is_some() {
+            self.camera_fov = other.camera_fov;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<Process3dPresence> for Process3dPresenceDiff {
+    fn inverse(&self, base: &Process3dPresence) -> Self {
+        Self {
+            engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()),
+            camera_position: self.camera_position.as_ref().map(|_| base.camera_position.clone()),
+            camera_target: self.camera_target.as_ref().map(|_| base.camera_target.clone()),
+            camera_fov: self.camera_fov.as_ref().map(|_| base.camera_fov.clone()),
+        }
+    }
+    fn between(base: &Process3dPresence, other: &Process3dPresence) -> Self {
+        Self {
+            engagement_input: (base.engagement_input != other.engagement_input).then(|| other.engagement_input.clone()),
+            camera_position: (base.camera_position != other.camera_position).then(|| other.camera_position.clone()),
+            camera_target: (base.camera_target != other.camera_target).then(|| other.camera_target.clone()),
+            camera_fov: (base.camera_fov != other.camera_fov).then(|| other.camera_fov.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.engagement_input.is_none() && self.camera_position.is_none() && self.camera_target.is_none() && self.camera_fov.is_none()
     }
 }
 
@@ -84,15 +144,22 @@ impl ArtifactPack for Process3dPresence {
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(rename_all = "camelCase")]
 pub enum Process3dPresenceMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        presence: Process3dPresence,
+    #[dsl(key = "engagement-input")]
+    SetEngagementInput {
+        value: String,
+    },
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(coord)]
+        position: [f64; 3],
+        #[dsl(coord)]
+        target: [f64; 3],
+        fov: f64,
     },
 }
 
 impl Mutation<Process3dPresence> for Process3dPresenceMutation {
-    type Diff = Process3dPresence;
+    type Diff = Process3dPresenceDiff;
 
     /// 🧾️ Leaf metadata for the single presence verb. ⚠️ PROVISIONAL: the `owner` path below names
     /// no directory on disk — this enum has no `👥️presence/<slug>` leaf triad of its own, so the
@@ -100,11 +167,11 @@ impl Mutation<Process3dPresence> for Process3dPresenceMutation {
     /// own presence precedent.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
-        owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot",
-        semantic_kind: "snapshot",
-        display_name: "Snapshot",
+        owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/set-engagement-input",
+        semantic_kind: "set-engagement-input",
+        display_name: "Set Engagement Input",
         emoji: "📄",
-        aggregate_variant: "Snapshot",
+        aggregate_variant: "SetEngagementInput",
         payload_schema: "🧬️schema/🔣️.json",
         text_opcode: None,
         binary_tag: None,
@@ -113,28 +180,44 @@ impl Mutation<Process3dPresence> for Process3dPresenceMutation {
         outcome_classes: &[protocol::MutationOutcomeClass::Applied],
         composition: protocol::MutationComposition::Atomic,
         required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }];
+    }]
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/set-camera",
+        semantic_kind: "set-camera",
+        display_name: "Set Camera",
+        emoji: "📄",
+        aggregate_variant: "SetCamera",
+        payload_schema: "🧬️schema/🔣️.json",
+        text_opcode: None,
+        binary_tag: None,
+        invertibility: protocol::MutationInvertibility::ExplicitMutation,
+        diff_participation: protocol::MutationDiffParticipation::Detect,
+        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+        composition: protocol::MutationComposition::Atomic,
+        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+    }]
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Self::SetEngagementInput { .. } => &Self::DESCRIPTORS[0],
+            Self::SetCamera { .. } => &Self::DESCRIPTORS[1],
         }
     }
 
-    /// 📦️ Whole-value snapshot replace — no target to be missing, so a message-free outcome per the
-    /// contract's root-scoped shrink-only allowlist.
-    fn diff(&self, _base: &Process3dPresence) -> protocol::MutationOutcome<Process3dPresence> {
+    fn diff(&self, base: &Process3dPresence) -> protocol::MutationOutcome<Process3dPresenceDiff> {
         protocol::MutationOutcome::new(match self {
-            Self::Snapshot { presence } => presence.clone(),
+            Self::SetEngagementInput { value } => Process3dPresenceDiff { engagement_input: (base.engagement_input != *value).then(|| value.clone()), ..Default::default() },
+            Self::SetCamera { position, target, fov } => Process3dPresenceDiff { camera_position: (base.camera_position != *position).then_some(*position), camera_target: (base.camera_target != *target).then_some(*target), camera_fov: (base.camera_fov != *fov).then_some(*fov), ..Default::default() },
         })
     }
 
     fn inverse(&self, base: &Process3dPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { presence: base.clone() }]
-    
-    })())
-}
+        Ok(vec![match self {
+            Self::SetEngagementInput { .. } => Self::SetEngagementInput { value: base.engagement_input.clone() },
+            Self::SetCamera { .. } => Self::SetCamera { position: base.camera_position, target: base.camera_target, fov: base.camera_fov },
+        }])
+    }
 }
 
 impl protocol::OpText for Process3dPresenceMutation {
@@ -246,3 +329,16 @@ pub fn process3d_presence_store_disposer() -> Box<dyn semio_framework_plugin::Ar
     Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(Process3dPresence::default()), process3d_presence_is_terminal_empty).expect("the default process3d presence root holds no engagement input"))
 }
 //#endregion 🧹️Retirement
+
+#[cfg(test)]
+mod law_tests {
+    use super::*;
+
+    /// ⚖️ The inverse diffs sum to the negative of the forward diff (L3).
+    #[semio_framework_async_macros::async_test]
+    async fn inverse_diffs_sum_to_the_negative_diff() {
+        let base = Process3dPresence::default();
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&Process3dPresenceMutation::SetEngagementInput { value: "typing".into() }, &base).await;
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&Process3dPresenceMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 1.0, 0.0], fov: 30.0 }, &base).await;
+    }
+}

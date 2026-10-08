@@ -39,7 +39,7 @@ from __future__ import annotations
 import json
 import struct
 
-from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
+from semio_repo_test import Adapter, Context, Outcome, digest
 
 # endregion 🔖️Imports
 
@@ -48,9 +48,6 @@ from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
 #: 🏷️ Every variant of this subset's mutation vocabulary, in the order the mutations grammar's `op`
 #: production lists them, kebab-cased as the catalog spells them.
 KINDS = (
-    "no-mutation",
-    "set-snapshot",
-    "patch-snapshot",
     "insert-block",
     "remove-block",
     "set-block-content",
@@ -615,16 +612,10 @@ def by_id(items: list, ident: str, verb: str) -> int:
 
 
 def apply_mutation(snapshot: dict, mutation: dict) -> dict:
-    """🧬️ Applies one verb, returning a NEW snapshot. `insert-style`/`insert-image` append to their
-    id-keyed collections, which is what the committed specification vectors record."""
+    """🧬️ Applies one verb, returning a NEW snapshot. `insert-style`/`insert-image` insert at `at`
+    when present and append otherwise, which is what the committed specification vectors record."""
     result = clone(snapshot)
     kind, args = parts(mutation)
-    if kind == "no-mutation":
-        return result
-    if kind == "patch-snapshot":
-        return patched_snapshot(snapshot, args["patch"])
-    if kind == "set-snapshot":
-        return clone(args["snapshot"])
     if kind == "insert-block":
         blocks, index = addressed(result, args["path"], kind, True)
         blocks.insert(index, clone(args["block"]))
@@ -660,7 +651,7 @@ def apply_mutation(snapshot: dict, mutation: dict) -> dict:
         runs[at]["style"] = clone(args["style"])
         return result
     if kind == "insert-style":
-        result["styles"].append(clone(args["style"]))
+        result["styles"].insert(min(args["at"], len(result["styles"])) if "at" in args else len(result["styles"]), clone(args["style"]))
         return result
     if kind == "remove-style":
         del result["styles"][by_id(result["styles"], args["id"], kind)]
@@ -672,7 +663,7 @@ def apply_mutation(snapshot: dict, mutation: dict) -> dict:
         result["styles"][by_id(result["styles"], args["id"], kind)]["basedOn"] = args["based_on"]
         return result
     if kind == "insert-image":
-        result["images"].append(clone(args["image"]))
+        result["images"].insert(min(args["at"], len(result["images"])) if "at" in args else len(result["images"]), clone(args["image"]))
         return result
     if kind == "remove-image":
         del result["images"][by_id(result["images"], args["id"], kind)]
@@ -685,17 +676,10 @@ def apply_mutation(snapshot: dict, mutation: dict) -> dict:
 def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
     """↩️ The undo of one verb against the state it was applied to. An insertion is undone by a
     removal at the position it took and an overwrite by an overwrite with the value it displaced.
-    Because `insert-style`/`insert-image` append, undoing a NON-FINAL removal from those two
-    id-keyed collections restores the value at the end — the feature exercises them at the final
-    entry and says so."""
+    A removal from the id-keyed `styles`/`images` collections is undone by an
+    insertion carrying the removed index (`at`), so the original position is restored exactly."""
     kind, args = parts(mutation)
     tag = TAG_OF_KIND
-    if kind == "no-mutation":
-        return {"mutation": tag[kind]}
-    if kind == "patch-snapshot":
-        return {"mutation": tag["set-snapshot"], "snapshot": clone(snapshot)}
-    if kind == "set-snapshot":
-        return {"mutation": tag[kind], "snapshot": clone(snapshot)}
     if kind == "insert-block":
         return {"mutation": tag["remove-block"], "path": clone(args["path"])}
     if kind in ("remove-block", "set-block-content", "set-paragraph-style", "set-heading-level", "set-list-ordered", "set-run-text", "set-run-style", "set-image-block"):
@@ -720,7 +704,7 @@ def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
     if kind == "insert-style":
         return {"mutation": tag["remove-style"], "id": args["style"]["id"]}
     if kind == "remove-style":
-        return {"mutation": tag["insert-style"], "style": clone(snapshot["styles"][by_id(snapshot["styles"], args["id"], kind)])}
+        return {"mutation": tag["insert-style"], "style": clone(snapshot["styles"][by_id(snapshot["styles"], args["id"], kind)]), "at": by_id(snapshot["styles"], args["id"], kind)}
     if kind == "set-style-name":
         return {"mutation": tag[kind], "id": args["id"], "name": snapshot["styles"][by_id(snapshot["styles"], args["id"], kind)]["name"]}
     if kind == "set-style-based-on":
@@ -728,7 +712,7 @@ def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
     if kind == "insert-image":
         return {"mutation": tag["remove-image"], "id": args["image"]["id"]}
     if kind == "remove-image":
-        return {"mutation": tag["insert-image"], "image": clone(snapshot["images"][by_id(snapshot["images"], args["id"], kind)])}
+        return {"mutation": tag["insert-image"], "image": clone(snapshot["images"][by_id(snapshot["images"], args["id"], kind)]), "at": by_id(snapshot["images"], args["id"], kind)}
     was = snapshot["images"][by_id(snapshot["images"], args["id"], kind)]
     return {"mutation": tag[kind], "id": args["id"], "mime": was["mime"], "bytes": clone(was["bytes"])}
 
@@ -818,7 +802,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
         raise AssertionError("re-encoding the memo did not reproduce the committed pack bytes (%d vs %d bytes)" % (len(repacked), len(committed_pack)))
     if parse_pack(repacked) != snapshot:
         raise AssertionError("re-decoding the encoded pack lost content")
-    declared = vector(ctx, "no-mutation")["before"]
+    declared = vector(ctx, "set-run-style")["before"]
     if snapshot != declared:
         raise AssertionError("the real committed memo does not decode to the before-snapshot every specification vector starts from\n     got: %s\nexpected: %s" % (json.dumps(snapshot), json.dumps(declared)))
     return Outcome(
@@ -839,7 +823,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
 def adapter() -> Adapter:
     """🧭️ Registration entry point the host calls. Handlers are registered under the Scenario Outline base
     ids, which the host resolves for every Examples row, and plain scenarios under their own ids."""
-    return Adapter("python").oracle("mutate", mutate).oracle("no-mutation-baseline-mutate", mutate).oracle("inverse", inverse).oracle("no-mutation-baseline-inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
+    return Adapter("python").oracle("mutate", mutate).oracle("inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

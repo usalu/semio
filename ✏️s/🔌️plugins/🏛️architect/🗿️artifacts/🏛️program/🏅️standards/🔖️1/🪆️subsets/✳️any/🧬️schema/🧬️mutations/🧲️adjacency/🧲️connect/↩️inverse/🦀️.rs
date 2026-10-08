@@ -13,7 +13,7 @@ pub fn inverse(payload: &super::ConnectAdjacency, base: &ProgramSnapshot) -> Res
     Ok((|| {
     let (a, b) = normalize_pair(&payload.adjacency.element_a_id, &payload.adjacency.element_b_id);
     match base.adjacencies.iter().find(|row| row.element_a_id == a && row.element_b_id == b) {
-        Some(existing) => vec![ProgramMutation::ConnectAdjacency(super::ConnectAdjacency { adjacency: existing.clone() })],
+        Some(existing) => vec![ProgramMutation::ConnectAdjacency(super::ConnectAdjacency { adjacency: existing.clone(), index: None })],
         None => {
             let id: EntityId = payload.adjacency.header.id.clone();
             vec![ProgramMutation::DisconnectAdjacency(super::super::disconnect_adjacency::DisconnectAdjacency { id })]

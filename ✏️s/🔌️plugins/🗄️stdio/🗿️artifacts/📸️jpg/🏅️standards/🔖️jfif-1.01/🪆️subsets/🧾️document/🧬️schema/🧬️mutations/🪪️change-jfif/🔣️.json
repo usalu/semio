@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeJfifHeader",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": "change-jfif-header",
-  "binaryTag": 2,
+  "binaryTag": 1,
   "invertibility": "explicit-mutation",
   "diffParticipation": "apply-only",
   "outcomeClasses": [

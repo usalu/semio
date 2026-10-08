@@ -596,7 +596,7 @@ pub fn project_tiff(input: &[u8]) -> Result<Json, String> {
 
 //#region 🔖️MutationParams
 /// 🧩️ Parses one `TiffIfd` wire value (`{"entries": [{tag, values}…], "storage": {kind, chunks…}}`) into an
-/// [`OracleIfd`] — the shape `insert-ifd`'s `ifd` and every `set-snapshot` IFD carry. Strip and tile offsets and byte
+/// [`OracleIfd`] — the shape `insert-ifd`'s `ifd` carries. Strip and tile offsets and byte
 /// counts are never accepted from a caller (they are layout-computed at [`write_tiff`] time); strip storage becomes this
 /// model's one combined strip, an IFD without storage carries none, and tiled storage is refused, because this
 /// strip-only IFD-chain model does not write tiles.
@@ -670,18 +670,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
                 ifd.entries.retain(|t| t.tag != tag);
             }
         }
-        "set-snapshot" => {
-            let snapshot = params.and_then(|p| j_get(p, "snapshot")).ok_or("tiff oracle: set-snapshot needs `snapshot`")?;
-            doc = OracleDoc { little_endian: byte_order(snapshot.get("byteOrder"))?, ifds: snapshot.array("ifds").iter().map(parse_ifd_json).collect::<Result<_, _>>()? };
-        }
-        "patch-snapshot" => {
-            for (member, value) in patch_members(params)? {
-                match member.as_str() {
-                    "byteOrder" => doc.little_endian = byte_order(Some(&value))?,
-                    other => return Err(format!("tiff oracle: patch-snapshot sets `{other}`, which this model does not edit by path")),
-                }
-            }
-        }
         other => return Err(format!("mutation kind {other:?} has no oracle implementation ({} input byte(s))", input.len())),
     }
     Ok(write_tiff(&doc))
@@ -695,19 +683,6 @@ fn byte_order(value: Option<&Json>) -> Result<bool, String> {
         Some("bigEndian") => Ok(false),
         other => Err(format!("tiff oracle: {other:?} is no byte order")),
     }
-}
-
-/// 🩹️ The `(member, value)` pairs of a `SnapshotPatch` whose operation sets (or inserts, when absent) one top-level member — the only edits this
-/// model has a slot for; any other path or operation is refused, never skipped.
-#[cfg(feature = "oracles")]
-fn patch_members(params: Option<&Json>) -> Result<Vec<(String, Json)>, String> {
-    params.and_then(|p| p.get("patch")).into_iter().map(|patch| {
-        let path = patch.str("path").split('/').skip(1).map(|segment| segment.replace("~1", "/").replace("~0", "~")).collect::<Vec<_>>();
-        match (path.as_slice(), patch.str("operation").as_str()) {
-            ([member], "set" | "insert") => Ok((member.clone(), patch.get("value").cloned().unwrap_or(Json::Null))),
-            (other, operation) => Err(format!("tiff oracle: patch-snapshot {operation} at {other:?} has no oracle implementation")),
-        }
-    }).collect()
 }
 
 /// ↩️ Applies the INDEPENDENTLY computed inverse of `spec` on top of `mutated`, so that
@@ -750,15 +725,6 @@ pub fn oracle_apply_mutation_inverse(original_input: &[u8], spec: &Json, mutated
                 match restored {
                     Some(existing) => ifd.set(tag, existing.value),
                     None => ifd.entries.retain(|entry| entry.tag != tag),
-                }
-            }
-        }
-        "set-snapshot" => doc = original,
-        "patch-snapshot" => {
-            for (member, _) in patch_members(params)? {
-                match member.as_str() {
-                    "byteOrder" => doc.little_endian = original.little_endian,
-                    other => return Err(format!("tiff oracle: patch-snapshot member `{other}` has no oracle inverse")),
                 }
             }
         }

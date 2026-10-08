@@ -7,568 +7,448 @@
   "required": [
     "schema",
     "seed",
-    "slotsRemoved",
-    "slotsUpserted",
-    "edgesRemoved",
-    "edgesUpserted",
-    "tilesRemoved",
-    "tilesUpserted",
-    "rulesRemoved",
-    "rulesUpserted"
+    "slots",
+    "edges",
+    "tiles",
+    "rules"
   ],
   "properties": {
     "schema": {
-      "type": [
-        "string",
-        "null"
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
       ]
     },
     "seed": {
-      "type": [
-        "integer",
-        "null"
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "slots": {
+      "title": "SlotsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "patched"
       ],
-      "minimum": 0
-    },
-    "slotsRemoved": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "slotsUpserted": {
-      "type": "array",
-      "items": {
-        "type": "array",
-        "items": [
-          {
-            "type": "integer",
-            "minimum": 0
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "x",
-              "y",
-              "width",
-              "height"
-            ],
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "x": {
-                "type": "number"
-              },
-              "y": {
-                "type": "number"
-              },
-              "width": {
-                "type": "number",
-                "exclusiveMinimum": 0
-              },
-              "height": {
-                "type": "number",
-                "exclusiveMinimum": 0
-              },
-              "pinnedTileId": {
-                "type": "string"
-              }
-            }
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
-        ],
-        "minItems": 2,
-        "maxItems": 2
-      }
-    },
-    "edgesRemoved": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "edgesUpserted": {
-      "type": "array",
-      "items": {
-        "type": "array",
-        "items": [
-          {
-            "type": "integer",
-            "minimum": 0
-          },
-          {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "fromSlotId",
-              "toSlotId",
-              "relation"
-            ],
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "fromSlotId": {
-                "type": "string"
-              },
-              "toSlotId": {
-                "type": "string"
-              },
-              "relation": {
-                "type": "string"
-              }
-            }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "title": "Wfc2dSlot",
+            "type": "object"
           }
-        ],
-        "minItems": 2,
-        "maxItems": 2
-      }
-    },
-    "tilesRemoved": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "tilesUpserted": {
-      "type": "array",
-      "items": {
-        "type": "array",
-        "items": [
-          {
-            "type": "integer",
-            "minimum": 0
-          },
-          {
+        },
+        "patched": {
+          "type": "array",
+          "items": {
             "type": "object",
             "additionalProperties": false,
             "required": [
               "id",
-              "weight"
+              "patch"
             ],
             "properties": {
               "id": {
                 "type": "string"
               },
-              "label": {
-                "type": "string"
-              },
-              "weight": {
-                "type": "number",
-                "minimum": 0
-              },
-              "media": {
-                "description": "Externally tagged tile media: the bare string \"Empty\", or a one-key object Bitmap/Vector/Image.",
-                "oneOf": [
-                  {
-                    "type": "string",
-                    "enum": [
-                      "Empty"
+              "patch": {
+                "title": "SlotsPatch",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "x",
+                  "y",
+                  "width",
+                  "height",
+                  "pinnedTileId"
+                ],
+                "properties": {
+                  "x": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   },
-                  {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": [
-                      "Bitmap"
-                    ],
-                    "properties": {
-                      "Bitmap": {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "required": [
-                          "width",
-                          "height",
-                          "palette",
-                          "pixels"
-                        ],
-                        "properties": {
-                          "width": {
-                            "type": "integer",
-                            "minimum": 1
-                          },
-                          "height": {
-                            "type": "integer",
-                            "minimum": 1
-                          },
-                          "palette": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "additionalProperties": false,
-                              "required": [
-                                "r",
-                                "g",
-                                "b",
-                                "a"
-                              ],
-                              "properties": {
-                                "r": {
-                                  "type": "integer",
-                                  "minimum": 0,
-                                  "maximum": 255
-                                },
-                                "g": {
-                                  "type": "integer",
-                                  "minimum": 0,
-                                  "maximum": 255
-                                },
-                                "b": {
-                                  "type": "integer",
-                                  "minimum": 0,
-                                  "maximum": 255
-                                },
-                                "a": {
-                                  "type": "integer",
-                                  "minimum": 0,
-                                  "maximum": 255
-                                }
-                              }
-                            }
-                          },
-                          "pixels": {
-                            "type": "string",
-                            "format": "base64"
-                          }
-                        }
+                  "y": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
                       }
-                    }
+                    ]
                   },
-                  {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": [
-                      "Vector"
-                    ],
-                    "properties": {
-                      "Vector": {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "required": [
-                          "paths"
-                        ],
-                        "properties": {
-                          "paths": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "additionalProperties": false,
-                              "required": [
-                                "segments",
-                                "strokeWidth"
-                              ],
-                              "properties": {
-                                "segments": {
-                                  "type": "array",
-                                  "items": {
-                                    "description": "Externally tagged path command in tile space 0..1: the bare string \"Close\", or a one-key object Move/Line/Quad/Cubic.",
-                                    "oneOf": [
-                                      {
-                                        "type": "string",
-                                        "enum": [
-                                          "Close"
-                                        ]
-                                      },
-                                      {
-                                        "type": "object",
-                                        "additionalProperties": false,
-                                        "required": [
-                                          "Move"
-                                        ],
-                                        "properties": {
-                                          "Move": {
-                                            "type": "object",
-                                            "additionalProperties": false,
-                                            "required": [
-                                              "to"
-                                            ],
-                                            "properties": {
-                                              "to": {
-                                                "type": "array",
-                                                "items": {
-                                                  "type": "number"
-                                                },
-                                                "minItems": 2,
-                                                "maxItems": 2
-                                              }
-                                            }
-                                          }
-                                        }
-                                      },
-                                      {
-                                        "type": "object",
-                                        "additionalProperties": false,
-                                        "required": [
-                                          "Line"
-                                        ],
-                                        "properties": {
-                                          "Line": {
-                                            "type": "object",
-                                            "additionalProperties": false,
-                                            "required": [
-                                              "to"
-                                            ],
-                                            "properties": {
-                                              "to": {
-                                                "type": "array",
-                                                "items": {
-                                                  "type": "number"
-                                                },
-                                                "minItems": 2,
-                                                "maxItems": 2
-                                              }
-                                            }
-                                          }
-                                        }
-                                      },
-                                      {
-                                        "type": "object",
-                                        "additionalProperties": false,
-                                        "required": [
-                                          "Quad"
-                                        ],
-                                        "properties": {
-                                          "Quad": {
-                                            "type": "object",
-                                            "additionalProperties": false,
-                                            "required": [
-                                              "ctrl",
-                                              "to"
-                                            ],
-                                            "properties": {
-                                              "ctrl": {
-                                                "type": "array",
-                                                "items": {
-                                                  "type": "number"
-                                                },
-                                                "minItems": 2,
-                                                "maxItems": 2
-                                              },
-                                              "to": {
-                                                "type": "array",
-                                                "items": {
-                                                  "type": "number"
-                                                },
-                                                "minItems": 2,
-                                                "maxItems": 2
-                                              }
-                                            }
-                                          }
-                                        }
-                                      },
-                                      {
-                                        "type": "object",
-                                        "additionalProperties": false,
-                                        "required": [
-                                          "Cubic"
-                                        ],
-                                        "properties": {
-                                          "Cubic": {
-                                            "type": "object",
-                                            "additionalProperties": false,
-                                            "required": [
-                                              "ctrl1",
-                                              "ctrl2",
-                                              "to"
-                                            ],
-                                            "properties": {
-                                              "ctrl1": {
-                                                "type": "array",
-                                                "items": {
-                                                  "type": "number"
-                                                },
-                                                "minItems": 2,
-                                                "maxItems": 2
-                                              },
-                                              "ctrl2": {
-                                                "type": "array",
-                                                "items": {
-                                                  "type": "number"
-                                                },
-                                                "minItems": 2,
-                                                "maxItems": 2
-                                              },
-                                              "to": {
-                                                "type": "array",
-                                                "items": {
-                                                  "type": "number"
-                                                },
-                                                "minItems": 2,
-                                                "maxItems": 2
-                                              }
-                                            }
-                                          }
-                                        }
-                                      }
-                                    ]
-                                  }
-                                },
-                                "fill": {
-                                  "type": "object",
-                                  "additionalProperties": false,
-                                  "required": [
-                                    "r",
-                                    "g",
-                                    "b",
-                                    "a"
-                                  ],
-                                  "properties": {
-                                    "r": {
-                                      "type": "integer",
-                                      "minimum": 0,
-                                      "maximum": 255
-                                    },
-                                    "g": {
-                                      "type": "integer",
-                                      "minimum": 0,
-                                      "maximum": 255
-                                    },
-                                    "b": {
-                                      "type": "integer",
-                                      "minimum": 0,
-                                      "maximum": 255
-                                    },
-                                    "a": {
-                                      "type": "integer",
-                                      "minimum": 0,
-                                      "maximum": 255
-                                    }
-                                  }
-                                },
-                                "stroke": {
-                                  "type": "object",
-                                  "additionalProperties": false,
-                                  "required": [
-                                    "r",
-                                    "g",
-                                    "b",
-                                    "a"
-                                  ],
-                                  "properties": {
-                                    "r": {
-                                      "type": "integer",
-                                      "minimum": 0,
-                                      "maximum": 255
-                                    },
-                                    "g": {
-                                      "type": "integer",
-                                      "minimum": 0,
-                                      "maximum": 255
-                                    },
-                                    "b": {
-                                      "type": "integer",
-                                      "minimum": 0,
-                                      "maximum": 255
-                                    },
-                                    "a": {
-                                      "type": "integer",
-                                      "minimum": 0,
-                                      "maximum": 255
-                                    }
-                                  }
-                                },
-                                "strokeWidth": {
-                                  "type": "number",
-                                  "minimum": 0
-                                }
-                              }
-                            }
-                          }
-                        }
+                  "width": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
                       }
-                    }
+                    ]
                   },
-                  {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": [
-                      "Image"
-                    ],
-                    "properties": {
-                      "Image": {
+                  "height": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "pinnedTileId": {
+                    "anyOf": [
+                      {
                         "type": "object",
                         "additionalProperties": false,
                         "required": [
-                          "child"
+                          "value"
                         ],
                         "properties": {
-                          "child": {
-                            "type": "object",
-                            "description": "store::ArtifactChild handle into s.stdio.semio@v1/image.",
-                            "required": [
-                              "childId",
-                              "target"
-                            ],
-                            "properties": {
-                              "childId": {
+                          "value": {
+                            "anyOf": [
+                              {
                                 "type": "string"
                               },
-                              "target": {
-                                "type": "object"
+                              {
+                                "type": "null"
                               }
-                            }
+                            ]
                           }
                         }
+                      },
+                      {
+                        "type": "null"
                       }
-                    }
+                    ]
                   }
-                ]
+                }
               }
             }
           }
-        ],
-        "minItems": 2,
-        "maxItems": 2
+        }
       }
     },
-    "rulesRemoved": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "rulesUpserted": {
-      "type": "array",
-      "items": {
-        "type": "array",
-        "items": [
-          {
-            "type": "integer",
-            "minimum": 0
-          },
-          {
+    "edges": {
+      "title": "EdgesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "patched"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "title": "Wfc2dSlotEdge",
+            "type": "object"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
             "type": "object",
             "additionalProperties": false,
             "required": [
               "id",
-              "tileAId",
-              "tileBId",
-              "allowed"
+              "patch"
             ],
             "properties": {
               "id": {
                 "type": "string"
               },
-              "tileAId": {
-                "type": "string"
-              },
-              "tileBId": {
-                "type": "string"
-              },
-              "relation": {
-                "type": "string"
-              },
-              "allowed": {
-                "type": "boolean"
+              "patch": {
+                "title": "EdgesPatch",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "fromSlotId",
+                  "toSlotId",
+                  "relation"
+                ],
+                "properties": {
+                  "fromSlotId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "toSlotId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relation": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
               }
             }
           }
-        ],
-        "minItems": 2,
-        "maxItems": 2
+        }
+      }
+    },
+    "tiles": {
+      "title": "TilesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "patched"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "title": "Wfc2dTile",
+            "type": "object"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "patch": {
+                "title": "TilesPatch",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "weight",
+                  "media",
+                  "label"
+                ],
+                "properties": {
+                  "weight": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "media": {
+                    "anyOf": [
+                      {
+                        "title": "Media",
+                        "type": [
+                          "object",
+                          "string"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "label": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "value"
+                        ],
+                        "properties": {
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "rules": {
+      "title": "RulesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "added",
+        "patched"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "title": "Wfc2dRule",
+            "type": "object"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "patch"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "patch": {
+                "title": "RulesPatch",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "tileAId",
+                  "tileBId",
+                  "allowed",
+                  "relation"
+                ],
+                "properties": {
+                  "tileAId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "tileBId": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "allowed": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "relation": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "value"
+                        ],
+                        "properties": {
+                          "value": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

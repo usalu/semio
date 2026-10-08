@@ -1,0 +1,11 @@
+# Corrected Production Guest Receipt Review
+
+Independently read actual first corrected guest receipt c1dfe245-cd85-4fc9-a44b-21f18b423f2c under the production buildDirectory provenance ledger. Exact check manifest Cargo.toml/lib/wasm32-wasip2/packages framework,replication,kernel,os,plugin/features component-guest and both deflate selections match declared guest1. Status0/cancelledfalse; 110 profile.test=false units; zero null dep-info bases; zero null input hashes; no mutation-testing feature units. Raw .d parent-relative syntax remains in55 rows;15 actual build-script records; no buildResources envelope in this first selection.
+
+Current physical digest validation of all1346 unique compiler input paths found TWO mismatches at inspection: `🧰️framework/🔨️modules/🎒️pack/🌱️value/🦀️.rs` and `🧰️framework/🔨️modules/🎒️pack/🌱️intrinsic/🎮️retained/🦀️.rs`. This actual compiled observation is historical, but is not current default-reuse proof. Both owners notified; no writer attribution or additional compiler dispatched. Strict current input refusal is required. Remaining ordered three guests were still active when this review was performed.
+
+## Corrected Third Full Four-Check Observation
+
+Independently opened all four production durable receipts indexed by plugin-four-guest-corrected3-historical-index.json. Exact target/workspace/package/features match all four declared checks, statuses0, units110/77/319/110, null bases0 and null input hashes0 throughout. Original parent-relative syntax persists in55/33/89/55 raw .d rows. WGPU selection retains two actual build-resource envelopes with362 and280 rows. Both bind the same package/OUT_DIR as an actual build-script record in their invocation, retained JSONL hash equals text, and every read/copy original/output captured SHA agrees. Other three selections have no build-resource envelopes.
+
+The contemporaneous currentness report records source drift2/1/1/1 across the four receipts. These full compiler successes prove historical corrected input observations, while strict current reuse remains refused. No current runtime exclusion or published/mounted asset claim is inferred. Old null-base four-check records remain invalid; this corrected observation does not relabel them.

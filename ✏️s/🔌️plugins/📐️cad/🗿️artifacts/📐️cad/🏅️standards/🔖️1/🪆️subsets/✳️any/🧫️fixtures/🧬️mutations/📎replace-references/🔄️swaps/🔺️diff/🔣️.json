@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "shapeModel": null,
@@ -9,24 +8,31 @@
   "drawings": null,
   "breps": null,
   "referencesByModelDefinitionId": {
-    "spatial.shape": [
-      {
-        "id": "ref-2",
-        "sourceUrl": "https://example.test/site.png",
-        "mediaKind": "image",
-        "origin": [
-          5.0,
-          0.0,
-          0.0
-        ],
-        "orientation": null,
-        "scale": null,
-        "widthWorld": 16.0,
-        "hidden": false,
-        "locked": false,
-        "opacity": null
-      }
-    ]
+    "spatial.shape": {
+      "added": [
+        {
+          "id": "ref-2",
+          "sourceUrl": "https://example.test/site.png",
+          "mediaKind": "image",
+          "origin": [
+            5.0,
+            0.0,
+            0.0
+          ],
+          "orientation": null,
+          "scale": null,
+          "widthWorld": 16.0,
+          "hidden": false,
+          "locked": false,
+          "opacity": null
+        }
+      ],
+      "removed": [
+        "ref-1"
+      ],
+      "patched": [],
+      "reordered": null
+    }
   },
   "nodes": null
 }

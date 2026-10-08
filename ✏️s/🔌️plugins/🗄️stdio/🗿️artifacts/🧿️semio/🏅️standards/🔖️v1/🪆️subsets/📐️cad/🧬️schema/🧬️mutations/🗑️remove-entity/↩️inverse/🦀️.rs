@@ -7,7 +7,7 @@ use super::super::*;
 pub fn inverse(payload: &super::RemoveEntity, base: &SemioCadSnapshot) -> Result<Vec<SemioCadMutation>, semio_framework_value::ValueError> {
     let super::RemoveEntity { handle } = payload;
     Ok(match find_entity(base, handle) {
-        Some(e) => vec![SemioCadMutation::AddEntity(add_entity::AddEntity { entity: e.clone() })],
+        Some(e) => vec![SemioCadMutation::AddEntity(add_entity::AddEntity { entity: e.clone(), at: base.entities.iter().position(|entity| entity.handle == *handle) })],
         None => Vec::new(),
     })
 }

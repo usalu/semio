@@ -2,7 +2,7 @@ grammar Stdio_txt_mutation;
 // TxtMutation delegates its payload codec to the opcode-selected direct leaf.
 document      : object EOF ;
 object        : '{' '"mutation"' ':' kind (',' field)* '}' ;
-kind          : '"setSnapshot"' | '"setTrailingNewline"' | '"setLineEnding"'
+kind          : '"setTrailingNewline"' | '"setLineEnding"'
               | '"insertLine"' | '"removeLine"' | '"setLine"' ;
 field         : snapshotF | valueF | indexF | textF ;
 snapshotF     : '"snapshot"' ':' snapshotObj ;

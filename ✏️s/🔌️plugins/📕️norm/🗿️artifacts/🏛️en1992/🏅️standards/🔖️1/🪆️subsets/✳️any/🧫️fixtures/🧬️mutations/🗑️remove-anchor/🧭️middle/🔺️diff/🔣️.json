@@ -1,0 +1,19 @@
+{
+  "annex": null,
+  "title": null,
+  "designWorkingLifeYears": null,
+  "deltaCDev": null,
+  "cementType": null,
+  "concreteGrades": null,
+  "reinforcementGrades": null,
+  "prestressSteels": null,
+  "members": null,
+  "anchors": {
+    "added": [],
+    "removed": [
+      "anc-1-m1"
+    ],
+    "modified": [],
+    "order": null
+  }
+}

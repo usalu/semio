@@ -2,6 +2,10 @@
 
 use crate::{En1993Diff, En1993Snapshot};
 
+#[path = "🧭️edit-rules/🦀️.rs"]
+mod edit_rules;
+pub use edit_rules::EDIT_RULES;
+
 //#region 🔖️Mutations
 //#region 🔖️Leaves
 use super::change_annex;

@@ -4,4 +4,5 @@ export interface SetCatalogEntryMutation {
   mutation: 'setCatalogEntry';
   key: string;
   value: PdfObject;
+  index?: number | null;
 }

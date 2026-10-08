@@ -1,6 +1,4 @@
-//! 🎨️ `set-stream-format` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🎨️ `set-stream-format` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -17,14 +15,18 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for SetStreamFormat {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "stream-format", kind: "set-stream-format", record: "SetStreamFormat" };
 
     fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
-        agg_diff(&AviMutation::SetStreamFormat(self.clone()), base)
+        let Self { stream_index, strf } = self;
+        protocol::MutationOutcome::new(stream_diff_for(*stream_index, AviStreamDiff { strf: Some(strf.clone()), ..AviStreamDiff::default() }))
     }
     fn inverse(&self, base: &AviSnapshot) -> Result<Vec<AviMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&AviMutation::SetStreamFormat(self.clone()), base)?
-    
-    })
-}
+        let Self { stream_index, .. } = self;
+        Ok({
+            match base.streams.get(*stream_index) {
+                Some(stream) => vec![AviMutation::SetStreamFormat(set_stream_format::SetStreamFormat { stream_index: *stream_index, strf: stream.strf.clone() })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set stream format", "Datenstromformat setzen")
     }

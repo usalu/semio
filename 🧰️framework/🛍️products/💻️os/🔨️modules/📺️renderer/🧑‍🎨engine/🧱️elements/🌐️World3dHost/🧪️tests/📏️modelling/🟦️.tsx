@@ -11,7 +11,7 @@
 import { act, cleanup, render } from "@semio-tech/ui-react/test";
 import { createElement, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { BufferGeometry, Color, ColorManagement, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, Plane, SRGBColorSpace, Vector3 } from "three";
+import { BufferAttribute, BufferGeometry, Color, ColorManagement, Group, Mesh, MeshBasicMaterial, MeshStandardMaterial, OrthographicCamera, PerspectiveCamera, Plane, SRGBColorSpace, Vector3 } from "three";
 import fixture from "../../../../../../../../../🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/📏️world3d-modelling/🔣️.json" with { type: "json" };
 
 const recorded = vi.hoisted(() => ({ frames: [] as ((state: unknown, delta: number) => void)[], camera: null as PerspectiveCamera | null, size: { width: 800, height: 600 } }));
@@ -57,6 +57,7 @@ import {
   applyWorld3dSectionClipping,
   collectWorld3dSolidMeshes,
   createWorld3dAnnotationStore,
+  formatWorld3dLegendValue,
   projectWorld3dAnnotations,
   resolveWorld3dHighlightPaint,
   resolveWorld3dToneHex,
@@ -65,6 +66,10 @@ import {
   World3dAnnotationOverlay,
   World3dScalarLegendView,
   World3dSectionCapStencils,
+  world3dGlbHitFaceId,
+  world3dGlbSubElementIds,
+  world3dGlbSubElementMeshData,
+  world3dLegendLines,
   world3dModellingStrings,
   world3dRampGradient,
   world3dSectionPlane,
@@ -490,5 +495,104 @@ describe("🧭️ the host mounts the modelling lanes", () => {
     recorded.camera!.updateMatrixWorld(true);
     playFrames();
     expect(view.container.querySelector("[data-slot=world-annotation-label]")!.getAttribute("style")).not.toBe(label);
+  });
+});
+
+function expectClose(actual: unknown, expected: unknown, path = "$"): void {
+  if (typeof expected === "number") {
+    expect(typeof actual, path).toBe("number");
+    expect(Math.abs((actual as number) - expected), `${path}: ${actual} vs ${expected}`).toBeLessThan(1e-6);
+  } else if (Array.isArray(expected)) {
+    expect(Array.isArray(actual), path).toBe(true);
+    expect((actual as unknown[]).length, path).toBe(expected.length);
+    expected.forEach((entry, index) => expectClose((actual as unknown[])[index], entry, `${path}[${index}]`));
+  } else if (expected !== null && typeof expected === "object") {
+    expect(Object.keys(actual as object).sort(), path).toEqual(Object.keys(expected).sort());
+    for (const [key, entry] of Object.entries(expected)) expectClose((actual as Record<string, unknown>)[key], entry, `${path}.${key}`);
+  } else {
+    expect(actual, path).toEqual(expected);
+  }
+}
+
+describe("🧫️ shared fixture rows that the wgpu renderer is pinned against", () => {
+  it("projects the annotation layer through the fixture camera to the fixture screen geometry", () => {
+    const spec = fixture.annotationProjection;
+    const camera = new PerspectiveCamera(spec.camera.fovYDegrees, spec.size.width / spec.size.height, spec.camera.near, spec.camera.far);
+    camera.up.set(spec.camera.up[0]!, spec.camera.up[1]!, spec.camera.up[2]!);
+    camera.position.set(spec.camera.position[0]!, spec.camera.position[1]!, spec.camera.position[2]!);
+    camera.lookAt(spec.camera.target[0]!, spec.camera.target[1]!, spec.camera.target[2]!);
+    camera.updateMatrixWorld(true);
+    camera.updateProjectionMatrix();
+    const projected = projectWorld3dAnnotations(layerOf(spec.layer), camera, spec.size).map((entry) => JSON.parse(JSON.stringify(entry)));
+    expectClose(projected, spec.expected);
+    expect(projected.some((entry) => !entry.visible)).toBe(true);
+  });
+
+  it("formats legend values exactly as the Intl rows say", () => {
+    for (const row of fixture.legendValues.rows) expect(formatWorld3dLegendValue(row.value, row.locale)).toBe(row.text);
+  });
+
+  it("writes the legend text of both languages as the fixture rows say", () => {
+    for (const row of fixture.legendLines.rows) expect(world3dLegendLines(parseWorld3dScalarField(row.field)!, row.locale)).toEqual(row.lines);
+  });
+
+  it("resolves sub-element paint tokens over the theme defaults as the fixture rows say", () => {
+    for (const row of fixture.subElementPaint.rows) {
+      const highlight = row.highlight === null ? undefined : parseWorld3dModellingOptions({ highlight: row.highlight })?.highlight;
+      const paint = resolveWorld3dHighlightPaint(highlight, (tone) => `tone:${tone}`);
+      expect(world3dSubElementPaint({ select: row.defaults.select, hover: row.defaults.hover, edgeHover: row.defaults.edgeHover }, paint, { edgeWidth: row.defaults.edgeWidth, vertexMarkPx: row.defaults.vertexMarkPx }), row.name).toEqual(row.expected);
+    }
+  });
+});
+
+describe("🪪️ GLB sub-element ids", () => {
+  const spec = fixture.glbSubElementIds;
+  function primitive(attributeNames: { readonly face: string; readonly vertex: string } | null, offset = 0): Mesh {
+    const geometry = new BufferGeometry();
+    geometry.setAttribute("position", new BufferAttribute(new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0]), 3));
+    geometry.setIndex(spec.indices);
+    if (attributeNames) {
+      geometry.setAttribute(attributeNames.face, new BufferAttribute(new Uint32Array(spec.faceIds.map((id: number) => id + offset)), 1));
+      geometry.setAttribute(attributeNames.vertex, new BufferAttribute(new Uint32Array(spec.vertexIds.map((id: number) => id + offset)), 1));
+    }
+    return new Mesh(geometry, new MeshBasicMaterial());
+  }
+
+  it("reads the face id at each triangle's first corner and the vertex id per vertex", () => {
+    const ids = world3dGlbSubElementIds(primitive({ face: spec.faceAttribute, vertex: spec.vertexAttribute }).geometry as never);
+    expect(ids.faceIds).toEqual(spec.expectedTriangleFaceIds);
+    expect(ids.vertexIds).toEqual(spec.vertexIds);
+  });
+
+  it("accepts the lower-cased names three's GLTFLoader gives custom attributes", () => {
+    const ids = world3dGlbSubElementIds(primitive({ face: spec.faceAttribute.toLowerCase(), vertex: spec.vertexAttribute.toLowerCase() }).geometry as never);
+    expect(ids.faceIds).toEqual(spec.expectedTriangleFaceIds);
+  });
+
+  it("answers no ids for a primitive without the attributes and resolves a pointer hit to the topology face", () => {
+    expect(world3dGlbSubElementIds(primitive(null).geometry as never)).toEqual({ faceIds: null, vertexIds: null });
+    const mesh = primitive({ face: spec.faceAttribute, vertex: spec.vertexAttribute });
+    expect(world3dGlbHitFaceId(mesh, 0)).toBe(7);
+    expect(world3dGlbHitFaceId(mesh, 1)).toBe(9);
+    expect(world3dGlbHitFaceId(mesh, 2)).toBeUndefined();
+    expect(world3dGlbHitFaceId(primitive(null), 0)).toBeUndefined();
+    expect(world3dGlbHitFaceId(undefined, 0)).toBeUndefined();
+  });
+
+  it("merges the primitives of a scene into one picking mesh and keeps an id table only when every primitive carries it", () => {
+    const names = { face: spec.faceAttribute, vertex: spec.vertexAttribute };
+    const root = new Group();
+    root.add(primitive(names), primitive(names, 1000));
+    const merged = world3dGlbSubElementMeshData(root)!;
+    expect(merged.indices).toEqual([...spec.indices, ...spec.indices.map((index: number) => index + 4)]);
+    expect(merged.faceIds).toEqual([...spec.expectedTriangleFaceIds, ...spec.expectedTriangleFaceIds.map((id: number) => id + 1000)]);
+    expect(merged.vertexIds).toEqual([...spec.vertexIds, ...spec.vertexIds.map((id: number) => id + 1000)]);
+    const mixed = new Group();
+    mixed.add(primitive(names), primitive(null));
+    const partial = world3dGlbSubElementMeshData(mixed)!;
+    expect(partial.faceIds).toBeUndefined();
+    expect(partial.vertexIds).toBeUndefined();
+    expect(partial.indices.length).toBe(12);
+    expect(world3dGlbSubElementMeshData(new Group())).toBeNull();
   });
 });

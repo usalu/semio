@@ -1,5 +1,6 @@
 {
   "mutation": "addAirLoopTerminalZone",
   "id": 17,
-  "zoneId": 2
+  "zoneId": 2,
+  "index": null
 }

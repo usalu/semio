@@ -23,7 +23,7 @@ export interface CadInference {
 // #region 🔌️Adapters
 import { CstParser, createToken, Lexer } from "chevrotain";
 import type { CstElement, CstNode, IToken } from "chevrotain";
-import { emptyMeshTransfer, kernelGeometry, solidRef, type Vec3 } from "@semio-tech/s-3d-js";
+import { emptyMeshTransfer, kernelGeometry, solidRef, type Vec3 } from "@semio-tech/framework-3d-js";
 import {
   Model,
   buildTypologyToEntityKindMapForModelDefinition,

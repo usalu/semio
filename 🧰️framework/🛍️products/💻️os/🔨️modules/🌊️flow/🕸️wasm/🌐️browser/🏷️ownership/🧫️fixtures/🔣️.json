@@ -290,7 +290,7 @@
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🧫️fixtures/🎬️draw-list/🔣️.json",
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🧫️fixtures/🎬️draw-list/🔣️.json",
       "tokens": [
         "🌊️flow/🕸️wasm/🖥️host/🏃️runtime/🟨️.js"
       ]
@@ -363,7 +363,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧪️tests/🔬️component-domain-laws/🦀️.rs",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🧫️fixtures/🎬️draw-list/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️canvas/🧫️fixtures/🎬️draw-list/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📇️layout.json",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️tests/🧪️source-contract/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",

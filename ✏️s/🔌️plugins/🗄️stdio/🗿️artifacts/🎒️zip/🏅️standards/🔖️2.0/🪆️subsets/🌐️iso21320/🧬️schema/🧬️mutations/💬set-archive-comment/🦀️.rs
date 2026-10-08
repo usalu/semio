@@ -1,7 +1,4 @@
-//! 💬️ `set-archive-comment` — authored as its own mutation leaf. The aggregate's original
-//! `diff`/`inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf
-//! reconstructs its aggregate value and delegates, so the semantics are preserved by
-//! construction rather than re-derived.
+//! 💬️ `set-archive-comment` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -18,14 +15,12 @@ impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for SetArchiveComm
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "archive-comment", kind: "set-archive-comment", record: "SetArchiveComment" };
 
     fn diff(&self, base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipIso21320Mutation as protocol::Mutation<ZipSnapshot>>::Diff> {
-        agg_diff(&ZipIso21320Mutation::SetArchiveComment(self.clone()), base)
+        let Self { comment, comment_utf8 } = self;
+        protocol::MutationOutcome::new(diff::diff_set_archive_comment(comment, *comment_utf8))
     }
     fn inverse(&self, base: &ZipSnapshot) -> Result<Vec<ZipIso21320Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&ZipIso21320Mutation::SetArchiveComment(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![ZipIso21320Mutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: base.comment.clone(), comment_utf8: base.comment_utf8 })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set archive comment", "Archivkommentar setzen")
     }

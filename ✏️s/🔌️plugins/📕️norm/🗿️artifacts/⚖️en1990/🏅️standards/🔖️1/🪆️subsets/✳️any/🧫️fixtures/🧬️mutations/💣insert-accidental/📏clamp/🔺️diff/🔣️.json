@@ -12,20 +12,43 @@
   "inspectionLevel": null,
   "kFiDeclared": null,
   "betaComputed": null,
-  "permanents": null,
-  "variables": null,
-  "accidentals": [
-    {
-      "id": "A-impact",
-      "ad": 50000.0
-    },
-    {
-      "id": "A-explosion",
-      "ad": 30000.0
-    }
-  ],
-  "seismics": null,
-  "members": null,
-  "bridgeSls": null,
-  "effects": null
+  "permanents": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "variables": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "accidentals": {
+    "removed": [],
+    "added": [
+      {
+        "after": "A-impact",
+        "row": {
+          "id": "A-explosion",
+          "ad": 30000.0
+        }
+      }
+    ],
+    "modified": []
+  },
+  "seismics": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "bridgeSls": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "effects": []
 }

@@ -296,7 +296,7 @@ async fn gumball_drag(app: &mut LayoutApp, dx: f64) {
 /// 🧮️ The fresh fold of a log of frame-selection leaves on the demo document.
 fn folded(log: &[LayoutMutation]) -> LayoutSnapshot {
     use protocol::{Mutation, MutationDiff};
-    log.iter().fold(crate::standards::v1::subsets::any::io::text::snapshot::default_document(), |document, mutation| mutation.diff(&document).diff().apply(&document).expect("the leaf applies"))
+    log.iter().fold(crate::standards::v1::subsets::any::io::text::snapshot::default_document(), |document, mutation| protocol::apply_diff(mutation.diff(&document).diff(), &document).expect("the leaf applies"))
 }
 
 fn drag_leaf(dx: f64) -> LayoutMutation {

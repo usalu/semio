@@ -2,6 +2,7 @@
 //! (`mutation.partial`).
 
 use super::{equation_targets_invariant, SetNodePositions};
+use crate::diff::{EquationNodePatch, EquationNodesDelta};
 use crate::{EquationDiff, EquationSnapshot};
 
 //#region 🔖️Diff
@@ -15,23 +16,22 @@ pub fn diff(payload: &SetNodePositions, base: &EquationSnapshot) -> protocol::Mu
     if payload.positions.iter().any(|position| !position.x.is_finite() || !position.y.is_finite()) {
         return protocol::MutationOutcome::fatal("mutation.invariant", "A node position must be finite.", ids);
     }
-    let mut graph = base.graph.clone();
-    let missing: Vec<String> = ids.iter().filter(|id| !graph.nodes.iter().any(|node| &node.id == *id)).cloned().collect();
+    let nodes = &base.graph.nodes;
+    let missing: Vec<String> = ids.iter().filter(|id| !nodes.iter().any(|node| &node.id == *id)).cloned().collect();
     if missing.len() == ids.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} node(s) exists.", ids.len()), missing);
     }
     let partial = (!missing.is_empty()).then(|| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} node(s) skipped (no such node): {}", missing.len(), ids.len(), missing.join(", "))).at(missing));
-    let mut changed = false;
-    for position in &payload.positions {
-        if let Some(node) = graph.nodes.iter_mut().find(|node| node.id == position.id) {
-            changed |= (node.x, node.y) != (position.x, position.y);
-            node.x = position.x;
-            node.y = position.y;
-        }
-    }
-    if !changed {
+    let patched: Vec<EquationNodePatch> = payload
+        .positions
+        .iter()
+        .filter(|position| nodes.iter().any(|node| node.id == position.id && (node.x, node.y) != (position.x, position.y)))
+        .map(|position| EquationNodePatch { id: position.id.clone(), x: Some(position.x), y: Some(position.y), ..Default::default() })
+        .collect();
+    if patched.is_empty() {
         return protocol::MutationOutcome::empty().absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "Every node already sits at its position.").at(ids)]));
     }
-    protocol::MutationOutcome::new(crate::equation_state_diff(graph, base.geometry.clone())).absorb_messages(partial)
+    let diff = EquationDiff { nodes: Some(EquationNodesDelta { patched, ..Default::default() }), ..Default::default() };
+    protocol::MutationOutcome::new(crate::equation_state_diff(diff, base)).absorb_messages(partial)
 }
 //#endregion 🔖️Diff

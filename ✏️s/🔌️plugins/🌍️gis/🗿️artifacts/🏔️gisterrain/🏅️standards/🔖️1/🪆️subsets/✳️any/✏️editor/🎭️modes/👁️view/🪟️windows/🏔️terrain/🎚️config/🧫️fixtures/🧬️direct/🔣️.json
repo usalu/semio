@@ -240,10 +240,6 @@
         "expected": {
           "steps": [
             {
-              "cameraJson": "a"
-            },
-            {},
-            {
               "cameraJson": "b"
             }
           ]

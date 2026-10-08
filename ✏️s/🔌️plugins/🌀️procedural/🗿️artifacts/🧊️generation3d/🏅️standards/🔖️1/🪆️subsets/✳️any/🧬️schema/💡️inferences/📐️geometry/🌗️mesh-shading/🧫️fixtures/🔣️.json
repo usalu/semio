@@ -1,0 +1,555 @@
+{
+ "description": "Language-agnostic laws of the mesh.shading widgets on a unit cube. Vertex normals are the unit sum of the normals of the smooth faces at the vertex, else the normal of the lowest face at the vertex.",
+ "tolerance": 1e-05,
+ "cases": [
+  {
+   "name": "smooth shading of every cube face averages the three face normals",
+   "kind": "mesh.shading.setShading",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "faces": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "smooth": true
+   },
+   "outputs": {
+    "mesh": {
+     "faces": 6,
+     "vertexNormals": {
+      "0": [
+       -0.5773502691896258,
+       -0.5773502691896258,
+       -0.5773502691896258
+      ],
+      "6": [
+       0.5773502691896258,
+       0.5773502691896258,
+       0.5773502691896258
+      ],
+      "3": [
+       -0.5773502691896258,
+       0.5773502691896258,
+       -0.5773502691896258
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "flat shading keeps the normal of the first face at a vertex",
+   "kind": "mesh.shading.setShading",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "faces": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5
+    ],
+    "smooth": false
+   },
+   "outputs": {
+    "mesh": {
+     "faces": 6,
+     "vertexNormals": {
+      "0": [
+       0,
+       0,
+       -1
+      ],
+      "6": [
+       0,
+       0,
+       1
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "smoothing the top face only smooths its corners",
+   "kind": "mesh.shading.setShading",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "faces": [
+     1
+    ],
+    "smooth": true
+   },
+   "outputs": {
+    "mesh": {
+     "faces": 6,
+     "vertexNormals": {
+      "4": [
+       0,
+       0,
+       1
+      ],
+      "0": [
+       0,
+       0,
+       -1
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "recompute normals of a flat cube",
+   "kind": "mesh.shading.recomputeNormals",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    }
+   },
+   "outputs": {
+    "mesh": {
+     "faces": 6,
+     "vertexNormals": {
+      "0": [
+       0,
+       0,
+       -1
+      ],
+      "1": [
+       0,
+       0,
+       -1
+      ],
+      "4": [
+       0,
+       0,
+       1
+      ]
+     },
+     "closed": true
+    }
+   }
+  },
+  {
+   "name": "a face beyond the mesh is stale",
+   "kind": "mesh.shading.setShading",
+   "inputs": {
+    "mesh": {
+     "positions": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       1,
+       0,
+       0
+      ],
+      [
+       1,
+       1,
+       0
+      ],
+      [
+       0,
+       1,
+       0
+      ],
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       1,
+       1,
+       1
+      ],
+      [
+       0,
+       1,
+       1
+      ]
+     ],
+     "faces": [
+      [
+       0,
+       3,
+       2,
+       1
+      ],
+      [
+       4,
+       5,
+       6,
+       7
+      ],
+      [
+       0,
+       1,
+       5,
+       4
+      ],
+      [
+       2,
+       3,
+       7,
+       6
+      ],
+      [
+       0,
+       4,
+       7,
+       3
+      ],
+      [
+       1,
+       2,
+       6,
+       5
+      ]
+     ]
+    },
+    "faces": [
+     9
+    ],
+    "smooth": true
+   },
+   "fault": {
+    "code": "generation3d.geometry.selection-stale",
+    "port": "faces"
+   }
+  }
+ ]
+}

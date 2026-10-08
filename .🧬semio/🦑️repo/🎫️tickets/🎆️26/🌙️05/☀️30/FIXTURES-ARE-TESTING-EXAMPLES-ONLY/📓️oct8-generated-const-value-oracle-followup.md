@@ -1,0 +1,5 @@
+# Generated Const Value Oracle Followup
+
+A bounded authored TypeScript/TSX scan of Framework, s, Hub and semio-tech for inline compile/validate/addSchema const objects referencing fixture/corpus/cases found six remaining single-line callsites after the Dev processCases closure. Dependencies, generated output, compiler caches and bindings were excluded. This is a textual same-signature followup, not a complete AST/dataflow inventory.
+
+One Flow BRep standalone guest law compares an individual evaluated operator identity to its example's operatorId. Four Repo physical-codec laws compare individual Forms value, graph value, expected text value and changed word bits against independent Ajv. One Dev browser-host-staging law compares one compiled guest call's decoded result to its row's expected value. These checks concern actual domain output values and are not admissions of the entire test example roster or corpus metadata. They remain intact. No additional source mutation, test execution or broader zero finding is inferred from this bounded scan.

@@ -2,6 +2,7 @@ syntax = "proto3";
 package semio.s_stdio_pdf_1_7.mutation;
 
 import "📥️insert-page/🛰️.proto";
+import "🪄️replace-page/🛰️.proto";
 import "🗑️remove-page/🛰️.proto";
 import "📐️set-page-media-box/🛰️.proto";
 import "✂️set-page-crop-box/🛰️.proto";
@@ -124,5 +125,6 @@ message PdfMutation {
     SetEncryptionMutation set_encryption = 58;
     SetCatalogEntryMutation set_catalog_entry = 59;
     RemoveCatalogEntryMutation remove_catalog_entry = 60;
+    ReplacePageMutation replace_page = 61;
   }
 }

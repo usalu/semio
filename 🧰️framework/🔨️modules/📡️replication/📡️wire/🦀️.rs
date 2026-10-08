@@ -2414,6 +2414,12 @@ pub enum SelectionMode {
     Multiple,
 }
 
+impl crate::value::retirement::RetireOwned for SelectionMode {
+    fn retirement(self)->Box<dyn crate::value::retirement::RetirementCursor>{crate::value::retirement::leaf(())}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(crate::value::retirement::leaf_birth_bytes::<()>())}
+    fn controlled_retirement_supported()->bool{true}
+}
+
 /// 🌱️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): hand-written, not
 /// derived — this crate physically owns `ToValue`/`FromValue`/`DslValue` (`crate::value`), and the
 /// `#[derive(ToValue, FromValue)]` macro's generated code is rooted at
@@ -2594,6 +2600,8 @@ pub struct DomainSelection {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub anchor_id: Option<String>,
 }
+
+crate::value::artifact_retire_struct!(DomainSelection {granularity,ids,anchor_id});
 
 /// 🌱️ Hand-written twin of the `SelectionMode` note above — same reason (this crate cannot depend
 /// on the derive macro's target crate).

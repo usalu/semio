@@ -1,6 +1,5 @@
 //! 🏠️ Artifact document-store and publication authorities.
 
-use crate::standards::v1::subsets::any::io::binary::mutations::PresentationProjectionAdoptionTarget;
 use crate::standards::v1::subsets::any::schema::empty_presentation_snapshot;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
@@ -333,7 +332,7 @@ impl semio_framework_job::InteractiveJob for PresentationEnvelopeMaterializeJob 
                             self.begin_materialize_retirement(PresentationEnvelopeMaterializeState::RetireEnvelopeFault);
                             return semio_framework_job::StepOutcome::Yield;
                         }
-                        match diff.apply(current) {
+                        match protocol::apply_diff(&diff, current) {
                             Ok(next) => {
                                 let previous = self.materialize_snapshot.take().expect("materialized snapshot remains owned");
                                 *self.materialize_snapshot = Some(next);
@@ -1644,3 +1643,9 @@ pub struct PresentationEnvelopeMaterializeRegistry {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+/// 🎯️ Nonblocking publication target for one completed Presentation snapshot owner.
+pub trait PresentationProjectionAdoptionTarget {
+    #[expect(clippy::result_large_err, reason = "Returns the exact unadopted snapshot owner for retry or incremental retirement without allocating on refusal.")]
+    fn try_adopt(&mut self, value: PresentationSnapshot) -> Result<(), PresentationSnapshot>;
+}

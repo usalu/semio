@@ -138,32 +138,6 @@ export type RustWorkerHost = {
   postReady(): void;
 };
 
-let rustHost: RustWorkerHost | null = null;
-
-// 🧵️ Built as a variable rather than a string literal so Rollup's static import analysis — including
-// the separate sub-build `vite:worker-import-meta-url` runs for this very file — can't see a resolvable
-// specifier at all and leaves the `import()` genuinely dynamic; a real bundler-visible specifier here
-// (even `@vite-ignore`d) still gets probed by that sub-build and, since the package is never actually
-// published, either fails the build outright or emits a phantom `__vite-browser-external-*.js` chunk
-// reference that 404s in production. Left dynamic, the browser's native module loader simply rejects
-// the unresolvable bare specifier at runtime, which the `catch` below already treats as "unavailable".
-const RUST_SYNC_WORKER_MODULE_SPECIFIER = "@semio-tech/store-worker";
-
-async function ensureRustHost(): Promise<RustWorkerHost | null> {
-  if (rustHost) return rustHost;
-  if (typeof WebAssembly === "undefined") return null;
-  try {
-    const module = await import(RUST_SYNC_WORKER_MODULE_SPECIFIER);
-    await module.default();
-    rustHost = new module.BackboneWorkerHost() as RustWorkerHost;
-    return rustHost;
-  } catch {
-    return null;
-  }
-}
-
-const rustHostPromise = ensureRustHost();
-
 type DocumentExecutionOwner = "typescript" | "rust";
 type DocumentExecutionOwnerEntry = Readonly<{ owner: DocumentExecutionOwner; documentId: string; clientInstanceId: string; spaceId?: string }>;
 
@@ -256,16 +230,11 @@ if (workerScope) {
     // 🛡️ React DevTools and other injectors postMessage into every Worker; ignore non-wire traffic.
     if (!isBackboneWorkerWireMessage(messageEvent.data)) return;
     const request = decodeWorkerRequest(messageEvent.data);
-    void rustHostPromise.then((host) => {
-      dispatchBackboneWorkerRequest(request, host);
-    });
+    queueMicrotask(() => dispatchBackboneWorkerRequest(request, null));
   };
 }
 
-void rustHostPromise.then((host) => {
-  if (host) host.postReady();
-  else post({ kind: "ready" });
-});
+queueMicrotask(() => post({ kind: "ready" }));
 
 //#region 🧪️TestContracts
 /** 🧵️ Exact shape of the mutable seam bag the worker hands its extracted test module; every member is a `typeof` of the live binding, so it cannot drift. */

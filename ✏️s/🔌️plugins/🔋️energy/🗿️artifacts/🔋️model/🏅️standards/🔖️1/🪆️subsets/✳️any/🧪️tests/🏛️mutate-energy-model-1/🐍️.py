@@ -858,8 +858,10 @@ def add_output_variable(before, payload):
         return unchanged(before), rejected("mutation.invariant", [key])
     if any(spec["name"] == name and spec["key"] == key for spec in before["model"]["output_variables"]):
         return unchanged(before), rejected("mutation.duplicate-id", [name, key])
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["output_variables"]):
+        return unchanged(before), rejected("mutation.target-missing", [name, key])
     after = copy.deepcopy(before)
-    after["model"]["output_variables"].append({"name": name, "key": key, "reporting_frequency": payload["reportingFrequency"]})
+    after["model"]["output_variables"].insert(len(after["model"]["output_variables"]) if payload.get("index") is None else payload["index"], {"name": name, "key": key, "reporting_frequency": payload["reportingFrequency"]})
     return after, applied()
 
 
@@ -1021,10 +1023,14 @@ def create_zone(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if payload["multiplier"] == 0:
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["zones"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
     created = {"id": entity_id, "name": payload["name"], "volume_m3": payload["volumeM3"], "multiplier": payload["multiplier"], "conditioned": payload["conditioned"], "part_of_total_floor_area": payload["partOfTotalFloorArea"]}
     rows = after["model"]["zones"]
     position = next((index for index, row in enumerate(rows) if row["id"] > entity_id), len(rows))
+    if payload.get("index") is not None:
+        position = payload["index"]
     rows.insert(position, created)
     return after, applied()
 
@@ -1047,8 +1053,8 @@ def delete_zone(before, payload):
 
 
 def _invert_delete_zone(before, payload):
-    item = next(row for row in before["model"]["zones"] if row["id"] == payload["id"])
-    return [("create-zone", {"id": item["id"], "name": item["name"], "volumeM3": item["volume_m3"], "multiplier": item["multiplier"], "conditioned": item["conditioned"], "partOfTotalFloorArea": item["part_of_total_floor_area"]})]
+    index, item = next((position, row) for position, row in enumerate(before["model"]["zones"]) if row["id"] == payload["id"])
+    return [("create-zone", {"id": item["id"], "name": item["name"], "volumeM3": item["volume_m3"], "multiplier": item["multiplier"], "conditioned": item["conditioned"], "partOfTotalFloorArea": item["part_of_total_floor_area"], "index": index})]
 
 
 def create_space(before, payload):
@@ -1062,10 +1068,14 @@ def create_space(before, payload):
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
     if not (payload["floorAreaM2"] == payload["floorAreaM2"] and abs(payload["floorAreaM2"]) != float("inf") and payload["floorAreaM2"] >= 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["spaces"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
     created = {"id": entity_id, "name": payload["name"], "zone_id": payload["zoneId"], "floor_area_m2": payload["floorAreaM2"]}
     rows = after["model"]["spaces"]
     position = next((index for index, row in enumerate(rows) if row["id"] > entity_id), len(rows))
+    if payload.get("index") is not None:
+        position = payload["index"]
     rows.insert(position, created)
     return after, applied()
 
@@ -1088,8 +1098,8 @@ def delete_space(before, payload):
 
 
 def _invert_delete_space(before, payload):
-    item = next(row for row in before["model"]["spaces"] if row["id"] == payload["id"])
-    return [("create-space", {"id": item["id"], "name": item["name"], "zoneId": item["zone_id"], "floorAreaM2": item["floor_area_m2"]})]
+    index, item = next((position, row) for position, row in enumerate(before["model"]["spaces"]) if row["id"] == payload["id"])
+    return [("create-space", {"id": item["id"], "name": item["name"], "zoneId": item["zone_id"], "floorAreaM2": item["floor_area_m2"], "index": index})]
 
 
 def rename_space(before, payload):
@@ -1180,10 +1190,14 @@ def create_surface(before, payload):
     if (payload["boundary"] == "Interzone") != (payload["interzoneSurfaceId"] is not None):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     boundary = {"Interzone": payload["interzoneSurfaceId"]} if payload["interzoneSurfaceId"] is not None else payload["boundary"]
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["surfaces"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
     created = {"id": entity_id, "name": payload["name"], "zone_id": payload["zoneId"], "class": payload["class"], "vertices_m": payload["verticesM"], "construction_id": payload["constructionId"], "outside_boundary_condition": boundary, "sun_exposed": payload["sunExposed"], "wind_exposed": payload["windExposed"], "multiplier": payload["multiplier"]}
     rows = after["model"]["surfaces"]
     position = next((index for index, row in enumerate(rows) if row["id"] > entity_id), len(rows))
+    if payload.get("index") is not None:
+        position = payload["index"]
     rows.insert(position, created)
     return after, applied()
 
@@ -1214,18 +1228,18 @@ def delete_surface(before, payload):
 
 def _invert_delete_surface(before, payload):
     entity_id = payload["id"]
-    item = next(row for row in before["model"]["surfaces"] if row["id"] == entity_id)
+    index, item = next((position, row) for position, row in enumerate(before["model"]["surfaces"]) if row["id"] == entity_id)
     boundary = item["outside_boundary_condition"]
     partner = boundary["Interzone"] if isinstance(boundary, dict) else None
-    steps = [("create-surface", {"id": item["id"], "name": item["name"], "zoneId": item["zone_id"], "class": item["class"], "verticesM": item["vertices_m"], "constructionId": item["construction_id"], "boundary": "Interzone" if partner is not None else boundary, "interzoneSurfaceId": partner, "sunExposed": item["sun_exposed"], "windExposed": item["wind_exposed"], "multiplier": item["multiplier"]})]
-    for window in before["model"]["fenestrations"]:
+    steps = [("create-surface", {"id": item["id"], "name": item["name"], "zoneId": item["zone_id"], "class": item["class"], "verticesM": item["vertices_m"], "constructionId": item["construction_id"], "boundary": "Interzone" if partner is not None else boundary, "interzoneSurfaceId": partner, "sunExposed": item["sun_exposed"], "windExposed": item["wind_exposed"], "multiplier": item["multiplier"], "index": index})]
+    for window_index, window in enumerate(before["model"]["fenestrations"]):
         if window["surface_id"] == entity_id:
-            steps.append(("create-fenestration", {"id": window["id"], "name": window["name"], "surfaceId": window["surface_id"], "uValueWM2k": window["u_value_w_m2k"], "shgc": window["shgc"], "vlt": window["vlt"], "areaM2": window["area_m2"], "heightM": window["height_m"], "sillHeightM": window["sill_height_m"], "frameConductanceWK": window["frame_conductance_w_k"], "dividerConductanceWK": window["divider_conductance_w_k"], "overhangDepthM": window["overhang_depth_m"], "overhangOffsetM": window["overhang_offset_m"], "finDepthM": window["fin_depth_m"], "finOffsetM": window["fin_offset_m"], "glazingConstructionId": window["glazing_construction_id"]}))
+            steps.append(("create-fenestration", {"id": window["id"], "name": window["name"], "surfaceId": window["surface_id"], "uValueWM2k": window["u_value_w_m2k"], "shgc": window["shgc"], "vlt": window["vlt"], "areaM2": window["area_m2"], "heightM": window["height_m"], "sillHeightM": window["sill_height_m"], "frameConductanceWK": window["frame_conductance_w_k"], "dividerConductanceWK": window["divider_conductance_w_k"], "overhangDepthM": window["overhang_depth_m"], "overhangOffsetM": window["overhang_offset_m"], "finDepthM": window["fin_depth_m"], "finOffsetM": window["fin_offset_m"], "glazingConstructionId": window["glazing_construction_id"], "index": window_index}))
             if window["vertices_m"]:
                 steps.append(("replace-fenestration-vertices", {"id": window["id"], "newVerticesM": window["vertices_m"]}))
-    for pair in before["model"]["adjacency_pairs"]:
+    for pair_index, pair in enumerate(before["model"]["adjacency_pairs"]):
         if entity_id in (pair["surface_a_id"], pair["surface_b_id"]):
-            steps.append(("connect-surfaces", {"surfaceAId": pair["surface_a_id"], "surfaceBId": pair["surface_b_id"]}))
+            steps.append(("connect-surfaces", {"surfaceAId": pair["surface_a_id"], "surfaceBId": pair["surface_b_id"], "index": pair_index}))
     return steps
 
 
@@ -1452,10 +1466,14 @@ def create_fenestration(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if not (payload["sillHeightM"] == payload["sillHeightM"] and abs(payload["sillHeightM"]) != float("inf") and payload["sillHeightM"] >= 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["fenestrations"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
     created = {"id": entity_id, "name": payload["name"], "surface_id": payload["surfaceId"], "u_value_w_m2k": payload["uValueWM2k"], "shgc": payload["shgc"], "vlt": payload["vlt"], "area_m2": payload["areaM2"], "height_m": payload["heightM"], "sill_height_m": payload["sillHeightM"], "frame_conductance_w_k": payload["frameConductanceWK"], "divider_conductance_w_k": payload["dividerConductanceWK"], "overhang_depth_m": payload["overhangDepthM"], "overhang_offset_m": payload["overhangOffsetM"], "fin_depth_m": payload["finDepthM"], "fin_offset_m": payload["finOffsetM"], "glazing_construction_id": payload["glazingConstructionId"], "vertices_m": []}
     rows = after["model"]["fenestrations"]
     position = next((index for index, row in enumerate(rows) if row["id"] > entity_id), len(rows))
+    if payload.get("index") is not None:
+        position = payload["index"]
     rows.insert(position, created)
     return after, applied()
 
@@ -1476,8 +1494,8 @@ def delete_fenestration(before, payload):
 
 
 def _invert_delete_fenestration(before, payload):
-    item = next(row for row in before["model"]["fenestrations"] if row["id"] == payload["id"])
-    return [("create-fenestration", {"id": item["id"], "name": item["name"], "surfaceId": item["surface_id"], "uValueWM2k": item["u_value_w_m2k"], "shgc": item["shgc"], "vlt": item["vlt"], "areaM2": item["area_m2"], "heightM": item["height_m"], "sillHeightM": item["sill_height_m"], "frameConductanceWK": item["frame_conductance_w_k"], "dividerConductanceWK": item["divider_conductance_w_k"], "overhangDepthM": item["overhang_depth_m"], "overhangOffsetM": item["overhang_offset_m"], "finDepthM": item["fin_depth_m"], "finOffsetM": item["fin_offset_m"], "glazingConstructionId": item["glazing_construction_id"]})] + ([("replace-fenestration-vertices", {"id": item["id"], "newVerticesM": item["vertices_m"]})] if item["vertices_m"] else [])
+    index, item = next((position, row) for position, row in enumerate(before["model"]["fenestrations"]) if row["id"] == payload["id"])
+    return [("create-fenestration", {"id": item["id"], "name": item["name"], "surfaceId": item["surface_id"], "uValueWM2k": item["u_value_w_m2k"], "shgc": item["shgc"], "vlt": item["vlt"], "areaM2": item["area_m2"], "heightM": item["height_m"], "sillHeightM": item["sill_height_m"], "frameConductanceWK": item["frame_conductance_w_k"], "dividerConductanceWK": item["divider_conductance_w_k"], "overhangDepthM": item["overhang_depth_m"], "overhangOffsetM": item["overhang_offset_m"], "finDepthM": item["fin_depth_m"], "finOffsetM": item["fin_offset_m"], "glazingConstructionId": item["glazing_construction_id"], "index": index})] + ([("replace-fenestration-vertices", {"id": item["id"], "newVerticesM": item["vertices_m"]})] if item["vertices_m"] else [])
 
 
 def rename_fenestration(before, payload):
@@ -1669,10 +1687,14 @@ def create_shading_surface(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(entity_id)])
     if (payload["transmittanceScheduleId"] is not None and not any(row["id"] == payload["transmittanceScheduleId"] for family in ("constants", "daily", "weekly", "annual", "time_series") for row in before["model"]["schedules"][family])):
         return unchanged(before), rejected("mutation.target-missing", [str(entity_id)])
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["shading_surfaces"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
     created = {"id": entity_id, "name": payload["name"], "vertices_m": payload["verticesM"], "transmittance_schedule_id": payload["transmittanceScheduleId"]}
     rows = after["model"]["shading_surfaces"]
     position = next((index for index, row in enumerate(rows) if row["id"] > entity_id), len(rows))
+    if payload.get("index") is not None:
+        position = payload["index"]
     rows.insert(position, created)
     return after, applied()
 
@@ -1693,8 +1715,8 @@ def delete_shading_surface(before, payload):
 
 
 def _invert_delete_shading_surface(before, payload):
-    item = next(row for row in before["model"]["shading_surfaces"] if row["id"] == payload["id"])
-    return [("create-shading-surface", {"id": item["id"], "name": item["name"], "verticesM": item["vertices_m"], "transmittanceScheduleId": item["transmittance_schedule_id"]})]
+    index, item = next((position, row) for position, row in enumerate(before["model"]["shading_surfaces"]) if row["id"] == payload["id"])
+    return [("create-shading-surface", {"id": item["id"], "name": item["name"], "verticesM": item["vertices_m"], "transmittanceScheduleId": item["transmittance_schedule_id"], "index": index})]
 
 
 def rename_shading_surface(before, payload):
@@ -1777,9 +1799,13 @@ def connect_surfaces(before, payload):
         return unchanged(before), rejected("mutation.target-missing", address)
     if any({row["surface_a_id"], row["surface_b_id"]} == {first, second} for row in before["model"]["adjacency_pairs"]):
         return unchanged(before), rejected("mutation.duplicate-id", address)
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["adjacency_pairs"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["surfaceAId"]), str(payload["surfaceBId"])])
     after = copy.deepcopy(before)
     rows = after["model"]["adjacency_pairs"]
     position = next((index for index, row in enumerate(rows) if (row["surface_a_id"], row["surface_b_id"]) > (first, second)), len(rows))
+    if payload.get("index") is not None:
+        position = payload["index"]
     rows.insert(position, {"surface_a_id": first, "surface_b_id": second})
     return after, applied()
 
@@ -1799,8 +1825,8 @@ def disconnect_surfaces(before, payload):
 
 
 def _invert_disconnect_surfaces(before, payload):
-    item = next(row for row in before["model"]["adjacency_pairs"] if {row["surface_a_id"], row["surface_b_id"]} == {payload["surfaceAId"], payload["surfaceBId"]})
-    return [("connect-surfaces", {"surfaceAId": item["surface_a_id"], "surfaceBId": item["surface_b_id"]})]
+    index, item = next((position, row) for position, row in enumerate(before["model"]["adjacency_pairs"]) if {row["surface_a_id"], row["surface_b_id"]} == {payload["surfaceAId"], payload["surfaceBId"]})
+    return [("connect-surfaces", {"surfaceAId": item["surface_a_id"], "surfaceBId": item["surface_b_id"], "index": index})]
 
 
 def bind_fenestration_glazing_construction(before, payload):
@@ -3348,8 +3374,10 @@ def create_thermostat(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if payload["coolingThrottleRangeK"] != payload["coolingThrottleRangeK"] or payload["coolingThrottleRangeK"] in (float("inf"), float("-inf")) or payload["coolingThrottleRangeK"] <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["thermostats"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
-    after["model"]["thermostats"].append({"id": payload["id"], "zone_id": payload["zoneId"], "heating_setpoint_schedule_id": payload["heatingSetpointScheduleId"], "cooling_setpoint_schedule_id": payload["coolingSetpointScheduleId"], "heating_throttle_range_k": payload["heatingThrottleRangeK"], "cooling_throttle_range_k": payload["coolingThrottleRangeK"]})
+    after["model"]["thermostats"].insert(len(after["model"]["thermostats"]) if payload.get("index") is None else payload["index"], {"id": payload["id"], "zone_id": payload["zoneId"], "heating_setpoint_schedule_id": payload["heatingSetpointScheduleId"], "cooling_setpoint_schedule_id": payload["coolingSetpointScheduleId"], "heating_throttle_range_k": payload["heatingThrottleRangeK"], "cooling_throttle_range_k": payload["coolingThrottleRangeK"]})
     return after, applied()
 
 
@@ -3371,8 +3399,8 @@ def delete_thermostat(before, payload):
 
 def _invert_delete_thermostat(before, payload):
     """↩️ The undo of a delete re-creates the row exactly as BASE held it."""
-    item = next(entry for entry in before["model"]["thermostats"] if entry["id"] == payload["id"])
-    return [("create-thermostat", {"id": item["id"], "zoneId": item["zone_id"], "heatingSetpointScheduleId": item["heating_setpoint_schedule_id"], "coolingSetpointScheduleId": item["cooling_setpoint_schedule_id"], "heatingThrottleRangeK": item["heating_throttle_range_k"], "coolingThrottleRangeK": item["cooling_throttle_range_k"]})]
+    index, item = next((position, entry) for position, entry in enumerate(before["model"]["thermostats"]) if entry["id"] == payload["id"])
+    return [("create-thermostat", {"id": item["id"], "zoneId": item["zone_id"], "heatingSetpointScheduleId": item["heating_setpoint_schedule_id"], "coolingSetpointScheduleId": item["cooling_setpoint_schedule_id"], "heatingThrottleRangeK": item["heating_throttle_range_k"], "coolingThrottleRangeK": item["cooling_throttle_range_k"], "index": index})]
 
 
 def change_thermostat_zone(before, payload):
@@ -3499,8 +3527,10 @@ def create_humidistat(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if payload["dehumidifyingThrottleRange"] != payload["dehumidifyingThrottleRange"] or payload["dehumidifyingThrottleRange"] in (float("inf"), float("-inf")) or payload["dehumidifyingThrottleRange"] <= 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["humidistats"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
-    after["model"]["humidistats"].append({"id": payload["id"], "zone_id": payload["zoneId"], "humidifying_setpoint_schedule_id": payload["humidifyingSetpointScheduleId"], "dehumidifying_setpoint_schedule_id": payload["dehumidifyingSetpointScheduleId"], "humidifying_throttle_range": payload["humidifyingThrottleRange"], "dehumidifying_throttle_range": payload["dehumidifyingThrottleRange"]})
+    after["model"]["humidistats"].insert(len(after["model"]["humidistats"]) if payload.get("index") is None else payload["index"], {"id": payload["id"], "zone_id": payload["zoneId"], "humidifying_setpoint_schedule_id": payload["humidifyingSetpointScheduleId"], "dehumidifying_setpoint_schedule_id": payload["dehumidifyingSetpointScheduleId"], "humidifying_throttle_range": payload["humidifyingThrottleRange"], "dehumidifying_throttle_range": payload["dehumidifyingThrottleRange"]})
     return after, applied()
 
 
@@ -3522,8 +3552,8 @@ def delete_humidistat(before, payload):
 
 def _invert_delete_humidistat(before, payload):
     """↩️ The undo of a delete re-creates the row exactly as BASE held it."""
-    item = next(entry for entry in before["model"]["humidistats"] if entry["id"] == payload["id"])
-    return [("create-humidistat", {"id": item["id"], "zoneId": item["zone_id"], "humidifyingSetpointScheduleId": item["humidifying_setpoint_schedule_id"], "dehumidifyingSetpointScheduleId": item["dehumidifying_setpoint_schedule_id"], "humidifyingThrottleRange": item["humidifying_throttle_range"], "dehumidifyingThrottleRange": item["dehumidifying_throttle_range"]})]
+    index, item = next((position, entry) for position, entry in enumerate(before["model"]["humidistats"]) if entry["id"] == payload["id"])
+    return [("create-humidistat", {"id": item["id"], "zoneId": item["zone_id"], "humidifyingSetpointScheduleId": item["humidifying_setpoint_schedule_id"], "dehumidifyingSetpointScheduleId": item["dehumidifying_setpoint_schedule_id"], "humidifyingThrottleRange": item["humidifying_throttle_range"], "dehumidifyingThrottleRange": item["dehumidifying_throttle_range"], "index": index})]
 
 
 def change_humidistat_zone(before, payload):
@@ -3658,8 +3688,10 @@ def create_ideal_loads_system(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if payload["maxCoolingCapacityPresent"] and (payload["maxCoolingCapacityW"] != payload["maxCoolingCapacityW"] or payload["maxCoolingCapacityW"] in (float("inf"), float("-inf")) or payload["maxCoolingCapacityW"] <= 0.0):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["ideal_loads"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
-    after["model"]["ideal_loads"].append({"id": payload["id"], "zone_id": payload["zoneId"], "max_heating_supply_air_temp_c": payload["maxHeatingSupplyAirTempC"], "min_cooling_supply_air_temp_c": payload["minCoolingSupplyAirTempC"], "max_heating_capacity_w": payload["maxHeatingCapacityW"] if payload["maxHeatingCapacityPresent"] else None, "max_cooling_capacity_w": payload["maxCoolingCapacityW"] if payload["maxCoolingCapacityPresent"] else None, "outdoor_air_per_person_m3_s": payload["outdoorAirPerPersonM3S"], "outdoor_air_per_area_m3_s_m2": payload["outdoorAirPerAreaM3SM2"]})
+    after["model"]["ideal_loads"].insert(len(after["model"]["ideal_loads"]) if payload.get("index") is None else payload["index"], {"id": payload["id"], "zone_id": payload["zoneId"], "max_heating_supply_air_temp_c": payload["maxHeatingSupplyAirTempC"], "min_cooling_supply_air_temp_c": payload["minCoolingSupplyAirTempC"], "max_heating_capacity_w": payload["maxHeatingCapacityW"] if payload["maxHeatingCapacityPresent"] else None, "max_cooling_capacity_w": payload["maxCoolingCapacityW"] if payload["maxCoolingCapacityPresent"] else None, "outdoor_air_per_person_m3_s": payload["outdoorAirPerPersonM3S"], "outdoor_air_per_area_m3_s_m2": payload["outdoorAirPerAreaM3SM2"]})
     return after, applied()
 
 
@@ -3681,8 +3713,8 @@ def delete_ideal_loads_system(before, payload):
 
 def _invert_delete_ideal_loads_system(before, payload):
     """↩️ The undo of a delete re-creates the row exactly as BASE held it."""
-    item = next(entry for entry in before["model"]["ideal_loads"] if entry["id"] == payload["id"])
-    return [("create-ideal-loads-system", {"id": item["id"], "zoneId": item["zone_id"], "maxHeatingSupplyAirTempC": item["max_heating_supply_air_temp_c"], "minCoolingSupplyAirTempC": item["min_cooling_supply_air_temp_c"], "maxHeatingCapacityPresent": item["max_heating_capacity_w"] is not None, "maxHeatingCapacityW": item["max_heating_capacity_w"] if item["max_heating_capacity_w"] is not None else 0.0, "maxCoolingCapacityPresent": item["max_cooling_capacity_w"] is not None, "maxCoolingCapacityW": item["max_cooling_capacity_w"] if item["max_cooling_capacity_w"] is not None else 0.0, "outdoorAirPerPersonM3S": item["outdoor_air_per_person_m3_s"], "outdoorAirPerAreaM3SM2": item["outdoor_air_per_area_m3_s_m2"]})]
+    index, item = next((position, entry) for position, entry in enumerate(before["model"]["ideal_loads"]) if entry["id"] == payload["id"])
+    return [("create-ideal-loads-system", {"id": item["id"], "zoneId": item["zone_id"], "maxHeatingSupplyAirTempC": item["max_heating_supply_air_temp_c"], "minCoolingSupplyAirTempC": item["min_cooling_supply_air_temp_c"], "maxHeatingCapacityPresent": item["max_heating_capacity_w"] is not None, "maxHeatingCapacityW": item["max_heating_capacity_w"] if item["max_heating_capacity_w"] is not None else 0.0, "maxCoolingCapacityPresent": item["max_cooling_capacity_w"] is not None, "maxCoolingCapacityW": item["max_cooling_capacity_w"] if item["max_cooling_capacity_w"] is not None else 0.0, "outdoorAirPerPersonM3S": item["outdoor_air_per_person_m3_s"], "outdoorAirPerAreaM3SM2": item["outdoor_air_per_area_m3_s_m2"], "index": index})]
 
 
 def change_ideal_loads_system_zone(before, payload):
@@ -3861,8 +3893,10 @@ def create_zone_equipment(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if payload["coolingCapacityW"] != payload["coolingCapacityW"] or payload["coolingCapacityW"] in (float("inf"), float("-inf")) or payload["coolingCapacityW"] < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["zone_equipment"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
-    after["model"]["zone_equipment"].append({"id": payload["id"], "zone_id": payload["zoneId"], "equipment_type": payload["equipmentType"], "priority": payload["priority"], "heating_capacity_w": payload["heatingCapacityW"], "cooling_capacity_w": payload["coolingCapacityW"]})
+    after["model"]["zone_equipment"].insert(len(after["model"]["zone_equipment"]) if payload.get("index") is None else payload["index"], {"id": payload["id"], "zone_id": payload["zoneId"], "equipment_type": payload["equipmentType"], "priority": payload["priority"], "heating_capacity_w": payload["heatingCapacityW"], "cooling_capacity_w": payload["coolingCapacityW"]})
     return after, applied()
 
 
@@ -3884,8 +3918,8 @@ def delete_zone_equipment(before, payload):
 
 def _invert_delete_zone_equipment(before, payload):
     """↩️ The undo of a delete re-creates the row exactly as BASE held it."""
-    item = next(entry for entry in before["model"]["zone_equipment"] if entry["id"] == payload["id"])
-    return [("create-zone-equipment", {"id": item["id"], "zoneId": item["zone_id"], "equipmentType": item["equipment_type"], "priority": item["priority"], "heatingCapacityW": item["heating_capacity_w"], "coolingCapacityW": item["cooling_capacity_w"]})]
+    index, item = next((position, entry) for position, entry in enumerate(before["model"]["zone_equipment"]) if entry["id"] == payload["id"])
+    return [("create-zone-equipment", {"id": item["id"], "zoneId": item["zone_id"], "equipmentType": item["equipment_type"], "priority": item["priority"], "heatingCapacityW": item["heating_capacity_w"], "coolingCapacityW": item["cooling_capacity_w"], "index": index})]
 
 
 def change_zone_equipment_zone(before, payload):
@@ -4009,8 +4043,10 @@ def create_daylight_zone(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if payload["windowTransmittance"] != payload["windowTransmittance"] or payload["windowTransmittance"] in (float("inf"), float("-inf")) or not 0.0 <= payload["windowTransmittance"] <= 1.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["daylight_zones"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
-    after["model"]["daylight_zones"].append({"id": payload["id"], "zone_id": payload["zoneId"], "illuminance_target_lux": payload["illuminanceTargetLux"], "glare_limit": payload["glareLimit"], "window_transmittance": payload["windowTransmittance"]})
+    after["model"]["daylight_zones"].insert(len(after["model"]["daylight_zones"]) if payload.get("index") is None else payload["index"], {"id": payload["id"], "zone_id": payload["zoneId"], "illuminance_target_lux": payload["illuminanceTargetLux"], "glare_limit": payload["glareLimit"], "window_transmittance": payload["windowTransmittance"]})
     return after, applied()
 
 
@@ -4032,8 +4068,8 @@ def delete_daylight_zone(before, payload):
 
 def _invert_delete_daylight_zone(before, payload):
     """↩️ The undo of a delete re-creates the row exactly as BASE held it."""
-    item = next(entry for entry in before["model"]["daylight_zones"] if entry["id"] == payload["id"])
-    return [("create-daylight-zone", {"id": item["id"], "zoneId": item["zone_id"], "illuminanceTargetLux": item["illuminance_target_lux"], "glareLimit": item["glare_limit"], "windowTransmittance": item["window_transmittance"]})]
+    index, item = next((position, entry) for position, entry in enumerate(before["model"]["daylight_zones"]) if entry["id"] == payload["id"])
+    return [("create-daylight-zone", {"id": item["id"], "zoneId": item["zone_id"], "illuminanceTargetLux": item["illuminance_target_lux"], "glareLimit": item["glare_limit"], "windowTransmittance": item["window_transmittance"], "index": index})]
 
 
 def change_daylight_zone_zone(before, payload):
@@ -4130,8 +4166,10 @@ def create_sizing_object(before, payload):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["id"])])
     if not any(entry["id"] == payload["zoneId"] for entry in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["zoneId"])])
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["sizing_objects"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
-    after["model"]["sizing_objects"].append({"id": payload["id"], "zone_id": payload["zoneId"], "sizing_type": payload["sizingType"], "design_day_type": payload["designDayType"]})
+    after["model"]["sizing_objects"].insert(len(after["model"]["sizing_objects"]) if payload.get("index") is None else payload["index"], {"id": payload["id"], "zone_id": payload["zoneId"], "sizing_type": payload["sizingType"], "design_day_type": payload["designDayType"]})
     return after, applied()
 
 
@@ -4153,8 +4191,8 @@ def delete_sizing_object(before, payload):
 
 def _invert_delete_sizing_object(before, payload):
     """↩️ The undo of a delete re-creates the row exactly as BASE held it."""
-    item = next(entry for entry in before["model"]["sizing_objects"] if entry["id"] == payload["id"])
-    return [("create-sizing-object", {"id": item["id"], "zoneId": item["zone_id"], "sizingType": item["sizing_type"], "designDayType": item["design_day_type"]})]
+    index, item = next((position, entry) for position, entry in enumerate(before["model"]["sizing_objects"]) if entry["id"] == payload["id"])
+    return [("create-sizing-object", {"id": item["id"], "zoneId": item["zone_id"], "sizingType": item["sizing_type"], "designDayType": item["design_day_type"], "index": index})]
 
 
 def change_sizing_object_zone(before, payload):
@@ -4227,8 +4265,10 @@ def create_room_air_model_assignment(before, payload):
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["zoneId"])])
     if not any(entry["id"] == payload["zoneId"] for entry in before["model"]["zones"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["zoneId"])])
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["room_air_models"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["zoneId"])])
     after = copy.deepcopy(before)
-    after["model"]["room_air_models"].append({"zone_id": payload["zoneId"], "model": payload["model"]})
+    after["model"]["room_air_models"].insert(len(after["model"]["room_air_models"]) if payload.get("index") is None else payload["index"], {"zone_id": payload["zoneId"], "model": payload["model"]})
     return after, applied()
 
 
@@ -4250,8 +4290,8 @@ def delete_room_air_model_assignment(before, payload):
 
 def _invert_delete_room_air_model_assignment(before, payload):
     """↩️ The undo of a delete re-creates the row exactly as BASE held it."""
-    item = next(entry for entry in before["model"]["room_air_models"] if entry["zone_id"] == payload["zoneId"])
-    return [("create-room-air-model-assignment", {"zoneId": item["zone_id"], "model": item["model"]})]
+    index, item = next((position, entry) for position, entry in enumerate(before["model"]["room_air_models"]) if entry["zone_id"] == payload["zoneId"])
+    return [("create-room-air-model-assignment", {"zoneId": item["zone_id"], "model": item["model"], "index": index})]
 
 
 def change_room_air_model(before, payload):
@@ -4293,8 +4333,10 @@ def create_setpoint_manager(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
     if payload["schedulePresent"] and (not any(entry["id"] == payload["scheduleId"] for family in ("constants", "daily", "weekly", "annual", "time_series",) for entry in before["model"]["schedules"][family])):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["scheduleId"])])
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["setpoint_managers"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
-    after["model"]["setpoint_managers"].append({"id": payload["id"], "name": payload["name"], "kind": ({"OutdoorAirReset": {"low_outdoor_c": payload["lowOutdoorC"], "high_outdoor_c": payload["highOutdoorC"], "low_setpoint_c": payload["lowSetpointC"], "high_setpoint_c": payload["highSetpointC"]}} if payload["kind"] == "OutdoorAirReset" else payload["kind"]), "schedule_id": (payload["scheduleId"] if payload["schedulePresent"] else None)})
+    after["model"]["setpoint_managers"].insert(len(after["model"]["setpoint_managers"]) if payload.get("index") is None else payload["index"], {"id": payload["id"], "name": payload["name"], "kind": ({"OutdoorAirReset": {"low_outdoor_c": payload["lowOutdoorC"], "high_outdoor_c": payload["highOutdoorC"], "low_setpoint_c": payload["lowSetpointC"], "high_setpoint_c": payload["highSetpointC"]}} if payload["kind"] == "OutdoorAirReset" else payload["kind"]), "schedule_id": (payload["scheduleId"] if payload["schedulePresent"] else None)})
     return after, applied()
 
 
@@ -4316,8 +4358,8 @@ def delete_setpoint_manager(before, payload):
 
 def _invert_delete_setpoint_manager(before, payload):
     """↩️ The undo of a delete re-creates the row exactly as BASE held it."""
-    item = next(entry for entry in before["model"]["setpoint_managers"] if entry["id"] == payload["id"])
-    return [("create-setpoint-manager", {"id": item["id"], "name": item["name"], "kind": ("OutdoorAirReset" if isinstance(item["kind"], dict) else item["kind"]), "lowOutdoorC": (item["kind"]["OutdoorAirReset"]["low_outdoor_c"] if isinstance(item["kind"], dict) else 0.0), "highOutdoorC": (item["kind"]["OutdoorAirReset"]["high_outdoor_c"] if isinstance(item["kind"], dict) else 0.0), "lowSetpointC": (item["kind"]["OutdoorAirReset"]["low_setpoint_c"] if isinstance(item["kind"], dict) else 0.0), "highSetpointC": (item["kind"]["OutdoorAirReset"]["high_setpoint_c"] if isinstance(item["kind"], dict) else 0.0), "schedulePresent": item["schedule_id"] is not None, "scheduleId": (item["schedule_id"] if item["schedule_id"] is not None else 0)})]
+    index, item = next((position, entry) for position, entry in enumerate(before["model"]["setpoint_managers"]) if entry["id"] == payload["id"])
+    return [("create-setpoint-manager", {"id": item["id"], "name": item["name"], "kind": ("OutdoorAirReset" if isinstance(item["kind"], dict) else item["kind"]), "lowOutdoorC": (item["kind"]["OutdoorAirReset"]["low_outdoor_c"] if isinstance(item["kind"], dict) else 0.0), "highOutdoorC": (item["kind"]["OutdoorAirReset"]["high_outdoor_c"] if isinstance(item["kind"], dict) else 0.0), "lowSetpointC": (item["kind"]["OutdoorAirReset"]["low_setpoint_c"] if isinstance(item["kind"], dict) else 0.0), "highSetpointC": (item["kind"]["OutdoorAirReset"]["high_setpoint_c"] if isinstance(item["kind"], dict) else 0.0), "schedulePresent": item["schedule_id"] is not None, "scheduleId": (item["schedule_id"] if item["schedule_id"] is not None else 0), "index": index})]
 
 
 def rename_setpoint_manager(before, payload):
@@ -4417,8 +4459,10 @@ def create_air_loop(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])], invariant="terminal-zone-ids-ascending")
     if any(not any(zone["id"] == value for zone in before["model"]["zones"]) for value in payload["terminalZoneIds"]):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["air_loops"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
-    after["model"]["air_loops"].append({"id": payload["id"], "name": payload["name"], "supply_node_id": payload["supplyNodeId"], "return_node_id": payload["returnNodeId"], "design_supply_air_flow_m3_s": payload["designSupplyAirFlowM3S"], "terminal_zone_ids": payload["terminalZoneIds"]})
+    after["model"]["air_loops"].insert(len(after["model"]["air_loops"]) if payload.get("index") is None else payload["index"], {"id": payload["id"], "name": payload["name"], "supply_node_id": payload["supplyNodeId"], "return_node_id": payload["returnNodeId"], "design_supply_air_flow_m3_s": payload["designSupplyAirFlowM3S"], "terminal_zone_ids": payload["terminalZoneIds"]})
     return after, applied()
 
 
@@ -4441,8 +4485,8 @@ def delete_air_loop(before, payload):
 
 def _invert_delete_air_loop(before, payload):
     """↩️ The undo of a delete re-creates the row exactly as BASE held it."""
-    item = next(entry for entry in before["model"]["air_loops"] if entry["id"] == payload["id"])
-    return [("create-air-loop", {"id": item["id"], "name": item["name"], "supplyNodeId": item["supply_node_id"], "returnNodeId": item["return_node_id"], "designSupplyAirFlowM3S": item["design_supply_air_flow_m3_s"], "terminalZoneIds": item["terminal_zone_ids"]})]
+    index, item = next((position, entry) for position, entry in enumerate(before["model"]["air_loops"]) if entry["id"] == payload["id"])
+    return [("create-air-loop", {"id": item["id"], "name": item["name"], "supplyNodeId": item["supply_node_id"], "returnNodeId": item["return_node_id"], "designSupplyAirFlowM3S": item["design_supply_air_flow_m3_s"], "terminalZoneIds": item["terminal_zone_ids"], "index": index})]
 
 
 def rename_air_loop(before, payload):
@@ -4544,11 +4588,15 @@ def add_air_loop_terminal_zone(before, payload):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["zoneId"])])
     if payload["zoneId"] in item["terminal_zone_ids"]:
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["zoneId"])])
+    if payload.get("index") is not None and payload["index"] > len(item["terminal_zone_ids"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
     for entry in after["model"]["air_loops"]:
         if entry["id"] == payload["id"]:
             members = entry["terminal_zone_ids"]
             position = next((index for index, value in enumerate(members) if value > payload["zoneId"]), len(members))
+            if payload.get("index") is not None:
+                position = payload["index"]
             members.insert(position, payload["zoneId"])
     return after, applied()
 
@@ -4574,7 +4622,8 @@ def remove_air_loop_terminal_zone(before, payload):
 
 def _invert_remove_air_loop_terminal_zone(before, payload):
     """↩️ The undo of a removal puts the member back at its ascending position."""
-    return [("add-air-loop-terminal-zone", {"id": payload["id"], "zoneId": payload["zoneId"]})]
+    item = next(entry for entry in before["model"]["air_loops"] if entry["id"] == payload["id"])
+    return [("add-air-loop-terminal-zone", {"id": payload["id"], "zoneId": payload["zoneId"], "index": item["terminal_zone_ids"].index(payload["zoneId"])})]
 
 
 def create_plant_loop(before, payload):
@@ -4595,8 +4644,10 @@ def create_plant_loop(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])], invariant="equipment-ids-ascending")
     if any(value == 0 for value in payload["equipmentIds"]):
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["plant_loops"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
-    after["model"]["plant_loops"].append({"id": payload["id"], "name": payload["name"], "loop_type": payload["loopType"], "supply_temperature_c": payload["supplyTemperatureC"], "return_temperature_c": payload["returnTemperatureC"], "design_flow_kg_s": payload["designFlowKgS"], "equipment_ids": payload["equipmentIds"]})
+    after["model"]["plant_loops"].insert(len(after["model"]["plant_loops"]) if payload.get("index") is None else payload["index"], {"id": payload["id"], "name": payload["name"], "loop_type": payload["loopType"], "supply_temperature_c": payload["supplyTemperatureC"], "return_temperature_c": payload["returnTemperatureC"], "design_flow_kg_s": payload["designFlowKgS"], "equipment_ids": payload["equipmentIds"]})
     return after, applied()
 
 
@@ -4618,8 +4669,8 @@ def delete_plant_loop(before, payload):
 
 def _invert_delete_plant_loop(before, payload):
     """↩️ The undo of a delete re-creates the row exactly as BASE held it."""
-    item = next(entry for entry in before["model"]["plant_loops"] if entry["id"] == payload["id"])
-    return [("create-plant-loop", {"id": item["id"], "name": item["name"], "loopType": item["loop_type"], "supplyTemperatureC": item["supply_temperature_c"], "returnTemperatureC": item["return_temperature_c"], "designFlowKgS": item["design_flow_kg_s"], "equipmentIds": item["equipment_ids"]})]
+    index, item = next((position, entry) for position, entry in enumerate(before["model"]["plant_loops"]) if entry["id"] == payload["id"])
+    return [("create-plant-loop", {"id": item["id"], "name": item["name"], "loopType": item["loop_type"], "supplyTemperatureC": item["supply_temperature_c"], "returnTemperatureC": item["return_temperature_c"], "designFlowKgS": item["design_flow_kg_s"], "equipmentIds": item["equipment_ids"], "index": index})]
 
 
 def rename_plant_loop(before, payload):
@@ -4742,11 +4793,15 @@ def add_plant_loop_equipment(before, payload):
         return unchanged(before), rejected("mutation.invariant", [str(payload["equipmentId"])])
     if payload["equipmentId"] in item["equipment_ids"]:
         return unchanged(before), rejected("mutation.duplicate-id", [str(payload["equipmentId"])])
+    if payload.get("index") is not None and payload["index"] > len(item["equipment_ids"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
     for entry in after["model"]["plant_loops"]:
         if entry["id"] == payload["id"]:
             members = entry["equipment_ids"]
             position = next((index for index, value in enumerate(members) if value > payload["equipmentId"]), len(members))
+            if payload.get("index") is not None:
+                position = payload["index"]
             members.insert(position, payload["equipmentId"])
     return after, applied()
 
@@ -4772,7 +4827,8 @@ def remove_plant_loop_equipment(before, payload):
 
 def _invert_remove_plant_loop_equipment(before, payload):
     """↩️ The undo of a removal puts the member back at its ascending position."""
-    return [("add-plant-loop-equipment", {"id": payload["id"], "equipmentId": payload["equipmentId"]})]
+    item = next(entry for entry in before["model"]["plant_loops"] if entry["id"] == payload["id"])
+    return [("add-plant-loop-equipment", {"id": payload["id"], "equipmentId": payload["equipmentId"], "index": item["equipment_ids"].index(payload["equipmentId"])})]
 
 
 def create_outdoor_air_system(before, payload):
@@ -4783,8 +4839,10 @@ def create_outdoor_air_system(before, payload):
         return unchanged(before), rejected("mutation.target-missing", [str(payload["airLoopId"])])
     if payload["minOaFlowM3S"] != payload["minOaFlowM3S"] or payload["minOaFlowM3S"] in (float("inf"), float("-inf")) or payload["minOaFlowM3S"] < 0.0:
         return unchanged(before), rejected("mutation.invariant", [str(payload["id"])])
+    if payload.get("index") is not None and payload["index"] > len(before["model"]["outdoor_air_systems"]):
+        return unchanged(before), rejected("mutation.target-missing", [str(payload["id"])])
     after = copy.deepcopy(before)
-    after["model"]["outdoor_air_systems"].append({"id": payload["id"], "air_loop_id": payload["airLoopId"], "min_oa_flow_m3_s": payload["minOaFlowM3S"], "economizer_enabled": payload["economizerEnabled"]})
+    after["model"]["outdoor_air_systems"].insert(len(after["model"]["outdoor_air_systems"]) if payload.get("index") is None else payload["index"], {"id": payload["id"], "air_loop_id": payload["airLoopId"], "min_oa_flow_m3_s": payload["minOaFlowM3S"], "economizer_enabled": payload["economizerEnabled"]})
     return after, applied()
 
 
@@ -4806,8 +4864,8 @@ def delete_outdoor_air_system(before, payload):
 
 def _invert_delete_outdoor_air_system(before, payload):
     """↩️ The undo of a delete re-creates the row exactly as BASE held it."""
-    item = next(entry for entry in before["model"]["outdoor_air_systems"] if entry["id"] == payload["id"])
-    return [("create-outdoor-air-system", {"id": item["id"], "airLoopId": item["air_loop_id"], "minOaFlowM3S": item["min_oa_flow_m3_s"], "economizerEnabled": item["economizer_enabled"]})]
+    index, item = next((position, entry) for position, entry in enumerate(before["model"]["outdoor_air_systems"]) if entry["id"] == payload["id"])
+    return [("create-outdoor-air-system", {"id": item["id"], "airLoopId": item["air_loop_id"], "minOaFlowM3S": item["min_oa_flow_m3_s"], "economizerEnabled": item["economizer_enabled"], "index": index})]
 
 
 def change_outdoor_air_system_air_loop(before, payload):
@@ -7563,8 +7621,8 @@ def invert(kind, before, payload):
     if kind == "add-output-variable":
         return [("remove-output-variable", {"name": payload["name"], "key": payload["key"]})]
     if kind == "remove-output-variable":
-        spec = next(spec for spec in before["model"]["output_variables"] if spec["name"] == payload["name"] and spec["key"] == payload["key"])
-        return [("add-output-variable", {"name": spec["name"], "key": spec["key"], "reportingFrequency": spec["reporting_frequency"]})]
+        index, spec = next((position, spec) for position, spec in enumerate(before["model"]["output_variables"]) if spec["name"] == payload["name"] and spec["key"] == payload["key"])
+        return [("add-output-variable", {"name": spec["name"], "key": spec["key"], "reportingFrequency": spec["reporting_frequency"], "index": index})]
     if kind in ("bind-weather-file", "unbind-weather-file"):
         existing = before.get("weatherLink")
         return [("bind-weather-file", {"target": copy.deepcopy(existing["target"])})] if existing else [("unbind-weather-file", {})]

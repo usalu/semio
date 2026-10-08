@@ -1,6 +1,6 @@
 //! 🔺️ PlyDiff — handcrafted sparse diff. Ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL: replaces the
 //! old `PlyDiff{snapshot: Option<PlySnapshot>}` full-replace template with a real per-field
-//! patch — `format` + `comments` (weak, whole-vec replace) + a name-keyed `elements` triple,
+//! patch — `format` + an index-keyed `comments` triple + a name-keyed `elements` triple,
 //! each modified element carrying its own `properties` (weak, whole-vec replace) and an
 //! index-keyed `rows` triple, each modified row carrying a name-keyed sparse per-property patch.
 //! Two collection levels nest (elements → rows), matching the recipe's "trees nest" rule.
@@ -29,6 +29,229 @@ use protocol::command::DiffAlgebra;
 use protocol::{DiffCodec};
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
+
+//#region 🔖️CommentsTriple
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct IndexedDiff<T, D> {
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub removed: Vec<usize>,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub modified: Vec<IndexedModified<D>>,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub added: Vec<IndexedAdded<T>>,
+}
+
+impl<T, D> IndexedDiff<T, D> {
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn is_empty(&self) -> bool {
+        self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct IndexedModified<D> {
+    pub index: usize,
+    pub diff: D,
+}
+
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct IndexedAdded<T> {
+    pub index: usize,
+    pub item: T,
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_indexed<T: Clone, D>(base: &[T], diff: &IndexedDiff<T, D>, apply_item: impl Fn(&T, &D) -> T) -> Vec<T> {
+    let mut kept: Vec<(usize, T)> = base.iter().enumerate().filter(|(i, _)| !diff.removed.contains(i)).map(|(i, t)| (i, t.clone())).collect();
+    for m in &diff.modified {
+        if let Some(entry) = kept.iter_mut().find(|(i, _)| *i == m.index) {
+            entry.1 = apply_item(&entry.1, &m.diff);
+        }
+    }
+    let mut result: Vec<T> = kept.into_iter().map(|(_, t)| t).collect();
+    let mut adds = diff.added.clone();
+    adds.sort_by_key(|a| a.index);
+    for a in adds {
+        let idx = a.index.min(result.len());
+        result.insert(idx, a.item);
+    }
+    result
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_indexed<T, D>(base: &[T], diff: &IndexedDiff<T, D>, validate_item: impl Fn(&T, &D) -> MutationApplyResult<()>) -> MutationApplyResult<()> {
+    let mut removed = std::collections::HashSet::new();
+    for &index in &diff.removed {
+        if index >= base.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed removal target does not exist"));
+        }
+        if !removed.insert(index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed removal target is repeated"));
+        }
+    }
+    let mut modified = std::collections::HashSet::new();
+    for entry in &diff.modified {
+        if entry.index >= base.len() {
+            return Err(MutationApplyError::new("mutation.apply.missing-target", "indexed modification target does not exist"));
+        }
+        if removed.contains(&entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.conflicting-target", "indexed modification targets a removed item"));
+        }
+        if !modified.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed modification target is repeated"));
+        }
+        validate_item(&base[entry.index], &entry.diff).map_err(|error| error.under(vec!["modified".to_string(), entry.index.to_string()]))?;
+    }
+    let final_len = base.len() - removed.len() + diff.added.len();
+    let mut added = std::collections::HashSet::new();
+    for entry in &diff.added {
+        if entry.index > final_len {
+            return Err(MutationApplyError::new("mutation.apply.invalid-index", "indexed addition is outside the final collection"));
+        }
+        if !added.insert(entry.index) {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "indexed addition occupies a repeated final position"));
+        }
+    }
+    Ok(())
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn between_indexed<T: Clone + PartialEq, D>(base: &[T], other: &[T], between_item: impl Fn(&T, &T) -> D, item_is_empty: impl Fn(&D) -> bool) -> IndexedDiff<T, D> {
+    let min_len = base.len().min(other.len());
+    let mut modified = Vec::new();
+    for i in 0..min_len {
+        if base[i] != other[i] {
+            let d = between_item(&base[i], &other[i]);
+            if !item_is_empty(&d) {
+                modified.push(IndexedModified { index: i, diff: d });
+            }
+        }
+    }
+    let removed: Vec<usize> = if other.len() < base.len() { (other.len()..base.len()).collect() } else { Vec::new() };
+    let added: Vec<IndexedAdded<T>> = if other.len() > base.len() { (base.len()..other.len()).map(|i| IndexedAdded { index: i, item: other[i].clone() }).collect() } else { Vec::new() };
+    IndexedDiff { removed, modified, added }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn count_le(sorted: &[usize], x: usize) -> usize {
+    sorted.partition_point(|&v| v <= x)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn rank_excluding(pos: usize, excluded_sorted: &[usize]) -> usize {
+    pos - count_le(excluded_sorted, pos)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn unrank_excluding(rank: usize, excluded_sorted: &[usize]) -> usize {
+    let mut candidate = rank;
+    loop {
+        let next = rank + count_le(excluded_sorted, candidate);
+        if next == candidate {
+            return candidate;
+        }
+        candidate = next;
+    }
+}
+
+/// ➕️ Structural, total, base-free absorb — see mp4's `absorb_indexed` for the full derivation
+/// (identical algorithm, adapted from gif 89a's `absorb_indexed_collection`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn absorb_indexed<T: Clone, D: Clone>(d1: &mut IndexedDiff<T, D>, d2: IndexedDiff<T, D>, absorb_item: impl Fn(&mut D, D), apply_item_diff: impl Fn(&mut T, &D)) {
+    let mut removed1_sorted = d1.removed.clone();
+    removed1_sorted.sort_unstable();
+    let mut added1_index_sorted: Vec<usize> = d1.added.iter().map(|a| a.index).collect();
+    added1_index_sorted.sort_unstable();
+    let mut removed2_sorted = d2.removed.clone();
+    removed2_sorted.sort_unstable();
+    let mut added2_index_sorted: Vec<usize> = d2.added.iter().map(|a| a.index).collect();
+    added2_index_sorted.sort_unstable();
+
+    let mut merged_added: Vec<IndexedAdded<T>> = std::mem::take(&mut d1.added);
+    let mut annihilated: std::collections::HashSet<usize> = Default::default();
+
+    let mut merged_removed_base: Vec<usize> = removed1_sorted.clone();
+    for &r2 in &removed2_sorted {
+        if added1_index_sorted.binary_search(&r2).is_ok() {
+            annihilated.insert(r2);
+            merged_added.retain(|a| a.index != r2);
+        } else {
+            let post_remove_rank = rank_excluding(r2, &added1_index_sorted);
+            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
+            merged_removed_base.push(base_index);
+        }
+    }
+    merged_removed_base.sort_unstable();
+    merged_removed_base.dedup();
+
+    let mut modified_map: std::collections::BTreeMap<usize, D> = std::mem::take(&mut d1.modified).into_iter().map(|m| (m.index, m.diff)).collect();
+    for base_index in &merged_removed_base {
+        modified_map.remove(base_index);
+    }
+    for m2 in d2.modified {
+        if annihilated.contains(&m2.index) {
+            continue;
+        }
+        if added1_index_sorted.binary_search(&m2.index).is_ok() {
+            if let Some(entry) = merged_added.iter_mut().find(|a| a.index == m2.index) {
+                apply_item_diff(&mut entry.item, &m2.diff);
+            }
+        } else {
+            let post_remove_rank = rank_excluding(m2.index, &added1_index_sorted);
+            let base_index = unrank_excluding(post_remove_rank, &removed1_sorted);
+            if merged_removed_base.binary_search(&base_index).is_ok() {
+                continue;
+            }
+            match modified_map.get_mut(&base_index) {
+                Some(existing) => absorb_item(existing, m2.diff),
+                None => {
+                    modified_map.insert(base_index, m2.diff);
+                }
+            }
+        }
+    }
+
+    let mut merged_added_final: Vec<IndexedAdded<T>> = merged_added
+        .into_iter()
+        .map(|a| {
+            let after_pos = if removed2_sorted.binary_search(&a.index).is_ok() {
+                a.index
+            } else {
+                let post_remove_rank = rank_excluding(a.index, &removed2_sorted);
+                unrank_excluding(post_remove_rank, &added2_index_sorted)
+            };
+            IndexedAdded { index: after_pos, item: a.item }
+        })
+        .collect();
+    merged_added_final.extend(d2.added);
+    merged_added_final.sort_by_key(|a| a.index);
+
+    d1.removed = merged_removed_base;
+    d1.modified = modified_map.into_iter().map(|(index, diff)| IndexedModified { index, diff }).collect();
+    d1.added = merged_added_final;
+}
+
+/// ↩️ Negative rows for an indexed collection triple against its BASE items: added rows become removals at their final index,
+/// removed rows return at their base index, and each modified row restores its base value at the index the row has after the
+/// diff. Every list comes back ascending, the normal form [`absorb_indexed`] emits.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_indexed<T: Clone, D>(diff: &IndexedDiff<T, D>, base: &[T], inverse_item: impl Fn(&D, &T) -> D) -> IndexedDiff<T, D> {
+    let mut removed_sorted = diff.removed.clone();
+    removed_sorted.sort_unstable();
+    removed_sorted.dedup();
+    let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
+    added_final.sort_unstable();
+    let after_index = |index: usize| {
+        let survivor = index - removed_sorted.iter().filter(|dropped| **dropped < index).count();
+        added_final.iter().fold(survivor, |position, inserted| if *inserted <= position { position + 1 } else { position })
+    };
+    let mut modified: Vec<IndexedModified<D>> = diff.modified.iter().filter_map(|row| base.get(row.index).map(|item| IndexedModified { index: after_index(row.index), diff: inverse_item(&row.diff, item) })).collect();
+    modified.sort_by_key(|row| row.index);
+    let added = removed_sorted.iter().filter_map(|index| base.get(*index).map(|item| IndexedAdded { index: *index, item: item.clone() })).collect();
+    IndexedDiff { removed: added_final, modified, added }
+}
+//#endregion 🔖️CommentsTriple
 
 //#region 🔖️RowFieldDiff
 /// 🔣️ One changed cell inside a row's sparse patch, keyed by the owning element's property
@@ -377,7 +600,7 @@ fn absorb_element_diff(base: &mut PlyElementDiff, other: PlyElementDiff) {
 
 /// 🧭️ Field-by-field state delta between two elements sharing the same NAME. If `properties`
 /// itself differs (a genuine schema change — there is no `ChangeElementProperties` mutation, so
-/// this only arises from hand-built `between()` calls or `SetSnapshot`), row-level positional
+/// this only arises from hand-built `between()` calls), row-level positional
 /// diffing is meaningless across two different schemas: fall back to a whole-rows replace
 /// (documented scope cut — see `deviations`), matching the recipe's "trees recursive with
 /// Replace fallback on node-kind change" rule.
@@ -497,6 +720,9 @@ fn absorb_elements(d1: Option<PlyElementsDiff>, d2: Option<PlyElementsDiff>) -> 
 }
 //#endregion 🔖️ElementsTriple
 
+/// 💬 Index-keyed comments triple: removed base indices, replaced comment texts, inserted comments at their final index.
+pub type PlyCommentsDiff = IndexedDiff<String, String>;
+
 //#region 🔖️Diff
 /// 🔺️ Diff for `stdio.ply`. `schema` is an identity field and never appears here.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -508,7 +734,7 @@ pub struct PlyDiff {
     pub format: Option<PlyFormat>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub comments: Option<Vec<String>>,
+    pub comments: Option<PlyCommentsDiff>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub elements: Option<PlyElementsDiff>,
@@ -613,7 +839,7 @@ fn apply_ply_diff_unchecked(diff: &PlyDiff, base: &PlySnapshot) -> PlySnapshot {
         next.format = format;
     }
     if let Some(comments) = &diff.comments {
-        next.comments = comments.clone();
+        next.comments = apply_indexed(&base.comments, comments, |_, replacement: &String| replacement.clone());
     }
     if let Some(elements) = &diff.elements {
         for modified in &elements.modified {
@@ -636,6 +862,9 @@ fn apply_ply_diff_unchecked(diff: &PlyDiff, base: &PlySnapshot) -> PlySnapshot {
 
 impl MutationDiff<PlySnapshot> for PlyDiff {
     fn apply(&self, base: &PlySnapshot, _capability: protocol::ApplyCapability) -> MutationApplyResult<PlySnapshot> {
+        if let Some(diff) = &self.comments {
+            validate_indexed(&base.comments, diff, |_, _| Ok(()))?;
+        }
         if let Some(diff) = &self.elements {
             validate_elements_diff(&base.elements, diff)?;
         }
@@ -649,25 +878,76 @@ impl MutationDiff<PlySnapshot> for PlyDiff {
         if other.format.is_some() {
             self.format = other.format;
         }
-        if other.comments.is_some() {
-            self.comments = other.comments;
+        match (&mut self.comments, other.comments) {
+            (Some(existing), Some(other_comments)) => absorb_indexed(existing, other_comments, |a: &mut String, b: String| *a = b, |t: &mut String, d: &String| *t = d.clone()),
+            (slot @ None, Some(other_comments)) => *slot = Some(other_comments),
+            _ => {}
         }
         self.elements = absorb_elements(self.elements.take(), other.elements);
     }
 }
 
+/// ↩️ Negative rows for one row triple against its BASE rows: added rows become removals at their final index, removed rows return
+/// at their base index, and each modified row restores its base cells at the index the row has after the diff.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_rows(properties: &[PlyProperty], diff: &PlyRowsDiff, base: &[PlyRow]) -> PlyRowsDiff {
+    let mut removed_sorted = diff.removed.clone();
+    removed_sorted.sort_unstable();
+    removed_sorted.dedup();
+    let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
+    added_final.sort_unstable();
+    let after_index = |index: usize| {
+        let survivor = index - removed_sorted.iter().filter(|dropped| **dropped < index).count();
+        added_final.iter().fold(survivor, |position, inserted| if *inserted <= position { position + 1 } else { position })
+    };
+    let restore = |row_diff: &PlyRowDiff, row: &PlyRow| PlyRowDiff {
+        fields: row_diff.fields.iter().filter_map(|change| properties.iter().position(|property| property.name() == change.name).and_then(|cell| row.values.get(cell)).map(|value| PlyRowFieldChange { name: change.name.clone(), value: value.clone() })).collect(),
+    };
+    let mut modified: Vec<PlyRowModified> = diff.modified.iter().filter_map(|row| base.get(row.index).map(|base_row| PlyRowModified { index: after_index(row.index), diff: restore(&row.diff, base_row) })).collect();
+    modified.sort_by_key(|row| row.index);
+    let added = removed_sorted.iter().filter_map(|index| base.get(*index).map(|row| PlyRowAdded { index: *index, row: row.clone() })).collect();
+    PlyRowsDiff { removed: added_final, modified, added }
+}
+
+/// ↩️ The element patch restoring exactly what `diff` replaces in the BASE element.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_element_diff(diff: &PlyElementDiff, base: &PlyElement) -> PlyElementDiff {
+    PlyElementDiff {
+        count: diff.count.map(|_| base.count),
+        properties: diff.properties.as_ref().map(|_| base.properties.clone()),
+        rows: diff.rows.as_ref().map(|rows| inverse_rows(&base.properties, rows, &base.rows)).filter(|rows| !rows.is_empty()),
+    }
+}
+
+/// ↩️ Negative rows for the elements triple against its BASE elements; removed elements return at their base index.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_elements(diff: &PlyElementsDiff, base: &[PlyElement]) -> PlyElementsDiff {
+    let mut added_final: Vec<&PlyElementAdded> = diff.added.iter().collect();
+    added_final.sort_by_key(|added| added.index);
+    let removed = added_final.iter().map(|added| added.element.name.clone()).collect();
+    let modified = diff.modified.iter().filter_map(|row| base.iter().find(|element| element.name == row.name).map(|element| PlyElementModified { name: row.name.clone(), diff: inverse_element_diff(&row.diff, element) })).collect();
+    let mut restored: Vec<PlyElementAdded> = diff.removed.iter().filter_map(|name| base.iter().position(|element| &element.name == name).map(|index| PlyElementAdded { index, element: base[index].clone() })).collect();
+    restored.sort_by_key(|added| added.index);
+    PlyElementsDiff { removed, modified, added: restored }
+}
+
 impl DiffAlgebra<PlySnapshot> for PlyDiff {
-    /// 🔁️ Diff-level undo, derived generically (correct by construction) from `between`.
+    /// ↩️ Concrete diff-level undo: the format and comments return to their base values, and the elements triple turns into its
+    /// negative rows (added elements become removals, removed elements return at their base index, modified elements restore
+    /// their base declaration and rows).
     fn inverse(&self, base: &PlySnapshot) -> Self {
-        let mutated = apply_ply_diff_unchecked(self, base);
-        Self::between(&mutated, base)
+        PlyDiff {
+            format: self.format.map(|_| base.format),
+            comments: self.comments.as_ref().map(|comments| inverse_indexed(comments, &base.comments, |_, text: &String| text.clone())).filter(|comments| !comments.is_empty()),
+            elements: self.elements.as_ref().map(|elements| inverse_elements(elements, &base.elements)).filter(|elements| !elements.is_empty()),
+        }
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): name-keyed matching over `elements`, each modified
     /// element recursing into `element_between`.
     fn between(base: &PlySnapshot, other: &PlySnapshot) -> Self {
         let format = (base.format != other.format).then_some(other.format);
-        let comments = (base.comments != other.comments).then(|| other.comments.clone());
+        let comments = Some(between_indexed(&base.comments, &other.comments, |_, replacement: &String| replacement.clone(), |_| false)).filter(|comments| !comments.is_empty());
         let elements = if base.elements == other.elements {
             None
         } else {
@@ -704,22 +984,19 @@ impl DiffAlgebra<PlySnapshot> for PlyDiff {
 }
 //#endregion 🔖️Diff
 
-//#region 🔖️MutationDiffBuilders
-/// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
-/// slot exists on `PlyDiff` to short-circuit into.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &PlySnapshot, next: &PlySnapshot) -> PlyDiff {
-    PlyDiff::between(base, next)
-}
-
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_format(format: PlyFormat) -> PlyDiff {
     PlyDiff { format: Some(format), comments: None, elements: None }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_comments(comments: Vec<String>) -> PlyDiff {
-    PlyDiff { format: None, comments: Some(comments), elements: None }
+pub fn diff_insert_comment(index: usize, comment: String) -> PlyDiff {
+    PlyDiff { format: None, comments: Some(PlyCommentsDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index, item: comment }] }), elements: None }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_remove_comment(index: usize) -> PlyDiff {
+    PlyDiff { format: None, comments: Some(PlyCommentsDiff { removed: vec![index], modified: vec![], added: vec![] }), elements: None }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

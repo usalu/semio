@@ -1,7 +1,7 @@
 syntax = "proto3";
 package semio.s.puzzle.puzzle2d.diff;
 
-// 🧬️ Puzzle2d diff schema — sparse field delta.
+// 🧬️ Puzzle2d diff schema — sparse typed delta.
 
 message Puzzle2dDiff {
   // @state artifact
@@ -17,23 +17,27 @@ message Puzzle2dDiff {
   // @state artifact
   optional Puzzle2dTargetRegionsDelta target_regions = 6;
   // @state artifact
-  optional Puzzle2dMeta meta = 7;
-  // @state config
-  // @state config
+  optional Puzzle2dMetaPatch meta = 7;
 }
 
 message Puzzle2dArtifact { string schema = 1; }
-message Puzzle2dStringList { repeated string values = 1; }
+message Puzzle2dKindCompatibilityKey { string source = 1; string target = 2; }
+message Puzzle2dHandlePatch { optional string handle_kind = 1; optional double angle = 2; optional double radius = 3; optional string color = 4; optional string icon_kind = 5; optional double scale = 6; optional bool visible = 7; optional bool locked = 8; }
+message Puzzle2dNodePatch { optional string node_kind = 1; optional string shape = 2; optional double x = 3; optional double y = 4; optional double radius = 5; optional double width = 6; optional double height = 7; optional string text = 8; optional string icon_kind = 9; optional bool root = 10; optional double scale = 11; optional bool visible = 12; optional bool locked = 13; optional Puzzle2dNodeAnchor anchor = 14; optional Puzzle2dHandlesDelta handles = 15; }
+message Puzzle2dEdgePatch { optional string source = 1; optional string target = 2; optional string edge_kind = 3; optional double gap = 4; optional double shift = 5; optional double rise = 6; optional double rotation = 7; optional double turn = 8; optional double tilt = 9; optional double x = 10; optional double y = 11; optional string source_tip = 12; optional string target_tip = 13; optional bool visible = 14; optional bool locked = 15; }
+message Puzzle2dTargetRegionPatch { optional double x = 1; optional double y = 2; optional double width = 3; optional double height = 4; optional string label = 5; optional bool hidden = 6; optional bool locked = 7; }
+message Puzzle2dKindCompatibilityPatch { optional bool bidirectional = 1; optional bool important = 2; optional Puzzle2dCompatSpecificity specificity = 3; }
+message Puzzle2dMetaPatch { optional string manifest_id = 1; optional Puzzle2dKindCompatibilityDelta kind_compatibility = 2; optional Puzzle2dKindCatalogs kind_catalogs = 3; }
+message Puzzle2dHandlesDelta { repeated Puzzle2dHandle added = 1; repeated string removed = 2; repeated Puzzle2dHandlePatchEntry patched = 3; repeated string reordered = 4; }
+message Puzzle2dHandlePatchEntry { string id = 1; Puzzle2dHandlePatch patch = 2; }
 message Puzzle2dNodesDelta { repeated Puzzle2dNode added = 1; repeated string removed = 2; repeated Puzzle2dNodePatchEntry patched = 3; repeated string reordered = 4; }
 message Puzzle2dNodePatchEntry { string id = 1; Puzzle2dNodePatch patch = 2; }
-message Puzzle2dNodePatch { optional Puzzle2dNode replacement = 1; }
 message Puzzle2dEdgesDelta { repeated Puzzle2dEdge added = 1; repeated string removed = 2; repeated Puzzle2dEdgePatchEntry patched = 3; repeated string reordered = 4; }
 message Puzzle2dEdgePatchEntry { string id = 1; Puzzle2dEdgePatch patch = 2; }
-message Puzzle2dEdgePatch { optional Puzzle2dEdge replacement = 1; }
 message Puzzle2dTargetRegionsDelta { repeated Puzzle2dTargetRegion added = 1; repeated string removed = 2; repeated Puzzle2dTargetRegionPatchEntry patched = 3; repeated string reordered = 4; }
 message Puzzle2dTargetRegionPatchEntry { string id = 1; Puzzle2dTargetRegionPatch patch = 2; }
-message Puzzle2dTargetRegionPatch { optional Puzzle2dTargetRegion replacement = 1; }
-
+message Puzzle2dKindCompatibilityDelta { repeated Puzzle2dKindCompatibility added = 1; repeated Puzzle2dKindCompatibilityKey removed = 2; repeated Puzzle2dKindCompatibilityPatchEntry patched = 3; repeated Puzzle2dKindCompatibilityKey reordered = 4; }
+message Puzzle2dKindCompatibilityPatchEntry { Puzzle2dKindCompatibilityKey id = 1; Puzzle2dKindCompatibilityPatch patch = 2; }
 
 enum Puzzle2dNodeAnchor {
   PUZZLE2D_NODE_ANCHOR_FIXED = 0;
@@ -221,4 +225,3 @@ message Puzzle2dMeta {
   repeated Puzzle2dKindCompatibility kind_compatibility = 2;
   optional Puzzle2dKindCatalogs kind_catalogs = 3;
 }
-

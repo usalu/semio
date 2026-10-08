@@ -774,14 +774,7 @@ fn absorb_children_diff(d1: XmlChildrenDiff, d2: &XmlChildrenDiff) -> XmlChildre
 }
 //#endregion 🔖️Absorb
 
-//#region 🔖️SetSnapshot
-/// 🧩️ Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
-/// Option<XmlSnapshot>` full-replace slot -- this IS `XmlDiff::between`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &XmlSnapshot, next: &XmlSnapshot) -> XmlDiff {
-    XmlDiff::between(base, next)
-}
-//#endregion 🔖️SetSnapshot
+
 
 //#region 🔖️HandcraftedDiffCodec
 /// 🧪️ F6: hand-rolled `protocol::DiffCodec` for `XmlDiff` — adapted from `🎨️svg`'s own hand-rolled

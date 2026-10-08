@@ -2,62 +2,78 @@
 syntax = "proto3";
 package semio.s.norm.din16798.diff;
 
-enum Din16798RowOp {
-  DIN16798_ROW_OP_INSERT = 0;
-  DIN16798_ROW_OP_REMOVE = 1;
-  DIN16798_ROW_OP_REPLACE = 2;
-  DIN16798_ROW_OP_PATCH = 3;
+message Din16798ZoneAddition {
+  optional string after = 1;
+  bytes row = 2;
 }
 
-message Din16798ZoneEdit {
-  Din16798RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-  optional Din16798ZonePatch patch = 5;
+message Din16798ZoneModification {
+  string key = 1;
+  Din16798ZonePatch patch = 2;
 }
 
-message Din16798VentSystemEdit {
-  Din16798RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-  optional Din16798VentSystemPatch patch = 5;
+message Din16798ZoneDelta {
+  repeated string removed = 1;
+  repeated Din16798ZoneAddition added = 2;
+  repeated Din16798ZoneModification modified = 3;
 }
 
 message Din16798ZonePatch {
-  optional string usage_type = 1;
-  optional double floor_area_m2 = 2;
-  optional uint32 occupants = 3;
-  optional string comfort_category = 4;
-  optional string pollution_class = 5;
-  optional string comfort_model = 6;
-  optional double t_op_winter_c = 7;
-  optional double t_op_summer_c = 8;
-  optional double air_speed_m_s = 9;
-  optional double clothing_clo = 10;
-  optional double metabolic_rate_met = 11;
-  optional double rh_percent = 12;
-  optional double outdoor_air_supplied_m3_h = 13;
-  optional double co2_ppm = 14;
-  optional double illuminance_lx = 15;
-  optional double noise_db = 16;
-  optional double turbulence_intensity_percent = 17;
-  optional string vent_method = 18;
-  optional string vent_system_id = 19;
+  optional string name = 1;
+  optional string usage_type = 2;
+  optional double floor_area_m2 = 3;
+  optional uint32 occupants = 4;
+  optional string comfort_category = 5;
+  optional string pollution_class = 6;
+  optional string comfort_model = 7;
+  optional double t_op_winter_c = 8;
+  optional double t_op_summer_c = 9;
+  optional double air_speed_m_s = 10;
+  optional double clothing_clo = 11;
+  optional double metabolic_rate_met = 12;
+  optional double rh_percent = 13;
+  optional double outdoor_air_supplied_m3_h = 14;
+  optional double co2_ppm = 15;
+  optional double illuminance_lx = 16;
+  optional double noise_db = 17;
+  optional double turbulence_intensity_percent = 18;
+  optional string vent_method = 19;
+  optional string vent_system_id = 20;
+}
+
+message Din16798VentSystemAddition {
+  optional string after = 1;
+  bytes row = 2;
+}
+
+message Din16798VentSystemModification {
+  string key = 1;
+  Din16798VentSystemPatch patch = 2;
+}
+
+message Din16798VentSystemDelta {
+  repeated string removed = 1;
+  repeated Din16798VentSystemAddition added = 2;
+  repeated Din16798VentSystemModification modified = 3;
 }
 
 message Din16798VentSystemPatch {
-  optional string system_type = 1;
-  optional double sfp_w_m3_s = 2;
-  optional uint32 sfp_required_class = 3;
-  optional double heat_recovery_eta = 4;
-  optional string oda_class = 5;
-  optional string filter_sup_class = 6;
-  optional uint32 years_since_inspection = 7;
-  optional string duct_class = 8;
-  optional double duct_leakage_m3_s_m2 = 9;
-  optional double design_airflow_m3_h = 10;
+  optional string name = 1;
+  optional string system_type = 2;
+  optional double sfp_w_m3_s = 3;
+  optional uint32 sfp_required_class = 4;
+  optional double heat_recovery_eta = 5;
+  optional string oda_class = 6;
+  optional string filter_sup_class = 7;
+  optional uint32 years_since_inspection = 8;
+  optional double humidification_required_kg_h = 9;
+  optional double humidification_provided_kg_h = 10;
+  optional double fan_q_v_m3_s = 11;
+  optional double fan_t_run_h = 12;
+  optional string duct_class = 13;
+  optional double duct_test_pressure_pa = 14;
+  optional double duct_leakage_m3_s_m2 = 15;
+  optional double design_airflow_m3_h = 16;
 }
 
 message Din16798Diff {
@@ -78,7 +94,7 @@ message Din16798Diff {
   // @state artifact
   optional double night_setback_k = 8;
   // @state artifact
-  repeated Din16798ZoneEdit zones = 9;
+  Din16798ZoneDelta zones = 9;
   // @state artifact
-  repeated Din16798VentSystemEdit vent_systems = 10;
+  Din16798VentSystemDelta vent_systems = 10;
 }

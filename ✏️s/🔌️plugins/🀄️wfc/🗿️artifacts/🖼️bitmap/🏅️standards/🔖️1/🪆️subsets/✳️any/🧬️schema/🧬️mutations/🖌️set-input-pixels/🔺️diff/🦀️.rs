@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `SetInputPixels` — one real region entry on the `inputRegions` lane,
 //! never a whole-buffer capture.
 
-use crate::diff::{BitmapDiff, BitmapPixelRegion};
+use crate::diff::{BitmapDiff, BitmapInputOp, BitmapPixelRegion};
 use crate::schema::snapshot::{read_region, BitmapSnapshot};
 
 pub fn diff(payload: &super::SetInputPixels, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
@@ -22,5 +22,5 @@ pub fn diff(payload: &super::SetInputPixels, base: &BitmapSnapshot) -> protocol:
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "The region already holds these pixels.".to_string());
     }
     let entry = BitmapPixelRegion { x: payload.x, y: payload.y, width: payload.width, height: payload.height, pixels: payload.pixels.clone() };
-    protocol::MutationOutcome::new(BitmapDiff { input_regions: vec![entry], ..Default::default() })
+    protocol::MutationOutcome::new(BitmapDiff { input_ops: vec![BitmapInputOp::Region { region: entry }], ..Default::default() })
 }

@@ -1,0 +1,17 @@
+{
+  "name": "semio-framework-canvas",
+  "projectType": "library",
+  "tags": [
+    "language:cargo"
+  ],
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

@@ -12,10 +12,10 @@ async fn rewriting_map_ownership_transport_preserves_entry_presence() {
         for input in row["mutations"].as_array().unwrap() {
             let mutation: RewriteRuleMutation = semio_framework_pack_json::from_json_str(&input.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             let outcome = mutation.diff(&current);
-            let direct = outcome.diff().apply(&current).unwrap();
+            let direct = protocol::apply_diff(outcome.diff(), &current).unwrap();
             let encoded = semio_framework_pack_json::to_json_string(outcome.diff());
             let decoded: RewritingDiff = semio_framework_pack_json::from_json_str(&encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-            let restored = decoded.apply(&current);
+            let restored = protocol::apply_diff(&decoded, &current);
             assert_eq!(restored.as_ref(), Ok(&direct), "{}: persisted diff {}", row["name"], encoded);
             current = restored.unwrap();
         }
@@ -35,9 +35,9 @@ async fn rewriting_map_ownership_absorb_preserves_sequential_application() {
         for input in row["mutations"].as_array().unwrap() {
             let mutation: RewriteRuleMutation = semio_framework_pack_json::from_json_str(&input.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             let outcome = mutation.diff(&current);
-            current = outcome.diff().apply(&current).unwrap();
+            current = protocol::apply_diff(outcome.diff(), &current).unwrap();
             combined.absorb(outcome.diff().clone());
         }
-        assert_eq!(combined.apply(&base).as_ref(), Ok(&current), "{}", row["name"]);
+        assert_eq!(protocol::apply_diff(&combined, &base).as_ref(), Ok(&current), "{}", row["name"]);
     }
 }

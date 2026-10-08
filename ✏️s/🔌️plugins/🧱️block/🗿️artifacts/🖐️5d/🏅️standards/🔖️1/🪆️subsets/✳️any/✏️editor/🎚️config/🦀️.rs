@@ -4,7 +4,6 @@
 //! like document content, with a true `backwards` per operation. Nothing here is document state — the
 //! part kind's identity/presentations/grips live in `crate`.
 
-use protocol::Mutation;
 
 //#region 🔖️Config
 /// 🧮️ `Block5dPlayApp`'s empty artifact config; selection and locale live in the shared view model.
@@ -61,121 +60,72 @@ impl store::ArtifactPack for Block5dConfig {
 
 //#endregion 🔖️ArtifactCodec
 
-store::impl_whole_record_config!(Block5dConfig);
+impl store::ConfigRecord for Block5dConfig {}
+
+/// 🔺️ The diff of an empty config: there is nothing to change.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Block5dConfigDiff {}
+
+impl protocol::DiffAlgebra<Block5dConfig> for Block5dConfigDiff {
+    fn inverse(&self, _base: &Block5dConfig) -> Self {
+        Self {}
+    }
+    fn between(_base: &Block5dConfig, _other: &Block5dConfig) -> Self {
+        Self {}
+    }
+    fn is_empty(&self) -> bool {
+        true
+    }
+}
+
+impl protocol::MutationDiff<Block5dConfig> for Block5dConfigDiff {
+    fn apply(&self, base: &Block5dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Block5dConfig> {
+        Ok(base.clone())
+    }
+    fn absorb(&mut self, _other: Self) {}
+}
+
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
-/// 🧮️ `Block5dConfig`'s operation enum — one variant per settled interaction (mirrors the pre-B1
-/// `Block5dPlayApp` `RefCell` field write), plus a generic `Snapshot` every variant's `backwards()`
-/// returns.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-pub enum Block5dConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: Block5dConfig,
-    },
-}
+/// 🧮️ An empty config has no mutation: the enum is uninhabited, so no diff can be raised against it.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+pub enum Block5dConfigMutation {}
 
-//#region 🔖️OpCodec
-impl protocol::OpText for Block5dConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
-                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown mutation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
-        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
-    }
-}
-
-/// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for Block5dConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
-        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1.ordinary)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = (spec_fn.ordinary)();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
-    }
-}
-
-//#endregion 🔖️OpCodec
-
-impl Mutation<Block5dConfig> for Block5dConfigMutation {
-    type Diff = Block5dConfig;
-
-    /// 🧷️ Hand-written (not `#[derive(dsl::Mutations)]`: this is a plain whole-config-record
-    /// mutation enum, not a `dsl::Mutations`-eligible semantic-document vocabulary). ⚠️
-    /// PROVISIONAL: neither `owner` path below names a directory that exists on disk — this enum
-    /// has no `🧬️mutations/<slug>` leaf triads of its own, so both entries are metadata
-    /// placeholders to satisfy `protocol::Mutation`, matching puzzle5d's config precedent.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
-        schema_version: 1,
-        owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot",
-        semantic_kind: "snapshot",
-        display_name: "Snapshot",
-        emoji: "📄",
-        aggregate_variant: "Snapshot",
-        payload_schema: "🧬️schema/🔣️.json",
-        text_opcode: None,
-        binary_tag: None,
-        invertibility: protocol::MutationInvertibility::ExplicitMutation,
-        diff_participation: protocol::MutationDiffParticipation::Detect,
-        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-        composition: protocol::MutationComposition::Atomic,
-        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }];
+impl protocol::Mutation<Block5dConfig> for Block5dConfigMutation {
+    type Diff = Block5dConfigDiff;
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
-        match self {
-            Block5dConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
-        }
+        match *self {}
     }
 
-    fn diff(&self, _base: &Block5dConfig) -> protocol::MutationOutcome<Block5dConfig> {
-        match self {
-            Block5dConfigMutation::Snapshot { config } => protocol::MutationOutcome::new(config.clone()),
-        }
+    fn diff(&self, _base: &Block5dConfig) -> protocol::MutationOutcome<Block5dConfigDiff> {
+        match *self {}
     }
 
-    fn inverse(&self, base: &Block5dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Block5dConfigMutation::Snapshot { config: base.clone() }]
-    
-    })())
+    fn inverse(&self, _base: &Block5dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+        match *self {}
+    }
 }
+
+impl protocol::OpText for Block5dConfigMutation {
+    fn parse_op(_line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "no config mutations exist", semio_framework_diagnostic::TextSpan::at(1, 1)))
+    }
+    fn print_op(&self) -> String {
+        match *self {}
+    }
+}
+
+impl protocol::OpBinary for Block5dConfigMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        match *self {}
+    }
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        Err(protocol::ProtocolError::Malformed { what: "no-config-mutation", offset: 0, detail: "no config mutations exist".into() })
+    }
 }
 //#endregion 🔖️ConfigOperations
 

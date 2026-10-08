@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/neural/engine/retirement/schema.json",
+  "title": "Neural Retained Ownership",
+  "$defs": {
+    "Grant": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant"
+    },
+    "Demand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

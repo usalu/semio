@@ -9,7 +9,7 @@ pub use transport::*;
 
 #[path = "🌳️root/🦀️.rs"]
 mod retained_root;
-pub use retained_root::{LocalInteractionRoot, LocalInteractionRootPatch, LocalInteractionRootRetirement, LocalInteractionRootStep, LocalInteractionRootUpdate, LocalInteractionUpdateStep};
+pub use retained_root::{LocalInteractionRoot,LocalInteractionRootPatch,LocalInteractionRootUpdate,LocalInteractionWork};
 
 //#region 🧬️Contract
 /// 🗺️ The complete local selection/mode/granularity state, excluding current hover and peer filtering.

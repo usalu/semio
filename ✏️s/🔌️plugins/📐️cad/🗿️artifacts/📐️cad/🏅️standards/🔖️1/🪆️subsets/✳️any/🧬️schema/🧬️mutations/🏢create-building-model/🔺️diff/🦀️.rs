@@ -1,7 +1,7 @@
 //! 🔺️ `create-building-model ` — sparse diff construction from an exact composed model child handle.
 
 use super::CreateBuildingModel;
-use crate::diff::CadDiff;
+use crate::diff::{CadDiff, CadModelSlot};
 use crate::CadSnapshot;
 
 //#region 🔖️Diff
@@ -13,6 +13,6 @@ pub fn diff(payload: &CreateBuildingModel, base: &CadSnapshot) -> protocol::Muta
     if base.building_model.as_ref() == Some(&candidate) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Building-model child is already {}.", payload.child_id));
     }
-    protocol::MutationOutcome::new(CadDiff { building_model: Some(Some(candidate)), ..Default::default() })
+    protocol::MutationOutcome::new(CadDiff { building_model: Some(CadModelSlot { child: Some(candidate) }), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,0 +1,24 @@
+{
+  "mutation": "upsertInstance",
+  "instance": {
+    "id": 1,
+    "entities": [
+      {
+        "typeName": "IFCPROJECT",
+        "arguments": [
+          {
+            "kind": "str",
+            "value": "0Xk$Q1nMz9wgLp2vBcRt4A"
+          },
+          {
+            "kind": "unset"
+          },
+          {
+            "kind": "str",
+            "value": "Nakagin Capsule Tower"
+          }
+        ]
+      }
+    ]
+  }
+}

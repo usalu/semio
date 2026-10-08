@@ -1,6 +1,6 @@
 
 use super::*;
-use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
+use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix, assert_mutation_inverse_sum_law};
 
 #[semio_framework_async_macros::async_test]
 async fn home_op_text_round_trips_every_variant() {
@@ -21,6 +21,7 @@ async fn dispatch_registers_semantic_descriptors() {
 async fn change_catalog_generation_inverse_law() {
     let base = SHomeSnapshot::default();
     assert_mutation_inverse_law(&base, &change_catalog_generation(7)).await;
+    assert_mutation_inverse_sum_law(&change_catalog_generation(7), &base).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -28,7 +29,7 @@ async fn change_catalog_generation_diff_absorb_law() {
     use protocol::Mutation;
     let base = SHomeSnapshot::default();
     let d1 = change_catalog_generation(3).diff(&base).diff().clone();
-    let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
+    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
     let d2 = change_catalog_generation(9).diff(&mid).diff().clone();
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }

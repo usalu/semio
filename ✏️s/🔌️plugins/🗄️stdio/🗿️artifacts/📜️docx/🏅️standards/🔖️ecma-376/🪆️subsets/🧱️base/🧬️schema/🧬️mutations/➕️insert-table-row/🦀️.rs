@@ -14,12 +14,12 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for InsertTableRow {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "table-row", kind: "insert-table-row", record: "InsertTableRow" };
 
     fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as Mutation<DocxSnapshot>>::Diff> {
-        agg_diff(&DocxMutation::InsertTableRow(self.clone()), base)
+        addressed_outcome(&DocxMutation::InsertTableRow(self.clone()), base)
     }
 
     fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
     Ok({
-        agg_inverse(&DocxMutation::InsertTableRow(self.clone()), base)?
+        addressed_inverse(&DocxMutation::InsertTableRow(self.clone()), base)?
     
     })
 }

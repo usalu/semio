@@ -78,7 +78,6 @@ struct Rebuild {
     tol: f64,
     policy: Policy,
     surfaces: HashMap<FaceId, Surface>,
-    materialize: HashSet<FaceId>,
     solid_faces: HashSet<FaceId>,
     edge_set: HashSet<EdgeId>,
     vertex_list: Vec<VertexId>,
@@ -99,7 +98,7 @@ impl Rebuild {
         edge_list.sort_unstable();
         let mut face_list: Vec<FaceId> = solid_faces.iter().copied().filter(|face| materialize.contains(face)).collect();
         face_list.sort_unstable();
-        Self { tol, policy, surfaces: HashMap::new(), materialize, solid_faces, edge_set, vertex_list, edge_list, face_list, vertex_pos: HashMap::new(), out: RebuiltTopology { face_new: HashMap::new(), edge_new: HashMap::new(), vertex_new: HashMap::new() } }
+        Self { tol, policy, surfaces: HashMap::new(), solid_faces, edge_set, vertex_list, edge_list, face_list, vertex_pos: HashMap::new(), out: RebuiltTopology { face_new: HashMap::new(), edge_new: HashMap::new(), vertex_new: HashMap::new() } }
     }
 
     /// 🧮️ Units per pass: vertices, edges, materialized faces.

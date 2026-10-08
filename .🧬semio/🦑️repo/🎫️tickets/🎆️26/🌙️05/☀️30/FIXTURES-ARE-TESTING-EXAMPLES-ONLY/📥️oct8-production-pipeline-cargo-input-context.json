@@ -1,0 +1,226 @@
+{
+  "observation": "Actual owner command declarations and existing policy-resolved compiler context before production dispatch; no compilation inferred",
+  "root": "/Users/ueli/Documents/semio",
+  "context": {
+    "root": "/Users/ueli/Documents/semio",
+    "directories": {
+      "target": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/target",
+      "build": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build"
+    },
+    "environment": {
+      "CARGO_TARGET_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/target",
+      "CARGO_BUILD_BUILD_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/cargo/fixture-boundary-production/build"
+    }
+  },
+  "checks": [
+    {
+      "declaredCheck": {
+        "target": "wasm32-wasip2",
+        "workspace": "Cargo.toml",
+        "packages": [
+          "semio-framework",
+          "semio-framework-replication",
+          "semio-framework-os-kernel",
+          "semio-framework-os",
+          "semio-framework-plugin"
+        ],
+        "features": [
+          "semio-framework-plugin/component-guest",
+          "semio-framework-os-kernel/deflate",
+          "semio-framework-replication/deflate"
+        ]
+      },
+      "args": [
+        "check",
+        "--manifest-path",
+        "Cargo.toml",
+        "--lib",
+        "--target",
+        "wasm32-wasip2",
+        "-p",
+        "semio-framework",
+        "-p",
+        "semio-framework-replication",
+        "-p",
+        "semio-framework-os-kernel",
+        "-p",
+        "semio-framework-os",
+        "-p",
+        "semio-framework-plugin",
+        "--features",
+        "semio-framework-plugin/component-guest,semio-framework-os-kernel/deflate,semio-framework-replication/deflate",
+        "--message-format=json"
+      ],
+      "manifest": "/Users/ueli/Documents/semio/Cargo.toml",
+      "manifestSha256": "8cbec0c3fa580693648ddb2d09fc60fa62631a8caffa24e5396b5060314a39a5"
+    },
+    {
+      "declaredCheck": {
+        "target": "wasm32-unknown-unknown",
+        "workspace": "Cargo.toml",
+        "packages": [
+          "semio-framework-os-kernel"
+        ],
+        "features": [
+          "semio-framework-os-kernel/sync"
+        ]
+      },
+      "args": [
+        "check",
+        "--manifest-path",
+        "Cargo.toml",
+        "--lib",
+        "--target",
+        "wasm32-unknown-unknown",
+        "-p",
+        "semio-framework-os-kernel",
+        "--features",
+        "semio-framework-os-kernel/sync",
+        "--message-format=json"
+      ],
+      "manifest": "/Users/ueli/Documents/semio/Cargo.toml",
+      "manifestSha256": "8cbec0c3fa580693648ddb2d09fc60fa62631a8caffa24e5396b5060314a39a5"
+    },
+    {
+      "declaredCheck": {
+        "target": "wasm32-unknown-unknown",
+        "workspace": "Cargo.toml",
+        "packages": [
+          "semio-framework-os-renderer-wgpu"
+        ],
+        "features": []
+      },
+      "args": [
+        "check",
+        "--manifest-path",
+        "Cargo.toml",
+        "--lib",
+        "--target",
+        "wasm32-unknown-unknown",
+        "-p",
+        "semio-framework-os-renderer-wgpu",
+        "--message-format=json"
+      ],
+      "manifest": "/Users/ueli/Documents/semio/Cargo.toml",
+      "manifestSha256": "8cbec0c3fa580693648ddb2d09fc60fa62631a8caffa24e5396b5060314a39a5"
+    },
+    {
+      "declaredCheck": {
+        "target": "wasm32-wasip2",
+        "workspace": "✏️s/Cargo.toml",
+        "packages": [
+          "semio-s-plugin-stdio"
+        ],
+        "features": []
+      },
+      "args": [
+        "check",
+        "--manifest-path",
+        "✏️s/Cargo.toml",
+        "--lib",
+        "--target",
+        "wasm32-wasip2",
+        "-p",
+        "semio-s-plugin-stdio",
+        "--message-format=json"
+      ],
+      "manifest": "/Users/ueli/Documents/semio/✏️s/Cargo.toml",
+      "manifestSha256": "dd551e7777b9c328f63d405c5514f56e15813930f8f8e4431213c4c68a31ab5b"
+    }
+  ],
+  "priorLedgerNames": [],
+  "priorTicketReceiptNames": [
+    "cargo-unit-provenance-cargo-artifacts-jO7Qje.json",
+    "cargo-unit-provenance-cargo-artifacts-t3G4Pn.json",
+    "cargo-unit-provenance-cargo-artifacts-P07L6q.json",
+    "cargo-unit-provenance-cargo-artifacts-CMLNQY.json",
+    "cargo-unit-provenance-cargo-artifacts-Gw5NdI.json",
+    "cargo-unit-provenance-cargo-artifacts-AGGuvA.json",
+    "cargo-unit-provenance-cargo-relay-195d088f-4a18-4f73-bba7-1d9e1fd763c3.json",
+    "cargo-unit-provenance-cargo-artifacts-bKjdVe.json",
+    "cargo-unit-provenance-cargo-artifacts-izcmQC.json",
+    "cargo-unit-provenance-cargo-artifacts-xLEapt.json",
+    "cargo-unit-provenance-cargo-artifacts-3OxEyZ.json",
+    "cargo-unit-provenance-cargo-relay-45486fdf-6918-4e25-a2f5-186caab13569.json",
+    "cargo-unit-provenance-cargo-artifacts-XubHAo.json",
+    "cargo-unit-provenance-cargo-artifacts-UfH7Pe.json",
+    "cargo-unit-provenance-cargo-artifacts-c2pJTA.json",
+    "cargo-unit-provenance-cargo-artifacts-ZBqVIb.json",
+    "cargo-unit-provenance-cargo-artifacts-Al7ELx.json",
+    "cargo-unit-provenance-cargo-artifacts-XAeVOZ.json",
+    "cargo-unit-provenance-cargo-artifacts-WNDn6p.json",
+    "cargo-unit-provenance-cargo-artifacts-SExqmV.json",
+    "cargo-unit-provenance-cargo-artifacts-K63tGA.json",
+    "cargo-unit-provenance-cargo-artifacts-bNBwqb.json",
+    "cargo-unit-provenance-cargo-artifacts-g9C1Tn.json",
+    "cargo-unit-provenance-cargo-artifacts-dZuVpg.json",
+    "cargo-unit-provenance-cargo-artifacts-LOFWtW.json",
+    "cargo-unit-provenance-cargo-artifacts-cnD04H.json",
+    "cargo-unit-provenance-cargo-artifacts-N78lgW.json",
+    "cargo-unit-provenance-cargo-artifacts-xqGvbp.json",
+    "cargo-unit-provenance-cargo-artifacts-bd13NC.json",
+    "cargo-unit-provenance-cargo-artifacts-dE976n.json",
+    "cargo-unit-provenance-cargo-artifacts-2NZAqX.json",
+    "cargo-unit-provenance-cargo-artifacts-pFLe7d.json",
+    "cargo-unit-provenance-cargo-artifacts-XIKUVa.json",
+    "cargo-unit-provenance-cargo-artifacts-Ap7cr5.json",
+    "cargo-unit-provenance-cargo-artifacts-bg9EC3.json",
+    "cargo-unit-provenance-cargo-artifacts-MoJwLl.json",
+    "cargo-unit-provenance-cargo-artifacts-UBloxG.json",
+    "cargo-unit-provenance-cargo-artifacts-hzs8hz.json",
+    "cargo-unit-provenance-cargo-artifacts-fzYE3C.json",
+    "cargo-unit-provenance-cargo-artifacts-ARbTe5.json",
+    "cargo-unit-provenance-cargo-artifacts-3reVWB.json",
+    "cargo-unit-provenance-cargo-artifacts-fghork.json",
+    "cargo-unit-provenance-cargo-artifacts-xHneTS.json",
+    "cargo-unit-provenance-cargo-artifacts-pU6vnd.json",
+    "cargo-unit-provenance-cargo-artifacts-cWj2zk.json",
+    "cargo-unit-provenance-cargo-artifacts-juPFmK.json",
+    "cargo-unit-provenance-cargo-artifacts-KQcJBZ.json",
+    "cargo-unit-provenance-cargo-artifacts-iN6dV6.json",
+    "cargo-unit-provenance-cargo-artifacts-BKfIAP.json",
+    "cargo-unit-provenance-cargo-artifacts-Ooh9Wr.json",
+    "cargo-unit-provenance-cargo-artifacts-UJZicx.json",
+    "cargo-unit-provenance-cargo-artifacts-yoQGrT.json",
+    "cargo-unit-provenance-cargo-artifacts-YrUcbQ.json",
+    "cargo-unit-provenance-cargo-artifacts-DaVXRs.json",
+    "cargo-unit-provenance-cargo-artifacts-hIwFf1.json",
+    "cargo-unit-provenance-cargo-artifacts-U254pf.json",
+    "cargo-unit-provenance-cargo-relay-f1d1c31a-fe50-452b-8252-09061ac43698.json",
+    "cargo-unit-provenance-cargo-artifacts-gNFTXj.json",
+    "cargo-unit-provenance-cargo-artifacts-DCdeak.json",
+    "cargo-unit-provenance-cargo-artifacts-QUcdsK.json",
+    "cargo-unit-provenance-cargo-artifacts-yY0BrP.json",
+    "cargo-unit-provenance-cargo-artifacts-OIDkOD.json",
+    "cargo-unit-provenance-cargo-artifacts-vmxukR.json",
+    "cargo-unit-provenance-cargo-artifacts-b6OLEC.json",
+    "cargo-unit-provenance-cargo-relay-1c2d6230-22ad-48f1-a3dd-91898ee484d6.json",
+    "cargo-unit-provenance-cargo-artifacts-7WnDBa.json",
+    "cargo-unit-provenance-cargo-artifacts-6rgJwG.json",
+    "cargo-unit-provenance-cargo-artifacts-e3K2gV.json",
+    "cargo-unit-provenance-cargo-artifacts-gfjJQE.json",
+    "cargo-unit-provenance-cargo-artifacts-KxtGyZ.json",
+    "cargo-unit-provenance-cargo-artifacts-BlhNng.json",
+    "cargo-unit-provenance-cargo-artifacts-yI4knK.json",
+    "cargo-unit-provenance-cargo-artifacts-bW2BBt.json",
+    "cargo-unit-provenance-cargo-artifacts-GQOwSM.json",
+    "cargo-unit-provenance-cargo-artifacts-LJ6HWl.json",
+    "cargo-unit-provenance-cargo-artifacts-pQCSuU.json",
+    "cargo-unit-provenance-cargo-artifacts-OliOkE.json",
+    "cargo-unit-provenance-cargo-artifacts-cchCng.json",
+    "cargo-unit-provenance-cargo-artifacts-6s0okG.json",
+    "cargo-unit-provenance-cargo-artifacts-JjRidJ.json",
+    "cargo-unit-provenance-cargo-artifacts-4ahF2s.json",
+    "cargo-unit-provenance-cargo-artifacts-ouj7nH.json",
+    "cargo-unit-provenance-cargo-artifacts-DFf2Q4.json",
+    "cargo-unit-provenance-cargo-artifacts-qfBw4B.json",
+    "cargo-unit-provenance-cargo-artifacts-6mhA1L.json",
+    "cargo-unit-provenance-cargo-artifacts-sKCQHY.json",
+    "cargo-unit-provenance-cargo-relay-fd90e4fb-5b38-4b25-840d-cc3b6b9dbbec.json",
+    "cargo-unit-provenance-cargo-artifacts-DuznI9.json",
+    "cargo-unit-provenance-cargo-artifacts-8K8ff2.json",
+    "cargo-unit-provenance-cargo-artifacts-ZPujwQ.json",
+    "cargo-unit-provenance-cargo-artifacts-LTvunU.json",
+    "cargo-unit-provenance-cargo-artifacts-JxLDJm.json"
+  ]
+}

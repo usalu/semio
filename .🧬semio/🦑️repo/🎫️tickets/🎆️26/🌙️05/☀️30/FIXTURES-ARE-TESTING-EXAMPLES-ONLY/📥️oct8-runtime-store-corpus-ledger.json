@@ -1,0 +1,54 @@
+{
+  "updated": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🧪️tests/🔬️unit/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🌱️genesis/🧪️tests/🔬️unit/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📏️birth/🧪️tests/🔬️unit/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/📚️catalog/🧪️tests/🔬️unit/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🌱️birth/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️catalog/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️graph/🤝️group/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️deferred-reprojection/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/♻️snapshot-read-retirement/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/📦️native-codec-send/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧪️tests/💰️allocation/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/👁️group-visibility/🟦️.ts"
+  ],
+  "removed": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/♻️retirement/📦️backing/🧫️fixtures/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/📚️catalog/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧫️fixtures/📐️schema.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🧫️fixtures/🔐️projection/📐️schema.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🧫️fixtures/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🌱️genesis/🧫️fixtures/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📏️birth/🧫️fixtures/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🧬️schema/📄️inline.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/📏️reprojection-operation-authority.schema.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🧫️fixtures/📏️physical-demand/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🧫️fixtures/📏️store-entry/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🧫️fixtures/📦️release-pages/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️catalog/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️graph/🤝️group/🧫️fixtures/📐️schema.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧵️send/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🌱️birth/🧫️fixtures/📐️schema.json"
+  ],
+  "schemaExports": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️.json",
+      "export": "GroupCursorVisibility"
+    }
+  ],
+  "fixtureMetadata": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️supersede-law/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️replay-retirement/🔣️.json"
+  ],
+  "tests": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🟦️.ts"
+  ]
+}

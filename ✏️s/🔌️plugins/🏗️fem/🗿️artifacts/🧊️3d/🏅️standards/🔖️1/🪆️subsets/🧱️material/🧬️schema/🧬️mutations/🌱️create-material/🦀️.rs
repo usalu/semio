@@ -13,6 +13,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "create-material")]
 pub struct CreateMaterial {
     pub material: FemMaterial,
+    /// 📍 Zero-based insertion position among the siblings; `None` or past the end appends.
+    pub index: Option<usize>,
 }
 
 impl MutationKind<Fem3dSnapshot, Fem3dMutation> for CreateMaterial {

@@ -8,7 +8,7 @@ fn entity(id: u64, name: &str, args: Vec<StepValue>) -> StepEntity {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn base_snapshot() -> StepSnapshot {
-    StepSnapshot { schema: crate::STDIO_STEP_DOCUMENT_SCHEMA.into(), header: StepHeader::default(), entities: vec![entity(1, "CARTESIAN_POINT", vec![SV::String("".into()), SV::Real(1.0)]), entity(2, "DIRECTION", vec![SV::Unset])] }
+    StepSnapshot { schema: crate::STDIO_STEP_DOCUMENT_SCHEMA.into(), header: StepHeader::default(), entities: vec![entity(1, "CARTESIAN_POINT", vec![SV::String("".into()), SV::Real(1.0)]), entity(2, "DIRECTION", vec![SV::Unset]), entity(3, "AXIS", vec![SV::Unset])] }
 }
 
 /// 🧪️ `mutation_diff_law`: ∀ variant, `m.diff(base).diff().apply(base) == { apply(&mut s, m); s }`
@@ -16,7 +16,7 @@ fn base_snapshot() -> StepSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_mutation_diff_law(base: &StepSnapshot, m: StepMutation) {
     let expected_diff = <StepMutation as Mutation<StepSnapshot>>::diff(&m, base);
-    let expected_state = expected_diff.diff().apply(base).expect("valid mutation diff");
+    let expected_state = protocol::apply_diff(expected_diff.diff(), base).expect("valid mutation diff");
     let mut actual_state = base.clone();
     let actual_diff = apply_step_mutation(&mut actual_state, &m);
     assert_eq!(actual_diff, expected_diff, "returned diff must equal m.diff(base) for {m:?}");
@@ -26,9 +26,6 @@ fn assert_mutation_diff_law(base: &StepSnapshot, m: StepMutation) {
 #[semio_framework_async_macros::async_test]
 async fn mutation_diff_law_covers_every_variant() {
     let base = base_snapshot();
-    let mut next = base.clone();
-    next.entities[0].name = "X".into();
-    assert_mutation_diff_law(&base, StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: next }));
     assert_mutation_diff_law(&base, StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: StepFileDescription { description: vec!["d".into()], implementation_level: "2;1".into() } }));
     assert_mutation_diff_law(&base, StepMutation::SetFileName(set_file_name::SetFileName { file_name: StepFileName { name: "n".into(), ..Default::default() } }));
     assert_mutation_diff_law(&base, StepMutation::SetFileSchema(set_file_schema::SetFileSchema { file_schema: StepFileSchema { schemas: vec!["X".into()] } }));
@@ -74,7 +71,35 @@ async fn inverse_law_mutation_level_round_trips_every_variant() {
             apply_step_mutation(&mut restored, inv);
         }
         assert_eq!(restored, base, "mutation-level inverse must restore base for {m:?}");
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&m, &base).await;
     }
+}
+
+/// 🧪️ A removed MIDDLE entity comes back at its original index, and a middle insert is undone by removing it.
+#[semio_framework_async_macros::async_test]
+async fn removing_a_middle_row_is_restored_at_its_original_index() {
+    let base = base_snapshot();
+    let removal = StepMutation::RemoveEntity(remove_entity::RemoveEntity { id: 2 });
+    let inverse = <StepMutation as Mutation<StepSnapshot>>::inverse(&removal, &base).expect("valid retained mutation inverse fixture");
+    assert_eq!(inverse, vec![StepMutation::InsertEntity(insert_entity::InsertEntity { index: 1, entity: base.entities[1].clone() })]);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&removal, &base).await;
+}
+
+/// 🧪️ `net_mutations` carries any retained-order-preserving edit with intermediate snapshots that never dangle.
+#[semio_framework_async_macros::async_test]
+async fn net_mutations_reach_the_next_snapshot_stepwise() {
+    let base = base_snapshot();
+    let mut next = base.clone();
+    next.entities[0].name = "RENAMED".into();
+    next.entities[1].args.push(SV::Integer(7));
+    next.entities.remove(2);
+    next.entities.insert(1, entity(50, "NEW", vec![SV::Reference(1)]));
+    let mut state = base.clone();
+    for leaf in net_mutations(&base, &next).expect("a retained-order edit has a net") {
+        let outcome = apply_step_mutation(&mut state, &leaf);
+        assert!(outcome.messages().is_empty(), "{leaf:?} was rejected: {:?}", outcome.messages());
+    }
+    assert_eq!(state, next);
 }
 
 /// 🧪️ F6: `OpText`/`OpBinary` round-trip laws for the hand-rolled `StepMutation` grammar —
@@ -85,8 +110,6 @@ async fn inverse_law_mutation_level_round_trips_every_variant() {
 async fn op_text_binary_roundtrip_law() {
     let base = base_snapshot();
     let mutations = vec![
-        StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-        StepMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: StepFileDescription { description: vec!["d1".into(), "d2".into()], implementation_level: "2;1".into() } }),
         StepMutation::SetFileName(set_file_name::SetFileName {
             file_name: StepFileName {
@@ -143,8 +166,6 @@ async fn op_text_binary_roundtrip_law() {
 async fn kinds_const_matches_enum_variants_in_declaration_order() {
     let base = base_snapshot();
     let one_per_variant = vec![
-        StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }),
-        StepMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: StepFileDescription::default() }),
         StepMutation::SetFileName(set_file_name::SetFileName { file_name: StepFileName::default() }),
         StepMutation::SetFileSchema(set_file_schema::SetFileSchema { file_schema: StepFileSchema::default() }),

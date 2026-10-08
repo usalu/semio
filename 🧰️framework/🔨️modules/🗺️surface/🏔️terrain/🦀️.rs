@@ -1,6 +1,6 @@
 //! 🌐️⛰️ GIS 3D: terrain-tile engine — Terrarium DEM decode, chunked heightfield meshing, and the
 //! wasm-bindgen `TerrainSession` consumed by the React `World3dHost` terrain layer. Mirrors the
-//! `framework_surface_tiled_map` crate's tile/session architecture, but produces renderable mesh buffers (for the
+//! General Surface TiledMap tile/session architecture, but produces renderable mesh buffers (for the
 //! existing `World3d` instancing pipeline) instead of rasterized pixels.
 //!
 //! 🧬️ DKM doctrine classification (ticket `26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS`,
@@ -321,7 +321,7 @@ struct TerrainElevationTiles {
 
 /// 🖥️ The browser-facing session: uploads decoded elevation tiles, reports which DEM tiles are
 /// currently visible for a given camera, and produces per-tile mesh buffers on demand. Mirrors
-/// `framework_surface_tiled_map`'s `MapSession`, but yields mesh JSON rather than driving a canvas itself — actual
+/// General Surface's `MapSession`, but yields mesh JSON rather than driving a canvas itself — actual
 /// rendering happens via the existing `World3d`/three.js instancing pipeline in React.
 ///
 /// 🧬️ Despite the "session + setters" shape, this struct owns NO tier-(a) authoritative state — see

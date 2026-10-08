@@ -1,6 +1,4 @@
-//! 🏷️ `set-style-name` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🏷️ `set-style-name` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,15 +13,14 @@ pub struct SetStyleName {
 impl protocol::MutationKind<DocxSnapshot, DocxMutation> for SetStyleName {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "style-name", kind: "set-style-name", record: "SetStyleName" };
 
-    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as Mutation<DocxSnapshot>>::Diff> {
-        agg_diff(&DocxMutation::SetStyleName(self.clone()), base)
+    fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<DocxDiff> {
+        plan_outcome(style_name_plan(base, &self.id, &self.name))
     }
+
     fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&DocxMutation::SetStyleName(self.clone()), base)?
-    
-    })
-}
+        Ok(plan_inverse(style_name_plan(base, &self.id, &self.name)))
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set style name", "Name der Formatvorlage setzen")
     }

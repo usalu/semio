@@ -37,7 +37,7 @@ use semio_repo_test_host::Json;
 /// here only by this module's own real-fixture sweep test, which is what keeps this copy honest
 /// against a drift (the case adapter's own `KINDS` is the one the runner actually dispatches on).
 #[cfg(test)]
-const KINDS: &[&str] = &["set-snapshot", "set-doctype", "insert-node", "remove-node", "set-element-name", "set-attribute", "set-text", "set-comment", "set-raw-text"];
+const KINDS: &[&str] = &["set-doctype", "insert-node", "remove-node", "set-element-name", "set-attribute", "set-text", "set-comment", "set-raw-text"];
 //#endregion 🔖️Kinds
 
 #[cfg(feature = "oracles")]
@@ -276,15 +276,6 @@ mod oracles {
     /// every example this subset's own feature exercises resolves against the real document.
     fn apply_kind(doc: &mut HDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "set-snapshot" => {
-                let snapshot = params.get("snapshot").cloned().unwrap_or(Json::Null);
-                let doctype = match snapshot.get("doctype") {
-                    Some(Json::String(text)) => Some(text.clone()),
-                    _ => None,
-                };
-                let root = Some(json_to_hnode(&snapshot.get("root").cloned().unwrap_or(Json::Null))?);
-                *doc = HDoc { doctype, root };
-            }
             "set-doctype" => {
                 doc.doctype = match params.get("doctype") {
                     Some(Json::String(text)) => Some(text.clone()),
@@ -375,7 +366,6 @@ mod oracles {
             Ok(())
         };
         match kind {
-            "set-snapshot" => *doc = base.clone(),
             "set-doctype" => doc.doctype = base.doctype.clone(),
             "insert-node" | "remove-node" => {
                 let parent = usize_path(params.array("parent"));

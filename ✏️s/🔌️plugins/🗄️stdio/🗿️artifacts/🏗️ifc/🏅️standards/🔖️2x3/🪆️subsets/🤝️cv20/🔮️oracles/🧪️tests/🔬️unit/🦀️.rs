@@ -1,5 +1,5 @@
 
-use super::{oracle_apply_mutation, oracle_round_trip, oracle_snapshot_payload, project_ifc_2x3_cv20};
+use super::{oracle_apply_mutation, oracle_round_trip, project_ifc_2x3_cv20};
 use semio_repo_test_host::Json;
 
 const FIXTURE: &[u8] = include_bytes!("../../../🧫️fixtures/🏥️wellness-center-sama-street-level/🏥️wellness-center-sama-street-level.ifc");
@@ -42,17 +42,6 @@ fn the_round_trip_through_our_own_writer_does_not_pass_bytes_through() {
     let output = oracle_round_trip(FIXTURE).expect("identity round trip");
     assert_ne!(output, FIXTURE, "our own writer must not reproduce the source writer's exact bytes");
     assert_eq!(project_ifc_2x3_cv20(&output).unwrap(), project_ifc_2x3_cv20(FIXTURE).unwrap());
-}
-
-/// 📸️ The case's own `set-snapshot` row — its leaf wire payload — replaces the whole model, and the untouched
-/// model read back as a `set-snapshot` payload restores it exactly.
-#[test]
-fn set_snapshot_replaces_the_model_and_the_read_back_snapshot_restores_it() {
-    let (_, row) = semio_repo_test_host::law::feature_rows(include_str!("../../../🧪️tests/🤝️mutate-ifc-2x3-cv20/🥒️.feature")).into_iter().find(|(kind, _)| kind == "set-snapshot").expect("set-snapshot row");
-    let mutated = oracle_apply_mutation(FIXTURE, &spec("set-snapshot", row)).expect("set-snapshot");
-    assert_eq!(field(&project_ifc_2x3_cv20(&mutated).unwrap(), "entityCount"), &num(1.0));
-    let restored = oracle_apply_mutation(&mutated, &spec("set-snapshot", oracle_snapshot_payload(FIXTURE).unwrap())).expect("inverse");
-    assert_eq!(project_ifc_2x3_cv20(&restored).unwrap(), project_ifc_2x3_cv20(FIXTURE).unwrap());
 }
 
 #[test]

@@ -5,11 +5,302 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "graph": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/s/equation/equation/artifact.json#/$defs/graph" }, { "type": "null" }], "x-semio-state": "artifact" },
-    "geometry": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/s/equation/equation/artifact.json#/$defs/geometry" }, { "type": "null" }], "x-semio-state": "artifact" },
-    "notation": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json" }, { "type": "null" }], "x-semio-state": "artifact" },
-    "results": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json" }, { "type": "null" }], "x-semio-state": "artifact" },
-    "computed": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json" }, { "type": "null" }], "x-semio-state": "artifact" },
-    "equation": { "anyOf": [{ "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json" }, { "type": "null" }], "x-semio-state": "artifact" }
+    "directed": {
+      "type": "boolean",
+      "x-semio-state": "artifact"
+    },
+    "algorithm": {
+      "type": "string",
+      "x-semio-state": "artifact"
+    },
+    "algorithmSeed": {
+      "$ref": "#/$defs/EquationOptionalSeed",
+      "x-semio-state": "artifact"
+    },
+    "nodes": {
+      "$ref": "#/$defs/EquationNodesDelta",
+      "x-semio-state": "artifact"
+    },
+    "edges": {
+      "$ref": "#/$defs/EquationEdgesDelta",
+      "x-semio-state": "artifact"
+    },
+    "points": {
+      "$ref": "#/$defs/EquationPointsDelta",
+      "x-semio-state": "artifact"
+    },
+    "notation": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
+      "x-semio-state": "artifact"
+    },
+    "results": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
+      "x-semio-state": "artifact"
+    },
+    "computed": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/store/child/schema.json",
+      "x-semio-state": "artifact"
+    },
+    "equation": {
+      "$ref": "#/$defs/EquationExprDiff",
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "EquationOptionalSeed": {
+      "title": "EquationOptionalSeed",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "EquationNodesDelta": {
+      "title": "EquationNodesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/equation/equation/artifact.json#/$defs/node"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EquationNodePatch"
+          }
+        },
+        "reordered": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ]
+    },
+    "EquationNodePatch": {
+      "title": "EquationNodePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "EquationEdgesDelta": {
+      "title": "EquationEdgesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/equation/equation/artifact.json#/$defs/edge"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EquationEdgePatch"
+          }
+        },
+        "reordered": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ]
+    },
+    "EquationEdgePatch": {
+      "title": "EquationEdgePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "EquationPointsDelta": {
+      "title": "EquationPointsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "edits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EquationPointEdit"
+          }
+        }
+      },
+      "required": [
+        "edits"
+      ]
+    },
+    "EquationPointEdit": {
+      "oneOf": [
+        {
+          "title": "EquationPointInsert",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "insert"
+            },
+            "at": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "point": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/equation/equation/artifact.json#/$defs/point"
+            }
+          },
+          "required": [
+            "op",
+            "at",
+            "point"
+          ]
+        },
+        {
+          "title": "EquationPointRemove",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "remove"
+            },
+            "at": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "op",
+            "at"
+          ]
+        },
+        {
+          "title": "EquationPointSet",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "op": {
+              "const": "set"
+            },
+            "at": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "point": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/equation/equation/artifact.json#/$defs/point"
+            }
+          },
+          "required": [
+            "op",
+            "at",
+            "point"
+          ]
+        }
+      ]
+    },
+    "EquationExprDiff": {
+      "title": "EquationExprDiff",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kinds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EquationKindPatch"
+          }
+        },
+        "nextLabel": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "required": [
+        "kinds"
+      ]
+    },
+    "EquationKindPatch": {
+      "title": "EquationKindPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "kind": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/schema.json"
+        }
+      },
+      "required": [
+        "label",
+        "kind"
+      ]
+    }
   }
 }

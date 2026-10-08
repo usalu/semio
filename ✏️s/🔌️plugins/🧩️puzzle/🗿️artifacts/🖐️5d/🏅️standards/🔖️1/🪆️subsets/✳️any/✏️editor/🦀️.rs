@@ -2482,7 +2482,7 @@ impl InteractiveJob for Puzzle5dPasteJob {
                         fastener.turn,
                         fastener.tilt,
                         fastener.x + self.delta.0,
-                        fastener.y + self.delta.1,
+                        fastener.y + self.delta.1, None,
                     ));
                 } else {
                     self.stage = Puzzle5dPasteStage::Complete;
@@ -3712,13 +3712,13 @@ impl InteractiveJob for Puzzle5dImportJob {
                             if let Err(error) = self.push_mutation(crate::standards::v1::subsets::any::schema::mutations::disconnect_kind_compatibility(parsed.source.clone(), parsed.target.clone())) {
                                 return puzzle5d_job_fault(cx, error);
                             }
-                            if let Err(error) = self.push_mutation(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(parsed.source.clone(), parsed.target.clone(), parsed.bidirectional, parsed.important, parsed.specificity)) {
+                            if let Err(error) = self.push_mutation(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(parsed.source.clone(), parsed.target.clone(), parsed.bidirectional, parsed.important, parsed.specificity, None)) {
                                 return puzzle5d_job_fault(cx, error);
                             }
                             self.compatibility[index] = parsed;
                         }
                         None => {
-                            if let Err(error) = self.push_mutation(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(parsed.source.clone(), parsed.target.clone(), parsed.bidirectional, parsed.important, parsed.specificity)) {
+                            if let Err(error) = self.push_mutation(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(parsed.source.clone(), parsed.target.clone(), parsed.bidirectional, parsed.important, parsed.specificity, None)) {
                                 return puzzle5d_job_fault(cx, error);
                             }
                             self.compatibility_index.push((key, self.compatibility.len()));
@@ -4678,7 +4678,7 @@ impl Puzzle5dPlayApp {
         }
         let effects = arm_effects;
         let shared_after = window_ownership::shared(&scene.runtime);
-        let config_mutations = if shared_after != shared_before { vec![Puzzle5dConfigMutation::Snapshot { config: shared_after }] } else { Vec::new() };
+        let config_mutations = shared_before.mutations_to(&shared_after);
         let window_after = window_ownership::config_from_runtime(&scene.runtime);
         let window_config_mutations = if window_after != window_before {
             view_state.and_then(|view| window_ownership::addressed_config(view, window_after).ok()).into_iter().collect()
@@ -6332,7 +6332,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     fastener.turn,
                     fastener.tilt,
                     fastener.x,
-                    fastener.y,
+                    fastener.y, None,
                 ));
                 self.stage = Puzzle5dRetargetFastenerStage::Complete;
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: std::mem::take(&mut self.mutations), ui_scope: UiDirtyScope::Full, ..Default::default() }))
@@ -6574,7 +6574,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 let target = self.moved_id.as_ref().cloned().ok_or_else(|| Fault::from("puzzle5d-proximity-target-owner"))?;
                 let arg = |key: &str| command.args().and_then(|args| args.get(key)).and_then(Value::as_f64).unwrap_or(0.0);
                 let kind = command.args().and_then(|args| args.get("fastenerKind").or_else(|| args.get("edgeKind"))).and_then(Value::as_str).filter(|kind| !kind.is_empty()).map(str::to_string);
-                self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(id, source, target, kind, arg("gap"), arg("shift"), arg("rise"), arg("rotation"), arg("turn"), arg("tilt"), arg("x"), arg("y")));
+                self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(id, source, target, kind, arg("gap"), arg("shift"), arg("rise"), arg("rotation"), arg("turn"), arg("tilt"), arg("x"), arg("y"), None));
                 self.clear_candidate();
                 Ok(Puzzle5dPatchPartWork::progress("puzzle5d-proximity-candidate", "Scanning nearby grip", "Naher Griff wird geprüft"))
             }
@@ -7207,7 +7207,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                         self.fresh_cursor = self.fresh_cursor.saturating_add(1);
                         id
                     });
-                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(id, source.clone(), puzzle5d_grip_full_id(part, grip), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+                    self.mutations.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(id, source.clone(), puzzle5d_grip_full_id(part, grip), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None));
                 }
                 self.stage = Puzzle5dAddBrushPartStage::Complete;
                 // 🕹️ Re-select the placed part so the brush's next gesture chains off it, exactly as puzzle
@@ -7575,7 +7575,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 let source = self.pending_source.take().expect("preflighted edge source");
                 let target = self.pending_target.take().expect("preflighted edge target");
                 let kind = self.pending_edge_kind.take();
-                self.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(id, source, target, kind, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))?;
+                self.push(crate::standards::v1::subsets::any::schema::mutations::connect_grips(id, source, target, kind, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None))?;
                 self.next_event();
                 Ok(Self::progress("puzzle5d-board-edge", "Creating board edge", "Board-Kante wird erstellt"))
             }
@@ -7953,7 +7953,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                     Self::arg_f64(command, "turn"),
                     Self::arg_f64(command, "tilt"),
                     Self::arg_f64(command, "x"),
-                    Self::arg_f64(command, "y"),
+                    Self::arg_f64(command, "y"), None,
                 ));
                 self.stage = Puzzle5dCreateFastenerStage::Complete;
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit { artifact_mutations: self.mutation.take().into_iter().collect(), ui_scope: UiDirtyScope::Full, ..Default::default() }))
@@ -8129,7 +8129,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         &mut self,
         command: &Puzzle5dCommand,
         snapshot: &Puzzle5dPlaySnapshot,
-        _config: &Puzzle5dConfig,
+        config: &Puzzle5dConfig,
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
@@ -8220,7 +8220,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 if !range.is_empty() {
                     for row in &rows[range] {
                         let row: crate::Puzzle5dKindCompatibility = <crate::Puzzle5dKindCompatibility as semio_framework_value::FromValue>::from_value(semio_framework_value::DslValue::from(row)).map_err(|_| Fault::from("puzzle5d-set-active-example-compatibility-malformed"))?;
-                        self.push(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source, row.target, row.bidirectional, row.important, row.specificity))?;
+                        self.push(crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility(row.source, row.target, row.bidirectional, row.important, row.specificity, None))?;
                     }
                     return Ok(Self::progress("puzzle5d-example-add-compatibility", "Adding compatibility", "Kompatibilität wird hinzugefügt"));
                 }
@@ -8264,7 +8264,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                             fastener.turn,
                             fastener.tilt,
                             fastener.x,
-                            fastener.y,
+                            fastener.y, None,
                         ))?;
                     }
                     return Ok(Self::progress("puzzle5d-example-add-fastener", "Adding example fastener", "Beispielverbindung wird hinzugefügt"));
@@ -8279,7 +8279,7 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
                 let interaction_writes = if targets.is_empty() { Vec::new() } else { vec![InteractionWrite { domain: PUZZLE5D_INTERACTION_DOMAIN.into(), targets, merge: MergeMode::Subtractive }] };
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(Emit {
                     artifact_mutations: std::mem::take(&mut self.mutations),
-                    config_mutations: vec![Puzzle5dConfigMutation::Snapshot { config: Puzzle5dConfig::default() }],
+                    config_mutations: config.mutations_to(&Puzzle5dConfig::default()),
                     interaction_writes,
                     ui_scope: UiDirtyScope::Full,
                     ..Default::default()
@@ -8650,7 +8650,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle5dPlaySnapshot, Puzzle5dMutati
                 let base = self.base.as_ref().ok_or_else(|| "Puzzle5d preparation lost its exact base root".to_string())?;
                 let mutation = self.mutation.take().ok_or_else(|| "Puzzle5d preparation lost its mutation owner".to_string())?;
                 let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-                let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|_| "Puzzle5d mutation could not produce its post root".to_string())?;
+                let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| "Puzzle5d mutation could not produce its post root".to_string())?;
                 self.candidate = Some((post, inverse, mutation));
                 self.phase = 1;
                 self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: [0; 32] };
@@ -8773,7 +8773,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle5dConfig, Puzzle5dConfigMutati
         let base = self.base.as_ref().ok_or_else(|| "Puzzle5d config preparation lost its exact base root".to_string())?;
         let mutation = self.mutation.take().ok_or_else(|| "Puzzle5d config preparation lost its mutation owner".to_string())?;
         let inverse = mutation.inverse(base.get()).map_err(semio_framework_value::ValueError::into_message)?;
-        let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|_| "Puzzle5d config mutation could not produce its post root".to_string())?;
+        let post = protocol::apply_diff(mutation.diff(base.get()).diff(), base.get()).map_err(|_| "Puzzle5d config mutation could not produce its post root".to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "Puzzle5d config preparation lost its Store authority".to_string())?;
         let edit = authority.next_edit(mutation, inverse);
         let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;

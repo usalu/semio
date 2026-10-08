@@ -1,5 +1,6 @@
 {
   "mutation": "connectSurfaces",
   "surfaceAId": 3,
-  "surfaceBId": 6
+  "surfaceBId": 6,
+  "index": null
 }

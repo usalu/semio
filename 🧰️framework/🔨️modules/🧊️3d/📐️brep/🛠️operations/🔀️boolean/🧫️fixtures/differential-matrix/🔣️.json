@@ -1,0 +1,9061 @@
+{
+ "oracleSegments": 360,
+ "checkSegments": 180,
+ "tolerance": {
+  "volume": 0.002,
+  "area": 0.004
+ },
+ "cases": [
+  {
+   "id": "sphere-box-poles-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     6
+    ],
+    "translate": [
+     0,
+     -3,
+     -3
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 124.75215970576443,
+    "area": 156.5645635752874,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-poles-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     6
+    ],
+    "translate": [
+     0,
+     -3,
+     -3
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 16.75215970576443,
+    "area": 37.69602884497564,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-poles-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     6
+    ],
+    "translate": [
+     0,
+     -3,
+     -3
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 16.752159705764427,
+    "area": 37.69602884497564,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-poles-negative-side-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     6
+    ],
+    "translate": [
+     -3,
+     -3,
+     -3
+    ]
+   },
+   "tags": [
+    "pole-crossing",
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 124.75215970576443,
+    "area": 156.5645635752874,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-poles-negative-side-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     6
+    ],
+    "translate": [
+     -3,
+     -3,
+     -3
+    ]
+   },
+   "tags": [
+    "pole-crossing",
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 16.752159705764427,
+    "area": 37.69602884497564,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-poles-negative-side-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     6
+    ],
+    "translate": [
+     -3,
+     -3,
+     -3
+    ]
+   },
+   "tags": [
+    "pole-crossing",
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 16.75215970576443,
+    "area": 37.69602884497564,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-poles-diagonal-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     6
+    ],
+    "rotate": [
+     0,
+     0,
+     45
+    ],
+    "translate": [
+     2.12132034356,
+     -2.12132034356,
+     -3
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 124.75215970576443,
+    "area": 156.56553130282902,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-poles-diagonal-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     6
+    ],
+    "rotate": [
+     0,
+     0,
+     45
+    ],
+    "translate": [
+     2.12132034356,
+     -2.12132034356,
+     -3
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 16.75215970576443,
+    "area": 37.69506111743402,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-poles-diagonal-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     6
+    ],
+    "rotate": [
+     0,
+     0,
+     45
+    ],
+    "translate": [
+     2.12132034356,
+     -2.12132034356,
+     -3
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 16.752159705764427,
+    "area": 37.69506111743402,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-equator-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     3
+    ],
+    "translate": [
+     -3,
+     -3,
+     0
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 124.75215970576443,
+    "area": 156.5645635752874,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-equator-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     3
+    ],
+    "translate": [
+     -3,
+     -3,
+     0
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 16.75215970576443,
+    "area": 37.69602884497564,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-equator-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     3
+    ],
+    "translate": [
+     -3,
+     -3,
+     0
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 16.752159705764427,
+    "area": 37.69602884497564,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-cap-x-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     6
+    ],
+    "translate": [
+     1,
+     -3,
+     -3
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 136.2698607403595,
+    "area": 172.27309970624975,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-cap-x-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     6
+    ],
+    "translate": [
+     1,
+     -3,
+     -3
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 28.269860740359498,
+    "area": 47.1194520773927,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-cap-x-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     6
+    ],
+    "translate": [
+     1,
+     -3,
+     -3
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 5.234458671169361,
+    "area": 21.98749271401328,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-cap-pole-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     3
+    ],
+    "translate": [
+     -3,
+     -3,
+     1.2
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 138.0204473088959,
+    "area": 176.1687092357734,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-cap-pole-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     3
+    ],
+    "translate": [
+     -3,
+     -3,
+     1.2
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 30.02044730889591,
+    "area": 48.25027799626546,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-cap-pole-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     3
+    ],
+    "translate": [
+     -3,
+     -3,
+     1.2
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 3.483872102632947,
+    "area": 18.09188318448962,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-corner-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     3,
+     3
+    ],
+    "translate": [
+     1,
+     1,
+     1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 60.48913862033319,
+    "area": 103.80831356625927,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-corner-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     3,
+     3
+    ],
+    "translate": [
+     1,
+     1,
+     1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 33.48913862033319,
+    "area": 50.38096816636722,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-corner-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     3,
+     3
+    ],
+    "translate": [
+     1,
+     1,
+     1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 0.015180791195665335,
+    "area": 0.4522788540037596,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-tilted-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     3
+    ],
+    "rotate": [
+     0,
+     30,
+     0
+    ],
+    "translate": [
+     -2.598076211353,
+     -3,
+     1.5
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 124.75215970576642,
+    "area": 156.56548354507177,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-tilted-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     3
+    ],
+    "rotate": [
+     0,
+     30,
+     0
+    ],
+    "translate": [
+     -2.598076211353,
+     -3,
+     1.5
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 16.75215970576641,
+    "area": 37.69510887519521,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-tilted-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     3
+    ],
+    "rotate": [
+     0,
+     30,
+     0
+    ],
+    "translate": [
+     -2.598076211353,
+     -3,
+     1.5
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 16.75215970576244,
+    "area": 37.69510887519124,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-pole-poke-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     1,
+     3
+    ],
+    "translate": [
+     -0.5,
+     -0.5,
+     0
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 34.5467228918353,
+    "area": 54.58016948670881,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-pole-poke-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     1,
+     3
+    ],
+    "translate": [
+     -0.5,
+     -0.5,
+     0
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 31.5467228918353,
+    "area": 57.89736874823062,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-pole-poke-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     1,
+     3
+    ],
+    "translate": [
+     -0.5,
+     -0.5,
+     0
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1.9575965196935547,
+    "area": 9.680422933554222,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-nested-outside-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     6
+    ],
+    "translate": [
+     -3,
+     -3,
+     -3
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 216,
+    "area": 216,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-nested-outside-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     6
+    ],
+    "translate": [
+     -3,
+     -3,
+     -3
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "sphere-box-nested-outside-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     6
+    ],
+    "translate": [
+     -3,
+     -3,
+     -3
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 33.50431941152886,
+    "area": 50.26059242026303,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-inscribed-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     4,
+     4
+    ],
+    "translate": [
+     -2,
+     -2,
+     -2
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 64,
+    "area": 96,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-inscribed-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     4,
+     4
+    ],
+    "translate": [
+     -2,
+     -2,
+     -2
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "sphere-box-inscribed-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     4,
+     4
+    ],
+    "translate": [
+     -2,
+     -2,
+     -2
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 33.50431941152886,
+    "area": 50.26059242026303,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-nested-inside-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     -1,
+     -1,
+     -1
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 33.50431941152886,
+    "area": 50.26059242026303,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-nested-inside-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     -1,
+     -1,
+     -1
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 25.504319411528858,
+    "area": 74.26059242026304,
+    "euler": 4,
+    "shells": 2
+   }
+  },
+  {
+   "id": "sphere-box-nested-inside-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     -1,
+     -1,
+     -1
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 8,
+    "area": 24,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-disjoint-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "translate": [
+     5,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "disjoint"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 34.504319411528854,
+    "area": 56.26059242026303,
+    "euler": 4,
+    "shells": 2
+   }
+  },
+  {
+   "id": "sphere-box-disjoint-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "translate": [
+     5,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "disjoint"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 33.50431941152886,
+    "area": 50.26059242026303,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-disjoint-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "translate": [
+     5,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "disjoint"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "sphere-box-touching-point-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     2,
+     2
+    ],
+    "translate": [
+     2,
+     -1,
+     -1
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 37.50431941152886,
+    "area": 66.26059242026304,
+    "euler": 4,
+    "shells": 2
+   }
+  },
+  {
+   "id": "sphere-box-touching-point-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     2,
+     2
+    ],
+    "translate": [
+     2,
+     -1,
+     -1
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 33.50431941152886,
+    "area": 50.26059242026303,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-box-touching-point-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     2,
+     2
+    ],
+    "translate": [
+     2,
+     -1,
+     -1
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "sphere-cylinder-axial-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 6,
+    "translate": [
+     0,
+     0,
+     -3
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 40.60947644794851,
+    "area": 65.74409595154044,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cylinder-axial-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 6,
+    "translate": [
+     0,
+     0,
+     -3
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 21.76087749568232,
+    "area": 65.29019145897509,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cylinder-axial-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 6,
+    "translate": [
+     0,
+     0,
+     -3
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 11.743441915846539,
+    "area": 28.49799613912005,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cylinder-lateral-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 6,
+    "rotate": [
+     0,
+     90,
+     0
+    ],
+    "translate": [
+     -3,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 40.60947644794851,
+    "area": 65.74409595154044,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cylinder-lateral-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 6,
+    "rotate": [
+     0,
+     90,
+     0
+    ],
+    "translate": [
+     -3,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 21.76087749568232,
+    "area": 65.29019145897509,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cylinder-lateral-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 6,
+    "rotate": [
+     0,
+     90,
+     0
+    ],
+    "translate": [
+     -3,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 11.743441915846539,
+    "area": 28.49799613912005,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cylinder-offset-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.6,
+    "height": 6,
+    "translate": [
+     1,
+     0,
+     -3
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 36.51546429284283,
+    "area": 60.31101756510145,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cylinder-offset-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.6,
+    "height": 6,
+    "translate": [
+     1,
+     0,
+     -3
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 29.729968670027002,
+    "area": 59.59575890686211,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cylinder-offset-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.6,
+    "height": 6,
+    "translate": [
+     1,
+     0,
+     -3
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 3.7743507415018565,
+    "area": 14.830586741218765,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cylinder-skew-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 6,
+    "rotate": [
+     30,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     1.5,
+     -2.598076211353
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 35.124813235560005,
+    "area": 56.91805960032884,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cylinder-skew-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 6,
+    "rotate": [
+     30,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     1.5,
+     -2.598076211353
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 30.412663497493455,
+    "area": 60.83095658292225,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cylinder-skew-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 6,
+    "rotate": [
+     30,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     1.5,
+     -2.598076211353
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 3.0916559140354027,
+    "area": 13.76256607577741,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cylinder-blind-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 3,
+    "translate": [
+     0,
+     0,
+     0.5
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 38.6276145090942,
+    "area": 61.14389696531636,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cylinder-blind-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 3,
+    "translate": [
+     0,
+     0,
+     0.5
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 29.203315032961104,
+    "area": 57.775272318915476,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cylinder-blind-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 3,
+    "translate": [
+     0,
+     0,
+     0.5
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 4.301004378567754,
+    "area": 14.248878448856441,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cylinder-tangent-circle-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 2,
+    "height": 6,
+    "translate": [
+     0,
+     0,
+     -3
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 75.39439580906478,
+    "area": 100.52873197563906,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cylinder-tangent-circle-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 2,
+    "height": 6,
+    "translate": [
+     0,
+     0,
+     -3
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "sphere-cylinder-tangent-circle-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 2,
+    "height": 6,
+    "translate": [
+     0,
+     0,
+     -3
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 33.504319411528854,
+    "area": 50.26059242026303,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cone-axial-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cone",
+    "radius": 1.5,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -1.5
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 33.62083902077818,
+    "area": 51.70996083903495,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cone-axial-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cone",
+    "radius": 1.5,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -1.5
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 24.196539544645077,
+    "area": 72.62232067358414,
+    "euler": 2,
+    "shells": 2
+   }
+  },
+  {
+   "id": "sphere-cone-axial-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cone",
+    "radius": 1.5,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -1.5
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 9.307779866883779,
+    "area": 25.74984072130415,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cone-apex-inside-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cone",
+    "radius": 1.5,
+    "height": 3,
+    "translate": [
+     0,
+     0,
+     -3
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 38.80401625469244,
+    "area": 64.86216867565396,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cone-apex-inside-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cone",
+    "radius": 1.5,
+    "height": 3,
+    "translate": [
+     0,
+     0,
+     -3
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 31.735791647592617,
+    "area": 53.2267619633411,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cone-apex-inside-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cone",
+    "radius": 1.5,
+    "height": 3,
+    "translate": [
+     0,
+     0,
+     -3
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1.76852776393624,
+    "area": 8.272160519298632,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cone-offset-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cone",
+    "radius": 1,
+    "height": 2,
+    "translate": [
+     1,
+     0,
+     -0.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 33.5057482214772,
+    "area": 50.30885672674389,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cone-offset-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cone",
+    "radius": 1,
+    "height": 2,
+    "translate": [
+     1,
+     0,
+     -0.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 31.411459449003175,
+    "area": 60.26311514317938,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-cone-offset-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "cone",
+    "radius": 1,
+    "height": 2,
+    "translate": [
+     1,
+     0,
+     -0.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 2.092859962525683,
+    "area": 10.117840926714504,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-torus-equatorial-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 39.22259387252723,
+    "area": 62.22507634289153,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-torus-equatorial-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 29.353991581878056,
+    "area": 52.83888784069248,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-torus-equatorial-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 2
+   },
+   "b": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 4.150327829650803,
+    "area": 27.512179954832018,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-sphere-in-tube-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 0.4,
+    "translate": [
+     2,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 9.868602290649175,
+    "area": 39.47666387746052,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-sphere-in-tube-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 0.4,
+    "translate": [
+     2,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 9.600567735356943,
+    "area": 41.48708757427104,
+    "euler": 2,
+    "shells": 2
+   }
+  },
+  {
+   "id": "torus-sphere-in-tube-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 0.4,
+    "translate": [
+     2,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 0.2680345552922309,
+    "area": 2.0104236968105216,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-sphere-crossing-tube-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 0.8,
+    "translate": [
+     2,
+     0,
+     0
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 10.884495408391492,
+    "area": 41.80455345127748,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-sphere-crossing-tube-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 0.8,
+    "translate": [
+     2,
+     0,
+     0
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 8.740218966053646,
+    "area": 37.34211418292812,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-sphere-crossing-tube-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 0.8,
+    "translate": [
+     2,
+     0,
+     0
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1.1283833245955286,
+    "area": 5.713805213425126,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-sphere-hole-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 1,
+    "translate": [
+     0,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "disjoint"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 14.056642217090282,
+    "area": 52.041811982526276,
+    "euler": 2,
+    "shells": 2
+   }
+  },
+  {
+   "id": "torus-sphere-hole-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 1,
+    "translate": [
+     0,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "disjoint"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 9.868602290649175,
+    "area": 39.47666387746052,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-sphere-hole-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 1,
+    "translate": [
+     0,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "disjoint"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "box-box-corner-overlap-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     1,
+     1,
+     1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 15,
+    "area": 42,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-corner-overlap-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     1,
+     1,
+     1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 7,
+    "area": 24,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-corner-overlap-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     1,
+     1,
+     1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1,
+    "area": 6,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-face-share-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     2,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 16,
+    "area": 40,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-face-share-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     2,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 8,
+    "area": 24,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-face-share-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     2,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "box-box-face-partial-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     2,
+     1,
+     0
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 16,
+    "area": 44,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-face-partial-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     2,
+     1,
+     0
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 8,
+    "area": 24,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-face-partial-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     2,
+     1,
+     0
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "box-box-nested-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "translate": [
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 8,
+    "area": 24,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-nested-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "translate": [
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 6.999999999999999,
+    "area": 30,
+    "euler": 4,
+    "shells": 2
+   }
+  },
+  {
+   "id": "box-box-nested-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "translate": [
+     0.5,
+     0.5,
+     0.5
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1,
+    "area": 6,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-flush-corner-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     1,
+     1
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 8,
+    "area": 24,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-flush-corner-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     1,
+     1
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 7,
+    "area": 24,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-flush-corner-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     1,
+     1
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1,
+    "area": 6,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-flush-face-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "translate": [
+     0,
+     0.5,
+     0.5
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 8,
+    "area": 24,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-flush-face-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "translate": [
+     0,
+     0.5,
+     0.5
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 7,
+    "area": 28,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-flush-face-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     1,
+     1
+    ],
+    "translate": [
+     0,
+     0.5,
+     0.5
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1,
+    "area": 6,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-edge-touch-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     2,
+     2,
+     0
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 16,
+    "area": 48,
+    "euler": 4,
+    "shells": 2
+   }
+  },
+  {
+   "id": "box-box-edge-touch-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     2,
+     2,
+     0
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 8,
+    "area": 24,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-edge-touch-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     2,
+     2,
+     0
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "box-box-vertex-touch-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     2,
+     2,
+     2
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 16,
+    "area": 48,
+    "euler": 4,
+    "shells": 2
+   }
+  },
+  {
+   "id": "box-box-vertex-touch-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     2,
+     2,
+     2
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 8,
+    "area": 24,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-vertex-touch-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     2,
+     2,
+     2
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "box-box-cross-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "box",
+    "size": [
+     4,
+     1,
+     1
+    ],
+    "translate": [
+     -2,
+     -0.5,
+     -0.5
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     4,
+     1
+    ],
+    "translate": [
+     -0.5,
+     -2,
+     -0.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 7,
+    "area": 30,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-box-cross-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "box",
+    "size": [
+     4,
+     1,
+     1
+    ],
+    "translate": [
+     -2,
+     -0.5,
+     -0.5
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     4,
+     1
+    ],
+    "translate": [
+     -0.5,
+     -2,
+     -0.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 3,
+    "area": 16,
+    "euler": 4,
+    "shells": 2
+   }
+  },
+  {
+   "id": "box-box-cross-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "box",
+    "size": [
+     4,
+     1,
+     1
+    ],
+    "translate": [
+     -2,
+     -0.5,
+     -0.5
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     1,
+     4,
+     1
+    ],
+    "translate": [
+     -0.5,
+     -2,
+     -0.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1,
+    "area": 6,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-through-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     4,
+     2
+    ],
+    "translate": [
+     -2,
+     -2,
+     -1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 33.57071657935551,
+    "area": 70.28310555882923,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-through-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     4,
+     2
+    ],
+    "translate": [
+     -2,
+     -2,
+     -1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1.5707165793555162,
+    "area": 9.424538717540266,
+    "euler": 4,
+    "shells": 2
+   }
+  },
+  {
+   "id": "cylinder-box-through-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     4,
+     2
+    ],
+    "translate": [
+     -2,
+     -2,
+     -1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1.5707165793555162,
+    "area": 7.853822138184749,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-blind-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.4,
+    "height": 1.5,
+    "translate": [
+     1,
+     1,
+     1.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 8.502629305393764,
+    "area": 26.51324222353169,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-blind-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.4,
+    "height": 1.5,
+    "translate": [
+     1,
+     1,
+     1.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 7.748685347303116,
+    "area": 25.256621111765845,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-blind-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.4,
+    "height": 1.5,
+    "translate": [
+     1,
+     1,
+     1.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 0.2513146526968826,
+    "area": 2.261879722553377,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-half-axis-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     4,
+     4
+    ],
+    "translate": [
+     0,
+     -2,
+     -1
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 35.14143315871103,
+    "area": 69.42453871754026,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-half-axis-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     4,
+     4
+    ],
+    "translate": [
+     0,
+     -2,
+     -1
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 3.1414331587110325,
+    "area": 13.424538717540266,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-half-axis-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     4,
+     4
+    ],
+    "translate": [
+     0,
+     -2,
+     -1
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 3.1414331587110325,
+    "area": 13.424538717540266,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-half-seam-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     2,
+     4
+    ],
+    "translate": [
+     -2,
+     0,
+     -1
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 35.14143315871103,
+    "area": 69.42453871754026,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-half-seam-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     2,
+     4
+    ],
+    "translate": [
+     -2,
+     0,
+     -1
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 3.1414331587110325,
+    "area": 13.424538717540266,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-half-seam-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     2,
+     4
+    ],
+    "translate": [
+     -2,
+     0,
+     -1
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 3.1414331587110325,
+    "area": 13.424538717540266,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-chord-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2.5,
+     4,
+     4
+    ],
+    "translate": [
+     0.5,
+     -2,
+     -1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 45.05460294873248,
+    "area": 81.96797541203371,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-chord-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2.5,
+     4,
+     4
+    ],
+    "translate": [
+     0.5,
+     -2,
+     -1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 5.054602948732482,
+    "area": 16.896178642309213,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-chord-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2.5,
+     4,
+     4
+    ],
+    "translate": [
+     0.5,
+     -2,
+     -1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1.2282633686895827,
+    "area": 8.881102023046804,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-chord-flush-caps-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2.5,
+     4,
+     2
+    ],
+    "translate": [
+     0.5,
+     -2,
+     0
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 25.054602948732473,
+    "area": 55.96797541203371,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-chord-flush-caps-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2.5,
+     4,
+     2
+    ],
+    "translate": [
+     0.5,
+     -2,
+     0
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 5.054602948732482,
+    "area": 16.896178642309213,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-chord-flush-caps-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2.5,
+     4,
+     2
+    ],
+    "translate": [
+     0.5,
+     -2,
+     0
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1.2282633686895827,
+    "area": 8.881102023046804,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-tangent-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     1,
+     -1,
+     0
+    ]
+   },
+   "tags": [
+    "tangent",
+    "coincident"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 14.282866317422064,
+    "area": 42.84907743508053,
+    "euler": 4,
+    "shells": 2
+   }
+  },
+  {
+   "id": "cylinder-box-tangent-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     1,
+     -1,
+     0
+    ]
+   },
+   "tags": [
+    "tangent",
+    "coincident"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 6.282866317422065,
+    "area": 18.84907743508053,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-tangent-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ],
+    "translate": [
+     1,
+     -1,
+     0
+    ]
+   },
+   "tags": [
+    "tangent",
+    "coincident"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "cylinder-box-partially-outside-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.6,
+    "height": 3,
+    "translate": [
+     1.6,
+     1,
+     -0.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 9.378683820722308,
+    "area": 28.247341233923503,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-partially-outside-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.6,
+    "height": 3,
+    "translate": [
+     1.6,
+     1,
+     -0.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 5.985936009314393,
+    "area": 25.71839393603744,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-partially-outside-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.6,
+    "height": 3,
+    "translate": [
+     1.6,
+     1,
+     -0.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 2.0140639906856066,
+    "area": 9.32408064624106,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-stacked-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 1,
+    "translate": [
+     1,
+     1,
+     2
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 11.141433158711033,
+    "area": 30.283105558829234,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-stacked-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 1,
+    "translate": [
+     1,
+     1,
+     2
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 8,
+    "area": 24,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-stacked-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 1,
+    "translate": [
+     1,
+     1,
+     2
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "cylinder-box-stacked-overhang-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1.5,
+    "height": 1,
+    "translate": [
+     1,
+     1,
+     2
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 15.068224607099822,
+    "area": 39.561107552443495,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-stacked-overhang-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1.5,
+    "height": 1,
+    "translate": [
+     1,
+     1,
+     2
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 8,
+    "area": 24,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-box-stacked-overhang-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1.5,
+    "height": 1,
+    "translate": [
+     1,
+     1,
+     2
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "cylinder-cylinder-cross-unequal-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 4,
+    "rotate": [
+     0,
+     90,
+     0
+    ],
+    "translate": [
+     -2,
+     0,
+     0
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.6,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -2
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 14.934597884999553,
+    "area": 39.56931632948571,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-cross-unequal-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 4,
+    "rotate": [
+     0,
+     90,
+     0
+    ],
+    "translate": [
+     -2,
+     0,
+     0
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.6,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -2
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 10.410934136455667,
+    "area": 35.84111006304751,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-cross-unequal-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 4,
+    "rotate": [
+     0,
+     90,
+     0
+    ],
+    "translate": [
+     -2,
+     0,
+     0
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.6,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -2
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 2.1547984983884625,
+    "area": 9.187257438715388,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-cross-equal-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 4,
+    "rotate": [
+     0,
+     90,
+     0
+    ],
+    "translate": [
+     -2,
+     0,
+     0
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -2
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 19.798538082604548,
+    "area": 46.83118633645125,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-cross-equal-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 4,
+    "rotate": [
+     0,
+     90,
+     0
+    ],
+    "translate": [
+     -2,
+     0,
+     0
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -2
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 7.232805447760419,
+    "area": 31.415288552738996,
+    "euler": 4,
+    "shells": 2
+   }
+  },
+  {
+   "id": "cylinder-cylinder-cross-equal-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 4,
+    "rotate": [
+     0,
+     90,
+     0
+    ],
+    "translate": [
+     -2,
+     0,
+     0
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -2
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 5.33292718708371,
+    "area": 15.999390769026741,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-parallel-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2,
+    "translate": [
+     1,
+     0,
+     0
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 10.109205897464964,
+    "area": 26.864154054342926,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-parallel-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2,
+    "translate": [
+     1,
+     0,
+     0
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 3.826339580042899,
+    "area": 16.392550697701363,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-parallel-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2,
+    "translate": [
+     1,
+     0,
+     0
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 2.456526737379166,
+    "area": 10.834000815818143,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-stacked-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 1
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 1,
+    "translate": [
+     0,
+     0,
+     1
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 6.282866317422065,
+    "area": 18.84907743508053,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-stacked-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 1
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 1,
+    "translate": [
+     0,
+     0,
+     1
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 3.1414331587110325,
+    "area": 12.565971876251298,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-stacked-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 1
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 1,
+    "translate": [
+     0,
+     0,
+     1
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "cylinder-cylinder-bored-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 3,
+    "translate": [
+     0,
+     0,
+     -0.5
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 7.068224607099823,
+    "area": 21.990630214495148,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-bored-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 3,
+    "translate": [
+     0,
+     0,
+     -0.5
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 4.7121497380665485,
+    "area": 23.561466414554246,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-bored-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 3,
+    "translate": [
+     0,
+     0,
+     -0.5
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1.5707165793555162,
+    "area": 7.853822138184749,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-bored-flush-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 2
+   },
+   "tags": [
+    "coincident",
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 6.282866317422065,
+    "area": 18.84907743508053,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-bored-flush-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 2
+   },
+   "tags": [
+    "coincident",
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 4.7121497380665485,
+    "area": 23.561466414554246,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-bored-flush-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 2
+   },
+   "tags": [
+    "coincident",
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1.5707165793555162,
+    "area": 7.853822138184749,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-tee-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -2
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 2,
+    "rotate": [
+     0,
+     90,
+     0
+    ],
+    "translate": [
+     0,
+     0,
+     0
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 13.376487103336066,
+    "area": 34.73637146126779,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-tee-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -2
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 2,
+    "rotate": [
+     0,
+     90,
+     0
+    ],
+    "translate": [
+     0,
+     0,
+     0
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 11.805770523980549,
+    "area": 34.32289707442357,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-cylinder-tee-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -2
+    ]
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 2,
+    "rotate": [
+     0,
+     90,
+     0
+    ],
+    "translate": [
+     0,
+     0,
+     0
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 0.7599621108635798,
+    "area": 4.532739229655961,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cone-box-band-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cone",
+    "radius": 2,
+    "height": 3
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     2
+    ],
+    "translate": [
+     -3,
+     -3,
+     0.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 77.3520713074336,
+    "area": 131.04174590428968,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cone-box-band-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cone",
+    "radius": 2,
+    "height": 3
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     2
+    ],
+    "translate": [
+     -3,
+     -3,
+     0.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 5.3520713074336115,
+    "area": 29.192248599064545,
+    "euler": 4,
+    "shells": 2
+   }
+  },
+  {
+   "id": "cone-box-band-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cone",
+    "radius": 2,
+    "height": 3
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     2
+    ],
+    "translate": [
+     -3,
+     -3,
+     0.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 7.213661327410517,
+    "area": 24.177780581053394,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cone-box-half-through-apex-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cone",
+    "radius": 2,
+    "height": 3
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     4
+    ],
+    "translate": [
+     0,
+     -3,
+     -0.5
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 78.28286631742206,
+    "area": 119.60976324267153,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cone-box-half-through-apex-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cone",
+    "radius": 2,
+    "height": 3
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     4
+    ],
+    "translate": [
+     0,
+     -3,
+     -0.5
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 6.282866317422065,
+    "area": 23.60976324267154,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cone-box-half-through-apex-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cone",
+    "radius": 2,
+    "height": 3
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     4
+    ],
+    "translate": [
+     0,
+     -3,
+     -0.5
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 6.282866317422065,
+    "area": 23.60976324267154,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cone-box-oblique-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cone",
+    "radius": 2,
+    "height": 3
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     3
+    ],
+    "rotate": [
+     0,
+     20,
+     0
+    ],
+    "translate": [
+     -2.819077862358,
+     -3,
+     1.026060429977
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 109.50624841744138,
+    "area": 147.9151952564089,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cone-box-oblique-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cone",
+    "radius": 2,
+    "height": 3
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     3
+    ],
+    "rotate": [
+     0,
+     20,
+     0
+    ],
+    "translate": [
+     -2.819077862358,
+     -3,
+     1.026060429977
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1.5062484174413733,
+    "area": 14.081536449946114,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cone-box-oblique-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cone",
+    "radius": 2,
+    "height": 3
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     6,
+     6,
+     3
+    ],
+    "rotate": [
+     0,
+     20,
+     0
+    ],
+    "translate": [
+     -2.819077862358,
+     -3,
+     1.026060429977
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 11.059484217402584,
+    "area": 31.30433122893409,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cone-cylinder-coaxial-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cone",
+    "radius": 2,
+    "height": 3
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.8,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -0.5
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 16.18466363367924,
+    "area": 44.663702474377764,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cone-cylinder-coaxial-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cone",
+    "radius": 2,
+    "height": 3
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.8,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -0.5
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 8.142594747378997,
+    "area": 38.63207425240228,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cone-cylinder-coaxial-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cone",
+    "radius": 2,
+    "height": 3
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.8,
+    "height": 4,
+    "translate": [
+     0,
+     0,
+     -0.5
+    ]
+   },
+   "tags": [
+    "pole-crossing"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 4.423137887465135,
+    "area": 14.682796242368989,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cone-cylinder-stacked-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 1
+   },
+   "b": {
+    "kind": "cone",
+    "radius": 1,
+    "height": 1,
+    "translate": [
+     0,
+     0,
+     1
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 4.188577544948043,
+    "area": 13.86728068129383,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cone-cylinder-stacked-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 1
+   },
+   "b": {
+    "kind": "cone",
+    "radius": 1,
+    "height": 1,
+    "translate": [
+     0,
+     0,
+     1
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 3.1414331587110325,
+    "area": 12.565971876251298,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cone-cylinder-stacked-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 1
+   },
+   "b": {
+    "kind": "cone",
+    "radius": 1,
+    "height": 1,
+    "translate": [
+     0,
+     0,
+     1
+    ]
+   },
+   "tags": [
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "torus-box-half-equator-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     8,
+     8,
+     2
+    ],
+    "translate": [
+     -4,
+     -4,
+     0
+    ]
+   },
+   "tags": [
+    "seam",
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 132.93430114532458,
+    "area": 199.17259930388613,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-box-half-equator-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     8,
+     8,
+     2
+    ],
+    "translate": [
+     -4,
+     -4,
+     0
+    ]
+   },
+   "tags": [
+    "seam",
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 4.9343011453245875,
+    "area": 32.30406457357439,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-box-half-equator-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     8,
+     8,
+     2
+    ],
+    "translate": [
+     -4,
+     -4,
+     0
+    ]
+   },
+   "tags": [
+    "seam",
+    "coincident"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 4.9343011453245875,
+    "area": 32.30406457357439,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-box-half-meridian-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     8,
+     4
+    ],
+    "translate": [
+     0,
+     -4,
+     -2
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 132.93430114532458,
+    "area": 178.16761535937474,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-box-half-meridian-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     8,
+     4
+    ],
+    "translate": [
+     0,
+     -4,
+     -2
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 4.9343011453245875,
+    "area": 21.309048518085774,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-box-half-meridian-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     8,
+     4
+    ],
+    "translate": [
+     0,
+     -4,
+     -2
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 4.9343011453245875,
+    "area": 21.309048518085774,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-box-quarter-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     4,
+     4
+    ],
+    "translate": [
+     0,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 72.63502700431802,
+    "area": 126.61528944438916,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-box-quarter-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     4,
+     4
+    ],
+    "translate": [
+     0,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 8.635027004318028,
+    "area": 38.468872341166744,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-box-quarter-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     4,
+     4
+    ],
+    "translate": [
+     0,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1.2335752863311469,
+    "area": 8.861374433071354,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-box-offset-z-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     8,
+     8,
+     2
+    ],
+    "translate": [
+     -4,
+     -4,
+     0.25
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 135.93934865363337,
+    "area": 207.43563583763506,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-box-offset-z-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     8,
+     8,
+     2
+    ],
+    "translate": [
+     -4,
+     -4,
+     0.25
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 7.939348653633389,
+    "area": 37.20012319551144,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-box-offset-z-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     8,
+     8,
+     2
+    ],
+    "translate": [
+     -4,
+     -4,
+     0.25
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1.929253637015785,
+    "area": 24.04102803982544,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-box-offset-x-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     8,
+     4
+    ],
+    "translate": [
+     2,
+     -4,
+     -2
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 137.1414736009282,
+    "area": 193.14939428969535,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-box-offset-x-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     8,
+     4
+    ],
+    "translate": [
+     2,
+     -4,
+     -2
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 9.141473600928224,
+    "area": 38.34055103776923,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-box-offset-x-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     4,
+     8,
+     4
+    ],
+    "translate": [
+     2,
+     -4,
+     -2
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 0.7271286897209498,
+    "area": 6.327269587765157,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-box-tangent-top-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     8,
+     8,
+     2
+    ],
+    "translate": [
+     -4,
+     -4,
+     0.5
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 137.86860229064916,
+    "area": 231.47666387746054,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-box-tangent-top-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     8,
+     8,
+     2
+    ],
+    "translate": [
+     -4,
+     -4,
+     0.5
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 9.868602290649175,
+    "area": 39.47666387746052,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-box-tangent-top-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     8,
+     8,
+     2
+    ],
+    "translate": [
+     -4,
+     -4,
+     0.5
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "torus-cylinder-through-tube-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1.7,
+    "height": 2,
+    "translate": [
+     0,
+     0,
+     -1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 26.88912267698144,
+    "area": 61.31284216606233,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-cylinder-through-tube-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1.7,
+    "height": 2,
+    "translate": [
+     0,
+     0,
+     -1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 8.731639019631674,
+    "area": 38.882388641319594,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-cylinder-through-tube-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1.7,
+    "height": 2,
+    "translate": [
+     0,
+     0,
+     -1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1.1369632710175004,
+    "area": 17.68386426876734,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-cylinder-inside-hole-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2,
+    "translate": [
+     0,
+     0,
+     -1
+    ]
+   },
+   "tags": [
+    "disjoint"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 16.151468608071237,
+    "area": 58.32574131254105,
+    "euler": 2,
+    "shells": 2
+   }
+  },
+  {
+   "id": "torus-cylinder-inside-hole-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2,
+    "translate": [
+     0,
+     0,
+     -1
+    ]
+   },
+   "tags": [
+    "disjoint"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 9.868602290649175,
+    "area": 39.47666387746052,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-cylinder-inside-hole-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2,
+    "translate": [
+     0,
+     0,
+     -1
+    ]
+   },
+   "tags": [
+    "disjoint"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "torus-torus-linked-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5,
+    "rotate": [
+     90,
+     0,
+     0
+    ],
+    "translate": [
+     2,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "stress"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 19.73720458129835,
+    "area": 78.95332775492103,
+    "euler": 0,
+    "shells": 2
+   }
+  },
+  {
+   "id": "torus-torus-linked-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5,
+    "rotate": [
+     90,
+     0,
+     0
+    ],
+    "translate": [
+     2,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "stress"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 9.868602290649175,
+    "area": 39.47666387746052,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-torus-linked-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5,
+    "rotate": [
+     90,
+     0,
+     0
+    ],
+    "translate": [
+     2,
+     0,
+     0
+    ]
+   },
+   "tags": [
+    "stress"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "torus-torus-stacked-tangent-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5,
+    "translate": [
+     0,
+     0,
+     1
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 19.73720458129835,
+    "area": 78.95332775492103,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-torus-stacked-tangent-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5,
+    "translate": [
+     0,
+     0,
+     1
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": false,
+    "volume": 9.868602290649175,
+    "area": 39.47666387746052,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-torus-stacked-tangent-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5,
+    "translate": [
+     0,
+     0,
+     1
+    ]
+   },
+   "tags": [
+    "tangent"
+   ],
+   "compareTopology": false,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "prism-box-slot-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     5,
+     0.6,
+     1
+    ],
+    "translate": [
+     -1,
+     0.2,
+     0.5
+    ]
+   },
+   "tags": [
+    "concave"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 11.2,
+    "area": 40.4,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "prism-box-slot-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     5,
+     0.6,
+     1
+    ],
+    "translate": [
+     -1,
+     0.2,
+     0.5
+    ]
+   },
+   "tags": [
+    "concave"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 8.2,
+    "area": 42.4,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "prism-box-slot-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     5,
+     0.6,
+     1
+    ],
+    "translate": [
+     -1,
+     0.2,
+     0.5
+    ]
+   },
+   "tags": [
+    "concave"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1.8000000000000003,
+    "area": 10.8,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "prism-box-reflex-corner-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     3
+    ],
+    "translate": [
+     0.5,
+     0.5,
+     -0.5
+    ]
+   },
+   "tags": [
+    "concave"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 18.5,
+    "area": 46.5,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "prism-box-reflex-corner-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     3
+    ],
+    "translate": [
+     0.5,
+     0.5,
+     -0.5
+    ]
+   },
+   "tags": [
+    "concave"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 6.5,
+    "area": 34.5,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "prism-box-reflex-corner-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     3
+    ],
+    "translate": [
+     0.5,
+     0.5,
+     -0.5
+    ]
+   },
+   "tags": [
+    "concave"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 3.5,
+    "area": 19.5,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "prism-sphere-reflex-corner-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 1.5,
+    "translate": [
+     1,
+     1,
+     1
+    ]
+   },
+   "tags": [
+    "concave"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 17.177968785493412,
+    "area": 38.522516683331226,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "prism-sphere-reflex-corner-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 1.5,
+    "translate": [
+     1,
+     1,
+     1
+    ]
+   },
+   "tags": [
+    "concave"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 3.043334033754675,
+    "area": 20.816050878202752,
+    "euler": 8,
+    "shells": 4
+   }
+  },
+  {
+   "id": "prism-sphere-reflex-corner-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 1.5,
+    "translate": [
+     1,
+     1,
+     1
+    ]
+   },
+   "tags": [
+    "concave"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 6.956665966245326,
+    "area": 23.749066553066733,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "prism-cylinder-reflex-corner-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 4,
+    "translate": [
+     1.4,
+     1.4,
+     -1
+    ]
+   },
+   "tags": [
+    "concave"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 12.977964793482997,
+    "area": 42.999696515600476,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "prism-cylinder-reflex-corner-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 4,
+    "translate": [
+     1.4,
+     1.4,
+     -1
+    ]
+   },
+   "tags": [
+    "concave"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 9.836531634771964,
+    "area": 34.01052628444857,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "prism-cylinder-reflex-corner-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 0.5,
+    "height": 4,
+    "translate": [
+     1.4,
+     1.4,
+     -1
+    ]
+   },
+   "tags": [
+    "concave"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 0.16346836522803596,
+    "area": 5.137231181413506,
+    "euler": 4,
+    "shells": 2
+   }
+  },
+  {
+   "id": "hexagon-sphere-bumps-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      1.5,
+      0
+     ],
+     [
+      0.7500000000000002,
+      1.299038105676658
+     ],
+     [
+      -0.7499999999999998,
+      1.299038105676658
+     ],
+     [
+      -1.5,
+      1.8369701987210297e-16
+     ],
+     [
+      -0.7500000000000007,
+      -1.2990381056766576
+     ],
+     [
+      0.7500000000000002,
+      -1.299038105676658
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 1.4,
+    "translate": [
+     0,
+     0,
+     1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 13.226280136035026,
+    "area": 30.888418679331977,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "hexagon-sphere-bumps-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      1.5,
+      0
+     ],
+     [
+      0.7500000000000002,
+      1.299038105676658
+     ],
+     [
+      -0.7499999999999998,
+      1.299038105676658
+     ],
+     [
+      -1.5,
+      1.8369701987210297e-16
+     ],
+     [
+      -0.7500000000000007,
+      -1.2990381056766576
+     ],
+     [
+      0.7500000000000002,
+      -1.299038105676658
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 1.4,
+    "translate": [
+     0,
+     0,
+     1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 1.7342985778806295,
+    "area": 30.797181499347825,
+    "euler": -12,
+    "shells": 1
+   }
+  },
+  {
+   "id": "hexagon-sphere-bumps-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      1.5,
+      0
+     ],
+     [
+      0.7500000000000002,
+      1.299038105676658
+     ],
+     [
+      -0.7499999999999998,
+      1.299038105676658
+     ],
+     [
+      -1.5,
+      1.8369701987210297e-16
+     ],
+     [
+      -0.7500000000000007,
+      -1.2990381056766576
+     ],
+     [
+      0.7500000000000002,
+      -1.299038105676658
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 1.4,
+    "translate": [
+     0,
+     0,
+     1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 9.957044364536038,
+    "area": 23.430614542336897,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "revolved-box-half-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     3
+    ],
+    "translate": [
+     0,
+     -3,
+     -1
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 58.71214973806655,
+    "area": 106.84895781437694,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "revolved-box-half-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     3
+    ],
+    "translate": [
+     0,
+     -3,
+     -1
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 4.7121497380665485,
+    "area": 20.848957814376945,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "revolved-box-half-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     3
+    ],
+    "translate": [
+     0,
+     -3,
+     -1
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 4.7121497380665485,
+    "area": 20.848957814376945,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "revolved-box-slot-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     0.4,
+     6,
+     3
+    ],
+    "translate": [
+     -0.2,
+     -3,
+     -1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 15.82162521647871,
+    "area": 73.64512816875178,
+    "euler": -2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "revolved-box-slot-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     0.4,
+     6,
+     3
+    ],
+    "translate": [
+     -0.2,
+     -3,
+     -1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 8.621625216478709,
+    "area": 38.52639713794552,
+    "euler": 4,
+    "shells": 2
+   }
+  },
+  {
+   "id": "revolved-box-slot-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     0.4,
+     6,
+     3
+    ],
+    "translate": [
+     -0.2,
+     -3,
+     -1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 0.8026742596543877,
+    "area": 7.252787460002113,
+    "euler": 4,
+    "shells": 2
+   }
+  },
+  {
+   "id": "revolved-sphere-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 1.5,
+    "translate": [
+     0,
+     0,
+     0.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 19.89437150802368,
+    "area": 43.98018876599009,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "revolved-sphere-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 1.5,
+    "translate": [
+     0,
+     0,
+     0.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 5.759736756284946,
+    "area": 34.55770915849595,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "revolved-sphere-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 1.5,
+    "translate": [
+     0,
+     0,
+     0.5
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 3.664562719848151,
+    "area": 21.989310099161756,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "revolved-cones-box-half-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2.5,
+      1
+     ],
+     [
+      2,
+      2
+     ],
+     [
+      1,
+      2
+     ]
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     4
+    ],
+    "translate": [
+     0,
+     -3,
+     -1
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 84.82751873140339,
+    "area": 134.51291720255207,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "revolved-cones-box-half-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2.5,
+      1
+     ],
+     [
+      2,
+      2
+     ],
+     [
+      1,
+      2
+     ]
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     4
+    ],
+    "translate": [
+     0,
+     -3,
+     -1
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 12.827518731403382,
+    "area": 36.512917202552075,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "revolved-cones-box-half-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2.5,
+      1
+     ],
+     [
+      2,
+      2
+     ],
+     [
+      1,
+      2
+     ]
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     3,
+     6,
+     4
+    ],
+    "translate": [
+     0,
+     -3,
+     -1
+    ]
+   },
+   "tags": [
+    "seam"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 12.827518731403382,
+    "area": 36.512917202552075,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "revolved-cones-sphere-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2.5,
+      1
+     ],
+     [
+      2,
+      2
+     ],
+     [
+      1,
+      2
+     ]
+    ]
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 2.2,
+    "translate": [
+     0,
+     0,
+     1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 48.219453021763016,
+    "area": 65.78919184110751,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "revolved-cones-sphere-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2.5,
+      1
+     ],
+     [
+      2,
+      2
+     ],
+     [
+      1,
+      2
+     ]
+    ]
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 2.2,
+    "translate": [
+     0,
+     0,
+     1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 3.625203885018095,
+    "area": 60.26447724929187,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "revolved-cones-sphere-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2.5,
+      1
+     ],
+     [
+      2,
+      2
+     ],
+     [
+      1,
+      2
+     ]
+    ]
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 2.2,
+    "translate": [
+     0,
+     0,
+     1
+    ]
+   },
+   "tags": [],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 22.02983357778867,
+    "area": 58.05195939251492,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "revolved-torus-nested-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "b": {
+    "kind": "torus",
+    "major": 1.5,
+    "minor": 0.3,
+    "translate": [
+     0,
+     0,
+     0.5
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 9.424299476133097,
+    "area": 37.69791562875389,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "revolved-torus-nested-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "b": {
+    "kind": "torus",
+    "major": 1.5,
+    "minor": 0.3,
+    "translate": [
+     0,
+     0,
+     0.5
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 6.75977685765782,
+    "area": 55.462414373611125,
+    "euler": 0,
+    "shells": 2
+   }
+  },
+  {
+   "id": "revolved-torus-nested-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "b": {
+    "kind": "torus",
+    "major": 1.5,
+    "minor": 0.3,
+    "translate": [
+     0,
+     0,
+     0.5
+    ]
+   },
+   "tags": [
+    "nested"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 2.6645226184752766,
+    "area": 17.76449874485723,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-identical-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 8,
+    "area": 24,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "box-identical-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "box-identical-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "b": {
+    "kind": "box",
+    "size": [
+     2,
+     2,
+     2
+    ]
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 8,
+    "area": 24,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-identical-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "sphere",
+    "radius": 1.5
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 1.5
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 14.134634751738737,
+    "area": 28.271583236397955,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "sphere-identical-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "sphere",
+    "radius": 1.5
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 1.5
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "sphere-identical-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "sphere",
+    "radius": 1.5
+   },
+   "b": {
+    "kind": "sphere",
+    "radius": 1.5
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 14.134634751738737,
+    "area": 28.271583236397955,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-identical-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 6.282866317422065,
+    "area": 18.84907743508053,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cylinder-identical-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "cylinder-identical-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "cylinder",
+    "radius": 1,
+    "height": 2
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 6.282866317422065,
+    "area": 18.84907743508053,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cone-identical-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "cone",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "cone",
+    "radius": 1,
+    "height": 2
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 2.0942887724740213,
+    "area": 10.166105233195363,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "cone-identical-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "cone",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "cone",
+    "radius": 1,
+    "height": 2
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "cone-identical-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "cone",
+    "radius": 1,
+    "height": 2
+   },
+   "b": {
+    "kind": "cone",
+    "radius": 1,
+    "height": 2
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 2.0942887724740213,
+    "area": 10.166105233195363,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-identical-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 9.868602290649175,
+    "area": 39.47666387746052,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "torus-identical-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "torus-identical-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "b": {
+    "kind": "torus",
+    "major": 2,
+    "minor": 0.5
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 9.868602290649175,
+    "area": 39.47666387746052,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "prism-identical-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 10,
+    "area": 34,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "prism-identical-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "prism-identical-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "b": {
+    "kind": "prism",
+    "polygon": [
+     [
+      0,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      1,
+      3
+     ],
+     [
+      0,
+      3
+     ]
+    ],
+    "height": 2
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 10,
+    "area": 34,
+    "euler": 2,
+    "shells": 1
+   }
+  },
+  {
+   "id": "revolved-identical-fuse",
+   "operation": "fuse",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "b": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 9.424299476133097,
+    "area": 37.69791562875389,
+    "euler": 0,
+    "shells": 1
+   }
+  },
+  {
+   "id": "revolved-identical-cut",
+   "operation": "cut",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "b": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": true,
+    "volume": 0,
+    "area": 0,
+    "euler": 0,
+    "shells": 0
+   }
+  },
+  {
+   "id": "revolved-identical-intersect",
+   "operation": "intersect",
+   "a": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "b": {
+    "kind": "revolved",
+    "profile": [
+     [
+      1,
+      0
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      1,
+      1
+     ]
+    ]
+   },
+   "tags": [
+    "coincident",
+    "identical"
+   ],
+   "compareTopology": true,
+   "expected": {
+    "empty": false,
+    "volume": 9.424299476133097,
+    "area": 37.69791562875389,
+    "euler": 0,
+    "shells": 1
+   }
+  }
+ ]
+}

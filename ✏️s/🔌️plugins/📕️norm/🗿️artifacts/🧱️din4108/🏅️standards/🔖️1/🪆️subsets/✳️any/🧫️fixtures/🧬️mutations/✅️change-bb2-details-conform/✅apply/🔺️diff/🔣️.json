@@ -6,7 +6,19 @@
   "hasMechanicalVentilation": null,
   "airtightnessN50": null,
   "bb2DetailsConform": false,
-  "zones": null,
-  "elements": null,
-  "thermalBridges": null
+  "zones": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "elements": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "thermalBridges": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

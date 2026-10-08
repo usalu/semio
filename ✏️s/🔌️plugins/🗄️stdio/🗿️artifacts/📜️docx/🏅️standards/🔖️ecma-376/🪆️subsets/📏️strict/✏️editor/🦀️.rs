@@ -5,7 +5,7 @@
 
 use crate::editor::docx::standards::v_ecma_376::subsets::strict::modes::edit;
 use crate::editor::docx::standards::v_ecma_376::subsets::strict::modes::edit::windows::main;
-use crate::schema::mutations::{patch_snapshot, set_snapshot, DocxXmlAddress};
+use crate::schema::mutations::{net_mutations, DocxXmlAddress};
 use crate::{DocxMutation, DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ArtifactBuilder;
 use semio_framework_plugin::ArtifactEditor;
@@ -139,10 +139,6 @@ impl ArtifactEditor for DocxStrictEditor {
         crate::standards::v_ecma_376::subsets::base::io::import::deserializers::decode_docx(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
-    }
-
     semio_s_artifact_stdio_contract::snapshot_details_editor_support! {
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/✏️editor/🦀️.rs",
         controller: "s.stdio.docx@ecma-376/strict#editor",
@@ -230,7 +226,9 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for DocxStr
     }
 
     fn snapshot_edit_mutations(event: &semio_s_artifact_stdio_contract::editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| DocxMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| DocxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))
+        let next = semio_s_artifact_stdio_contract::editing::apply_snapshot_edit(snapshot, event).map_err(|error| Fault::from(error.to_string()))?;
+        let leaves = net_mutations(snapshot, &next).ok_or_else(|| Fault::from("docx: the edit changes something the part-level mutations do not address (relationships, package comment or content-type defaults)"))?;
+        Ok(Emit { artifact_mutations: leaves, ..Default::default() })
     }
 }
 

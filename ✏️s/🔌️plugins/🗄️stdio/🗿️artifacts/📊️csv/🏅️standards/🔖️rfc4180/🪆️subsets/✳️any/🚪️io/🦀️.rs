@@ -4,7 +4,7 @@
 pub mod derived_composition {
     use crate::standards::v_rfc4180::subsets::any::io::CsvAnalyzer;
     use crate::CsvSnapshot;
-    use {semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
@@ -54,7 +54,7 @@ pub use derived_composition::*;
 /// `io_registry::entries()` silently rebinds to the wrong one.
 pub mod io_registry {
     use crate::standards::v_rfc4180::subsets::any::io::CsvComposer as CsvRawAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
+    use semio_framework_plugin::{composer_entry_of, io::ComposerEntry};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -108,7 +108,7 @@ pub mod derived_construction {
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <CsvDiff as protocol::MutationDiff<CsvSnapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
@@ -125,7 +125,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::CsvSnapshot;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
     /// 🧩 Analyzed `stdio.csv` parts.
@@ -143,25 +143,25 @@ pub mod derived_analysis {
     /// first few lines yields a consistent field count across records (a strong tabular
     /// signal) and that at least one delimiter/quote is actually present.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn looks_like_csv(text: &str) -> IoConfidence {
+    fn looks_like_csv(text: &str) -> semio_framework_plugin::io::Confidence {
         let sample: String = text.lines().take(20).collect::<Vec<_>>().join("\n");
         if sample.trim().is_empty() {
-            return IoConfidence::Low;
+            return semio_framework_plugin::io::Confidence::Low;
         }
         let snapshot = crate::standards::v_rfc4180::subsets::any::io::text::snapshot::decode_csv_with(&sample, false);
         if snapshot.records.is_empty() {
-            return IoConfidence::Low;
+            return semio_framework_plugin::io::Confidence::Low;
         }
         let width = snapshot.records[0].fields.len();
         if width == 0 {
-            return IoConfidence::Low;
+            return semio_framework_plugin::io::Confidence::Low;
         }
         let consistent = snapshot.records.iter().all(|r| r.fields.len() == width);
         let has_delimiter = sample.contains(',');
         match (consistent, width > 1, has_delimiter) {
-            (true, true, true) => IoConfidence::High,
-            (true, _, true) => IoConfidence::Medium,
-            _ => IoConfidence::Low,
+            (true, true, true) => semio_framework_plugin::io::Confidence::High,
+            (true, _, true) => semio_framework_plugin::io::Confidence::Medium,
+            _ => semio_framework_plugin::io::Confidence::Low,
         }
     }
 
@@ -169,30 +169,30 @@ pub mod derived_analysis {
         type Parts = CsvParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             match source {
-                AnalyzeSource::Text(text) => if text.starts_with("semio "){if crate::standards::v_rfc4180::subsets::any::io::text::snapshot::read_csv_source_text(text).is_ok(){IoConfidence::High}else{IoConfidence::Low}}else{looks_like_csv(text)},
-                AnalyzeSource::Binary(bytes) => if bytes.starts_with(&[137,83,69,77,13,10,26,10]){if crate::standards::v_rfc4180::subsets::any::io::binary::snapshot::read_csv_source_binary(bytes).is_ok(){IoConfidence::High}else{IoConfidence::Low}}else{std::str::from_utf8(bytes).map(looks_like_csv).unwrap_or(IoConfidence::Low)},
+                AnalyzeSource::Text(text) => if text.starts_with("semio "){if crate::standards::v_rfc4180::subsets::any::io::text::snapshot::read_csv_source_text(text).is_ok(){semio_framework_plugin::io::Confidence::High}else{semio_framework_plugin::io::Confidence::Low}}else{looks_like_csv(text)},
+                AnalyzeSource::Binary(bytes) => if bytes.starts_with(&[137,83,69,77,13,10,26,10]){if crate::standards::v_rfc4180::subsets::any::io::binary::snapshot::read_csv_source_binary(bytes).is_ok(){semio_framework_plugin::io::Confidence::High}else{semio_framework_plugin::io::Confidence::Low}}else{std::str::from_utf8(bytes).map(looks_like_csv).unwrap_or(semio_framework_plugin::io::Confidence::Low)},
             }
         }
 
         fn analyze(sources: &[AnalyzeSource<'_>]) -> Analysis<Self::Parts> {
             let mut parts = CsvParts::default();
             let mut diagnostics = Vec::new();
-            let mut confidence = IoConfidence::High;
+            let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match crate::standards::v_rfc4180::subsets::any::io::text::snapshot::read_csv_source_text(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match crate::standards::v_rfc4180::subsets::any::io::binary::snapshot::read_csv_source_binary(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
-                            confidence = IoConfidence::Low;
+                            confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },

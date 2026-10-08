@@ -1,140 +1,315 @@
-# 🧬️ En1998 diff schema — sparse scalar fields and ordered per-collection row edits.
-
-enum En1998RowOp {
-  INSERT
-  REMOVE
-  REPLACE
-  PATCH
-}
+# 🧬️ En1998 diff schema — sparse scalar fields plus keyed row deltas.
 
 type En1998Diff {
   annex: String @state(class: ARTIFACT)
   site: En1998Site @state(class: ARTIFACT)
-  buildings: [En1998BuildingEdit!]! @state(class: ARTIFACT)
-  bridges: [En1998BridgeEdit!]! @state(class: ARTIFACT)
-  assessments: [En1998AssessmentEdit!]! @state(class: ARTIFACT)
-  silos: [En1998SiloEdit!]! @state(class: ARTIFACT)
-  tanks: [En1998TankEdit!]! @state(class: ARTIFACT)
-  foundations: [En1998FoundationEdit!]! @state(class: ARTIFACT)
-  retainingWalls: [En1998RetainingWallEdit!]! @state(class: ARTIFACT)
-  towers: [En1998TowerEdit!]! @state(class: ARTIFACT)
+  buildings: En1998BuildingDelta! @state(class: ARTIFACT)
+  bridges: En1998BridgeDelta! @state(class: ARTIFACT)
+  assessments: En1998AssessmentDelta! @state(class: ARTIFACT)
+  silos: En1998SiloDelta! @state(class: ARTIFACT)
+  tanks: En1998TankDelta! @state(class: ARTIFACT)
+  foundations: En1998FoundationDelta! @state(class: ARTIFACT)
+  retainingWalls: En1998RetainingWallDelta! @state(class: ARTIFACT)
+  towers: En1998TowerDelta! @state(class: ARTIFACT)
 }
 
-type En1998BuildingEdit {
-  op: En1998RowOp!
-  index: Int!
-  id: String!
-  value: En1998Building
-  patch: En1998BuildingPatch
+type En1998SystemDelta {
+  removed: [String!]!
+  added: [En1998SystemAddition!]!
+  modified: [En1998SystemModification!]!
 }
 
-type En1998BridgeEdit {
-  op: En1998RowOp!
-  index: Int!
-  id: String!
-  value: En1998Bridge
-  patch: En1998BridgePatch
+type En1998SystemAddition {
+  after: String
+  row: En1998System!
 }
 
-type En1998AssessmentEdit {
-  op: En1998RowOp!
-  index: Int!
-  id: String!
-  value: En1998Assessment
-  patch: En1998AssessmentPatch
-}
-
-type En1998SiloEdit {
-  op: En1998RowOp!
-  index: Int!
-  id: String!
-  value: En1998Silo
-}
-
-type En1998TankEdit {
-  op: En1998RowOp!
-  index: Int!
-  id: String!
-  value: En1998Tank
-}
-
-type En1998FoundationEdit {
-  op: En1998RowOp!
-  index: Int!
-  id: String!
-  value: En1998Foundation
-}
-
-type En1998RetainingWallEdit {
-  op: En1998RowOp!
-  index: Int!
-  id: String!
-  value: En1998RetainingWall
-}
-
-type En1998TowerEdit {
-  op: En1998RowOp!
-  index: Int!
-  id: String!
-  value: En1998Tower
-  patch: En1998TowerPatch
-}
-
-type En1998SystemEdit {
-  op: En1998RowOp!
-  index: Int!
-  id: String!
-  value: En1998System
-  patch: En1998SystemPatch
-}
-
-type En1998StoreyEdit {
-  op: En1998RowOp!
-  index: Int!
-  id: String!
-  value: En1998Storey
-  patch: En1998StoreyPatch
-}
-
-type En1998MemberEdit {
-  op: En1998RowOp!
-  index: Int!
-  id: String!
-  value: En1998Member
-  patch: En1998MemberPatch
-}
-
-type En1998BuildingPatch {
-  planRegular: Boolean
-  elevationRegular: Boolean
-  masonryWallAreaRatio: Float
-  systems: [En1998SystemEdit!]!
-  storeys: [En1998StoreyEdit!]!
-  members: [En1998MemberEdit!]!
-}
-
-type En1998BridgePatch {
-  vRdN: Float
-}
-
-type En1998AssessmentPatch {
-  rKN: Float
-}
-
-type En1998TowerPatch {
-  mRdNm: Float
+type En1998SystemModification {
+  key: String!
+  patch: En1998SystemPatch!
 }
 
 type En1998SystemPatch {
+  direction: String
+  systemType: String
+  material: String
+  ductilityClass: String
+  q0: Float
+  alphaUOverAlpha1: Float
+  kW: Float
   baseShearResistanceN: Float
 }
 
+type En1998StoreyDelta {
+  removed: [String!]!
+  added: [En1998StoreyAddition!]!
+  modified: [En1998StoreyModification!]!
+}
+
+type En1998StoreyAddition {
+  after: String
+  row: En1998Storey!
+}
+
+type En1998StoreyModification {
+  key: String!
+  patch: En1998StoreyPatch!
+}
+
 type En1998StoreyPatch {
+  heightM: Float
   permanentGkN: Float
+  correlatedOccupancy: Boolean
+  variables: String
   stiffnessX: Float
+  stiffnessY: Float
+  centreOfMassXM: Float
+  centreOfMassYM: Float
+  centreOfStiffnessXM: Float
+  centreOfStiffnessYM: Float
   driftXM: Float
+  driftYM: Float
+  shearResistanceN: Float
+}
+
+type En1998MemberDelta {
+  removed: [String!]!
+  added: [En1998MemberAddition!]!
+  modified: [En1998MemberModification!]!
+}
+
+type En1998MemberAddition {
+  after: String
+  row: En1998Member!
+}
+
+type En1998MemberModification {
+  key: String!
+  patch: En1998MemberPatch!
 }
 
 type En1998MemberPatch {
+  material: String
+  role: String
   detailingCompatibleWithQ: Boolean
+  minDimensionM: Float
+  rho: Float
+  rhoPrime: Float
+  omegaWd: Float
+  steelSectionClass: Int
+}
+
+type En1998BuildingDelta {
+  removed: [String!]!
+  added: [En1998BuildingAddition!]!
+  modified: [En1998BuildingModification!]!
+}
+
+type En1998BuildingAddition {
+  after: String
+  row: En1998Building!
+}
+
+type En1998BuildingModification {
+  key: String!
+  patch: En1998BuildingPatch!
+}
+
+type En1998BuildingPatch {
+  name: String
+  planWidthM: Float
+  planLengthM: Float
+  systems: En1998SystemDelta!
+  storeys: En1998StoreyDelta!
+  members: En1998MemberDelta!
+  planRegular: Boolean
+  elevationRegular: Boolean
+  t1Method: String
+  t1GivenS: Float
+  ct: Float
+  driftLimitClass: String
+  nu: Float
+  multipleResistingSystems: Boolean
+  claimsSimpleMasonry: Boolean
+  masonryWallAreaRatio: Float
+  accidentalEccentricityRatio: Float
+}
+
+type En1998BridgeDelta {
+  removed: [String!]!
+  added: [En1998BridgeAddition!]!
+  modified: [En1998BridgeModification!]!
+}
+
+type En1998BridgeAddition {
+  after: String
+  row: En1998Bridge!
+}
+
+type En1998BridgeModification {
+  key: String!
+  patch: En1998BridgePatch!
+}
+
+type En1998BridgePatch {
+  periodRatio: Float
+  fundamentalPeriodS: Float
+  vRdN: Float
+  bearingDRdM: Float
+  permanentGkN: Float
+  correlatedOccupancy: Boolean
+  variables: String
+}
+
+type En1998AssessmentDelta {
+  removed: [String!]!
+  added: [En1998AssessmentAddition!]!
+  modified: [En1998AssessmentModification!]!
+}
+
+type En1998AssessmentAddition {
+  after: String
+  row: En1998Assessment!
+}
+
+type En1998AssessmentModification {
+  key: String!
+  patch: En1998AssessmentPatch!
+}
+
+type En1998AssessmentPatch {
+  knowledgeLevel: String
+  limitState: String
+  supportedBuildingId: String
+  rKN: Float
+  gammaEl: Float
+}
+
+type En1998SiloDelta {
+  removed: [String!]!
+  added: [En1998SiloAddition!]!
+  modified: [En1998SiloModification!]!
+}
+
+type En1998SiloAddition {
+  after: String
+  row: En1998Silo!
+}
+
+type En1998SiloModification {
+  key: String!
+  patch: En1998SiloPatch!
+}
+
+type En1998SiloPatch {
+  heightM: Float
+  radiusM: Float
+  permanentGkN: Float
+  contentQkN: Float
+  contentCategory: String
+  fillingRatio: Float
+  nRdN: Float
+  vRdN: Float
+  qNominal: Float
+}
+
+type En1998TankDelta {
+  removed: [String!]!
+  added: [En1998TankAddition!]!
+  modified: [En1998TankModification!]!
+}
+
+type En1998TankAddition {
+  after: String
+  row: En1998Tank!
+}
+
+type En1998TankModification {
+  key: String!
+  patch: En1998TankPatch!
+}
+
+type En1998TankPatch {
+  heightM: Float
+  radiusM: Float
+  permanentGkN: Float
+  contentQkN: Float
+  contentCategory: String
+  fillingRatio: Float
+  vRdN: Float
+}
+
+type En1998FoundationDelta {
+  removed: [String!]!
+  added: [En1998FoundationAddition!]!
+  modified: [En1998FoundationModification!]!
+}
+
+type En1998FoundationAddition {
+  after: String
+  row: En1998Foundation!
+}
+
+type En1998FoundationModification {
+  key: String!
+  patch: En1998FoundationPatch!
+}
+
+type En1998FoundationPatch {
+  supportedBuildingId: String
+  areaM2: Float
+  pRdPa: Float
+  hRdN: Float
+  kFoundation: Float
+  kSoil: Float
+}
+
+type En1998RetainingWallDelta {
+  removed: [String!]!
+  added: [En1998RetainingWallAddition!]!
+  modified: [En1998RetainingWallModification!]!
+}
+
+type En1998RetainingWallAddition {
+  after: String
+  row: En1998RetainingWall!
+}
+
+type En1998RetainingWallModification {
+  key: String!
+  patch: En1998RetainingWallPatch!
+}
+
+type En1998RetainingWallPatch {
+  heightM: Float
+  phiDeg: Float
+  soilGamma: Float
+  r: Float
+  hRdNPerM: Float
+}
+
+type En1998TowerDelta {
+  removed: [String!]!
+  added: [En1998TowerAddition!]!
+  modified: [En1998TowerModification!]!
+}
+
+type En1998TowerAddition {
+  after: String
+  row: En1998Tower!
+}
+
+type En1998TowerModification {
+  key: String!
+  patch: En1998TowerPatch!
+}
+
+type En1998TowerPatch {
+  heightM: Float
+  mRdNm: Float
+  isChimney: Boolean
+  qNominal: Float
+  permanentGkN: Float
+  correlatedOccupancy: Boolean
+  variables: String
 }

@@ -26,7 +26,7 @@ fn ops() -> Vec<Puzzle3dMutation> {
         hidden: false,
         locked: true,
     };
-    vec![create_object(object, Some(0)), change_object_anchor("o1".into(), puzzle_3d::Puzzle3dObjectAnchor::Derived), delete_object("o1".into()), connect_vortices("a1".into(), "o1:v0".into(), "o2:v0".into(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0)]
+    vec![create_object(object, Some(0)), change_object_anchor("o1".into(), puzzle_3d::Puzzle3dObjectAnchor::Derived), delete_object("o1".into()), connect_vortices("a1".into(), "o1:v0".into(), "o2:v0".into(), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, None)]
 }
 
 fn engine_commands() -> Vec<Puzzle3dEngineCommand> {

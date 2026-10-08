@@ -2,8 +2,7 @@
 //! `mutation.clamped` warning and an id the document already holds is a `mutation.duplicate-id`.
 
 use super::InsertMember;
-use crate::diff::En1990RowEdit as _;
-use crate::diff::{En1990Diff, En1990MemberEdit};
+use crate::diff::{En1990Diff, En1990MemberDelta};
 use crate::En1990Snapshot;
 use protocol::MutationOutcome;
 
@@ -13,7 +12,7 @@ pub fn diff(payload: &InsertMember, base: &En1990Snapshot) -> MutationOutcome<En
         return MutationOutcome::fatal("mutation.duplicate-id", format!("The member '{key}' already exists."), [key]);
     }
     let index = payload.index.min(base.members.len());
-    let outcome = MutationOutcome::new(En1990Diff { members: vec![En1990MemberEdit::insert(index, payload.item.clone())], ..En1990Diff::default() });
+    let outcome = MutationOutcome::new(En1990Diff { members: En1990MemberDelta::insertion(&base.members, index, payload.item.clone()), ..En1990Diff::default() });
     if index == payload.index {
         return outcome;
     }

@@ -265,8 +265,6 @@ mod oracles {
         let params = member(spec, "params")?;
         let mut doc = decode(input)?;
         match kind.as_str() {
-            "set-snapshot" => doc = OracleDoc::from_snapshot(member(params, "snapshot")?)?,
-            "patch-snapshot" => { let patched = semio_repo_test_host::law::patched_snapshot(&doc.snapshot(), member(params, "patch")?)?; doc = OracleDoc::from_snapshot(&patched)?; }
             "paint-indexed-region" | "paint-direct-region" => { if params.str("revision") != revision(&doc) { return Err("stale owned revision".into()); } paint(&mut doc, &kind, params)?; }
             _ => return Err(format!("unknown BMP mutation {kind}"))
         }
@@ -275,7 +273,7 @@ mod oracles {
 
     pub fn undo_mutation(original: &[u8], spec: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
         decode(mutated)?;
-        match spec.str("kind").as_str() { "set-snapshot" | "patch-snapshot" | "paint-indexed-region" | "paint-direct-region" => encode(&decode(original)?), _ => Err("unknown inverse".into()) }
+        match spec.str("kind").as_str() { "paint-indexed-region" | "paint-direct-region" => encode(&decode(original)?), _ => Err("unknown inverse".into()) }
     }
 
     pub fn project(input: &[u8]) -> Result<Json, String> {

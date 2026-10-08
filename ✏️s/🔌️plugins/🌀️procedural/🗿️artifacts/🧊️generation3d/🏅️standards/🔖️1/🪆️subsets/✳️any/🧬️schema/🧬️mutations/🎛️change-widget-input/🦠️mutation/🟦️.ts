@@ -7,6 +7,7 @@ export type WidgetInputValue =
   | { type: "boolean"; value: boolean }
   | { type: "point"; value: Triple }
   | { type: "vector"; value: Triple }
+  | { type: "plane"; value: { origin: Triple; normal: Triple } }
   | { type: "numberList"; value: number[] }
   | { type: "textList"; value: string[] }
   | { type: "booleanList"; value: boolean[] }
@@ -33,8 +34,14 @@ function parseItem(type: string, value: unknown): unknown {
     case "vector":
       if (!Array.isArray(value) || value.length !== 3 || !value.every(finite)) throw new TypeError(`change-widget-input: a ${type} value is three finite numbers`);
       return [value[0], value[1], value[2]];
+    case "plane": {
+      if (value === null || typeof value !== "object" || Array.isArray(value)) throw new TypeError("change-widget-input: a plane value is an origin and a normal");
+      const row = value as Record<string, unknown>;
+      if (Object.keys(row).some((key) => key !== "origin" && key !== "normal")) throw new TypeError("change-widget-input: a plane value holds only an origin and a normal");
+      return { origin: parseItem("point", row.origin), normal: parseItem("vector", row.normal) };
+    }
     default:
-      throw new TypeError("change-widget-input: type must be number, text, boolean, point or vector, or a list of one of them");
+      throw new TypeError("change-widget-input: type must be number, text, boolean, point, vector or plane, or a list of one of them");
   }
 }
 

@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "unicode-nul",
+      "bytes": "4772c3bcc39f6520f09f8c8d000a",
+      "repeat": 1,
+      "view": false,
+      "program": "process.stdout.write(require('node:fs').readFileSync(0))",
+      "budgetMs": 5000,
+      "outputBytes": 1048576,
+      "abortAfterMs": null,
+      "expected": {
+        "reason": "exit",
+        "status": 0,
+        "stdoutHex": "4772c3bcc39f6520f09f8c8d000a",
+        "inputState": "complete"
+      },
+      "oracle": true
+    },
+    {
+      "id": "invalid-utf8-view",
+      "bytes": "00ffc328800a",
+      "repeat": 1,
+      "view": true,
+      "program": "process.stdout.write(require('node:fs').readFileSync(0))",
+      "budgetMs": 5000,
+      "outputBytes": 1048576,
+      "abortAfterMs": null,
+      "expected": {
+        "reason": "exit",
+        "status": 0,
+        "stdoutHex": "00ffc328800a",
+        "inputState": "complete"
+      },
+      "oracle": true
+    },
+    {
+      "id": "zero-eof",
+      "bytes": "",
+      "repeat": 1,
+      "view": false,
+      "program": "process.stdout.write(require('node:fs').readFileSync(0))",
+      "budgetMs": 5000,
+      "outputBytes": 1048576,
+      "abortAfterMs": null,
+      "expected": {
+        "reason": "exit",
+        "status": 0,
+        "stdoutHex": "",
+        "inputState": "complete"
+      },
+      "oracle": true
+    },
+    {
+      "id": "backpressure-output-first",
+      "bytes": "01020304",
+      "repeat": 65536,
+      "view": false,
+      "program": "process.stdout.write('ready\\n');setTimeout(()=>process.stdout.write(require('node:crypto').createHash('sha256').update(require('node:fs').readFileSync(0)).digest('hex')),100)",
+      "budgetMs": 5000,
+      "outputBytes": 1048576,
+      "abortAfterMs": null,
+      "expected": {
+        "reason": "exit",
+        "status": 0,
+        "stdoutHex": null,
+        "inputState": "complete"
+      },
+      "oracle": true
+    },
+    {
+      "id": "early-exit",
+      "bytes": "00",
+      "repeat": 4194304,
+      "view": false,
+      "program": "process.exit(0)",
+      "budgetMs": 5000,
+      "outputBytes": 1048576,
+      "abortAfterMs": null,
+      "expected": {
+        "reason": "exit",
+        "status": 0,
+        "stdoutHex": "",
+        "inputState": "incomplete"
+      },
+      "oracle": false
+    },
+    {
+      "id": "cancel-before",
+      "bytes": "00",
+      "repeat": 1,
+      "view": false,
+      "program": "process.stdout.write('no')",
+      "budgetMs": 5000,
+      "outputBytes": 1048576,
+      "abortAfterMs": 0,
+      "expected": {
+        "reason": "cancelled",
+        "status": null,
+        "stdoutHex": "",
+        "inputState": "absent"
+      },
+      "oracle": false
+    },
+    {
+      "id": "cancel-running",
+      "bytes": "00",
+      "repeat": 4194304,
+      "view": false,
+      "program": "setInterval(()=>{},25)",
+      "budgetMs": 5000,
+      "outputBytes": 1048576,
+      "abortAfterMs": 150,
+      "expected": {
+        "reason": "cancelled",
+        "status": null,
+        "stdoutHex": "",
+        "inputState": "incomplete"
+      },
+      "oracle": false
+    },
+    {
+      "id": "deadline",
+      "bytes": "00",
+      "repeat": 4194304,
+      "view": false,
+      "program": "setInterval(()=>{},25)",
+      "budgetMs": 150,
+      "outputBytes": 1048576,
+      "abortAfterMs": null,
+      "expected": {
+        "reason": "timeout",
+        "status": null,
+        "stdoutHex": "",
+        "inputState": "incomplete"
+      },
+      "oracle": false
+    },
+    {
+      "id": "output-limit-utf8",
+      "bytes": "",
+      "repeat": 1,
+      "view": false,
+      "program": "process.stdout.write('🍋'.repeat(800));setInterval(()=>{},25)",
+      "budgetMs": 5000,
+      "outputBytes": 1,
+      "abortAfterMs": null,
+      "expected": {
+        "reason": "output-limit",
+        "status": null,
+        "stdoutHex": "f0",
+        "inputState": "any"
+      },
+      "oracle": false
+    }
+  ]
+}

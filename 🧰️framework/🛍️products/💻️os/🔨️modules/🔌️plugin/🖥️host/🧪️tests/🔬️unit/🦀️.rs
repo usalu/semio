@@ -301,11 +301,11 @@ async fn io_router_compose_resolves_ownership_and_drives_the_semio_compose_job_t
     )];
     router.register_plugin("cad", handle, &dialects, &[]).await.expect("register cad");
 
-    let key = semio_framework::IoKey {
+    let key = semio_framework_os_kernel::io::IoKey {
         artifact_kind: "s.stdio.step".to_string(),
         standard: "ap214".to_string(),
         subset: "*".to_string(),
-        direction: semio_framework::IoDirection::Export,
+        direction: semio_framework_os_kernel::io::IoDirection::Export,
         format_kind: "s.cad".to_string(),
         format_standard: "1".to_string(),
         format_subset: "*".to_string(),
@@ -333,11 +333,11 @@ async fn io_router_compose_still_refuses_to_route_back_into_the_calling_plugin()
     )];
     router.register_plugin("cad", handle, &dialects, &[]).await.expect("register cad");
 
-    let key = semio_framework::IoKey {
+    let key = semio_framework_os_kernel::io::IoKey {
         artifact_kind: "s.stdio.step".to_string(),
         standard: "ap214".to_string(),
         subset: "*".to_string(),
-        direction: semio_framework::IoDirection::Export,
+        direction: semio_framework_os_kernel::io::IoDirection::Export,
         format_kind: "s.cad".to_string(),
         format_standard: "1".to_string(),
         format_subset: "*".to_string(),

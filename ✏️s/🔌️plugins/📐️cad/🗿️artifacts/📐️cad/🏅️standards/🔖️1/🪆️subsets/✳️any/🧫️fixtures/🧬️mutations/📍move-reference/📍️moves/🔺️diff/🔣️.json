@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "shapeModel": null,
@@ -9,24 +8,23 @@
   "drawings": null,
   "breps": null,
   "referencesByModelDefinitionId": {
-    "spatial.shape": [
-      {
-        "id": "ref-1",
-        "sourceUrl": "https://example.test/plan.png",
-        "mediaKind": "image",
-        "origin": [
-          1.0,
-          2.0,
-          3.0
-        ],
-        "orientation": null,
-        "scale": 1.5,
-        "widthWorld": 8.0,
-        "hidden": false,
-        "locked": true,
-        "opacity": 0.5
-      }
-    ]
+    "spatial.shape": {
+      "added": [],
+      "removed": [],
+      "patched": [
+        {
+          "id": "ref-1",
+          "patch": {
+            "origin": [
+              1.0,
+              2.0,
+              3.0
+            ]
+          }
+        }
+      ],
+      "reordered": null
+    }
   },
   "nodes": null
 }

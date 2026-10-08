@@ -3,26 +3,50 @@ use crate::standards::v1::subsets::any::schema::default_generation3d_snapshot;
 use crate::standards::v1::subsets::any::schema::snapshot::Generation3dSnapshotRead;
 use protocol::TouchedPaths;
 
+fn camera_diff(oracle: &serde_json::Value, key: &str) -> (Generation3dDiff, semio_framework_artifact_flow_flow::CameraJson) {
+    let camera: semio_framework_artifact_flow_flow::CameraJson = semio_framework_pack_json::from_json_str(&oracle[key].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    (Generation3dDiff { camera: Some(camera.clone()), ..Default::default() }, camera)
+}
+
+/// ➕️ Absorb keeps the incoming value of a scalar field, composes row deltas, and the absorbed diff applies exactly like its parts.
 #[test]
-fn diff_absorb_prefers_incoming_fixture_and_preserves_generation() {
+fn diff_absorb_prefers_incoming_camera_and_preserves_other_rows() {
     let oracle: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧲️absorb/🔣️.json")).unwrap();
-    let base = default_generation3d_snapshot();
-    let mut first_fixture = base.host_snapshot.clone();
-    first_fixture.camera = semio_framework_pack_json::from_json_str(&oracle["firstCamera"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let mut incoming = base.host_snapshot.clone();
-    incoming.camera = semio_framework_pack_json::from_json_str(&oracle["incomingCamera"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let mut first = Generation3dDiff { host_snapshot: Some(first_fixture), generation: Some(base.generation.clone()), ..Default::default() };
-    first.absorb(Generation3dDiff { host_snapshot: Some(incoming.clone()), ..Default::default() });
-    assert_eq!(first.host_snapshot.as_ref(), Some(&incoming));
-    assert_eq!(first.generation.as_ref(), Some(&base.generation));
-    let mut expected = base.clone();
-    expected.host_snapshot = incoming;
-    let next = first.apply(&base).expect("absorbed diff applies");
-    assert_eq!(next, expected);
+    let base = Generation3dSnapshotRead::new(default_generation3d_snapshot());
+    let (first_camera, _) = camera_diff(&oracle, "firstCamera");
+    let (incoming_camera, incoming) = camera_diff(&oracle, "incomingCamera");
+    let selection = Generation3dDiff { selected_generation: Some(Generation3dSelectionChange { id: None }), ..Default::default() };
+    let mut sum = first_camera;
+    protocol::MutationDiff::absorb(&mut sum, selection);
+    protocol::MutationDiff::absorb(&mut sum, incoming_camera);
+    let sum = Generation3dDiffRead::new(sum);
+    assert_eq!(sum.camera.as_ref(), Some(&incoming));
+    assert_eq!(sum.selected_generation, Some(Generation3dSelectionChange { id: None }));
+    let next = Generation3dSnapshotRead::new(protocol::apply_diff(&*sum, &base).expect("absorbed diff applies"));
+    assert_eq!(next.host_snapshot.camera, incoming);
+    assert_eq!(next.generation.selected_generation_id, None);
     let camera: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&next.host_snapshot.camera)).unwrap();
     assert_eq!(camera, oracle["incomingCamera"]);
 }
 
+/// 🔁️ Added then removed rows vanish, removed then added rows become a replace, and the inverse of any single row diff restores the base.
+#[test]
+fn row_deltas_coalesce_and_invert() {
+    let base = Generation3dSnapshotRead::new(default_generation3d_snapshot());
+    let widget = base.host_snapshot.widgets[0].clone();
+    let id = crate::widget_id(&widget).to_string();
+    let removed = Generation3dDiff { widgets: Some(Generation3dWidgetsDelta { removed: vec![id.clone()], ..Default::default() }), ..Default::default() };
+    let readded = Generation3dDiff { widgets: Some(Generation3dWidgetsDelta { added: vec![widget.clone()], ..Default::default() }), ..Default::default() };
+    let mut replaced = removed.clone();
+    protocol::MutationDiff::absorb(&mut replaced, readded);
+    let replaced = Generation3dDiffRead::new(replaced);
+    let delta = replaced.widgets.as_ref().expect("widgets");
+    assert_eq!((delta.removed.clone(), delta.added.len()), (vec![id.clone()], 1));
+    let inverse = Generation3dDiffRead::new(protocol::DiffAlgebra::inverse(&removed, &*base));
+    let after = Generation3dSnapshotRead::new(protocol::apply_diff(&removed, &base).expect("removal applies"));
+    assert_eq!(protocol::apply_diff(&*inverse, &after).expect("inverse applies").host_snapshot.widgets.len(), base.host_snapshot.widgets.len());
+    removed.retire_cold();
+}
 
 //#region 🗺️TouchedRegions
 /// 🧬️ Every committed quintet of the mutation vocabulary: its kind, its before-snapshot and its mutation payload.
@@ -122,7 +146,7 @@ fn every_leafs_applied_diff_changes_only_covered_regions_and_covers_every_change
         let mutation: crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation = semio_framework_pack_json::from_json_str(mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed mutation decodes");
         let (diff, _messages) = protocol::Mutation::diff(&mutation, &*base).into_parts();
         let diff = Generation3dDiffRead::new(diff);
-        let next = Generation3dSnapshotRead::new(diff.apply(&base).expect("the committed quintet's diff applies"));
+        let next = Generation3dSnapshotRead::new(protocol::apply_diff(&diff, &base).expect("the committed quintet's diff applies"));
         let changed = changed_regions(&json(&base), &json(&next));
         let touches = diff.touches();
         assert!(!changed.is_empty(), "{kind}: the committed vector moves the document");
@@ -136,20 +160,16 @@ fn every_leafs_applied_diff_changes_only_covered_regions_and_covers_every_change
     }
 }
 
-/// 🗺️ A hand-built delta that replaces a member without recording what changed inside it can only over-approximate, and an
-/// absorbed pair touches the union of both sides.
+/// 🗺️ A delta touches exactly the regions its rows name, and an absorbed pair touches the union of both sides.
 #[test]
-fn an_unrecorded_member_replacement_touches_the_whole_member_and_absorb_unions_regions() {
+fn rows_name_their_regions_and_absorb_unions_them() {
     use protocol::DiffRegions;
-    let base = default_generation3d_snapshot();
-    let coarse = Generation3dDiff { host_snapshot: Some(base.host_snapshot.clone()), ..Default::default() };
-    assert_eq!(coarse.touches().paths, vec!["hostSnapshot".to_string()]);
-    let mut first = Generation3dDiff { generation: Some(base.generation.clone()), touched: Some(vec!["generation/g".to_string()]), ..Default::default() };
-    first.absorb(coarse);
-    assert_eq!(first.touches().paths, vec!["generation/g".to_string(), "hostSnapshot".to_string()]);
+    let widgets = Generation3dDiff { widgets: Some(Generation3dWidgetsDelta { removed: vec!["w/1".to_string()], ..Default::default() }), ..Default::default() };
+    assert_eq!(widgets.touches().paths, vec!["hostSnapshot/widgets/w~11".to_string()]);
+    let mut first = Generation3dDiff { selected_generation: Some(Generation3dSelectionChange { id: None }), ..Default::default() };
+    protocol::MutationDiff::absorb(&mut first, widgets);
+    assert_eq!(first.touches().paths, vec!["generation/selected".to_string(), "hostSnapshot/widgets/w~11".to_string()]);
     assert!(Generation3dDiff::default().touches().paths.is_empty());
-    first.retire_cold();
-    base.retire_cold();
 }
 
 /// 🧭️ The `topology` inference declares reads that no layout, camera, schema or generation edit reaches, and every leaf that
@@ -163,8 +183,8 @@ fn topology_reads_are_sound_for_every_leaf() {
         let mutation: crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation = semio_framework_pack_json::from_json_str(mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed mutation decodes");
         let (diff, _messages) = protocol::Mutation::diff(&mutation, &*base).into_parts();
         let diff = Generation3dDiffRead::new(diff);
-        let next = Generation3dSnapshotRead::new(diff.apply(&base).expect("the committed quintet's diff applies"));
-        let moved = crate::standards::v1::subsets::any::schema::inferences::Generation3dInference::infer(&base).expect("topology infers") != crate::standards::v1::subsets::any::schema::inferences::Generation3dInference::infer(&next).expect("topology infers");
+        let next = Generation3dSnapshotRead::new(protocol::apply_diff(&diff, &base).expect("the committed quintet's diff applies"));
+        let moved = crate::standards::v1::subsets::any::schema::inferences::Generation3dInference::infer(&crate::test_serial::geometry_input(&base)).expect("topology infers") != crate::standards::v1::subsets::any::schema::inferences::Generation3dInference::infer(&crate::test_serial::geometry_input(&next)).expect("topology infers");
         if moved {
             assert!(diff.touches().intersects_any(reads), "{kind}: the topology moves but touches() {:?} misses the reads {reads:?}", diff.touches().paths);
         }

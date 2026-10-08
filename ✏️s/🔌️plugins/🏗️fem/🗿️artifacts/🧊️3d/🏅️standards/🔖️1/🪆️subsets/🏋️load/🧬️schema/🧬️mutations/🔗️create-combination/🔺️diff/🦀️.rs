@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateCombination`.
 use super::CreateCombination;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dCombinationsDelta, Fem3dDiff};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dCombinationsDelta, Fem3dDiff, insertion_order};
 use crate::standards::v1::subsets::any::schema::mutations::{combination_breach,invariant,resolve_combination_terms};
 
 use crate::Fem3dSnapshot;
@@ -16,6 +16,6 @@ pub fn diff(payload: &CreateCombination, base: &Fem3dSnapshot) -> protocol::Muta
     if let Some(breach) = combination_breach(&payload.combination) {
         return invariant(breach, vec![payload.combination.id.clone()]);
     }
-    protocol::MutationOutcome::new(Fem3dDiff { combinations: Some(Fem3dCombinationsDelta { added: vec![payload.combination.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem3dDiff { combinations: Some(Fem3dCombinationsDelta { added: vec![payload.combination.clone()], reordered: insertion_order(base.combinations.iter().map(|item| item.id.as_str()), &payload.combination.id, payload.index), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

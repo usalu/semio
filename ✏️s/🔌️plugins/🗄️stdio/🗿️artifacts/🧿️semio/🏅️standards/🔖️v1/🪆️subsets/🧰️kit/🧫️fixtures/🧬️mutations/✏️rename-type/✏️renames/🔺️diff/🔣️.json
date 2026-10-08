@@ -1,15 +1,11 @@
 {
   "types": {
-    "values": [
+    "modified": [
       {
-        "id": "t1",
-        "name": "Girder",
-        "category": "structure"
-      },
-      {
-        "id": "t2",
-        "name": "Column",
-        "category": "structure"
+        "index": 0,
+        "diff": {
+          "name": "Girder"
+        }
       }
     ]
   }

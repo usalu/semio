@@ -76,3 +76,38 @@ pub(crate) fn bridge_render(snapshot: &LayoutSnapshot, messages: &[String]) -> S
 }
 }
 pub use mutations_wire_codec::*;
+
+use crate::standards::v1::subsets::any::schema::mutations::bridge_step;
+
+/// 🌉️ Applies one committed mutation payload to one committed before-document and answers
+/// `{"snapshot": …, "messages": [ … ]}`.
+///
+/// The bridge exists because the generated Rust test host links only `semio-repo-test-host` and,
+/// behind its `sut` feature, this crate — `serde_json`, `protocol` and `store` are private
+/// extern-crate aliases (`🦀️.rs`) and cannot be named from a case adapter. Same shape and same
+/// reason as `🗄️stdio`'s `decode_semio_mesh_mutation_json`/`apply_semio_mesh_mutation` pair.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_layout_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
+    let (snapshot, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
+    let (applied, messages) = bridge_step(&snapshot, &mutation)?;
+    Ok(bridge_render(&applied, &messages))
+}
+
+/// ↩️ Applies one committed mutation payload and then EVERY step of its own computed inverse,
+/// answering in the same shape — the metamorphic half of the evidence the `layout-mutation-semantics` no-oracle
+/// decision rests on. The inverse is computed against the PRE-mutation document, which is the only
+/// state that carries what a delete removed.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn undo_layout_mutation_json(snapshot_json: &str, mutation_json: &str) -> Result<String, String> {
+    use protocol::Mutation;
+    let (base, mutation) = bridge_decode_pair(snapshot_json, mutation_json)?;
+    let (mut current, mut messages) = bridge_step(&base, &mutation)?;
+    for undo in <LayoutMutation as Mutation<LayoutSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)? {
+        let (next, raised) = bridge_step(&current, &undo)?;
+        current = next;
+        messages.extend(raised);
+    }
+    Ok(bridge_render(&current, &messages))
+}
+
+

@@ -44,7 +44,7 @@ async fn inverse_and_absorb_laws_hold() {
     let base = PlaygroundSnapshot { schema: "playground.base".into() };
     let operation = mutation("playground.changed");
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &operation).await;
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&operation, &base);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&operation, &base).await;
     let first = operation.diff(&base).into_parts().0;
     let after = protocol::apply_diff(&first, &base).expect("valid mutation diff");
     let second = mutation("playground.changed-again").diff(&after).into_parts().0;

@@ -165,7 +165,7 @@ pub fn parse_html_document(text: &str) -> Result<HtmlSnapshot, TextError> {
 /// inert in HTML: WHATWG §13.2.6.4.22 "after after body" processes it with the "in body" rules, so a
 /// trailing newline re-enters `<body>`'s last text node on the very next read by any conformant
 /// parser. Emitting one made `write` → `html5ever::parse` grow a newline inside `body` on every
-/// cycle (found by `🌐️mutate-html-5`'s `set-snapshot` parity row, ticket
+/// cycle (found by `🌐️mutate-html-5`'s parity row, ticket
 /// 26/08/23/END-TO-END-TESTING-REFACTOR); [`parse_html_document`] carries that whitespace into the
 /// model instead, where it round-trips as the real text node it is.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

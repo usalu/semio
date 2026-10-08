@@ -98,3 +98,17 @@ the children's concrete inverses.
   `cargo check -p <crate> --target wasm32-wasip2 --message-format=short` for plugins, `cargo check -p <crate>` for framework.
 - Errors only inside `🧰️framework/**/🖥️host/**` or other peers' crates are not yours — note them and move on.
 - "WRITTEN BUT UNVERIFIED" with a precise list is an acceptable report.
+
+## Rulings (wave 2)
+
+- **Position-exact inverses.** The inverse of a delete/remove on an ordered collection restores the item at its original
+  index (create/insert kinds carry an optional `index`/`before` anchor; absent = append). Every ordered-collection kind has
+  a law fixture that deletes/moves a MIDDLE row, not only the last one.
+- **Replace kinds.** A `replace-<entity>` kind may invert to the same kind carrying the base entity value — that is the
+  entity's own concrete setter, not a restore inverse.
+- **No whole-document mutations.** `set-snapshot`/`patch-snapshot`/`replace-document`-style kinds and every
+  `from_snapshot(base, target)`/`replacement(base, target)` snapshot-differencing helper are deleted in every artifact.
+  Whole-document import/load is the artifact's genesis/load path (not a mutation, not a history row); a user action that
+  replaces many fields becomes the concrete kinds it consists of.
+- **Shared keyed list delta.** Norm's `📇️registry/🧬️contract/🪡️list-delta` (keyed added/removed/modified, coalescing absorb,
+  randomized sequence test) is the reference shape for keyed collection diffs.

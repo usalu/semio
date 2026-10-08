@@ -10,10 +10,8 @@ dialect grammar
 grammar stdio.step.mutation
 start document
 
-document = set-snapshot | patch-snapshot | set-file-description | set-file-name | set-file-schema | insert-entity | remove-entity | set-entity-name | set-entity-arg | insert-entity-arg | remove-entity-arg
+document = set-file-description | set-file-name | set-file-schema | insert-entity | remove-entity | set-entity-name | set-entity-arg | insert-entity-arg | remove-entity-arg
 
-patch-snapshot = "patch-snapshot" "patch" "=" hex
-set-snapshot = "set-snapshot" "snapshot" "=" step-snapshot
 set-file-description = "set-file-description" "file-description" "=" file-description
 set-file-name = "set-file-name" "file-name" "=" file-name
 set-file-schema = "set-file-schema" "file-schema" "=" file-schema
@@ -46,7 +44,3 @@ file-description = "[" "[" hex-list "]" "," hex "]"
 file-name = "[" hex "," hex "," "[" hex-list "]" "," "[" hex-list "]" "," hex "," hex "," hex "]"
 # `enc_file_schema`: `[schema-strings]`.
 file-schema = "[" hex-list "]"
-
-# `enc_step_snapshot` (only reachable via `SetSnapshot`'s payload): `[schema,fileDescription,
-# fileName,fileSchema,[entities]]`.
-step-snapshot = "[" hex "," file-description "," file-name "," file-schema "," "[" entity-list "]" "]"

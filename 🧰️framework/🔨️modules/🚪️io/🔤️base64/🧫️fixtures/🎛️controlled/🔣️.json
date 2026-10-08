@@ -1,0 +1,38 @@
+{
+  "lengths": [0, 1, 2, 3, 7, 3071, 3072, 3073, 4094, 4095, 4096, 8191, 8192, 8193, 65536],
+  "generator": { "multiplier": 73, "lengthMultiplier": 19, "modulus": 256 },
+  "malformed": [
+    { "encoded": "Zg", "kind": "invalidLength" },
+    { "encoded": "Z g=", "kind": "invalidByte", "index": 1, "byte": 32 },
+    { "encoded": "=m9v", "kind": "invalidPadding" },
+    { "encoded": "Zm=v", "kind": "invalidPadding" },
+    { "encoded": "Zg==Zm8=", "kind": "invalidPadding" },
+    { "encoded": "Zh==", "kind": "nonCanonicalTrailingBits" },
+    { "encoded": "Zm9=", "kind": "nonCanonicalTrailingBits" },
+    { "encoded": "Zm_=", "kind": "invalidByte", "index": 2, "byte": 95 }
+  ],
+  "cancellations": [
+    { "phase": "validate", "completed": 0, "ownsOutput": false },
+    { "phase": "validate", "completed": 4096, "ownsOutput": false },
+    { "phase": "decode", "completed": 0, "ownsOutput": false },
+    { "phase": "decode", "completed": 4096, "ownsOutput": true },
+    { "phase": "decode", "completed": 8192, "ownsOutput": true },
+    { "phase": "encode", "completed": 0, "ownsOutput": false },
+    { "phase": "encode", "completed": 4095, "ownsOutput": true },
+    { "phase": "encode", "completed": 8190, "ownsOutput": true }
+  ],
+  "cancellationInputLength": 8193,
+  "stepGrants": [0, 1, 3, 4095, 4096, 8191, 8192, 16384],
+  "competingRefusal": { "block": "Zm9v", "repeats": 2048, "invalidByteOffset": 0, "paddingOffset": 100, "kind": "invalidPadding" },
+  "callbackMutations": ["cancel", "withdraw", "step"],
+  "inputRanges": [
+    { "prefix": "pk:", "suffix": "", "utf8Start": 3, "utf16Start": 3 },
+    { "prefix": "🪜️:", "suffix": ":end", "utf8Start": 8, "utf16Start": 4 },
+    { "prefix": "", "suffix": ":end", "utf8Start": 0, "utf16Start": 0 }
+  ],
+  "invalidInputRanges": [
+    { "input": "TWFu", "utf8": { "start": 3, "end": 2 }, "utf16": { "start": 3, "end": 2 } },
+    { "input": "TWFu", "utf8": { "start": 0, "end": 5 }, "utf16": { "start": 0, "end": 5 } },
+    { "input": "🪜️TWFu", "utf8": { "start": 1, "end": 11 }, "utf16": { "start": 1, "end": 7 } }
+  ]
+}

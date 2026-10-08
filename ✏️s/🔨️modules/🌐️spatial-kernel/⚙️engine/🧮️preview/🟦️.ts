@@ -3,7 +3,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { kernelGeometry, type EdgeCurve, type MeshTransfer, type Vec3 } from "@semio-tech/s-3d-js";
+import { kernelGeometry, type EdgeCurve, type MeshTransfer, type Vec3 } from "@semio-tech/framework-3d-js";
 export { kernelGeometry };
 import { Model } from "../📐️geometry/🟦️.ts";
 import type { ModelDiff, SpatialPreviewKernel } from "../🗺️spatial/🟦️.ts";

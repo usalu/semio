@@ -81,20 +81,20 @@ Feature: Apply every typed DOCX ECMA-376 Transitional conformance-class mutation
       | set-conformance-attribute    | {"value": "strict"}                                                 |
       | remove-conformance-attribute | {}                                                                  |
 
-  @id-mutate-set-snapshot
+  @id-mutate-stamp-strict-class
   @level-exhaustive
   @mode-differential
-  Scenario: Stamp the real package into the strict class as one whole-package set-snapshot
+  Scenario: Stamp the real package into the strict class through its concrete conformance mutations
     Given the real input package shared://📜️example-readme.docx
-    When the package is stamped strict and the stamped package replaces it through set-snapshot
+    When the package is stamped strict through the namespace, relationship-base and conformance-attribute mutations
     Then the oracle and the subject agree on the conformance-class projection
 
-  @id-inverse-set-snapshot
+  @id-inverse-stamp-strict-class
   @level-exhaustive
   @mode-property
   Scenario: Undoing the strict stamp restores the real package
     Given the real input package shared://📜️example-readme.docx
-    When the package is stamped strict through set-snapshot and then stamped back
+    When the package is stamped strict through those mutations and then stamped back
     Then the conformance-class projection is the one the package started from
 
   @id-identity-round-trip

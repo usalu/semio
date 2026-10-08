@@ -1,6 +1,4 @@
-//! ⚙️ `set-photometric-interpretation` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! ⚙️ `set-photometric-interpretation` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,14 +13,14 @@ impl protocol::MutationKind<TiffSnapshot, TiffBaselineMutation> for SetPhotometr
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "photometric-interpretation", kind: "set-photometric-interpretation", record: "SetPhotometricInterpretation" };
 
     fn diff(&self, base: &TiffSnapshot) -> protocol::MutationOutcome<<TiffBaselineMutation as Mutation<TiffSnapshot>>::Diff> {
-        agg_diff(&TiffBaselineMutation::SetPhotometricInterpretation(self.clone()), base)
+        set_first_page_shorts(base, TAG_PHOTOMETRIC, vec![self.photometric])
     }
     fn inverse(&self, base: &TiffSnapshot) -> Result<Vec<TiffBaselineMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&TiffBaselineMutation::SetPhotometricInterpretation(self.clone()), base)?
-    
-    })
-}
+        Ok(match first_page_shorts(base, TAG_PHOTOMETRIC) {
+            Some([old]) if *old != self.photometric => vec![TiffBaselineMutation::SetPhotometricInterpretation(Self { photometric: *old })],
+            _ => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set photometric interpretation", "Photometrische Interpretation setzen")
     }

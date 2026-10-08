@@ -1,6 +1,6 @@
 {
   "schema": "semio.renderer.surface-idle-frames/v1",
-  "description": "The idle budget of every wasm canvas surface family the shell hosts: once a mounted surface has settled it paints NO frame while nothing changes, a change paints it again within `change.renders`, and it is idle again after. Each family's steps run in order on one mounted host with a stub wasm session on a faked 16 ms frame + wall clock; `renders` bounds the session's renderFrame calls the step produced (inclusive). A family that loops (paints every frame unconditionally) fails its `idle` steps — measured before ticket 26/09/23 F1: raster 60 frames/s (Paint2dHost), puzzle2d/5d 60 frames/s (Board2dHost), trinity jack 10 frames/s at 100 % busy (GraphWasmCanvas, fixed by S15).",
+  "description": "The idle budget of every wasm canvas surface family the shell hosts: once a mounted surface has settled it paints NO frame while nothing changes, a change paints it again within `change.renders`, and it is idle again after. Each family's steps run in order on one mounted host with a stub wasm session on a faked 16 ms frame + wall clock; `renders` bounds the session's renderFrame calls the step produced (inclusive). A family that loops (paints every frame unconditionally) fails its `idle` steps — measured before ticket 26/09/23 F1: raster 60 frames/s (Paint2dHost), puzzle2d/5d 60 frames/s (Board2dHost), trinity jack 10 frames/s at 100 % busy (WasmCanvas, fixed by S15).",
   "frameMs": 16,
   "families": [
     {

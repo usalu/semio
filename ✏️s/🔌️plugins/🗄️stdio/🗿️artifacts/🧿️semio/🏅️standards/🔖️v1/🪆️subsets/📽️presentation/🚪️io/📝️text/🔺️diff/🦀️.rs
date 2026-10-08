@@ -11,6 +11,7 @@ use crate::standards::v1::subsets::presentation::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_added, enc_named_added};
 use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
 use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 /// 🧱️ REUSE, don't reinvent — `document::DocBlock`'s own real, already-tested text codec
@@ -514,22 +515,22 @@ pub(crate) fn dec_slide_diff(s: &str) -> Result<SlideDiff, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_masters_diff(d: &SlideMastersDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_master_diff, enc_master)
+    enc_named_triple(d, |k| enc_str(k), enc_master_diff, |a| enc_named_added(a, enc_master))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_masters_diff(s: &str) -> Result<SlideMastersDiff, String> {
-    dec_named_triple(s, dec_str, dec_master_diff, dec_master)
+    dec_named_triple(s, dec_str, dec_master_diff, |t| dec_named_added(t, dec_master))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_layouts_diff(d: &SlideLayoutsDiff) -> String {
-    enc_named_triple(d, |k| enc_str(k), enc_layout_diff, enc_layout)
+    enc_named_triple(d, |k| enc_str(k), enc_layout_diff, |a| enc_named_added(a, enc_layout))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_layouts_diff(s: &str) -> Result<SlideLayoutsDiff, String> {
-    dec_named_triple(s, dec_str, dec_layout_diff, dec_layout)
+    dec_named_triple(s, dec_str, dec_layout_diff, |t| dec_named_added(t, dec_layout))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

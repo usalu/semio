@@ -19,46 +19,120 @@ impl Default for BitmapOutputWindowConfig {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
+/// 🔺️ Field-sparse diff of [`BitmapOutputWindowConfig`]: each field is an optional absolute value.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct BitmapOutputWindowConfigDiff {
+    pub show_pins: Option<bool>,
+    pub zoom: Option<f64>,
+}
+
+impl protocol::DiffAlgebra<BitmapOutputWindowConfig> for BitmapOutputWindowConfigDiff {
+    fn inverse(&self, base: &BitmapOutputWindowConfig) -> Self {
+        Self {
+            show_pins: self.show_pins.as_ref().map(|_| base.show_pins.clone()),
+            zoom: self.zoom.as_ref().map(|_| base.zoom.clone()),
+        }
+    }
+    fn between(base: &BitmapOutputWindowConfig, other: &BitmapOutputWindowConfig) -> Self {
+        Self {
+            show_pins: (base.show_pins != other.show_pins).then(|| other.show_pins.clone()),
+            zoom: (base.zoom != other.zoom).then(|| other.zoom.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.show_pins.is_none() && self.zoom.is_none()
+    }
+}
+
+impl protocol::MutationDiff<BitmapOutputWindowConfig> for BitmapOutputWindowConfigDiff {
+    fn apply(&self, base: &BitmapOutputWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<BitmapOutputWindowConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.show_pins {
+            next.show_pins.clone_from(value);
+        }
+        if let Some(value) = &self.zoom {
+            next.zoom.clone_from(value);
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, later: Self) {
+        if later.show_pins.is_some() {
+            self.show_pins = later.show_pins;
+        }
+        if later.zoom.is_some() {
+            self.zoom = later.zoom;
+        }
+    }
+}
+
+/// 🪟️ The bitmap output window configuration's mutation vocabulary: one absolute setter per field group.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "kebab-case")]
 pub enum BitmapOutputWindowConfigMutation {
-    Snapshot { config: BitmapOutputWindowConfig },
+    SetShowPins { show_pins: bool },
+    SetZoom { zoom: f64 },
 }
 
 impl protocol::Mutation<BitmapOutputWindowConfig> for BitmapOutputWindowConfigMutation {
-    type Diff = BitmapOutputWindowConfig;
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
-        schema_version: 1,
-        owner: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧩️output/🎚️config",
-        semantic_kind: "set-window-config",
-        display_name: "Set Bitmap Output Window Configuration",
-        emoji: "🎚️",
-        aggregate_variant: "Snapshot",
-        payload_schema: "wfcbitmap.outputwindowconfig",
-        text_opcode: None,
-        binary_tag: None,
-        invertibility: protocol::MutationInvertibility::ExplicitMutation,
-        diff_participation: protocol::MutationDiffParticipation::Detect,
-        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-        composition: protocol::MutationComposition::Atomic,
-        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }];
+    type Diff = BitmapOutputWindowConfigDiff;
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧩️output/🎚️config",
+            semantic_kind: "set-show-pins",
+            display_name: "Set Show Pins",
+            emoji: "🪟️",
+            aggregate_variant: "SetShowPins",
+            payload_schema: "wfcbitmap.outputwindowconfig",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧩️output/🎚️config",
+            semantic_kind: "set-zoom",
+            display_name: "Set Zoom",
+            emoji: "🪟️",
+            aggregate_variant: "SetZoom",
+            payload_schema: "wfcbitmap.outputwindowconfig",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+    ];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
-        &Self::DESCRIPTORS[0]
-    }
-    fn diff(&self, _base: &BitmapOutputWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
         match self {
-            Self::Snapshot { config } => protocol::MutationOutcome::new(config.clone()),
+            Self::SetShowPins { .. } => &Self::DESCRIPTORS[0],
+            Self::SetZoom { .. } => &Self::DESCRIPTORS[1],
         }
     }
+    fn diff(&self, base: &BitmapOutputWindowConfig) -> protocol::MutationOutcome<BitmapOutputWindowConfigDiff> {
+        let diff = match self {
+            Self::SetShowPins { show_pins } => BitmapOutputWindowConfigDiff { show_pins: (base.show_pins != *show_pins).then(|| show_pins.clone()), ..Default::default() },
+            Self::SetZoom { zoom } => BitmapOutputWindowConfigDiff { zoom: (base.zoom != *zoom).then(|| zoom.clone()), ..Default::default() },
+        };
+        if protocol::DiffAlgebra::<BitmapOutputWindowConfig>::is_empty(&diff) {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The window configuration already holds that value.");
+        }
+        protocol::MutationOutcome::new(diff)
+    }
     fn inverse(&self, base: &BitmapOutputWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { config: base.clone() }]
-    
-    })())
+        Ok(vec![match self {
+            Self::SetShowPins { .. } => Self::SetShowPins { show_pins: base.show_pins.clone() },
+            Self::SetZoom { .. } => Self::SetZoom { zoom: base.zoom.clone() },
+        }])
+    }
 }
-}
-
 impl store::ArtifactDsl for BitmapOutputWindowConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
@@ -95,7 +169,7 @@ impl store::ArtifactPack for BitmapOutputWindowConfig {
     }
 }
 
-store::impl_whole_record_config!(BitmapOutputWindowConfig);
+impl store::ConfigRecord for BitmapOutputWindowConfig {}
 
 impl protocol::OpText for BitmapOutputWindowConfigMutation {
     fn print_op(&self) -> String {
@@ -142,11 +216,11 @@ pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> BitmapOut
 
 /// 🎯️ Addresses one config write at the window instance being dispatched — refuses outright when
 /// the active window is not an input window, rather than writing a zoom into some other pane.
-pub fn addressed(view: &semio_framework_plugin::ViewModel, config: BitmapOutputWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
+pub fn addressed(view: &semio_framework_plugin::ViewModel, mutation: BitmapOutputWindowConfigMutation) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.output.window-required"), "wfc.bitmap.output.window-required"))?;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.window.stale"), "wfc.bitmap.window.stale"))?;
     if kind != super::WFC_BITMAP_WINDOW_OUTPUT {
         return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.output.window-kind-required"), "wfc.bitmap.output.window-kind-required"));
     }
-    Ok(semio_framework_plugin::WindowConfigMutation::of::<BitmapOutputWindowConfigOwner>(id, BitmapOutputWindowConfigMutation::Snapshot { config }))
+    Ok(semio_framework_plugin::WindowConfigMutation::of::<BitmapOutputWindowConfigOwner>(id, mutation))
 }

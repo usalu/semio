@@ -87,7 +87,6 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
     Then the independent implementation and the subject agree on the resulting deck
     Examples:
       | id | fixture |
-      | set-snapshot | 🔄️set-snapshot |
       | insert-slide | 🆕️insert-slide |
       | remove-slide | ⏏️remove-slide |
       | set-slide-layout | 🧱️set-slide-layout |
@@ -101,18 +100,6 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
       | insert-layout | 📐️insert-layout |
       | remove-layout | 🗑️remove-layout |
       | set-layout-master | 🔗️set-layout-master |
-      | patch-snapshot | 🩹️patch-snapshot |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real derived talk deck
-    Given the real derived presentation artifact shared://📽️mutate-semio-presentation/🎙️talk/🗣️.dsl.semio
-    When the no-mutation mutation is applied to the deck parsed from it
-      """
-      {"mutation": "noMutation"}
-      """
-    Then the independent implementation and the subject agree on the resulting deck
 
   @id-inverse
   @level-exhaustive
@@ -124,7 +111,6 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
     Then both sides restore the deck and agree on the mutated and the restored snapshot, slide and shape order included
     Examples:
       | id | fixture |
-      | set-snapshot | 🔄️set-snapshot |
       | insert-slide | 🆕️insert-slide |
       | remove-slide | ⏏️remove-slide |
       | set-slide-layout | 🧱️set-slide-layout |
@@ -138,18 +124,6 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
       | insert-layout | 📐️insert-layout |
       | remove-layout | 🗑️remove-layout |
       | set-layout-master | 🔗️set-layout-master |
-      | patch-snapshot | 🩹️patch-snapshot |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing no-mutation restores the real derived talk deck
-    Given the real derived presentation artifact shared://📽️mutate-semio-presentation/🎙️talk/🗣️.dsl.semio
-    When the no-mutation mutation is applied to the deck parsed from it and each side undoes it with its own computed inverse
-      """
-      {"mutation": "noMutation"}
-      """
-    Then both sides restore the deck and agree on the mutated and the restored snapshot, slide and shape order included
 
   @id-spec-vector
   @level-exhaustive
@@ -164,8 +138,6 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id | fixture |
-      | no-mutation | ⏸️no-mutation |
-      | set-snapshot | 📸️set-snapshot |
       | insert-slide | 🎬️insert-slide |
       | remove-slide | 📤️remove-slide |
       | set-slide-layout | 🧭️set-slide-layout |

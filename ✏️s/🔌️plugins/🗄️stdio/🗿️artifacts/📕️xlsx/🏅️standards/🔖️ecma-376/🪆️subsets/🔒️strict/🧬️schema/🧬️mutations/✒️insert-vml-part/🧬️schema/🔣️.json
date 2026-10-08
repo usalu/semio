@@ -36,6 +36,25 @@
         "group": "value",
         "order": 20
       }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Position the part takes among the XML parts; the last position when absent.",
+          "de": "Position, die der Paketteil unter den XML-Paketteilen einnimmt; ohne Angabe die letzte."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "value",
+        "order": 30
+      }
     }
   }
 }

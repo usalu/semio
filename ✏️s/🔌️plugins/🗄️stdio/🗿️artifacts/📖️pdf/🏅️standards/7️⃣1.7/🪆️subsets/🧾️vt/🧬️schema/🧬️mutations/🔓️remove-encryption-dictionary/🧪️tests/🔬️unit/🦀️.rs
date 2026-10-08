@@ -13,6 +13,12 @@ fn removes_only_a_present_security_handler() {
 
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
-    let base = applied(&support::document(), &PdfVtMutation::InsertEncryptionDictionary(InsertEncryptionDictionary { version: 2, revision: 3 }));
+    let base = applied(&support::document(), &PdfVtMutation::InsertEncryptionDictionary(InsertEncryptionDictionary { version: 2, revision: 3, placements: Vec::new() }));
+    assert_mutation_inverse_sum_law(&PdfVtMutation::RemoveEncryptionDictionary(RemoveEncryptionDictionary { version: 2, revision: 3 }), &base).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_restores_a_middle_row() {
+    let base = support::with_tail(&applied(&support::document(), &PdfVtMutation::InsertEncryptionDictionary(InsertEncryptionDictionary { version: 2, revision: 3, placements: Vec::new() })));
     assert_mutation_inverse_sum_law(&PdfVtMutation::RemoveEncryptionDictionary(RemoveEncryptionDictionary { version: 2, revision: 3 }), &base).await;
 }

@@ -4,25 +4,23 @@ package semio.s.fem.fem2d.diff;
 // 🧬️ Fem2d diff schema
 message Fem2dDiff {
   // @state artifact
-  optional Fem2dArtifact artifact = 1;
+  optional Fem2dNodesDelta nodes = 1;
   // @state artifact
-  optional Fem2dNodesDelta nodes = 2;
+  optional Fem2dElementsDelta elements = 2;
   // @state artifact
-  optional Fem2dElementsDelta elements = 3;
+  optional Fem2dRegionsDelta regions = 3;
   // @state artifact
-  optional Fem2dRegionsDelta regions = 4;
+  optional Fem2dMaterialsDelta materials = 4;
   // @state artifact
-  optional Fem2dMaterialsDelta materials = 5;
+  optional Fem2dSectionsDelta sections = 5;
   // @state artifact
-  optional Fem2dSectionsDelta sections = 6;
+  optional Fem2dSupportsDelta supports = 6;
   // @state artifact
-  optional Fem2dSupportsDelta supports = 7;
+  optional Fem2dLoadCasesDelta load_cases = 7;
   // @state artifact
-  optional Fem2dLoadCasesDelta load_cases = 8;
+  optional Fem2dCombinationsDelta combinations = 8;
   // @state artifact
-  optional Fem2dCombinationsDelta combinations = 9;
-  // @state artifact
-  optional FemAnalysisSettings analysis = 10;
+  optional Fem2dAnalysisPatch analysis = 9;
   // @state config
 }
 
@@ -107,7 +105,25 @@ message Fem2dLoadCasesDelta {
 
 message Fem2dLoadCasesPatchEntry {
   string id = 1;
-  FemLoadCase item = 2;
+  Fem2dLoadCasePatch patch = 2;
+}
+
+message Fem2dLoadCasePatch {
+  optional string name = 1;
+  optional bool self_weight = 2;
+  optional Fem2dLoadsDelta loads = 3;
+}
+
+message Fem2dLoadsDelta {
+  repeated FemLoad added = 1;
+  repeated string removed = 2;
+  repeated Fem2dLoadsPatchEntry patched = 3;
+  repeated string reordered = 4;
+}
+
+message Fem2dLoadsPatchEntry {
+  string id = 1;
+  FemLoad item = 2;
 }
 
 message Fem2dCombinationsDelta {
@@ -122,3 +138,8 @@ message Fem2dCombinationsPatchEntry {
   FemCombination item = 2;
 }
 
+message Fem2dAnalysisPatch {
+  optional uint32 modal_count = 1;
+  optional uint32 buckling_count = 2;
+  optional double deformation_scale = 3;
+}

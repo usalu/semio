@@ -99,7 +99,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-grid-subdivisions/doubles-grid-subdivisions: committed diff did not carry before to after");
 }
 
@@ -113,4 +113,10 @@ async fn subdivisions_double_while_spacing_is_untouched() {
     assert!(applied.grid_subdivisions.expect("subdivisions are set") >= 1.0, "the applied value must satisfy this leaf's own >= 1 floor");
     assert_eq!(applied.grid_spacing, Some(32.0), "subdividing must not resize the grid itself");
     assert_eq!(applied.grid_opacity, Some(0.35), "subdividing must not fade the grid");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

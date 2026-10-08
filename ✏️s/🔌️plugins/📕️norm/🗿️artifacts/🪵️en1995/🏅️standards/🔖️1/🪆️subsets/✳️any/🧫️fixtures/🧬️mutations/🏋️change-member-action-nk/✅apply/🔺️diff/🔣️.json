@@ -1,67 +1,67 @@
 {
-  "artifact": null,
   "annex": null,
   "members": {
-    "values": [
+    "removed": [],
+    "added": [],
+    "modified": [
       {
-        "id": "beam-B1",
-        "labelEn": "Main glulam floor beam B1",
-        "labelDe": "Hauptträger BSH Decke B1",
-        "role": "floor",
-        "strengthClass": "GL28h",
-        "serviceClass": 1,
-        "support": "simplySupported",
-        "bM": 0.2,
-        "hM": 0.4,
-        "spanM": 5.0,
-        "supportLengthM": 0.15,
-        "bearingLengthM": 0.15,
-        "bucklingLengthYM": 5.0,
-        "bucklingLengthZM": 1.5,
-        "lateralRestraintSpacingM": 1.5,
-        "notchDepthM": 0.0,
-        "notchDistanceM": 0.0,
-        "mCritNm": 180000.0,
-        "massKgPerM": 120.0,
-        "massKgPerM2": 450.0,
-        "dampingXi": 0.04,
-        "fireDurationS": 0.0,
-        "bridgeNObs": 0.0,
-        "bridgeTLYears": 0.0,
-        "bridgeBeta": 0.0,
-        "bridgeA": 0.0,
-        "bridgeB": 0.0,
-        "bridgeCrowdPerM2": 0.0,
-        "actions": [
-          {
-            "id": "g",
-            "kind": "permanent",
-            "category": "",
-            "loadDuration": "permanent",
-            "qLineNPerM": 2500.0,
-            "fPointN": 0.0,
-            "mKNm": 0.0,
-            "vKN": 0.0,
-            "nKN": 5000.0,
-            "nTKN": 0.0,
-            "fC90KN": 0.0
-          },
-          {
-            "id": "q",
-            "kind": "imposed",
-            "category": "A",
-            "loadDuration": "medium",
-            "qLineNPerM": 3000.0,
-            "fPointN": 0.0,
-            "mKNm": 0.0,
-            "vKN": 0.0,
-            "nKN": 0.0,
-            "nTKN": 0.0,
-            "fC90KN": 0.0
+        "key": "beam-B1",
+        "patch": {
+          "labelEn": null,
+          "labelDe": null,
+          "role": null,
+          "strengthClass": null,
+          "serviceClass": null,
+          "support": null,
+          "bM": null,
+          "hM": null,
+          "spanM": null,
+          "supportLengthM": null,
+          "bearingLengthM": null,
+          "bucklingLengthYM": null,
+          "bucklingLengthZM": null,
+          "lateralRestraintSpacingM": null,
+          "notchDepthM": null,
+          "notchDistanceM": null,
+          "mCritNm": null,
+          "massKgPerM": null,
+          "massKgPerM2": null,
+          "dampingXi": null,
+          "fireDurationS": null,
+          "bridgeNObs": null,
+          "bridgeTLYears": null,
+          "bridgeBeta": null,
+          "bridgeA": null,
+          "bridgeB": null,
+          "bridgeCrowdPerM2": null,
+          "actions": {
+            "removed": [],
+            "added": [],
+            "modified": [
+              {
+                "key": "g",
+                "patch": {
+                  "kind": null,
+                  "category": null,
+                  "loadDuration": null,
+                  "qLineNPerM": null,
+                  "fPointN": null,
+                  "mKNm": null,
+                  "vKN": null,
+                  "nKN": 5000.0,
+                  "nTKN": null,
+                  "fC90KN": null
+                }
+              }
+            ]
           }
-        ]
+        }
       }
     ]
   },
-  "connections": null
+  "connections": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

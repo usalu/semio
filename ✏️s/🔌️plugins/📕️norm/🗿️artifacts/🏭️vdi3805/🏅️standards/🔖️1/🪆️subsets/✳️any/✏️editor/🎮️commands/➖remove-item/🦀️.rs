@@ -16,6 +16,6 @@ pub struct RemoveItem {
 
 //#region 🔖️Handler
 pub fn handle(payload: &RemoveItem, doc: &ArtifactView<'_, Vdi3805Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Vdi3805Mutation, NoConfigMutation>, Fault> {
-    crate::app_surface::dispatch_remove_item(doc.snapshot, &payload.path, payload.index as usize, |base, target| Vdi3805Mutation::from_snapshot(base, target))
+    crate::app_surface::dispatch_remove_item(doc.snapshot, &payload.path, payload.index as usize, |document, edit| crate::mutations::resolve_edit(document, edit))
 }
 //#endregion 🔖️Handler

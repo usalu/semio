@@ -32,7 +32,7 @@ input SetFrameFlags { pageId: String! frameId: String! locked: Boolean visible: 
 input UpdateParagraphStyle { id: String! name: String! fontFamily: String! fontSize: Float! fontWeight: Float! leading: Float! tracking: Float! alignment: String! }
 input UpdateTextFrame { pageId: String! frameId: String! storyId: String! threadNext: String insetX: Float! insetY: Float! insetWidth: Float! insetHeight: Float! }
 input UpdateLayer { pageId: String! layerId: String! name: String! visible: Boolean! locked: Boolean! }
-input CreateCharacterStyle { id: String! name: String }
+input CreateCharacterStyle { id: String! name: String index: Int }
 input DeleteCharacterStyle { id: String! }
 input UpdateCharacterStyle { id: String! name: String fontFamily: String fontSize: Float fontWeight: Float italic: Boolean color: [Float!] tracking: Float }
 input UpdateParentPage { id: String! name: String! width: Float! height: Float! }
@@ -42,7 +42,7 @@ input SetPageGuides { id: String! guides: Bytes! }
 input SetStoryRuns { id: String! runs: Bytes! }
 input UpdateLink { id: String! width: Float! height: Float! dpi: Float! colorProfile: String }
 input SetPageOverrides { id: String! overrides: Bytes! }
-input CreateLayer { pageId: String! id: String! name: String! remove: Boolean! }
+input CreateLayer { pageId: String! id: String! name: String! index: Int remove: Boolean! }
 input SetFrameLayer { pageId: String! frameId: String! layerId: String! }
 input SetDrawingText { index: Float! text: String! }
 input ReorderFrame { pageId: String! frameId: String! forward: Boolean! }

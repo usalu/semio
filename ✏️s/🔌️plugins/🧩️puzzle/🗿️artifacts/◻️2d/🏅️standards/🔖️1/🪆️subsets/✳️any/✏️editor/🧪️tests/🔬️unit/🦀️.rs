@@ -15,7 +15,7 @@ pub(crate) mod context {
     
     /// ⏳️ The harness's own executor: polls one app future to completion, yielding between turns.
     ///
-    /// 🐛️ This file used to bridge every app call through `semio_framework::io::resolve_ready`, whose
+    /// 🐛️ This file used to bridge every app call through `semio_framework_os_kernel::io::resolve_ready`, whose
     /// contract is "an ARTIFACT-IO body must complete without a real suspension" — it PANICS on the
     /// first `Pending`. That contract belongs to the synchronous `IoEntry`/compose thunks it was
     /// written for, not to a harness driving a live app: the moment a dispatch gained a real await

@@ -24,12 +24,44 @@ impl Default for RasterPresence {
     }
 }
 
-impl protocol::MutationDiff<RasterPresence> for RasterPresence {
-    fn apply(&self, _base: &RasterPresence) -> protocol::MutationApplyResult<RasterPresence> {
-        Ok(self.clone())
+/// 🔺️ Sparse delta of the shareable presence: only the fields a mutation actually changes.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct RasterPresenceDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub brush_size: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub brush_opacity: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera: Option<RasterCamera>,
+}
+
+impl protocol::MutationDiff<RasterPresence> for RasterPresenceDiff {
+    fn apply(&self, base: &RasterPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RasterPresence> {
+        Ok(RasterPresence { brush_size: self.brush_size.unwrap_or(base.brush_size), brush_opacity: self.brush_opacity.unwrap_or(base.brush_opacity), camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()) })
     }
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if other.brush_size.is_some() {
+            self.brush_size = other.brush_size;
+        }
+        if other.brush_opacity.is_some() {
+            self.brush_opacity = other.brush_opacity;
+        }
+        if other.camera.is_some() {
+            self.camera = other.camera;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<RasterPresence> for RasterPresenceDiff {
+    fn inverse(&self, base: &RasterPresence) -> Self {
+        Self { brush_size: self.brush_size.map(|_| base.brush_size), brush_opacity: self.brush_opacity.map(|_| base.brush_opacity), camera: self.camera.as_ref().map(|_| base.camera.clone()) }
+    }
+    fn between(base: &RasterPresence, other: &RasterPresence) -> Self {
+        Self { brush_size: (base.brush_size != other.brush_size).then_some(other.brush_size), brush_opacity: (base.brush_opacity != other.brush_opacity).then_some(other.brush_opacity), camera: (base.camera != other.camera).then(|| other.camera.clone()) }
+    }
+    fn is_empty(&self) -> bool {
+        *self == Self::default()
     }
 }
 
@@ -83,25 +115,25 @@ impl ArtifactPack for RasterPresence {
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[value(rename_all = "camelCase")]
 pub enum RasterPresenceMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
+    #[dsl(key = "set")]
+    Set {
         #[dsl(block)]
         presence: RasterPresence,
     },
 }
 
 impl Mutation<RasterPresence> for RasterPresenceMutation {
-    type Diff = RasterPresence;
+    type Diff = RasterPresenceDiff;
 
     /// 🧷️ Hand-written (no `dsl::Mutations` derive on this enum) — presence is ephemeral shared
     /// state, so the `owner` path is registry metadata only.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
-        owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot",
-        semantic_kind: "snapshot",
-        display_name: "Snapshot",
-        emoji: "📄",
-        aggregate_variant: "Snapshot",
+        owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+        semantic_kind: "set-presence",
+        display_name: "Set Presence",
+        emoji: "👥️",
+        aggregate_variant: "Set",
         payload_schema: "🧬️schema/🔣️.json",
         text_opcode: None,
         binary_tag: None,
@@ -114,22 +146,26 @@ impl Mutation<RasterPresence> for RasterPresenceMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Self::Set { .. } => &Self::DESCRIPTORS[0],
         }
     }
 
-    fn diff(&self, _base: &RasterPresence) -> protocol::MutationOutcome<RasterPresence> {
-        match self {
-            Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),
+    fn diff(&self, base: &RasterPresence) -> protocol::MutationOutcome<RasterPresenceDiff> {
+        let Self::Set { presence } = self;
+        let diff = RasterPresenceDiff {
+            brush_size: (base.brush_size != presence.brush_size).then_some(presence.brush_size),
+            brush_opacity: (base.brush_opacity != presence.brush_opacity).then_some(presence.brush_opacity),
+            camera: (base.camera != presence.camera).then(|| presence.camera.clone()),
+        };
+        if diff == RasterPresenceDiff::default() {
+            return protocol::MutationOutcome::new(diff).warning("mutation.no-op", "Presence is already up to date.");
         }
+        protocol::MutationOutcome::new(diff)
     }
 
     fn inverse(&self, base: &RasterPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { presence: base.clone() }]
-    
-    })())
-}
+        Ok(vec![Self::Set { presence: base.clone() }])
+    }
 }
 
 impl protocol::OpText for RasterPresenceMutation {
@@ -222,3 +258,9 @@ pub fn raster_presence_store_disposer() -> Box<dyn semio_framework_plugin::Artif
     Box::new(semio_framework_plugin::PresenceStoreOwnedDisposer::new(std::sync::Arc::new(RasterPresence::default()), raster_presence_is_terminal_empty).expect("the default raster presence root owns no heap"))
 }
 //#endregion 🧹️Retirement
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

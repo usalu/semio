@@ -16,32 +16,15 @@ use protocol::{OpBinary, OpText};
 
 /// 🧪️ F6: hand-rolled `OpText`/`OpBinary` grammar — see this file's top doc comment for why (the
 /// same real, reproduced `dsl`-derive bug that forced `StlDiff`'s hand-roll also reaches here via
-/// `SetSnapshot`/`InsertTriangle`/`SetTriangleVertices`'s `[[f64; 3]; 3]` payload).
+/// `InsertTriangle`/`SetTriangleVertices`'s `[[f64; 3]; 3]` payload).
 ///
 /// **Grammar**: `<keyword> arg=value ...` — one space-separated `key=value` token per argument
 /// (every variant's args are ALWAYS present, unlike `StlDiff`'s sparse tokens). `index`/floats
-/// print via `Display`; `name`/`solid_name` are lowercase hex; `normal`/`vertices`/`triangle`/
-/// `snapshot` reuse `🔺️diff::component`'s `pub(crate)` value codecs verbatim (`enc_vec3`,
-/// `enc_vertices`, `enc_triangle`) plus this file's own `enc_snapshot` (the one type `🔺️diff`
-/// doesn't need — only `SetSnapshot`'s payload does).
-pub(crate) fn enc_snapshot(s: &StlSnapshot) -> String {
-    let stl_triangle_separator = ",";
-    format!("[{},{},[{}]]", crate::standards::v_ascii::subsets::any::io::text::diff::hex_encode_str(&s.schema), crate::standards::v_ascii::subsets::any::io::text::diff::hex_encode_str(&s.solid_name), s.triangles.iter().map(crate::standards::v_ascii::subsets::any::io::text::diff::enc_triangle).collect::<Vec<_>>().join(stl_triangle_separator),)
-}
-
-pub(crate) fn dec_snapshot(s: &str) -> Result<StlSnapshot, String> {
-    let parts = crate::standards::v_ascii::subsets::any::io::text::diff::split_top_level(crate::standards::v_ascii::subsets::any::io::text::diff::strip_brackets(s)?, ',');
-    let [schema, solid_name, triangles] = parts.as_slice() else {
-        return Err(format!("snapshot: expected 3 fields, got {}", parts.len()));
-    };
-    let triangles = crate::standards::v_ascii::subsets::any::io::text::diff::split_top_level(crate::standards::v_ascii::subsets::any::io::text::diff::strip_brackets(triangles)?, ',').into_iter().filter(|s| !s.is_empty()).map(crate::standards::v_ascii::subsets::any::io::text::diff::dec_triangle).collect::<Result<Vec<_>, String>>()?;
-    Ok(StlSnapshot { schema: crate::standards::v_ascii::subsets::any::io::text::diff::hex_decode_str(schema)?, solid_name: crate::standards::v_ascii::subsets::any::io::text::diff::hex_decode_str(solid_name)?, triangles })
-}
-
+/// print via `Display`; `name`/`solid_name` are lowercase hex; `normal`/`vertices`/`triangle`
+/// reuse `🔺️diff::component`'s `pub(crate)` value codecs verbatim (`enc_vec3`, `enc_vertices`,
+/// `enc_triangle`).
 pub(crate) fn print_stl_op(m: &StlMutation) -> String {
     match m {
-        StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_snapshot(snapshot)),
-        StlMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         StlMutation::SetSolidName(set_solid_name::SetSolidName { name }) => format!("set-solid-name name={}", crate::standards::v_ascii::subsets::any::io::text::diff::hex_encode_str(name)),
         StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index, triangle }) => format!("insert-triangle index={index} triangle={}", crate::standards::v_ascii::subsets::any::io::text::diff::enc_triangle(triangle)),
         StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index }) => format!("remove-triangle index={index}"),
@@ -59,8 +42,6 @@ pub(crate) fn parse_stl_op(line: &str) -> Result<StlMutation, String> {
         args.iter().find_map(|t| t.strip_prefix(probe.as_str())).ok_or_else(|| format!("stl op: missing '{key}=' in {line:?}"))
     };
     match keyword {
-        "set-snapshot" => Ok(StlMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_snapshot(get("snapshot")?)? })),
-        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| StlMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
         "set-solid-name" => Ok(StlMutation::SetSolidName(set_solid_name::SetSolidName { name: crate::standards::v_ascii::subsets::any::io::text::diff::hex_decode_str(get("name")?)? })),
         "insert-triangle" => Ok(StlMutation::InsertTriangle(insert_triangle::InsertTriangle { index: crate::standards::v_ascii::subsets::any::io::text::diff::parse_usize(get("index")?)?, triangle: crate::standards::v_ascii::subsets::any::io::text::diff::dec_triangle(get("triangle")?)? })),
         "remove-triangle" => Ok(StlMutation::RemoveTriangle(remove_triangle::RemoveTriangle { index: crate::standards::v_ascii::subsets::any::io::text::diff::parse_usize(get("index")?)? })),

@@ -1,0 +1,19 @@
+dialect protocol
+protocol stdio.step.cc2.mutations
+version 1
+schema s.stdio.step.cc2
+start record
+framing record
+header fixed 2
+field format u8
+field tag varint
+record set-file-schema tag=0
+field payload bytes
+record set-product-identity tag=1
+field payload bytes
+record set-shape-representation tag=2
+field payload bytes
+record demote-shape-representation tag=3
+field payload bytes
+record restore-entities tag=4
+field payload bytes

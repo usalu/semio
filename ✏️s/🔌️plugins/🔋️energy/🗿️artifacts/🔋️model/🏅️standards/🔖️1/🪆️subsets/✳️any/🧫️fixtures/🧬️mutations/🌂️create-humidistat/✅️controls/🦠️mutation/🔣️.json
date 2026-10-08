@@ -5,5 +5,6 @@
   "humidifyingSetpointScheduleId": 1,
   "dehumidifyingSetpointScheduleId": 2,
   "humidifyingThrottleRange": 5.0,
-  "dehumidifyingThrottleRange": 5.0
+  "dehumidifyingThrottleRange": 5.0,
+  "index": null
 }

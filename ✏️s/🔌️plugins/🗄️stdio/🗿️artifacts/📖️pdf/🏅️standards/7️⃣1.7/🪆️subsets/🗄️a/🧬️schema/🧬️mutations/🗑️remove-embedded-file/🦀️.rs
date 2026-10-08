@@ -2,7 +2,7 @@
 
 use super::insert_embedded_file::InsertEmbeddedFile;
 use super::PdfAMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -22,11 +22,10 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveEmbeddedFile {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        support::file_spec_named(base, &self.file_name).map(|_| PdfAMutation::InsertEmbeddedFile(InsertEmbeddedFile { file_name: self.file_name.clone() })).into_iter().collect()
-    
-    })())
-}
+        Ok({
+            support::file_spec_named(base, &self.file_name).map(|id| PdfAMutation::InsertEmbeddedFile(InsertEmbeddedFile { file_name: self.file_name.clone(), placements: support::placements_of(base, &support::file_spec_creation_ids(base, id)) })).into_iter().collect()
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove embedded file \"{}\"", self.file_name), &format!("Eingebettete Datei \"{}\" entfernen", self.file_name))

@@ -98,14 +98,6 @@ mod live {
     /// silent no-op: a quietly skipped mutation reports as a passing test.
     pub fn apply(doc: &mut MarkupDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "set-snapshot" => {
-                *doc = doc_from_wire(&member(&member(params, "snapshot"), "doc"))?;
-                Ok(())
-            }
-            "patch-snapshot" => {
-                *doc = patched_markup(doc, "stdio.svg", &member(params, "patch"))?;
-                Ok(())
-            }
             "stamp-base-profile" => {
                 let root = doc.root.as_mut().ok_or("stamp-base-profile: document has no root element")?;
                 set_attr(root, "baseProfile", non_empty_str(params, "baseProfile"));
@@ -183,8 +175,7 @@ mod live {
     /// property has two producers to disagree.
     pub fn invert(base: &MarkupDoc, mut mutated: MarkupDoc, kind: &str, params: &Json) -> Result<MarkupDoc, String> {
         match kind {
-            "set-snapshot" | "patch-snapshot" => Ok(base.clone()),
-            "stamp-base-profile" => {
+                        "stamp-base-profile" => {
                 let prior_profile = node_at(base, &[]).ok().and_then(|node| element_attr(node, "baseProfile")).map(|s| s.to_string());
                 let prior_version = node_at(base, &[]).ok().and_then(|node| element_attr(node, "version")).map(|s| s.to_string());
                 let root = mutated.root.as_mut().ok_or("inverse stamp-base-profile: document has no root element")?;

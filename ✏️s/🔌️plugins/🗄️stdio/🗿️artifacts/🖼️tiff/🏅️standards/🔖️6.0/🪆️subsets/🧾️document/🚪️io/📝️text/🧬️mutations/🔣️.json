@@ -3,5 +3,5 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/mutations/text.json",
   "title": "TiffMutationText",
   "type": "string",
-  "pattern": "^(?:change-byte-order|insert-ifd|remove-ifd|replace-tag|remove-tag|paint-region|set-snapshot|patch-snapshot)(?: |$)"
+  "pattern": "^(?:change-byte-order|insert-ifd|remove-ifd|replace-tag|remove-tag|paint-region|replace-samples)(?: |$)"
 }

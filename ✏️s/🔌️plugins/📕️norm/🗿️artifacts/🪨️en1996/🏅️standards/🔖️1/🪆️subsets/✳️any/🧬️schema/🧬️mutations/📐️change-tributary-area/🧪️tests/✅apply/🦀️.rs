@@ -1,8 +1,7 @@
-#[test]
-fn applies_change_tributary_area() {
-    use crate::mutations::change_tributary_area::ChangeTributaryArea;
-    use crate::En1996Snapshot;
-    use protocol::MutationKind;
-    let _ = En1996Snapshot::compliant_clay_wall();
-    assert_eq!(<ChangeTributaryArea as MutationKind<En1996Snapshot, crate::En1996Mutation>>::SEMANTICS.kind, "change-tributary-area");
+//! 🧪️ `change-tributary-area` — the committed applied vector's inverse diffs sum to the negative of its forward diff.
+
+#[semio_framework_async_macros::async_test]
+async fn change_tributary_area_inverse_diffs_sum_to_the_negative_diff() {
+    let (mutation, before) = crate::mutations::fixture_tests::applied_vector("change-tributary-area");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
 }

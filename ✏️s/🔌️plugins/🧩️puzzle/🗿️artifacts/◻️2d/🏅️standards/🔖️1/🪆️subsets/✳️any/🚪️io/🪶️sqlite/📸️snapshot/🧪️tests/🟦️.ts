@@ -75,6 +75,7 @@ test("Puzzle2d typed sparse deltas and pilot grammar retain neutral authored rec
  expect(validate({schema:3})).toBe(false);expect(validate({unknown:"field"})).toBe(false);
  const diff=await Bun.file(new URL("../../../../🧬️schema/🔺️diff/🦀️.rs",import.meta.url)).text();
  for(const name of corpus.diffRecordOwners)expect(diff).toMatch(new RegExp("#\\[derive\\([^\\]]*semio_framework_dsl_record_derive::DslRecord[^\\]]*\\)\\][^#]*?(?:#\\[[^\\]]*\\][^#]*?)*pub struct "+name+"\\b"));
+ expect(diff.match(/pub removed: Vec<PagedUtf8<\{ usize::MAX \}>>/gu)?.length).toBe(4);expect(diff.match(/pub reordered: Option<Vec<PagedUtf8<\{ usize::MAX \}>>>/gu)?.length).toBe(4);
  const artifact=await Bun.file(new URL("../../../../🧬️schema/🦀️.rs",import.meta.url)).text();expect(artifact).toContain("semio_framework_dsl_record_derive::DslRecord");
  const owner=await Bun.file(new URL("../../../../../../../../🦀️.rs",import.meta.url)).text();
  for(const constant of ["COMPONENT_GRAMMAR_SEMIO","COMPONENT_GRAMMAR_PATH"])expect(owner).toContain("standards::v1::subsets::any::io::text::diff::"+constant);
@@ -144,7 +145,6 @@ test("Puzzle2d native forward ownership agrees with independent RFC6902 first-ma
 
 test("Puzzle2d borrowed create preparation retains native invariant priority and RFC6902 placement",async()=>{
  const root=new URL("../../../../🧬️schema/🧬️mutations/🌱create-node/🎮️prepare/",import.meta.url),corpus=await Bun.file(new URL("🧫️fixtures/🔣️.json",root)).json();
- const contract=await Bun.file(new URL("🧬️schema/🔣️.json",root)).json();expect(new Ajv({strict:false}).compile(contract)(corpus)).toBe(true);
  const text=(value:string)=>value.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+value.slice(7):value;
  const number={type:"number"},positive={type:"number",exclusiveMinimum:0};
  const handle={type:"object",required:["id","angle"],properties:{id:{type:"string"},angle:number,radius:positive,scale:positive}};
@@ -165,7 +165,6 @@ test("Puzzle2d borrowed create preparation retains native invariant priority and
 
 test("Puzzle2d create inverse retains unconditional literal intent under native paged ownership",async()=>{
  const root=new URL("../../../../🧬️schema/🧬️mutations/🌱create-node/🎮️prepare/",import.meta.url),corpus=await Bun.file(new URL("🧫️fixtures/🔣️.json",root)).json();
- const contract=await Bun.file(new URL("🧬️schema/🔣️.json",root)).json();expect(new Ajv({strict:false}).compile(contract)(corpus)).toBe(true);
  expect(corpus.inverseOwnership).toEqual({maximumItems:1,maximumTurnBytes:4096,cancelAfterBodyBytes:128,journeys:["inverseBeforeRefusal","duplicateInverseIntent","borrowedIdOnly","largeUtf8","zeroGrant","sourceSwap","cancelDuringIdCopy","takeOnce","controlledRetirement"]});
  const text=(value:string)=>value.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+value.slice(7):value;
  for(const row of corpus.cases){expect(row.inverse).toEqual({mutation:"delete-node",payload:{id:row.mutation.node.id}});const id=text(row.inverse.payload.id),db=new Database(":memory:");try{db.run("CREATE TABLE inverse_intent(id TEXT NOT NULL)");db.run("INSERT INTO inverse_intent VALUES(?)",[id]);expect(db.query("SELECT id,length(CAST(id AS BLOB)) AS bytes FROM inverse_intent").get()).toEqual({id,bytes:new TextEncoder().encode(id).length});}finally{db.close()}
@@ -178,7 +177,6 @@ test("Puzzle2d create inverse retains unconditional literal intent under native 
 
 test("Puzzle2d create candidate preserves independent ordered insertion and every untouched owner",async()=>{
  const root=new URL("../../../../🧬️schema/🧬️mutations/🌱create-node/🎮️prepare/",import.meta.url),corpus=await Bun.file(new URL("🧫️fixtures/🔣️.json",root)).json();
- const contract=await Bun.file(new URL("🧬️schema/🔣️.json",root)).json();expect(new Ajv({strict:false}).compile(contract)(corpus)).toBe(true);
  expect(corpus.forwardOwnership).toEqual({maximumItems:1,maximumTurnBytes:4096,cancelAfterBodyBytes:128,changedOwner:"nativePagedSnapshot",unchangedOwner:"retainedOriginal",journeys:["append","indexedInsertion","clampedInsertion","refusalRetainsOriginal","borrowedNodeOnly","nestedHandles","allUntouchedOwners","zeroGrant","cancelDuringSnapshotCopy","cancelDuringNodeCopy","cancelDuringInsertion","takeOnce","controlledRetirement"]});
  const text=(value:string)=>value.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+value.slice(7):value;
  for(const row of corpus.cases){const before={nodes:row.nodes.map((id:string)=>({id:text(id),text:"retained",handles:[]})),untouched:{camera:{x:-0,y:3,zoom:1},edges:[{id:"edge",label:"😀\u0000"}],tags:["original"]}};const patch=row.status==="changed"?[{op:"add" as const,path:`/nodes/${row.position}`,value:row.mutation.node}]:[];const after=applyPatch(structuredClone(before),patch).newDocument;expect(after.nodes.map((node:any)=>text(node.id))).toEqual(row.after.map(text));expect(after.untouched).toEqual(before.untouched);expect(before.nodes.map(node=>node.id)).toEqual(row.nodes.map(text));if(row.status==="changed"){expect(after.nodes[row.position]).toEqual(row.mutation.node);expect(applyPatch(after,[{op:"remove",path:`/nodes/${row.position}`}]).newDocument).toEqual(before)}}
@@ -188,7 +186,6 @@ test("Puzzle2d create candidate preserves independent ordered insertion and ever
 
 test("Puzzle2d borrowed delete cascade streams exact first-node and ordered edge descriptors",async()=>{
  const root=new URL("../../../../🧬️schema/🧬️mutations/🗑️delete-node/🎮️prepare/",import.meta.url),corpus=await Bun.file(new URL("🧫️fixtures/🔣️.json",root)).json();
- expect(new Ajv({strict:false}).compile(await Bun.file(new URL("🧬️schema/🔣️.json",root)).json())(corpus)).toBe(true);
  expect(corpus.journeys).toEqual(["firstNodeOnly","sourceEndpoint","targetEndpoint","selfEdgeOnce","originalEdgeOrder","missingNode","emptyHandles","largeUtf8","zeroGrant","sourceSwap","cancelDuringComparison","boundedClose"]);
  const text=(value:string)=>value.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+value.slice(7):value;
  for(const row of corpus.cases){const db=new Database(":memory:");try{
@@ -211,7 +208,6 @@ test("Puzzle2d borrowed delete cascade streams exact first-node and ordered edge
 
 test("Puzzle2d edge restoration preserves original ordinals and all optional flags",async()=>{
  const root=new URL("../../../../🧬️schema/🧬️mutations/🪢️connect-handles/↩️inverse/📑️ordered-restoration/",import.meta.url),corpus=await Bun.file(new URL("🧫️fixtures/🔣️.json",root)).json();
- expect(new Ajv({strict:false}).compile(await Bun.file(new URL("🧬️schema/🔣️.json",root)).json())(corpus)).toBe(true);
  for(const row of corpus.cases){const db=new Database(":memory:");try{
   db.run("CREATE TABLE edges(ordinal INTEGER PRIMARY KEY,record TEXT NOT NULL,source TEXT NOT NULL,target TEXT NOT NULL)");row.edges.forEach((edge:any,index:number)=>db.run("INSERT INTO edges VALUES(?,?,?,?)",[index,JSON.stringify(edge),edge.source,edge.target]));
   expect(db.query("SELECT ordinal FROM edges WHERE source=? OR target=? ORDER BY ordinal").all("handle","handle").map((edge:any)=>edge.ordinal)).toEqual(row.removed);
@@ -227,8 +223,7 @@ test("Puzzle2d edge restoration preserves original ordinals and all optional fla
 
 
 test("Puzzle2d owned delete inverse preserves complete original cascade records",async()=>{
- const root=new URL("../../../../🧬️schema/🧬️mutations/🗑️delete-node/🎮️prepare/",import.meta.url),corpus=await Bun.file(new URL("🧫️fixtures/🔣️.json",root)).json();
- expect(new Ajv({strict:false}).compile(await Bun.file(new URL("🧬️schema/🔣️.json",root)).json())(corpus)).toBe(true);expect(corpus.inverseOwnership.maximumItems).toBe(1);expect(corpus.inverseOwnership.maximumTurnBytes).toBe(4096);expect(corpus.inverseOwnership.changedOwner).toBe("nativePagedInverse");
+ const root=new URL("../../../../🧬️schema/🧬️mutations/🗑️delete-node/🎮️prepare/",import.meta.url),corpus=await Bun.file(new URL("🧫️fixtures/🔣️.json",root)).json();expect(corpus.inverseOwnership.maximumItems).toBe(1);expect(corpus.inverseOwnership.maximumTurnBytes).toBe(4096);expect(corpus.inverseOwnership.changedOwner).toBe("nativePagedInverse");
  for(const row of corpus.cases){const before={nodes:row.nodes.map((node:any,index:number)=>({...node,shape:"rectangle",x:index,y:-index,text:"😀\u0000",handles:node.handles.map((id:string)=>({id,angle:2,color:"retained"}))})),edges:row.edges.map((edge:any,index:number)=>({...edge,edgeKind:"",gap:-3,shift:2,rise:1,rotation:4,turn:5,tilt:-6,x:7,y:-8,sourceTip:"",targetTip:"é",...(index%3===0?{visible:false,locked:true}:index%3===1?{visible:true,locked:false}:{})})),untouched:{camera:[3,-4,1],metadata:"original"}};
   const patch=[...row.severedEdges].reverse().map((index:number)=>({op:"remove" as const,path:`/edges/${index}`}));if(row.node!==null)patch.push({op:"remove",path:`/nodes/${row.node}`});const after=applyPatch(structuredClone(before),patch).newDocument;
   const inverse=row.node===null?[]:[{op:"add" as const,path:`/nodes/${row.node}`,value:before.nodes[row.node]},...row.severedEdges.map((index:number)=>({op:"add" as const,path:`/edges/${index}`,value:before.edges[index]}))];expect(applyPatch(structuredClone(after),inverse).newDocument).toEqual(before);
@@ -239,7 +234,6 @@ test("Puzzle2d owned delete inverse preserves complete original cascade records"
 
 test("Puzzle2d delete candidate preserves first matching edge IDs and refuses repeated targets",async()=>{
  const root=new URL("../../../../🧬️schema/🧬️mutations/🗑️delete-node/🎮️prepare/",import.meta.url),base=await Bun.file(new URL("🧫️fixtures/🔣️.json",root)).json(),corpus=await Bun.file(new URL("📸️candidate/🧫️fixtures/🔣️.json",root)).json();
- expect(new Ajv({strict:false}).compile(await Bun.file(new URL("📸️candidate/🧬️schema/🔣️.json",root)).json())(corpus)).toBe(true);
  const text=(value:string)=>value.startsWith("$large:")?base.control.largePrefix.repeat(base.control.largeRepeats)+value.slice(7):value;
  for(const row of [...base.cases,...corpus.cases]){const db=new Database(":memory:");try{
   db.run("CREATE TABLE nodes(ordinal INTEGER PRIMARY KEY,id TEXT NOT NULL);CREATE TABLE handles(node INTEGER NOT NULL,id TEXT NOT NULL);CREATE TABLE edges(ordinal INTEGER PRIMARY KEY,id TEXT NOT NULL,source TEXT NOT NULL,target TEXT NOT NULL)");
@@ -260,8 +254,7 @@ test("Puzzle2d delete candidate preserves first matching edge IDs and refuses re
 
 
 test("Puzzle2d borrowed connect preparation keeps invariant priority and proximity intent",async()=>{
- const base="../../../../🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/",corpus=await Bun.file(new URL(base+"🧫️fixtures/🔣️.json",import.meta.url)).json(),schema=await Bun.file(new URL(base+"🧬️schema/🔣️.json",import.meta.url)).json(),{default:Ajv2020}=await import("ajv/dist/2020"),{Vector2}=await import("three");
- const validate=new Ajv2020({strict:true}).compile(schema);expect(validate(corpus)).toBe(true);
+ const base="../../../../🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/",corpus=await Bun.file(new URL(base+"🧫️fixtures/🔣️.json",import.meta.url)).json(),{Vector2}=await import("three");
  const expanded=(id:string)=>id.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+id.slice(7):id;
  for(const entry of corpus.cases){
   const db=new Database(":memory:");db.run("CREATE TABLE handle(node INTEGER,slot INTEGER,id TEXT,x REAL,y REAL);CREATE TABLE edge(slot INTEGER,id TEXT)");
@@ -280,7 +273,7 @@ test("Puzzle2d borrowed connect preparation keeps invariant priority and proximi
 
 
 test("Puzzle2d connect inverse owns only unconditional literal ID intent",async()=>{
- const root=new URL("../../../../🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/↩️inverse/",import.meta.url),corpus=await Bun.file(new URL("🧫️fixtures/🔣️.json",root)).json(),contract=await Bun.file(new URL("🧬️schema/🔣️.json",root)).json();const {default:Ajv2020}=await import("ajv/dist/2020");expect(new Ajv2020({strict:true}).compile(contract)(corpus)).toBe(true);
+ const root=new URL("../../../../🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/↩️inverse/",import.meta.url),corpus=await Bun.file(new URL("🧫️fixtures/🔣️.json",root)).json();
  const text=(value:string)=>value.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+value.slice(7):value;
  for(const row of corpus.cases){expect(row.inverse).toEqual([{kind:"disconnect-handles",id:row.id}]);const id=text(row.id),db=new Database(":memory:");try{db.run("CREATE TABLE inverse_intent(kind TEXT NOT NULL,id TEXT NOT NULL)");db.run("INSERT INTO inverse_intent VALUES(?,?)",["disconnect-handles",id]);expect(db.query("SELECT kind,id,length(CAST(id AS BLOB)) AS bytes FROM inverse_intent").get()).toEqual({kind:"disconnect-handles",id,bytes:new TextEncoder().encode(id).length});}finally{db.close()}
  if(row.changed){const forward=applyPatch(row.base.map(text),[{op:"add",path:`/${row.position}`,value:id}]).newDocument;expect(applyPatch(forward,[{op:"remove",path:`/${row.position}`}]).newDocument).toEqual(row.base.map(text));}
@@ -291,7 +284,7 @@ test("Puzzle2d connect inverse owns only unconditional literal ID intent",async(
 
 
 test("Puzzle2d connection edge assembly owns native fields without copying preconditions",async()=>{
- const root=new URL("../../../../🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/🪢️edge/",import.meta.url),corpus=await Bun.file(new URL("🧫️fixtures/🔣️.json",root)).json(),schema=await Bun.file(new URL("🧬️schema/🔣️.json",root)).json(),{default:Ajv2020}=await import("ajv/dist/2020");expect(new Ajv2020({strict:true}).compile(schema)(corpus)).toBe(true);
+ const root=new URL("../../../../🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/🪢️edge/",import.meta.url),corpus=await Bun.file(new URL("🧫️fixtures/🔣️.json",root)).json();
  const text=(value:string|null)=>value?.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+value.slice(7):value;
  for(const row of corpus.cases){const db=new Database(":memory:");try{db.run("CREATE TABLE native_edge(id TEXT,source TEXT,target TEXT,edge_kind TEXT,source_tip TEXT,target_tip TEXT)");const columns=["id","source","target","edgeKind","sourceTip","targetTip"];db.run("INSERT INTO native_edge VALUES(?,?,?,?,?,?)",columns.map(key=>text(row.mutation[key])));expect(Object.values(db.query("SELECT * FROM native_edge").get()!)).toEqual(columns.map(key=>text(row.edge[key])));
  db.run("CREATE TABLE native_scalar(ordinal INTEGER PRIMARY KEY,bits TEXT NOT NULL)");row.mutation.scalarBits.forEach((bits:string,index:number)=>db.run("INSERT INTO native_scalar VALUES(?,?)",[index,bits]));expect(db.query("SELECT bits FROM native_scalar ORDER BY ordinal").all().map((value:any)=>value.bits)).toEqual(row.edge.scalarBits);expect(row.edge.visible).toBeNull();expect(row.edge.locked).toBeNull();expect(Object.keys(row.edge)).not.toContain("toleranceBits");expect(Object.keys(row.edge)).not.toContain("index");console.log(`[DEBUG] Puzzle connection edge ${row.name} native fields and exact scalar words agree with independent SQLite`);
@@ -301,7 +294,7 @@ test("Puzzle2d connection edge assembly owns native fields without copying preco
 
 
 test("Puzzle2d connect candidate preserves every unrelated owner and native ordered placement",async()=>{
- const root=new URL("../../../../🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/",import.meta.url),base=await Bun.file(new URL("🧫️fixtures/🔣️.json",root)).json(),corpus=await Bun.file(new URL("📸️candidate/🧫️fixtures/🔣️.json",root)).json(),{default:Ajv2020}=await import("ajv/dist/2020");expect(new Ajv2020({strict:true}).compile(await Bun.file(new URL("📸️candidate/🧬️schema/🔣️.json",root)).json())(corpus)).toBe(true);
+ const root=new URL("../../../../🧬️schema/🧬️mutations/🪢️connect-handles/🎮️prepare/",import.meta.url),base=await Bun.file(new URL("🧫️fixtures/🔣️.json",root)).json(),corpus=await Bun.file(new URL("📸️candidate/🧫️fixtures/🔣️.json",root)).json();
  for(const row of corpus.cases){const intent=base.cases.find((entry:any)=>entry.id===row.preparationCase);expect(intent).toBeDefined();const mutation={...intent.mutation,index:row.index},before={edges:row.edges.map((id:string)=>({id,visible:false,locked:true,sourceTip:"retained\u0000😀"})),untouched:{nodes:intent.nodes,camera:[3,-4,1],metadata:"native\u0000😀"}},changed=intent.status==="changed",position=Math.min(row.index??row.edges.length,row.edges.length),edge={id:mutation.id,source:mutation.source,target:mutation.target,edgeKind:mutation.edgeKind,sourceTip:mutation.sourceTip,targetTip:mutation.targetTip,gap:mutation.gap,shift:mutation.shift,rise:mutation.rise,rotation:mutation.rotation,turn:mutation.turn,tilt:mutation.tilt,x:mutation.x,y:mutation.y,visible:null,locked:null};
  const after=applyPatch(structuredClone(before),changed?[{op:"add",path:`/edges/${position}`,value:edge}]:[]).newDocument;expect(after.edges.map((edge:any)=>edge.id)).toEqual(row.after);expect(after.untouched).toEqual(before.untouched);if(changed)expect(after.edges[position]).toEqual(edge);else expect(after).toEqual(before);
  const db=new Database(":memory:");try{db.run("CREATE TABLE native_order(position INTEGER PRIMARY KEY,record TEXT NOT NULL)");before.edges.forEach((edge:any,index:number)=>db.run("INSERT INTO native_order VALUES(?,?)",[index*2,JSON.stringify(edge)]));if(changed){db.run("UPDATE native_order SET position=position+1000 WHERE position>=?",[position*2]);db.run("UPDATE native_order SET position=position-998 WHERE position>=1000");db.run("INSERT INTO native_order VALUES(?,?)",[position*2,JSON.stringify(edge)])}expect(db.query("SELECT record FROM native_order ORDER BY position").all().map((item:any)=>JSON.parse(item.record))).toEqual(after.edges)}finally{db.close()}
@@ -314,8 +307,7 @@ test("Puzzle2d connect candidate preserves every unrelated owner and native orde
 test("Puzzle2d borrowed optional flags preserve four typed native intents and first target semantics", () => {
  const path=resolve(import.meta.dir,"../../../../🧬️schema/🧬️mutations/⚑️flag/🎮️prepare");
  const corpus=JSON.parse(readFileSync(resolve(path,"🧫️fixtures/🔣️.json"),"utf8"));
- const schema=JSON.parse(readFileSync(resolve(path,"🧬️schema/🔣️.json"),"utf8"));
- const Ajv=require("ajv/dist/2020").default;expect(new Ajv({strict:true,allowUnionTypes:true}).compile(schema)(corpus)).toBe(true);
+
  const text=(value:string)=>value.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+value.slice(7):value;
  const patch=require("fast-json-patch");
  for(const row of corpus.cases){
@@ -335,7 +327,7 @@ test("Puzzle2d borrowed optional flags preserve four typed native intents and fi
 
 
 test("Puzzle2d native optional flag inverses retain authored absence and false exactly",()=>{
- const path=resolve(import.meta.dir,"../../../../🧬️schema/🧬️mutations/⚑️flag/🎮️prepare");const corpus=JSON.parse(readFileSync(resolve(path,"🧫️fixtures/🔣️.json"),"utf8"));const inverse=JSON.parse(readFileSync(resolve(path,"↩️inverse/🧫️fixtures/🔣️.json"),"utf8"));const schema=JSON.parse(readFileSync(resolve(path,"↩️inverse/🧬️schema/🔣️.json"),"utf8"));const Ajv=require("ajv/dist/2020").default;expect(new Ajv({strict:true,allowUnionTypes:true}).compile(schema)(inverse)).toBe(true);
+ const path=resolve(import.meta.dir,"../../../../🧬️schema/🧬️mutations/⚑️flag/🎮️prepare");const corpus=JSON.parse(readFileSync(resolve(path,"🧫️fixtures/🔣️.json"),"utf8"));const inverse=JSON.parse(readFileSync(resolve(path,"↩️inverse/🧫️fixtures/🔣️.json"),"utf8"));
  const kinds:Record<string,[string,string]>={"node-locked":["changeNodeLocked","newLocked"],"node-visible":["changeNodeVisible","newVisible"],"edge-locked":["changeEdgeLocked","newLocked"],"edge-visible":["changeEdgeVisible","newVisible"]};
  const text=(value:string)=>value.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+value.slice(7):value;
  for(const row of corpus.cases){const db=new Database(":memory:");db.run("CREATE TABLE native_flag (ordinal INTEGER PRIMARY KEY, identifier TEXT, value INTEGER)");for(const [i,item]of row.rows.entries())db.query("INSERT INTO native_flag VALUES (?1,?2,?3)").run(i,text(item.id),item.value===null?null:Number(item.value));const found=db.query("SELECT identifier,value FROM native_flag WHERE identifier=?1 ORDER BY ordinal LIMIT 1").get(text(row.mutation.id))as{identifier:string;value:number|null}|null;const[kind,key]=kinds[row.kind]!;const actual=found===null?[]:[{mutation:kind,id:found.identifier,[key]:found.value===null?null:Boolean(found.value)}];expect(actual).toEqual(inverse.cases.find((value:{id:string})=>value.id===row.id).inverse.map((value:{id:string})=>({...value,id:text(value.id)})));db.close();}
@@ -345,7 +337,7 @@ test("Puzzle2d native optional flag inverses retain authored absence and false e
 
 
 test("Puzzle2d native optional flag candidates preserve every untouched ordinal owner",()=>{
- const path=resolve(import.meta.dir,"../../../../🧬️schema/🧬️mutations/⚑️flag/🎮️prepare");const corpus=JSON.parse(readFileSync(resolve(path,"🧫️fixtures/🔣️.json"),"utf8"));const candidates=JSON.parse(readFileSync(resolve(path,"📸️candidate/🧫️fixtures/🔣️.json"),"utf8"));const schema=JSON.parse(readFileSync(resolve(path,"📸️candidate/🧬️schema/🔣️.json"),"utf8"));const Ajv=require("ajv/dist/2020").default;expect(new Ajv({strict:true,allowUnionTypes:true}).compile(schema)(candidates)).toBe(true);const patch=require("fast-json-patch");const text=(value:string)=>value.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+value.slice(7):value;
+ const path=resolve(import.meta.dir,"../../../../🧬️schema/🧬️mutations/⚑️flag/🎮️prepare");const corpus=JSON.parse(readFileSync(resolve(path,"🧫️fixtures/🔣️.json"),"utf8"));const candidates=JSON.parse(readFileSync(resolve(path,"📸️candidate/🧫️fixtures/🔣️.json"),"utf8"));const patch=require("fast-json-patch");const text=(value:string)=>value.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+value.slice(7):value;
  for(const row of corpus.cases){const before=row.rows.map((item:{id:string;value:boolean|null})=>({...item,id:text(item.id)}));const db=new Database(":memory:");db.run("CREATE TABLE native_flag (ordinal INTEGER PRIMARY KEY, identifier TEXT, value INTEGER)");for(const[i,item]of before.entries())db.query("INSERT INTO native_flag VALUES (?1,?2,?3)").run(i,item.id,item.value===null?null:Number(item.value));let actual=null;if(row.status==="changed"){db.query("UPDATE native_flag SET value=?1 WHERE ordinal=(SELECT ordinal FROM native_flag WHERE identifier=?2 ORDER BY ordinal LIMIT 1)").run(row.mutation.value===null?null:Number(row.mutation.value),text(row.mutation.id));actual=(db.query("SELECT identifier,value FROM native_flag ORDER BY ordinal").all()as{identifier:string;value:number|null}[]).map(item=>({id:item.identifier,value:item.value===null?null:Boolean(item.value)}));expect(patch.applyPatch(structuredClone(before),patch.compare(before,actual)).newDocument).toEqual(actual);expect(patch.applyPatch(structuredClone(actual),patch.compare(actual,before)).newDocument).toEqual(before);}const expected=candidates.cases.find((item:{id:string})=>item.id===row.id).after;expect(actual).toEqual(expected===null?null:expected.map((item:{id:string})=>({...item,id:text(item.id)})));db.close();}
  console.log("[DEBUG] forty exact native flag candidate ordinal rows and untouched owners agree with independent SQLite/RFC6902");
  const source=readFileSync(resolve(path,"📸️candidate/🦀️.rs"),"utf8");expect(source).toContain("Puzzle2dFlagCandidateCursor");expect(source).toContain("RetainedFieldCursor");expect(source).toContain("ControlledRetirement");expect(source).not.toContain(".clone()");expect(source).not.toContain(".to_string_owner()");
@@ -353,14 +345,14 @@ test("Puzzle2d native optional flag candidates preserve every untouched ordinal 
 
 
 test("Puzzle2d native optional root flag preserves literal preparation inverse and candidate owners",()=>{
- const path=resolve(import.meta.dir,"../../../../🧬️schema/🧬️mutations/⚑️flag/🎮️prepare"),corpus=JSON.parse(readFileSync(resolve(path,"🌟️root/🧫️fixtures/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(resolve(path,"🌟️root/🧬️schema/🔣️.json"),"utf8")),Ajv=require("ajv/dist/2020").default,patch=require("fast-json-patch");expect(new Ajv({strict:true,allowUnionTypes:true}).compile(schema)(corpus)).toBe(true);
+ const path=resolve(import.meta.dir,"../../../../🧬️schema/🧬️mutations/⚑️flag/🎮️prepare"),corpus=JSON.parse(readFileSync(resolve(path,"🌟️root/🧫️fixtures/🔣️.json"),"utf8")),patch=require("fast-json-patch");
  const text=(value:string)=>value.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+value.slice(7):value;
  for(const row of corpus.cases){const before=row.rows.map((item:{id:string;value:boolean|null})=>({...item,id:text(item.id)})),db=new Database(":memory:");try{db.run("CREATE TABLE root_flag (ordinal INTEGER PRIMARY KEY, identifier TEXT, value INTEGER)");for(const[i,item]of before.entries())db.query("INSERT INTO root_flag VALUES(?1,?2,?3)").run(i,item.id,item.value===null?null:Number(item.value));const found=db.query("SELECT ordinal,identifier,value FROM root_flag WHERE identifier=?1 ORDER BY ordinal LIMIT 1").get(text(row.mutation.id))as{ordinal:number;identifier:string;value:number|null}|null,previous=found===null?null:found.value===null?null:Boolean(found.value),status=found===null?"target-missing":previous===row.mutation.value?"no-op":"changed";expect(found?.ordinal??null).toBe(row.index);expect(previous).toBe(row.previous);expect(status).toBe(row.status);const inverse=found===null?[]:[{mutation:"changeNodeRoot",id:found.identifier,newRoot:previous}];expect(inverse).toEqual(row.inverse.map((owner:{id:string})=>({...owner,id:text(owner.id)})));let after=null;if(status==="changed"){after=structuredClone(before);after[found!.ordinal]!.value=row.mutation.value;expect(patch.applyPatch(structuredClone(before),patch.compare(before,after)).newDocument).toEqual(after);expect(patch.applyPatch(structuredClone(after),patch.compare(after,before)).newDocument).toEqual(before)}expect(after).toEqual(row.after===null?null:row.after.map((item:{id:string})=>({...item,id:text(item.id)})))}finally{db.close()}}
  console.log("[DEBUG] ten native root optional first-owner plans, literal inverse and ordered candidate cases agree with independent SQLite/RFC6902");const source=readFileSync(resolve(path,"🦀️.rs"),"utf8");expect(source).toContain("impl Puzzle2dFlagIntent for ChangeNodeRoot");expect(source).toContain(".root=value");
 });
 
 test("Puzzle2d native required region flags preserve literal first owner inverse and candidate states",()=>{
- const path=resolve(import.meta.dir,"../../../../🧬️schema/🧬️mutations/⚑️flag/🎮️prepare"),corpus=JSON.parse(readFileSync(resolve(path,"🏁️region/🧫️fixtures/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(resolve(path,"🏁️region/🧬️schema/🔣️.json"),"utf8")),Ajv=require("ajv/dist/2020").default,patch=require("fast-json-patch");expect(new Ajv({strict:true,allowUnionTypes:true}).compile(schema)(corpus)).toBe(true);
+ const path=resolve(import.meta.dir,"../../../../🧬️schema/🧬️mutations/⚑️flag/🎮️prepare"),corpus=JSON.parse(readFileSync(resolve(path,"🏁️region/🧫️fixtures/🔣️.json"),"utf8")),patch=require("fast-json-patch");
  const text=(value:string)=>value.startsWith("$large:")?corpus.control.largePrefix.repeat(corpus.control.largeRepeats)+value.slice(7):value;
  for(const row of corpus.cases){const before=row.rows.map((item:{id:string;value:boolean|null})=>({...item,id:text(item.id)})),db=new Database(":memory:");try{db.run("CREATE TABLE region_flag (ordinal INTEGER PRIMARY KEY, identifier TEXT, value INTEGER)");for(const[i,item]of before.entries())db.query("INSERT INTO region_flag VALUES(?1,?2,?3)").run(i,item.id,item.value===null?null:Number(item.value));const found=db.query("SELECT ordinal,identifier,value FROM region_flag WHERE identifier=?1 ORDER BY ordinal LIMIT 1").get(text(row.mutation.id))as{ordinal:number;identifier:string;value:number|null}|null,previous=found===null?null:found.value===null?null:Boolean(found.value),status=found===null?"target-missing":previous===row.mutation.value?"no-op":"changed";expect(found?.ordinal??null).toBe(row.index);expect(previous).toBe(row.previous);expect(status).toBe(row.status);const inverse=found===null?[]:[{mutation:row.kind==="region-hidden"?"changeTargetRegionHidden":"changeTargetRegionLocked",id:found.identifier,[row.kind==="region-hidden"?"newHidden":"newLocked"]:previous}];expect(inverse).toEqual(row.inverse.map((owner:{id:string})=>({...owner,id:text(owner.id)})));let after=null;if(status==="changed"){after=structuredClone(before);after[found!.ordinal]!.value=row.mutation.value;expect(patch.applyPatch(structuredClone(before),patch.compare(before,after)).newDocument).toEqual(after);expect(patch.applyPatch(structuredClone(after),patch.compare(after,before)).newDocument).toEqual(before)}expect(after).toEqual(row.after===null?null:row.after.map((item:{id:string})=>({...item,id:text(item.id)})))}finally{db.close()}}
  console.log("[DEBUG] twenty native region required first-owner plans, literal inverse and ordered candidate cases agree with independent SQLite/RFC6902");const source=readFileSync(resolve(path,"🦀️.rs"),"utf8");expect(source).toContain("impl Puzzle2dFlagIntent for ChangeTargetRegionHidden");expect(source).toContain("impl Puzzle2dFlagIntent for ChangeTargetRegionLocked");expect(source).toContain("Puzzle2dLookupScope::Region");

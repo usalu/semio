@@ -8,7 +8,7 @@ message SetLayer { string name = 1; optional int32 color_index = 2; optional str
 message SetBlockBasePoint { string name = 1; semio.s_stdio_semio_cad.snapshot.SemioPoint2 base_point = 2; }
 message SetEntityLayer { string handle = 1; string layer = 2; }
 message SetEntityGeometry { string handle = 1; semio.s_stdio_semio_cad.snapshot.CadEntity entity = 2; }
-message AddBlockEntity { string block_name = 1; semio.s_stdio_semio_cad.snapshot.CadEntityRecord entity = 2; }
+message AddBlockEntity { string block_name = 1; semio.s_stdio_semio_cad.snapshot.CadEntityRecord entity = 2; optional uint64 at = 3; }
 message RemoveBlockEntity { string block_name = 1; string handle = 2; }
 message SetBlockEntityLayer { string block_name = 1; string handle = 2; string layer = 3; }
 message SetBlockEntityGeometry { string block_name = 1; string handle = 2; semio.s_stdio_semio_cad.snapshot.CadEntity entity = 3; }

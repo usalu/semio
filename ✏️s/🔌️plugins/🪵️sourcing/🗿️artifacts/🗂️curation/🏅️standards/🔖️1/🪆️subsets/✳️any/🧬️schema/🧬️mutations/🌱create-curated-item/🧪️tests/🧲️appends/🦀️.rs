@@ -35,7 +35,7 @@ fn built_outcome() -> protocol::MutationOutcome<CurationDiff> {
 /// filtering, so the two existing picks keep both their order and their counts.
 #[semio_framework_async_macros::async_test]
 async fn appends_the_new_pick_at_the_tail() {
-    let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("create-curated-item applies to its committed before-document");
+    let applied = protocol::apply_diff(built_outcome().diff(), &before()).expect("create-curated-item applies to its committed before-document");
     assert_eq!(applied, expected_after(), "create-curated-item/appends-a-steel-plate-to-the-curation: the extended curation differs from the committed after-snapshot");
     assert_eq!(applied.curated.last().map(|item| item.object_id.as_str()), Some("plate-steel-8"), "create-curated-item/appends-a-steel-plate-to-the-curation: a created pick must land at the tail, not be spliced in");
 }
@@ -45,12 +45,12 @@ async fn appends_the_new_pick_at_the_tail() {
 #[semio_framework_async_macros::async_test]
 async fn deleting_the_new_pick_restores_before() {
     let base = before();
-    let mut snapshot = protocol::MutationDiff::apply(built_outcome().diff(), &base).expect("forward create-curated-item applies");
+    let mut snapshot = protocol::apply_diff(built_outcome().diff(), &base).expect("forward create-curated-item applies");
     let inverse = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "create-curated-item/appends-a-steel-plate-to-the-curation: the inverse of one create is exactly one delete");
     for step in &inverse {
         let undo = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::diff(step, &snapshot);
-        snapshot = protocol::MutationDiff::apply(undo.diff(), &snapshot).expect("the delete-curated-item inverse step applies");
+        snapshot = protocol::apply_diff(undo.diff(), &snapshot).expect("the delete-curated-item inverse step applies");
     }
     assert_eq!(snapshot, base, "create-curated-item/appends-a-steel-plate-to-the-curation: un-curating the steel plate did not restore the before-document");
 }
@@ -106,6 +106,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: CurationDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-curated-item diff decodes");
-    let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-document");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(produced, expected_after(), "create-curated-item/appends-a-steel-plate-to-the-curation: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

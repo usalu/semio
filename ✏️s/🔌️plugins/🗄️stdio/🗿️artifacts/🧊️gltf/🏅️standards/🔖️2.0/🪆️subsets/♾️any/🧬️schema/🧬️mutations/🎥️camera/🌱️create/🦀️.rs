@@ -1,4 +1,5 @@
 //! 🧬️ Direct create-camera mutation owner: payload, validation, typed diff, inverse, and outcomes.
+use crate::schema::diff::*;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::snapshot::*;
@@ -10,21 +11,34 @@ pub const TOUCHED_PATHS: &[&str] = &["document/cameras"];
 pub struct GltfCreateCameraPayload {
     pub position: usize,
     pub projection: GltfCameraProjection,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub camera: Option<Box<GltfCamera>>,
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn validate(payload: &GltfCreateCameraPayload, base: &GltfSnapshot) -> Result<(), GltfTopLevelMutationRejection> {
     if payload.position > base.document.cameras.len() {
         return Err(reject("gltf.mutation.insert-out-of-range", "document/cameras", "position must be within the collection"));
     }
+    if let Some(record) = &payload.camera {
+        if !(record.projection == payload.projection) {
+            return Err(reject("gltf.mutation.record-mismatch", "document/cameras", "the record must carry the fields the payload names"));
+        }
+    }
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfCreateCameraPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
-    let mut next = base.clone();
-    repair(&mut next.document, GltfTopLevelFamily::Cameras, &Change::Insert(payload.position))?;
-    next.document.cameras.insert(payload.position, GltfCamera { projection: payload.projection.clone(), name: None, extensions: None, extras: None });
-    Ok(next)
+pub fn plan(p: &GltfCreateCameraPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
+    validate(p, base)?;
+    let mut diff = rewire(base, GltfTopLevelFamily::Cameras, &mut after_insert(p.position));
+    diff.cameras.get_or_insert_with(Default::default).added.push(GltfAdded { index: p.position, item: p.camera.as_deref().cloned().unwrap_or_else(|| GltfCamera { projection: p.projection.clone(), name: None, extensions: None, extras: None }) });
+    Ok(diff)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(p: &GltfCreateCameraPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    if validate(p, base).is_err() {
+        return Vec::new();
+    }
+    vec![super::delete_camera::mutation(super::delete_camera::GltfDeleteCameraPayload { index: p.position })]
 }
 
 //#region 🧬️DirectMutation
@@ -33,7 +47,11 @@ pub fn apply(payload: &GltfCreateCameraPayload, base: &GltfSnapshot) -> Result<G
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum CreateCameraMutation {
     Apply(GltfCreateCameraPayload),
-    Restore(Box<crate::schema::diff::GltfDiff>),
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutation(payload: GltfCreateCameraPayload) -> super::GltfMutation {
+    super::GltfMutation::CreateCamera(CreateCameraMutation::Apply(payload))
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateCameraMutation {
@@ -41,28 +59,18 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for CreateCameraM
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => match apply(payload, base) {
-                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Self::Apply(payload) => match plan(payload, base) {
+                Ok(diff) => protocol::MutationOutcome::new(diff),
                 Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
-            },
-            Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
-                Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-                Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
             },
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
-            return Vec::new();
+        match self {
+            Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::GltfMutation::CreateCamera(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Create Camera", "Kamera erstellen")

@@ -78,7 +78,6 @@ Feature: Apply every typed semio VIDEO mutation to a real recording, against an 
     Then the independent implementation and the subject agree on the resulting snapshot
     Examples:
       | id               | mutation                                                                                                                                                                                                                     |
-      | set-snapshot     | {"mutation":"setSnapshot","snapshot":{"schema":"stdio.semio.video","streams":[{"kind":"subtitle","codec":"srt","width":0,"height":0,"rate":{"num":1,"den":1},"samples":[{"pts":0,"key":true,"data":[66,97,117,101,114]}]}]}} |
       | insert-stream    | {"mutation":"insertStream","index":0,"stream":{"kind":"subtitle","codec":"srt","width":0,"height":0,"rate":{"num":1,"den":1},"samples":[]}}                                                                                  |
       | remove-stream    | {"mutation":"removeStream","index":0}                                                                                                                                                                                        |
       | set-stream-meta  | {"mutation":"setStreamMeta","index":0,"kind":"video","codec":"vp9","width":1280,"height":720,"rate":{"num":60,"den":1}}                                                                                                      |
@@ -86,18 +85,6 @@ Feature: Apply every typed semio VIDEO mutation to a real recording, against an 
       | remove-sample    | {"mutation":"removeSample","streamIndex":0,"index":0}                                                                                                                                                                        |
       | set-sample-data  | {"mutation":"setSampleData","streamIndex":0,"index":4,"data":[255,216,255,224,0,16,74,70,73,70]}                                                                                                                             |
       | set-sample-flags | {"mutation":"setSampleFlags","streamIndex":0,"index":0,"pts":500,"key":false}                                                                                                                                                |
-      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/streams/0/codec", "value": "vp9"}} |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real recording
-    Given the real recording shared://🎥️mutate-semio-video/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
-    When the no-mutation mutation is applied to the recording parsed from it
-      """
-      {"mutation":"noMutation"}
-      """
-    Then the independent implementation and the subject agree on the resulting snapshot
 
   @id-inverse
   @level-exhaustive
@@ -111,7 +98,6 @@ Feature: Apply every typed semio VIDEO mutation to a real recording, against an 
     Then both sides restore the recording and agree on the mutated and the restored snapshot
     Examples:
       | id               | mutation                                                                                                                                                                                                                     |
-      | set-snapshot     | {"mutation":"setSnapshot","snapshot":{"schema":"stdio.semio.video","streams":[{"kind":"subtitle","codec":"srt","width":0,"height":0,"rate":{"num":1,"den":1},"samples":[{"pts":0,"key":true,"data":[66,97,117,101,114]}]}]}} |
       | insert-stream    | {"mutation":"insertStream","index":0,"stream":{"kind":"subtitle","codec":"srt","width":0,"height":0,"rate":{"num":1,"den":1},"samples":[]}}                                                                                  |
       | remove-stream    | {"mutation":"removeStream","index":0}                                                                                                                                                                                        |
       | set-stream-meta  | {"mutation":"setStreamMeta","index":0,"kind":"video","codec":"vp9","width":1280,"height":720,"rate":{"num":60,"den":1}}                                                                                                      |
@@ -119,18 +105,6 @@ Feature: Apply every typed semio VIDEO mutation to a real recording, against an 
       | remove-sample    | {"mutation":"removeSample","streamIndex":0,"index":0}                                                                                                                                                                        |
       | set-sample-data  | {"mutation":"setSampleData","streamIndex":0,"index":4,"data":[255,216,255,224,0,16,74,70,73,70]}                                                                                                                             |
       | set-sample-flags | {"mutation":"setSampleFlags","streamIndex":0,"index":0,"pts":500,"key":false}                                                                                                                                                |
-      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/streams/0/codec", "value": "vp9"}} |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing no-mutation restores the real recording
-    Given the real recording shared://🎥️mutate-semio-video/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
-    When the no-mutation mutation is applied to the recording parsed from it and each side undoes it with its own computed inverse
-      """
-      {"mutation":"noMutation"}
-      """
-    Then both sides restore the recording and agree on the mutated and the restored snapshot
 
   @id-spec-vector
   @level-exhaustive
@@ -141,8 +115,6 @@ Feature: Apply every typed semio VIDEO mutation to a real recording, against an 
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id | fixture |
-      | no-mutation | ⏸️no-mutation |
-      | set-snapshot | 📸️set-snapshot |
       | insert-stream | 🎥️insert-stream |
       | remove-stream | 🗑️remove-stream |
       | set-stream-meta | 📋️set-stream-meta |
@@ -156,7 +128,7 @@ Feature: Apply every typed semio VIDEO mutation to a real recording, against an 
   @mode-round-trip
   Scenario: Re-emit the committed encodings of the demo clip and of the real recording
     Given the real committed video artifact asset://🎥️clip/🗣️.dsl.semio
-    And the committed specification vector shared://🎥️mutate-semio-video/⏸️no-mutation/🦠️mutation/🔣️.json whose before-snapshot is that artifact decoded
+    And the committed specification vector shared://🎥️mutate-semio-video/➕️insert-sample/🦠️mutation/🔣️.json whose before-snapshot is that artifact decoded
     And the real recording shared://🎥️mutate-semio-video/🏚️bauen-mit-bestand-ausschnitt/🗣️.dsl.semio
     When each implementation parses both artifacts, prints them back and parses the printed text again
     Then both reproduce the two files byte for byte and agree on both documents and on the digests of what they emitted

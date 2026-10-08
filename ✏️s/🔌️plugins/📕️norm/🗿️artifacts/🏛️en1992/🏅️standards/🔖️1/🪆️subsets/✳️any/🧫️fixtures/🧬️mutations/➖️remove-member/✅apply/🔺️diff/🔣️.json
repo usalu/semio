@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "annex": null,
   "title": null,
   "designWorkingLifeYears": null,
@@ -9,7 +8,12 @@
   "reinforcementGrades": null,
   "prestressSteels": null,
   "members": {
-    "values": []
+    "added": [],
+    "removed": [
+      "wall-W1"
+    ],
+    "modified": [],
+    "order": null
   },
   "anchors": null
 }

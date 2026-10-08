@@ -1,0 +1,41 @@
+[package]
+workspace = "../../../.."
+name = "semio-framework-canvas"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Application-neutral Canvas drawing, geometry, labels and rendering ports"
+
+[package.metadata.semio]
+role = "framework"
+id = "canvas"
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_canvas"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-framework-async = { workspace = true }
+geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+base64_codec = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+ui_styling = { path = "../../../🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+compiler = { path = "../../../📚️compiler/📦️packages/🦀️rust", package = "semio-framework-compiler" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+[target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
+vello = { version = "0.9.0", features = ["wgpu", "wgpu_default"] }
+vello_svg = { version = "0.10.0", default-features = true, features = ["wgpu"] }
+kurbo = "0.13.1"
+peniko = "0.6.1"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
+[target.'cfg(all(target_arch = "wasm32", target_env = "p2"))'.dependencies]
+semio-framework-intrinsic-size = { path = "../../../📏️intrinsic-size/📦️packages/🦀️rust" }
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
+wasm-bindgen = { workspace = true }
+js-sys = "0.3.83"
+web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }

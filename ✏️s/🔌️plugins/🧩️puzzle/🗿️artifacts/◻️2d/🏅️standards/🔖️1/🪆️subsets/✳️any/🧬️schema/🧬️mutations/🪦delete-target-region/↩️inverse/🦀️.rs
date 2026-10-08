@@ -9,7 +9,8 @@ pub fn inverse(payload: &super::DeleteTargetRegion, base: &Puzzle2dSnapshot) -> 
     let Some(region) = base.target_regions.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };
-    vec![crate::standards::v1::subsets::any::schema::mutations::create_target_region::create_target_region(region.clone(), None)]
+    let index = base.target_regions.iter().position(|entry| entry.id == payload.id);
+    vec![crate::standards::v1::subsets::any::schema::mutations::create_target_region::create_target_region(region.clone(), index)]
 
     })())
 }

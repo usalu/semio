@@ -1,0 +1,380 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "⚖️gate🌉️os-mcp🤖️live-agent-loop🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:live-agent-loop-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.10758
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🤖️live-agent-loop🌐️de🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:live-agent-loop-check",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_MCP_LIVE_LOCALE": "de",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107582
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🤝️hub-edit-durability🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:hub-edit-durability-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107585
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🤝️hub-agent-participant🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:hub-agent-participant-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.10759
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp💬️agent-reply🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:agent-reply-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107595
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🧩️plugin-coverage🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:plugin-coverage-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.28
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🚶️user-path🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:user-path-check",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OS_MCP_HUB_ORIGIN": "${input:acceptanceHubUrl}",
+        "S_OS_MCP_LIVE_SHELL_URL": "${input:acceptanceServeUrl}",
+        "S_OS_MCP_LIVE_LOCALE": "en",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.29
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🚶️user-path🌐️de🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:user-path-check",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OS_MCP_HUB_ORIGIN": "${input:acceptanceHubUrl}",
+        "S_OS_MCP_LIVE_SHELL_URL": "${input:acceptanceServeUrl}",
+        "S_OS_MCP_LIVE_LOCALE": "de",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.3
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🛡️security🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:security-check",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OS_MCP_HUB_ORIGIN": "${input:acceptanceHubUrl}",
+        "OS_HUB_ADMIN_CAPABILITY_FILE": "${input:acceptanceHubAdminCapability}",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.301
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp💼️inference-quartet🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:inference-quartet-check",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OS_MCP_HUB_ORIGIN": "${input:acceptanceHubUrl}",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.302
+      }
+    },
+    {
+      "name": "⚖️source-check💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:source-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.33
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      }
+    },
+    {
+      "name": "⚖️native-check💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:native-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.33
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      }
+    },
+    {
+      "name": "⚖️check💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.33
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      }
+    },
+    {
+      "name": "⚖️native-build💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:native-build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.33
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      }
+    },
+    {
+      "name": "⚖️native-build-release💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:native-build-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.33
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      }
+    },
+    {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "⚖️services-mcp-composition-source🧩️s🟦️🌍️gis",
+      "command": "bun nx run @semio-tech/s-gis-services-native:mcp-composition-source-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.18
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      }
+    },
+    {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "⚖️services-mcp-untrusted-content🧩️s🟦️🌍️gis",
+      "command": "bun nx run @semio-tech/s-gis-services-native:untrusted-content-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.1801
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      }
+    },
+    {
+      "type": "node-terminal",
+      "request": "launch",
+      "name": "⚖️services-fixture-ownership🧩️s🦀️🌍️gis",
+      "command": "bun nx run @semio-tech/s-gis-services-native:fixture-ownership-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.1802
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      }
+    },
+    {
+      "name": "⚖️canonical-pair-composition-check💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:canonical-pair-composition-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0297
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      }
+    },
+    {
+      "name": "📦️mcp-build💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:mcp-build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.0032
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      }
+    },
+    {
+      "name": "📦️mcp-build-release💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:mcp-build-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 900.0033
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      }
+    },
+    {
+      "name": "⚖️mcp-check💡️services🦀️🌍️gis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:mcp-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0298
+      },
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      }
+    },
+    {
+      "name": "⚖️s-neutral-services-native-focused🧩️s🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-services-native:check --outputStyle=stream --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.234
+      }
+    },
+    {
+      "name": "⚖️s-gis-services-runtime-focused🧩️s🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:native-check --outputStyle=stream --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.235
+      }
+    },
+    {
+      "name": "⚖️s-gis-services-source-focused🧩️s🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:source-check --outputStyle=stream --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.236
+      }
+    },
+    {
+      "name": "⚖️s-gis-mcp-composition-focused🧩️s🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/s-gis-services-native:mcp-composition-source-check --outputStyle=stream --excludeTaskDependencies",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/s-composition/native"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.237
+      }
+    }
+  ],
+  "retireNames": []
+}

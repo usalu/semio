@@ -8,8 +8,8 @@ use crate::ProgramSnapshot;
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::DeletePerformanceCriterion, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    match base.performance.iter().find(|row| row.header.id == payload.id) {
-        Some(existing) => vec![ProgramMutation::CreatePerformanceCriterion(super::super::create_performance_criterion::CreatePerformanceCriterion { performance_criterion: existing.clone() })],
+    match base.performance.iter().position(|row| row.header.id == payload.id) {
+        Some(position) => vec![ProgramMutation::CreatePerformanceCriterion(super::super::create_performance_criterion::CreatePerformanceCriterion { performance_criterion: base.performance[position].clone(), index: Some(position) })],
         None => Vec::new(),
     }
 

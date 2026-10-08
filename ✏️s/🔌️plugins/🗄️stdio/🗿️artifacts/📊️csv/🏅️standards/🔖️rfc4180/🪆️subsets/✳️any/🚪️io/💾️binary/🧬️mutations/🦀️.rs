@@ -3,14 +3,11 @@
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
 use crate::standards::v_rfc4180::subsets::any::schema::mutations::*;
-use crate::schema::diff::{diff_set_snapshot, CsvDiff, CsvFieldDiff, CsvRecordAdded, CsvRecordDiff, CsvRecordModified, CsvRecordsDiff};
+use crate::schema::diff::{CsvDiff, CsvFieldDiff, CsvRecordAdded, CsvRecordDiff, CsvRecordModified, CsvRecordsDiff};
 use crate::standards::v_rfc4180::subsets::any::io::text::diff::{dec_str};
 use crate::standards::v_rfc4180::subsets::any::io::text::diff::{enc_str};
 use crate::standards::v_rfc4180::subsets::any::io::text::diff::{dec_record};
@@ -103,14 +100,6 @@ impl OpBinary for CsvMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let mut w = dsl::ByteWriter::new();
         match self {
-            CsvMutation::PatchSnapshot(payload) => {
-                w.write_u8(super::patch_snapshot::BINARY_TAG);
-                w.write_bytes(&payload.patch.encode_op()?);
-            }
-            CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => {
-                w.write_u8(TAG_SET_SNAPSHOT);
-                write_bin_snapshot(&mut w, snapshot);
-            }
             CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header }) => {
                 w.write_u8(TAG_SET_HAS_HEADER);
                 w.write_u8(if *has_header { 1 } else { 0 });
@@ -138,8 +127,6 @@ impl OpBinary for CsvMutation {
         let mut r = dsl::ByteReader::new(bytes);
         let ordinal = r.read_u8().map_err(protocol::ProtocolError::from)?;
         let mutation = match ordinal {
-            super::patch_snapshot::BINARY_TAG => return super::patch_snapshot::decode(&bytes[1..]),
-            TAG_SET_SNAPSHOT => CsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: read_bin_snapshot(&mut r).map_err(protocol::ProtocolError::from)? }),
             TAG_SET_HAS_HEADER => CsvMutation::SetHasHeader(set_has_header::SetHasHeader { has_header: r.read_u8().map_err(protocol::ProtocolError::from)? != 0 }),
             TAG_INSERT_RECORD => {
                 let index = r.read_varint_u64().map_err(protocol::ProtocolError::from)? as usize;
@@ -167,7 +154,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `CsvMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
 const TAG_SET_HAS_HEADER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-has-header");
 const TAG_INSERT_RECORD: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-record");
 const TAG_REMOVE_RECORD: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-record");

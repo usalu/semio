@@ -54,7 +54,7 @@ const JPG_TOLERANCE: f64 = 400_000.0;
 /// list — including `change-jfif-header`, `insert-other-segment` and `remove-other-segment`, which are
 /// written to real bytes — must move the projection, and the law below fails the scenario if it
 /// does not.
-const UNOBSERVABLE: &[&str] = &["replace-quant-table", "remove-quant-table", "replace-huffman-table", "remove-huffman-table", "change-restart-interval"];
+const UNOBSERVABLE: &[&str] = &[];
 
 /// 🔲️ The whole-raster kinds, whose rows run on a 32x24 document: its 768 pixels are fewer than [`JPG_TOLERANCE`],
 /// which is sized for the scan and would excuse ANY change there, so their observability claim is exact — the
@@ -128,7 +128,7 @@ fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
     law::reparsed_not_copied(&bytes, &original)?;
     let before = project_jpg_mutation(&original)?;
     let projection = project_jpg_mutation(&bytes)?;
-    law::round_trip_preserves_within(&projection, &before, &["quantTables"], JPG_TOLERANCE)?;
+    law::round_trip_preserves_within(&projection, &before, &[], JPG_TOLERANCE)?;
     Ok(Outcome::with_raw(bytes, projection))
 }
 //#endregion 🔖️Oracle
@@ -158,7 +158,7 @@ mod subject {
         let bytes = mutable_input(ctx)?;
         let mut snapshot = decode_jpg(&bytes).map_err(|error| format!("decode_jpg failed: {error:?}"))?;
         apply_jpg_mutation(&mut snapshot, &mutation_from_spec(&ctx.doc_json()?)?);
-        let output = encode_jpg(&snapshot, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snapshot.frame.as_ref())).map_err(|error| format!("encode_jpg failed: {error:?}"))?;
+        let output = encode_jpg(&snapshot, &semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).map_err(|error| format!("encode_jpg failed: {error:?}"))?;
         if output == bytes {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
@@ -180,7 +180,7 @@ mod subject {
         for undo in mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_jpg_mutation(&mut snapshot, &undo);
         }
-        let output = encode_jpg(&snapshot, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snapshot.frame.as_ref())).map_err(|error| format!("encode_jpg (restore) failed: {error:?}"))?;
+        let output = encode_jpg(&snapshot, &semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).map_err(|error| format!("encode_jpg (restore) failed: {error:?}"))?;
         if output == bytes {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }
@@ -192,7 +192,7 @@ mod subject {
     pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
         let bytes = mutable_input(ctx)?;
         let snapshot = decode_jpg(&bytes).map_err(|error| format!("decode_jpg failed: {error:?}"))?;
-        let output = encode_jpg(&snapshot, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snapshot.frame.as_ref())).map_err(|error| format!("encode_jpg failed: {error:?}"))?;
+        let output = encode_jpg(&snapshot, &semio_s_artifact_stdio_jpg::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).map_err(|error| format!("encode_jpg failed: {error:?}"))?;
         if output == bytes {
             return Err("byte pass-through: output is bit-identical to the input".to_string());
         }

@@ -85,7 +85,7 @@ pub fn project_package(_input: &[u8]) -> Result<Json, String> {
 
 //#region 🔖️Stamp
 /// 🏅️ Stamps the whole package into (`strict`) or out of the strict conformance class — the reference half of the
-/// `mutate-set-snapshot`/`inverse-set-snapshot` scenarios, whose subject replaces its whole snapshot with its own stamp (`set-snapshot`).
+/// `mutate-stamp-strict-class`/`inverse-stamp-strict-class` scenarios, whose subject applies the namespace, relationship-base and conformance-attribute stamp mutations.
 #[cfg(feature = "oracles")]
 pub fn oracle_stamp(input: &[u8], strict: bool) -> Result<Vec<u8>, String> {
     let mut parts = semio_s_plugin_stdio_document_test_oracle::ooxml::read_parts(input)?;

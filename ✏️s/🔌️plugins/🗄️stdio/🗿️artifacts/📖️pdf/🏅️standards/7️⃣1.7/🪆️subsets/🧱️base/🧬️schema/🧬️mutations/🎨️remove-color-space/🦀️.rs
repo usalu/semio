@@ -26,7 +26,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveColorSpace {
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.color_spaces.iter().find(|item| item.name == self.name).map(|item| PdfMutation::SetColorSpace(super::set_color_space::SetColorSpace { color_space: item.clone() })).into_iter().collect()
+        base.color_spaces.iter().position(|item| item.name == self.name).map(|index| PdfMutation::SetColorSpace(super::set_color_space::SetColorSpace { color_space: base.color_spaces[index].clone(), index: Some(index) })).into_iter().collect()
     
     })())
 }

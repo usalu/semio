@@ -3,5 +3,5 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/png/1.2/any/mutations/text.json",
   "title": "PngMutationText",
   "type": "string",
-  "pattern": "^(?:change-gamma|set-snapshot|patch-pixels|patch-snapshot|paint-native-samples)(?: |$)"
+  "pattern": "^(?:replace-image|change-gamma|patch-pixels|paint-native-samples)(?: |$)"
 }

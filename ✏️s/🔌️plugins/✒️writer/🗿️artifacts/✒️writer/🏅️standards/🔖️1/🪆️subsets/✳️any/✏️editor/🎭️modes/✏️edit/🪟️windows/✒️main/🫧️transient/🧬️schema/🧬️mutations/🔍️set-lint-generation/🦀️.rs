@@ -1,4 +1,4 @@
-use super::{WriterMainWindowTransient, WriterMainWindowTransientMutation};
+use super::{WriterMainWindowTransient, WriterMainWindowTransientDiff, WriterMainWindowTransientMutation};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "set-lint-generation")]
@@ -9,11 +9,10 @@ pub struct SetLintGeneration {
 
 impl protocol::MutationKind<WriterMainWindowTransient, WriterMainWindowTransientMutation> for SetLintGeneration {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "writer-window-lint-generation", kind: "set-lint-generation", record: "SetLintGeneration" };
-    fn diff(&self, base: &WriterMainWindowTransient) -> protocol::MutationOutcome<WriterMainWindowTransient> {
-        let mut next = base.clone();
-        next.lint_generation = self.value;
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, base: &WriterMainWindowTransient) -> protocol::MutationOutcome<WriterMainWindowTransientDiff> {
+        protocol::MutationOutcome::new(WriterMainWindowTransientDiff { lint_generation: (base.lint_generation != self.value).then_some(self.value), ..Default::default() })
     }
+
     fn inverse(&self, base: &WriterMainWindowTransient) -> Result<Vec<WriterMainWindowTransientMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         vec![Self { value: base.lint_generation }.into()]
@@ -25,5 +24,17 @@ impl protocol::MutationKind<WriterMainWindowTransient, WriterMainWindowTransient
     }
     fn target(&self) -> Vec<String> {
         vec!["lint_generation".into()]
+    }
+}
+
+#[cfg(test)]
+mod law_tests {
+    use super::*;
+
+    /// ⚖️ The inverse diffs sum to the negative of the forward diff (L3).
+    #[semio_framework_async_macros::async_test]
+    async fn inverse_diffs_sum_to_the_negative_diff() {
+        let base = WriterMainWindowTransient::default();
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&WriterMainWindowTransientMutation::from(SetLintGeneration { value: 7 }), &base).await;
     }
 }

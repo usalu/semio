@@ -36,7 +36,10 @@ pub fn diff(payload: &super::CreateFenestration, base: &EnergyModelSnapshot) -> 
     if !payload.sill_height_m.is_finite() || payload.sill_height_m < 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Fenestration {} needs a non-negative finite sill height.", payload.id.0), [payload.id.0.to_string()]);
     }
-    let position = base.model.fenestrations.iter().position(|item| item.id > payload.id).unwrap_or(base.model.fenestrations.len());
+    let position = payload.index.map_or_else(|| base.model.fenestrations.iter().position(|item| item.id > payload.id).unwrap_or(base.model.fenestrations.len()), |index| index as usize);
+    if position > base.model.fenestrations.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} fenestrations.", position, base.model.fenestrations.len()), [payload.id.0.to_string()]);
+    }
     protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { fenestrations: Rows::inserting(position, crate::model::Fenestration {
             id: payload.id,
             name: payload.name.clone(),

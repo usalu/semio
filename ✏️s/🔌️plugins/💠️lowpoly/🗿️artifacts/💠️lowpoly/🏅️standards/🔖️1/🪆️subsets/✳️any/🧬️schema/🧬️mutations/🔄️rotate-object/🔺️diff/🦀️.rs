@@ -4,7 +4,7 @@
 
 use super::RotateObject;
 use crate::diff::diff_objects_patch;
-use crate::{LowpolyDiff, LowpolyObjectPatch, LowpolySnapshot, LowpolyTransform};
+use crate::{LowpolyDiff, LowpolyObjectPatch, LowpolySnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &RotateObject, base: &LowpolySnapshot) -> protocol::MutationOutcome<LowpolyDiff> {
@@ -17,7 +17,6 @@ pub fn diff(payload: &RotateObject, base: &LowpolySnapshot) -> protocol::Mutatio
     if existing.transform.rotation == payload.new_rotation {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Object \"{}\" is already at rotation {:?}.", payload.id, payload.new_rotation));
     }
-    let transform = LowpolyTransform { rotation: payload.new_rotation, ..existing.transform.clone() };
-    protocol::MutationOutcome::new(diff_objects_patch(payload.id.clone(), LowpolyObjectPatch { transform: Some(transform), ..LowpolyObjectPatch::default() }))
+    protocol::MutationOutcome::new(diff_objects_patch(payload.id.clone(), LowpolyObjectPatch { rotation: Some(payload.new_rotation), ..LowpolyObjectPatch::default() }))
 }
 //#endregion 🔖️Diff

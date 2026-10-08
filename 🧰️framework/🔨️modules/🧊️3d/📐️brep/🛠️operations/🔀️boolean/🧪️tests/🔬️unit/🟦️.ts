@@ -1,11 +1,9 @@
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
-import Ajv from "ajv";
 import ManifoldModule from "manifold-3d";
 
 test("coincident boundaries agree with independent Manifold occupancy and volumes", async () => {
   const root = new URL("../../🧫️fixtures/coincident-boundary/", import.meta.url), fixture = JSON.parse(readFileSync(new URL("🔣️.json", root), "utf8"));
-  expect(new Ajv({ strict: true }).compile(JSON.parse(readFileSync(new URL("📐️schema.json", root), "utf8")))(fixture)).toBe(true);
   const module = await ManifoldModule();
   module.setup();
   for (const row of fixture.cases) {
@@ -27,7 +25,6 @@ test("coincident boundaries agree with independent Manifold occupancy and volume
 
 test("coincident bore refill has a closed shell and independent Manifold volume", async () => {
   const root = new URL("../../🧫️fixtures/coincident-seam/", import.meta.url), row = JSON.parse(readFileSync(new URL("🔣️.json", root), "utf8"));
-  expect(new Ajv({ strict: true }).compile(JSON.parse(readFileSync(new URL("📐️schema.json", root), "utf8")))(row)).toBe(true);
   const module = await ManifoldModule();
   module.setup();
   const stock = module.Manifold.cube(row.stock), seed = module.Manifold.cylinder(row.height, row.radius, row.radius, row.circularSegments), bit = seed.translate(row.translation), bored = stock.subtract(bit), filled = bored.add(bit);

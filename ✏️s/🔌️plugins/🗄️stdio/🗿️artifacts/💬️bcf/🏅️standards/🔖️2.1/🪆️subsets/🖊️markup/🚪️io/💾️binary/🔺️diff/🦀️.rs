@@ -263,50 +263,52 @@ pub(crate) fn dec_part_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfRawP
     Ok(BcfRawPart { name, data })
 }
 
-/// 🏷️ Binary twin of `enc_named_triple`/`dec_named_triple` -- three varint-counted sections
-/// (removed keys / modified key+diff pairs / added whole items), generic over `K`/`D`/`T`.
+/// 🏷️ Binary twin of `enc_indexed_triple`/`dec_indexed_triple` -- three varint-counted sections
+/// (removed base indices / modified index+diff pairs / added index+item pairs), generic over `T`/`D`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_named_triple_bin<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K, &mut Vec<u8>), enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
+pub(crate) fn enc_indexed_triple_bin<T, D>(triple: &IndexedDiff<T, D>, enc_d: impl Fn(&D, &mut Vec<u8>), enc_t: impl Fn(&T, &mut Vec<u8>), out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, triple.removed.len() as u64);
-    for k in &triple.removed {
-        enc_k(k, out);
+    for index in &triple.removed {
+        store::pack_rt::write_varint_u64(out, *index as u64);
     }
     store::pack_rt::write_varint_u64(out, triple.modified.len() as u64);
     for m in &triple.modified {
-        enc_k(&m.key, out);
+        store::pack_rt::write_varint_u64(out, m.index as u64);
         enc_d(&m.diff, out);
     }
     store::pack_rt::write_varint_u64(out, triple.added.len() as u64);
-    for t in &triple.added {
-        enc_t(t, out);
+    for a in &triple.added {
+        store::pack_rt::write_varint_u64(out, a.index as u64);
+        enc_t(&a.item, out);
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_named_triple_bin<K, D, T>(
+pub(crate) fn dec_indexed_triple_bin<T, D>(
     reader: &mut store::ByteReader<'_>,
-    dec_k: impl Fn(&mut store::ByteReader<'_>) -> Result<K, String>,
     dec_d: impl Fn(&mut store::ByteReader<'_>) -> Result<D, String>,
     dec_t: impl Fn(&mut store::ByteReader<'_>) -> Result<T, String>,
-) -> Result<NamedTripleDiff<K, D, T>, String> {
+) -> Result<IndexedDiff<T, D>, String> {
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(dec_k(reader)?);
+        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())? as usize);
     }
     let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
     for _ in 0..modified_count {
-        let key = dec_k(reader)?;
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
         let diff = dec_d(reader)?;
-        modified.push(NamedModified { key, diff });
+        modified.push(IndexedModified { index, diff });
     }
     let added_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut added = Vec::with_capacity(added_count as usize);
     for _ in 0..added_count {
-        added.push(dec_t(reader)?);
+        let index = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
+        let item = dec_t(reader)?;
+        added.push(IndexedAdded { index, item });
     }
-    Ok(NamedTripleDiff { removed, modified, added })
+    Ok(IndexedDiff { removed, modified, added })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -378,22 +380,22 @@ pub(crate) fn dec_part_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<Bc
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_comments_diff_bin(d: &BcfCommentsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_comment_diff_bin, enc_comment_bin, out);
+    enc_indexed_triple_bin(d, enc_comment_diff_bin, enc_comment_bin, out);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_comments_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCommentsDiff, String> {
-    dec_named_triple_bin(reader, read_str_lp, dec_comment_diff_bin, dec_comment_bin)
+    dec_indexed_triple_bin(reader, dec_comment_diff_bin, dec_comment_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_viewpoints_diff_bin(d: &BcfViewpointsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_viewpoint_diff_bin, enc_viewpoint_bin, out);
+    enc_indexed_triple_bin(d, enc_viewpoint_diff_bin, enc_viewpoint_bin, out);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_viewpoints_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpointsDiff, String> {
-    dec_named_triple_bin(reader, read_str_lp, dec_viewpoint_diff_bin, dec_viewpoint_bin)
+    dec_indexed_triple_bin(reader, dec_viewpoint_diff_bin, dec_viewpoint_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -434,22 +436,22 @@ pub(crate) fn dec_topic_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<B
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_topics_diff_bin(d: &BcfTopicsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_topic_diff_bin, enc_topic_bin, out);
+    enc_indexed_triple_bin(d, enc_topic_diff_bin, enc_topic_bin, out);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_topics_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTopicsDiff, String> {
-    dec_named_triple_bin(reader, read_str_lp, dec_topic_diff_bin, dec_topic_bin)
+    dec_indexed_triple_bin(reader, dec_topic_diff_bin, dec_topic_bin)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_parts_diff_bin(d: &BcfPartsDiff, out: &mut Vec<u8>) {
-    enc_named_triple_bin(d, |k, out| write_str_lp(out, k), enc_part_diff_bin, enc_part_bin, out);
+    enc_indexed_triple_bin(d, enc_part_diff_bin, enc_part_bin, out);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_parts_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPartsDiff, String> {
-    dec_named_triple_bin(reader, read_str_lp, dec_part_diff_bin, dec_part_bin)
+    dec_indexed_triple_bin(reader, dec_part_diff_bin, dec_part_bin)
 }
 
 impl protocol::DiffBinary for BcfDiff {

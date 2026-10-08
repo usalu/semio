@@ -3,7 +3,7 @@
 use crate::op::WriterMutation;
 use crate::schema;
 use crate::WriterSnapshot;
-use protocol::{Mutation, MutationDiff, OpBinary};
+use protocol::{Mutation, OpBinary};
 use store::ArtifactEnvelopeMutationFieldTarget;
 pub fn writer_document_store_owners() -> store::DocumentStoreOwners<WriterSnapshot, WriterMutation> {
     store::DocumentStoreOwners::new(

@@ -4,10 +4,54 @@ import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 import "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 message EquationDiff {
-  optional semio.s.mathematical.equation.artifact.EquationGraph graph = 1;
-  optional semio.s.mathematical.equation.artifact.EquationGeometry geometry = 2;
-  optional semio.os.store.ArtifactChild notation = 3;
-  optional semio.os.store.ArtifactChild results = 4;
-  optional semio.os.store.ArtifactChild computed = 5;
-  optional semio.framework.value.DslValue equation = 6;
+  optional bool directed = 1;
+  optional string algorithm = 2;
+  optional EquationOptionalSeed algorithm_seed = 3;
+  optional EquationNodesDelta nodes = 4;
+  optional EquationEdgesDelta edges = 5;
+  optional EquationPointsDelta points = 6;
+  optional semio.os.store.ArtifactChild notation = 7;
+  optional semio.os.store.ArtifactChild results = 8;
+  optional semio.os.store.ArtifactChild computed = 9;
+  optional EquationExprDiff equation = 10;
 }
+message EquationOptionalSeed { optional string value = 1; }
+message EquationNodesDelta {
+  repeated semio.s.mathematical.equation.artifact.EquationNode added = 1;
+  repeated string removed = 2;
+  repeated EquationNodePatch patched = 3;
+  repeated string reordered = 4;
+}
+message EquationNodePatch {
+  string id = 1;
+  optional string label = 2;
+  optional double x = 3;
+  optional double y = 4;
+}
+message EquationEdgesDelta {
+  repeated semio.s.mathematical.equation.artifact.EquationEdge added = 1;
+  repeated string removed = 2;
+  repeated EquationEdgePatch patched = 3;
+  repeated string reordered = 4;
+}
+message EquationEdgePatch {
+  string id = 1;
+  optional string source = 2;
+  optional string target = 3;
+}
+message EquationPointsDelta { repeated EquationPointEdit edits = 1; }
+message EquationPointEdit {
+  oneof edit {
+    EquationPointInsert insert = 1;
+    EquationPointRemove remove = 2;
+    EquationPointSet set = 3;
+  }
+}
+message EquationPointInsert { uint32 at = 1; semio.s.mathematical.equation.artifact.EquationPoint point = 2; }
+message EquationPointRemove { uint32 at = 1; }
+message EquationPointSet { uint32 at = 1; semio.s.mathematical.equation.artifact.EquationPoint point = 2; }
+message EquationExprDiff {
+  repeated EquationKindPatch kinds = 1;
+  optional uint64 next_label = 2;
+}
+message EquationKindPatch { uint64 label = 1; semio.framework.value.DslValue kind = 2; }

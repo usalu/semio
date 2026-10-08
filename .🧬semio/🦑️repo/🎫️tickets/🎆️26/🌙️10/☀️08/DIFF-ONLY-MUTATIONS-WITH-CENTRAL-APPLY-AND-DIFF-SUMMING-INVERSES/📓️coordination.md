@@ -24,3 +24,9 @@ inverse-sum (L3) test; `ApplyCapability` absent; 57 whole-state `MutationDiff` i
 | small-plugins | 14 small plugins + procedural hand config | `📓️exec-small-plugins.md` |
 
 Build gate: `🚦️gate.sh` (4 slots, < 10 rustc, `CARGO_BUILD_JOBS=3`).
+
+## Events
+- 01:45 SPINE-API-LANDED (replication green; `ApplyCapability`, `apply_diff`, `apply_to` deleted).
+- ~02:10 fw-gate done: R8–R16 live, baseline 4152 breaches (stdio 1241, norm 938, energy 592, architect 277).
+- ~02:15 all 17 other executors cut off by API session limit (reset 04:40); 11:23 all 17 resumed via SendMessage,
+  stale gate slots cleared, one hung norm-a heredoc shell killed.

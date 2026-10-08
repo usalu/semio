@@ -259,5 +259,55 @@
     "expectedNames": [
       "owned-member"
     ]
-  }
+  },
+  "overlappingOwners": {
+    "rootMembers": [
+      "framework/product"
+    ],
+    "frameworkMembers": [
+      "general"
+    ],
+    "rootAdmission": [
+      "framework/**/Cargo.toml"
+    ],
+    "rootPackage": "product-app",
+    "frameworkPackage": "general-module",
+    "rootPackageWorkspace": "../.."
+  },
+  "profilePeriods": {
+    "fundamental": "15s",
+    "quick": "300s",
+    "long": "900s",
+    "exhaustive": "1800s"
+  },
+  "policyPackages": [
+    {
+      "name": "semio-framework-ui",
+      "workspace": "🧰️framework"
+    },
+    {
+      "name": "semio-framework-os-renderer-wgpu",
+      "workspace": "."
+    }
+  ],
+  "reachablePreparation": [
+    {
+      "names": [
+        "product-app"
+      ],
+      "valid": true
+    },
+    {
+      "names": [
+        "general-module"
+      ],
+      "valid": true
+    },
+    {
+      "names": [
+        "unreachable-module"
+      ],
+      "valid": false
+    }
+  ]
 }

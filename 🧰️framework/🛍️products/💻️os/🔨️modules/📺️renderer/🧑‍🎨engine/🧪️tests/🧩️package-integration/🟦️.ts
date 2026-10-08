@@ -16,6 +16,7 @@ import { assertPinnedBunVersion, decodeAstralEscapes } from "../../🎯️target
 import { decodeInvocationPayloads, pluginHandleForBridge, reconcileRetainedWindowPatch, retireWgpuOwnedUiInstanceLifecycle, settleFailedInstanceOpen, WgpuOwnedUiInstanceRoute, type WgpuPluginHandle } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";
 import { resolvePlaygroundBoot, type PluginCatalog } from "@semio-tech/framework";
 import bootSelectionFixture from "../../🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json";
+import activationFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🎬️artifact-activation/🔣️.json";
 import operationPublicationCorpus from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🧫️operation-publication/🔣️.json";
 
 import { coerceTurnResult } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
@@ -603,9 +604,7 @@ describe("framework renderer wgpu generated worker", () => {
     expect(ran).toEqual(["clean", "threw"]);
   });
 
-  it("hands the wgpu shell its generation3d boot plan in dependency order, so the requested plugin is never plugins[0] — the ordering the Rust boot selection (🧫️fixtures/🔬️wgpu-shell-boot-selection) must survive", () => {
-    
-    
+  it("hands the shell its injected boot plan in dependency order", () => {
     const catalog: PluginCatalog = {
       plugins: bootSelectionFixture.catalog.plugins.map((entry) => ({ ...entry, wasmOut: `${entry.pluginId}.wasm`, role: "plugin", contributes: [], consumes: [] })),
       extensions: [],
@@ -614,15 +613,25 @@ describe("framework renderer wgpu generated worker", () => {
       moduleUrl: (pluginId) => `${pluginId}.wasm`,
       extensionModuleUrl: (pluginId) => `${pluginId}.wasm`,
     };
-    const boot = resolvePlaygroundBoot(catalog, "generation3d");
+    const fixtureCase = bootSelectionFixture.cases.find((entry) => entry.id === "dependency-sorts-first")!;
+    const declaration = catalog.playgrounds.find(entry => entry.variant === fixtureCase.variant)!;
+    const boot = resolvePlaygroundBoot(catalog, fixtureCase.variant);
     const ids = boot.plugins.map((entry) => entry.pluginId);
-    expect(ids).toContain("procedural");
-    expect(ids).toContain("flow");
-    expect(ids.indexOf("flow")).toBeLessThan(ids.indexOf("procedural"));
-    expect(ids[0]).not.toBe("procedural");
-    const fixtureCase = bootSelectionFixture.cases.find((entry) => entry.id === "dependency-sorts-first");
-    expect(fixtureCase?.programs.map((program) => program.pluginId)).toEqual(["flow", "procedural"]);
-    expect(fixtureCase?.expected?.appId).toBe(boot.defaultAppId);
+    const dependency = catalog.plugins.find(entry => entry.pluginId === declaration.pluginId)!.dependsOn[0];
+    expect(ids).toContain(declaration.pluginId);
+    expect(ids).toContain(dependency);
+    expect(ids.indexOf(dependency)).toBeLessThan(ids.indexOf(declaration.pluginId));
+    expect(ids[0]).not.toBe(declaration.pluginId);
+    expect(fixtureCase.programs.map((program) => program.pluginId)).toEqual(ids);
+    expect(fixtureCase.expected?.appId).toBe(boot.defaultAppId);
+  });
+
+  it("resolves injected artifact activation with an independent Map oracle", () => {
+    const owners = new Map(activationFixture.rows.map(row => [row[0], row[1]]));
+    expect(owners.size).toBe(activationFixture.rows.length);
+    expect(new Set(owners.values()).size).toBeGreaterThan(1);
+    expect(owners.get(activationFixture.relay.artifactRef.split("@")[0])).toBe(activationFixture.relay.expectedOwner);
+    expect(owners.get("no.such.kind")).toBeUndefined();
   });
 
   it("renders an astral-emoji-bearing browser entry (🟦️.ts, which references the \"🎞️frame-worker.js\" filename by URL) with the emoji as literal UTF-8, not Bun's astral \\uXXXX surrogate-pair escapes — otherwise the reference scanner cannot see or rewrite it", async () => {

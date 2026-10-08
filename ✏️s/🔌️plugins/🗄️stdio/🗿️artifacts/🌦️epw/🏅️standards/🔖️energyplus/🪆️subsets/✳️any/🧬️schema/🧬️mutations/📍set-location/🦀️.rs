@@ -1,7 +1,4 @@
-//! 📍️ `set-location` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 📍️ `set-location` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -17,14 +14,12 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetLocation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "location", kind: "set-location", record: "SetLocation" };
 
     fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
-        agg_diff(&EpwMutation::SetLocation(self.clone()), base)
+        let Self { location } = self;
+        protocol::MutationOutcome::new(EpwDiff { location: Some(location.clone()), ..EpwDiff::default() })
     }
     fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&EpwMutation::SetLocation(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![EpwMutation::SetLocation(set_location::SetLocation { location: base.location.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set location", "Standort setzen")
     }

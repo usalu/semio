@@ -5,11 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "topology"
+    "topology",
+    "geometry"
   ],
   "properties": {
     "topology": {
       "$ref": "#/$defs/Generation3dTopology",
+      "x-semio-derived": true
+    },
+    "geometry": {
+      "$ref": "#/$defs/Generation3dGeometryRecord",
       "x-semio-derived": true
     }
   },
@@ -45,6 +50,110 @@
         },
         "cycleFree": {
           "type": "boolean"
+        }
+      }
+    },
+    "Generation3dGeometryRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "widgets",
+        "faulted"
+      ],
+      "properties": {
+        "widgets": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Generation3dWidgetRecord"
+          }
+        },
+        "faulted": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Generation3dWidgetRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "quality",
+        "fault",
+        "outputs"
+      ],
+      "properties": {
+        "quality": {
+          "enum": [
+            "exact-analytic",
+            "exact-numerical",
+            "approximate",
+            "mesh-derived-brep",
+            "polygon-mesh",
+            "tessellated-mesh"
+          ]
+        },
+        "fault": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/Generation3dFaultRecord"
+            }
+          ]
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Generation3dOutputRecord"
+          }
+        }
+      }
+    },
+    "Generation3dFaultRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "en",
+        "de",
+        "port"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "en": {
+          "type": "string"
+        },
+        "de": {
+          "type": "string"
+        },
+        "port": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Generation3dOutputRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "port",
+        "kind",
+        "detail"
+      ],
+      "properties": {
+        "port": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
         }
       }
     }

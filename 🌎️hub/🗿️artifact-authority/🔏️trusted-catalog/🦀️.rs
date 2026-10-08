@@ -1106,7 +1106,7 @@ impl TrustedArtifactGenesisCodec for VerifiedNativeArtifactCodec {
     /// 🌱️ Creation authority is the COMPONENT's, always. The `dialect` the caller carries is not
     /// passed to the guest: the guest stamps its own app's dialect, and a genesis whose dialect
     /// differs from the catalog's open target is refused here rather than silently accepted.
-    async fn initial_pair(&self, document_id: &str, dialect: &directory::os_io::ArtifactDialect, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+    async fn initial_pair(&self, document_id: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         context.checkpoint()?;
         let pair = self.guest.genesis(document_id, context).await?;
         context.checkpoint()?;
@@ -2056,7 +2056,7 @@ impl<T> MostGeneralDialect<T> {
     }
 }
 
-/// 🌳️ The ONE most-general-dialect rule ([fixture](../../../🧰️framework/🔨️modules/🚪️io/🧫️fixtures/🌳️most-general-dialect/🔣️.json),
+/// 🌳️ The ONE most-general-dialect rule ([fixture](../../../🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧫️fixtures/🌳️most-general-dialect/🔣️.json),
 /// read by the guest's `artifact_codec_owner` too): the candidate no other candidate covers ([`dialect_covers`]); several
 /// uncovered candidates are ambiguous and refused rather than resolved by order.
 fn most_general_dialect<T>(candidates: Vec<T>, dialect: impl Fn(&T) -> &semio_framework::ArtifactDialect) -> MostGeneralDialect<T> {

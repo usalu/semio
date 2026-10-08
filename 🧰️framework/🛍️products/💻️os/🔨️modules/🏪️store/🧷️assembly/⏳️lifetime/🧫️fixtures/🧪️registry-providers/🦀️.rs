@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 use std::sync::{Mutex, MutexGuard, RwLock};
 #[derive(Clone)] struct ArtifactCodec;
 #[derive(Clone)] struct DialectMigration;
-mod os_io { #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)] pub struct ArtifactDialect; }
+mod io { #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)] pub struct ArtifactDialect; }
 #[derive(Clone, Debug, PartialEq, Eq)] pub enum DocumentCodecRegistryError { Unavailable }
 #[derive(Clone, Debug, PartialEq, Eq)] pub enum DialectMigrationRegistryError { Unavailable }
 impl std::fmt::Display for DocumentCodecRegistryError { fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { f.write_str("document unavailable") } }

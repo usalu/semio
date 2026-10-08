@@ -2,9 +2,14 @@
   "contract": {
     "physicalOwner": "text-diff-record",
     "fieldIds": {
-      "artifact": 0,
-      "hostSnapshot": 1,
-      "generation": 2
+      "schema": 0,
+      "camera": 1,
+      "widgets": 2,
+      "synapses": 3,
+      "layout": 4,
+      "generations": 5,
+      "selectedGeneration": 6,
+      "previewText": 7
     },
     "absent": "omitted-record-field",
     "semanticParity": "complete-domain-value",
@@ -18,78 +23,148 @@
     {
       "id": "empty",
       "value": {
-        "artifact": null,
-        "hostSnapshot": null,
-        "generation": null
+        "schema": null,
+        "camera": null,
+        "widgets": null,
+        "synapses": null,
+        "layout": null,
+        "generations": null,
+        "selectedGeneration": null,
+        "previewText": null
       }
     },
     {
-      "id": "artifact",
+      "id": "scalars",
       "value": {
-        "artifact": {
-          "hostSnapshot": {
-            "schema": "generation3d",
-            "camera": {
-              "x": 1.5,
-              "y": -2.25,
-              "zoom": 0.875
-            },
-            "widgets": [],
-            "synapses": [],
-            "layout": {}
-          },
-          "generation": {
-            "generations": [
-              {
-                "id": "original-é-🧊",
-                "name": "Original 😀",
-                "values": {
-                  "answer": {
-                    "nested": [
-                      "é😀",
-                      true,
-                      null
-                    ],
-                    "number": 42
-                  }
-                }
-              }
-            ],
-            "selectedGenerationId": "original-é-🧊",
-            "previewText": "Preview 😀\n"
-          }
+        "schema": "generation3d",
+        "camera": {
+          "x": 1.5,
+          "y": -2.25,
+          "zoom": 0.875
         },
-        "hostSnapshot": null,
-        "generation": null
+        "widgets": null,
+        "synapses": null,
+        "layout": null,
+        "generations": null,
+        "selectedGeneration": null,
+        "previewText": null
       }
     },
     {
-      "id": "host",
+      "id": "widgets",
       "value": {
-        "artifact": null,
-        "hostSnapshot": {
-          "schema": "generation3d",
-          "camera": {
-            "x": 1.5,
-            "y": -2.25,
-            "zoom": 0.875
-          },
-          "widgets": [],
-          "synapses": [],
-          "layout": {}
-        },
-        "generation": null
-      }
-    },
-    {
-      "id": "generation",
-      "value": {
-        "artifact": null,
-        "hostSnapshot": null,
-        "generation": {
-          "generations": [
+        "schema": null,
+        "camera": null,
+        "widgets": {
+          "added": [
             {
-              "id": "original-é-🧊",
+              "kind": "inputNote",
+              "id": "note",
+              "text": "é😀"
+            }
+          ],
+          "removed": [
+            "old"
+          ],
+          "patched": [
+            {
+              "id": "slider",
+              "patch": {
+                "kind": "slider",
+                "value": 4.5,
+                "min": 0.0,
+                "max": 10.0,
+                "step": 0.5
+              }
+            }
+          ],
+          "reordered": [
+            "note",
+            "slider"
+          ]
+        },
+        "synapses": null,
+        "layout": null,
+        "generations": null,
+        "selectedGeneration": null,
+        "previewText": null
+      }
+    },
+    {
+      "id": "synapses",
+      "value": {
+        "schema": null,
+        "camera": null,
+        "widgets": null,
+        "synapses": {
+          "added": [
+            {
+              "id": "s9",
+              "from": "note",
+              "to": "slider",
+              "fromPort": "out",
+              "toPort": "in"
+            }
+          ],
+          "removed": [
+            "s1"
+          ],
+          "patched": [],
+          "reordered": null
+        },
+        "layout": null,
+        "generations": null,
+        "selectedGeneration": null,
+        "previewText": null
+      }
+    },
+    {
+      "id": "layout",
+      "value": {
+        "schema": null,
+        "camera": null,
+        "widgets": null,
+        "synapses": null,
+        "layout": {
+          "added": [
+            {
+              "id": "note",
+              "layout": {
+                "x": 1.0,
+                "y": 2.0
+              }
+            }
+          ],
+          "removed": [
+            "old"
+          ],
+          "patched": [
+            {
+              "id": "slider",
+              "layout": {
+                "x": -3.5,
+                "y": 8.0
+              }
+            }
+          ]
+        },
+        "generations": null,
+        "selectedGeneration": null,
+        "previewText": null
+      }
+    },
+    {
+      "id": "generations",
+      "value": {
+        "schema": null,
+        "camera": null,
+        "widgets": null,
+        "synapses": null,
+        "layout": null,
+        "generations": {
+          "added": [
+            {
+              "id": "original-é-🌀",
               "name": "Original 😀",
               "values": {
                 "answer": {
@@ -103,62 +178,131 @@
               }
             }
           ],
-          "selectedGenerationId": "original-é-🧊",
-          "previewText": "Preview 😀\n"
+          "removed": [
+            "gone"
+          ],
+          "patched": [
+            {
+              "id": "kept",
+              "patch": {
+                "name": "Renamed",
+                "values": {
+                  "added": [
+                    {
+                      "questionId": "q2",
+                      "value": {
+                        "nested": [
+                          "é😀",
+                          true,
+                          null
+                        ],
+                        "number": 42
+                      }
+                    }
+                  ],
+                  "removed": [
+                    "q1"
+                  ],
+                  "patched": [
+                    {
+                      "questionId": "q3",
+                      "value": null
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "reordered": null
+        },
+        "selectedGeneration": {
+          "id": "original-é-🌀"
+        },
+        "previewText": {
+          "text": "preview é"
         }
       }
     },
     {
       "id": "all",
       "value": {
-        "artifact": {
-          "hostSnapshot": {
-            "schema": "generation3d",
-            "camera": {
-              "x": 1.5,
-              "y": -2.25,
-              "zoom": 0.875
-            },
-            "widgets": [],
-            "synapses": [],
-            "layout": {}
-          },
-          "generation": {
-            "generations": [
-              {
-                "id": "original-é-🧊",
-                "name": "Original 😀",
-                "values": {
-                  "answer": {
-                    "nested": [
-                      "é😀",
-                      true,
-                      null
-                    ],
-                    "number": 42
-                  }
-                }
-              }
-            ],
-            "selectedGenerationId": "original-é-🧊",
-            "previewText": "Preview 😀\n"
-          }
+        "schema": "generation3d",
+        "camera": {
+          "x": 1.5,
+          "y": -2.25,
+          "zoom": 0.875
         },
-        "hostSnapshot": {
-          "schema": "generation3d",
-          "camera": {
-            "x": 1.5,
-            "y": -2.25,
-            "zoom": 0.875
-          },
-          "widgets": [],
-          "synapses": [],
-          "layout": {}
-        },
-        "generation": {
-          "generations": [
+        "widgets": {
+          "added": [
             {
-              "id": "original-é-🧊",
+              "kind": "inputNote",
+              "id": "note",
+              "text": "é😀"
+            }
+          ],
+          "removed": [
+            "old"
+          ],
+          "patched": [
+            {
+              "id": "slider",
+              "patch": {
+                "kind": "slider",
+                "value": 4.5,
+                "min": 0.0,
+                "max": 10.0,
+                "step": 0.5
+              }
+            }
+          ],
+          "reordered": [
+            "note",
+            "slider"
+          ]
+        },
+        "synapses": {
+          "added": [
+            {
+              "id": "s9",
+              "from": "note",
+              "to": "slider",
+              "fromPort": "out",
+              "toPort": "in"
+            }
+          ],
+          "removed": [
+            "s1"
+          ],
+          "patched": [],
+          "reordered": null
+        },
+        "layout": {
+          "added": [
+            {
+              "id": "note",
+              "layout": {
+                "x": 1.0,
+                "y": 2.0
+              }
+            }
+          ],
+          "removed": [
+            "old"
+          ],
+          "patched": [
+            {
+              "id": "slider",
+              "layout": {
+                "x": -3.5,
+                "y": 8.0
+              }
+            }
+          ]
+        },
+        "generations": {
+          "added": [
+            {
+              "id": "original-é-🌀",
               "name": "Original 😀",
               "values": {
                 "answer": {
@@ -172,8 +316,48 @@
               }
             }
           ],
-          "selectedGenerationId": "original-é-🧊",
-          "previewText": "Preview 😀\n"
+          "removed": [
+            "gone"
+          ],
+          "patched": [
+            {
+              "id": "kept",
+              "patch": {
+                "name": "Renamed",
+                "values": {
+                  "added": [
+                    {
+                      "questionId": "q2",
+                      "value": {
+                        "nested": [
+                          "é😀",
+                          true,
+                          null
+                        ],
+                        "number": 42
+                      }
+                    }
+                  ],
+                  "removed": [
+                    "q1"
+                  ],
+                  "patched": [
+                    {
+                      "questionId": "q3",
+                      "value": null
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "reordered": null
+        },
+        "selectedGeneration": {
+          "id": null
+        },
+        "previewText": {
+          "text": null
         }
       }
     }

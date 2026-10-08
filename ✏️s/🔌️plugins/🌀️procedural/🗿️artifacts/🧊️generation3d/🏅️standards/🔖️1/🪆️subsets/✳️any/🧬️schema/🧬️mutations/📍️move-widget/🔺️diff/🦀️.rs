@@ -1,7 +1,7 @@
 //! 🔺️ `move-widget` sparse diff construction.
 
 use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
-use crate::standards::v1::subsets::any::schema::diff::{diff_snapshot_from_helpers, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{Generation3dLayoutDelta, Generation3dLayoutRow};
 use crate::standards::v1::subsets::any::schema::mutations::move_widget::MoveWidget;
 use crate::standards::v1::subsets::any::schema::mutations::widget_index;
 use crate::Generation3dSnapshot;
@@ -14,5 +14,7 @@ pub fn diff(payload: &MoveWidget, base: &Generation3dSnapshot) -> protocol::Muta
     if !payload.layout.x.is_finite() || !payload.layout.y.is_finite() {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("Position for widget \"{}\" is not finite.", payload.id), [payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(diff_snapshot_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff::default(), &LayoutDiff { removed: vec![], set: vec![(payload.id.clone(), payload.layout.clone())] }, None, None))
+    let row = Generation3dLayoutRow { id: payload.id.clone(), layout: payload.layout.clone() };
+    let delta = if base.host_snapshot.layout.contains_key(&payload.id) { Generation3dLayoutDelta { patched: vec![row], ..Default::default() } } else { Generation3dLayoutDelta { added: vec![row], ..Default::default() } };
+    protocol::MutationOutcome::new(Generation3dDiff { layout: Some(delta), ..Default::default() })
 }

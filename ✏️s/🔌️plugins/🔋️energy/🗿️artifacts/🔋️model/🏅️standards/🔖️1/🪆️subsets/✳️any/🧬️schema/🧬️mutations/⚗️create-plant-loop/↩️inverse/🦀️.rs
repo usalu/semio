@@ -19,6 +19,9 @@ pub fn inverse(payload: &super::CreatePlantLoop, base: &EnergyModelSnapshot) -> 
     {
         return Vec::new();
     }
+    if payload.index.is_some_and(|index| index as usize > base.model.plant_loops.len()) {
+        return Vec::new();
+    }
     vec![vocabulary::delete_plant_loop(payload.id)]
 
     })())

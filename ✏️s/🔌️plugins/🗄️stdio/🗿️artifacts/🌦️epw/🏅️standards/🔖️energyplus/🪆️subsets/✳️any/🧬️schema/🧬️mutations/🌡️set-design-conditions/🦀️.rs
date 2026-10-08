@@ -1,7 +1,4 @@
-//! 🌡️ `set-design-conditions` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 🌡️ `set-design-conditions` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -17,14 +14,12 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetDesignConditions {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "design-conditions", kind: "set-design-conditions", record: "SetDesignConditions" };
 
     fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
-        agg_diff(&EpwMutation::SetDesignConditions(self.clone()), base)
+        let Self { value } = self;
+        protocol::MutationOutcome::new(EpwDiff { design_conditions: Some(value.clone()), ..EpwDiff::default() })
     }
     fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&EpwMutation::SetDesignConditions(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: base.design_conditions.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set design conditions", "Auslegungsbedingungen setzen")
     }

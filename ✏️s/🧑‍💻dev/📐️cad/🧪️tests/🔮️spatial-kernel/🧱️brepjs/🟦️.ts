@@ -65,7 +65,7 @@ import {
 } from "../../../../../🔌️plugins/📐️cad/⚙️engine/🧱️brepjs/🟦️.ts";
 import { applyModelDiff, isEmptyModelDiff, type SpatialKernel, type ModelDiff, type EdgeRecordDiff } from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️.ts";
 import { Model, ModelSpace, type ModelJson, defaultModelDefinitionId, type ModelSpaceJson } from "../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️.ts";
-import { emptyMeshTransfer, kernelGeometry, type EdgeCurve, type EdgeInfo, type FaceInfo, type MeshTransfer, type Vec3, solidRef } from "@semio-tech/s-3d-js";
+import { emptyMeshTransfer, kernelGeometry, type EdgeCurve, type EdgeInfo, type FaceInfo, type MeshTransfer, type Vec3, solidRef } from "@semio-tech/framework-3d-js";
 import {
   PreciseSpatialKernelMath,
   aabbDifferencePieces,
@@ -2108,7 +2108,7 @@ export async function exportModelSpaceToStep(space: ModelSpace, modelSpaceId = "
 
 /** 💾️ Exports `space` solids as merged OBJ via tessellation. */
 export async function exportModelSpaceToObj(space: ModelSpace, deflection = 0.1): Promise<string> {
-  const { meshTransferToObj, mergeMeshTransfers } = await import("@semio-tech/s-3d-js");
+  const { meshTransferToObj, mergeMeshTransfers } = await import("@semio-tech/framework-3d-js");
   const kernel = new BrepjsKernel();
   const meshes = [];
   for (const model of Object.values(space.models)) {
@@ -2123,7 +2123,7 @@ export async function exportModelSpaceToObj(space: ModelSpace, deflection = 0.1)
 
 /** 💾️ Exports `space` solids as merged GLB via tessellation. */
 export async function exportModelSpaceToGlb(space: ModelSpace, deflection = 0.1): Promise<Uint8Array> {
-  const { meshTransferToGlb, mergeMeshTransfers } = await import("@semio-tech/s-3d-js");
+  const { meshTransferToGlb, mergeMeshTransfers } = await import("@semio-tech/framework-3d-js");
   const kernel = new BrepjsKernel();
   const meshes = [];
   for (const model of Object.values(space.models)) {

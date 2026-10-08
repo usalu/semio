@@ -7,7 +7,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 mod mutations_codec {
 use super::*;
 use crate::standards::energyplus::subsets::any::schema::mutations::*;
-use crate::standards::energyplus::subsets::any::schema::diff::{diff_set_snapshot, EpwDiff, EpwRecordAdded, EpwRecordDiff, EpwRecordModified, EpwRecordsDiff};
+use crate::standards::energyplus::subsets::any::schema::diff::{EpwDiff, EpwRecordAdded, EpwRecordDiff, EpwRecordModified, EpwRecordsDiff};
 use crate::standards::energyplus::subsets::any::io::text::diff::{dec_record};
 use crate::standards::energyplus::subsets::any::io::text::diff::{enc_record};
 use crate::standards::energyplus::subsets::any::io::text::diff::{strip_brackets};
@@ -66,8 +66,6 @@ pub(crate) fn dec_epw_snapshot(s: &str) -> Result<EpwSnapshot, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_epw_mutation(m: &EpwMutation) -> String {
     match m {
-        EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_epw_snapshot(snapshot)),
-        EpwMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => semio_s_artifact_stdio_contract::editing::snapshot_patch_text(patch),
         EpwMutation::SetLocation(set_location::SetLocation { location }) => format!("set-location location={}", enc_location(location)),
         EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value }) => format!("set-design-conditions value={}", enc_str(value)),
         EpwMutation::SetTypicalExtremePeriods(set_typical_extreme_periods::SetTypicalExtremePeriods { value }) => format!("set-typical-extreme-periods value={}", enc_str(value)),
@@ -89,8 +87,6 @@ pub(crate) fn parse_epw_mutation(line: &str) -> Result<EpwMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("epw mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "patch-snapshot" => semio_s_artifact_stdio_contract::editing::snapshot_patch_from_text(line).map(|patch| EpwMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch })),
-        "set-snapshot" => Ok(EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_epw_snapshot(arg("snapshot")?)? })),
         "set-location" => Ok(EpwMutation::SetLocation(set_location::SetLocation { location: dec_location(arg("location")?)? })),
         "set-design-conditions" => Ok(EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: dec_str(arg("value")?)? })),
         "set-typical-extreme-periods" => Ok(EpwMutation::SetTypicalExtremePeriods(set_typical_extreme_periods::SetTypicalExtremePeriods { value: dec_str(arg("value")?)? })),

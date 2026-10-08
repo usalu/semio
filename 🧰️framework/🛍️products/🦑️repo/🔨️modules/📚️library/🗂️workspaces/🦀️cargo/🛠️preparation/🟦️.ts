@@ -1,0 +1,21 @@
+import {randomUUID,createHash} from "node:crypto";
+import {mkdirSync,readFileSync,rmSync,lstatSync} from "node:fs";
+import {fileURLToPath} from "node:url";
+import {join,resolve} from "node:path";
+import {acquireQueuedResourceLease} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import {cargoWorkspaceForManifest,discoverCargoWorkspaces,cargoWorkspaceMembers,prepareCargoOwners,publishCargoWorkspaceMembership} from "../🟦️.ts";
+import {cargoPreparationInputV1,assertCargoPreparationObservationCurrentV1} from "./🧾️custody/🟦️.ts";
+
+export type CargoDependencyPairRunnerV1=(args:string[],cwd:string,signal:AbortSignal)=>Promise<void>;
+const sha=(path:string):string=>{const info=lstatSync(path);if(info.isSymbolicLink()||!info.isFile())throw Error("Preparation source must be a physical file");return createHash("sha256").update(readFileSync(path)).digest("hex");};
+/** 🔗️ Prepares once, then owns unchanged Cargo update and locked fetch under one current exclusive custody. */
+export async function withPreparedCargoDependencyPairV1(root:string,manifest:string,signal:AbortSignal,runner:CargoDependencyPairRunnerV1,sourcePaths:readonly string[]=[]):Promise<void> {
+ signal.throwIfAborted();const directory=join(root,".🧬semio/🦑️repo/⚡️cache/cargo-preparation",randomUUID()),lease=await acquireQueuedResourceLease({directory:join(root,".🧬semio/🦑️repo/⚡️cache/agents/resource-leases"),resource:`cargo-preparation:${root}`,mode:"exclusive",owner:randomUUID(),signal,onWait:()=>console.log(`[cargo-preparation] waiting for ${manifest}`)});
+ try {
+ mkdirSync(directory,{recursive:true});const scope=cargoWorkspaceForManifest(root,manifest),sources=[...new Set([fileURLToPath(import.meta.url),fileURLToPath(new URL("../🟦️.ts",import.meta.url)),fileURLToPath(new URL("./📜️script.ts",import.meta.url)),fileURLToPath(new URL("./🧾️custody/🟦️.ts",import.meta.url)),fileURLToPath(new URL("./🧾️custody/🧬️schema/🔣️.json",import.meta.url)),fileURLToPath(new URL("../🧬️schema/🏃️invocation/🔣️.json",import.meta.url)),fileURLToPath(new URL("../🧬️schema/🛠️preparation/🔣️.json",import.meta.url)),...sourcePaths])].map(path=>({path,sha256:sha(path)}));
+ const prepared=prepareCargoOwners(root,scope,[],directory);publishCargoWorkspaceMembership(root,cargoWorkspaceForManifest(root,scope.manifest),"write");
+ const scopes=discoverCargoWorkspaces(root),ownerRoster=JSON.stringify(scopes.map(scope=>scope.manifest)),members=prepared.owners.map(owner=>{const scope=scopes.find(scope=>scope.directory===owner);if(!scope)throw Error("Prepared workspace disappeared");return{owner,roster:JSON.stringify(cargoWorkspaceMembers(root,scope))};}),inputs=[...new Set([...prepared.manifests,...members.flatMap(member=>{const scope=scopes.find(scope=>scope.directory===member.owner)!;return cargoWorkspaceMembers(root,scope).map(pkg=>pkg.manifest);})])].map(path=>cargoPreparationInputV1(root,resolve(root,path),"file"));
+ const current=():void=>{signal.throwIfAborted();for(const source of sources)if(sha(source.path)!==source.sha256)throw Error(`Prepared source changed: ${source.path}`);for(const input of inputs)if(cargoPreparationInputV1(root,input.path,input.kind).sha256!==input.sha256)throw Error(`Prepared manifest changed: ${input.path}`);const currentScopes=discoverCargoWorkspaces(root);if(JSON.stringify(currentScopes.map(scope=>scope.manifest))!==ownerRoster)throw Error("Prepared workspace roster changed");for(const member of members){const scope=currentScopes.find(scope=>scope.directory===member.owner);if(!scope||JSON.stringify(cargoWorkspaceMembers(root,scope))!==member.roster)throw Error("Prepared member roster changed");}for(const recipe of prepared.recipes)assertCargoPreparationObservationCurrentV1(recipe);};
+ current();await runner(["update","--workspace","--manifest-path",manifest],root,signal);current();const lock=cargoPreparationInputV1(root,resolve(root,scope.lock),"file");if(!lock.sha256)throw Error("Prepared update did not publish a lock");await runner(["fetch","--locked","--manifest-path",manifest],root,signal);current();if(cargoPreparationInputV1(root,lock.path,"file").sha256!==lock.sha256)throw Error("Locked fetch changed its prepared lock");
+ } finally {rmSync(directory,{recursive:true,force:true});lease.release();}
+}

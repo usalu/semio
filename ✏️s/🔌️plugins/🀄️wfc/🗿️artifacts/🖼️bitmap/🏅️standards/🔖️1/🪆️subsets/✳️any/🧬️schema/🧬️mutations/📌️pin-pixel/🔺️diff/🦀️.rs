@@ -2,8 +2,8 @@
 //! CANONICAL row-major position rather than appended, so `unpin-pixel` removes exactly what this
 //! inserted (the point-invertibility law).
 
-use crate::diff::BitmapDiff;
-use crate::schema::snapshot::{ordered_pin_index, pin_index, BitmapPinnedPixel, BitmapSnapshot};
+use crate::diff::{BitmapDiff, BitmapPinnedPatch, BitmapRowPatch, BitmapRows};
+use crate::schema::snapshot::{pin_index, pin_key, BitmapPinnedPixel, BitmapSnapshot};
 
 pub fn diff(payload: &super::PinPixel, base: &BitmapSnapshot) -> protocol::MutationOutcome<BitmapDiff> {
     if payload.x >= base.output.width || payload.y >= base.output.height {
@@ -15,7 +15,7 @@ pub fn diff(payload: &super::PinPixel, base: &BitmapSnapshot) -> protocol::Mutat
     let pin = BitmapPinnedPixel { x: payload.x, y: payload.y, color: payload.color };
     match pin_index(base, payload.x, payload.y) {
         Some(at) if base.pinned[at] == pin => protocol::MutationOutcome::empty().warning("mutation.no-op", format!("({}, {}) is already pinned to colour {}.", payload.x, payload.y, payload.color)),
-        Some(at) => protocol::MutationOutcome::new(BitmapDiff { pinned_upserted: vec![(at, pin)], ..Default::default() }),
-        None => protocol::MutationOutcome::new(BitmapDiff { pinned_upserted: vec![(ordered_pin_index(&base.pinned, payload.x, payload.y), pin)], ..Default::default() }),
+        Some(_) => protocol::MutationOutcome::new(BitmapDiff { pinned: BitmapRows { patched: vec![BitmapRowPatch { id: pin_key(payload.x, payload.y), patch: BitmapPinnedPatch { color: Some(payload.color) } }], ..Default::default() }, ..Default::default() }),
+        None => protocol::MutationOutcome::new(BitmapDiff { pinned: BitmapRows { added: vec![pin], ..Default::default() }, ..Default::default() }),
     }
 }

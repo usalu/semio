@@ -15,8 +15,10 @@
   "ventilation": null,
   "cooling": {
     "plant": {
-      "eer": 3.5,
-      "energyCarrier": "electricity"
+      "value": {
+        "eer": 3.5,
+        "energyCarrier": "electricity"
+      }
     }
   },
   "lighting": null,

@@ -1,6 +1,4 @@
-//! 🏷️ `set-id3v2` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🏷️ `set-id3v2` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,14 +13,12 @@ impl protocol::MutationKind<Mp3Snapshot, Mp3Mutation> for SetId3v2 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "id3v2", kind: "set-id3v2", record: "SetId3v2" };
 
     fn diff(&self, base: &Mp3Snapshot) -> protocol::MutationOutcome<<Mp3Mutation as Mutation<Mp3Snapshot>>::Diff> {
-        agg_diff(&Mp3Mutation::SetId3v2(self.clone()), base)
+        let Self { id3v2 } = self;
+        protocol::MutationOutcome::new(diff_set_id3v2(id3v2.clone()))
     }
     fn inverse(&self, base: &Mp3Snapshot) -> Result<Vec<Mp3Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&Mp3Mutation::SetId3v2(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![Mp3Mutation::SetId3v2(set_id3v2::SetId3v2 { id3v2: base.id3v2.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set ID3v2", "ID3v2-Tag setzen")
     }

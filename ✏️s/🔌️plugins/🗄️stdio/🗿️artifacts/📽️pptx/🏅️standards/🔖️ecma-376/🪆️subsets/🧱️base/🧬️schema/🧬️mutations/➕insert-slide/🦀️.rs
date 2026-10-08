@@ -1,6 +1,4 @@
-//! ➕️ `insert-slide` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! ➕️ `insert-slide` -- builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,15 +13,14 @@ pub struct InsertSlide {
 impl protocol::MutationKind<PptxSnapshot, PptxMutation> for InsertSlide {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "slide", kind: "insert-slide", record: "InsertSlide" };
 
-    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<<PptxMutation as Mutation<PptxSnapshot>>::Diff> {
-        agg_diff(&PptxMutation::InsertSlide(self.clone()), base)
+    fn diff(&self, base: &PptxSnapshot) -> protocol::MutationOutcome<PptxDiff> {
+        plan_outcome(xml_address::insert_slide_plan(base, &self.vacancy, &self.entry))
     }
+
     fn inverse(&self, base: &PptxSnapshot) -> Result<Vec<PptxMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&PptxMutation::InsertSlide(self.clone()), base)?
-    
-    })
-}
+        Ok(plan_inverse(xml_address::insert_slide_plan(base, &self.vacancy, &self.entry)))
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert slide", "Folie einfügen")
     }

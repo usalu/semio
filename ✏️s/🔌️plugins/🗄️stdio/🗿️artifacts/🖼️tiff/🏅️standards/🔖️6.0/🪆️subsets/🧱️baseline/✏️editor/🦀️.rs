@@ -5,9 +5,8 @@
 
 use crate::editor::tiff_baseline::modes::edit;
 use crate::editor::tiff_baseline::modes::edit::windows::main;
-use crate::standards::v6_0::subsets::baseline::schema::mutations::{patch_snapshot, set_bits_per_sample, set_photometric_interpretation, set_snapshot, TiffBaselineMutation};
+use crate::standards::v6_0::subsets::baseline::schema::mutations::{net_mutations, TiffBaselineMutation};
 use crate::standards::v6_0::subsets::baseline::schema::snapshot::TiffSnapshot;
-use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffValues, TAG_BITS_PER_SAMPLE, TAG_PHOTOMETRIC};
 use crate::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_BASELINE_DIALECT};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -100,36 +99,6 @@ fn tiffBaselineEditor_retained_reduce(command: &TiffBaselineEditCommand, _snapsh
     match command {
         TiffBaselineEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tiffBaselineEditor_example_snapshot(example_id), STDIO_TIFF_DOCUMENT_SCHEMA)], ..Default::default() }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
-    }
-}
-fn tiffBaselineEditor_edit_fault(code: &'static str, message: impl Into<String>) -> Fault {
-    Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), message)
-}
-fn tiffBaselineEditor_bounded_edit(event: &editing::SnapshotEditEvent, snapshot: &TiffSnapshot) -> Result<TiffSnapshot, Fault> {
-    let patch = editing::prepare_snapshot_patch(snapshot, event).map_err(|error| tiffBaselineEditor_edit_fault(error.code, error.to_string()))?;
-    editing::apply_snapshot_patch_for_dialect(snapshot, &patch, TIFF_BASELINE_DIALECT, STDIO_TIFF_DOCUMENT_SCHEMA).map_err(|error| tiffBaselineEditor_edit_fault(error.code, error.to_string()))
-}
-fn tiffBaselineEditor_entry_index(path: &str, snapshot: &TiffSnapshot) -> Option<usize> {
-    let segment = path.strip_prefix("/ifds/0/entries/")?.split('/').next()?;
-    if segment.is_empty() || (segment.len() > 1 && segment.starts_with('0')) || !segment.bytes().all(|byte| byte.is_ascii_digit()) { return None; }
-    segment.parse::<usize>().ok().filter(|index| snapshot.ifds.first().is_some_and(|ifd| *index < ifd.entries.len()))
-}
-fn tiffBaselineEditor_first_u16(values: &TiffValues) -> Option<u16> {
-    match values { TiffValues::Short(values) => values.first().copied(), TiffValues::Long(values) => values.first().and_then(|value| u16::try_from(*value).ok()), _ => None }
-}
-/// 🎯️ The domain leaf exactly as granular as the edit — the single value of the Compression or PhotometricInterpretation
-/// entry, the whole BitsPerSample or StripOffsets value list — else `None`, and the edit publishes as a path-scoped patch
-/// (design §19.3: a leaf wider than the edited field masks history edits of its siblings).
-fn tiffBaselineEditor_compact_mutation(event: &editing::SnapshotEditEvent, next: &TiffSnapshot) -> Option<TiffBaselineMutation> {
-    let editing::SnapshotEditEvent::SetValue { path, .. } = event else { return None };
-    let index = tiffBaselineEditor_entry_index(path, next)?;
-    let (_, rest) = path.strip_prefix("/ifds/0/entries/")?.split_once('/')?;
-    let tag = &next.ifds[0].entries[index];
-    let single = matches!(rest, "values" | "values/0") && (matches!(&tag.values, TiffValues::Short(values) if values.len() == 1) || matches!(&tag.values, TiffValues::Long(values) if values.len() == 1));
-    match (tag.tag, rest, &tag.values) {
-        (TAG_PHOTOMETRIC, _, values) if single => tiffBaselineEditor_first_u16(values).map(|photometric| TiffBaselineMutation::SetPhotometricInterpretation(set_photometric_interpretation::SetPhotometricInterpretation { photometric })),
-        (TAG_BITS_PER_SAMPLE, "values", TiffValues::Short(bits)) => Some(TiffBaselineMutation::SetBitsPerSample(set_bits_per_sample::SetBitsPerSample { bits: bits.clone() })),
-        _ => None,
     }
 }
 struct TiffBaselineEditorExampleFactory { keys: Vec<ToolFactoryKey> }
@@ -246,11 +215,7 @@ impl editing::SnapshotEditingEditor for TiffBaselineEditor {
         match command { TiffBaselineEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        let next = tiffBaselineEditor_bounded_edit(event, snapshot)?;
-        if let Some(mutation) = tiffBaselineEditor_compact_mutation(event, &next) {
-            return Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() });
-        }
-        editing::snapshot_edit_patch(event, snapshot, |patch| TiffBaselineMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| TiffBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))
+        editing::snapshot_edit_net_exact(event, snapshot, net_mutations)
     }
 }
 

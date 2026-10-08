@@ -3,9 +3,9 @@
 //! is banned); `inverse()` is handcrafted per variant, index-aware.
 
 use crate::standards::isobmff::subsets::any::schema::diff::{IndexedAdded, IndexedDiff, IndexedModified, Mp4Diff, Mp4SampleDiff, Mp4TrackDiff};
-use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track};
+use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Ftyp, Mp4Movie, Mp4Sample, Mp4Snapshot, Mp4Track};
 #[cfg(test)]
-use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Movie, Mp4TrackMetadata};
+use crate::standards::isobmff::subsets::any::schema::snapshot::Mp4TrackMetadata;
 use protocol::Mutation;
 
 
@@ -21,12 +21,10 @@ pub mod remove_sample;
 pub mod remove_track;
 #[path = "🏷️set-ftyp/🦀️.rs"]
 pub mod set_ftyp;
+#[path = "🎬set-movie/🦀️.rs"]
+pub mod set_movie;
 #[path = "⭐set-sample-sync/🦀️.rs"]
 pub mod set_sample_sync;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
 #[path = "🎛️set-track-codec/🦀️.rs"]
 pub mod set_track_codec;
 #[path = "📐set-track-dimensions/🦀️.rs"]
@@ -40,9 +38,8 @@ pub mod set_track_dimensions;
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = Mp4Snapshot, diff = Mp4Diff, schema = "Mp4Mutation")]
 pub enum Mp4Mutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetFtyp(set_ftyp::SetFtyp),
+    SetMovie(set_movie::SetMovie),
     InsertTrack(insert_track::InsertTrack),
     RemoveTrack(remove_track::RemoveTrack),
     SetTrackDimensions(set_track_dimensions::SetTrackDimensions),
@@ -56,7 +53,7 @@ pub enum Mp4Mutation {
 /// `../../🔣️oracle.json`'s own `kinds` list is checked against (the framework never
 /// parses Rust, so `kinds_const_matches_enum_variants_in_declaration_order` below is what keeps the
 /// declaration honest). Wave 7 fleet brief, ticket 26/08/23/END-TO-END-TESTING-REFACTOR.
-pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-ftyp", "insert-track", "remove-track", "set-track-dimensions", "set-track-codec", "insert-sample", "remove-sample", "set-sample-sync"];
+pub const KINDS: &[&str] = &["set-ftyp", "set-movie", "insert-track", "remove-track", "set-track-dimensions", "set-track-codec", "insert-sample", "remove-sample", "set-sample-sync"];
 
 fn track_diff_for(track_index: usize, inner: Mp4TrackDiff) -> Mp4Diff {
     Mp4Diff { ftyp: None, movie: None, tracks: Some(IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: track_index, diff: inner }], added: vec![] }) }
@@ -70,7 +67,7 @@ fn sample_diff_for(track_index: usize, samples: IndexedDiff<Mp4Sample, Mp4Sample
 /// `apply_gif_mutation` convention).
 pub fn apply_mp4_mutation(snapshot: &mut Mp4Snapshot, mutation: &Mp4Mutation) -> protocol::MutationOutcome<Mp4Diff> {
     let outcome = <Mp4Mutation as Mutation<Mp4Snapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -81,75 +78,56 @@ pub fn apply_mp4_mutation(snapshot: &mut Mp4Snapshot, mutation: &Mp4Mutation) ->
 
 //#endregion 🔖️Mutation
 
+//#region 🔖️Net
+/// 🧮️ The leaves that carry `base` to exactly `next`: the file type and the movie header if they moved, then every track in place
+/// (its dimensions, its codec, and its samples row by row: a sample differing only in its sync flag is re-flagged, any other
+/// change is remove-then-insert; a track whose id, timescale, metadata or chunking differ is removed and inserted anew) and the
+/// diverging track tail. Sample leaves re-chunk a track into one chunk, so a track keeping its sample count must keep its chunking.
+pub fn net_mutations(base: &Mp4Snapshot, next: &Mp4Snapshot) -> Vec<Mp4Mutation> {
+    let mut leaves = Vec::new();
+    if base.ftyp != next.ftyp {
+        leaves.push(Mp4Mutation::SetFtyp(set_ftyp::SetFtyp { ftyp: next.ftyp.clone() }));
+    }
+    if base.movie != next.movie {
+        leaves.push(Mp4Mutation::SetMovie(set_movie::SetMovie { movie: next.movie.clone() }));
+    }
+    let paired = base.tracks.len().min(next.tracks.len());
+    for (track_index, (before, after)) in base.tracks.iter().zip(&next.tracks).enumerate().filter(|(_, (before, after))| before != after) {
+        if (before.track_id, before.timescale, &before.metadata) != (after.track_id, after.timescale, &after.metadata) || (before.samples.len() == after.samples.len() && before.chunk_sample_counts != after.chunk_sample_counts) {
+            leaves.push(Mp4Mutation::RemoveTrack(remove_track::RemoveTrack { index: track_index }));
+            leaves.push(Mp4Mutation::InsertTrack(insert_track::InsertTrack { index: track_index, track: after.clone() }));
+            continue;
+        }
+        if (before.width, before.height) != (after.width, after.height) {
+            leaves.push(Mp4Mutation::SetTrackDimensions(set_track_dimensions::SetTrackDimensions { track_index, width: after.width, height: after.height }));
+        }
+        if before.codec != after.codec {
+            leaves.push(Mp4Mutation::SetTrackCodec(set_track_codec::SetTrackCodec { track_index, codec: after.codec.clone() }));
+        }
+        let samples_paired = before.samples.len().min(after.samples.len());
+        for (index, (old, new)) in before.samples.iter().zip(&after.samples).enumerate().filter(|(_, (old, new))| old != new) {
+            if (&old.data, old.duration, old.cts_offset) == (&new.data, new.duration, new.cts_offset) {
+                leaves.push(Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index, index, sync: new.sync }));
+            } else {
+                leaves.push(Mp4Mutation::RemoveSample(remove_sample::RemoveSample { track_index, index }));
+                leaves.push(Mp4Mutation::InsertSample(insert_sample::InsertSample { track_index, index, sample: new.clone() }));
+            }
+        }
+        leaves.extend((samples_paired..before.samples.len()).rev().map(|index| Mp4Mutation::RemoveSample(remove_sample::RemoveSample { track_index, index })));
+        leaves.extend(after.samples.iter().enumerate().skip(samples_paired).map(|(index, sample)| Mp4Mutation::InsertSample(insert_sample::InsertSample { track_index, index, sample: sample.clone() })));
+    }
+    leaves.extend((paired..base.tracks.len()).rev().map(|index| Mp4Mutation::RemoveTrack(remove_track::RemoveTrack { index })));
+    leaves.extend(next.tracks.iter().enumerate().skip(paired).map(|(index, track)| Mp4Mutation::InsertTrack(insert_track::InsertTrack { index, track: track.clone() })));
+    leaves
+}
+//#endregion 🔖️Net
+
 //#region OpCodecs
 
 
 
 //#endregion OpCodecs
 
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &Mp4Mutation, base: &Mp4Snapshot) -> protocol::MutationOutcome<Mp4Diff> {
-    protocol::MutationOutcome::new(match this {
-        Mp4Mutation::PatchSnapshot(payload) => return protocol::MutationKind::diff(payload, base),
-        Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => <Mp4Diff as protocol::command::DiffAlgebra<Mp4Snapshot>>::between(base, snapshot),
-        Mp4Mutation::SetFtyp(set_ftyp::SetFtyp { ftyp }) => Mp4Diff { ftyp: Some(ftyp.clone()), movie: None, tracks: None },
-        Mp4Mutation::InsertTrack(insert_track::InsertTrack { index, track }) => Mp4Diff { ftyp: None, movie: None, tracks: Some(IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: track.clone() }] }) },
-        Mp4Mutation::RemoveTrack(remove_track::RemoveTrack { index }) => Mp4Diff { ftyp: None, movie: None, tracks: Some(IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }) },
-        Mp4Mutation::SetTrackDimensions(set_track_dimensions::SetTrackDimensions { track_index, width, height }) => track_diff_for(*track_index, Mp4TrackDiff { width: Some(*width), height: Some(*height), ..Mp4TrackDiff::default() }),
-        Mp4Mutation::SetTrackCodec(set_track_codec::SetTrackCodec { track_index, codec }) => track_diff_for(*track_index, Mp4TrackDiff { codec: Some(codec.clone()), ..Mp4TrackDiff::default() }),
-        Mp4Mutation::InsertSample(insert_sample::InsertSample { track_index, index, sample }) => {
-            let count = base.tracks.get(*track_index).map_or(1, |track| track.samples.len() as u32 + 1);
-            sample_diff_for(*track_index, IndexedDiff { removed: vec![], modified: vec![], added: vec![IndexedAdded { index: *index, item: sample.clone() }] }, Some(vec![count]))
-        }
-        Mp4Mutation::RemoveSample(remove_sample::RemoveSample { track_index, index }) => {
-            let count = base.tracks.get(*track_index).map_or(0, |track| track.samples.len().saturating_sub(1) as u32);
-            sample_diff_for(*track_index, IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }, Some(vec![count]))
-        }
-        Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index, index, sync }) => {
-            sample_diff_for(*track_index, IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: *index, diff: Mp4SampleDiff { data: None, duration: None, cts_offset: None, sync: Some(*sync) } }], added: vec![] }, None)
-        }
-    })
-}
-
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &Mp4Mutation, base: &Mp4Snapshot) -> Result<Vec<Mp4Mutation>, semio_framework_value::ValueError> {
-    Ok({
-    match this {
-        Mp4Mutation::PatchSnapshot(payload) => protocol::MutationKind::inverse(payload, base)?,
-        Mp4Mutation::SetSnapshot(_) => vec![Mp4Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        Mp4Mutation::SetFtyp(_) => vec![Mp4Mutation::SetFtyp(set_ftyp::SetFtyp { ftyp: base.ftyp.clone() })],
-        Mp4Mutation::InsertTrack(insert_track::InsertTrack { index, .. }) => vec![Mp4Mutation::RemoveTrack(remove_track::RemoveTrack { index: *index })],
-        Mp4Mutation::RemoveTrack(remove_track::RemoveTrack { index }) => match base.tracks.get(*index) {
-            Some(track) => vec![Mp4Mutation::InsertTrack(insert_track::InsertTrack { index: *index, track: track.clone() })],
-            None => Vec::new(),
-        },
-        Mp4Mutation::SetTrackDimensions(set_track_dimensions::SetTrackDimensions { track_index, .. }) => match base.tracks.get(*track_index) {
-            Some(track) => vec![Mp4Mutation::SetTrackDimensions(set_track_dimensions::SetTrackDimensions { track_index: *track_index, width: track.width, height: track.height })],
-            None => Vec::new(),
-        },
-        Mp4Mutation::SetTrackCodec(set_track_codec::SetTrackCodec { track_index, .. }) => match base.tracks.get(*track_index) {
-            Some(track) => vec![Mp4Mutation::SetTrackCodec(set_track_codec::SetTrackCodec { track_index: *track_index, codec: track.codec.clone() })],
-            None => Vec::new(),
-        },
-        Mp4Mutation::InsertSample(insert_sample::InsertSample { track_index, index, .. }) => {
-            vec![Mp4Mutation::RemoveSample(remove_sample::RemoveSample { track_index: *track_index, index: *index })]
-        }
-        Mp4Mutation::RemoveSample(remove_sample::RemoveSample { track_index, index }) => base
-            .tracks
-            .get(*track_index)
-            .and_then(|track| track.samples.get(*index))
-            .map(|sample| Mp4Mutation::InsertSample(insert_sample::InsertSample { track_index: *track_index, index: *index, sample: sample.clone() }))
-            .into_iter()
-            .collect(),
-        Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index, index, .. }) => match base.tracks.get(*track_index).and_then(|t| t.samples.get(*index)) {
-            Some(sample) => vec![Mp4Mutation::SetSampleSync(set_sample_sync::SetSampleSync { track_index: *track_index, index: *index, sync: sample.sync })],
-            None => Vec::new(),
-        },
-    }
-
-    })
-}
 //#endregion 🔖️MutationTrait
 
 //#region 🔖️Tests
@@ -158,16 +136,6 @@ pub(crate) fn agg_inverse(this: &Mp4Mutation, base: &Mp4Snapshot) -> Result<Vec<
 mod tests;
 //#endregion 🔖️Tests
 
-//#region 🧪️FixtureTests
-// 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
-// agents migrating the other stdio artifacts, so the production mounts there stay untouched while
-// this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
-// directory, which is what makes the leaf-relative path below resolve.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-//#endregion 🧪️FixtureTests
 
 #[cfg(test)]
 use protocol::{OpBinary,OpText};

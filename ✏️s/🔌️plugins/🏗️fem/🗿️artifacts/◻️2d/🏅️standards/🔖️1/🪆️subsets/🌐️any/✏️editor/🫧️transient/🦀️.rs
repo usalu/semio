@@ -115,12 +115,14 @@ pub fn fem_gumball_drive<T: GestureTool<Gesture = FemGumballGesture>>(
 semio_framework_plugin::transient_root! {
     state: FemGumballTransient,
     mutation: FemGumballTransientMutation,
+    diff: FemGumballTransientDiff,
     owner: "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🫧️transient",
     kind: "set-snapshot",
     display_name: "Set Gumball Transient",
     payload_schema: "🧬️schema/🔣️.json",
     envelope: "fem.gumballtransient",
     extension: "femgumballtransient",
+    fields: { gestures: BTreeMap<String, FemGumballGesture> },
 }
 //#endregion 🔖️Mutation
 

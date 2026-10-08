@@ -1,6 +1,6 @@
 //! 🧬️ Equation configuration mutations with explicit source descriptors.
 
-use super::{EquationCamera, EquationGraphWindowConfig};
+use super::{EquationCamera, EquationGraphWindowConfig, EquationGraphWindowConfigDiff};
 #[path = "🎥️set-camera/🦀️.rs"]
 mod set_camera;
 pub use set_camera::SetCamera;
@@ -15,7 +15,7 @@ pub use set_camera::SetCamera;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(tag = "kind", rename_all = "kebab-case"))]
 #[value(tag = "kind", rename_all = "kebab-case")]
-#[mutations(snapshot = EquationGraphWindowConfig, diff = EquationGraphWindowConfig, schema = "mathematical.equationgraphwindowconfig")]
+#[mutations(snapshot = EquationGraphWindowConfig, diff = EquationGraphWindowConfigDiff, schema = "mathematical.equationgraphwindowconfig")]
 pub enum EquationGraphWindowConfigMutation {
     #[dsl(key = "set-camera")]
     SetCamera(SetCamera),

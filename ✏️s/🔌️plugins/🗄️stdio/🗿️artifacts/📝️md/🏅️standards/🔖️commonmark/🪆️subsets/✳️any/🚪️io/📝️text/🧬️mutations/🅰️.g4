@@ -2,9 +2,8 @@ grammar Stdio_md_mutations;
 // 🧬️ ANTLR4 mirror of ../📖️.grammar.semio -- wire-JSON shape of `MdMutation`.
 
 mdMutation
-    : setSnapshot | insertBlock | removeBlock | replaceBlock | setInlines
+    : insertBlock | removeBlock | replaceBlock | setInlines
     ;
-setSnapshot: '{' MUTATION '"setSnapshot"' ',' '"snapshot"' ':' MD_SNAPSHOT '}';
 insertBlock: '{' MUTATION '"insertBlock"' ',' '"path"' ':' pathArray ','
                  '"index"' ':' INDEX ',' '"block"' ':' MD_BLOCK '}';
 removeBlock: '{' MUTATION '"removeBlock"' ',' '"path"' ':' pathArray ',' '"index"' ':' INDEX '}';

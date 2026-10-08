@@ -25,6 +25,9 @@ pub fn inverse(payload: &super::CreateThermostat, base: &EnergyModelSnapshot) ->
     {
         return Vec::new();
     }
+    if payload.index.is_some_and(|index| index as usize > base.model.thermostats.len()) {
+        return Vec::new();
+    }
     vec![vocabulary::delete_thermostat(payload.id)]
 
     })())

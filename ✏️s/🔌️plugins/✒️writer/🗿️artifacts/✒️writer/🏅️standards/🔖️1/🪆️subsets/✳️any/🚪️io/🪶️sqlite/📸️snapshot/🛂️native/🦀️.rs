@@ -16,12 +16,12 @@ fn admit_values(snapshot:&WriterSnapshot,control:&mut SqliteSnapshotControl<'_>,
  }Ok(())
 }
 
-pub(super) fn decode(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<WriterSnapshot,ValueError>{
+pub(super) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<WriterSnapshot,ValueError>{
  control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,2)?;
  admit(control)?;
  let value=store::decode_sqlite_snapshot_record_native(payload,<WriterSnapshot as store::ArtifactDsl>::envelope_id(),WriterSnapshot::__dsl_spec_producer(),|record,native|WriterSnapshot::__dsl_from_record_controlled(record,native),control)?;admit_values(&value,control,SqliteSnapshotPhase::DecodeNative)?;Ok(value)
 }
-pub(super) fn encode(snapshot:&WriterSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{
+pub(super) fn encode(snapshot:&WriterSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io::IoPayload,ValueError>{
  control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,2)?;
  admit(control)?;admit_values(snapshot,control,SqliteSnapshotPhase::EncodeNative)?;
  store::encode_sqlite_snapshot_record_native(encoding,<WriterSnapshot as store::ArtifactDsl>::envelope_id(),WriterSnapshot::__dsl_spec_producer(),|native|snapshot.__dsl_to_record_controlled(native),control)

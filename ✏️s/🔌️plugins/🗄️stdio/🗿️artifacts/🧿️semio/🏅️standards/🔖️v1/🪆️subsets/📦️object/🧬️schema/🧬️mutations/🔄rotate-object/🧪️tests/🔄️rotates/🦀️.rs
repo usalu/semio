@@ -31,7 +31,7 @@ fn rotate_object() -> SemioObjectMutation {
 #[semio_framework_async_macros::async_test]
 async fn replaces_the_rotation_and_keeps_translation_and_scale() {
     let base = before();
-    let produced = rotate_object().diff(&base).diff().apply(&base).expect("rotate-object applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(rotate_object().diff(&base).diff(), &base).expect("rotate-object applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "rotate-object/rotates-the-object-a-half-turn-about-z: applied state differs from the committed after-snapshot");
     assert_eq!((produced.transform.rotation.x, produced.transform.rotation.y), (0.0, 0.0), "a Z-axis rotation leaves the X/Y quaternion components at zero");
     assert_eq!((produced.transform.rotation.z, produced.transform.rotation.w), (1.0, 0.0), "the half turn about Z is the quaternion (0, 0, 1, 0)");
@@ -44,11 +44,12 @@ async fn replaces_the_rotation_and_keeps_translation_and_scale() {
 async fn the_undo_rotate_object_restores_the_identity_rotation() {
     let base = before();
     let mutation = rotate_object();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "rotate-object undoes as exactly one rotate-object");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward rotate-object applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo rotate-object applies to the rotated object");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward rotate-object applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo rotate-object applies to the rotated object");
     }
     assert_eq!(current, base, "rotate-object/rotates-the-object-a-half-turn-about-z: the undo did not restore the before-snapshot");
 }
@@ -104,6 +105,6 @@ async fn committed_diff_is_canonical_and_carries_the_whole_transform() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed rotate-object diff decodes");
-    let produced = decoded.apply(&before()).expect("committed rotate-object diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed rotate-object diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rotate-object/rotates-the-object-a-half-turn-about-z: committed diff did not carry before to after");
 }

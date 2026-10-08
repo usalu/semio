@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "annex": null,
   "title": null,
   "designWorkingLifeYears": null,
@@ -10,6 +9,11 @@
   "prestressSteels": null,
   "members": null,
   "anchors": {
-    "values": []
+    "added": [],
+    "removed": [
+      "anc-1"
+    ],
+    "modified": [],
+    "order": null
   }
 }

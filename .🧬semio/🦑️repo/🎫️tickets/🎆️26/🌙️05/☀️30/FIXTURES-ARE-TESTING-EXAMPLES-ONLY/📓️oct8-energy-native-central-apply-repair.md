@@ -1,0 +1,3 @@
+# Energy Native Central Apply Repair — 2026-10-08
+
+Actual ordered Energy3 Cargo build failed101 on3calls in the stdio shared contract/editor after the shared ApplyCapability sealed trait change. Central apply_diff is the only mint point; the caller cannot manufacture a token. Changed exactly3callers to existing kernel::apply_diff, matching the current editor leaf-fold route at1386. Retained mutation-outcome messages, publication codec cap, exact inverse restoration, final expected snapshot checks and all error mapping. Immediate full current preimages retained in `📥️oct8-energy-native-central-apply-before.json`. Actual rerun pending.

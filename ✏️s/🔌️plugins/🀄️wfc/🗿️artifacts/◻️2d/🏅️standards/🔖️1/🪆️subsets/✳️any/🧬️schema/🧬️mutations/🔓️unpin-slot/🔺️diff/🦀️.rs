@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `UnpinSlot` — a real id-keyed delta, never a whole-snapshot capture.
 
-use crate::diff::Wfc2dDiff;
+use crate::diff::{Wfc2dDiff, Wfc2dOptionalText, Wfc2dRowPatch, Wfc2dRows, Wfc2dSlotPatch};
 use crate::schema::snapshot::Wfc2dSnapshot;
 
 pub fn diff(payload: &super::UnpinSlot, base: &Wfc2dSnapshot) -> protocol::MutationOutcome<Wfc2dDiff> {
@@ -11,6 +11,5 @@ pub fn diff(payload: &super::UnpinSlot, base: &Wfc2dSnapshot) -> protocol::Mutat
     if slot.pinned_tile_id.is_none() {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Slot \"{}\" carries no pin.", payload.id));
     }
-    let released = crate::schema::snapshot::Wfc2dSlot { pinned_tile_id: None, ..slot.clone() };
-    protocol::MutationOutcome::new(Wfc2dDiff { slots_upserted: vec![(index, released)], ..Default::default() })
+    protocol::MutationOutcome::new(Wfc2dDiff { slots: Wfc2dRows { patched: vec![Wfc2dRowPatch { id: slot.id.clone(), patch: Wfc2dSlotPatch { pinned_tile_id: Some(Wfc2dOptionalText { value: None }), ..Default::default() } }], ..Default::default() }, ..Default::default() })
 }

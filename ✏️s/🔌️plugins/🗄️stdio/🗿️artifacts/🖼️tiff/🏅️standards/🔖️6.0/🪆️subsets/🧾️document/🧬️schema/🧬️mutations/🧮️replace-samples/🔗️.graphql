@@ -1,0 +1,7 @@
+# 🧮️ Contiguous run of owned TIFF sample words inside one block of one image page.
+input ReplaceSamplesMutation {
+  ifdIndex: Int!
+  block: Int!
+  offset: Int!
+  samples: [TiffWord64Input!]!
+}

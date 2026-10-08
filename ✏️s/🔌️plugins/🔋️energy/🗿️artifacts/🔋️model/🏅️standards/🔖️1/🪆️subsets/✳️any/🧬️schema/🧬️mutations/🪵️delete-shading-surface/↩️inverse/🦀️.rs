@@ -8,10 +8,10 @@ use crate::EnergyModelSnapshot;
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
 pub fn inverse(payload: &super::DeleteShadingSurface, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    let Some(existing) = base.model.shading_surfaces.iter().find(|item| item.id == payload.id) else {
+    let Some((index, existing)) = base.model.shading_surfaces.iter().enumerate().find(|(_, item)| item.id == payload.id) else {
         return Vec::new();
     };
-    vec![vocabulary::create_shading_surface(existing.id, existing.name.clone(), existing.vertices_m.clone(), existing.transmittance_schedule_id)]
+    vec![vocabulary::create_shading_surface(existing.id, existing.name.clone(), existing.vertices_m.clone(), existing.transmittance_schedule_id, Some(index as u32))]
 
     })())
 }

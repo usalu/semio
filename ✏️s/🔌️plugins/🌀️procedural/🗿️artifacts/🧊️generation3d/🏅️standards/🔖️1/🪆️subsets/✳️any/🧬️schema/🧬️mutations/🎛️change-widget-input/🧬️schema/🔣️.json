@@ -551,6 +551,145 @@
           }
         },
         "type": {
+          "const": "plane",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Type",
+              "de": "Typ"
+            },
+            "description": {
+              "en": "The literal type the input declares.",
+              "de": "Der Literaltyp, den der Eingang deklariert."
+            }
+          }
+        },
+        "value": {
+          "title": "Plane",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "origin",
+            "normal"
+          ],
+          "properties": {
+            "origin": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "Origin",
+                  "de": "Ursprung"
+                },
+                "step": 0.1,
+                "precision": 3,
+                "group": "value",
+                "order": 40
+              }
+            },
+            "normal": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3,
+              "x-semio-ui": {
+                "widget": "vector",
+                "role": "value",
+                "label": {
+                  "en": "Normal",
+                  "de": "Normale"
+                },
+                "step": 0.1,
+                "precision": 3,
+                "group": "value",
+                "order": 50
+              }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Plane",
+              "de": "Ebene"
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Plane",
+          "de": "Ebene"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "id",
+        "channel",
+        "type",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeWidgetInput"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Operator",
+              "de": "Operator"
+            },
+            "description": {
+              "en": "The operator (or text source) whose input this value is set on.",
+              "de": "Der Operator (oder die Textquelle), an dessen Eingang dieser Wert gesetzt wird."
+            },
+            "ref": {
+              "kind": "widget",
+              "domain": "graph",
+              "granularity": "node"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "x-semio-ui": {
+            "widget": "select",
+            "role": "value",
+            "label": {
+              "en": "Input",
+              "de": "Eingang"
+            },
+            "description": {
+              "en": "The unconnected input of the operator (a text source's `text`).",
+              "de": "Der unverbundene Eingang des Operators (bei einer Textquelle `text`)."
+            },
+            "optionSource": {
+              "snapshot": "/hostSnapshot/widgets/{id}/params"
+            },
+            "group": "target",
+            "order": 20
+          }
+        },
+        "type": {
           "const": "numberList",
           "x-semio-ui": {
             "role": "discriminator",

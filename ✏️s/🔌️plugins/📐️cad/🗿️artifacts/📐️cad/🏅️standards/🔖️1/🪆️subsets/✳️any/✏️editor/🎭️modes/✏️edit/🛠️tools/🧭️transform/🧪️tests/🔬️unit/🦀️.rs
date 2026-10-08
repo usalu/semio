@@ -10,7 +10,7 @@ use crate::editor::cad::unit_tests::context::{close, member_rows, meta, new_app,
 use crate::editor::cad::{start_interaction_session, try_commit_session_entries, CadCommand, CadPlayRuntime};
 use crate::sample_scene_fixture::sample_object;
 use crate::standards::v1::subsets::any::schema::geometry::{objects_from_model_snapshot, semio_model_snapshot_from_objects};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 use semio_framework_plugin::app::ChildEmitPreparationStep;
 use semio_framework_plugin::{AppOperationContext, HistoryView, PluginApp};
 
@@ -29,7 +29,7 @@ fn ids(values: &[&str]) -> Vec<String> {
 
 /// 🧮️ `model` after `leaves`, folded the way the child store folds them.
 fn apply(model: &SemioModelSnapshot, leaves: &[SemioModelMutation]) -> SemioModelSnapshot {
-    leaves.iter().fold(model.clone(), |state, leaf| leaf.diff(&state).diff().apply(&state).expect("leaf applies"))
+    leaves.iter().fold(model.clone(), |state, leaf| protocol::apply_diff(leaf.diff(&state).diff(), &state).expect("leaf applies"))
 }
 
 fn origin(model: &SemioModelSnapshot, id: &str) -> [f64; 3] {

@@ -219,8 +219,8 @@
         "de": "Fläche aus Kantenzug"
       },
       "description": {
-        "en": "Creates a face bounded by a closed wire.",
-        "de": "Erzeugt eine Fläche, die von einem geschlossenen Kantenzug begrenzt wird."
+        "en": "Creates a face bounded by a closed wire in any plane; the face points the way the wire winds counter-clockwise.",
+        "de": "Erzeugt eine Fläche, die von einem geschlossenen Kantenzug in beliebiger Ebene begrenzt wird; die Fläche zeigt in die Richtung, in der der Kantenzug gegen den Uhrzeigersinn umläuft."
       },
       "inputs": [
         {

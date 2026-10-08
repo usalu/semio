@@ -51,9 +51,9 @@ async fn between_apply_and_inverse_round_trip() {
     let a = snapshot_a();
     let b = snapshot_b();
     let d = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &b);
-    assert_eq!(d.apply(&a).expect("apply must succeed for a well-formed fixture"), b);
+    assert_eq!(protocol::apply_diff(&d, &a).expect("apply must succeed for a well-formed fixture"), b);
     let inv = d.inverse(&a);
-    assert_eq!(inv.apply(&d.apply(&a).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture"), a);
+    assert_eq!(protocol::apply_diff(&inv, &protocol::apply_diff(&d, &a).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture"), a);
     assert!(<SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &a).is_empty());
 }
 
@@ -65,10 +65,10 @@ async fn absorb_composes_two_sequential_diffs() {
     after.materials[0].metallic = 0.42;
     let mut d1 = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&a, &mid);
     let d2 = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&mid, &after);
-    let applied_before_absorb = d1.apply(&a).expect("apply must succeed for a well-formed fixture");
+    let applied_before_absorb = protocol::apply_diff(&d1, &a).expect("apply must succeed for a well-formed fixture");
     d1.absorb(d2.clone());
-    assert_eq!(d1.apply(&a).expect("apply must succeed for a well-formed fixture"), d2.apply(&applied_before_absorb).expect("apply must succeed for a well-formed fixture"));
-    assert_eq!(d1.apply(&a).expect("apply must succeed for a well-formed fixture"), after);
+    assert_eq!(protocol::apply_diff(&d1, &a).expect("apply must succeed for a well-formed fixture"), protocol::apply_diff(&d2, &applied_before_absorb).expect("apply must succeed for a well-formed fixture"));
+    assert_eq!(protocol::apply_diff(&d1, &a).expect("apply must succeed for a well-formed fixture"), after);
 }
 
 /// 🧪️ diff_codec_text_binary_roundtrip_law: hand-rolled `DiffCodec` round-trips through both
@@ -115,19 +115,19 @@ async fn material_texture_refs_roundtrip_sparse_clear_inverse_and_absorb() {
     set.materials[0].emissive_texture = Some(fixture["bindings"]["emissiveTexture"].as_str().unwrap().into());
 
     let diff = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&before, &set);
-    assert_eq!(diff.apply(&before).unwrap(), set);
-    assert_eq!(diff.inverse(&before).apply(&set).unwrap(), before);
+    assert_eq!(protocol::apply_diff(&diff, &before).unwrap(), set);
+    assert_eq!(protocol::apply_diff(&diff.inverse(&before), &set).unwrap(), before);
     let mut cleared = set.clone();
     cleared.materials[0].normal_texture = None;
     let clear = <SemioMeshDiff as DiffAlgebra<SemioMeshSnapshot>>::between(&set, &cleared);
     assert_eq!(clear.materials.as_ref().unwrap().modified[0].diff.normal_texture, Some(None));
-    assert_eq!(clear.inverse(&set).apply(&cleared).unwrap(), set);
+    assert_eq!(protocol::apply_diff(&clear.inverse(&set), &cleared).unwrap(), set);
     for value in [&diff, &clear] {
         assert_eq!(SemioMeshDiff::parse_diff(&value.print_diff()).unwrap(), *value);
         assert_eq!(SemioMeshDiff::decode_diff(&value.encode_diff().unwrap()).unwrap(), *value);
     }
     let mut combined = diff;
     combined.absorb(clear);
-    assert_eq!(combined.apply(&before).unwrap(), cleared);
+    assert_eq!(protocol::apply_diff(&combined, &before).unwrap(), cleared);
     println!("[DEBUG] Five Semio material texture references survive sparse codecs, inverse and absorb");
 }

@@ -1,4 +1,6 @@
 //! 🧬️ Direct change-asset-descriptive-metadata mutation owner: payload, validation, typed diff, inverse, and outcomes.
+use crate::schema::diff::*;
+use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
@@ -19,13 +21,21 @@ pub fn validate(payload: &GltfChangeAssetDescriptiveMetadataPayload, base: &Gltf
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfChangeAssetDescriptiveMetadataPayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
-    let mut next = base.clone();
-    next.document.asset.generator = payload.generator.clone();
-    next.document.asset.copyright = payload.copyright.clone();
-    next.document.asset.min_version = payload.min_version.clone();
-    Ok(next)
+pub fn plan(p: &GltfChangeAssetDescriptiveMetadataPayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
+    validate(p, base)?;
+    let asset = &base.document.asset;
+    Ok(GltfDiff { asset: changed(GltfAssetDiff { generator: (asset.generator != p.generator).then(|| p.generator.clone()), copyright: (asset.copyright != p.copyright).then(|| p.copyright.clone()), min_version: (asset.min_version != p.min_version).then(|| p.min_version.clone()), ..Default::default() }), ..Default::default() })
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(p: &GltfChangeAssetDescriptiveMetadataPayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    if validate(p, base).is_err() {
+        return Vec::new();
+    }
+    let asset = &base.document.asset;
+    if asset.generator == p.generator && asset.copyright == p.copyright && asset.min_version == p.min_version {
+        return Vec::new();
+    }
+    vec![super::change_asset_descriptive_metadata::mutation(super::change_asset_descriptive_metadata::GltfChangeAssetDescriptiveMetadataPayload { generator: asset.generator.clone(), copyright: asset.copyright.clone(), min_version: asset.min_version.clone() })]
 }
 
 //#region 🧬️DirectMutation
@@ -34,7 +44,11 @@ pub fn apply(payload: &GltfChangeAssetDescriptiveMetadataPayload, base: &GltfSna
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum ChangeAssetDescriptiveMetadataMutation {
     Apply(GltfChangeAssetDescriptiveMetadataPayload),
-    Restore(Box<crate::schema::diff::GltfDiff>),
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutation(payload: GltfChangeAssetDescriptiveMetadataPayload) -> super::GltfMutation {
+    super::GltfMutation::ChangeAssetDescriptiveMetadata(ChangeAssetDescriptiveMetadataMutation::Apply(payload))
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetDescriptiveMetadataMutation {
@@ -42,28 +56,18 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for ChangeAssetDe
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => match apply(payload, base) {
-                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Self::Apply(payload) => match plan(payload, base) {
+                Ok(diff) => protocol::MutationOutcome::new(diff),
                 Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
-            },
-            Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
-                Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-                Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
             },
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
-            return Vec::new();
+        match self {
+            Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::GltfMutation::ChangeAssetDescriptiveMetadata(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Change Asset Descriptive Metadata", "Beschreibende Asset-Metadaten ändern")

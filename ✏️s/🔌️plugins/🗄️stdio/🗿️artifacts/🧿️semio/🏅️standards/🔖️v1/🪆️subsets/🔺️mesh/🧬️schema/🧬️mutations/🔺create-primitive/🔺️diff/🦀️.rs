@@ -12,6 +12,6 @@ pub fn diff(payload: &super::CreatePrimitive, base: &SemioMeshSnapshot) -> proto
     if mesh.primitives.iter().any(|p| p.id == payload.primitive.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Primitive \"{}\" already exists in mesh \"{}\".", payload.primitive.id, payload.mesh_id), [payload.primitive.id.clone()]);
     }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::mesh::schema::diff::diff_add_primitive(base, &payload.mesh_id, payload.primitive.clone()))
+    protocol::MutationOutcome::new(crate::standards::v1::subsets::mesh::schema::diff::diff_add_primitive(base, &payload.mesh_id, payload.primitive.clone(), payload.at))
 }
 //#endregion 🔖️Diff

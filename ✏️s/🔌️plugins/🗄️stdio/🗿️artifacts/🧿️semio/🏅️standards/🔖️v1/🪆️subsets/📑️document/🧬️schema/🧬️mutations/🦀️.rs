@@ -16,7 +16,7 @@
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 
 
-use crate::standards::v1::subsets::document::schema::diff::{diff_block, diff_set_snapshot, BlocksDiff, DocBlockDiff, DocHeadingDiff, DocParagraphDiff, DocQuoteDiff, DocRunDiff, DocTableCellDiff, DocTableRowDiff, ListItemsDiff, RunsDiff, SemioDocumentDiff, TableCellsDiff, TableRowsDiff};
+use crate::standards::v1::subsets::document::schema::diff::{diff_block, BlocksDiff, DocBlockDiff, DocHeadingDiff, DocParagraphDiff, DocQuoteDiff, DocRunDiff, DocTableCellDiff, DocTableRowDiff, ListItemsDiff, RunsDiff, SemioDocumentDiff, TableCellsDiff, TableRowsDiff};
 
 
 
@@ -361,11 +361,11 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioDocumentMutation> {
         SemioDocumentMutation::SetRunText(set_run_text::SetRunText { path: DocBlockPath::top(0), run_index: 0, text: "hello world".into() }),
         SemioDocumentMutation::SetRunStyle(set_run_style::SetRunStyle { path: DocBlockPath::top(0), run_index: 0, style: RunStyle { bold: true, size: Some(12.0), font: Some("Arial".into()), ..Default::default() } }),
         SemioDocumentMutation::SetImageBlock(set_image_block::SetImageBlock { path: DocBlockPath::top(0), image_id: "img1".into(), alt: "alt".into(), width: Some(10.0), height: None }),
-        SemioDocumentMutation::InsertStyle(insert_style::InsertStyle { style: DocStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) } }),
+        SemioDocumentMutation::InsertStyle(insert_style::InsertStyle { style: DocStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) }, at: None }),
         SemioDocumentMutation::RemoveStyle(remove_style::RemoveStyle { id: "Normal".into() }),
         SemioDocumentMutation::SetStyleName(set_style_name::SetStyleName { id: "Normal".into(), name: "Body Text".into() }),
         SemioDocumentMutation::SetStyleBasedOn(set_style_based_on::SetStyleBasedOn { id: "Normal".into(), based_on: Some("Other".into()) }),
-        SemioDocumentMutation::InsertImage(insert_image::InsertImage { image: DocImage { id: "img2".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] } }),
+        SemioDocumentMutation::InsertImage(insert_image::InsertImage { image: DocImage { id: "img2".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] }, at: None }),
         SemioDocumentMutation::RemoveImage(remove_image::RemoveImage { id: "img2".into() }),
         SemioDocumentMutation::SetImageBytes(set_image_bytes::SetImageBytes { id: "img1".into(), mime: "image/gif".into(), bytes: vec![7] }),
     ]

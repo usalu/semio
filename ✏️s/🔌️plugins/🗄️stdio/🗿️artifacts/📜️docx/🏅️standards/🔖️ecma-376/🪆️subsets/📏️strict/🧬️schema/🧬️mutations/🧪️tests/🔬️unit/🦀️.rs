@@ -10,7 +10,6 @@ use super::*;
 fn kinds_match_enum_and_catalog() {
     fn kind_of(mutation: &DocxStrictMutation) -> &'static str {
         match mutation {
-            DocxStrictMutation::SetSnapshot(_) => "set-snapshot",
             DocxStrictMutation::SetMainNamespace(_) => "set-main-namespace",
             DocxStrictMutation::SetRelationshipBase(_) => "set-relationship-base",
             DocxStrictMutation::SetConformanceAttribute(_) => "set-conformance-attribute",
@@ -22,7 +21,6 @@ fn kinds_match_enum_and_catalog() {
         }
     }
     let samples = [
-        DocxStrictMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: DocxSnapshot::default() }),
         DocxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace: String::new() }),
         DocxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: String::new() }),
         DocxStrictMutation::SetConformanceAttribute(set_conformance_attribute::SetConformanceAttribute { value: String::new() }),
@@ -45,13 +43,20 @@ fn kinds_match_enum_and_catalog() {
 //#endregion 🔖️KindsConformanceLaw
 
 //#region 🔖️StampLaw
-/// 🏅️ The class stamp is bijective: stamping into one class and back out of it lands on the
-/// snapshot it started from. This is what makes `SetSnapshot` exactly invertible on this axis,
-/// and it is proven on a snapshot built by this repository's own code, not asserted.
+/// 🏅️ The class stamp is bijective: moving a package out of a class and back into it with the concrete stamp mutations lands on the
+/// snapshot it started from, which is what makes each stamp mutation exactly invertible on its axis.
 #[test]
-fn stamping_into_a_class_and_back_is_the_identity() {
-    let base = DocxSnapshot::default();
-    assert_eq!(stamp_conformance_class(stamp_conformance_class(base.clone(), true), false), stamp_conformance_class(base, false));
+fn stamping_out_of_a_class_and_back_is_the_identity() {
+    use semio_framework_plugin::ArtifactBuilder;
+    let started = crate::standards::v_ecma_376::subsets::strict::io::DocxStrictBuilderConstruction::empty().add_text_paragraph("clean").build().unwrap();
+    let mut state = started.clone();
+    for mutation in stamp_conformance_class_mutations(false) {
+        assert!(apply_docx_strict_mutation(&mut state, &mutation).messages().is_empty());
+    }
+    for mutation in stamp_conformance_class_mutations(true) {
+        assert!(apply_docx_strict_mutation(&mut state, &mutation).messages().is_empty());
+    }
+    assert_eq!(state, started);
 }
 //#endregion 🔖️StampLaw
 
@@ -71,7 +76,7 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
     assert!(DocxStrictMutation::decode_op(&invalid).is_err());
     let before = DocxSnapshot::default();
     let outcome = mutation.diff(&before);
-    let inserted = protocol::MutationDiff::apply(outcome.diff(), &before).unwrap();
+    let inserted = protocol::apply_diff(outcome.diff(), &before).unwrap();
     let part = inserted.xml_part(&path).unwrap();
     assert_eq!(part.materialize_document_exact().unwrap(), document);
     let physical = semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text(&document);
@@ -91,6 +96,6 @@ fn vml_owned_document_fixture_round_trips_native_codecs_and_inverse() {
     let removal = DocxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path });
     let inverse = removal.inverse(&inserted).unwrap();
     assert_eq!(inverse, vec![mutation]);
-    let removed = protocol::MutationDiff::apply(removal.diff(&inserted).diff(), &inserted).unwrap();
+    let removed = protocol::apply_diff(removal.diff(&inserted).diff(), &inserted).unwrap();
     assert_eq!(removed, before);
 }

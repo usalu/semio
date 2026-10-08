@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `ReplaceTrajectory`. Clearing an already-absent trajectory ⇒ Error;
 //! identical resubmission ⇒ Warning.
-use crate::diff::RemodelingDiff;
+use crate::diff::{RemodelingAssigned, RemodelingDiff, RemodelingResultsDiff};
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
@@ -11,8 +11,6 @@ pub fn diff(payload: &super::ReplaceTrajectory, base: &RemodelingSnapshot) -> pr
     if payload.trajectory == base.results.trajectory {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Trajectory is already up to date.".to_string());
     }
-    let mut results = base.results.clone();
-    results.trajectory = payload.trajectory.clone();
-    protocol::MutationOutcome::new(RemodelingDiff { results: Some(results), ..Default::default() })
+    protocol::MutationOutcome::new(RemodelingDiff { results: Some(RemodelingResultsDiff { trajectory: Some(RemodelingAssigned::new(payload.trajectory.clone())), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

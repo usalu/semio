@@ -45,7 +45,7 @@ from __future__ import annotations
 import json
 import struct
 
-from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
+from semio_repo_test import Adapter, Context, Outcome, digest
 
 # endregion 🔖️Imports
 
@@ -55,9 +55,6 @@ from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot
 #: production lists them, kebab-cased as the catalog spells them, paired with the camel-case tag the
 #: committed vectors and the feature use on the wire.
 KINDS = (
-    "no-mutation",
-    "set-snapshot",
-    "patch-snapshot",
     "add-layer",
     "remove-layer",
     "set-layer",
@@ -531,14 +528,8 @@ def apply_mutation(snapshot: dict, mutation: dict) -> dict:
     which is what the committed specification vectors record and what the grammars leave open."""
     result = clone(snapshot)
     kind, args = parts(mutation)
-    if kind == "no-mutation":
-        return result
-    if kind == "patch-snapshot":
-        return patched_snapshot(snapshot, args["patch"])
-    if kind == "set-snapshot":
-        return clone(args["snapshot"])
     if kind == "add-layer":
-        result["layers"].append(clone(args["layer"]))
+        result["layers"].insert(min(args["at"], len(result["layers"])) if "at" in args else len(result["layers"]), clone(args["layer"]))
         return result
     if kind == "remove-layer":
         del result["layers"][named(result["layers"], "name", args["name"], kind)]
@@ -550,7 +541,7 @@ def apply_mutation(snapshot: dict, mutation: dict) -> dict:
                 layer[key] = args[key]
         return result
     if kind == "add-block":
-        result["blocks"].append(clone(args["block"]))
+        result["blocks"].insert(min(args["at"], len(result["blocks"])) if "at" in args else len(result["blocks"]), clone(args["block"]))
         return result
     if kind == "remove-block":
         del result["blocks"][named(result["blocks"], "name", args["name"], kind)]
@@ -559,7 +550,7 @@ def apply_mutation(snapshot: dict, mutation: dict) -> dict:
         result["blocks"][named(result["blocks"], "name", args["name"], kind)]["basePoint"] = clone(args["basePoint"])
         return result
     if kind == "add-entity":
-        result["entities"].append(clone(args["entity"]))
+        result["entities"].insert(min(args["at"], len(result["entities"])) if "at" in args else len(result["entities"]), clone(args["entity"]))
         return result
     if kind == "remove-entity":
         del result["entities"][named(result["entities"], "handle", args["handle"], kind)]
@@ -572,7 +563,7 @@ def apply_mutation(snapshot: dict, mutation: dict) -> dict:
         return result
     block = block_named(result, args, kind)
     if kind == "add-block-entity":
-        block["entities"].append(clone(args["entity"]))
+        block["entities"].insert(min(args["at"], len(block["entities"])) if "at" in args else len(block["entities"]), clone(args["entity"]))
         return result
     at = named(block["entities"], "handle", args["handle"], kind)
     if kind == "remove-block-entity":
@@ -587,20 +578,13 @@ def apply_mutation(snapshot: dict, mutation: dict) -> dict:
 
 def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
     """↩️ The undo of one verb against the state it was applied to. An addition is undone by the
-    matching removal and an overwrite by an overwrite with the value it displaced. Because `add-…`
-    appends, undoing a NON-FINAL removal restores the value at the end of its collection rather than
-    in place — the feature exercises the inverse at the final entry and states that limit."""
+    matching removal, an overwrite by an overwrite with the value it displaced, and a removal by an
+    `add-…` carrying the removed index (`at`), so the original position is restored exactly."""
     kind, args = parts(mutation)
-    if kind == "no-mutation":
-        return {"mutation": TAG_OF_KIND[kind]}
-    if kind == "patch-snapshot":
-        return {"mutation": TAG_OF_KIND["set-snapshot"], "snapshot": clone(snapshot)}
-    if kind == "set-snapshot":
-        return {"mutation": TAG_OF_KIND[kind], "snapshot": clone(snapshot)}
     if kind == "add-layer":
         return {"mutation": TAG_OF_KIND["remove-layer"], "name": args["layer"]["name"]}
     if kind == "remove-layer":
-        return {"mutation": TAG_OF_KIND["add-layer"], "layer": clone(snapshot["layers"][named(snapshot["layers"], "name", args["name"], kind)])}
+        return {"mutation": TAG_OF_KIND["add-layer"], "layer": clone(snapshot["layers"][named(snapshot["layers"], "name", args["name"], kind)]), "at": named(snapshot["layers"], "name", args["name"], kind)}
     if kind == "set-layer":
         was = snapshot["layers"][named(snapshot["layers"], "name", args["name"], kind)]
         undo = {"mutation": TAG_OF_KIND[kind], "name": args["name"]}
@@ -611,14 +595,14 @@ def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
     if kind == "add-block":
         return {"mutation": TAG_OF_KIND["remove-block"], "name": args["block"]["name"]}
     if kind == "remove-block":
-        return {"mutation": TAG_OF_KIND["add-block"], "block": clone(snapshot["blocks"][named(snapshot["blocks"], "name", args["name"], kind)])}
+        return {"mutation": TAG_OF_KIND["add-block"], "block": clone(snapshot["blocks"][named(snapshot["blocks"], "name", args["name"], kind)]), "at": named(snapshot["blocks"], "name", args["name"], kind)}
     if kind == "set-block-base-point":
         was = snapshot["blocks"][named(snapshot["blocks"], "name", args["name"], kind)]
         return {"mutation": TAG_OF_KIND[kind], "name": args["name"], "basePoint": clone(was["basePoint"])}
     if kind == "add-entity":
         return {"mutation": TAG_OF_KIND["remove-entity"], "handle": args["entity"]["handle"]}
     if kind == "remove-entity":
-        return {"mutation": TAG_OF_KIND["add-entity"], "entity": clone(snapshot["entities"][named(snapshot["entities"], "handle", args["handle"], kind)])}
+        return {"mutation": TAG_OF_KIND["add-entity"], "entity": clone(snapshot["entities"][named(snapshot["entities"], "handle", args["handle"], kind)]), "at": named(snapshot["entities"], "handle", args["handle"], kind)}
     if kind in ("set-entity-layer", "set-entity-geometry"):
         was = snapshot["entities"][named(snapshot["entities"], "handle", args["handle"], kind)]
         if kind == "set-entity-layer":
@@ -629,7 +613,7 @@ def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
         return {"mutation": TAG_OF_KIND["remove-block-entity"], "blockName": args["blockName"], "handle": args["entity"]["handle"]}
     was = block["entities"][named(block["entities"], "handle", args["handle"], kind)]
     if kind == "remove-block-entity":
-        return {"mutation": TAG_OF_KIND["add-block-entity"], "blockName": args["blockName"], "entity": clone(was)}
+        return {"mutation": TAG_OF_KIND["add-block-entity"], "blockName": args["blockName"], "entity": clone(was), "at": named(block["entities"], "handle", args["handle"], kind)}
     if kind == "set-block-entity-layer":
         return {"mutation": TAG_OF_KIND[kind], "blockName": args["blockName"], "handle": args["handle"], "layer": was["layer"]}
     return {"mutation": TAG_OF_KIND[kind], "blockName": args["blockName"], "handle": args["handle"], "entity": clone(was["entity"])}
@@ -720,7 +704,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
         raise AssertionError("re-encoding the drawing did not reproduce the committed pack bytes (%d vs %d bytes)" % (len(repacked), len(committed_pack)))
     if parse_pack(repacked) != snapshot:
         raise AssertionError("re-decoding the encoded pack lost content")
-    declared = vector(ctx, "no-mutation")["before"]
+    declared = vector(ctx, "remove-block-entity")["before"]
     if snapshot != declared:
         raise AssertionError("the real committed drawing does not decode to the before-snapshot every specification vector starts from\n     got: %s\nexpected: %s" % (json.dumps(snapshot), json.dumps(declared)))
     return Outcome(
@@ -741,7 +725,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
 def adapter() -> Adapter:
     """🧭️ Registration entry point the host calls. Handlers are registered under the Scenario Outline base
     ids, which the host resolves for every Examples row, and plain scenarios under their own ids."""
-    return Adapter("python").oracle("mutate", mutate).oracle("no-mutation-baseline-mutate", mutate).oracle("inverse", inverse).oracle("no-mutation-baseline-inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
+    return Adapter("python").oracle("mutate", mutate).oracle("inverse", inverse).oracle("spec-vector", spec_vector).oracle("identity-round-trip", identity_round_trip)
 
 
 # endregion 🔖️Registration

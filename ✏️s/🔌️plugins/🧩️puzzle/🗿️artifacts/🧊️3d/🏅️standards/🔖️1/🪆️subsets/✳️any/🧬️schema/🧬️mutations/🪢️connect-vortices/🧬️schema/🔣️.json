@@ -243,6 +243,29 @@
         "group": "diagram",
         "order": 110
       }
+    },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Insertion index",
+          "de": "Einfügeposition"
+        },
+        "description": {
+          "en": "Final row position. Empty appends; positions past the end append.",
+          "de": "Endgültige Zeilenposition. Ohne Angabe am Ende; Positionen hinter dem Ende hängen an."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "order",
+        "order": 120
+      }
     }
   }
 }

@@ -36,7 +36,7 @@ const CLASS: &str = "ISO 10303-214 CC1 (config data only)";
 
 /// 🏷️ The declared vocabulary, mirroring `StepCc1Mutation`'s own variants in declaration order.
 /// Duplicated rather than imported: the oracle crate must never link the production crate.
-pub const KINDS: &[&str] = &["set-snapshot", "set-file-schema", "set-product-identity", "remove-shape-representation"];
+pub const KINDS: &[&str] = &["set-file-schema", "set-product-identity", "remove-shape-representation", "restore-entities"];
 //#endregion 🔖️Class
 
 #[cfg(feature = "oracles")]
@@ -55,7 +55,6 @@ mod oracles {
     pub fn apply_mutation(input: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
         let mut exchange = part21::read(input)?;
         match kind {
-            "set-snapshot" => part21::replace_with_snapshot(&mut exchange, params.get("snapshot").ok_or("set-snapshot carries `snapshot`")?)?,
             "set-file-schema" => {
                 let schemas = part21::str_array(params, "schemas");
                 if schemas.is_empty() {
@@ -68,6 +67,7 @@ mod oracles {
                 ladder::set_product_identity(&mut exchange, identity)?;
             }
             "remove-shape-representation" => ladder::remove_representation(&mut exchange, part21::u64_field(params, "id")?)?,
+            "restore-entities" => part21::restore_entities(&mut exchange, params)?,
             other => return Err(format!("mutation kind {other:?} has no oracle implementation in {CLASS}")),
         }
         Ok(part21::write(&exchange))
@@ -76,18 +76,18 @@ mod oracles {
     /// ↩️ The inverse of `(kind, params)` against the UNMUTATED `base`, computed independently here
     /// and mirroring `StepCc1Mutation::inverse()`'s own base-relative semantics.
     ///
-/// `remove-shape-representation` inverts to a whole-document restore: putting a representation back
+/// `remove-shape-representation` inverts to an exact `restore-entities` row: putting a representation back
 /// is a state CC1 forbids, so no in-class verb can express it. That is the production vocabulary's
 /// own answer too (`StepCc1Mutation::inverse`), independently arrived at here.
     pub fn inverse_spec(base: &[u8], kind: &str, _params: &Json) -> Result<Json, String> {
         let exchange = part21::read(base)?;
         let object = |entries: Vec<(&str, Json)>| Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
-        let restore = || part21::snapshot_payload(&exchange);
+        let restore = |ids: &[u64]| part21::restore_entities_payload(&exchange, ids);
         let (inverse_kind, inverse_params) = match kind {
-            "set-snapshot" => ("set-snapshot", restore()?),
             "set-file-schema" => ("set-file-schema", object(vec![("schemas", Json::Array(part21::file_schema_names(&exchange).into_iter().map(Json::String).collect()))])),
             "set-product-identity" => ("set-product-identity", object(vec![("identity", ladder::product_identity_json(&exchange))])),
-            "remove-shape-representation" => ("set-snapshot", restore()?),
+            "remove-shape-representation" => ("restore-entities", restore(&[part21::u64_field(_params, "id")?])?),
+            "restore-entities" => ("restore-entities", restore(&part21::entity_ids(_params))?),
             other => return Err(format!("mutation kind {other:?} has no oracle inverse in {CLASS}")),
         };
         Ok(object(vec![("kind", Json::String(inverse_kind.to_string())), ("params", inverse_params)]))

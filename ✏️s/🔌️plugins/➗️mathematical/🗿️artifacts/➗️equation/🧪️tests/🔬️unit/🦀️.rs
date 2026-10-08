@@ -78,8 +78,8 @@ async fn genesis_answers_only_the_derived_coordinate() {
 #[semio_framework_async_macros::async_test]
 async fn a_state_diff_carries_the_state_and_its_handles() {
     let base = EquationSnapshot::default();
-    let diff = equation_state_diff(base.graph.clone(), moved_geometry());
-    let applied = protocol::MutationDiff::apply(&diff, &base).expect("a state diff applies");
+    let diff = equation_state_diff(EquationDiff { points: Some(crate::diff::points_replacing(&base.geometry.points, &moved_geometry().points)), ..Default::default() }, &base);
+    let applied = protocol::apply_diff(&diff, &base).expect("a state diff applies");
     let mut expected = equation_snapshot_with_state(&base.graph, &moved_geometry());
     expected.equation = base.equation.clone();
     assert_eq!(applied, expected);
@@ -116,8 +116,12 @@ fn committed_fixtures_carry_their_derived_handles() {
             semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&snapshot.to_value()))
         } else if diff_side {
             let mut diff: EquationDiff = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-            if let (Some(graph), Some(geometry)) = (diff.graph.as_ref(), diff.geometry.as_ref()) {
-                let (notation, results, computed) = equation_children(graph, geometry);
+            let before_path = path.parent().and_then(std::path::Path::parent).expect("fixture directory").join("📸️snapshot/⬅️before/🔣️.json");
+            if diff.notation.is_some() || diff.results.is_some() || diff.computed.is_some() {
+                let before_text = std::fs::read_to_string(&before_path).expect("the before snapshot beside a handle-carrying diff reads");
+                let before: EquationSnapshot = semio_framework_pack_json::from_json_str(&before_text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed before snapshot decodes");
+                let (graph, geometry) = diff.state_after(&before).expect("committed diff applies to its before snapshot");
+                let (notation, results, computed) = equation_children(&graph, &geometry);
                 (diff.notation, diff.results, diff.computed) = (Some(notation), Some(results), Some(computed));
             }
             semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&diff.to_value()))
@@ -158,10 +162,10 @@ fn the_child_restore_projection_names_every_declared_child_slot() {
 async fn txt_dsl_carrier_round_trips_exactly() {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use semio_framework::io::io_mechanism::{Deserializer, Serializer};
+    use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
     use semio_framework::io_schema::IoPayload;
     let snapshot = crate::EquationSnapshot::default();
-    let exported = export::txt::v_utf_8::any::EquationIntoTxt::serialize(&snapshot, &semio_framework::io::io_mechanism::ArchiveChildren::default()).await.expect("dsl txt export");
+    let exported = export::txt::v_utf_8::any::EquationIntoTxt::serialize(&snapshot, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::default()).await.expect("dsl txt export");
     let IoPayload::Text(text) = exported.value else { panic!("txt is a text payload") };
     let back = import::txt::v_utf_8::any::TxtIntoEquation::deserialize(&IoPayload::Text(text)).await.expect("dsl txt import");
     assert_eq!(back.value, snapshot);

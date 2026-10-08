@@ -12,6 +12,8 @@ pub struct CreateEdge {
     pub end_vertex: String,
     pub curve: BrepCurve,
     pub tol: f64,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for CreateEdge {

@@ -62,7 +62,6 @@
       "subsetDirectoryName": "🏢️cobie",
       "vectors": [],
       "kinds": [
-        "set-snapshot",
         "set-view-definition",
         "set-facility-name",
         "set-floor-elevation",
@@ -116,28 +115,6 @@
             "operation": "set-floor-elevation",
             "bridgeVersion": 1,
             "variant": "SetFloorElevation"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "ifc-2x3-cobie-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "ifc-2x3-cobie-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
           },
           "oracleRequirements": [
             {
@@ -466,56 +443,6 @@
       "reproducible": true,
       "family": "structural",
       "notes": "Replaced the header FILE_DESCRIPTION's view-definition text via ifcopenshell's own header object."
-    },
-    {
-      "id": "set-snapshot-applied",
-      "class": "third-party-generated",
-      "target": {
-        "artifact": "s.stdio.ifc",
-        "standard": "2x3",
-        "subset": "cobie"
-      },
-      "mutation": "set-snapshot",
-      "outcome": "applied",
-      "units": {
-        "length": "millimetre",
-        "angle": "radian"
-      },
-      "files": [
-        {
-          "role": "expected-before-ifc",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/⬅️before.ifc",
-          "mediaType": "model/ifc",
-          "sha256": "sha256:320f5915d2ce0c3384c779c8ff9eb7e471aaca3bba64ce909760559b452d969c",
-          "bytes": 188288
-        },
-        {
-          "role": "expected-after-ifc",
-          "path": "../🧫️fixtures/📸️set-snapshot-applied/➡️after.ifc",
-          "mediaType": "model/ifc",
-          "sha256": "sha256:f390850ec1fecad9de3eb1d3e704b15d4640d29a4ad41d7ce7a7e80a2eac4933",
-          "bytes": 188317
-        }
-      ],
-      "generator": {
-        "oracle": "ifcopenshell-ifc-2x3-cobie-mutate-reader",
-        "packageVersion": "0.8.4.post1",
-        "engineFamily": "ifcopenshell",
-        "engineVersion": "0.8.4.post1",
-        "command": "uv run --group test python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️02/SEPARATE-ARTIFACT-STANDARD-SUBSET-IMPLEMENTATIONS-AND-FIXTURE-TEST-EVERY-MUTATION/🔨️f1-ifc-generate.py",
-        "platform": "darwin-arm64"
-      },
-      "provenance": {
-        "source": "generated",
-        "license": "LGPL-3.0-or-later (ifcopenshell)",
-        "attribution": "Generated with IfcOpenShell 0.8.4.post1 (LGPL-3.0-or-later) via a real read+write round trip against this repository's own committed real-world fixture",
-        "security": "scanned-clean",
-        "privacy": "no-personal-data"
-      },
-      "comparisonProfile": "semantic-ifc-v1",
-      "reproducible": true,
-      "family": "structural",
-      "notes": "Replaced both #IfcBuilding.Name and the first #IfcBuildingStorey.Elevation together, standing in for a wholesale COBie snapshot replacement (ifcopenshell has no single bulk-document type; the combined edit is the observable surface)."
     }
   ],
   "oracleHostPackages": []

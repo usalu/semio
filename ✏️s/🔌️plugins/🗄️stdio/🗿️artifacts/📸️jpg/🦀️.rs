@@ -17,7 +17,7 @@ use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference
 
 pub use schema::diff::JpgDiff;
 pub use schema::mutations::JpgMutation;
-pub use schema::snapshot::JpgSnapshot;
+pub use schema::snapshot::{JpgSnapshot,JpgImage};
 pub use schema::JpgArtifact;
 
 /// 🏷️ Document schema / DSL envelope id.
@@ -129,9 +129,9 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// why this calls `subset_validator_entry_of` directly instead of reusing the private cache in
 /// `🧱️baseline/🚪️io`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn declared_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
-    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
-    ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<standards::v_jfif_1_01::subsets::baseline::io::JpgBaselineValidator>()]).as_slice()
+fn declared_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
+    ENTRIES.get_or_init(|| vec![semio_framework_plugin::io::subset_validator_entry_of::<standards::v_jfif_1_01::subsets::baseline::io::JpgBaselineValidator>()]).as_slice()
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — moved
@@ -203,7 +203,7 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v_jfif_1_01::subsets::document::io::io_registry as v_jfif_1_01;
-    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
+    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -275,28 +275,16 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod top_level;
                         pub use top_level::*;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
-                        pub mod set_snapshot;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
-                        pub mod patch_snapshot;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪪️change-jfif/🦀️.rs"]
                         pub mod change_jfif_header;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🔁️change-restart/🦀️.rs"]
-                        pub mod change_restart_interval;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📥️insert-other/🦀️.rs"]
                         pub mod insert_other_segment;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪓️remove-huffman/🦀️.rs"]
-                        pub mod remove_huffman_table;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🗑️remove-other/🦀️.rs"]
                         pub mod remove_other_segment;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🧹️remove-quant/🦀️.rs"]
-                        pub mod remove_quant_table;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🌳️replace-huffman/🦀️.rs"]
-                        pub mod replace_huffman_table;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🔲️replace-pixels/🦀️.rs"]
                         pub mod replace_pixels;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📊️replace-quant/🦀️.rs"]
-                        pub mod replace_quant_table;
+                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🖼️replace-image/🦀️.rs"]
+                        pub mod replace_image;
                     }
                     #[cfg(test)]
                     #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧪️tests/🛡️mutation-regressions/🦀️.rs"]

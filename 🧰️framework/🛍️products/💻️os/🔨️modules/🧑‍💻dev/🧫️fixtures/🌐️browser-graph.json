@@ -54,8 +54,8 @@
       "replacement": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript"
     },
     {
-      "find": "@semio-tech/infinite-canvas-react-renderer",
-      "replacement": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️.tsx"
+      "find": "@semio-tech/canvas-react-renderer",
+      "replacement": "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️.tsx"
     },
     {
       "find": "@semio-tech/infinite-world-r3f",

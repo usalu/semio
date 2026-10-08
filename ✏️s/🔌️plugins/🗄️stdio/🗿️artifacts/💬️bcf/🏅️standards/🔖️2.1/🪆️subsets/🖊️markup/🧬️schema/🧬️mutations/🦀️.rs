@@ -2,7 +2,7 @@
 //! apply-and-capture) via the diff module's `wrap_*_diff` helpers; every variant's `inverse()`
 //! looks up prior state from `base` and constructs the exact undoing mutation (guid-aware,
 //! matching svg/docx precedent). `SetVersion`/`SetViewpointSnapshot` extend the brief's literal
-//! mutation list (`SetSnapshot, InsertTopic/RemoveTopic/SetTopicMarkup,
+//! mutation list (`InsertTopic/RemoveTopic/SetTopicMarkup,
 //! InsertComment/RemoveComment/SetComment, InsertViewpoint/RemoveViewpoint/SetViewpointCamera/
 //! SetViewpointComponents`) — `version` and a viewpoint's `snapshot` bytes are real independently
 //! mutable snapshot fields the target completeness table lists, so a complete mutation API needs
@@ -53,7 +53,7 @@
 
 
 
-use crate::schema::diff::{diff_set_snapshot, wrap_comment_diff, wrap_topic_diff, wrap_viewpoint_diff, BcfCommentDiff, BcfCommentsDiff, BcfDiff, BcfTopicDiff, BcfTopicsDiff, BcfViewpointDiff, BcfViewpointsDiff};
+use crate::schema::diff::{comment_index, topic_index, viewpoint_index, wrap_comment_diff, wrap_topic_diff, wrap_viewpoint_diff, BcfCommentDiff, BcfCommentsDiff, BcfDiff, BcfTopicDiff, BcfTopicsDiff, BcfViewpointDiff, BcfViewpointsDiff, IndexedAdded};
 use crate::schema::snapshot::{BcfCamera, BcfComment, BcfComponents, BcfTopic, BcfViewpoint};
 use crate::BcfSnapshot;
 use protocol::Mutation;
@@ -85,9 +85,7 @@ pub mod remove_viewpoint;
 pub mod set_comment;
 /// 📐️ Typed content mutation for `stdio.bcf`.
 /// 🧪️ F6 CONFIRMED (real `cargo check` error, `dsl::DslOps` attempted and reverted): fails for
-/// the mutation-side twin of the diff's blockers — `SetSnapshot{snapshot: BcfSnapshot}`
-/// recursively contains `BcfCamera` (`error[E0277]: the trait bound v2_1::...::BcfCamera:
-/// DslField is not satisfied`) via `topics -> viewpoints -> camera`, `InsertTopic`/
+/// the mutation-side twin of the diff's blockers — `InsertTopic`/
 /// `InsertComment`/`InsertViewpoint` each carry a whole `BcfTopic`/`BcfComment`/`BcfViewpoint`
 /// (none of which derive `DslField` — none are `DslRecord`-derived), and
 /// `SetViewpointCamera{camera: Option<BcfCamera>}` carries the enum DIRECTLY as a variant field
@@ -97,10 +95,6 @@ pub mod set_comment;
 /// check (§3b). `OpText`/`OpBinary` hand-rolled below, reusing the diff module's `pub(crate)`
 /// grammar primitives.
 //#region 🔖️Leaves
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "🗃️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "🖊️set-topic-markup/🦀️.rs"]
 pub mod set_topic_markup;
 #[path = "🔢set-version/🦀️.rs"]
@@ -119,8 +113,6 @@ pub mod set_viewpoint_snapshot;
 #[mutations(snapshot = BcfSnapshot, diff = BcfDiff, schema = "BcfMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum BcfMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetVersion(set_version::SetVersion),
     InsertTopic(insert_topic::InsertTopic),
     RemoveTopic(remove_topic::RemoveTopic),
@@ -141,7 +133,6 @@ pub enum BcfMutation {
 /// framework never parses Rust to check it itself). Mirrors `print_bcf_mutation`'s own keyword match
 /// entry-for-entry, so `KINDS[i]` is exactly what `print_op()` emits for the enum's `i`-th variant.
 pub const KINDS: &[&str] = &[
-    "set-snapshot", "patch-snapshot",
     "set-version",
     "insert-topic",
     "remove-topic",
@@ -163,7 +154,7 @@ pub const KINDS: &[&str] = &[
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_bcf_mutation(snapshot: &mut BcfSnapshot, mutation: &BcfMutation) -> protocol::MutationOutcome<BcfDiff> {
     let outcome = <BcfMutation as Mutation<BcfSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -173,119 +164,6 @@ pub fn apply_bcf_mutation(snapshot: &mut BcfSnapshot, mutation: &BcfMutation) ->
 }
 //#endregion 🔖️Apply
 
-
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &BcfMutation, base: &BcfSnapshot) -> protocol::MutationOutcome<BcfDiff> {
-    protocol::MutationOutcome::new(match this {
-        BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
-        BcfMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<BcfSnapshot, BcfMutation>>::diff(patch, base),
-        BcfMutation::SetVersion(set_version::SetVersion { version }) => BcfDiff { version: Some(version.clone()), topics: None, parts: None },
-        BcfMutation::InsertTopic(insert_topic::InsertTopic { topic }) => BcfDiff { version: None, topics: Some(BcfTopicsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![topic.clone()] }), parts: None },
-        BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid }) => BcfDiff { version: None, topics: Some(BcfTopicsDiff { removed: vec![guid.clone()], modified: Vec::new(), added: Vec::new() }), parts: None },
-        BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup { guid, title, description, status, priority, labels, creation_date, creation_author }) => wrap_topic_diff(
-            guid,
-            BcfTopicDiff {
-                title: title.clone(),
-                description: description.clone(),
-                status: status.clone(),
-                priority: priority.clone(),
-                labels: labels.clone(),
-                creation_date: creation_date.clone(),
-                creation_author: creation_author.clone(),
-                comments: None,
-                viewpoints: None,
-            },
-        ),
-        BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid, comment }) => {
-            wrap_topic_diff(topic_guid, BcfTopicDiff { comments: Some(BcfCommentsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![comment.clone()] }), ..Default::default() })
-        }
-        BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid, guid }) => {
-            wrap_topic_diff(topic_guid, BcfTopicDiff { comments: Some(BcfCommentsDiff { removed: vec![guid.clone()], modified: Vec::new(), added: Vec::new() }), ..Default::default() })
-        }
-        BcfMutation::SetComment(set_comment::SetComment { topic_guid, guid, date, author, text, viewpoint_ref }) => {
-            wrap_comment_diff(topic_guid, guid, BcfCommentDiff { date: date.clone(), author: author.clone(), text: text.clone(), viewpoint_ref: viewpoint_ref.clone() })
-        }
-        BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid, viewpoint }) => {
-            wrap_topic_diff(topic_guid, BcfTopicDiff { viewpoints: Some(BcfViewpointsDiff { removed: Vec::new(), modified: Vec::new(), added: vec![viewpoint.clone()] }), ..Default::default() })
-        }
-        BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid, guid }) => {
-            wrap_topic_diff(topic_guid, BcfTopicDiff { viewpoints: Some(BcfViewpointsDiff { removed: vec![guid.clone()], modified: Vec::new(), added: Vec::new() }), ..Default::default() })
-        }
-        BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid, guid, camera }) => wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: Some(camera.clone()), components: None, snapshot: None }),
-        BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid, guid, components }) => {
-            wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: None, components: Some(components.clone()), snapshot: None })
-        }
-        BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid, guid, snapshot }) => wrap_viewpoint_diff(topic_guid, guid, BcfViewpointDiff { camera: None, components: None, snapshot: Some(snapshot.clone()) }),
-    })
-}
-
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &BcfMutation, base: &BcfSnapshot) -> Result<Vec<BcfMutation>, semio_framework_value::ValueError> {
-    Ok({
-    match this {
-        BcfMutation::SetSnapshot(_) => vec![BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        BcfMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<BcfSnapshot, BcfMutation>>::inverse(patch, base)?),
-        BcfMutation::SetVersion(_) => vec![BcfMutation::SetVersion(set_version::SetVersion { version: base.version.clone() })],
-        BcfMutation::InsertTopic(insert_topic::InsertTopic { topic }) => vec![BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: topic.guid.clone() })],
-        BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid }) => match find_topic(base, guid) {
-            Some(t) => vec![BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: t.clone() })],
-            None => Vec::new(),
-        },
-        BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup { guid, title, description, status, priority, labels, creation_date, creation_author }) => match find_topic(base, guid) {
-            Some(t) => vec![BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup {
-                guid: guid.clone(),
-                title: title.as_ref().map(|_| t.title.clone()),
-                description: description.as_ref().map(|_| t.description.clone()),
-                status: status.as_ref().map(|_| t.status.clone()),
-                priority: priority.as_ref().map(|_| t.priority.clone()),
-                labels: labels.as_ref().map(|_| t.labels.clone()),
-                creation_date: creation_date.as_ref().map(|_| t.creation_date.clone()),
-                creation_author: creation_author.as_ref().map(|_| t.creation_author.clone()),
-            })],
-            None => Vec::new(),
-        },
-        BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid, comment }) => {
-            vec![BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid: topic_guid.clone(), guid: comment.guid.clone() })]
-        }
-        BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid, guid }) => match find_comment(base, topic_guid, guid) {
-            Some(c) => vec![BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: topic_guid.clone(), comment: c.clone() })],
-            None => Vec::new(),
-        },
-        BcfMutation::SetComment(set_comment::SetComment { topic_guid, guid, date, author, text, viewpoint_ref }) => match find_comment(base, topic_guid, guid) {
-            Some(c) => vec![BcfMutation::SetComment(set_comment::SetComment {
-                topic_guid: topic_guid.clone(),
-                guid: guid.clone(),
-                date: date.as_ref().map(|_| c.date.clone()),
-                author: author.as_ref().map(|_| c.author.clone()),
-                text: text.as_ref().map(|_| c.text.clone()),
-                viewpoint_ref: viewpoint_ref.as_ref().map(|_| c.viewpoint_ref.clone()),
-            })],
-            None => Vec::new(),
-        },
-        BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid, viewpoint }) => {
-            vec![BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: topic_guid.clone(), guid: viewpoint.guid.clone() })]
-        }
-        BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid, guid }) => match find_viewpoint(base, topic_guid, guid) {
-            Some(v) => vec![BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: topic_guid.clone(), viewpoint: v.clone() })],
-            None => Vec::new(),
-        },
-        BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid, guid, .. }) => match find_viewpoint(base, topic_guid, guid) {
-            Some(v) => vec![BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: topic_guid.clone(), guid: guid.clone(), camera: v.camera.clone() })],
-            None => Vec::new(),
-        },
-        BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid, guid, .. }) => match find_viewpoint(base, topic_guid, guid) {
-            Some(v) => vec![BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid: topic_guid.clone(), guid: guid.clone(), components: v.components.clone() })],
-            None => Vec::new(),
-        },
-        BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid, guid, .. }) => match find_viewpoint(base, topic_guid, guid) {
-            Some(v) => vec![BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid: topic_guid.clone(), guid: guid.clone(), snapshot: v.snapshot.clone() })],
-            None => Vec::new(),
-        },
-    }
-
-    })
-}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn find_topic<'a>(base: &'a BcfSnapshot, guid: &str) -> Option<&'a BcfTopic> {
@@ -302,6 +180,81 @@ fn find_viewpoint<'a>(base: &'a BcfSnapshot, topic_guid: &str, guid: &str) -> Op
     find_topic(base, topic_guid)?.viewpoints.iter().find(|v| v.guid == guid)
 }
 //#endregion 🔖️MutationTrait
+
+//#region 🔖️Net
+/// 🧮️ The leaves that carry `base` to exactly `next`: the version if it moved, then every topic in place by position (a topic of
+/// another guid is removed and inserted anew at its index; the same topic re-sets its markup and walks its comments and
+/// viewpoints the same way) and the diverging tails. The unmodeled `parts` have no leaf, so a change to them is left unaddressed.
+pub fn net_mutations(base: &BcfSnapshot, next: &BcfSnapshot) -> Vec<BcfMutation> {
+    let mut leaves = Vec::new();
+    if base.version != next.version {
+        leaves.push(BcfMutation::SetVersion(set_version::SetVersion { version: next.version.clone() }));
+    }
+    let paired = base.topics.len().min(next.topics.len());
+    for (index, (before, after)) in base.topics.iter().zip(&next.topics).enumerate().filter(|(_, (before, after))| before != after) {
+        if before.guid != after.guid {
+            leaves.push(BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: before.guid.clone() }));
+            leaves.push(BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: after.clone(), index: Some(index) }));
+            continue;
+        }
+        let guid = &before.guid;
+        let moved = |old: &String, new: &String| (old != new).then(|| new.clone());
+        let markup = set_topic_markup::SetTopicMarkup {
+            guid: guid.clone(),
+            title: moved(&before.title, &after.title),
+            description: moved(&before.description, &after.description),
+            status: moved(&before.status, &after.status),
+            priority: moved(&before.priority, &after.priority),
+            labels: (before.labels != after.labels).then(|| after.labels.clone()),
+            creation_date: moved(&before.creation_date, &after.creation_date),
+            creation_author: moved(&before.creation_author, &after.creation_author),
+        };
+        if (&markup.title, &markup.description, &markup.status, &markup.priority, &markup.labels, &markup.creation_date, &markup.creation_author) != (&None, &None, &None, &None, &None, &None, &None) {
+            leaves.push(BcfMutation::SetTopicMarkup(markup));
+        }
+        let comments_paired = before.comments.len().min(after.comments.len());
+        for (comment_index, (old, new)) in before.comments.iter().zip(&after.comments).enumerate().filter(|(_, (old, new))| old != new) {
+            if old.guid != new.guid {
+                leaves.push(BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid: guid.clone(), guid: old.guid.clone() }));
+                leaves.push(BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: guid.clone(), comment: new.clone(), index: Some(comment_index) }));
+            } else {
+                leaves.push(BcfMutation::SetComment(set_comment::SetComment {
+                    topic_guid: guid.clone(),
+                    guid: old.guid.clone(),
+                    date: moved(&old.date, &new.date),
+                    author: moved(&old.author, &new.author),
+                    text: moved(&old.text, &new.text),
+                    viewpoint_ref: (old.viewpoint_ref != new.viewpoint_ref).then(|| new.viewpoint_ref.clone()),
+                }));
+            }
+        }
+        leaves.extend(before.comments[comments_paired..].iter().rev().map(|old| BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid: guid.clone(), guid: old.guid.clone() })));
+        leaves.extend(after.comments.iter().enumerate().skip(comments_paired).map(|(comment_index, new)| BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: guid.clone(), comment: new.clone(), index: Some(comment_index) })));
+        let viewpoints_paired = before.viewpoints.len().min(after.viewpoints.len());
+        for (viewpoint_index, (old, new)) in before.viewpoints.iter().zip(&after.viewpoints).enumerate().filter(|(_, (old, new))| old != new) {
+            if old.guid != new.guid {
+                leaves.push(BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: guid.clone(), guid: old.guid.clone() }));
+                leaves.push(BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: guid.clone(), viewpoint: new.clone(), index: Some(viewpoint_index) }));
+                continue;
+            }
+            if old.camera != new.camera {
+                leaves.push(BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: guid.clone(), guid: old.guid.clone(), camera: new.camera.clone() }));
+            }
+            if old.components != new.components {
+                leaves.push(BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid: guid.clone(), guid: old.guid.clone(), components: new.components.clone() }));
+            }
+            if old.snapshot != new.snapshot {
+                leaves.push(BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid: guid.clone(), guid: old.guid.clone(), snapshot: new.snapshot.clone() }));
+            }
+        }
+        leaves.extend(before.viewpoints[viewpoints_paired..].iter().rev().map(|old| BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: guid.clone(), guid: old.guid.clone() })));
+        leaves.extend(after.viewpoints.iter().enumerate().skip(viewpoints_paired).map(|(viewpoint_index, new)| BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: guid.clone(), viewpoint: new.clone(), index: Some(viewpoint_index) })));
+    }
+    leaves.extend(base.topics[paired..].iter().rev().map(|old| BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: old.guid.clone() })));
+    leaves.extend(next.topics.iter().enumerate().skip(paired).map(|(index, topic)| BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: topic.clone(), index: Some(index) })));
+    leaves
+}
+//#endregion 🔖️Net
 
 //#region OpCodecs
 
@@ -336,8 +289,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
     let base = demo_snapshot_a();
     let snapshot = demo_snapshot_b();
     vec![
-        BcfMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
-        BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }),
         BcfMutation::SetVersion(set_version::SetVersion { version: "2.2".into() }),
         BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: base.topics[0].clone() }),
         BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: "keep".into() }),
@@ -378,13 +329,3 @@ pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
 mod kinds_tests;
 //#endregion 🧪️KindsLaw
 
-//#region 🧪️FixtureTests
-// 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),
-// one case per mutation leaf. Wired HERE and not in `🦀️.rs`: that file is shared with the
-// agents migrating the other stdio artifacts, so the production mounts there stay untouched while
-// this artifact owns its own test mount. `#[path = "."]` re-bases the children on this file's own
-// directory, which is what makes the leaf-relative path below resolve.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️fixture/🦀️.rs"]
-mod fixture_tests;
-//#endregion 🧪️FixtureTests

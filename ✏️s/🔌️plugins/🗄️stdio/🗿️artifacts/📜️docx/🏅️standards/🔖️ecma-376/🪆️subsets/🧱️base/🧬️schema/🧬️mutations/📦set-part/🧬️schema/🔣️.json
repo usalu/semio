@@ -95,6 +95,25 @@
         "group": "value",
         "order": 30
       }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Position a new non-XML package part takes among the package parts; the last position when absent.",
+          "de": "Position, die ein neuer Nicht-XML-Paketteil unter den Paketteilen einnimmt; ohne Angabe die letzte."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "value",
+        "order": 40
+      }
     }
   }
 }

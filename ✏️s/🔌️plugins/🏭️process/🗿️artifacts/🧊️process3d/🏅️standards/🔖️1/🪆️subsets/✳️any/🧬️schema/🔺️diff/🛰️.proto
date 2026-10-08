@@ -1,41 +1,70 @@
 syntax = "proto3";
 package semio.s.process.process3d.diff;
 
-// 🧬️ Process3d diff schema — sparse field delta over the artifact.
+// 🧬️ Process3d diff schema — sparse field delta over the artifact: id-keyed machine, step and tool-solid row deltas plus the scalar stock slots.
 
 message Process3dDiff {
   // @state artifact
-  optional Process3dArtifact artifact = 1;
+  optional Process3dMachinesDelta workshop = 1;
   // @state artifact
-  optional Process3dWorkshop workshop = 2;
+  optional string stock_id = 2;
+  optional string stock_label = 3;
+  optional Process3dPose stock_pose = 4;
+  optional Process3dStock stock_payload = 5;
+  optional ArtifactChildHandle stock_solid = 6;
   // @state artifact
-  optional string stock_id = 3;
-  optional string stock_label = 4;
-  optional Process3dPose stock_pose = 5;
-  optional Process3dStock stock_payload = 6;
-  optional ArtifactChildHandle stock_solid = 7;
-  // @state artifact
-  optional ArtifactChildHandle steps = 8;
-  repeated Process3dStep step_payloads = 9;
-  repeated ArtifactChildHandle tool_solids = 10;
+  optional ArtifactChildHandle steps = 7;
+  optional Process3dStepsDelta step_payloads = 8;
+  optional Process3dToolSolidsDelta tool_solids = 9;
   // @state presence
   // @state config
 }
 
-message Process3dArtifact {}
-message Process3dWorkshop {}
 message Process3dStock {}
+message Process3dPose {}
+message Process3dMachine {}
+message Process3dCapability {}
+message Process3dStep {}
+message Process3dMeasure {}
+message Process3dOrigin {}
+message ArtifactChildHandle { string child_id = 1; string target = 2; }
+
+message Process3dMachinesDelta {
+  repeated Process3dMachine added = 1;
+  repeated string removed = 2;
+  repeated Process3dMachinePatch patched = 3;
+  repeated string reordered = 4;
+}
+
+message Process3dMachinePatch {
+  string id = 1;
+  optional string label = 2;
+  optional string icon_id = 3;
+  repeated Process3dCapability capabilities = 4;
+}
+
 message Process3dStepsDelta {
   repeated Process3dStep added = 1;
   repeated string removed = 2;
-  repeated Process3dStepPatchEntry patched = 3;
+  repeated Process3dStepPatch patched = 3;
   repeated string reordered = 4;
 }
-message Process3dStep {}
-message Process3dStepPatchEntry {
+
+message Process3dStepPatch {
   string id = 1;
-  Process3dStepPatch patch = 2;
+  optional string label = 2;
+  optional bool enabled = 3;
+  optional Process3dMeasure measure = 4;
+  optional Process3dOptionalOrigin origin = 5;
 }
-message Process3dStepPatch {}
-message Process3dPose {}
-message ArtifactChildHandle { string child_id = 1; string target = 2; }
+
+message Process3dOptionalOrigin { optional Process3dOrigin value = 1; }
+
+message Process3dToolSolidsDelta {
+  repeated ArtifactChildHandle added = 1;
+  repeated string removed = 2;
+  repeated Process3dToolSolidPatch patched = 3;
+  repeated string reordered = 4;
+}
+
+message Process3dToolSolidPatch { string child_id = 1; }

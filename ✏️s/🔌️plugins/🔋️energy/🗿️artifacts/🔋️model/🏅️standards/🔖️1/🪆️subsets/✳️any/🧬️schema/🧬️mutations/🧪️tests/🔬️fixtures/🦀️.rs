@@ -312,22 +312,27 @@ fn committed_is_rejected(case: &Case) -> bool {
     matches!(committed(case, "outcome", case.outcome).get("status"), Some(semio_framework_pack_json::Value::String(status)) if status == "rejected")
 }
 
-/// ⚖️ The framework's own inverse and diff-absorb laws, run in role against this vector. A vector
-/// the committed outcome declares REJECTED is exempt from the inverse law by construction — the
-/// framework law panics on any Error/Fatal forward outcome, and a refusal IS that outcome; what a
-/// refusal owes instead (the exact fault code + path, an empty delta, before == after) is pinned
-/// by `assert_outcome`/`assert_diff`/`assert_forward`. The absorb law still holds for it.
+/// ⚖️ The framework's own laws, run in role against this vector: the sequential inverse law, the L3 inverse-sum law (the concrete
+/// inverse steps' diffs, absorbed, equal the negative of the forward diff) and the diff-absorb law over the forward diff followed
+/// by the diff of the first inverse step applied. A vector the committed outcome declares REJECTED is exempt from the inverse
+/// laws by construction — the framework laws panic on any Error/Fatal forward outcome, and a refusal IS that outcome; what a
+/// refusal owes instead (the exact fault code + path, an empty delta, before == after) is pinned by
+/// `assert_outcome`/`assert_diff`/`assert_forward`. The absorb law still holds for it.
 pub async fn assert_laws(case: &Case) {
     let base = decode(case, "before-snapshot", case.before);
     let mutation: EnergyModelMutation = semio_framework_pack_json::from_json_str(case.mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed mutation payload decodes");
+    let first = built(case).diff().clone();
     if committed_is_rejected(case) {
         assert!(built(case).worst_level().is_some_and(|level| level >= semio_framework_diagnostic::Severity::Error), "{}/{}: the committed outcome is a refusal but the implementation applied the mutation", case.kind, case.directory);
         assert_eq!(decode(case, "after-snapshot", case.after), base, "{}/{}: a refused vector must leave the document untouched", case.kind, case.directory);
-    } else {
-        protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+        protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, first.clone(), first).await;
+        return;
     }
-    let first = built(case).diff().clone();
-    let second = built(case).diff().clone();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    let after = protocol::apply_diff(&first, &base).expect("the committed forward diff applies");
+    let undo = <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").pop();
+    let second = undo.map_or_else(EnergyModelDiff::default, |step| <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::diff(&step, &after).diff().clone());
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, first, second).await;
 }
 

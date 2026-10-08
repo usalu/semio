@@ -55,97 +55,19 @@
   },
   "$defs": {
     "ChangeNodeNameMutation": {
-      "description": "The whole wire of ChangeNodeNameMutation: the editable apply payload (this document's root) or the inert restore.",
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "phase",
-            "value"
-          ],
-          "properties": {
-            "phase": {
-              "const": "apply"
-            },
-            "value": {
-              "$ref": "#"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "phase",
-            "value"
-          ],
-          "properties": {
-            "phase": {
-              "const": "restore"
-            },
-            "value": {
-              "$ref": "#/$defs/GltfChangeNodeNameRestore"
-            }
-          }
-        }
-      ]
-    },
-    "GltfChangeNodeNameRestore": {
+      "description": "The whole wire of ChangeNodeNameMutation: the editable apply payload (this document's root).",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "node",
-        "before",
-        "after"
+        "phase",
+        "value"
       ],
       "properties": {
-        "node": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4294967295,
-          "x-semio-ui": {
-            "label": {
-              "en": "Node",
-              "de": "Knoten"
-            },
-            "description": {
-              "en": "Index of the node, counted from 0.",
-              "de": "Index des Knotens, ab 0 gezählt."
-            }
-          }
+        "phase": {
+          "const": "apply"
         },
-        "before": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "x-semio-ui": {
-            "label": {
-              "en": "Name before",
-              "de": "Name vorher"
-            }
-          }
-        },
-        "after": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "x-semio-ui": {
-            "label": {
-              "en": "Name after",
-              "de": "Name nachher"
-            }
-          }
+        "value": {
+          "$ref": "#"
         }
       }
     }

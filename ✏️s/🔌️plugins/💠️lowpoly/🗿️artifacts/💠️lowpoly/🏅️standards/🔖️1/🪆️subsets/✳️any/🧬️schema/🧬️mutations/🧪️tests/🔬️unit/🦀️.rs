@@ -1,6 +1,6 @@
 use super::*;
 use crate::{schema::default_snapshot, LowpolyObject, LowpolySnapshot};
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 fn tiny_object(id: &str, name: &str) -> LowpolyObject {
     let mesh = default_snapshot().objects[0].mesh.clone();
@@ -16,8 +16,9 @@ async fn create_object_obeys_the_inverse_and_absorb_laws() {
     let base = default_snapshot();
     let create = LowpolyMutation::CreateObject(super::super::create_object::CreateObject { index: base.objects.len(), object: tiny_object("obj-99", "Extra") });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &create).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&create, &base).await;
     let d1 = create.diff(&base).into_parts().0;
-    let after = d1.apply(&base).expect("valid mutation diff");
+    let after = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
     let d2 = LowpolyMutation::RenameObject(super::super::rename_object::RenameObject { id: "obj-99".into(), new_name: "Renamed".into() }).diff(&after).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
@@ -35,6 +36,7 @@ async fn move_object_obeys_the_inverse_law() {
     let id = base.objects[0].id.clone();
     let mutation = LowpolyMutation::MoveObject(super::super::move_object::MoveObject { id, new_position: [4.0, 5.0, 6.0] });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
 }
 //#endregion ⚖️SemanticLaws
 
@@ -173,3 +175,24 @@ fn refresh_lowpoly_mutation_fixtures_when_requested() {
     }
 }
 //#endregion 🔄TestInputresh
+
+/// ⚖️ Every ordered-collection kind deletes, inserts or moves a MIDDLE row: the inverse restores the exact original index and the
+/// inverse diffs sum to the negative of the forward diff.
+#[semio_framework_async_macros::async_test]
+async fn middle_row_edits_restore_their_original_index() {
+    let mut base = default_snapshot();
+    base.objects = ["a", "b", "c", "d"].map(|id| tiny_object(id, id)).to_vec();
+    base.objects[1].paint_layers = ["x", "y", "z"].map(crate::LowpolyPaintLayer::new).to_vec();
+    let mutations = vec![
+        LowpolyMutation::DeleteObject(super::super::delete_object::DeleteObject { id: "b".into() }),
+        LowpolyMutation::CreateObject(super::super::create_object::CreateObject { index: 2, object: tiny_object("n", "New") }),
+        LowpolyMutation::ReorderObjects(super::super::reorder_objects::ReorderObjects { id: "b".into(), to_index: 3 }),
+        LowpolyMutation::ReorderObjects(super::super::reorder_objects::ReorderObjects { id: "c".into(), to_index: 0 }),
+        LowpolyMutation::RemovePaintLayer(super::super::remove_paint_layer::RemovePaintLayer { object_id: "b".into(), index: 1 }),
+        LowpolyMutation::InsertPaintLayer(super::super::insert_paint_layer::InsertPaintLayer { object_id: "b".into(), index: 1, layer: crate::LowpolyPaintLayer::new("new") }),
+    ];
+    for mutation in mutations {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+}

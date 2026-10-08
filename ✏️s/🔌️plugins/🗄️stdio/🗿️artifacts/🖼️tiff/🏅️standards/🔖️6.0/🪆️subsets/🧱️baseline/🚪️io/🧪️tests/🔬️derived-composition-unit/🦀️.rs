@@ -1,7 +1,7 @@
 mod tests {
     use super::*;
     use crate::standards::v6_0::subsets::document::schema::snapshot::{TiffByteOrder, TiffFieldType, TiffIfd, TiffStorage, TiffStorageKind, TiffTag, TiffValues};
-    use semio_framework_plugin::AnalyzeSource;
+    use semio_framework_plugin::io::AnalyzeSource;
 
     /// 🩹 `TiffSnapshot::default()` has no IFD at all, which the real encoder rejects ("tiff:
     /// encode requires an ImageWidth tag") -- `encode_pack`'s infallible convenience wrapper

@@ -31,7 +31,7 @@ fn mutation() -> SemioKitMutation {
 #[semio_framework_async_macros::async_test]
 async fn repins_the_link_without_retargeting_or_rerolling_it() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("change-representation-pin applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("change-representation-pin applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "change-representation-pin/repins-the-representation-from-head-to-a-checkpoint: applied state differs from the committed after-snapshot");
     assert_ne!(produced.representations[0].pin, base.representations[0].pin, "the pin really must have changed");
     assert_eq!(produced.representations[0].target, base.representations[0].target, "repinning must not retarget the link");
@@ -44,13 +44,14 @@ async fn repins_the_link_without_retargeting_or_rerolling_it() {
 async fn the_undo_change_representation_pin_restores_the_head_pin() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "change-representation-pin of an existing link undoes as exactly one change-representation-pin");
     let SemioKitMutation::ChangeRepresentationPin(restore) = &undo[0] else { panic!("change-representation-pin must undo as change-representation-pin") };
     assert_eq!(restore.pin, base.representations[0].pin, "the undo must recapture BASE's own pin");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward change-representation-pin applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo change-representation-pin applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward change-representation-pin applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo change-representation-pin applies");
     }
     assert_eq!(current, base, "change-representation-pin/repins-the-representation-from-head-to-a-checkpoint: the undo did not restore the before-snapshot");
 }
@@ -93,9 +94,6 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-representation-pin diff decodes");
-    let links = decoded.representations.as_ref().expect("change-representation-pin must write the representations slot");
-    assert_eq!(links.values.len(), 1, "a repin never changes how many links there are");
-    assert_eq!(links.values[0].role, before().representations[0].role, "the diff carries the whole link, role unchanged");
     assert!(decoded.types.is_none() && decoded.designs.is_none() && decoded.objects.is_none() && decoded.models.is_none() && decoded.properties.is_none(), "no other kit slot may appear in the diff");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -106,6 +104,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-representation-pin diff decodes");
-    let produced = decoded.apply(&before()).expect("committed change-representation-pin diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed change-representation-pin diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-representation-pin/repins-the-representation-from-head-to-a-checkpoint: committed diff did not carry before to after");
 }

@@ -1,0 +1,8 @@
+{
+  "cases": [
+    {"id": "ascii-spare-capacity", "key": "key", "keyCapacity": 257, "value": "payload", "valueCapacity": 513},
+    {"id": "unicode-spare-capacity", "key": "雪😀", "keyCapacity": 513, "value": "é", "valueCapacity": 257}
+  ],
+  "grants": [1, 3, 64],
+  "expected": {"terminalOwners": 0, "stepBirthBytes": 0, "reportedReleaseEqualsAllocator": true, "actualReleaseFitsGrant": true, "sourcePayloadPointerPreserved": true}
+}

@@ -1,41 +1,93 @@
 {
-  "artifact": null,
   "annex": null,
-  "materials": null,
-  "sections": null,
-  "members": null,
-  "loadCases": {
-    "values": [
-      {
-        "id": "uls-1",
-        "name": "ULS gravity",
-        "kind": "imposed",
-        "category": "office"
-      },
-      {
-        "id": "sls-1",
-        "name": "SLS characteristic",
-        "kind": "imposed",
-        "category": "office"
-      },
-      {
-        "id": "lc-acc",
-        "name": "Accidental",
-        "kind": "accidental",
-        "category": "office"
-      }
-    ]
+  "materials": {
+    "removed": [],
+    "added": [],
+    "modified": []
   },
-  "memberActions": null,
-  "joints": null,
-  "fatigueDetails": null,
-  "fireExposures": null,
-  "coldFormedMembers": null,
-  "platedPanels": null,
-  "siloShells": null,
-  "tensionComponents": null,
-  "bridgeFatigue": null,
-  "towerLegs": null,
-  "piles": null,
-  "craneRunways": null
+  "sections": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "loadCases": {
+    "removed": [],
+    "added": [
+      {
+        "after": "sls-1",
+        "row": {
+          "id": "lc-acc",
+          "name": "Accidental",
+          "kind": "accidental",
+          "category": "office"
+        }
+      }
+    ],
+    "modified": []
+  },
+  "memberActions": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "joints": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "fatigueDetails": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "fireExposures": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "coldFormedMembers": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "platedPanels": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "siloShells": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "tensionComponents": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "bridgeFatigue": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "towerLegs": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "piles": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "craneRunways": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

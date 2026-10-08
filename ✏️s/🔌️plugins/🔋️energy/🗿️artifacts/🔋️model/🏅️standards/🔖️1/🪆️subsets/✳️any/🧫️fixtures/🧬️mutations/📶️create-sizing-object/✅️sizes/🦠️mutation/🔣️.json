@@ -3,5 +3,6 @@
   "id": 15,
   "zoneId": 1,
   "sizingType": "Heating",
-  "designDayType": "Heating"
+  "designDayType": "Heating",
+  "index": null
 }

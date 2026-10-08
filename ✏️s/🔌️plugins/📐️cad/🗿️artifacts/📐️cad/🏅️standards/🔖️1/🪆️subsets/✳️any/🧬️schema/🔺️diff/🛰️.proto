@@ -3,20 +3,41 @@ package semio.s.cad.cad.diff;
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 import "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 message CadDiff {
-  optional semio.s.cad.cad.artifact.CadArtifact artifact = 1;
-  optional string schema = 2;
-  optional string id = 3;
-  optional semio.os.store.ArtifactChild shape_model = 4;
-  optional semio.os.store.ArtifactChild building_model = 5;
-  optional semio.os.store.ArtifactChild energy_model = 6;
-  optional semio.os.store.ArtifactChild structure_classic_model = 7;
-  optional CadDrawingChildList drawings = 8;
-  optional CadBrepChildList breps = 9;
-  map<string, semio.s.cad.cad.artifact.CadReferenceList> references_by_model_definition_id = 10;
-  optional CadNodesDelta nodes = 11;
+  optional string schema = 1;
+  optional string id = 2;
+  optional CadModelSlot shape_model = 3;
+  optional CadModelSlot building_model = 4;
+  optional CadModelSlot energy_model = 5;
+  optional CadModelSlot structure_classic_model = 6;
+  optional CadDrawingsDelta drawings = 7;
+  optional CadBrepsDelta breps = 8;
+  map<string, CadReferencesDelta> references_by_model_definition_id = 9;
+  optional CadNodesDelta nodes = 10;
 }
-message CadDrawingChildList { repeated semio.os.store.ArtifactChild values = 1; }
-message CadBrepChildList { repeated semio.os.store.ArtifactChild values = 1; }
+message CadModelSlot { optional semio.os.store.ArtifactChild child = 1; }
+message CadDrawingsDelta { repeated semio.os.store.ArtifactChild added = 1; repeated string removed = 2; repeated string reordered = 3; }
+message CadBrepsDelta { repeated semio.os.store.ArtifactChild added = 1; repeated string removed = 2; repeated string reordered = 3; }
+message CadOrientationSet { repeated double value = 1; }
+message CadScaleSet { optional double value = 1; }
+message CadOpacitySet { optional double value = 1; }
+message CadReferencePatch {
+  optional string source_url = 1;
+  optional string media_kind = 2;
+  repeated double origin = 3;
+  optional CadOrientationSet orientation = 4;
+  optional CadScaleSet scale = 5;
+  optional double width_world = 6;
+  optional bool hidden = 7;
+  optional bool locked = 8;
+  optional CadOpacitySet opacity = 9;
+}
+message CadReferencePatchEntry { string id = 1; CadReferencePatch patch = 2; }
+message CadReferencesDelta {
+  repeated semio.s.cad.cad.artifact.CadReference added = 1;
+  repeated string removed = 2;
+  repeated CadReferencePatchEntry patched = 3;
+  repeated string reordered = 4;
+}
 message CadNodePatch { optional string label = 1; }
 message CadNodePatchEntry { string id = 1; CadNodePatch patch = 2; }
 message CadNodesDelta {

@@ -6,9 +6,9 @@ package semio.s_stdio_semio_mesh.mutations;
 
 import "../📸️snapshot/🛰️.proto";
 
-message CreateMesh { semio.s_stdio_semio_mesh.snapshot.SemioMesh mesh = 1; }
+message CreateMesh { semio.s_stdio_semio_mesh.snapshot.SemioMesh mesh = 1; optional uint64 at = 2; }
 message DeleteMesh { string id = 1; }
-message CreatePrimitive { string mesh_id = 1; semio.s_stdio_semio_mesh.snapshot.SemioPrimitive primitive = 2; }
+message CreatePrimitive { string mesh_id = 1; semio.s_stdio_semio_mesh.snapshot.SemioPrimitive primitive = 2; optional uint64 at = 3; }
 message DeletePrimitive { string mesh_id = 1; string primitive_id = 2; }
 message SetPrimitiveTopology { string mesh_id = 1; string primitive_id = 2; semio.s_stdio_semio_mesh.snapshot.SemioTopology topology = 3; }
 message ReplacePrimitiveGeometry {
@@ -21,12 +21,12 @@ message ReplacePrimitiveGeometry {
   repeated uint32 indices = 7;
 }
 message SetPrimitiveMaterial { string mesh_id = 1; string primitive_id = 2; optional string material_id = 3; }
-message CreateMaterial { semio.s_stdio_semio_mesh.snapshot.SemioMaterial material = 1; }
+message CreateMaterial { semio.s_stdio_semio_mesh.snapshot.SemioMaterial material = 1; optional uint64 at = 2; }
 message DeleteMaterial { string id = 1; }
 message ChangeMaterialBaseColor { string id = 1; semio.s_stdio_semio_mesh.snapshot.SemioRgba new_base_color = 2; }
 message ChangeMaterialMetallic { string id = 1; float new_metallic = 2; }
 message ChangeMaterialRoughness { string id = 1; float new_roughness = 2; }
-message CreateTexture { semio.s_stdio_semio_mesh.snapshot.SemioTexture texture = 1; }
+message CreateTexture { semio.s_stdio_semio_mesh.snapshot.SemioTexture texture = 1; optional uint64 at = 2; }
 message DeleteTexture { string id = 1; }
 message ChangeTextureMime { string id = 1; string new_mime = 2; }
 message ReplaceTextureBytes { string id = 1; bytes new_bytes = 2; }

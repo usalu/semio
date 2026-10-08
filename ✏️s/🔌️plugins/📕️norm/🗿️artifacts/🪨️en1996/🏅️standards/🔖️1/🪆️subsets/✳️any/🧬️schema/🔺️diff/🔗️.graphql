@@ -1,5 +1,4 @@
 type En1996Diff {
-  artifact: JSON
   annex: String
   masonryClass: String
   designSituation: String

@@ -34,43 +34,6 @@ use protocol::Mutation;
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance};
 
-/// 🧪️ Mutation-specific real binary primitives backing the upgraded `OpBinary` impl below — reuses
-/// the diff sibling's `pub(crate)` recursive `enc_part21_instance_bin`/`enc_part21_header_bin`/
-/// `write_str_bin` primitives for the SHARED `Part21Instance`/`Part21Header`/`Part21Value` shape
-/// (same intra-artifact-reuse split the TEXT codec above already uses); only `Ifc2x3Snapshot`'s own
-/// binary shape is genuinely new here.
-pub(crate) fn enc_ifc2x3_snapshot_bin(s: &Ifc2x3Snapshot, out: &mut Vec<u8>) {
-    write_str_bin(out, &s.schema);
-    enc_part21_header_bin(&s.document.header, out);
-    store::pack_rt::write_varint_u64(out, s.document.instances.len() as u64);
-    for inst in &s.document.instances {
-        enc_part21_instance_bin(inst, out);
-    }
-    match &s.edm_preamble {
-        None => out.push(0),
-        Some(value) => {
-            out.push(1);
-            enc_edm_preamble_bin(value, out);
-        }
-    }
-}
-
-pub(crate) fn dec_ifc2x3_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3Snapshot, String> {
-    let schema = read_str_bin(reader)?;
-    let header = dec_part21_header_bin(reader)?;
-    let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut instances = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        instances.push(dec_part21_instance_bin(reader)?);
-    }
-    let edm_preamble = match reader.read_u8().map_err(|e| e.to_string())? {
-        0 => None,
-        1 => Some(dec_edm_preamble_bin(reader)?),
-        tag => return Err(format!("ifc2x3 snapshot: invalid EDM preamble presence {tag}")),
-    };
-    Ok(Ifc2x3Snapshot { schema, document: Part21Document { header, instances }, edm_preamble })
-}
-
 /// 🧪️ REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from the literal-JSON shortcut above. `tag` is the `Ifc2x3Mutation` variant ordinal,
@@ -81,17 +44,16 @@ pub(crate) fn dec_ifc2x3_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Res
 impl protocol::OpBinary for Ifc2x3Mutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            Ifc2x3Mutation::SetSnapshot(..) => TAG_SET_SNAPSHOT,
-            Ifc2x3Mutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
             Ifc2x3Mutation::UpsertInstance(..) => TAG_UPSERT_INSTANCE,
             Ifc2x3Mutation::RemoveInstance(..) => TAG_REMOVE_INSTANCE,
             Ifc2x3Mutation::SetHeader(..) => TAG_SET_HEADER,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
-            Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_ifc2x3_snapshot_bin(snapshot, &mut out),
-            Ifc2x3Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => out.extend(protocol::OpBinary::encode_op(patch)?),
-            Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance }) => enc_part21_instance_bin(instance, &mut out),
+            Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance, index }) => {
+                enc_part21_instance_bin(instance, &mut out);
+                store::pack_rt::write_varint_u64(&mut out, index.map_or(0, |index| index as u64 + 1));
+            }
             Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id }) => store::pack_rt::write_varint_u64(&mut out, *id),
             Ifc2x3Mutation::SetHeader(set_header::SetHeader { header }) => enc_part21_header_bin(header, &mut out),
         }
@@ -107,15 +69,6 @@ impl protocol::OpBinary for Ifc2x3Mutation {
         }
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         let mutation = match tag {
-            TAG_PATCH_SNAPSHOT => Ifc2x3Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(reader.read_bytes(reader.remaining()).map_err(|e| protocol::ProtocolError::Malformed { what: "patch-snapshot payload", offset: reader.position() as u64, detail: e.to_string() })?)? }),
-            TAG_SET_SNAPSHOT => {
-                let snapshot = dec_ifc2x3_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
-                Ifc2x3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Box::new(snapshot) })
-            }
-            TAG_UPSERT_INSTANCE => {
-                let instance = dec_part21_instance_bin(&mut reader).map_err(|e| malformed("op instance", reader.position(), e))?;
-                Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance })
-            }
             TAG_REMOVE_INSTANCE => {
                 let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
                 Ifc2x3Mutation::RemoveInstance(remove_instance::RemoveInstance { id })
@@ -138,8 +91,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `Ifc2x3Mutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_UPSERT_INSTANCE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "upsert-instance");
 const TAG_REMOVE_INSTANCE: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-instance");
 const TAG_SET_HEADER: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-header");

@@ -1,20 +1,16 @@
 {
   "runs": {
-    "values": [
+    "removed": [
+      0
+    ],
+    "added": [
       {
-        "language": "en",
-        "content": "two",
-        "marks": []
-      },
-      {
-        "language": "en",
-        "content": "three",
-        "marks": []
-      },
-      {
-        "language": "en",
-        "content": "one",
-        "marks": []
+        "index": 2,
+        "item": {
+          "language": "en",
+          "content": "one",
+          "marks": []
+        }
       }
     ]
   }

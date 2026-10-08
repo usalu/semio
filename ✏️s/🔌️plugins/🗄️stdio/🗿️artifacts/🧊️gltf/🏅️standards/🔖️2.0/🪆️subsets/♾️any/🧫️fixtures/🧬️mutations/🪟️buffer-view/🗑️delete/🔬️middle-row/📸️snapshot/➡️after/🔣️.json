@@ -1,0 +1,38 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "bufferViews": [
+      {
+        "buffer": 0,
+        "byteOffset": 0,
+        "byteLength": 2,
+        "name": "view0"
+      },
+      {
+        "buffer": 0,
+        "byteOffset": 4,
+        "byteLength": 2,
+        "name": "view2"
+      }
+    ],
+    "buffers": [
+      {
+        "byteLength": 6
+      }
+    ]
+  },
+  "buffers": [
+    [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ]
+  ],
+  "sourceForm": "json"
+}

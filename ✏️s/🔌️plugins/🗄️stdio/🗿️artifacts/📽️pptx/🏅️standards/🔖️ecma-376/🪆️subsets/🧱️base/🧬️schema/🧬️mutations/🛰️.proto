@@ -17,7 +17,6 @@ message PptxShapeAddress { PptxXmlAddress node = 1; string shape_id = 2; }
 message PptxXmlVacancyAddress { PptxXmlAddress container = 1; uint64 index = 2; }
 message PptxMutation {
   string mutation = 1;
-  optional semio.s_stdio_pptx.snapshot.PptxSnapshot snapshot = 2;
   optional PptxSlideAddress slide_address = 3;
   optional PptxShapeAddress shape_address = 4;
   optional PptxXmlVacancyAddress vacancy = 5;
@@ -26,4 +25,6 @@ message PptxMutation {
   optional uint64 destination_index = 8;
   optional string text = 9;
   optional semio.s_stdio_pptx.snapshot.PptxTransform position = 10;
+  optional PptxXmlAddress address = 11;
+  optional semio.s_stdio_pptx.snapshot.XmlNode node = 12;
 }

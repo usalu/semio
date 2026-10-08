@@ -1,0 +1,19 @@
+syntax = "proto2";
+package surface.vector_tile;
+
+message Tile {
+  message Feature {
+    optional uint64 id = 1;
+    repeated uint32 tags = 2 [packed = true];
+    optional uint32 type = 3 [default = 0];
+    repeated uint32 geometry = 4 [packed = true];
+  }
+  message Layer {
+    required string name = 1;
+    repeated Feature features = 2;
+    repeated string keys = 3;
+    optional uint32 extent = 5 [default = 4096];
+    required uint32 version = 15 [default = 1];
+  }
+  repeated Layer layers = 3;
+}

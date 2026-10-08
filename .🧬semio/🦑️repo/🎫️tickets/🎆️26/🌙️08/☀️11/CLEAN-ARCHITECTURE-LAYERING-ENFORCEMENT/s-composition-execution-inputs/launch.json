@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "rows": [
+    {"name":"⚖️s-dev-composition🧩️s🟦️", "type":"node-terminal", "request":"launch", "command":"bun nx run @semio-tech/s-dev-composition:composition-check --outputStyle=stream", "cwd":"${workspaceFolder}", "presentation":{"group":"4_gate", "order":900.22}},
+    {"name":"⚖️s-dev-composition-source🧩️s🟦️", "type":"node-terminal", "request":"launch", "command":"bun nx run @semio-tech/s-dev-composition:source-check --outputStyle=stream", "cwd":"${workspaceFolder}", "presentation":{"group":"4_gate", "order":900.23}}
+  ],
+  "retireNames": []
+}

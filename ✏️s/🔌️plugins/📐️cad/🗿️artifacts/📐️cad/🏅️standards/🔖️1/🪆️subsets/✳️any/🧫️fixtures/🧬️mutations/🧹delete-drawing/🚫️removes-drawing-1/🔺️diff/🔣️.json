@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "shapeModel": null,
@@ -7,7 +6,11 @@
   "energyModel": null,
   "structureClassicModel": null,
   "drawings": {
-    "values": []
+    "added": [],
+    "removed": [
+      "cad-drawing-1"
+    ],
+    "reordered": null
   },
   "breps": null,
   "referencesByModelDefinitionId": null,

@@ -4,6 +4,7 @@
 use super::colour::{extra_entries, lift_colour_space, lower_colour_space, numbers_of, push_opt, raw_stream};
 use super::lexer::{dict_get, dict_i64, dict_name};
 use super::xref::ObjectSink;
+use super::lexer::PResult;
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfImage, PdfImageCodec, PdfImageMask, PdfObject, PdfStreamFilter};
 
@@ -52,12 +53,12 @@ pub fn lift_image(id: &str, dict: &[PdfDictEntry], data: &[u8], filters: &[PdfSt
 /// ⬆️ Lowers an image to its stream object. `ref_of` resolves the ids of masks/soft masks and
 /// optional-content groups to references.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn lower_image(image: &PdfImage, sink: &mut dyn ObjectSink, ref_of: &mut dyn FnMut(&str) -> Option<PdfObject>, oc_ref_of: &mut dyn FnMut(&str) -> Option<PdfObject>) -> PdfObject {
+pub fn lower_image(image: &PdfImage, sink: &mut dyn ObjectSink, ref_of: &mut dyn FnMut(&str) -> Option<PdfObject>, oc_ref_of: &mut dyn FnMut(&str) -> Option<PdfObject>) -> PResult<PdfObject> {
     let mut dict = vec![PdfDictEntry::new("Type", PdfObject::name("XObject")), PdfDictEntry::new("Subtype", PdfObject::name("Image")), PdfDictEntry::new("Width", PdfObject::Int(image.width as i64)), PdfDictEntry::new("Height", PdfObject::Int(image.height as i64))];
     if image.image_mask {
         dict.push(PdfDictEntry::new("ImageMask", PdfObject::Bool(true)));
     } else {
-        push_opt(&mut dict, "ColorSpace", image.color_space.as_ref().map(|cs| lower_colour_space(cs, sink)));
+        push_opt(&mut dict, "ColorSpace", image.color_space.as_ref().map(|cs| lower_colour_space(cs, sink)).transpose()?);
         dict.push(PdfDictEntry::new("BitsPerComponent", PdfObject::Int(image.bits_per_component.max(1) as i64)));
     }
     if !image.decode.is_empty() {
@@ -89,7 +90,7 @@ pub fn lower_image(image: &PdfImage, sink: &mut dyn ObjectSink, ref_of: &mut dyn
     if let PdfObject::Stream { filters: slot, .. } = &mut object {
         *slot = filters;
     }
-    object
+    Ok(object)
 }
 
 //#region 🧪️Tests

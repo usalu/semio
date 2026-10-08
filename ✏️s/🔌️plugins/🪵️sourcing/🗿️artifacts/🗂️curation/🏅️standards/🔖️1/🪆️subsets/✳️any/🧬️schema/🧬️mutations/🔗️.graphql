@@ -1,6 +1,6 @@
 # 🗂️ Sourcing curation direct mutation aggregate.
 input CuratedItemInput { objectId: String!, count: Int! }
-input CreateCuratedItemInput { item: CuratedItemInput! }
+input CreateCuratedItemInput { item: CuratedItemInput! index: Int }
 input DeleteCuratedItemInput { objectId: String! }
 input ChangeCuratedItemCountInput { objectId: String!, newCount: Int! }
 

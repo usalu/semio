@@ -1,135 +1,24 @@
 {
-  "artifact": null,
-  "catalogue": {
-    "id": "cat.fixture",
-    "metadata": {
-      "names": {
-        "preferred": {
-          "locale": "en",
-          "text": "Fixture Radiator Catalogue"
-        },
-        "shortName": "Fixture",
-        "alternatives": [
-          {
-            "locale": "de",
-            "text": "Musterkatalog Heizkörper"
-          }
-        ]
-      },
-      "lifecycle": {
-        "revision": "1",
-        "status": "published",
-        "validFrom": null,
-        "validTo": null
-      },
-      "editionProfile": "FullPublished"
-    },
-    "manufacturer": {
-      "id": "mfg.fixture",
-      "names": {
-        "preferred": {
-          "locale": "en",
-          "text": "Fixture Heating Works"
-        },
-        "shortName": null,
-        "alternatives": []
-      }
-    },
-    "dictionary": {
-      "id": "bsdd.fixture",
-      "version": "2026-01"
-    },
-    "productGroups": [
-      {
-        "id": "group.radiators",
-        "names": {
-          "preferred": {
-            "locale": "en",
-            "text": "Radiators"
-          },
-          "shortName": null,
-          "alternatives": []
-        },
-        "dictionarySubjectId": "subject.radiator"
-      }
+  "catalogueName": null,
+  "manufacturerName": null,
+  "productGroups": null,
+  "productClasses": null,
+  "productSeries": null,
+  "products": {
+    "added": [],
+    "removed": [
+      "product.pr600"
     ],
-    "productClasses": [
-      {
-        "id": "class.panel-radiator",
-        "groupId": "group.radiators",
-        "parentId": null,
-        "names": {
-          "preferred": {
-            "locale": "en",
-            "text": "Panel radiator"
-          },
-          "shortName": null,
-          "alternatives": []
-        },
-        "requiredPropertyIds": [
-          "prop.height"
-        ],
-        "optionalPropertyIds": []
-      }
-    ],
-    "productSeries": [
-      {
-        "id": "series-pr",
-        "classId": "class.panel-radiator",
-        "names": {
-          "preferred": {
-            "locale": "en",
-            "text": "PR series"
-          },
-          "shortName": null,
-          "alternatives": []
-        },
-        "sharedPropertyValues": {},
-        "geometryId": null
-      }
-    ],
-    "products": [],
-    "productIndexes": [],
-    "propertyDefinitions": [
-      {
-        "id": "prop.height",
-        "names": {
-          "preferred": {
-            "locale": "en",
-            "text": "Height"
-          },
-          "shortName": null,
-          "alternatives": []
-        },
-        "dataType": "decimal",
-        "unit": {
-          "symbol": "mm",
-          "dimension": {
-            "length": 1,
-            "mass": 0,
-            "time": 0,
-            "temperature": 0
-          },
-          "siFactor": 0.001
-        },
-        "cardinality": {
-          "min": 1,
-          "max": 1
-        },
-        "kind": "Static",
-        "dictionaryPropertyId": "prop.height"
-      }
-    ],
-    "accessories": {},
-    "compositions": {},
-    "descriptiveObjects": [],
-    "extensions": {
-      "fields": {}
-    }
+    "modified": [],
+    "order": null
   },
-  "dictionary": null,
-  "geometry": null,
-  "selection": null,
+  "productIndexes": null,
+  "propertyDefinitions": null,
+  "subjects": null,
+  "geometryObjects": null,
+  "selectionClassId": null,
+  "selectionSeriesId": null,
+  "selectionConstraints": null,
   "partNumberRule": null,
   "partNumberInputs": null,
   "scriptLimits": null,

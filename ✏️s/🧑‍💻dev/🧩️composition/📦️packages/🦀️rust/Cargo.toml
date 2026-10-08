@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../.."
+workspace = "../.."
 name = "semio-s-composition-laws"
 version.workspace = true
 edition.workspace = true
@@ -26,7 +26,7 @@ path = "../../🧪️tests/🎬️sequence-runtime/🦀️.rs"
 [dev-dependencies]
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-artifact-playbook-playbook.workspace = true
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-s-spatial-kernel-semio-session = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-framework-artifact-infinite-dag = { workspace = true }

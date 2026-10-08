@@ -25,3 +25,5 @@ pub struct EquationGraphWindowConfig {
     #[dsl(block)]
     pub camera: EquationCamera,
 }
+
+semio_framework_os_kernel::config_diff! { record: EquationGraphWindowConfig, diff: EquationGraphWindowConfigDiff, fields: { camera: EquationCamera } }

@@ -1,7 +1,6 @@
 # 🧬️ PlyMutation union — mirrors the Rust `PlyMutation` enum, discriminated on `mutation`.
 
 enum PlyMutationKind {
-  SET_SNAPSHOT
   SET_FORMAT
   INSERT_COMMENT
   REMOVE_COMMENT

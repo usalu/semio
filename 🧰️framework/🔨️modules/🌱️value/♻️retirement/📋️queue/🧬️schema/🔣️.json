@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/value/retirement/queue/schema.json",
+  "title": "Admitted Typed Retirement Queue",
+  "$defs": {
+    "Grant": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant"
+    },
+    "Admission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frameCapacityBytes",
+        "reservedSlot"
+      ],
+      "properties": {
+        "frameCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reservedSlot": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Demand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

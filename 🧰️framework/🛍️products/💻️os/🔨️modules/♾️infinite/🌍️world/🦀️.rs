@@ -12,7 +12,7 @@ use semio_framework_ui_viewport::{Viewport3dProjectionFramePolicy, Viewport3dPro
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 use ui_wgpu::wgpu::{
     aabb_intersects_frustum, directional_shadow_frustum_planes, directional_shadow_view_projection, frustum_planes, grid_placement_anchor, paint_selection_marquee, transform_aabb, LineDraw3d, SceneLighting3d, SceneMaterial3d,
-    Mat4Math, ProceduralGrid3d, SceneAuthoredMaterial3d, SceneMaterialAlpha3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneShadow3d, SceneShadowRole3d, SceneViewportMask3d, TexturedDraw3d, TexturedInstance3d, ICON_SHADOW_MAP_SIZE, WORLD_SHADOW_MAP_SIZE,
+    Mat4Math, ProceduralGrid3d, SceneAuthoredMaterial3d, SceneInstanceMaterial3d, SceneMaterialAlpha3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneSectionRole3d, SceneShadow3d, SceneShadowRole3d, SceneViewportMask3d, TexturedDraw3d, TexturedInstance3d, ICON_SHADOW_MAP_SIZE, WORLD_SHADOW_MAP_SIZE,
 };
 use ui_wgpu::wgpu::axis_rotate_angle;
 use ui_wgpu::wgpu::camera_grid_fade_distance;
@@ -1789,6 +1789,29 @@ pub fn world3d_opaque_quarantine_status() -> (usize, u64) {
     WORLD_OPAQUE_QUARANTINE.lock().map_or((WORLD_OPAQUE_QUARANTINE_CAPACITY, u64::MAX), |quarantine| (usize::from(quarantine.len), quarantine.saturated))
 }
 
+/// 🌡️ What became of the scene's scalar field on the mesh it names, so the legend is shown only for a heatmap that exists
+/// (`applied`) and a mismatch is announced instead of a wrong colouring — the React host's `data-world-scalar-field` status.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum World3dScalarFieldStatus {
+    #[default]
+    None,
+    Applied,
+    Mismatch,
+    Missing,
+}
+
+/// 🖍️ The scene's sub-element highlight tokens resolved through the live theme; an absent entry keeps the engine's built-in palette.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+struct WorldSubElementPaint {
+    face_select: Option<[f32; 4]>,
+    face_hover: Option<[f32; 4]>,
+    edge_select: Option<[f32; 4]>,
+    edge_hover: Option<[f32; 4]>,
+    vertex_select: Option<[f32; 4]>,
+    vertex_hover: Option<[f32; 4]>,
+    vertex_mark_px: Option<f32>,
+}
+
 pub struct World3dState {
     pub surface_id: String,
     pub controller_id: String,
@@ -1986,6 +2009,9 @@ pub struct World3dState {
     face_overlay_generation: Option<u64>,
     face_overlay_retired_generation: Option<u64>,
     face_overlay_colors: [Option<[f32; 4]>; 3],
+    modelling_locale: &'static str,
+    scalar_field_status: World3dScalarFieldStatus,
+    sub_element_paint: WorldSubElementPaint,
     face_overlay_applied_revision: u64,
     face_overlay_applied_draw_generation: u64,
     draw_generation: u64,
@@ -2300,6 +2326,9 @@ impl World3dState {
             face_overlay_generation: None,
             face_overlay_retired_generation: None,
             face_overlay_colors: [None; 3],
+            modelling_locale: "en",
+            scalar_field_status: World3dScalarFieldStatus::None,
+            sub_element_paint: WorldSubElementPaint::default(),
             face_overlay_applied_revision: u64::MAX,
             face_overlay_applied_draw_generation: u64::MAX,
             draw_generation: 0,
@@ -2330,6 +2359,16 @@ impl World3dState {
 
     pub fn dynamic_retirement_is_idle(&self) -> bool {
         self.dynamic_retirement.is_none()
+    }
+
+    /// 🌍️ Selects the language the modelling overlays (annotations, legend, their accessible text) are written in: German, else English.
+    pub fn set_modelling_locale(&mut self, german: bool) {
+        self.modelling_locale = if german { "de" } else { "en" };
+    }
+
+    /// 🌡️ Whether the scene's scalar field painted the mesh it names.
+    pub fn scalar_field_status(&self) -> World3dScalarFieldStatus {
+        self.scalar_field_status
     }
 
     /// 🚨️ The last snapshot fault this surface recorded, for a host that reports why a world window
@@ -5523,9 +5562,20 @@ const WORLD_GUMBALL_SELECTED_CAPACITY: usize = ui_wgpu::wgpu::ACTION_NODE_CAPACI
 struct WorldGumballTarget {
     object: WorldInteractionObjectToken,
     source_index: Option<u32>,
+    captured: [u8; WORLD_COMPONENT_TARGET_BYTE_CAPACITY],
+    captured_len: u16,
 }
 
 impl WorldGumballTarget {
+    fn new(object: WorldInteractionObjectToken, source_index: Option<u32>, text: &str) -> Option<Self> {
+        if text.len() > WORLD_COMPONENT_TARGET_BYTE_CAPACITY { return None; }
+        let mut target = Self { object, source_index, captured: [0; WORLD_COMPONENT_TARGET_BYTE_CAPACITY], captured_len: u16::try_from(text.len()).ok()? };
+        target.captured[..text.len()].copy_from_slice(text.as_bytes());
+        Some(target)
+    }
+
+    fn captured_text(&self) -> &str { std::str::from_utf8(&self.captured[..usize::from(self.captured_len)]).expect("captured gumball target is valid UTF-8") }
+
     fn text<'a>(&self, state: &'a World3dState, mode: Option<WorldComponentKind>) -> Option<&'a str> {
         let entry = state.interaction_objects.resolve(self.object)?;
         match (self.source_index, mode) {
@@ -5723,7 +5773,7 @@ impl WorldGumballPickCursor {
                     self.source_probe += 1;
                     if let Some(entry) = state.interaction_objects.slots[index].as_ref().filter(|entry| entry.revision == self.revision && entry.kind == WorldInteractionObjectKind::Instance && entry.id.as_str() == address.object) {
                         let Some(source_index) = u32::try_from(self.source_cursor).ok() else { self.faulted = true; return WorldInteractionStep::Fault; };
-                        let target = WorldGumballTarget { object: WorldInteractionObjectToken { slot: index as u16, generation: entry.generation, revision: entry.revision }, source_index: Some(source_index) };
+                        let Some(target) = WorldGumballTarget::new(WorldInteractionObjectToken { slot: index as u16, generation: entry.generation, revision: entry.revision }, Some(source_index), id) else { self.faulted = true; return WorldInteractionStep::Fault; };
                         if !address.matches_registry(state, entry) || !self.retain(target, id.len(), Vec3::new(entry.values[3], entry.values[4], entry.values[5])) {
                             self.faulted = true;
                             return WorldInteractionStep::Fault;
@@ -5739,7 +5789,7 @@ impl WorldGumballPickCursor {
                 if let Some(entry) = state.interaction_objects.slots.get(index) {
                     self.slot += 1;
                     if let Some(entry) = entry.as_ref().filter(|entry| entry.revision == self.revision && entry.kind == WorldInteractionObjectKind::Instance && entry.values[2] != 0.0) {
-                        let target = WorldGumballTarget { object: WorldInteractionObjectToken { slot: index as u16, generation: entry.generation, revision: entry.revision }, source_index: None };
+                        let Some(target) = WorldGumballTarget::new(WorldInteractionObjectToken { slot: index as u16, generation: entry.generation, revision: entry.revision }, None, entry.id.as_str()) else { self.faulted = true; return WorldInteractionStep::Fault; };
                         if !self.retain(target, entry.id.as_str().len(), Vec3::new(entry.values[3], entry.values[4], entry.values[5])) {
                             self.faulted = true;
                             return WorldInteractionStep::Fault;
@@ -6038,7 +6088,7 @@ impl WorldGumballGesture {
         if self.validation < self.selected_len {
             let target = self.selected[usize::from(self.validation)].expect("gumball selected target");
             self.validation += 1;
-            return if target.text(state, self.mode).is_some() { WorldInteractionStep::Pending } else { WorldInteractionStep::Stale };
+            return if self.live && self.streamed || target.text(state, self.mode).is_some() { WorldInteractionStep::Pending } else { WorldInteractionStep::Stale };
         }
         let Some((local_x, local_y, viewport)) = pointer_in_pick_rect(state, pending.x, pending.y) else {
             self.pending = None;
@@ -6411,8 +6461,8 @@ impl WorldGumballCommitJob {
         }
         let selected_end = 5 + self.gesture.selected_len;
         let selected = if self.stage >= 5 && self.stage < selected_end {
-            let target = self.gesture.selected[usize::from(self.stage - 5)].expect("gumball selected target");
-            Some(target.text(state, self.gesture.mode).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?)
+            let target = self.gesture.selected[usize::from(self.stage - 5)].as_ref().expect("gumball selected target");
+            Some(if self.gesture.live { target.captured_text() } else { target.text(state, self.gesture.mode).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)? })
         } else {
             None
         };
@@ -6920,7 +6970,7 @@ impl WorldInteractionAuthority {
             context.consume_fuel(1);
             return WorldInteractionAuthorityStep::Pending;
         }
-        if let (true, Some(gumball)) = (intent.phase == WorldInteractionPhase::PointerMove && intent.button == 0 && intent.down, self.gumball.as_mut()) {
+        if let (true, Some(gumball)) = (intent.button == 0 && (intent.phase == WorldInteractionPhase::PointerMove && intent.down || intent.phase == WorldInteractionPhase::PointerButton && !intent.down), self.gumball.as_mut()) {
             match gumball.begin_update(intent.generation, intent.x, intent.y) {
                 WorldInteractionStep::Stale => return WorldInteractionAuthorityStep::Stale,
                 WorldInteractionStep::Fault => {
@@ -6941,6 +6991,13 @@ impl WorldInteractionAuthority {
                 }
                 WorldInteractionStep::Complete => {}
             }
+            if intent.phase == WorldInteractionPhase::PointerButton {
+                let gesture = self.gumball.take().expect("gumball final pointer pose is complete");
+                let (phase, (translate, angle, scale)) = gesture.release();
+                self.active = Some(WorldInteractionActive::GumballCommit { job: WorldGumballCommitJob::new(intent.generation, WorldGumballGesture { translate, angle, scale, ..gesture }, phase), retirement: None });
+                context.consume_fuel(1);
+                return WorldInteractionAuthorityStep::Pending;
+            }
             if let Some((phase, motion)) = gumball.stream() {
                 let tick = gumball.publication(motion);
                 self.active = Some(WorldInteractionActive::GumballCommit { job: WorldGumballCommitJob::new(intent.generation, tick, phase), retirement: None });
@@ -6950,13 +7007,6 @@ impl WorldInteractionAuthority {
             self.queue.retire_front(intent.generation);
             context.consume_fuel(1);
             return WorldInteractionAuthorityStep::Complete;
-        }
-        if intent.phase == WorldInteractionPhase::PointerButton && intent.button == 0 && !intent.down && self.gumball.is_some() {
-            let gesture = self.gumball.take().expect("gumball gesture retained above");
-            let (phase, (translate, angle, scale)) = gesture.release();
-            self.active = Some(WorldInteractionActive::GumballCommit { job: WorldGumballCommitJob::new(intent.generation, WorldGumballGesture { translate, angle, scale, ..gesture }, phase), retirement: None });
-            context.consume_fuel(1);
-            return WorldInteractionAuthorityStep::Pending;
         }
         if intent.phase == WorldInteractionPhase::PointerButton && intent.button == 0 && !intent.down && state.active_utility == "brush" {
             match WorldBrushCommitJob::new(state, intent.generation) {
@@ -10284,20 +10334,52 @@ fn world_units_per_pixel(camera: &Camera3d, viewport: Rect, distance: f32) -> f3
 
 /// 🔘️ Half the world-space span of one vertex marker cross at `centre` — React's pixel size,
 /// converted through [`world_units_per_pixel`] so the marker keeps its apparent size at every zoom.
-fn vertex_marker_half_extent(camera: &Camera3d, viewport: Rect, centre: Vec3, scale: f32) -> f32 {
-    let pixels = if scale > VERTEX_BASE_SCALE { WORLD_VERTEX_MARK_PX } else { WORLD_VERTEX_DOT_PX };
+fn vertex_marker_half_extent(camera: &Camera3d, viewport: Rect, centre: Vec3, scale: f32, mark_px: Option<f32>) -> f32 {
+    let pixels = if scale > VERTEX_BASE_SCALE { mark_px.unwrap_or(WORLD_VERTEX_MARK_PX) } else { WORLD_VERTEX_DOT_PX };
     pixels * 0.5 * world_units_per_pixel(camera, viewport, camera.position.sub(centre).length())
 }
 
-fn component_overlay_color(id: &str, selected: &HashSet<String>, preview: &HashSet<String>, hovered: &Option<String>) -> Option<([f32; 4], f32)> {
+/// 🖍️ Resolves the scene's sub-element highlight tokens through the live theme with the shared `world3d_sub_element_paint` table; a granularity without a token keeps the built-in palette.
+fn world3d_sub_element_paint_native(theme: &ui_wgpu::wgpu::Theme, highlight: Option<&ui_wgpu::wgpu::World3dHighlight>) -> WorldSubElementPaint {
+    let defaults = ui_wgpu::wgpu::World3dSubElementDefaults { select: None, hover: None, edge_hover: None, edge_width: 0.0, vertex_mark_px: 0.0 };
+    let paint = ui_wgpu::wgpu::world3d_sub_element_paint(highlight, |tone| Some(world3d_tone_rgba(theme, tone)), defaults);
+    WorldSubElementPaint {
+        face_select: paint.face_select,
+        face_hover: paint.face_hover,
+        edge_select: paint.edge_select,
+        edge_hover: paint.edge_hover,
+        vertex_select: paint.vertex_select,
+        vertex_hover: paint.vertex_hover,
+        vertex_mark_px: highlight.and_then(|highlight| highlight.vertex).and_then(|style| style.width_px).map(|width| width as f32),
+    }
+}
+
+/// 🎨️ A theme tone token as an opaque colour: `neutral` is the foreground, `primary`/`secondary`/`tertiary` the celebration triad, the rest the outcome palette of the same name.
+fn world3d_tone_rgba(theme: &ui_wgpu::wgpu::Theme, tone: ui_wgpu::wgpu::World3dTone) -> [f32; 4] {
+    use ui_wgpu::wgpu::World3dTone;
+    let color = match tone {
+        World3dTone::Neutral => theme.text,
+        World3dTone::Primary => theme.celebrate[0],
+        World3dTone::Secondary => theme.celebrate[1],
+        World3dTone::Tertiary => theme.celebrate[2],
+        World3dTone::Success => theme.success,
+        World3dTone::Warning => theme.warning,
+        World3dTone::Danger => theme.error,
+        World3dTone::Info => Rgba::from_token(&ui_styling::colors::INFO),
+    };
+    [color.r, color.g, color.b, 1.0]
+}
+
+fn component_overlay_color(id: &str, selected: &HashSet<String>, preview: &HashSet<String>, hovered: &Option<String>, tokens: (Option<[f32; 4]>, Option<[f32; 4]>)) -> Option<([f32; 4], f32)> {
+    let (select, hover) = tokens;
     if preview.contains(id) {
-        return Some(([1.0, 0.85, 0.35, 1.0], VERTEX_HOVER_SCALE));
+        return Some((hover.unwrap_or([1.0, 0.85, 0.35, 1.0]), VERTEX_HOVER_SCALE));
     }
     if hovered.as_deref() == Some(id) {
-        return Some(([0.35, 0.75, 1.0, 0.9], VERTEX_HOVER_SCALE));
+        return Some((hover.map_or([0.35, 0.75, 1.0, 0.9], |color| [color[0], color[1], color[2], 0.9]), VERTEX_HOVER_SCALE));
     }
     if selected.contains(id) {
-        return Some(([0.35, 0.75, 1.0, 1.0], VERTEX_SELECT_SCALE));
+        return Some((select.unwrap_or([0.35, 0.75, 1.0, 1.0]), VERTEX_SELECT_SCALE));
     }
     None
 }
@@ -10448,7 +10530,7 @@ fn append_pick_target_hover_lines(state: &World3dState, theme: &ui_wgpu::wgpu::T
     let Some((min, max)) = world_pick_target_bounds(target) else { return };
     if target.kind == "vertex" {
         let centre = Vec3::new((min[0] + max[0]) * 0.5, (min[1] + max[1]) * 0.5, (min[2] + max[2]) * 0.5);
-        let d = vertex_marker_half_extent(camera, viewport, centre, VERTEX_HOVER_SCALE);
+        let d = vertex_marker_half_extent(camera, viewport, centre, VERTEX_HOVER_SCALE, None);
         push_line_segment(lines, centre.sub(Vec3::new(d, 0.0, 0.0)), centre.add(Vec3::new(d, 0.0, 0.0)), color);
         push_line_segment(lines, centre.sub(Vec3::new(0.0, d, 0.0)), centre.add(Vec3::new(0.0, d, 0.0)), color);
         push_line_segment(lines, centre.sub(Vec3::new(0.0, 0.0, d)), centre.add(Vec3::new(0.0, 0.0, d)), color);
@@ -10554,7 +10636,7 @@ fn append_component_overlays(state: &World3dState, theme: &ui_wgpu::wgpu::Theme,
             for edge_index in 0..schema.edges {
                 let Ok(edge) = mesh.edge(edge_index) else { continue };
                 let id = world_mesh_component_id(mesh, Mesh3dField::EdgeIds, edge_index).to_string();
-                let Some((color, _)) = component_overlay_color(&id, &selected, &preview, &hovered) else {
+                let Some((color, _)) = component_overlay_color(&id, &selected, &preview, &hovered, (state.sub_element_paint.edge_select, state.sub_element_paint.edge_hover)) else {
                     continue;
                 };
                 let a = instance.model.transform_point(Vec3::new(edge[0][0], edge[0][1], edge[0][2]));
@@ -10579,7 +10661,7 @@ fn append_component_overlays(state: &World3dState, theme: &ui_wgpu::wgpu::Theme,
                 for tri_index in 0..schema.indices / 3 {
                     let Some(tri) = world_mesh_triangle(mesh, tri_index) else { continue };
                     let id = mesh_face_id(mesh, tri_index);
-                    let Some((color, _)) = component_overlay_color(&id, &selected, &preview, &hovered) else {
+                    let Some((color, _)) = component_overlay_color(&id, &selected, &preview, &hovered, (state.sub_element_paint.face_select, state.sub_element_paint.face_hover)) else {
                         continue;
                     };
                     let Some(verts) = Option::zip(Option::zip(mesh_vertex(mesh, tri[0]), mesh_vertex(mesh, tri[1])), mesh_vertex(mesh, tri[2]))
@@ -10615,11 +10697,12 @@ fn append_component_overlays(state: &World3dState, theme: &ui_wgpu::wgpu::Theme,
                     let id = group.to_string();
                     let center = instance.model.transform_point(Vec3::new(point[0], point[1], point[2]));
                     let base_color = if primary_point { mesh_style_paint(theme, resolve_mesh_style(world_instance_style(state, instance))).line } else { wire_color };
-                    let (color, scale) = component_overlay_color(&id, &selected, &preview, &hovered).unwrap_or((base_color, VERTEX_BASE_SCALE));
-                    if !primary_point && !state.selection_targets.vertex && component_overlay_color(&id, &selected, &preview, &hovered).is_none() {
+                    let vertex_tokens = (state.sub_element_paint.vertex_select, state.sub_element_paint.vertex_hover);
+                    let (color, scale) = component_overlay_color(&id, &selected, &preview, &hovered, vertex_tokens).unwrap_or((base_color, VERTEX_BASE_SCALE));
+                    if !primary_point && !state.selection_targets.vertex && component_overlay_color(&id, &selected, &preview, &hovered, vertex_tokens).is_none() {
                         continue;
                     }
-                    let d = vertex_marker_half_extent(camera, viewport, center, scale);
+                    let d = vertex_marker_half_extent(camera, viewport, center, scale, state.sub_element_paint.vertex_mark_px);
                     push_line_segment(lines, center.sub(Vec3::new(d, 0.0, 0.0)), center.add(Vec3::new(d, 0.0, 0.0)), color);
                     push_line_segment(lines, center.sub(Vec3::new(0.0, d, 0.0)), center.add(Vec3::new(0.0, d, 0.0)), color);
                     push_line_segment(lines, center.sub(Vec3::new(0.0, 0.0, d)), center.add(Vec3::new(0.0, 0.0, d)), color);
@@ -10930,7 +11013,7 @@ impl WorldFaceOverlayMeshCursor {
                 self.phase = WorldFaceOverlayPhase::NextBucket;
                 let index = usize::from(self.bucket);
                 let key = if self.retry_key.is_empty() { self.key(index) } else { std::mem::take(&mut self.retry_key) };
-                return Ok(WorldFaceOverlayMeshStep::Ready { index, color: face_overlay_color(self.order[index]), key, lease });
+                return Ok(WorldFaceOverlayMeshStep::Ready { index, color: face_overlay_color(&state.sub_element_paint, self.order[index]), key, lease });
             }
             WorldFaceOverlayPhase::NextBucket => {
                 self.bucket += 1;
@@ -11026,11 +11109,12 @@ fn instance_hovered_component_matches(state: &World3dState, instance_id: &str, f
         && state.hovered_component_id.as_deref().is_some_and(|id| decimal_component_id_matches(id, face_id))
 }
 
-fn face_overlay_color(category: u8) -> [f32; 4] {
+fn face_overlay_color(paint: &WorldSubElementPaint, category: u8) -> [f32; 4] {
+    let with_alpha = |color: [f32; 4], alpha: f32| [color[0], color[1], color[2], alpha];
     match category {
-        0 => [1.0, 0.85, 0.35, 0.36],
-        1 => [0.35, 0.75, 1.0, 0.48],
-        _ => [0.35, 0.75, 1.0, 0.62],
+        0 => with_alpha(paint.face_hover.unwrap_or([1.0, 0.85, 0.35, 1.0]), 0.36),
+        1 => with_alpha(paint.face_hover.unwrap_or([0.35, 0.75, 1.0, 1.0]), 0.48),
+        _ => with_alpha(paint.face_select.unwrap_or([0.35, 0.75, 1.0, 1.0]), 0.62),
     }
 }
 
@@ -11855,8 +11939,9 @@ pub enum World3dSnapshotApplyStep {
 
 /// 🔢️ The revision this apply INSTALLS, decided BEFORE the draw rebuild it began is sealed.
 ///
-/// 🩸️ `lease.revision` is this world's own `interaction_revision` as of the moment the bridge
-/// published the lease — `publish_world3d_scene_bridge_snapshot` is its one production writer —
+/// 🩸️ `lease.revision` is this world's proposed source-publication revision: the bridge reserves
+/// the next interaction revision for each changed payload — `publish_world3d_scene_bridge_snapshot`
+/// is its one production writer —
 /// so adopting it verbatim moves the counter BACKWARDS whenever anything bumped the revision
 /// while the lease was in flight: a document-lane change (`sync_world3d_scene_document_lanes`),
 /// a parallel framing (`sync_world3d_projection_content_frame`), a fit, a camera report. The
@@ -11913,6 +11998,9 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
             };
         }
         state.interaction_revision = revision;
+        if let Some(gesture) = state.interaction_authority.as_mut().and_then(|authority| authority.gumball.as_mut()).filter(|gesture| gesture.live && gesture.streamed) {
+            gesture.revision = revision;
+        }
         state.snapshot_lease = Some(cursor.lease);
         state.prepared_status = cursor.status;
         state.snapshot_fault = None;
@@ -12991,11 +13079,19 @@ pub fn step_world3d_scene_bridge(state: &mut World3dState, context: &mut semio_f
                     mesh.data.compute_normals();
                 }
             }
-            if let Some(field) = cursor.scalar_field.as_ref() {
-                if let Some(mesh) = cursor.meshes.iter_mut().find(|mesh| mesh.id == field.mesh_id) {
-                    world3d_apply_scalar_field(&mut mesh.data, field);
-                }
-            }
+            state.scalar_field_status = match cursor.scalar_field.as_ref() {
+                None => World3dScalarFieldStatus::None,
+                Some(field) => match cursor.meshes.iter_mut().find(|mesh| mesh.id == field.mesh_id) {
+                    Some(mesh) => {
+                        if world3d_apply_scalar_field(&mut mesh.data, field) {
+                            World3dScalarFieldStatus::Applied
+                        } else {
+                            World3dScalarFieldStatus::Mismatch
+                        }
+                    }
+                    None => World3dScalarFieldStatus::Missing,
+                },
+            };
             if !world3d_scene_instance_interactions_are_bounded(&cursor.instances) {
                 state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
                 return World3dSceneBridgeStep::Fault;
@@ -13278,8 +13374,9 @@ fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &Worl
     let item_count = u32::try_from(pages.iter().map(ui_wgpu::wgpu::World3dSnapshotPage::item_count).sum::<usize>()).map_err(|_| World3dSnapshotFault::Capacity)?;
     let byte_count = u32::try_from(pages.iter().map(ui_wgpu::wgpu::World3dSnapshotPage::byte_count).sum::<usize>()).map_err(|_| World3dSnapshotFault::Capacity)?;
     state.scene_bridge_generation = state.scene_bridge_generation.wrapping_add(1).max(1);
+    let revision = state.interaction_revision.checked_add(1).ok_or(World3dSnapshotFault::Capacity)?;
     let descriptor =
-        ui_wgpu::wgpu::World3dSnapshotDescriptor { revision: state.interaction_revision, generation: state.scene_bridge_generation, page_count, item_count, byte_count, draw_count, draw_instance_count: instance_total, draw_byte_count: draw_bytes };
+        ui_wgpu::wgpu::World3dSnapshotDescriptor { revision, generation: state.scene_bridge_generation, page_count, item_count, byte_count, draw_count, draw_instance_count: instance_total, draw_byte_count: draw_bytes };
     let token = ui_wgpu::wgpu::world3d_snapshot_begin(descriptor)?;
     for page in pages {
         if let Err(rejected) = ui_wgpu::wgpu::world3d_snapshot_admit_page(token, page) {
@@ -13625,6 +13722,269 @@ fn apply_runtime_draw_flags(state: &mut World3dState) {
     }
 }
 
+/// ✂️ Closes the cut of a capped section plane over the clipped solids, the native twin of the React `World3dSectionClip` cap: the clipped solids are drawn once with `StencilToggle`
+/// (each fragment inverts the stencil's section bit, so after both faces of a cut solid the bit is set exactly where the cut exposes its inside), then the flat cap plane in the cap tone
+/// is drawn only where the bit is set, then the solids are drawn a second time to invert the bit back to zero. The three passes ride the translucent draw list in that order,
+/// after the opaque solids, so the cap is depth-tested against the retained surface.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+fn append_world3d_section_cap(state: &mut World3dState, gpu: &mut World3dBuildContext, theme: &ui_wgpu::wgpu::Theme, section: &ui_wgpu::wgpu::World3dSection, solids: &[SceneDraw3d], translucent: &mut Vec<SceneDraw3d>) {
+    let Some(cap) = section.cap else { return };
+    if solids.iter().all(|draw| draw.instances.is_empty()) {
+        return;
+    }
+    if !state.meshes.contains_key(GUMBALL_PLANE_MESH) {
+        begin_world_placeholder_mesh(state, GUMBALL_PLANE_MESH, WorldPlaceholderKind::Plane);
+    }
+    let Some(plane) = state.meshes.get(GUMBALL_PLANE_MESH).copied() else { return };
+    let plane_version = *state.mesh_versions.get(GUMBALL_PLANE_MESH).unwrap_or(&0);
+    gpu.ensure_mesh(GUMBALL_PLANE_MESH, plane_version, plane);
+    let (mut low, mut high) = ([f32::INFINITY; 3], [f32::NEG_INFINITY; 3]);
+    for draw in solids {
+        let Some(Ok((mesh_low, mesh_high))) = state.meshes.get(&draw.mesh_key).map(|mesh| mesh.aabb()) else { continue };
+        for instance in &draw.instances {
+            let (instance_low, instance_high) = transform_aabb(instance.model, mesh_low, mesh_high);
+            for axis in 0..3 {
+                low[axis] = low[axis].min(instance_low[axis]);
+                high[axis] = high[axis].max(instance_high[axis]);
+            }
+        }
+    }
+    if !(0..3).all(|axis| low[axis].is_finite() && high[axis].is_finite()) {
+        return;
+    }
+    let diagonal = Vec3::new(high[0] - low[0], high[1] - low[1], high[2] - low[2]).length();
+    let side = (4.0 * diagonal).max(2.0);
+    let normal = section.unit_normal();
+    let normal = Vec3::new(normal[0] as f32, normal[1] as f32, normal[2] as f32);
+    let helper = if normal.y.abs() < 0.9 { Vec3::new(0.0, 1.0, 0.0) } else { Vec3::new(1.0, 0.0, 0.0) };
+    let tangent = helper.cross(normal).normalize();
+    let rotation = quat_from_basis(tangent, normal, tangent.cross(normal));
+    let origin = [section.origin[0] as f32, section.origin[1] as f32, section.origin[2] as f32];
+    let toggled = || -> Vec<SceneDraw3d> {
+        solids
+            .iter()
+            .filter(|draw| !draw.instances.is_empty())
+            .map(|draw| SceneDraw3d {
+                mesh_key: draw.mesh_key.clone(),
+                mesh_version: draw.mesh_version,
+                instances: draw.instances.iter().map(|instance| Instance3d { material: SceneInstanceMaterial3d { section: SceneSectionRole3d::StencilToggle, ..instance.material }, ..instance.clone() }).collect(),
+                shadow_role: Default::default(),
+            })
+            .collect()
+    };
+    translucent.extend(toggled());
+    translucent.push(SceneDraw3d {
+        mesh_key: GUMBALL_PLANE_MESH.into(),
+        mesh_version: plane_version,
+        instances: vec![Instance3d {
+            component_source: None,
+            id: "section-cap".into(),
+            model: Instance3d::model_from_trs(origin, rotation, [side, 1.0, side]),
+            color: world3d_tone_rgba(theme, cap.tone),
+            selected: false,
+            hovered: false,
+            material: SceneInstanceMaterial3d { section: SceneSectionRole3d::Cap, ..Default::default() },
+        }],
+        shadow_role: Default::default(),
+    });
+    translucent.extend(toggled());
+}
+
+//#region 📏️Modelling overlay
+const WORLD_OVERLAY_ARC_SEGMENT_PX: f64 = 6.0;
+const WORLD_OVERLAY_LEGEND_MARGIN_PX: f32 = 8.0;
+const WORLD_OVERLAY_LEGEND_PADDING_PX: f32 = 6.0;
+const WORLD_OVERLAY_LEGEND_BAR_WIDTH_PX: f32 = 12.0;
+const WORLD_OVERLAY_LEGEND_BAR_HEIGHT_PX: f32 = 96.0;
+const WORLD_OVERLAY_LEGEND_BAR_SLICES: usize = 32;
+const WORLD_OVERLAY_LEGEND_GAP_PX: f32 = 6.0;
+const WORLD_OVERLAY_LABEL_PADDING_X_PX: f32 = 4.0;
+const WORLD_OVERLAY_LABEL_PADDING_Y_PX: f32 = 1.0;
+
+/// 📐️ The three corners of a dimension arrowhead whose tip sits at `(x, y)` and points along `angle` — React's `arrowPoints`.
+fn world3d_arrow_points(x: f64, y: f64, angle: f64) -> [[f32; 2]; 3] {
+    let length = ui_wgpu::wgpu::WORLD3D_ANNOTATION_ARROW_PX;
+    let (cos, sin) = (angle.cos(), angle.sin());
+    let (base_x, base_y) = (x - cos * length, y - sin * length);
+    let half = length * 0.35;
+    [[x as f32, y as f32], [(base_x - sin * half) as f32, (base_y + cos * half) as f32], [(base_x + sin * half) as f32, (base_y - cos * half) as f32]]
+}
+
+/// 🌙️ The polyline of an angle arc, one vertex per `WORLD_OVERLAY_ARC_SEGMENT_PX` of arc length (at least four, at most thirty-two segments).
+fn world3d_arc_points(arc: &ui_wgpu::wgpu::World3dProjectedArc) -> Vec<[f32; 2]> {
+    let segments = ((arc.sweep.abs() * arc.radius / WORLD_OVERLAY_ARC_SEGMENT_PX).ceil() as usize).clamp(4, 32);
+    (0..=segments)
+        .map(|index| {
+            let angle = arc.start + arc.sweep * index as f64 / segments as f64;
+            [(arc.cx + angle.cos() * arc.radius) as f32, (arc.cy + angle.sin() * arc.radius) as f32]
+        })
+        .collect()
+}
+
+fn world3d_circle_points(x: f64, y: f64, radius: f64) -> Vec<[f32; 2]> {
+    (0..=16).map(|index| index as f64 / 16.0 * std::f64::consts::TAU).map(|angle| [(x + angle.cos() * radius) as f32, (y + angle.sin() * radius) as f32]).collect()
+}
+
+fn world3d_overlay_color(theme: &ui_wgpu::wgpu::Theme, tone: ui_wgpu::wgpu::World3dTone) -> Rgba {
+    let color = world3d_tone_rgba(theme, tone);
+    Rgba::new(color[0], color[1], color[2], color[3])
+}
+
+/// 📏️ Paints the projected annotation layer on top of the world pass: lines, arrowheads, arcs and marks at screen-constant size in the tone colours of the live theme,
+/// and the caller's text in the active language on a translucent plate. Clipped to the viewport by the caller's scissor.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+fn paint_world3d_annotations(ctx: &mut ui_wgpu::wgpu::widgets::WidgetContext<'_, ActionDescriptor>, layer: &ui_wgpu::wgpu::World3dAnnotationLayer, view_proj: &[f32; 16], inner: Rect, locale: &str) {
+    use ui_wgpu::wgpu::{World3dLabelAlign, World3dMarkerShape};
+    let theme = ctx.theme;
+    let stroke = ui_wgpu::wgpu::WORLD3D_ANNOTATION_STROKE_PX as f32;
+    let marker_radius = ui_wgpu::wgpu::WORLD3D_ANNOTATION_MARKER_PX / 2.0;
+    let size = theme.font_size_small;
+    let (origin_x, origin_y) = (f64::from(inner.x), f64::from(inner.y));
+    let at = |points: Vec<[f32; 2]>| -> Vec<[f32; 2]> { points.into_iter().map(|point| [point[0] + inner.x, point[1] + inner.y]).collect() };
+    let projected = ui_wgpu::wgpu::project_world3d_annotations(layer, view_proj, inner.w, inner.h);
+    for (item, entry) in layer.items.iter().zip(&projected).filter(|(_, entry)| entry.visible) {
+        let color = world3d_overlay_color(theme, entry.tone);
+        for line in &entry.lines {
+            ctx.draw.push_line_overlay(inner.x + line[0] as f32, inner.y + line[1] as f32, inner.x + line[2] as f32, inner.y + line[3] as f32, color, stroke);
+        }
+        for arrow in &entry.arrows {
+            ctx.draw.push_triangle_fan_overlay(&at(world3d_arrow_points(arrow.x, arrow.y, arrow.angle).to_vec()), color);
+        }
+        if let Some(arc) = entry.arc.as_ref() {
+            for pair in at(world3d_arc_points(arc)).windows(2) {
+                ctx.draw.push_line_overlay(pair[0][0], pair[0][1], pair[1][0], pair[1][1], color, stroke);
+            }
+        }
+        if let Some(marker) = entry.marker {
+            let (x, y) = (marker.x + origin_x, marker.y + origin_y);
+            match marker.shape {
+                World3dMarkerShape::Dot => ctx.draw.push_rounded_overlay([(x - marker_radius / 2.0) as f32, (y - marker_radius / 2.0) as f32, marker_radius as f32, marker_radius as f32], color, marker_radius as f32 / 2.0),
+                World3dMarkerShape::Cross => {
+                    for (dx, dy) in [(-1.0, -1.0), (-1.0, 1.0)] {
+                        ctx.draw.push_line_overlay((x + dx * marker_radius) as f32, (y + dy * marker_radius) as f32, (x - dx * marker_radius) as f32, (y - dy * marker_radius) as f32, color, stroke);
+                    }
+                }
+                World3dMarkerShape::Ring => {
+                    for pair in world3d_circle_points(x, y, marker_radius).windows(2) {
+                        ctx.draw.push_line_overlay(pair[0][0], pair[0][1], pair[1][0], pair[1][1], color, stroke);
+                    }
+                }
+            }
+        }
+        if let Some(label) = entry.label {
+            let text = item.text().resolve(locale);
+            let (width, height) = ctx.atlas.measure_text(text, size);
+            let left = match label.align {
+                World3dLabelAlign::Middle => label.x - f64::from(width) / 2.0,
+                World3dLabelAlign::Start => label.x,
+                World3dLabelAlign::End => label.x - f64::from(width),
+            } as f32
+                + inner.x;
+            let top = label.y as f32 + inner.y - height / 2.0;
+            let plate = Rgba::new(theme.background.r, theme.background.g, theme.background.b, 0.8);
+            ctx.draw.push_rounded_overlay([left - WORLD_OVERLAY_LABEL_PADDING_X_PX, top - WORLD_OVERLAY_LABEL_PADDING_Y_PX, width + 2.0 * WORLD_OVERLAY_LABEL_PADDING_X_PX, height + 2.0 * WORLD_OVERLAY_LABEL_PADDING_Y_PX], plate, theme.border_radius.min(4.0));
+            ui_wgpu::wgpu::widgets::draw_text_overlay(ctx, text, left, label.y as f32 + inner.y + size * 0.35, size, color);
+        }
+    }
+}
+
+/// 🌡️ The panel rectangle of a scalar-field legend (or its mismatch message) pinned to the viewport's lower left, `content` pixels wide and tall.
+fn world3d_legend_rect(inner: Rect, content: (f32, f32)) -> [f32; 4] {
+    let (width, height) = (content.0 + 2.0 * WORLD_OVERLAY_LEGEND_PADDING_PX, content.1 + 2.0 * WORLD_OVERLAY_LEGEND_PADDING_PX);
+    [inner.x + WORLD_OVERLAY_LEGEND_MARGIN_PX, inner.y + inner.h - WORLD_OVERLAY_LEGEND_MARGIN_PX - height, width, height]
+}
+
+/// 🌡️ Paints the scalar-field legend: the title with its unit, the ramp as a vertical gradient (range minimum at the bottom), the evenly spaced tick values beside it and the no-data caption.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+fn paint_world3d_legend(ctx: &mut ui_wgpu::wgpu::widgets::WidgetContext<'_, ActionDescriptor>, field: &ui_wgpu::wgpu::World3dScalarField, inner: Rect, locale: &str) {
+    let theme = ctx.theme;
+    let size = theme.font_size_small;
+    let lines = field.legend_lines(locale);
+    let (title_width, title_height) = ctx.atlas.measure_text(&lines.title, size);
+    let tick_width = lines.ticks.iter().map(|tick| ctx.atlas.measure_text(&tick.text, size).0).fold(0.0_f32, f32::max);
+    let no_data = lines.no_data.map(|text| (text, ctx.atlas.measure_text(text, size)));
+    let ramp_width = WORLD_OVERLAY_LEGEND_BAR_WIDTH_PX + WORLD_OVERLAY_LEGEND_GAP_PX + tick_width;
+    let no_data_width = no_data.map_or(0.0, |(_, (width, _))| 10.0 + WORLD_OVERLAY_LEGEND_GAP_PX + width);
+    let no_data_height = no_data.map_or(0.0, |(_, (_, height))| WORLD_OVERLAY_LEGEND_GAP_PX + height.max(10.0));
+    let content = (title_width.max(ramp_width).max(no_data_width), title_height + WORLD_OVERLAY_LEGEND_GAP_PX + WORLD_OVERLAY_LEGEND_BAR_HEIGHT_PX + no_data_height);
+    let rect = world3d_legend_rect(inner, content);
+    ctx.draw.push_rounded_overlay(rect, Rgba::new(theme.panel.r, theme.panel.g, theme.panel.b, 0.9), theme.border_radius.min(4.0));
+    let (left, top) = (rect[0] + WORLD_OVERLAY_LEGEND_PADDING_PX, rect[1] + WORLD_OVERLAY_LEGEND_PADDING_PX);
+    ui_wgpu::wgpu::widgets::draw_text_overlay(ctx, &lines.title, left, top + size, size, theme.text);
+    let bar_top = top + title_height + WORLD_OVERLAY_LEGEND_GAP_PX;
+    let slice = WORLD_OVERLAY_LEGEND_BAR_HEIGHT_PX / WORLD_OVERLAY_LEGEND_BAR_SLICES as f32;
+    for index in 0..WORLD_OVERLAY_LEGEND_BAR_SLICES {
+        let [r, g, b] = field.ramp.sample(1.0 - (index as f64 + 0.5) / WORLD_OVERLAY_LEGEND_BAR_SLICES as f64);
+        ctx.draw.push_solid_overlay([left, bar_top + index as f32 * slice, WORLD_OVERLAY_LEGEND_BAR_WIDTH_PX, slice + 0.5], Rgba::from_srgb8(r, g, b, 255));
+    }
+    let steps = lines.ticks.len().saturating_sub(1).max(1) as f32;
+    for (index, tick) in lines.ticks.iter().enumerate() {
+        let y = bar_top + WORLD_OVERLAY_LEGEND_BAR_HEIGHT_PX - index as f32 / steps * WORLD_OVERLAY_LEGEND_BAR_HEIGHT_PX;
+        ui_wgpu::wgpu::widgets::draw_text_overlay(ctx, &tick.text, left + WORLD_OVERLAY_LEGEND_BAR_WIDTH_PX + WORLD_OVERLAY_LEGEND_GAP_PX, y + size * 0.35, size, theme.text);
+    }
+    if let Some((text, (_, height))) = no_data {
+        let y = bar_top + WORLD_OVERLAY_LEGEND_BAR_HEIGHT_PX + WORLD_OVERLAY_LEGEND_GAP_PX;
+        let [r, g, b] = ui_wgpu::wgpu::WORLD3D_SCALAR_NO_DATA_RGB;
+        ctx.draw.push_solid_overlay([left, y, 10.0, 10.0], Rgba::from_srgb8(r, g, b, 255));
+        ui_wgpu::wgpu::widgets::draw_text_overlay(ctx, text, left + 10.0 + WORLD_OVERLAY_LEGEND_GAP_PX, y + height.max(10.0) * 0.5 + size * 0.35, size, theme.text);
+    }
+}
+
+/// 🌡️ Announces on the viewport that the scalar field does not fit the mesh it names, in place of a wrong heatmap.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+fn paint_world3d_scalar_mismatch(ctx: &mut ui_wgpu::wgpu::widgets::WidgetContext<'_, ActionDescriptor>, inner: Rect, locale: &str) {
+    let theme = ctx.theme;
+    let size = theme.font_size_small;
+    let text = ui_wgpu::wgpu::world3d_modelling_strings(locale).mismatch;
+    let (width, height) = ctx.atlas.measure_text(text, size);
+    let rect = world3d_legend_rect(inner, (width, height));
+    ctx.draw.push_rounded_overlay(rect, Rgba::new(theme.panel.r, theme.panel.g, theme.panel.b, 0.9), theme.border_radius.min(4.0));
+    ui_wgpu::wgpu::widgets::draw_text_overlay(ctx, text, rect[0] + WORLD_OVERLAY_LEGEND_PADDING_PX, rect[1] + WORLD_OVERLAY_LEGEND_PADDING_PX + size, size, theme.error);
+}
+
+/// ♿️ One node of the accessibility tree a world surface publishes for its modelling overlays: a stable key, an ARIA role, the text a screen reader speaks and its nesting below the surface.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct World3dAccessibilityEntry {
+    pub key: String,
+    pub role: &'static str,
+    pub label: String,
+    pub depth: u8,
+    pub polite: bool,
+}
+
+/// ♿️ The text alternative of everything `render_world_3d` paints for the modelling layer, in the surface's language and with the same structure as the React host: a `list` of annotations
+/// named by the layer title, one `listitem` per annotation (`Dimension: Width 40 mm`), a `group` for an applied scalar-field legend with its scale ticks and no-data caption, or a polite `status`
+/// when the field does not fit its mesh. The shell hands these to the accessibility mirror (the screen reader's `aria-live` region), so nothing drawn here is pointer-only.
+pub fn world3d_modelling_accessibility(state: &World3dState, scene: &UiComponentSceneNode) -> Vec<World3dAccessibilityEntry> {
+    let Some(world) = scene.world_3d.as_ref() else { return Vec::new() };
+    let locale = state.modelling_locale;
+    let strings = ui_wgpu::wgpu::world3d_modelling_strings(locale);
+    let host = scene.host_id.as_str();
+    let entry = |key: String, role: &'static str, label: String, depth: u8, polite: bool| World3dAccessibilityEntry { key, role, label, depth, polite };
+    let mut entries = Vec::new();
+    if let Some(layer) = world.annotations.as_ref().filter(|layer| !layer.items.is_empty()) {
+        entries.push(entry(format!("{host}::annotations"), "list", layer.title.as_ref().map_or(strings.annotations, |title| title.resolve(locale)).to_string(), 0, false));
+        entries.extend(layer.items.iter().map(|item| entry(format!("{host}::annotation::{}", item.id()), "listitem", item.accessible_name(locale), 1, false)));
+    }
+    if let Some(field) = world.scalar_field.as_ref() {
+        match state.scalar_field_status {
+            World3dScalarFieldStatus::Applied => {
+                let lines = field.legend_lines(locale);
+                entries.push(entry(format!("{host}::legend"), "group", format!("{}: {}", strings.legend, field.legend.title.resolve(locale)), 0, false));
+                entries.push(entry(format!("{host}::legend::scale"), "list", strings.scale.to_string(), 1, false));
+                entries.extend(lines.ticks.iter().enumerate().map(|(index, tick)| entry(format!("{host}::legend::tick::{index}"), "listitem", tick.text.clone(), 2, false)));
+                if let Some(caption) = lines.no_data {
+                    entries.push(entry(format!("{host}::legend::no-data"), "paragraph", caption.to_string(), 1, false));
+                }
+            }
+            World3dScalarFieldStatus::Mismatch => entries.push(entry(format!("{host}::scalar-field-mismatch"), "status", strings.mismatch.to_string(), 0, true)),
+            World3dScalarFieldStatus::None | World3dScalarFieldStatus::Missing => {}
+        }
+    }
+    entries
+}
+//#endregion 📏️Modelling overlay
+
 // 🖥️ Native/browser rendering-host entry point only (called from `📺️renderer`'s engine, never from
 // wasip2 plugin guest logic — confirmed by grepping every `render_world_3d` call site in the repo).
 // `WidgetContext` bundles the font/icon atlases, which are genuinely GPU-adjacent (real `wgpu`
@@ -13645,6 +14005,13 @@ pub fn render_world_3d(
 ) {
     use ui_wgpu::wgpu::widgets::{draw_text, gizmo as gpu_gizmo};
     let theme = ctx.theme;
+    let modelling = scene.world_3d.as_ref();
+    let section = modelling.and_then(|world| world.modelling_options.as_ref()).and_then(|options| options.section);
+    let sub_element_paint = world3d_sub_element_paint_native(theme, modelling.and_then(|world| world.modelling_options.as_ref()).and_then(|options| options.highlight.as_ref()));
+    if state.sub_element_paint != sub_element_paint {
+        state.sub_element_paint = sub_element_paint;
+        advance_world3d_view_revision(state);
+    }
     step_world_placeholder_mesh(state);
     state.pick_bounds = ctx.pick_clip.unwrap_or(bounds);
     sync_world3d_state(state, scene, bounds);
@@ -13704,6 +14071,9 @@ pub fn render_world_3d(
         for (instance_index, source) in draw.instances.iter().enumerate() {
             let style = world_instance_style(state, source);
             let mut instance = world3d_style_paint(theme, style, has_vertex_colors, source.clone());
+            if section.is_some() {
+                instance.material.section = SceneSectionRole3d::Clipped;
+            }
             let style_kind = resolve_mesh_style(style);
             instance.material.metalness = metalness;
             instance.material.roughness = roughness;
@@ -13951,6 +14321,9 @@ pub fn render_world_3d(
     for draw in extra_draws.iter_mut().chain(translucent_draws.iter_mut()).filter(|draw| draw.shadow_role == SceneShadowRole3d::default()) {
         draw.shadow_role = paint_shadow_role;
     }
+    if let Some(section) = section.filter(|section| section.cap.is_some()) {
+        append_world3d_section_cap(state, gpu, theme, &section, &culled_draws, &mut translucent_draws);
+    }
     culled_draws.extend(extra_draws);
     culled_draws.extend(terrain_draws);
     sort_world3d_translucent_material_draws(&state.meshes, view_proj, &mut material_draws);
@@ -13969,6 +14342,7 @@ pub fn render_world_3d(
         lighting,
         neutral_material,
         shadow,
+        section_clip: section.map(|section| section.clip_plane().map(|component| component as f32)),
         procedural_grid,
         shadow_draws,
         draws: culled_draws,
@@ -13982,6 +14356,24 @@ pub fn render_world_3d(
         },
         ..Default::default()
     });
+    if let Some(world) = modelling {
+        let paints_legend = world.scalar_field.is_some() && matches!(state.scalar_field_status, World3dScalarFieldStatus::Applied | World3dScalarFieldStatus::Mismatch);
+        if world.annotations.is_some() || paints_legend {
+            let locale = state.modelling_locale;
+            ctx.draw.push_scissor(inner);
+            if let Some(layer) = world.annotations.as_ref() {
+                paint_world3d_annotations(ctx, layer, &view_proj.to_cols_array(), inner, locale);
+            }
+            if let Some(field) = world.scalar_field.as_ref() {
+                match state.scalar_field_status {
+                    World3dScalarFieldStatus::Applied => paint_world3d_legend(ctx, field, inner, locale),
+                    World3dScalarFieldStatus::Mismatch => paint_world3d_scalar_mismatch(ctx, inner, locale),
+                    World3dScalarFieldStatus::None | World3dScalarFieldStatus::Missing => {}
+                }
+            }
+            ctx.draw.pop_scissor();
+        }
+    }
     if state.presentation.interactive {
         if let Some(points) = world_marquee_overlay_points(state) {
         let lasso = state.selection_method == "lasso";
@@ -16573,7 +16965,7 @@ pub fn world3d_brush_mesh_announce_pending(state: &World3dState) -> bool {
 // 🌉️ Dead on every target: repo-wide grep found zero callers of `apply_reference_image_bytes`
 // (not even a test). Gated rather than deleted, to keep the diff minimal and reversible if a
 // future caller lands. Does NOT remove `image` from the `wasm32-wasip2` link graph by itself —
-// `🖼️canvas`'s `icon_codec::board_resolve_icon_kind` (used by flow's genuinely guest-reachable
+// `🖼️canvas`'s `icon_codec::resolve_icon_kind` (used by flow's genuinely guest-reachable
 // `preview_media_natural_size` widget-layout path, see
 // `🔍️research/📓️infinite-host-deps-split.md`) still needs it unconditionally. RUNTIME-DEPENDENCY-
 // ELIMINATION ticket 26/09/01.

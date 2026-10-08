@@ -14,7 +14,7 @@ pub struct ImportMedia {
 }
 
 pub fn handle(payload: &ImportMedia, _doc: &ArtifactView<'_, WorkflowSnapshot>, _cfg: &ConfigView<'_, SpaceConfig>) -> Result<Emit<WorkflowMutation, SpaceConfigMutation>, Fault> {
-    let format_kind = semio_framework::format_descriptor(&payload.format)
+    let format_kind = directory::io::format_descriptor(&payload.format)
         .map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), error.to_string()))?
         .map(|descriptor| descriptor.short_id)
         .ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("s.space.media.format"), format!("unknown media format `{}`", payload.format)))?;

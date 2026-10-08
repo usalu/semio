@@ -1,0 +1,21 @@
+{
+  "schema": "stdio.gltf",
+  "document": {
+    "asset": {
+      "version": "2.0"
+    },
+    "nodes": [
+      {
+        "name": "node0"
+      },
+      {
+        "name": "node1"
+      },
+      {
+        "name": "node2"
+      }
+    ]
+  },
+  "buffers": [],
+  "sourceForm": "json"
+}

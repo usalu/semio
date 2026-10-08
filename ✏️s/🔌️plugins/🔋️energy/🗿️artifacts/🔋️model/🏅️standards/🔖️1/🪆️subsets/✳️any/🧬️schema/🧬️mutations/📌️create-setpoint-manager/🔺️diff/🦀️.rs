@@ -45,6 +45,10 @@ pub fn diff(payload: &super::CreateSetpointManager, base: &EnergyModelSnapshot) 
     } else {
         crate::model::SetpointManagerKind::Scheduled
     };
-    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { setpoint_managers: Rows::inserting(base.model.setpoint_managers.len(), crate::model::SetpointManager { id: payload.id, name: payload.name.clone(), kind, schedule_id: payload.schedule_present.then_some(payload.schedule_id) }), ..Default::default() }))
+    let position = payload.index.map_or(base.model.setpoint_managers.len(), |index| index as usize);
+    if position > base.model.setpoint_managers.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} setpoint_managers.", position, base.model.setpoint_managers.len()), [payload.id.0.to_string()]);
+    }
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { setpoint_managers: Rows::inserting(position, crate::model::SetpointManager { id: payload.id, name: payload.name.clone(), kind, schedule_id: payload.schedule_present.then_some(payload.schedule_id) }), ..Default::default() }))
 }
 //#endregion 🔖️Diff

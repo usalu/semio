@@ -63,7 +63,7 @@ export type Block =
 export type Doc = Readonly<{ styles: readonly Style[]; blocks: readonly Block[] }>;
 
 /** 👪️ The families the corpus is sharded and reported by — never at artifact level. */
-export type Family = "document" | "blocks" | "runs" | "styles";
+export type Family = "blocks" | "runs" | "styles";
 
 /** 🧪️ One corpus entry. A recipe DESCRIBES two documents; it computes nothing and predicts nothing.
  *  `carriers` names only the carriers that actually ENCODE what this mutation writes — a carrier that
@@ -93,7 +93,6 @@ const FIXTURE_DIRECTORY_BY_ID: Readonly<Record<string, string>> = {
   "insert-block-appends-a-paragraph": "🧱️insert-block-appends-a-paragraph",
   "insert-image": "🖼️insert-image",
   "insert-style-adds-a-named-style": "🧶️insert-style-adds-a-named-style",
-  "no-mutation-leaves-the-document-untouched": "⏸️no-mutation-leaves-the-document-untouched",
   "remove-block-drops-a-paragraph": "🪓️remove-block-drops-a-paragraph",
   "remove-image": "🪦️remove-image",
   "remove-style-drops-a-named-style": "🧽️remove-style-drops-a-named-style",
@@ -105,7 +104,6 @@ const FIXTURE_DIRECTORY_BY_ID: Readonly<Record<string, string>> = {
   "set-paragraph-style-names-the-body-style": "🪶️set-paragraph-style-names-the-body-style",
   "set-run-style-emphasises-a-run": "🎨️set-run-style-emphasises-a-run",
   "set-run-text-rewrites-the-body-copy": "🧵️set-run-text-rewrites-the-body-copy",
-  "set-snapshot-replaces-the-whole-document": "📸️set-snapshot-replaces-the-whole-document",
   "set-style-based-on-reparents-a-style": "🧬️set-style-based-on-reparents-a-style",
   "set-style-name-renames-a-style": "🏷️set-style-name-renames-a-style",
 };
@@ -360,7 +358,6 @@ export function mdBytes(source: Doc): Uint8Array {
 /** 🧪️ The corpus, assembled from one module per FAMILY — the sharding key CI uses and the unit somebody
  *  extends, reviews or runs in isolation, exactly as the mesh and BRep pilots organise theirs. */
 const RECIPES: readonly Recipe[] = [
-  ...(await import("./📜️document/📜️script.ts")).RECIPES,
   ...(await import("./🧱️blocks/📜️script.ts")).RECIPES,
   ...(await import("./🖋️runs/📜️script.ts")).RECIPES,
   ...(await import("./🎨️styles/📜️script.ts")).RECIPES,

@@ -15,6 +15,8 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 pub struct InsertObject {
     pub id: ObjRef,
     pub value: PdfObject,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfMutation> for InsertObject {
@@ -24,7 +26,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for InsertObject {
         if base.objects.iter().any(|object| object.id == self.id) {
             return MutationOutcome::fatal("mutation.duplicate-id", format!("Object {} {} already exists.", self.id.num, self.id.gen), [format!("{} {}", self.id.num, self.id.gen)]);
         }
-        MutationOutcome::new(diff::graph_edit(diff::diff_insert_object(self.id, base.objects.len(), self.value.clone())))
+        MutationOutcome::new(diff::graph_edit(diff::diff_insert_object(self.id, self.index.map_or(base.objects.len(), |at| at.min(base.objects.len())), self.value.clone())))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {

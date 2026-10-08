@@ -1,11 +1,4 @@
-# 🧬️ Din16798 diff schema — sparse scalar fields and ordered per-collection row edits.
-
-enum Din16798RowOp {
-  INSERT
-  REMOVE
-  REPLACE
-  PATCH
-}
+# 🧬️ Din16798 diff schema — sparse scalar fields plus keyed row deltas.
 
 type Din16798Diff {
   annex: String @state(class: ARTIFACT)
@@ -16,27 +9,28 @@ type Din16798Diff {
   cellarAreaM2: Float @state(class: ARTIFACT)
   cellarVentilationM3H: Float @state(class: ARTIFACT)
   nightSetbackK: Float @state(class: ARTIFACT)
-  zones: [Din16798ZoneEdit!]! @state(class: ARTIFACT)
-  ventSystems: [Din16798VentSystemEdit!]! @state(class: ARTIFACT)
+  zones: Din16798ZoneDelta! @state(class: ARTIFACT)
+  ventSystems: Din16798VentSystemDelta! @state(class: ARTIFACT)
 }
 
-type Din16798ZoneEdit {
-  op: Din16798RowOp!
-  index: Int!
-  id: String!
-  value: Din16798Zone
-  patch: Din16798ZonePatch
+type Din16798ZoneDelta {
+  removed: [String!]!
+  added: [Din16798ZoneAddition!]!
+  modified: [Din16798ZoneModification!]!
 }
 
-type Din16798VentSystemEdit {
-  op: Din16798RowOp!
-  index: Int!
-  id: String!
-  value: Din16798VentSystem
-  patch: Din16798VentSystemPatch
+type Din16798ZoneAddition {
+  after: String
+  row: Din16798Zone!
+}
+
+type Din16798ZoneModification {
+  key: String!
+  patch: Din16798ZonePatch!
 }
 
 type Din16798ZonePatch {
+  name: String
   usageType: String
   floorAreaM2: Float
   occupants: Int
@@ -58,7 +52,24 @@ type Din16798ZonePatch {
   ventSystemId: String
 }
 
+type Din16798VentSystemDelta {
+  removed: [String!]!
+  added: [Din16798VentSystemAddition!]!
+  modified: [Din16798VentSystemModification!]!
+}
+
+type Din16798VentSystemAddition {
+  after: String
+  row: Din16798VentSystem!
+}
+
+type Din16798VentSystemModification {
+  key: String!
+  patch: Din16798VentSystemPatch!
+}
+
 type Din16798VentSystemPatch {
+  name: String
   systemType: String
   sfpWM3S: Float
   sfpRequiredClass: Int
@@ -66,7 +77,12 @@ type Din16798VentSystemPatch {
   odaClass: String
   filterSupClass: String
   yearsSinceInspection: Int
+  humidificationRequiredKgH: Float
+  humidificationProvidedKgH: Float
+  fanQVM3S: Float
+  fanTRunH: Float
   ductClass: String
+  ductTestPressurePa: Float
   ductLeakageM3SM2: Float
   designAirflowM3H: Float
 }

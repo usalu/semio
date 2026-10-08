@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "requests": [
+    {
+      "id": "empty-arguments",
+      "args": [],
+      "preparation": "none",
+      "accepted": true
+    },
+    {
+      "id": "unicode-arguments",
+      "args": [
+        "α",
+        "💡",
+        "spaces preserved"
+      ],
+      "preparation": "none",
+      "accepted": true
+    },
+    {
+      "id": "required-custody",
+      "args": [
+        "--",
+        "-p",
+        "variable-owner"
+      ],
+      "preparation": "required",
+      "accepted": true
+    }
+  ],
+  "executions": [
+    {
+      "id": "success",
+      "stdout": "variable output α\n",
+      "status": 0
+    },
+    {
+      "id": "failure",
+      "stdout": "refused\n",
+      "status": 17
+    },
+    {
+      "id": "unicode",
+      "stdout": "💡\n",
+      "status": 0
+    }
+  ],
+  "configurations": [
+    {
+      "id": "owned",
+      "cwd": "owner",
+      "manifest": "owner/Cargo.toml",
+      "accepted": true
+    },
+    {
+      "id": "escaping-owner",
+      "cwd": "../foreign",
+      "manifest": "owner/Cargo.toml",
+      "accepted": false
+    },
+    {
+      "id": "escaping-manifest",
+      "cwd": "owner",
+      "manifest": "../foreign/Cargo.toml",
+      "accepted": false
+    }
+  ]
+}

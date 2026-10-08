@@ -24,7 +24,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 27.0 });
     model.air_loops.push(crate::model::ModelAirLoop { id: crate::model::EntityId(17), name: "MAIN AIR LOOP".into(), supply_node_id: 1, return_node_id: 2, design_supply_air_flow_m3_s: 1.2, terminal_zone_ids: vec![crate::model::EntityId(1)] });
     model.air_loops.push(crate::model::ModelAirLoop { id: crate::model::EntityId(20), name: "SPARE AIR LOOP".into(), supply_node_id: 3, return_node_id: 4, design_supply_air_flow_m3_s: 0.8, terminal_zone_ids: vec![crate::model::EntityId(2)] });
-    (snapshot(model), super::create_outdoor_air_system(crate::model::EntityId(19), crate::model::EntityId(99), 0.2, false))
+    (snapshot(model), super::create_outdoor_air_system(crate::model::EntityId(19), crate::model::EntityId(99), 0.2, false, None))
 }
 
 fn case() -> Case {

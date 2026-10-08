@@ -11,23 +11,25 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[value(rename_all = "camelCase")]
 pub struct SetLang {
     pub lang: String,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub entry_index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfUaMutation> for SetLang {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "lang", kind: "set-lang", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::graph_edit(support::set_catalog_entry_rows(base, "Lang", support::literal(&self.lang))))
+        MutationOutcome::new(diff::graph_edit(support::set_catalog_entry_rows(base, "Lang", support::literal(&self.lang), self.entry_index)))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        match support::catalog_entry(base, "Lang") {
-            Some(PdfObject::Str(bytes)) => vec![PdfUaMutation::SetLang(SetLang { lang: String::from_utf8_lossy(bytes).into_owned() })],
-            Some(PdfObject::Text(lang)) => vec![PdfUaMutation::SetLang(SetLang { lang: lang.clone() })],
-            _ => vec![PdfUaMutation::RemoveLang(RemoveLang {})],
-        }
-    })())
+        Ok({
+            match support::catalog_entry(base, "Lang") {
+                Some(PdfObject::Str(bytes)) => vec![PdfUaMutation::SetLang(SetLang { lang: String::from_utf8_lossy(bytes).into_owned(), entry_index: None })],
+                Some(PdfObject::Text(lang)) => vec![PdfUaMutation::SetLang(SetLang { lang: lang.clone(), entry_index: None })],
+                _ => vec![PdfUaMutation::RemoveLang(RemoveLang {})],
+            }
+        })
     }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

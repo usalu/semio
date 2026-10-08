@@ -36,7 +36,11 @@
             "en": "The shape to operate on.",
             "de": "Die Form, auf die der Vorgang angewendet wird."
           },
-          "type": "shape"
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
         }
       ],
       "outputs": [
@@ -184,8 +188,8 @@
         "de": "STL importieren"
       },
       "description": {
-        "en": "Reads base64 STL text into a faceted solid with one planar face per triangle.",
-        "de": "Liest Base64-STL-Text in einen facettierten Körper mit einer ebenen Fläche je Dreieck."
+        "en": "Reads base64 binary STL text into a faceted solid with one planar face per triangle.",
+        "de": "Liest binären STL-Text in Base64-Kodierung in einen facettierten Körper mit einer ebenen Fläche je Dreieck."
       },
       "inputs": [
         {

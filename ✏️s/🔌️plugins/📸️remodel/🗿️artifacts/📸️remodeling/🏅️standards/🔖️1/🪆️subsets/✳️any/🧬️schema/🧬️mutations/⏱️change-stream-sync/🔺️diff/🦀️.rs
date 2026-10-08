@@ -2,7 +2,7 @@
 //! target-missing ⇒ Error, then the invariant (a non-finite offset) ⇒ Fatal, then the identical
 //! resubmission ⇒ Warning: a malformed argument is a fault whether or not it happens to match what is
 //! already stored.
-use crate::diff::{RemodelingDiff, RemodelingMediaStreamList};
+use crate::diff::{RemodelingDiff, RemodelingRow, MediaStreamPatch};
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
@@ -16,10 +16,6 @@ pub fn diff(payload: &super::ChangeStreamSync, base: &RemodelingSnapshot) -> pro
     if existing.sync_offset_ms == payload.new_sync_offset_ms {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Stream \"{}\" sync offset is already {}ms.", payload.id, payload.new_sync_offset_ms));
     }
-    let mut streams = base.streams.clone();
-    if let Some(stream) = streams.iter_mut().find(|stream| stream.id == payload.id) {
-        stream.sync_offset_ms = payload.new_sync_offset_ms;
-    }
-    protocol::MutationOutcome::new(RemodelingDiff { streams: Some(RemodelingMediaStreamList { values: streams }), ..Default::default() })
+    protocol::MutationOutcome::new(RemodelingDiff::stream_rows(vec![RemodelingRow::Patch { key: payload.id.clone(), patch: MediaStreamPatch { sync_offset_ms: Some(payload.new_sync_offset_ms), ..Default::default() } }]))
 }
 //#endregion 🔖️Diff

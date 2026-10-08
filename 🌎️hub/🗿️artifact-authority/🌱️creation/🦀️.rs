@@ -2,7 +2,7 @@
 
 use super::{ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, CheckpointCandidate, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactGenesisCodec, TrustedArtifactIdentity, ValidatingCanonicalArtifactAuthority};
 use directory::os_directory::{ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, DocumentDescriptor, DocumentFrontier, DocumentOwner, DocumentScope};
-use directory::os_io::ArtifactDialect;
+use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_hash::Sha256;
 
 #[path = "🧬️schema/🦀️.rs"]

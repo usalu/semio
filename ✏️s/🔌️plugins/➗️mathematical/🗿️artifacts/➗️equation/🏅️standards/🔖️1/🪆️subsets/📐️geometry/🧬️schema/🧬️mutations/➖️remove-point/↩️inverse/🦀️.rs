@@ -7,7 +7,7 @@ use crate::{EquationMutation, EquationSnapshot};
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::RemovePoint, base: &EquationSnapshot) -> Result<Vec<EquationMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    let geometry = base.geometry.clone();
+    let geometry = &base.geometry;
     match geometry.points.get(payload.index) {
         Some(point) => vec![EquationMutation::InsertPoint(insert_point::InsertPoint { index: payload.index, x: point.x, y: point.y })],
         None => Vec::new(),

@@ -12,8 +12,8 @@
 //! rejected, never silently clamped or corrupted; `TruncateAt` past the current length is the
 //! vocabulary's own defined no-op, not an error) but is reimplemented here from scratch.
 //!
-//! The vocabulary is per SUBSET, not per artifact. This one has exactly 4 kinds: `set-snapshot`,
-//! `replace-byte-range`, `append-bytes`, `truncate-at`. Every spec's `params` is the leaf's own wire
+//! The vocabulary is per SUBSET, not per artifact. This one has exactly 3 kinds: `replace-byte-range`,
+//! `append-bytes`, `truncate-at`. Every spec's `params` is the leaf's own wire
 //! payload (`BinaryMutation`'s `payload_value()`), read by field name — the schema is the contract.
 //!
 //! @see ../🔣️oracle.json — the mutation catalog and the recorded no-oracle decision.
@@ -63,16 +63,12 @@ fn replace_range(buffer: &mut Vec<u8>, offset: usize, remove_len: usize, insert:
 
 //#region 🔖️Apply
 /// 🦠️ Every declared kind, dispatched by its kebab-case name over the leaf's own wire payload:
-/// `set-snapshot` reads `{"snapshot":{"schema","bytes":[...]}}`, `replace-byte-range` reads
+/// `replace-byte-range` reads
 /// `{offset, remove_len, insert}`, `append-bytes` reads `{data}`, `truncate-at` reads `{offset}`.
 #[cfg(feature = "oracles")]
 fn apply(buffer: &[u8], kind: &str, params: &Json) -> Result<Vec<u8>, String> {
     let mut out = buffer.to_vec();
     match kind {
-        "set-snapshot" => {
-            let snapshot = params.get("snapshot").ok_or("set-snapshot requires a `snapshot` field")?;
-            Ok(bytes_field(snapshot, "bytes"))
-        }
         "replace-byte-range" => {
             let offset = usize_field(params, "offset")?;
             let remove_len = usize_field(params, "remove_len")?;

@@ -19,7 +19,7 @@ fn base() -> StepSnapshot {
     })
 }
 
-fn round_trip(mutation: StepCc6Mutation) {
+async fn round_trip(mutation: StepCc6Mutation) {
     let start = base();
     let mut mutated = start.clone();
     let outcome = apply_step_cc6_mutation(&mut mutated, &mutation);
@@ -29,13 +29,14 @@ fn round_trip(mutation: StepCc6Mutation) {
         apply_step_cc6_mutation(&mut mutated, &step);
     }
     assert_eq!(mutated, start, "{mutation:?} then its inverse must restore the base");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &start).await;
 }
 
-#[test]
-fn every_conformance_axis_round_trips_through_its_own_inverse() {
-    round_trip(StepCc6Mutation::SetFileSchema(set_file_schema::SetFileSchema { schemas: vec!["CONFIG_CONTROL_DESIGN".into()] }));
-    round_trip(StepCc6Mutation::SetProductIdentity(set_product_identity::SetProductIdentity { identity: None }));
-    round_trip(StepCc6Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id: 13, representation: None }));
+#[semio_framework_async_macros::async_test]
+async fn every_conformance_axis_round_trips_through_its_own_inverse() {
+    round_trip(StepCc6Mutation::SetFileSchema(set_file_schema::SetFileSchema { schemas: vec!["CONFIG_CONTROL_DESIGN".into()] })).await;
+    round_trip(StepCc6Mutation::SetProductIdentity(set_product_identity::SetProductIdentity { identity: None })).await;
+    round_trip(StepCc6Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id: 13, representation: None, index: None })).await;
 }
 
 /// 🪜️ The claim this class's whole vocabulary rests on: the ladder tops out at 6, so every type
@@ -56,14 +57,14 @@ fn the_top_of_the_ladder_admits_every_classified_rung() {
 fn a_type_that_is_not_on_the_ladder_is_still_refused() {
     let mut snapshot = base();
     let off_ladder = ShapeRepresentationRow { type_name: "MANIFOLD_SOLID_BREP".into(), name: "not a representation".into(), items: vec![12], context: Some(835) };
-    let outcome = apply_step_cc6_mutation(&mut snapshot, &StepCc6Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id: 13, representation: Some(off_ladder) }));
+    let outcome = apply_step_cc6_mutation(&mut snapshot, &StepCc6Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id: 13, representation: Some(off_ladder), index: None }));
     let message = &outcome.messages().first().expect("MANIFOLD_SOLID_BREP is a solid, not a representation").message;
     assert!(message.contains("not a *_SHAPE_REPRESENTATION type"), "the refusal must say what is wrong: {message}");
     assert_eq!(snapshot, base(), "a rejected mutation leaves the snapshot untouched");
 
-    let at_ceiling = shape_representation_row(&base().to_part21_document(), 13).expect("a representation");
+    let at_ceiling = shape_representation_row(&base(), 13).expect("a representation");
     assert!(
-        apply_step_cc6_mutation(&mut snapshot, &StepCc6Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id: 13, representation: Some(at_ceiling) })).messages().is_empty(),
+        apply_step_cc6_mutation(&mut snapshot, &StepCc6Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id: 13, representation: Some(at_ceiling), index: None })).messages().is_empty(),
         "and the fixture's own rung-6 type is admitted"
     );
 }
@@ -76,8 +77,8 @@ fn each_verb_moves_the_diagnostic_it_was_derived_from() {
     let mut snapshot = base();
     assert!(check_cc6_conformance(&snapshot).is_empty());
 
-    apply_step_cc6_mutation(&mut snapshot, &StepCc6Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id: 13, representation: None }));
-    assert!(shape_representation_row(&snapshot.to_part21_document(), 13).is_none(), "the ladder verb really deleted the representation");
+    apply_step_cc6_mutation(&mut snapshot, &StepCc6Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id: 13, representation: None, index: None }));
+    assert!(shape_representation_row(&snapshot, 13).is_none(), "the ladder verb really deleted the representation");
     assert!(check_cc6_conformance(&snapshot).is_empty(), "a document with no representation at all still conforms to CC6 -- the class sets a ceiling, not a floor");
 
     apply_step_cc6_mutation(&mut snapshot, &StepCc6Mutation::SetProductIdentity(set_product_identity::SetProductIdentity { identity: None }));
@@ -91,21 +92,37 @@ fn each_verb_moves_the_diagnostic_it_was_derived_from() {
 fn a_rejected_mutation_leaves_the_snapshot_untouched() {
     let mut snapshot = base();
     assert!(
-        !apply_step_cc6_mutation(&mut snapshot, &StepCc6Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id: 827, representation: None })).messages().is_empty(),
+        !apply_step_cc6_mutation(&mut snapshot, &StepCc6Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id: 827, representation: None, index: None })).messages().is_empty(),
         "a conformance repair must never delete a product record"
     );
     assert!(!apply_step_cc6_mutation(&mut snapshot, &StepCc6Mutation::SetFileSchema(set_file_schema::SetFileSchema { schemas: vec![] })).messages().is_empty());
     assert_eq!(snapshot, base());
 }
 
+#[semio_framework_async_macros::async_test]
+async fn removing_a_middle_row_is_restored_at_its_original_index() {
+    let mut start = base();
+    let ceiling = ladder::ceiling_type_of(MAX_RUNG).expect("this class admits a ceiling type");
+    let row = ShapeRepresentationRow { type_name: ceiling.into(), name: "middle".into(), items: Vec::new(), context: None };
+    let created = StepCc6Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id: 99, representation: Some(row), index: Some(2) });
+    let outcome = apply_step_cc6_mutation(&mut start, &created);
+    assert!(outcome.messages().is_empty(), "{created:?} was rejected: {:?}", outcome.messages());
+    assert_eq!(start.entities.iter().position(|entity| entity.id == 99), Some(2), "the creation honours its index");
+    let removal = StepCc6Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id: 99, representation: None, index: None });
+    let inverse = Mutation::inverse(&removal, &start).expect("valid retained mutation inverse fixture");
+    let [StepCc6Mutation::RestoreEntities(restore)] = inverse.as_slice() else { panic!("one atomic restore row expected: {inverse:?}") };
+    assert_eq!(restore.entities.iter().map(|row| row.index).collect::<Vec<_>>(), vec![Some(2)], "the removal's inverse restores the row at its original index");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&removal, &start).await;
+}
+
 /// 🧪️ The declaration gate: `KINDS` must match the enum's own variants, in declaration order.
 #[test]
 fn kinds_const_matches_enum_variants_in_declaration_order() {
     let one_per_variant = vec![
-        StepCc6Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: StepSnapshot::default() }),
         StepCc6Mutation::SetFileSchema(set_file_schema::SetFileSchema { schemas: Vec::new() }),
         StepCc6Mutation::SetProductIdentity(set_product_identity::SetProductIdentity { identity: None }),
-        StepCc6Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id: 0, representation: None }),
+        StepCc6Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id: 0, representation: None, index: None }),
+        StepCc6Mutation::RestoreEntities(restore_entities::RestoreEntities { entities: Vec::new() }),
     ];
     assert_eq!(one_per_variant.len(), KINDS.len());
     for (mutation, kind) in one_per_variant.iter().zip(KINDS.iter()) {

@@ -80,8 +80,8 @@ async fn field_sweep_covers_every_mutable_field() {
     assert!(d.idx1_present.is_some());
     assert!(d.unknown_chunks.is_some());
     assert!(d.hdrl_extra.is_some());
-    assert_eq!(d.apply(&a).unwrap(), b);
-    assert_eq!(<AviDiff as DiffAlgebra<AviSnapshot>>::between(&b, &a).apply(&b).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&d, &a).unwrap(), b);
+    assert_eq!(<AviDiff as DiffAlgebra<AviSnapshot>>protocol::apply_diff(&::between(&b, &a), &b).unwrap(), a);
     assert!(<AviDiff as DiffAlgebra<AviSnapshot>>::between(&a, &a).is_empty());
 }
 
@@ -91,9 +91,9 @@ async fn inverse_law_round_trips_through_apply() {
     let mut b = a.clone();
     b.streams[0].chunks[0].keyframe = !b.streams[0].chunks[0].keyframe;
     let d = <AviDiff as DiffAlgebra<AviSnapshot>>::between(&a, &b);
-    let after = d.apply(&a).unwrap();
+    let after = protocol::apply_diff(&d, &a).unwrap();
     assert_eq!(after, b);
-    assert_eq!(d.inverse(&a).apply(&after).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&d.inverse(&a), &after).unwrap(), a);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -147,7 +147,7 @@ async fn absorb_associativity_over_three_diffs() {
     let mut right = d1;
     right.absorb(d23);
 
-    assert_eq!(left.apply(&a).unwrap(), after);
-    assert_eq!(right.apply(&a).unwrap(), after);
-    assert_eq!(left.apply(&a).unwrap(), right.apply(&a).unwrap());
+    assert_eq!(protocol::apply_diff(&left, &a).unwrap(), after);
+    assert_eq!(protocol::apply_diff(&right, &a).unwrap(), after);
+    assert_eq!(protocol::apply_diff(&left, &a).unwrap(), protocol::apply_diff(&right, &a).unwrap());
 }

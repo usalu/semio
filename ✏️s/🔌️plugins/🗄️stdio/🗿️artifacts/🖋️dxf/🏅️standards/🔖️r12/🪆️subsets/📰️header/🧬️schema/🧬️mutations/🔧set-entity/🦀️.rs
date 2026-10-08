@@ -1,6 +1,4 @@
-//! 🔧️ `set-entity` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🔧️ `set-entity` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -16,14 +14,21 @@ impl protocol::MutationKind<DxfSnapshot, DxfMutation> for SetEntity {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "entity", kind: "set-entity", record: "SetEntity" };
 
     fn diff(&self, base: &DxfSnapshot) -> protocol::MutationOutcome<<DxfMutation as Mutation<DxfSnapshot>>::Diff> {
-        agg_diff(&DxfMutation::SetEntity(self.clone()), base)
+        let Self { index, entity } = self;
+        protocol::MutationOutcome::new(match base.entities.get(*index) {
+            Some(old) => diff_set_entity(*index, entity_diff_between_pub(old, entity)),
+            None => diff_insert_entity(*index, entity.clone()),
+        })
     }
     fn inverse(&self, base: &DxfSnapshot) -> Result<Vec<DxfMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&DxfMutation::SetEntity(self.clone()), base)?
-    
-    })
-}
+        let Self { index, .. } = self;
+        Ok({
+            match base.entities.get(*index) {
+                Some(e) => vec![DxfMutation::SetEntity(set_entity::SetEntity { index: *index, entity: e.clone() })],
+                None => vec![DxfMutation::RemoveEntity(remove_entity::RemoveEntity { index: *index })],
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set entity", "Entität setzen")
     }

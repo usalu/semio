@@ -40,4 +40,5 @@ type SemioBrepMutation {
   faces: [BrepShellFace!]
   shells: [BrepSolidShell!]
   tol: Float
+  at: Int
 }

@@ -1,31 +1,31 @@
 {
   "artifact": null,
-  "schema": null,
+  "attractions": null,
   "domain": null,
   "meta": null,
   "objects": null,
-  "attractions": null,
-  "targetVolumes": null,
   "references": {
     "added": [
       {
+        "hidden": false,
         "id": "reference-2",
-        "source": {
-          "url": "asset://elevation.png",
-          "mediaKind": "image"
-        },
+        "locked": false,
         "origin": [
           0.0,
           0.0,
           3.0
         ],
-        "widthWorld": 6.0,
-        "locked": false,
-        "hidden": false
+        "source": {
+          "mediaKind": "image",
+          "url": "asset://elevation.png"
+        },
+        "widthWorld": 6.0
       }
     ],
-    "removed": [],
     "patched": [],
+    "removed": [],
     "reordered": null
-  }
+  },
+  "schema": null,
+  "targetVolumes": null
 }

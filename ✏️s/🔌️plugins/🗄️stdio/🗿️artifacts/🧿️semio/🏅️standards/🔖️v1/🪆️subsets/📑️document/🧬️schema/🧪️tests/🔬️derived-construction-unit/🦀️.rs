@@ -24,7 +24,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn mutate_then_absorb_round_trips() {
-        let (builder, diff) = SemioDocumentBuilderConstruction::empty().mutate(SemioDocumentMutation::InsertStyle(insert_style::InsertStyle { style: DocStyle { id: "s".into(), name: "S".into(), based_on: None } }));
+        let (builder, diff) = SemioDocumentBuilderConstruction::empty().mutate(SemioDocumentMutation::InsertStyle(insert_style::InsertStyle { style: DocStyle { id: "s".into(), name: "S".into(), based_on: None }, at: None }));
         let rebuilt = SemioDocumentBuilderConstruction::empty().absorb(diff.diff().clone()).expect("absorb must succeed for a well-formed fixture");
         assert_eq!(builder.build().unwrap(), rebuilt.build().unwrap());
     }

@@ -5,14 +5,17 @@ import { canonicalJson } from "../../../../../../../🦑️repo/🔨️modules/�
 import { loadCatalogTaxonomy, parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile, registryCatalogInputView, resolveWorkspaceTaxonomyAuthority, validateTaxonomy, type RegistryCatalogInputView } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 
 /** 🌐️ Builds browser artifacts entirely in memory from exact no-follow source or projected inputs. */
-export async function renderWgpuBrowserBundles(repoRoot: string, input: unknown, options: { readonly taxonomy?: ReturnType<typeof loadCatalogTaxonomy>; readonly view?: RegistryCatalogInputView; readonly isCancelled?: () => boolean; readonly progress?: (event: { readonly phase: "module-input" | "bundle"; readonly completed: number; readonly total: number }) => void; readonly entryIds?: readonly string[] } = {}): Promise<{ readonly nodes: readonly { readonly path: string; readonly content: string; readonly mode: number; readonly inclusion: "tracked" | "ignored" }[]; readonly inputs: readonly string[] }> {
+export async function renderWgpuBrowserBundles(repoRoot: string, input: unknown, options: { readonly taxonomy?: ReturnType<typeof loadCatalogTaxonomy>; readonly view?: RegistryCatalogInputView; readonly isCancelled?: () => boolean; readonly progress?: (event: { readonly phase: "module-input" | "bundle"; readonly completed: number; readonly total: number }) => void; readonly entryIds?: readonly string[] } = {}): Promise<{ readonly nodes: readonly { readonly path: string; readonly content: string; readonly mode: number; readonly inclusion: "tracked" | "ignored" }[]; readonly inputs: readonly string[]; readonly entryInputs: readonly { readonly id: string; readonly outputPath: string; readonly inputs: readonly string[] }[] }> {
   const taxonomy = options.taxonomy ?? loadCatalogTaxonomy(), profile = parseSemanticPackageBrowserProfile(input, taxonomy.pathEmojiPolicy.genericEmojiIdentities);
   const view = options.view ?? registryCatalogInputView(repoRoot, taxonomy);
   const allowed = new Set(profile.sourceModulePaths), modules = new Set<string>(), contents = new Map<string, string>();
   const nodes: { path: string; content: string; mode: number; inclusion: "tracked" | "ignored" }[] = [];
+  const entryInputs: { id: string; outputPath: string; inputs: string[] }[] = [];
+  let currentInputs = new Set<string>();
   const check = (): void => { if (options.isCancelled?.()) throw new Error("WGPU browser generation cancelled"); };
   const read = (path: string): string => {
     check();
+    currentInputs.add(path);
     const cached = contents.get(path);
     if (cached !== undefined) return cached;
     if (view.kind(path) !== "file") throw new Error("WGPU browser input is missing or not a no-follow file: " + path);
@@ -25,6 +28,7 @@ export async function renderWgpuBrowserBundles(repoRoot: string, input: unknown,
   if (!entries.length || options.entryIds?.some((id) => !entries.some((entry) => entry.id === id))) throw new Error("Unknown WGPU browser entry selection");
   for (const entry of entries) {
     check();
+    currentInputs = new Set<string>();
     const entryPath = profile.ownerPath + "/" + entry.sourceRelativePath, entryAbsolute = join(repoRoot, entryPath);
     const result = await Bun.build({ root: repoRoot, entrypoints: [entryAbsolute], target: "browser", format: "esm", define: { "import.meta.vitest": profile.inlineTestDefine }, plugins: [{ name: "semantic-wgpu-owned-inputs", setup(builder) {
       builder.onResolve({ filter: /.*/u }, (request) => {
@@ -50,6 +54,7 @@ export async function renderWgpuBrowserBundles(repoRoot: string, input: unknown,
     check();
     if (!result.success || result.logs.length || result.outputs.length !== 1) throw new Error("WGPU browser compilation did not produce exactly one clean artifact: " + entry.id);
     nodes.push({ path: profile.ownerPath + "/" + entry.outputRelativePath, content: await result.outputs[0]!.text(), mode: 0o644, inclusion: entry.inclusion });
+    entryInputs.push({id:entry.id,outputPath:profile.ownerPath+"/"+entry.outputRelativePath,inputs:[...currentInputs].sort()});
     options.progress?.({ phase: "bundle", completed: nodes.length, total: entries.length });
   }
   check();
@@ -57,7 +62,7 @@ export async function renderWgpuBrowserBundles(repoRoot: string, input: unknown,
   if (!options.entryIds && unused.length) throw new Error("WGPU browser module authority includes unread inputs: " + unused.join(" | "));
   for (const [path, content] of contents) if (view.kind(path) !== "file" || createHash("sha256").update(view.readText(path)).digest("hex") !== createHash("sha256").update(content).digest("hex")) throw new Error("WGPU browser input changed during generation: " + path);
   const compare = (left: string, right: string): number => Buffer.compare(Buffer.from(left), Buffer.from(right));
-  return { nodes: nodes.sort((left, right) => compare(left.path, right.path)), inputs: [...contents.keys()].sort(compare) };
+  return { nodes: nodes.sort((left, right) => compare(left.path, right.path)), inputs: [...contents.keys()].sort(compare), entryInputs };
 }
 
 /** 🥖️ Requires one exact root package-manager identity for all WGPU artifact commands. */

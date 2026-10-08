@@ -2,8 +2,6 @@
   "workingGraph": null,
   "lhs": null,
   "rhs": {
-    "create": [],
-    "delete": [],
     "set": [
       {
         "var": "c",
@@ -21,9 +19,7 @@
           "value": "$repeat"
         }
       }
-    ],
-    "merge": [],
-    "parameters": []
+    ]
   },
   "parameterBindings": null,
   "ruleLayout": null

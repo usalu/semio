@@ -164,7 +164,7 @@ fn extract_typed_value(children: &[XmlNode], cell_scope: &[(String, String)], na
 /// cell (ECMA-376 §18.3.1.40); its `cached` is the SAME `<v>`/`t` pair, re-typed by
 /// `extract_typed_value` (absent `<v>` = uncalculated, `cached: None`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn extract_cell_value(children: &[XmlNode], cell_scope: &[(String, String)], namespace: &str, t: Option<&str>, sst_len: usize, part: &str) -> Result<XlsxCellValue, XlsxError> {
+pub(crate) fn extract_cell_value(children: &[XmlNode], cell_scope: &[(String, String)], namespace: &str, t: Option<&str>, sst_len: usize, part: &str) -> Result<XlsxCellValue, XlsxError> {
     if let Some(expr) = child_text(children, cell_scope, namespace, "f").map_err(|detail| XlsxError::Xml { part: part.into(), detail })? {
         let cached =
             if child_text(children, cell_scope, namespace, "v").map_err(|detail| XlsxError::Xml { part: part.into(), detail })?.is_some() { Some(Box::new(extract_typed_value(children, cell_scope, namespace, t, sst_len, part)?)) } else { None };

@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../../.."
+workspace = "../../.."
 name = "semio-s-artifact-trinity-jack-shell"
 version.workspace = true
 edition.workspace = true
@@ -24,4 +24,5 @@ semio-s-artifact-trinity-jack = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 
 [dev-dependencies]
+semio-framework-os-kernel = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

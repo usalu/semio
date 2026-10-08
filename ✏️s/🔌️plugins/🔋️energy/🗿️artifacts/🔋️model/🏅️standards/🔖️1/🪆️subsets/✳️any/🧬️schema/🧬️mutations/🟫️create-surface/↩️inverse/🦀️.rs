@@ -20,6 +20,9 @@ pub fn inverse(payload: &super::CreateSurface, base: &EnergyModelSnapshot) -> Re
     {
         return Vec::new();
     }
+    if payload.index.is_some_and(|index| index as usize > base.model.surfaces.len()) {
+        return Vec::new();
+    }
     vec![vocabulary::delete_surface(payload.id)]
 
     })())

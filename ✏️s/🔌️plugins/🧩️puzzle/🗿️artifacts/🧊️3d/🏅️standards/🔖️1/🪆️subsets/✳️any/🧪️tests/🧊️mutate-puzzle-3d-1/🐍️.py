@@ -36,7 +36,7 @@ only. The one exception is NUMERIC, not semantic: re-deriving an attraction's si
 inversion, ported operation for operation so both sides round alike. WHICH objects follow a move and WHICH
 attractions re-derive is this file's own reading of the selection leaves' schema descriptions.
 
-**One kind this implementation REFUSES, by clause rather than by absence.** See `UNDERDETERMINED`.
+**No kind is refused.** `replace-object-vortex` replaces the addressed vortex record, per rule 2 of the derivation rules; its committed vector `⏸️rekind` moves `vortex-1` from `vortex-kind-a` to `vortex-kind-c`.
 """
 
 # region 🔖️Imports
@@ -77,19 +77,6 @@ eight values are addressed under two spellings."""
 COMPATIBILITY_FIELDS = ("source", "target", "bidirectional", "important", "specificity")
 """🤝 The members of one kind-compatibility record, in the order `connect-kind-compatibility` names
 them."""
-
-UNDERDETERMINED = {"replace-object-vortex"}
-"""🚧️ The one kind this implementation refuses to state — see `UNDERDETERMINED_REASON`."""
-
-UNDERDETERMINED_REASON = (
-    "this implementation refuses this kind rather than guessing it. Its single committed vector supplies a genuinely different vortex — `vortex-1` "
-    "moves from `vortex-kind-a` to `vortex-kind-c` — and yet the committed outcome declares `mutation.no-op` and the after-snapshot is identical to "
-    "the before-snapshot. At least three rules produce exactly that and no committed document distinguishes them: the verb is unimplemented; it "
-    "refuses a vortex an attraction is addressed to, which `vortex-1` is; or it refuses a vortex kind the `kindCompatibility` relation does not admit, "
-    "which `vortex-kind-c` is. `📓️derivation-rules.md` rule 2 says `replace-<singular>-<member>` replaces the addressed record, so a second "
-    "implementation written from the specification would move the document. ONE more committed vector, on an unattracted vortex, decides it. Its "
-    "sibling `mutate-puzzle-2d-1` reports the identical gap over `replace-node-handle`."
-)
 
 KINDS = (
     "create-object",
@@ -417,8 +404,6 @@ def put(record, member, value):
 def apply_mutation(document, kind, payload):
     """🦠️ Applies one kind. Every committed vector of this subset is accepted (`applied` or `no-op`), so an
     address the scene does not hold is an error rather than a rejection outcome."""
-    if kind in UNDERDETERMINED:
-        raise AssertionError("mutate-%s: %s" % (kind, UNDERDETERMINED_REASON))
     document = copy.deepcopy(document)
     if kind in COLLECTIONS:
         member, argument = COLLECTIONS[kind]
@@ -459,6 +444,11 @@ def apply_mutation(document, kind, payload):
         port = "%s:%s" % (payload["objectId"], payload["vortexId"])
         record["vortices"] = [vortex for vortex in record["vortices"] if vortex["id"] != payload["vortexId"]]
         document["attractions"] = [held for held in document["attractions"] if held["attracting"] != port and held["attracted"] != port]
+    elif kind == "replace-object-vortex":
+        record = document["objects"][record_at(document, "objects", payload["objectId"], kind, "mutate")]
+        if not any(vortex["id"] == payload["vortexId"] for vortex in record["vortices"]):
+            raise AssertionError("mutate-%s: object %r declares no vortex %r" % (kind, payload["objectId"], payload["vortexId"]))
+        record["vortices"] = [copy.deepcopy(payload["newVortex"]) if vortex["id"] == payload["vortexId"] else vortex for vortex in record["vortices"]]
     elif kind == "connect-vortices":
         attraction = {"id": payload["id"], "attracting": payload["attracting"], "attracted": payload["attracted"]}
         for member in ATTRACTION_GEOMETRY:
@@ -499,8 +489,6 @@ def inverse_mutation(document, kind, payload):
     pre-mutation scene. `delete-object` and `remove-object-vortex` invert to SEVERAL steps, because
     they sever attractions: the object or vortex is put back at its own index first and every severed
     attraction is reconnected after it, in scene order."""
-    if kind in UNDERDETERMINED:
-        raise AssertionError("inverse-%s: %s" % (kind, UNDERDETERMINED_REASON))
     if kind in COLLECTIONS:
         member, argument = COLLECTIONS[kind]
         undo = {"objects": "delete-object", "targetVolumes": "delete-target-volume", "references": "delete-reference"}[member]
@@ -544,6 +532,10 @@ def inverse_mutation(document, kind, payload):
         port = "%s:%s" % (payload["objectId"], payload["vortexId"])
         steps = [("add-object-vortex", {"objectId": payload["objectId"], "vortex": copy.deepcopy(record["vortices"][at]), "index": at})]
         return steps + [("connect-vortices", reconnect(held)) for held in attached_to(document, {port})]
+    if kind == "replace-object-vortex":
+        record = document["objects"][record_at(document, "objects", payload["objectId"], kind, "inverse")]
+        held = next(vortex for vortex in record["vortices"] if vortex["id"] == payload["vortexId"])
+        return [(kind, {"objectId": payload["objectId"], "vortexId": payload["vortexId"], "newVortex": copy.deepcopy(held)})]
     if kind == "connect-vortices":
         return [("disconnect-vortices", {"id": payload["id"]})]
     if kind == "disconnect-vortices":

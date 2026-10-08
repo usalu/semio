@@ -1,11 +1,14 @@
-//! 🧩 Outward application assembly of installed native document services.
-use semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1;
+//! 🧩 Native and MCP hosts receive their defining caller's installed inventory.
+pub use semio_framework_os_kernel::os_directory::client::InstalledServiceContributionV1;
 
-/// 📦 Supplies the concrete owner inventory installed by this application.
-pub fn service_contributions_v1() -> Vec<InstalledServiceContributionV1> {
-    vec![semio_s_artifact_gis_gismap::inference_worker::gis_map_service_contribution_v1()]
+/// 🖥 Runs the native host with exactly the supplied installed services.
+#[cfg(feature = "native-renderer")]
+pub fn run_native_v1(services: Vec<InstalledServiceContributionV1>) {
+    semio_framework_os_renderer_wgpu::run_native_entrypoint(services);
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🔌️service-composition/🦀️.rs"]
-mod tests;
+/// 🌉 Runs the MCP host with exactly the supplied service and credential protocols.
+#[cfg(feature = "mcp-service")]
+pub fn run_mcp_v1(services: Vec<semio_framework_os_mcp::inference::RemoteInferenceProtocolV1>, credentials: Vec<semio_framework_os_mcp::agent_credential::CredentialExchangeProtocolV1>) {
+    semio_framework_os_mcp::run_mcp_entrypoint(services, credentials);
+}

@@ -60,8 +60,8 @@ fn sqlite_snapshot_playground_actual_erased_native_formats_use_queryable_parent(
         let source = PlaygroundSnapshot { schema: case["schema"].as_str().unwrap().into() };
         for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
             let payload = match encoding {
-                SnapshotEncoding::Binary => store::os_io::IoPayload::Binary(source.encode_pack()),
-                SnapshotEncoding::Text => store::os_io::IoPayload::Text(source.print_dsl()),
+                SnapshotEncoding::Binary => store::io::IoPayload::Binary(source.encode_pack()),
+                SnapshotEncoding::Text => store::io::IoPayload::Text(source.print_dsl()),
             };
             let database = (provider.export)(crate::PLAYGROUND_DOCUMENT_SCHEMA, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
             assert_eq!(database.tables.len(), 1);

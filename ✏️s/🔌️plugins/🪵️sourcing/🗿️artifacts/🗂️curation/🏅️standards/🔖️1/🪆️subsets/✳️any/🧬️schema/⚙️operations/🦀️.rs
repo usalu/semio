@@ -41,7 +41,10 @@ pub const KINDS: &[&str] = &["create-curated-item", "delete-curated-item", "chan
 /// pairs, so the committed `🎯️outcome/🔣️.json`'s claim is checkable from outside this
 /// crate rather than only inside its own leaf tests.
 pub fn apply_sourcing_mutation_reporting(snapshot: &mut CurationSnapshot, mutation: &SourcingMutation) -> Vec<(String, String)> {
-    let outcome = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::diff(mutation, snapshot).apply_to(snapshot);
+    let outcome = <SourcingMutation as protocol::Mutation<CurationSnapshot>>::diff(mutation, snapshot);
+    if let Ok(next) = protocol::apply_diff(outcome.diff(), &*snapshot) {
+        *snapshot = next;
+    }
     outcome.messages().iter().map(|message| (message.code.0.clone(), format!("{:?}", message.level))).collect()
 }
 

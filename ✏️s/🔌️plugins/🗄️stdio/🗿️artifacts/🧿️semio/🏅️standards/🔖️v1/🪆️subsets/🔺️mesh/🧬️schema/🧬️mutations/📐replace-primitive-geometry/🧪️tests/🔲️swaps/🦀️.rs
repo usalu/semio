@@ -31,7 +31,7 @@ fn mutation() -> SemioMeshMutation {
 #[semio_framework_async_macros::async_test]
 async fn replaces_all_five_buffers_and_keeps_topology_and_material() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("replace-primitive-geometry applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("replace-primitive-geometry applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "replace-primitive-geometry/swaps-the-triangle-for-a-textured-quad: applied state differs from the committed after-snapshot");
     let edited = &produced.meshes[0].primitives[0];
     assert_eq!(edited.positions.len(), 4, "the triangle's three vertices become the quad's four");
@@ -48,14 +48,15 @@ async fn replaces_all_five_buffers_and_keeps_topology_and_material() {
 async fn the_undo_replace_primitive_geometry_restores_all_five_buffers() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "replace-primitive-geometry undoes as exactly one replace-primitive-geometry");
     let SemioMeshMutation::ReplacePrimitiveGeometry(restore) = &undo[0] else { panic!("replace-primitive-geometry must undo as itself") };
     assert_eq!(restore.positions, base.meshes[0].primitives[0].positions, "the undo must recapture BASE's own position buffer");
     assert_eq!(restore.indices, base.meshes[0].primitives[0].indices, "and BASE's own index buffer");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward replace-primitive-geometry applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo replace-primitive-geometry applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward replace-primitive-geometry applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo replace-primitive-geometry applies");
     }
     assert_eq!(current, base, "replace-primitive-geometry/swaps-the-triangle-for-a-textured-quad: the undo did not restore the before-snapshot");
 }
@@ -115,6 +116,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-primitive-geometry diff decodes");
-    let produced = decoded.apply(&before()).expect("committed replace-primitive-geometry diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed replace-primitive-geometry diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-primitive-geometry/swaps-the-triangle-for-a-textured-quad: committed diff did not carry before to after");
 }

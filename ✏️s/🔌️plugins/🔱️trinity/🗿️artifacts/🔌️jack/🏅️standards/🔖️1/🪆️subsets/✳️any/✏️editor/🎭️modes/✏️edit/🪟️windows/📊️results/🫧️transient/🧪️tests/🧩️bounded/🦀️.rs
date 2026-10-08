@@ -82,3 +82,11 @@ fn results_window_large_output_preserves_alias_cancel_and_bounded_disposal() {
     }
     assert!(retirement.terminal_is_empty());
 }
+
+/// ➕️ `replace-query-result`'s concrete inverse row sums to exactly the negative of its sparse diff (law L3).
+#[semio_framework_async_macros::async_test]
+async fn replace_query_result_inverse_sums_to_the_negative_diff() {
+    let base = JackResultsWindowTransient { query_execution_id: Some("run-1".into()), result: None, query_error: Some("old".into()) };
+    let mutation: JackResultsWindowTransientMutation = ReplaceQueryResult { execution_id: Some("run-2".into()), result: None, error: None }.into();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+}

@@ -7,6 +7,8 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 pub struct InsertStyle {
     pub style: DocStyle,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl protocol::MutationKind<SemioDocumentSnapshot, SemioDocumentMutation> for InsertStyle {

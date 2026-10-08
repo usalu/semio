@@ -31,4 +31,5 @@ message SemioModelMutation {
   repeated double axis = 19;
   optional double angle = 20;
   repeated double factors = 21;
+  optional uint64 at = 22;
 }

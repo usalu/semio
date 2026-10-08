@@ -1,5 +1,5 @@
 use super::*;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{Mutation, OpBinary, OpText};
 
 fn camera() -> GisMapViewerCamera {
     GisMapViewerCamera { x: 1_250.5, y: -830.25, zoom: 3.5 }
@@ -26,11 +26,11 @@ fn a_camera_prints_the_scene_camera_json_the_tiled_map_host_reads() {
 fn set_camera_replaces_the_camera_and_inverts_back_to_the_base() {
     let base = GisMapViewerWindowConfig::default();
     let mutation = GisMapViewerWindowConfigMutation::SetCamera(SetCamera { camera: camera() });
-    let next = mutation.diff(&base).diff().apply(&base).expect("the camera applies");
+    let next = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("the camera applies");
     assert_eq!(next.camera, camera());
     let mut restored = next;
     for inverse in mutation.inverse(&base).expect("valid retained mutation inverse fixture") {
-        restored = inverse.diff(&restored).diff().apply(&restored).expect("the inverse applies");
+        restored = protocol::apply_diff(inverse.diff(&restored).diff(), &restored).expect("the inverse applies");
     }
     assert_eq!(restored, base, "panning back is exactly the inverse");
 }
@@ -41,7 +41,7 @@ fn re_setting_the_same_camera_is_a_declared_no_op() {
     let mutation = GisMapViewerWindowConfigMutation::SetCamera(SetCamera { camera: camera() });
     let outcome = mutation.diff(&base);
     assert!(outcome.messages().iter().any(|message| message.code.0 == "mutation.no-op"), "a debounced duplicate must not publish a change");
-    assert_eq!(outcome.diff().apply(&base).expect("the whole-record no-op applies"), base, "the no-op keeps the camera instead of resetting the record");
+    assert_eq!(protocol::apply_diff(outcome.diff(), &base).expect("the whole-record no-op applies"), base, "the no-op keeps the camera instead of resetting the record");
     assert!(mutation.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "a no-op has no inverse");
 }
 

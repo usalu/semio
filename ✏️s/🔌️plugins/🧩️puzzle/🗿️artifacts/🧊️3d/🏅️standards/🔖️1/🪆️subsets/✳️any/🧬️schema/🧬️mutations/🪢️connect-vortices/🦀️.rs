@@ -25,12 +25,13 @@ pub struct ConnectVortices {
     pub tilt: f64,
     pub x: f64,
     pub y: f64,
+    pub index: Option<usize>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 #[allow(clippy::too_many_arguments)]
-pub fn connect_vortices(id: String, attracting: String, attracted: String, gap: f64, shift: f64, rise: f64, rotation: f64, turn: f64, tilt: f64, x: f64, y: f64) -> Puzzle3dMutation {
-    Puzzle3dMutation::ConnectVortices(ConnectVortices { id, attracting, attracted, gap, shift, rise, rotation, turn, tilt, x, y })
+pub fn connect_vortices(id: String, attracting: String, attracted: String, gap: f64, shift: f64, rise: f64, rotation: f64, turn: f64, tilt: f64, x: f64, y: f64, index: Option<usize>) -> Puzzle3dMutation {
+    Puzzle3dMutation::ConnectVortices(ConnectVortices { id, attracting, attracted, gap, shift, rise, rotation, turn, tilt, x, y, index })
 }
 
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ConnectVortices {

@@ -529,8 +529,8 @@ impl ArtifactEditor for WavEditor {
         }
     }
 
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(WavMutation::SetSnapshot(crate::standards::riff_pcm::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot }))
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
     fn bounded_first_step_tool_proofs() -> Vec<ArtifactBoundedFirstStepProof> {
@@ -708,12 +708,8 @@ impl editing::SnapshotEditingEditor for WavEditor {
             let next = wavEditor_snapshot_edit(event, snapshot)?;
             return Ok(Emit { artifact_mutations: vec![WavMutation::SetData(set_data::SetData { data: next.data })], ..Default::default() });
         }
-        editing::snapshot_edit_patch(
-            event,
-            snapshot,
-            |patch| WavMutation::PatchSnapshot(crate::standards::riff_pcm::subsets::any::schema::mutations::patch_snapshot::PatchSnapshot { patch }),
-            Some(|snapshot| WavMutation::SetSnapshot(crate::standards::riff_pcm::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot })),
-        )
+        let expected = Self::snapshot_edit_expected(event, snapshot)?;
+        Ok(Emit { artifact_mutations: editing::net_leaves_exact(snapshot, &expected, crate::standards::riff_pcm::subsets::any::schema::mutations::net_mutations)?, ..Default::default() })
     }
 }
 

@@ -131,10 +131,10 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// doc for why this calls `subset_validator_entry_of` directly instead of reusing either subset's
 /// own private cache.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn declared_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
-    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
+fn declared_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
     ENTRIES
-        .get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<standards::v1_1::subsets::tiny::io::SvgTinyValidator>(), semio_framework_plugin::subset_validator_entry_of::<standards::v1_1::subsets::basic::io::SvgBasicValidator>()])
+        .get_or_init(|| vec![semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_1::subsets::tiny::io::SvgTinyValidator>(), semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_1::subsets::basic::io::SvgBasicValidator>()])
         .as_slice()
 }
 
@@ -207,7 +207,7 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v1_1::subsets::base::io::io_registry as v1_1;
-    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
+    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();
@@ -275,10 +275,6 @@ pub mod standards {
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🦀️.rs"]
                         mod component;
                         pub use component::*;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🩹️patch-snapshot/🦀️.rs"]
-                        pub mod patch_snapshot;
-                        #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📸️set-snapshot/🦀️.rs"]
-                        pub mod set_snapshot;
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📥️insert-element/🦀️.rs"]
                         pub mod insert_element;
                         #[path = "🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🗑️remove-element/🦀️.rs"]

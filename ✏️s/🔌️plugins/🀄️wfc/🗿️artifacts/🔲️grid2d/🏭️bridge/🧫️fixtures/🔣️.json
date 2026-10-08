@@ -1,0 +1,20 @@
+{
+  "artifact": "s.wfc.grid2d",
+  "producedBy": "semio-wfc-mutation-bridge",
+  "excludedOwnerSegments": [
+    "👁️viewer",
+    "✏️editor"
+  ],
+  "aggregates": [
+    "Grid2dMutation"
+  ],
+  "coordinates": [
+    {
+      "artifact": "s.wfc.grid2d",
+      "standard": "1",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any"
+    }
+  ]
+}

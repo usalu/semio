@@ -21,15 +21,16 @@
 //! @see ../../🔣️oracle.json — the catalog `KINDS` below must match exactly.
 //! @see ../../../../../../🧪️tests/🔰️mutate-svg-1-1-basic/🥒️.feature — the case that exercises it.
 
-use crate::schema::diff::{diff_at_path, diff_set_snapshot, SvgAttrAdded, SvgAttrModified, SvgAttributesDiff, SvgChildAdded, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
-use crate::schema::snapshot::{element_attr, node_at, NodePath, TransformOp, ViewBox};
+use crate::schema::diff::{diff_at_path, SvgChildAdded, SvgChildrenDiff, SvgDiff, SvgElementDiff, SvgNodeDiff};
+use crate::schema::mutation_support::{attributes_diff_at_path, prior_attribute};
+use crate::schema::snapshot::{node_at, NodePath, TransformOp, ViewBox};
 
 
 
 
 use crate::SvgSnapshot;
 use protocol::Mutation;
-use crate::schema::snapshot::{SvgAttr, SvgNode, SvgAttributeValue};
+use crate::schema::snapshot::{SvgNode, SvgAttributeValue};
 
 //#region 🔖️Mutations
 #[path = "➕insert-basic-element/🦀️.rs"]
@@ -46,10 +47,6 @@ pub mod set_clip_path_reference;
 /// paths are addressed by their `id`, because that is how a `clip-path="url(#id)"` reference names
 /// them and the profile's whole clip-path rule is about what a reference resolves to.
 //#region 🔖️Leaves
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "✍️set-text/🦀️.rs"]
 pub mod set_text;
 #[path = "🔄set-transform/🦀️.rs"]
@@ -65,8 +62,6 @@ pub mod stamp_base_profile;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = SvgSnapshot, diff = SvgDiff, schema = "SvgBasicMutation")]
 pub enum SvgBasicMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
     /// 🏷️ Sets (or, with `None`, clears) the root's `baseProfile`/`version` declaration.
     StampBaseProfile(stamp_base_profile::StampBaseProfile),
     /// ➕️ Inserts `node` as child `index` of the element at `parent`, REJECTED when the subtree
@@ -95,15 +90,13 @@ pub enum SvgBasicMutation {
 
 /// 📇️ Kebab-case spelling of every `SvgBasicMutation` variant, in declaration order — the exact
 /// `kinds` list `../../🔣️oracle.json`'s `mutationCatalogs` entry declares.
-pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "stamp-base-profile", "insert-basic-element", "remove-element", "set-basic-attribute", "set-clip-path-reference", "insert-clip-path-shape", "set-text", "set-view-box", "set-transform"];
+pub const KINDS: &[&str] = &["stamp-base-profile", "insert-basic-element", "remove-element", "set-basic-attribute", "set-clip-path-reference", "insert-clip-path-shape", "set-text", "set-view-box", "set-transform"];
 
 crate::impl_serde_op_codec!(SvgBasicMutation, "svg-basic-mutation");
 
 /// 🏷️ The `KINDS` spelling of one mutation's own variant, exhaustively matched.
 pub fn kind_of(mutation: &SvgBasicMutation) -> &'static str {
     match mutation {
-        SvgBasicMutation::SetSnapshot(_) => "set-snapshot",
-        SvgBasicMutation::PatchSnapshot(_) => "patch-snapshot",
         SvgBasicMutation::StampBaseProfile(_) => "stamp-base-profile",
         SvgBasicMutation::InsertBasicElement(_) => "insert-basic-element",
         SvgBasicMutation::RemoveElement(_) => "remove-element",
@@ -197,38 +190,6 @@ pub fn resolve_clip_path(snapshot: &SvgSnapshot, id: &str) -> Result<NodePath, S
 //#endregion 🔖️Profile
 
 //#region 🔖️AttributeHelper
-/// 🏷️ Builds the exact `SvgAttributesDiff` a set of `(name, value)` transitions requires on the
-/// element addressed by `path`, resolving each attribute's PRIOR presence against `base`.
-fn attributes_diff_at_path(base: &SvgSnapshot, path: &[usize], changes: &[(&str, Option<SvgAttributeValue>)]) -> SvgDiff {
-    let target = node_at(&base.doc, path).ok();
-    let existing: &[SvgAttr] = match target {
-        Some(SvgNode::Element { attrs, .. }) => attrs.as_slice(),
-        _ => &[],
-    };
-    let mut diff = SvgAttributesDiff::default();
-    let mut next_index = existing.len();
-    for (name, value) in changes {
-        let present = existing.iter().any(|a| a.name.as_str() == *name);
-        match (present, value) {
-            (true, Some(v)) => diff.modified.push(SvgAttrModified { name: (*name).to_string(), value: v.clone() }),
-            (true, None) => {
-                diff.removed.push((*name).to_string());
-                next_index -= 1;
-            }
-            (false, Some(v)) => {
-                diff.added.push(SvgAttrAdded { index: next_index, name: (*name).to_string(), value: v.clone() });
-                next_index += 1;
-            }
-            (false, None) => {}
-        }
-    }
-    diff_at_path(path, SvgNodeDiff::Element(SvgElementDiff { name: None, attributes: Some(diff), children: None }))
-}
-
-fn prior_attribute(base: &SvgSnapshot, path: &[usize], name: &str) -> Option<SvgAttributeValue> {
-    node_at(&base.doc, path).ok().and_then(|n| element_attr(n, name)).cloned()
-}
-
 fn insert_child_diff(parent: &[usize], index: usize, node: &SvgNode) -> SvgDiff {
     diff_at_path(parent, SvgNodeDiff::Element(SvgElementDiff { name: None, attributes: None, children: Some(SvgChildrenDiff { removed: Vec::new(), modified: Vec::new(), added: vec![SvgChildAdded { index, item: node.clone() }] }) }))
 }
@@ -238,11 +199,42 @@ fn remove_child_diff(parent: &[usize], index: usize) -> SvgDiff {
 }
 //#endregion 🔖️AttributeHelper
 
+//#region 🔖️Net
+/// 🧮️ The leaves that carry `base` to exactly `next`, or `None` when `next` differs in a part no leaf of this vocabulary addresses
+/// (prolog, epilog, declaration, doctype, the root's presence or name). The root's attributes keep their order and the children past the
+/// longest equal prefix are removed and reinserted.
+pub fn net_mutations(base: &SvgSnapshot, next: &SvgSnapshot) -> Option<Vec<SvgBasicMutation>> {
+    if base.doc.prolog != next.doc.prolog || base.doc.epilog != next.doc.epilog || base.doc.declaration != next.doc.declaration || base.doc.doctype != next.doc.doctype {
+        return None;
+    }
+    match (&base.doc.root, &next.doc.root) {
+        (None, None) => Some(Vec::new()),
+        (Some(SvgNode::Element { name: base_name, attrs: base_attrs, children: base_children }), Some(SvgNode::Element { name, attrs, children })) if base_name == name => {
+            let set = |name: &str, value, index| SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute { path: Vec::new(), name: name.to_string(), value, index });
+            let kept_in_order = base_attrs.iter().filter(|attribute| attrs.iter().any(|other| other.name == attribute.name)).map(|attribute| &attribute.name).eq(attrs.iter().filter(|attribute| base_attrs.iter().any(|other| other.name == attribute.name)).map(|attribute| &attribute.name));
+            let mut leaves: Vec<SvgBasicMutation> = base_attrs.iter().filter(|attribute| !kept_in_order || !attrs.iter().any(|other| other.name == attribute.name)).map(|attribute| set(&attribute.name, None, None)).collect();
+            for (index, attribute) in attrs.iter().enumerate() {
+                match base_attrs.iter().find(|other| other.name == attribute.name).filter(|_| kept_in_order) {
+                    Some(current) if current.value == attribute.value => {}
+                    Some(_) => leaves.push(set(&attribute.name, Some(attribute.value.clone()), None)),
+                    None => leaves.push(set(&attribute.name, Some(attribute.value.clone()), Some(index))),
+                }
+            }
+            let common = base_children.iter().zip(children).take_while(|(left, right)| left == right).count();
+            leaves.extend((common..base_children.len()).rev().map(|index| SvgBasicMutation::RemoveElement(remove_element::RemoveElement { parent: Vec::new(), index })));
+            leaves.extend(children.iter().enumerate().skip(common).map(|(index, node)| SvgBasicMutation::InsertBasicElement(insert_basic_element::InsertBasicElement { parent: Vec::new(), index, node: node.clone() })));
+            Some(leaves)
+        }
+        _ => None,
+    }
+}
+//#endregion 🔖️Net
+
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: the diff is the single semantics source.
 pub fn apply_svg_basic_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgBasicMutation) -> protocol::MutationOutcome<SvgDiff> {
     let outcome = Mutation::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -253,99 +245,6 @@ pub fn apply_svg_basic_mutation(snapshot: &mut SvgSnapshot, mutation: &SvgBasicM
 
 //#endregion 🔖️Apply
 
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &SvgBasicMutation, base: &SvgSnapshot) -> protocol::MutationOutcome<SvgDiff> {
-    match this {
-        SvgBasicMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => protocol::MutationOutcome::new(diff_set_snapshot(base, snapshot)),
-        SvgBasicMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<SvgSnapshot, SvgBasicMutation>>::diff(patch, base),
-        SvgBasicMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile, version }) => protocol::MutationOutcome::new(attributes_diff_at_path(base, &[], &[("baseProfile", base_profile.clone().map(SvgAttributeValue::Text)), ("version", version.clone().map(SvgAttributeValue::Text))])),
-        SvgBasicMutation::InsertBasicElement(insert_basic_element::InsertBasicElement { parent, index, node }) => match subtree_profile_violation(node) {
-            Some(message) => protocol::MutationOutcome::error(CODE_REJECTED, message, Vec::<String>::new()),
-            None => protocol::MutationOutcome::new(insert_child_diff(parent, *index, node)),
-        },
-        SvgBasicMutation::RemoveElement(remove_element::RemoveElement { parent, index }) => protocol::MutationOutcome::new(remove_child_diff(parent, *index)),
-        SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute { path, name, value }) => {
-            if local_name(name) == "clip-path" {
-                if let Some(id) = value.as_ref().and_then(|v|if let SvgAttributeValue::LocalReference(id)=v {Some(id.as_str())}else{None}) {
-                    if let Err(message) = resolve_clip_path(base, id) {
-                        return protocol::MutationOutcome::error(CODE_REJECTED, message, Vec::<String>::new());
-                    }
-                }
-            }
-            protocol::MutationOutcome::new(attributes_diff_at_path(base, path, &[(name.as_str(), value.clone())]))
-        }
-        SvgBasicMutation::SetClipPathReference(set_clip_path_reference::SetClipPathReference { path, clip_path_id }) => {
-            let value = match clip_path_id {
-                Some(id) => match resolve_clip_path(base, id) {
-                    Ok(_) => Some(SvgAttributeValue::LocalReference(id.clone())),
-                    Err(message) => return protocol::MutationOutcome::error(CODE_REJECTED, message, Vec::<String>::new()),
-                },
-                None => None,
-            };
-            protocol::MutationOutcome::new(attributes_diff_at_path(base, path, &[("clip-path", value)]))
-        }
-        SvgBasicMutation::InsertClipPathShape(insert_clip_path_shape::InsertClipPathShape { clip_path_id, index, node }) => {
-            if carries_text(node) {
-                return protocol::MutationOutcome::error(CODE_REJECTED, "the inserted shape carries a text element -- SVG Basic 1.1 forbids clipping to text".to_string(), Vec::<String>::new());
-            }
-            if let Some(message) = subtree_profile_violation(node) {
-                return protocol::MutationOutcome::error(CODE_REJECTED, message, Vec::<String>::new());
-            }
-            match resolve_clip_path(base, clip_path_id) {
-                Ok(target) => protocol::MutationOutcome::new(insert_child_diff(&target, *index, node)),
-                Err(message) => protocol::MutationOutcome::error(CODE_REJECTED, message, Vec::<String>::new()),
-            }
-        }
-        SvgBasicMutation::SetText(set_text::SetText { path, text }) => protocol::MutationOutcome::new(diff_at_path(path, SvgNodeDiff::Text { text: Some(text.clone()) })),
-        SvgBasicMutation::SetViewBox(set_view_box::SetViewBox { path, view_box }) => protocol::MutationOutcome::new(attributes_diff_at_path(base, path, &[("viewBox", view_box.clone().map(SvgAttributeValue::ViewBox))])),
-        SvgBasicMutation::SetTransform(set_transform::SetTransform { path, transform }) => protocol::MutationOutcome::new(attributes_diff_at_path(base, path, &[("transform", transform.clone().map(SvgAttributeValue::Transform))])),
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &SvgBasicMutation, base: &SvgSnapshot) -> Result<Vec<SvgBasicMutation>, semio_framework_value::ValueError> {
-    Ok({
-    match this {
-        SvgBasicMutation::SetSnapshot(_) => vec![SvgBasicMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        SvgBasicMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<SvgSnapshot, SvgBasicMutation>>::inverse(patch, base)?),
-        SvgBasicMutation::StampBaseProfile(_) => vec![SvgBasicMutation::StampBaseProfile(stamp_base_profile::StampBaseProfile { base_profile: prior_attribute(base, &[], "baseProfile").and_then(|v| v.text().map(str::to_owned)), version: prior_attribute(base, &[], "version").and_then(|v| v.text().map(str::to_owned)) })],
-        SvgBasicMutation::InsertBasicElement(insert_basic_element::InsertBasicElement { parent, index, .. }) => vec![SvgBasicMutation::RemoveElement(remove_element::RemoveElement { parent: parent.clone(), index: *index })],
-        SvgBasicMutation::RemoveElement(remove_element::RemoveElement { parent, index }) => match node_at(&base.doc, parent) {
-            Ok(SvgNode::Element { children, .. }) => match children.get(*index) {
-                Some(node) => vec![SvgBasicMutation::InsertBasicElement(insert_basic_element::InsertBasicElement { parent: parent.clone(), index: *index, node: node.clone() })],
-                None => Vec::new(),
-            },
-            _ => Vec::new(),
-        },
-        SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute { path, name, .. }) => {
-            vec![SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute { path: path.clone(), name: name.clone(), value: prior_attribute(base, path, name) })]
-        }
-        SvgBasicMutation::SetClipPathReference(set_clip_path_reference::SetClipPathReference { path, .. }) => {
-            vec![SvgBasicMutation::SetBasicAttribute(set_basic_attribute::SetBasicAttribute { path: path.clone(), name: "clip-path".into(), value: prior_attribute(base, path, "clip-path") })]
-        }
-        SvgBasicMutation::InsertClipPathShape(insert_clip_path_shape::InsertClipPathShape { clip_path_id, index, .. }) => match path_of_id(base, clip_path_id) {
-            Some(target) => vec![SvgBasicMutation::RemoveElement(remove_element::RemoveElement { parent: target, index: *index })],
-            None => Vec::new(),
-        },
-        SvgBasicMutation::SetText(set_text::SetText { path, .. }) => {
-            let old = match node_at(&base.doc, path) {
-                Ok(SvgNode::Text { text }) => text.clone(),
-                _ => String::new(),
-            };
-            vec![SvgBasicMutation::SetText(set_text::SetText { path: path.clone(), text: old })]
-        }
-        SvgBasicMutation::SetViewBox(set_view_box::SetViewBox { path, .. }) => {
-            vec![SvgBasicMutation::SetViewBox(set_view_box::SetViewBox { path: path.clone(), view_box: prior_attribute(base, path, "viewBox").and_then(|v| if let SvgAttributeValue::ViewBox(value)=v {Some(value)}else{None}) })]
-        }
-        SvgBasicMutation::SetTransform(set_transform::SetTransform { path, .. }) => {
-            vec![SvgBasicMutation::SetTransform(set_transform::SetTransform { path: path.clone(), transform: prior_attribute(base, path, "transform").and_then(|v| if let SvgAttributeValue::Transform(value)=v {Some(value)}else{None}) })]
-        }
-    }
-
-    })
-}
-//#endregion 🔖️MutationTrait
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

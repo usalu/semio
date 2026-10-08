@@ -1,6 +1,6 @@
 //! 📷️ Sets the read-only preview viewport camera — one whole facet per orbit/pan/zoom gesture.
 
-use super::{Generation3dViewConfig, Generation3dViewConfigMutation, Generation3dViewCamera};
+use super::{Generation3dViewConfigPatch, Generation3dViewConfig, Generation3dViewConfigMutation, Generation3dViewCamera};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "preview-camera")]
@@ -14,10 +14,8 @@ pub struct SetPreviewCamera {
 impl protocol::MutationKind<Generation3dViewConfig, Generation3dViewConfigMutation> for SetPreviewCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "preview-camera", kind: "set-preview-camera", record: "SetPreviewCamera" };
 
-    fn diff(&self, base: &Generation3dViewConfig) -> protocol::MutationOutcome<Generation3dViewConfig> {
-        let mut next = base.clone();
-        next.preview_camera.clone_from(&self.camera);
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, base: &Generation3dViewConfig) -> protocol::MutationOutcome<Generation3dViewConfigPatch> {
+        protocol::MutationOutcome::new(Generation3dViewConfigPatch { preview_camera: Some(self.camera.clone()), ..Default::default() })
     }
 
     fn inverse(&self, base: &Generation3dViewConfig) -> Result<Vec<Generation3dViewConfigMutation>, semio_framework_value::ValueError> {

@@ -8,8 +8,7 @@
 //!
 //! | kind | rule |
 //! |---|---|
-//! | `set-snapshot` | `CODE_FILE_SCHEMA` — the document must declare `IFC2X3` |
-//! | `set-view-definition` | `CODE_VIEW_DEFINITION` — `FILE_DESCRIPTION` must name `StructuralAnalysisView` |
+//! //! | `set-view-definition` | `CODE_VIEW_DEFINITION` — `FILE_DESCRIPTION` must name `StructuralAnalysisView` |
 //! | `set-analysis-model` | `CODE_NO_ANALYSIS_MODEL` — at least one `IfcStructuralAnalysisModel` (HARD) |
 //! | `set-load-group` | `CODE_NO_LOADS` — loads live in an `IfcStructuralLoadGroup` |
 //! | `set-group-assignment` | `CODE_NO_GROUP_ASSIGNMENT` — members relate to the model through `IfcRelAssignsToGroup` |
@@ -30,7 +29,6 @@
 use crate::standards::v2x3::mvd;
 use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
 use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-use protocol::os_spr::command::DiffAlgebra;
 use protocol::Mutation;
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 
@@ -102,8 +100,6 @@ pub mod set_group_assignment;
 pub mod set_load_group;
 /// 📐️ Typed Structural Analysis View mutation for `stdio.ifc.2x3`.
 //#region 🔖️Leaves
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 #[path = "👁️set-view-definition/🦀️.rs"]
 pub mod set_view_definition;
 //#endregion 🔖️Leaves
@@ -113,7 +109,6 @@ pub mod set_view_definition;
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = Ifc2x3Snapshot, diff = Ifc2x3Diff, schema = "Ifc2x3SavMutation")]
 pub enum Ifc2x3SavMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
     SetViewDefinition(set_view_definition::SetViewDefinition),
     SetAnalysisModel(set_analysis_model::SetAnalysisModel),
     SetLoadGroup(set_load_group::SetLoadGroup),
@@ -122,14 +117,13 @@ pub enum Ifc2x3SavMutation {
 
 /// 📇️ Kebab-case spelling of every `Ifc2x3SavMutation` variant, in declaration order — the
 /// `ifc-2x3-sav` catalog in `../../🔣️oracle.json` is required to match verbatim.
-pub const KINDS: &[&str] = &["set-snapshot", "set-view-definition", "set-analysis-model", "set-load-group", "set-group-assignment"];
+pub const KINDS: &[&str] = &["set-view-definition", "set-analysis-model", "set-load-group", "set-group-assignment"];
 
 impl Ifc2x3SavMutation {
     /// 🏷️ This mutation's own kebab-case kind — the single spelling `KINDS`, the `ifc-2x3-sav`
     /// catalog and the feature file's `Examples` row ids are all measured against.
     pub fn kind(&self) -> &'static str {
         match self {
-            Ifc2x3SavMutation::SetSnapshot(_) => "set-snapshot",
             Ifc2x3SavMutation::SetViewDefinition(_) => "set-view-definition",
             Ifc2x3SavMutation::SetAnalysisModel(_) => "set-analysis-model",
             Ifc2x3SavMutation::SetLoadGroup(_) => "set-load-group",
@@ -145,7 +139,7 @@ impl Ifc2x3SavMutation {
 /// an error message with an empty diff — never applied partially and never silently skipped.
 pub fn apply_ifc2x3_sav_mutation(snapshot: &mut Ifc2x3Snapshot, mutation: &Ifc2x3SavMutation) -> protocol::MutationOutcome<Ifc2x3Diff> {
     let outcome = <Ifc2x3SavMutation as Mutation<Ifc2x3Snapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -203,95 +197,33 @@ fn group_assignment_args(assignment: &SavGroupAssignment) -> Vec<Part21Value> {
     ]
 }
 
-fn edit(base: &Ifc2x3Snapshot, mutation: &Ifc2x3SavMutation) -> Result<Ifc2x3Snapshot, String> {
-    let mut next = base.clone();
-    match mutation {
-        Ifc2x3SavMutation::SetSnapshot(_) => {}
-        Ifc2x3SavMutation::SetViewDefinition(set_view_definition::SetViewDefinition { view }) => mvd::set_view_definition(&mut next, view),
-        Ifc2x3SavMutation::SetAnalysisModel(set_analysis_model::SetAnalysisModel { id, model }) => match model {
-            None => mvd::remove_instance(&mut next, *id, &[ANALYSIS_MODEL])?,
-            Some(model) => mvd::upsert_instance(&mut next, mvd::simple_instance(*id, ANALYSIS_MODEL, analysis_model_args(model))),
-        },
-        Ifc2x3SavMutation::SetLoadGroup(set_load_group::SetLoadGroup { id, group }) => match group {
-            None => mvd::remove_instance(&mut next, *id, &[LOAD_GROUP])?,
-            Some(group) => mvd::upsert_instance(&mut next, mvd::simple_instance(*id, LOAD_GROUP, load_group_args(group))),
-        },
-        Ifc2x3SavMutation::SetGroupAssignment(set_group_assignment::SetGroupAssignment { id, assignment }) => match assignment {
-            None => mvd::remove_instance(&mut next, *id, &[GROUP_ASSIGNMENT])?,
-            Some(assignment) => {
-                let resolved = mvd::instance_type(&next, assignment.relating_group).unwrap_or("");
-                if !GROUP_TYPES.iter().any(|expected| resolved.eq_ignore_ascii_case(expected)) {
-                    return Err(format!("#{} is {resolved:?} -- a Structural Analysis View assignment relates members to one of {GROUP_TYPES:?}", assignment.relating_group));
-                }
-                if assignment.related_objects.is_empty() {
-                    return Err("an IFCRELASSIGNSTOGROUP with no RelatedObjects assigns nothing".into());
-                }
-                for object in &assignment.related_objects {
-                    if next.document.instance(*object).is_none() {
-                        return Err(format!("no instance #{object} to assign to the group"));
-                    }
-                }
-                mvd::upsert_instance(&mut next, mvd::simple_instance(*id, GROUP_ASSIGNMENT, group_assignment_args(assignment)));
-            }
-        },
-    }
-    Ok(next)
-}
-//#endregion 🔖️Apply
-
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &Ifc2x3SavMutation, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
-    match this {
-        Ifc2x3SavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => match crate::standards::v2x3::subsets::base::schema::snapshot::validate_ifc2x3_snapshot(snapshot) {
-            Ok(()) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, snapshot)),
-            Err(message) => rejected(message),
-        },
-        _ => match edit(base, this) {
-            Ok(next) => protocol::MutationOutcome::new(Ifc2x3Diff::between(base, &next)),
-            Err(message) => rejected(message),
-        },
-    }
+fn analysis_model_row(base: &Ifc2x3Snapshot, id: u64) -> Option<SavAnalysisModel> {
+    base.document.instance(id).filter(|instance| instance.is_type(ANALYSIS_MODEL)).map(|_| SavAnalysisModel {
+        global_id: text_argument(base, id, 0),
+        owner_history: mvd::reference_argument(base, id, OWNER_HISTORY_INDEX),
+        name: text_argument(base, id, NAME_INDEX),
+        predefined_type: enum_argument(base, id, PREDEFINED_TYPE_INDEX),
+    })
 }
 
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &Ifc2x3SavMutation, base: &Ifc2x3Snapshot) -> Result<Vec<Ifc2x3SavMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    match this {
-        Ifc2x3SavMutation::SetSnapshot(_) => vec![Ifc2x3SavMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        Ifc2x3SavMutation::SetViewDefinition(_) => vec![Ifc2x3SavMutation::SetViewDefinition(set_view_definition::SetViewDefinition { view: mvd::view_definition_name(base).unwrap_or_default() })],
-        Ifc2x3SavMutation::SetAnalysisModel(set_analysis_model::SetAnalysisModel { id, .. }) => {
-            let model = base.document.instance(*id).filter(|instance| instance.is_type(ANALYSIS_MODEL)).map(|_| SavAnalysisModel {
-                global_id: text_argument(base, *id, 0),
-                owner_history: mvd::reference_argument(base, *id, OWNER_HISTORY_INDEX),
-                name: text_argument(base, *id, NAME_INDEX),
-                predefined_type: enum_argument(base, *id, PREDEFINED_TYPE_INDEX),
-            });
-            vec![Ifc2x3SavMutation::SetAnalysisModel(set_analysis_model::SetAnalysisModel { id: *id, model })]
-        }
-        Ifc2x3SavMutation::SetLoadGroup(set_load_group::SetLoadGroup { id, .. }) => {
-            let group = base.document.instance(*id).filter(|instance| instance.is_type(LOAD_GROUP)).map(|_| SavLoadGroup {
-                global_id: text_argument(base, *id, 0),
-                owner_history: mvd::reference_argument(base, *id, OWNER_HISTORY_INDEX),
-                name: text_argument(base, *id, NAME_INDEX),
-                predefined_type: enum_argument(base, *id, PREDEFINED_TYPE_INDEX),
-                action_type: enum_argument(base, *id, ACTION_TYPE_INDEX),
-                action_source: enum_argument(base, *id, ACTION_SOURCE_INDEX),
-            });
-            vec![Ifc2x3SavMutation::SetLoadGroup(set_load_group::SetLoadGroup { id: *id, group })]
-        }
-        Ifc2x3SavMutation::SetGroupAssignment(set_group_assignment::SetGroupAssignment { id, .. }) => {
-            let assignment = base.document.instance(*id).filter(|instance| instance.is_type(GROUP_ASSIGNMENT)).map(|_| SavGroupAssignment {
-                global_id: text_argument(base, *id, 0),
-                owner_history: mvd::reference_argument(base, *id, OWNER_HISTORY_INDEX),
-                related_objects: mvd::reference_list_ids(mvd::argument(base, *id, RELATED_OBJECTS_INDEX)),
-                relating_group: mvd::reference_argument(base, *id, RELATING_GROUP_INDEX).unwrap_or_default(),
-            });
-            vec![Ifc2x3SavMutation::SetGroupAssignment(set_group_assignment::SetGroupAssignment { id: *id, assignment })]
-        }
-    }
+fn load_group_row(base: &Ifc2x3Snapshot, id: u64) -> Option<SavLoadGroup> {
+    base.document.instance(id).filter(|instance| instance.is_type(LOAD_GROUP)).map(|_| SavLoadGroup {
+        global_id: text_argument(base, id, 0),
+        owner_history: mvd::reference_argument(base, id, OWNER_HISTORY_INDEX),
+        name: text_argument(base, id, NAME_INDEX),
+        predefined_type: enum_argument(base, id, PREDEFINED_TYPE_INDEX),
+        action_type: enum_argument(base, id, ACTION_TYPE_INDEX),
+        action_source: enum_argument(base, id, ACTION_SOURCE_INDEX),
+    })
+}
 
-    })())
+fn group_assignment_row(base: &Ifc2x3Snapshot, id: u64) -> Option<SavGroupAssignment> {
+    base.document.instance(id).filter(|instance| instance.is_type(GROUP_ASSIGNMENT)).map(|_| SavGroupAssignment {
+        global_id: text_argument(base, id, 0),
+        owner_history: mvd::reference_argument(base, id, OWNER_HISTORY_INDEX),
+        related_objects: mvd::reference_list_ids(mvd::argument(base, id, RELATED_OBJECTS_INDEX)),
+        relating_group: mvd::reference_argument(base, id, RELATING_GROUP_INDEX).unwrap_or_default(),
+    })
 }
 
 fn text_argument(snapshot: &Ifc2x3Snapshot, id: u64, index: usize) -> String {
@@ -301,7 +233,8 @@ fn text_argument(snapshot: &Ifc2x3Snapshot, id: u64, index: usize) -> String {
 fn enum_argument(snapshot: &Ifc2x3Snapshot, id: u64, index: usize) -> Option<String> {
     mvd::argument(snapshot, id, index).and_then(Part21Value::as_enum).map(str::to_string)
 }
-//#endregion 🔖️MutationTrait
+//#endregion 🔖️Apply
+
 
 //#region 🧪️Tests
 #[cfg(test)]

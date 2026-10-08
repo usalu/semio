@@ -9,10 +9,11 @@ import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/�
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { rest } = resolveTestLevel(segments);
-    if (rest[0] !== "renderer-contract") await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+    const rendererContract = segments[0] === "renderer-contract";
+    const { rest } = resolveTestLevel(rendererContract ? segments.slice(1) : segments);
+    if (!rendererContract) await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
     if (rest[0] === "transform-gesture") return;
-    await runVitest(this.root, rest[0] === "renderer-contract" ? rest.slice(1) : [], "../../🧪️tests/🎚️renderer-contract/🟦️.ts");
+    await runVitest(this.root, rendererContract ? rest : [], "../../🧪️tests/🎚️renderer-contract/🟦️.ts");
   }
 }
 

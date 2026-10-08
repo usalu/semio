@@ -6,10 +6,11 @@ use crate::Puzzle2dSnapshot;
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::DisconnectKindCompatibility, base: &Puzzle2dSnapshot) -> Result<Vec<Puzzle2dMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    let Some(row) = base.meta.kind_compatibility.iter().find(|row| row.source == payload.source && row.target == payload.target) else {
+    let Some(at) = base.meta.kind_compatibility.iter().position(|row| row.source == payload.source && row.target == payload.target) else {
         return Vec::new();
     };
-    vec![crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility::connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity)]
+    let row = &base.meta.kind_compatibility[at];
+    vec![crate::standards::v1::subsets::any::schema::mutations::connect_kind_compatibility::connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, Some(at))]
 
     })())
 }

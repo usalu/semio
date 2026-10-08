@@ -48,7 +48,7 @@ impl store::ArtifactPack for EnergyModelViewerWindowConfig {
     }
 }
 
-store::impl_whole_record_config!(EnergyModelViewerWindowConfig);
+impl store::ConfigRecord for EnergyModelViewerWindowConfig {}
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;

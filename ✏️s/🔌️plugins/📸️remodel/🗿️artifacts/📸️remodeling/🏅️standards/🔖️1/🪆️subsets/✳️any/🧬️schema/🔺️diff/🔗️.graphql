@@ -1,16 +1,67 @@
-# 🔺️ Remodeling diff schema — one sparse lane per non-transient artifact field.
+# 🔺️ Remodeling diff schema — sparse keyed rows per id-keyed collection, ordered content rows, per-facet params and per-slot results.
 
 type RemodelingDiff {
-  artifact: RemodelingArtifact @state(class: ARTIFACT)
   schema: String @state(class: ARTIFACT)
   id: String @state(class: ARTIFACT)
-  streams: RemodelingMediaStreamList @state(class: ARTIFACT)
-  assets: [RemodelingAssetChildEntry!] @state(class: ARTIFACT)
-  durableArtifacts: [RemodelingDurableArtifactEntry!] @state(class: ARTIFACT)
-  calibration: CalibrationState @state(class: ARTIFACT)
-  params: ReconstructionParams @state(class: ARTIFACT)
-  gcps: RemodelingGcpList @state(class: ARTIFACT)
-  results: ReconstructionResults @state(class: ARTIFACT)
+  streams: RemodelingStreamsDelta @state(class: ARTIFACT)
+  assets: RemodelingAssetsDelta @state(class: ARTIFACT)
+  durableArtifacts: RemodelingContentDelta @state(class: ARTIFACT)
+  calibration: RemodelingCalibrationDelta @state(class: ARTIFACT)
+  params: RemodelingParamsDiff @state(class: ARTIFACT)
+  gcps: RemodelingGcpsDelta @state(class: ARTIFACT)
+  results: RemodelingResultsDiff @state(class: ARTIFACT)
+}
+
+enum RemodelingRowKind { INSERT REPLACE REMOVE PATCH }
+
+type RemodelingStreamRow { row: RemodelingRowKind! entity: MediaStream key: String patch: MediaStreamPatch }
+type RemodelingGcpRow { row: RemodelingRowKind! entity: GroundControlPoint key: String patch: GroundControlPointPatch }
+type RemodelingCameraRow { row: RemodelingRowKind! entity: CameraCalibration key: String }
+type RemodelingRigRow { row: RemodelingRowKind! entity: RigExtrinsic key: String }
+type RemodelingAssetRow { row: RemodelingRowKind! entity: RemodelingAssetEntry key: String }
+type RemodelingStreamsDelta { rows: [RemodelingStreamRow!]! }
+type RemodelingGcpsDelta { rows: [RemodelingGcpRow!]! }
+type RemodelingCamerasDelta { rows: [RemodelingCameraRow!]! }
+type RemodelingRigDelta { rows: [RemodelingRigRow!]! }
+type RemodelingAssetsDelta { rows: [RemodelingAssetRow!]! }
+type RemodelingAssetEntry { key: String! child: RemodelingAssetChild! }
+type RemodelingCalibrationDelta { cameras: RemodelingCamerasDelta! rig: RemodelingRigDelta! }
+
+type FrameRefMembers { removed: [FrameRef!]! added: [FrameRef!]! }
+type GcpObservationMembers { removed: [GcpObservation!]! added: [GcpObservation!]! }
+type RemodelingAssignedVideoSource { value: VideoSource }
+type MediaStreamPatch { syncOffsetMs: Float source: RemodelingAssignedVideoSource frames: FrameRefMembers }
+type GroundControlPointPatch { observations: GcpObservationMembers }
+
+enum RemodelingContentRowKind { APPEND TRUNCATE }
+type RemodelingContentHeader { kind: String! mime: String width: Int! height: Int! }
+type RemodelingContentRow { row: RemodelingContentRowKind! id: String! header: RemodelingContentHeader chunks: [Octets!] from: UInt64 }
+type RemodelingContentDelta { rows: [RemodelingContentRow!]! }
+
+type RemodelingParamsDiff {
+  ingest: IngestParams
+  feature: FeatureParams
+  matching: MatchParams
+  sfm: SfmParams
+  dense: DenseParams
+  mesh: MeshParams
+  motion: MotionParams
+  geo: GeoParams
+}
+
+type RemodelingAssignedSparseCloud { value: SparseCloud }
+type RemodelingAssignedDenseCloud { value: DenseCloud }
+type RemodelingAssignedCameraTrajectory { value: CameraTrajectory }
+type RemodelingAssignedGeoProducts { value: GeoProducts }
+type RemodelingAssignedQcReport { value: QcReportSnapshot }
+type RemodelingResultsDiff {
+  sparse: RemodelingAssignedSparseCloud
+  dense: RemodelingAssignedDenseCloud
+  mesh: RemodelingMesh
+  trajectory: RemodelingAssignedCameraTrajectory
+  tracks: [MotionTrackSummary!]
+  geo: RemodelingAssignedGeoProducts
+  qc: RemodelingAssignedQcReport
 }
 
 type ArtifactDialect {
@@ -22,11 +73,6 @@ type ArtifactDialect {
 type ArtifactRef {
   artifactId: String!
   dialect: ArtifactDialect!
-}
-
-type CalibrationState {
-  cameras: [CameraCalibration!]!
-  rig: [RigExtrinsic!]!
 }
 
 type CameraCalibration {
@@ -203,68 +249,9 @@ type QcReportSnapshot {
   warnings: [String!]!
 }
 
-type ReconstructionParams {
-  ingest: IngestParams!
-  feature: FeatureParams!
-  matching: MatchParams!
-  sfm: SfmParams!
-  dense: DenseParams!
-  mesh: MeshParams!
-  motion: MotionParams!
-  geo: GeoParams!
-}
-
-type ReconstructionResults {
-  sparse: SparseCloud
-  dense: DenseCloud
-  mesh: RemodelingMesh!
-  trajectory: CameraTrajectory
-  tracks: [MotionTrackSummary!]!
-  geo: GeoProducts
-  qc: QcReportSnapshot
-}
-
-type RemodelingArtifact {
-  schema: String!
-  id: String!
-  streams: [MediaStream!]!
-  assets: [RemodelingAssetChildEntry!]!
-  durableArtifacts: [RemodelingDurableArtifactEntry!]!
-  calibration: CalibrationState!
-  params: ReconstructionParams!
-  gcps: [GroundControlPoint!]!
-  results: ReconstructionResults!
-}
-
 type RemodelingAssetChild {
   childId: String!
   target: ArtifactRef!
-}
-
-type RemodelingAssetChildEntry {
-  key: String!
-  value: RemodelingAssetChild!
-}
-
-type RemodelingDurableArtifact {
-  kind: String!
-  mime: String
-  width: Int!
-  height: Int!
-  chunks: [Octets!]!
-}
-
-type RemodelingDurableArtifactEntry {
-  key: String!
-  value: RemodelingDurableArtifact!
-}
-
-type RemodelingGcpList {
-  values: [GroundControlPoint!]!
-}
-
-type RemodelingMediaStreamList {
-  values: [MediaStream!]!
 }
 
 type RemodelingMesh {

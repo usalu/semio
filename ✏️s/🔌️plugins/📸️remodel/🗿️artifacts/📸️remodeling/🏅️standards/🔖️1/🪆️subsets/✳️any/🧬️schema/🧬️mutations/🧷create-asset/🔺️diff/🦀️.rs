@@ -10,22 +10,32 @@
 //! retried import. An upsert also DROPS the durable leaf the overwritten handle owned, so the store
 //! never accumulates a leaf nothing addresses and `delete-asset` (which drops the leaf it minted) is
 //! this verb's exact inverse in both directions.
-use crate::diff::RemodelingDiff;
+use crate::diff::{RemodelingAssetEntry, RemodelingContentDelta, RemodelingContentRow, RemodelingDiff, RemodelingRow, RemodelingRows};
 use crate::{durable_remodeling_asset, store_remodeling_asset, RemodelingSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateAsset, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
-    let mut assets = base.assets.clone();
     let handle = store_remodeling_asset(&payload.key, &payload.asset);
     let Some(artifact) = durable_remodeling_asset(&payload.asset) else {
         return protocol::MutationOutcome::fatal("mutation.invariant", "The asset payload is malformed or exceeds its exact bounded envelope.", [payload.key.clone()]);
     };
-    let mut durable_artifacts = base.durable_artifacts.clone();
-    if let Some(previous) = base.assets.get(&payload.key) {
-        durable_artifacts.remove(&previous.child_id);
+    let previous = base.assets.get(&payload.key);
+    let mut content = Vec::new();
+    let mut released = None;
+    if let Some(previous) = previous.filter(|previous| base.durable_artifacts.contains_key(&previous.child_id)) {
+        content.push(RemodelingContentRow::Truncate { id: previous.child_id.clone(), from: 0 });
+        released = Some(&previous.child_id);
     }
-    durable_artifacts.insert(handle.child_id.clone(), artifact);
-    assets.insert(payload.key.clone(), handle);
-    protocol::MutationOutcome::new(RemodelingDiff { assets: Some(assets), durable_artifacts: Some(durable_artifacts), ..Default::default() })
+    match base.durable_artifacts.get(&handle.child_id) {
+        Some(held) if released != Some(&handle.child_id) && held == &artifact => {}
+        Some(_) if released != Some(&handle.child_id) => {
+            content.push(RemodelingContentRow::Truncate { id: handle.child_id.clone(), from: 0 });
+            content.push(RemodelingContentDelta::create(&handle.child_id, &artifact));
+        }
+        _ => content.push(RemodelingContentDelta::create(&handle.child_id, &artifact)),
+    }
+    let entry = RemodelingAssetEntry { key: payload.key.clone(), child: handle };
+    let row = if previous.is_some() { RemodelingRow::Replace { entity: entry } } else { RemodelingRow::Insert { entity: entry } };
+    protocol::MutationOutcome::new(RemodelingDiff { assets: Some(RemodelingRows { rows: vec![row] }), durable_artifacts: (!content.is_empty()).then_some(RemodelingContentDelta { rows: content }), ..Default::default() })
 }
 //#endregion 🔖️Diff

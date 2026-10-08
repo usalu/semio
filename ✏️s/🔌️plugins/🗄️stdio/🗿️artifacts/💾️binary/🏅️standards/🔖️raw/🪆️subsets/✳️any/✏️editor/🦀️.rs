@@ -8,7 +8,7 @@
 
 use crate::editor::binary::modes::edit;
 use crate::editor::binary::modes::edit::windows::main;
-use crate::schema::mutations::{replace_byte_range, set_snapshot};
+use crate::schema::mutations::replace_byte_range;
 use crate::{BinaryMutation, BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -169,12 +169,9 @@ fn binary_text_emit(command: &semio_s_artifact_stdio_contract::editing::Snapshot
     Ok(Emit::mutations(binary_net_replacement(&snapshot.bytes, &parsed).into_iter().collect()))
 }
 
-/// 🧮️ The net leaves of one document-details edit: the ONE `replace-byte-range` that carries `base`'s bytes to `next`'s; another
-/// document schema is the one genuine whole-document replacement (`set-snapshot`).
+/// 🧮️ The net leaves of one document-details edit: the ONE `replace-byte-range` that carries `base`'s bytes to `next`'s. The
+/// snapshot `schema` is a constant of the artifact and never differs.
 fn binary_net_mutations(base: &BinarySnapshot, next: &BinarySnapshot) -> Vec<BinaryMutation> {
-    if base.schema != next.schema {
-        return vec![BinaryMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: next.clone() })];
-    }
     binary_net_replacement(&base.bytes, &next.bytes).into_iter().collect()
 }
 

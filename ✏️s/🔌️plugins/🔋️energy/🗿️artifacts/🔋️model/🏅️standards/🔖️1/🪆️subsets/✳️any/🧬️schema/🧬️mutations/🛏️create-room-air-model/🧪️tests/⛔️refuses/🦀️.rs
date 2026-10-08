@@ -23,7 +23,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(1), value: 20.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::model::ScheduleId(2), value: 27.0 });
     model.room_air_models.push(crate::model::RoomAirModelAssignment { zone_id: crate::model::EntityId(1), model: crate::model::RoomAirModelType::WellMixed });
-    (snapshot(model), super::create_room_air_model_assignment(crate::model::EntityId(1), crate::model::RoomAirModelType::WellMixed))
+    (snapshot(model), super::create_room_air_model_assignment(crate::model::EntityId(1), crate::model::RoomAirModelType::WellMixed, None))
 }
 
 fn case() -> Case {

@@ -1,0 +1,7 @@
+# Generic Compiler Resource Collector Review
+
+Independently reviewed the current collector and relay integration. Capture selection derives only from actual non-proc-macro/non-build caller unit .d inputs named observation.json beneath the approved buildDirectory/semio-compiler-resources root. It does not sweep unrelated historical captures. Missing demanded capture paths are retained with null text/hash, preserving a strict refusal opportunity. Capture original producer/caller identities remain in untouched text; current collection observation time is separate.
+
+Producer/caller binding requires absolute manifest/source identity, exact unit manifest, source membership in that unit's typed file inputs, and exactly one original compiler message. Producer must be proc-macro; caller must be the named target crate and exclude proc-macro/custom-build. Missing or ambiguous binding remains null. Current directory/file/snapshot digests are observations rather than substitutes for actual compiler consumed-byte tracking. Relay adds the approved resource-root environment while preserving actual argv/cwd and collector staging choices.
+
+This closes collector selection/binding seams at source level. It does not by itself prove the proc-macro instrumented resource roster is complete: Runtime owns actual per-call helper, tracked paths/checksums, strict consumer and unknown resource refusal. Actual neutral vectors and reported231-law GREEN are bounded tests, not real four-guest or published runtime proof. No duplicate Cargo dispatched.

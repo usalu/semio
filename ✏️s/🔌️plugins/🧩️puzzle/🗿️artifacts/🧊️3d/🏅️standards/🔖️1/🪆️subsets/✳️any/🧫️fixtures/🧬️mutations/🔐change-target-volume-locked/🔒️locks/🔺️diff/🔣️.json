@@ -1,42 +1,22 @@
 {
   "artifact": null,
-  "schema": null,
+  "attractions": null,
   "domain": null,
   "meta": null,
   "objects": null,
-  "attractions": null,
+  "references": null,
+  "schema": null,
   "targetVolumes": {
     "added": [],
-    "removed": [],
     "patched": [
       {
         "id": "volume-1",
         "patch": {
-          "replacement": {
-            "id": "volume-1",
-            "origin": [
-              0.0,
-              0.0,
-              0.0
-            ],
-            "orientation": [
-              0.0,
-              0.0,
-              0.0,
-              1.0
-            ],
-            "scale": [
-              2.0,
-              2.0,
-              2.0
-            ],
-            "hidden": false,
-            "locked": true
-          }
+          "locked": true
         }
       }
     ],
+    "removed": [],
     "reordered": null
-  },
-  "references": null
+  }
 }

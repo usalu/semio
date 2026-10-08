@@ -1,6 +1,6 @@
 {
   "law": "Every fixed-capacity slot table listed here is built straight on the heap by semio_framework_async::boxed_fixed_slots, so its Default/new fits a thread that owns only boundedThreadStackBytes. Box::new([const { None }; N]) and Box::new(array::from_fn(..)) materialise the whole N * elementSizeBytes array in the constructing frame at opt-level 0, which is what this record exists to keep out of the tree.",
-  "provenance": ".semio/repo/tickets/26/09/09/PROCEDURAL-3D-END-TO-END/boxed-fixed-slots-2026-09-12.md",
+  "provenance": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/continuation-current-native-canonical-six-product-slot-budget-1.md",
   "boundedThreadStackBytes": 1048576,
   "workerPoolStackBytes": 2097152,
   "conversionThresholdBytes": 65536,
@@ -12,7 +12,7 @@
       "capacityConstant": "SCENE_SURFACE_CAPACITY",
       "capacity": 256,
       "elementType": "Option<AdmittedSurfaceEntry<World3dState>>",
-      "elementSizeBytes": 28400,
+      "elementSizeBytes": 28728,
       "ownerSizeBytes": 3136
     },
     {
@@ -22,7 +22,7 @@
       "capacityConstant": "ENGINE_SURFACE_CAPACITY",
       "capacity": 256,
       "elementType": "EngineSurfaceSlot",
-      "elementSizeBytes": 86544,
+      "elementSizeBytes": 90608,
       "ownerSizeBytes": 32
     },
     {
@@ -52,7 +52,7 @@
       "capacityConstant": "RETAINED_SURFACE_CAPACITY",
       "capacity": 64,
       "elementType": "Option<RetainedSurfaceSlot>",
-      "elementSizeBytes": 24488,
+      "elementSizeBytes": 25672,
       "ownerSizeBytes": 32
     },
     {

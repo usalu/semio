@@ -1,4 +1,3 @@
-import type { SnapshotPatch } from "../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts";
 /** 🧬 Transparent JsonMutation TypeScript aggregate. `JsonMutation` carries
  * `#[serde(tag = "mutation", content = "payload", rename_all = "camelCase")]`, so the tag values
  * are the camelCase form of the Rust variant names, NOT the kebab-case `semanticKind` slugs this
@@ -9,9 +8,8 @@ import type { InsertArrayElementPayload } from './📥️insert-array-element/�
 import type { RemoveArrayElementPayload } from './📤️remove-array-element/🟦️.ts';
 import type { SetScalarPayload } from './🔢️set-scalar/🟦️.ts';
 export type JsonMutation =
-  | { readonly mutation: 'setMember'; readonly payload: { readonly phase: 'apply'; readonly value: SetMemberPayload } }
-  | { readonly mutation: 'removeMember'; readonly payload: { readonly phase: 'apply'; readonly value: RemoveMemberPayload } }
-  | { readonly mutation: 'insertArrayElement'; readonly payload: { readonly phase: 'apply'; readonly value: InsertArrayElementPayload } }
-  | { readonly mutation: 'removeArrayElement'; readonly payload: { readonly phase: 'apply'; readonly value: RemoveArrayElementPayload } }
-  | { readonly mutation: 'setScalar'; readonly payload: { readonly phase: 'apply'; readonly value: SetScalarPayload } }
-  | { readonly mutation: 'patchSnapshot'; readonly payload: { readonly patch: SnapshotPatch } };
+  | { readonly mutation: 'setMember'; readonly payload: SetMemberPayload }
+  | { readonly mutation: 'removeMember'; readonly payload: RemoveMemberPayload }
+  | { readonly mutation: 'insertArrayElement'; readonly payload: InsertArrayElementPayload }
+  | { readonly mutation: 'removeArrayElement'; readonly payload: RemoveArrayElementPayload }
+  | { readonly mutation: 'setScalar'; readonly payload: SetScalarPayload }

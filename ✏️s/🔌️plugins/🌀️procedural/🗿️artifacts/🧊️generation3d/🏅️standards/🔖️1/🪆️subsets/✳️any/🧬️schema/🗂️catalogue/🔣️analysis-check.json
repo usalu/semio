@@ -134,8 +134,8 @@
             "de": "Kanten"
           },
           "description": {
-            "en": "Number of edges.",
-            "de": "Anzahl der Kanten."
+            "en": "Number of edges; an edge that collapses to a point, such as the pole of a sphere, is not counted.",
+            "de": "Anzahl der Kanten; eine Kante, die zu einem Punkt zusammenfällt, etwa der Pol einer Kugel, wird nicht gezählt."
           },
           "type": "integer"
         },

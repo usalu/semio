@@ -7,7 +7,7 @@ use crate::Fem2dSnapshot;
 //#region 🔖️Inverse
 pub fn inverse(payload: &DeleteRegion, base: &Fem2dSnapshot) -> Result<Vec<Fem2dMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    base.regions.iter().find(|item| item.id == payload.id).map(|item| vec![Fem2dMutation::CreateRegion(create_region::CreateRegion { region: item.clone() })]).unwrap_or_default()
+    base.regions.iter().enumerate().find(|(_, item)| item.id == payload.id).map(|(at, item)| vec![Fem2dMutation::CreateRegion(create_region::CreateRegion { region: item.clone(), index: Some(at) })]).unwrap_or_default()
 
     })())
 }

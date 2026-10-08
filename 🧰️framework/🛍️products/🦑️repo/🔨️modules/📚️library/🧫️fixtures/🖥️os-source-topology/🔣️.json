@@ -32,18 +32,18 @@
       "sourceDisposition": "removed"
     },
     {
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🌉️icon-name-value-bridge.rs",
-      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🌉️icon-name-value/🦀️.rs",
+      "source": "🧰️framework/🔨️modules/🖼️canvas/🌉️icon-name-value-bridge.rs",
+      "owner": "🧰️framework/🔨️modules/🖼️canvas/🌉️icon-name-value/🦀️.rs",
       "kind": "rust",
       "anchor": "impl dsl::ToValue for IconName",
       "consumers": [
-        "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🦀️.rs"
+        "🧰️framework/🔨️modules/🖼️canvas/🦀️.rs"
       ],
       "sourceDisposition": "removed"
     },
     {
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔨️bin/📤️dump_guestslim_typst_fonts.rs",
-      "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🔤️fonts/🦀️.rs",
+      "source": "🧰️framework/🔨️modules/🖼️canvas/🔨️bin/📤️dump_guestslim_typst_fonts.rs",
+      "owner": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/🦀️.rs",
       "kind": "rust",
       "anchor": "pack_asset_blobs",
       "consumers": [

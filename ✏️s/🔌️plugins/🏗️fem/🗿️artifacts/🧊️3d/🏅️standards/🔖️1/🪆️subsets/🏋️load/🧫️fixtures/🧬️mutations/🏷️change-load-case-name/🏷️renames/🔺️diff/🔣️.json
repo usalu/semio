@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "nodes": null,
   "elements": null,
   "materials": null,
@@ -12,11 +11,10 @@
     "patched": [
       {
         "id": "wind",
-        "item": {
-          "id": "wind",
+        "patch": {
           "name": "Wind Y",
-          "loads": [],
-          "selfWeight": false
+          "selfWeight": null,
+          "loads": null
         }
       }
     ],

@@ -10,14 +10,26 @@
   "periodicX": null,
   "periodicY": null,
   "periodicZ": null,
-  "tilesRemoved": [],
-  "tilesUpserted": [],
-  "rulesRemoved": [
-    "r-top-floor-wall"
-  ],
-  "rulesUpserted": [],
-  "pinnedRemoved": [],
-  "pinnedUpserted": [],
-  "maskedRemoved": [],
-  "maskedUpserted": []
+  "tiles": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "rules": {
+    "removed": [
+      "r-top-floor-wall"
+    ],
+    "added": [],
+    "patched": []
+  },
+  "pinned": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "masked": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  }
 }

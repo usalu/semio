@@ -1,37 +1,27 @@
 {
   "artifact": null,
-  "schema": null,
   "camera": null,
-  "nodes": null,
   "edges": null,
-  "targetRegions": null,
   "meta": {
-    "manifestId": "manifest-alpha",
-    "kindCompatibility": [
-      {
-        "source": "handle-kind-a",
-        "target": "handle-kind-b",
-        "bidirectional": true,
-        "important": false,
-        "specificity": "handle"
-      }
-    ],
     "kindCatalogs": {
-      "nodes": [],
+      "edges": [],
       "handles": [
         {
-          "id": "handle-kind-a",
+          "color": "#3366ff",
           "compatibleWith": [
             "handle-kind-b"
           ],
+          "defaultWireKind": "wire-kind-a",
           "description": "Alpha port",
           "icon": "circle",
-          "color": "#3366ff",
-          "defaultWireKind": "wire-kind-a"
+          "id": "handle-kind-a"
         }
       ],
-      "edges": [],
+      "nodes": [],
       "wires": []
     }
-  }
+  },
+  "nodes": null,
+  "schema": null,
+  "targetRegions": null
 }

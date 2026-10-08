@@ -3,7 +3,7 @@
 //! Guards, in the order they run: `mutation.duplicate-id` (Fatal), then the shared
 //! `guards::material_plausibility` elasticity bounds (`mutation.invariant`, Fatal).
 use super::CreateMaterial;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dMaterialsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dMaterialsDelta, insertion_order};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
@@ -15,6 +15,6 @@ pub fn diff(payload: &CreateMaterial, base: &Fem2dSnapshot) -> protocol::Mutatio
     if let Some(rejection) = guards::material_plausibility(&payload.material) {
         return rejection;
     }
-    protocol::MutationOutcome::new(Fem2dDiff { materials: Some(Fem2dMaterialsDelta { added: vec![payload.material.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { materials: Some(Fem2dMaterialsDelta { added: vec![payload.material.clone()], reordered: insertion_order(base.materials.iter().map(|item| item.id.as_str()), &payload.material.id, payload.index), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

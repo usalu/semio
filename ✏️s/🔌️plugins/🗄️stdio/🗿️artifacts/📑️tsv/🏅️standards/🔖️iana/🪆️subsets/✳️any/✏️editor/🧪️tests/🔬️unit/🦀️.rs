@@ -27,7 +27,7 @@ async fn editor_declares_the_table_window() {
 }
 
 #[test]
-fn natural_file_route_exports_tabular_bytes_and_reopens_through_one_mutation() {
+fn natural_file_route_exports_tabular_bytes_and_reopens_the_same_document() {
     let edited = TsvSnapshot { records: vec![vec!["name".into(), "value".into()], vec!["Natural Open Save".into(), "Grüße".into()]], trailing_newline: true, ..Default::default() };
     let bytes = <TsvEditor as ArtifactEditor>::encode_natural_file(&edited).expect("TSV natural bytes");
     let records = csv::ReaderBuilder::new()
@@ -40,10 +40,7 @@ fn natural_file_route_exports_tabular_bytes_and_reopens_through_one_mutation() {
         .expect("csv crate reads exported TSV");
     assert_eq!(records[1].get(0), Some("Natural Open Save"));
     let reopened = <TsvEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("TSV natural bytes reopen");
-    let Some(TsvMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: opened })) = <TsvEditor as ArtifactEditor>::whole_document_operation(reopened) else {
-        panic!("natural TSV opens through one event-sourced snapshot mutation")
-    };
-    assert_eq!(opened, edited);
+    assert_eq!(reopened, edited);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -193,10 +190,11 @@ fn structural_command_codecs_roundtrip_unicode_addresses() {
 #[test]
 fn blank_tsv_can_build_edit_and_remove_a_table_through_structural_mutations() {
     fn apply(snapshot: &mut TsvSnapshot, command: TsvEditorCommand) {
-        let mut emitted = tsv_emit(&command, snapshot).expect("structural edit");
-        assert_eq!(emitted.artifact_mutations.len(), 1);
-        let mutation = emitted.artifact_mutations.pop().expect("one mutation");
-        crate::standards::iana::subsets::any::schema::mutations::apply_tsv_mutation(snapshot, &mutation);
+        let emitted = tsv_emit(&command, snapshot).expect("structural edit");
+        assert!(!emitted.artifact_mutations.is_empty());
+        for mutation in &emitted.artifact_mutations {
+            crate::standards::iana::subsets::any::schema::mutations::apply_tsv_mutation(snapshot, mutation);
+        }
     }
     let mut snapshot = TsvSnapshot::default();
     let revision = semio_s_artifact_stdio_contract::window_kit_snapshot_revision(&snapshot);

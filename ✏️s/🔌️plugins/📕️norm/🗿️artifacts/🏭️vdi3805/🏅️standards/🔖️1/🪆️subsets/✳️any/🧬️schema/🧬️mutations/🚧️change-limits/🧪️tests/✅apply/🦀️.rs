@@ -10,7 +10,7 @@ fn mutation() -> Vdi3805Mutation { semio_framework_pack_json::from_json_str(MUTA
 fn apply(mutation: &Vdi3805Mutation, base: &Vdi3805Snapshot) -> Vdi3805Snapshot {
     let raised = <Vdi3805Mutation as protocol::Mutation<Vdi3805Snapshot>>::diff(mutation, base);
     assert!(raised.messages().is_empty(), "change-limits raised {:?}", raised.messages());
-    <Vdi3805Diff as protocol::MutationDiff<Vdi3805Snapshot>>::apply(raised.diff(), base).expect("apply")
+    protocol::apply_diff(raised.diff(), base).expect("apply")
 }
 #[test]
 fn mutation_is_the_canonical_wire() {
@@ -36,4 +36,8 @@ fn inverse_restores_before() {
 #[test]
 fn declared_outcome_holds() {
     assert_eq!(serde_json::from_str::<serde_json::Value>(OUTCOME).expect("outcome")["status"], "applied");
+}
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

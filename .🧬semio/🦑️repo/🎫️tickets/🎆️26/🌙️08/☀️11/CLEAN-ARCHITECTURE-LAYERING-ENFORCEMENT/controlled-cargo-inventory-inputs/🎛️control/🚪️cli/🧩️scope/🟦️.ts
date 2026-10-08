@@ -4,7 +4,7 @@ import type {CargoDiscoveryOperation} from "../../../📁️physical/🟦️.ts"
 class CommandScope {active=true;constructor(readonly owner:CargoCliOperationOwner){} }
 const scopes=new AsyncLocalStorage<CommandScope>();
 export class CargoCommandFailure extends Error {
- constructor(readonly owner:CargoCliOperationOwner,override readonly cause:unknown,readonly cleanupError:unknown){super("Cargo command refused with retained ownership");}
+ constructor(readonly owner:CargoCliOperationOwner,override readonly cause:unknown,readonly cleanupError:unknown){super("Cargo command refused with retained ownership"+(cause instanceof Error?": "+cause.message:""));}
 }
 
 /** 🎛️ Requires the explicitly admitted live command owner without creating a fallback capability. */

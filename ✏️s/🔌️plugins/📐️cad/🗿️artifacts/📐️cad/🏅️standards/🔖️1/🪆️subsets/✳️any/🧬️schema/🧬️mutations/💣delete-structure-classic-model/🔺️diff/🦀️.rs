@@ -2,7 +2,7 @@
 //! `(payload, base)` (idempotent even when `base.structure_classic_model` is already `None`).
 
 use super::DeleteStructureClassicModel;
-use crate::diff::CadDiff;
+use crate::diff::{CadDiff, CadModelSlot};
 use crate::CadSnapshot;
 
 //#region 🔖️Diff
@@ -10,6 +10,6 @@ pub fn diff(_payload: &DeleteStructureClassicModel, base: &CadSnapshot) -> proto
     if base.structure_classic_model.is_none() {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Structure-classic-model child is already empty.");
     }
-    protocol::MutationOutcome::new(CadDiff { structure_classic_model: Some(None), ..Default::default() })
+    protocol::MutationOutcome::new(CadDiff { structure_classic_model: Some(CadModelSlot { child: None }), ..Default::default() })
 }
 //#endregion 🔖️Diff

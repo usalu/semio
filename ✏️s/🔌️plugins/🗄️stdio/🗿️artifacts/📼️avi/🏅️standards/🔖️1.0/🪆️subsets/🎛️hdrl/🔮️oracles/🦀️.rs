@@ -760,8 +760,6 @@ mod oracles {
     /// unknown-chunk index, is an error — never a silent no-op.
     fn apply_kind(doc: &mut ODoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "set-snapshot" => *doc = doc_from_json(&params.get("snapshot").cloned().unwrap_or(Json::Null))?,
-            "patch-snapshot" => *doc = doc_from_json(&semio_repo_test_host::law::patched_snapshot(&doc_to_json(doc), params.get("patch").ok_or("patch-snapshot: missing `patch`")?)?)?,
             "set-main-header" => doc.main_header = main_header_from_json(&params.get("mainHeader").cloned().unwrap_or(Json::Null)),
             "set-idx1-present" => doc.idx1_present = flag(params, "idx1Present"),
             "insert-stream" => {
@@ -846,7 +844,6 @@ mod oracles {
         let stream = |index: usize| base.streams.get(index).ok_or_else(|| format!("{kind}: no stream at index {index} to restore"));
         let chunk = |stream_index: usize, index: usize| base.streams.get(stream_index).and_then(|stream| stream.chunks.get(index)).ok_or_else(|| format!("{kind}: no chunk {stream_index}/{index} to restore"));
         Ok(match kind {
-            "set-snapshot" | "patch-snapshot" => spec("set-snapshot", obj(vec![("snapshot", doc_to_json(base))])),
             "set-main-header" => spec("set-main-header", obj(vec![("mainHeader", main_header_to_json(&base.main_header))])),
             "set-idx1-present" => spec("set-idx1-present", obj(vec![("idx1Present", Json::Bool(base.idx1_present))])),
             "insert-stream" => spec("remove-stream", obj(vec![("index", Json::Number(index_of(params, "index") as f64))])),

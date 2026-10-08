@@ -43,8 +43,6 @@ import { getWorkspaceRoot } from "../../../../../../../../../../🧰️framework
 //#region 🗂️Recipes
 /** 🖊️ Built and written BY the `dxf` crate — genuinely third-party-generated. */
 const DXF_RECIPES = [
-  "no-mutation-identity",
-  "set-snapshot-replaces-drawing",
   "add-layer-hidden-services",
   "remove-layer-scratch",
   "set-layer-walls-color",
@@ -62,7 +60,7 @@ const DXF_RECIPES = [
 ] as const;
 
 /** 📐️ Written by us, VERIFIED by ruststep — handcrafted, and labelled handcrafted. */
-const STEP_RECIPES = ["step-no-mutation-identity", "step-set-snapshot-replaces-entities", "step-add-entity-circle", "step-remove-entity-line", "step-set-entity-geometry-circle-radius"] as const;
+const STEP_RECIPES = ["step-add-entity-circle", "step-remove-entity-line", "step-set-entity-geometry-circle-radius"] as const;
 
 const CRATE_DIR = join(import.meta.dir, "..", "🔬️probes", "📖️reader", "📦️packages", "🦀️rust");
 const COMMITTED_FIXTURES = join(import.meta.dir, "..", "🧫️fixtures");

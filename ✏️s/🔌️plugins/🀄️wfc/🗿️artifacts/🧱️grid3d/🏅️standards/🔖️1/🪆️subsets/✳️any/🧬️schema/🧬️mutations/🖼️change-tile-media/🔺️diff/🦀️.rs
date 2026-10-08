@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `ChangeTileMedia` — an id-keyed delta over `Grid3dSnapshot`, never a
 //! whole-snapshot capture.
 
-use crate::diff::Grid3dDiff;
+use crate::diff::{Grid3dDiff, Grid3dRowPatch, Grid3dRows, Grid3dTilePatch};
 use crate::schema::snapshot::*;
 
 pub fn diff(payload: &super::ChangeTileMedia, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
@@ -11,7 +11,5 @@ pub fn diff(payload: &super::ChangeTileMedia, base: &Grid3dSnapshot) -> protocol
     if base.tiles[index].media == payload.media {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Tile \"{}\" already carries that media.", payload.tile_id));
     }
-    let mut tile = base.tiles[index].clone();
-    tile.media = payload.media.clone();
-    protocol::MutationOutcome::new(Grid3dDiff { tiles_upserted: vec![(index, tile)], ..Default::default() })
+    protocol::MutationOutcome::new(Grid3dDiff { tiles: Grid3dRows { patched: vec![Grid3dRowPatch { id: payload.tile_id.clone(), patch: Grid3dTilePatch { media: Some(payload.media.clone()), ..Default::default() } }], ..Default::default() }, ..Default::default() })
 }

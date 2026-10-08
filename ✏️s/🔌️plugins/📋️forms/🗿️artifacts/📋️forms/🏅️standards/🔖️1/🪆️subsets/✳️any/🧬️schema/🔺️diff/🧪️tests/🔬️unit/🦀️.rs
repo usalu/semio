@@ -1,4 +1,5 @@
 use super::*;
+use crate::forms_steps;
 use crate::mutations::create_step;
 use crate::{mutations::FormMutation, FormStep, FORMS_DOCUMENT_SCHEMA};
 use protocol::Mutation;
@@ -7,7 +8,7 @@ use protocol::Mutation;
 async fn empty_diff_is_a_no_operation() {
     let base = FormsSnapshot::default();
     let diff = FormsDiff::default();
-    assert_eq!(diff.apply(&base).expect("valid mutation diff"), base);
+    assert_eq!(protocol::apply_diff(&diff, &base).expect("valid mutation diff"), base);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -16,5 +17,5 @@ async fn create_step_diff_applies_onto_the_base_snapshot() {
     let step = FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() };
     let operation = FormMutation::CreateStep(create_step::mutation::CreateStep { step, index: None });
     let diff: FormsDiff = operation.diff(&base).into_parts().0;
-    assert_eq!(forms_steps(&diff.apply(&base).expect("valid mutation diff")).len(), 1);
+    assert_eq!(forms_steps(&protocol::apply_diff(&diff, &base).expect("valid mutation diff")).len(), 1);
 }

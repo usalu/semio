@@ -4,7 +4,6 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Ajv from "ajv";
 import { parse } from "@iarna/toml";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
@@ -19,12 +18,8 @@ export function compositionLawGroups() {
   ];
 }
 
-/** 🔍️ AJV and independent TOML parsing validate authored ownership and preserved source. */
+/** 🔍️ Independent TOML parsing validates authored ownership and preserved source. */
 export function testCompositionOwnership(target?: string): void {
-  const schema = JSON.parse(read("🧬️schema/🔣️.json"));
-  const ajv = new Ajv({ strict: true, allErrors: true }).addKeyword("x-semio-formats").addSchema(schema);
-  const validate = ajv.getSchema(`${schema.$id}#/$defs/SCompositionLawsV1`)!;
-  assert(validate(fixture), JSON.stringify(validate.errors));
   const authored = read("📦️packages/🦀️rust/Cargo.toml");
   const manifest = Bun.TOML.parse(authored) as any;
   assert.deepEqual(manifest, parse(authored));

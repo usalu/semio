@@ -11,11 +11,10 @@ framing record
 header fixed 2
 field format u8
 field tag u8
-record set-snapshot tag=7
-field payload bytes
-record patch-snapshot tag=8
-field payload bytes
 record paint-indexed-region tag=9
 field payload bytes
 record paint-direct-region tag=10
+field payload bytes
+
+record replace-image tag=12
 field payload bytes

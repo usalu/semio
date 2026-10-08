@@ -1,0 +1,8 @@
+{
+  "owner": "semio-framework-surface",
+  "specificDependencies": ["semio-framework-os-kernel", "semio-framework-os-infinite", "semio-framework-artifact-infinite-dag"],
+  "specificCompositionOwner": "semio-framework-os-node-graph",
+  "neutralTypes": ["GraphPortRecord", "GraphNodeRecord", "GraphEdgeRecord", "NodeGraphScenePayload", "SceneDecodeCursor"],
+  "browserSessions": ["MapSession", "RasterSession", "TerrainSession"],
+  "specificBrowserSessions": ["GraphSession"]
+}

@@ -3,8 +3,8 @@ import type {GltfCreateSkinPayload,CreateSkinMutation} from "../../../../../🧬
 export type * from "../../../../../🧬️schema/🧬️mutations/🦴️skin/🌱️create/🟦️.ts";
 /** 🌱️ `create-skin` wire twin: the flat `Apply` payload `GltfCreateSkinPayload` and the phase wire `CreateSkinMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
-import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireIndex, gltfWireObject, gltfWireRequired, gltfWireOptional, parseGltfSkin } from "../../../📸️snapshot/🔣️json/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
-export const parseGltfCreateSkinPayload = gltfWireObject<GltfCreateSkinPayload>({ position: gltfWireRequired(gltfWireIndex) });
-export const parseCreateSkinMutation = gltfWirePhase(parseGltfCreateSkinPayload, parseGltfDiff);
+export const parseGltfCreateSkinPayload = gltfWireObject<GltfCreateSkinPayload>({ position: gltfWireRequired(gltfWireIndex), skin: gltfWireOptional(parseGltfSkin) });
+export const parseCreateSkinMutation = gltfWireApplyPhase(parseGltfCreateSkinPayload);

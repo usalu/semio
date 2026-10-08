@@ -124,7 +124,6 @@ Feature: Apply every typed semio MESH mutation to a real architectural model, ag
       | change-texture-mime | 🏷️change-texture-mime |
       | replace-texture-bytes | 📀️replace-texture-bytes |
       | move-vertex | 📍️move-vertex |
-      | patch-snapshot | 🩹️patch-snapshot |
 
   @id-inverse
   @level-exhaustive
@@ -153,7 +152,6 @@ Feature: Apply every typed semio MESH mutation to a real architectural model, ag
       | change-texture-mime | 🏷️change-texture-mime |
       | replace-texture-bytes | 📀️replace-texture-bytes |
       | move-vertex | 📍️move-vertex |
-      | patch-snapshot | 🩹️patch-snapshot |
 
   @id-spec-vector
   @level-exhaustive

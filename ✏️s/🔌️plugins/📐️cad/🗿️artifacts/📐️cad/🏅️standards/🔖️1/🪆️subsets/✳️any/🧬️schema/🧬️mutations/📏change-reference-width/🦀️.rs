@@ -23,11 +23,8 @@ impl MutationKind<CadSnapshot, CadMutation> for ChangeReferenceWidth {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &CadSnapshot) -> Result<Vec<CadMutation>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
+        super::inverse::inverse(self, base)
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change width of reference \"{}\"", self.reference_id), &format!("Breite von Referenz \"{}\" ändern", self.reference_id))
     }

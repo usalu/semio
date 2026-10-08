@@ -254,34 +254,8 @@ mod imp {
     }
     //#endregion 🔖️OrderedRebuild
 
-    //#region 🔖️Apply
-    /// ▶️ Performs one mutation kind against `drawing` in place — the forward half both
-    /// `oracle_apply_mutation` and `oracle_apply_mutation_inverse` share (the latter calls it twice:
-    /// the mutation, then its own computed inverse).
-    /// 🩹️ A `patch-snapshot` row as the declared kind its one pointer operation is in this oracle's reading: replacing one
-    /// `headerVars` member names the variable it sets (`set-header-var`); any other pointer has no reading here.
-    fn patch_as_kind(params: &Json) -> Result<(String, Json), String> {
-        let patch = member(params, "patch")?;
-        let path = patch.str("path");
-        match (patch.str("operation").as_str(), path.strip_prefix("/headerVars/").is_some_and(|index| !index.is_empty() && index.bytes().all(|byte| byte.is_ascii_digit()))) {
-            ("set", true) => {
-                let header_var = member(&patch, "value")?;
-                Ok(("set-header-var".to_string(), obj(vec![("name", Json::String(header_var.str("name"))), ("headerVar", header_var)])))
-            }
-            (operation, _) => Err(format!("dxf oracle: patch-snapshot {operation} {path} has no reading")),
-        }
-    }
-
     fn apply_kind(drawing: &mut Drawing, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "patch-snapshot" => {
-                let (kind, params) = patch_as_kind(params)?;
-                apply_kind(drawing, &kind, &params)
-            }
-            "set-snapshot" => {
-                *drawing = snapshot_drawing(&member(params, "snapshot")?)?;
-                Ok(())
-            }
 
             "set-header-var" => match params.str("name").as_str() {
                 "$INSBASE" => {
@@ -430,39 +404,6 @@ mod imp {
         }
     }
 
-    /// 📸️ A whole new drawing built by `dxf` from the `DxfSnapshot` wire alone — `set-snapshot` replaces the document, so
-    /// nothing of the input survives. `Drawing::new()`'s ensured default table entries are dropped so the tables hold exactly
-    /// what the snapshot declares; the header honours `$ACADVER` and `$INSBASE`, the two variables this reference models.
-    fn snapshot_drawing(snapshot: &Json) -> Result<Drawing, String> {
-        let mut drawing = Drawing::new();
-        for header_var in snapshot.array("headerVars") {
-            match header_var.str("name").as_str() {
-                "$ACADVER" => drawing.header.version = AcadVersion::from(member(&header_var, "value")?.str("value")).map_err(|error| format!("dxf oracle: $ACADVER: {error:?}"))?,
-                "$INSBASE" => drawing.header.insertion_base = header_point(&header_var)?,
-                other => return Err(format!("dxf oracle: unsupported header var {other:?}")),
-            }
-        }
-        while drawing.remove_layer(0).is_some() {}
-        while drawing.remove_style(0).is_some() {}
-        while drawing.remove_line_type(0).is_some() {}
-        let tables = snapshot.get("tables").cloned().unwrap_or(Json::Null);
-        for layer in tables.array("layers") {
-            drawing.add_layer(build_layer(&layer));
-        }
-        for style in tables.array("styles") {
-            drawing.add_style(build_style(&style));
-        }
-        for linetype in tables.array("linetypes") {
-            drawing.add_line_type(build_linetype(&linetype));
-        }
-        for block in snapshot.array("blocks") {
-            drawing.add_block(build_block(&block)?);
-        }
-        for entity in snapshot.array("entities") {
-            drawing.add_entity(build_entity(&entity)?);
-        }
-        Ok(drawing)
-    }
     //#endregion 🔖️SnapshotWire
 
     //#region 🔖️Inverse
@@ -485,11 +426,6 @@ mod imp {
         let index = index_of(params, "index");
         let insbase = |name: String| obj(vec![("name", Json::String(name.clone())), ("headerVar", obj(vec![("name", Json::String(name)), ("groupCode", Json::Number(10.0)), ("value", obj(vec![("kind", Json::String("point".to_string())), ("value", point_json(&base.header.insertion_base))]))]))]);
         match kind {
-            "set-snapshot" => Ok(Undo::Original),
-            "patch-snapshot" => {
-                let (kind, params) = patch_as_kind(params)?;
-                inverse_of(base, &kind, &params)
-            }
 
             "set-header-var" | "remove-header-var" => match name.as_str() {
                 "$INSBASE" => apply("set-header-var", insbase(name)),

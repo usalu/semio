@@ -44,5 +44,6 @@
     "thickness": 0.2,
     "materialId": "concrete_c30",
     "meshSize": 0.5
-  }
+  },
+  "index": null
 }

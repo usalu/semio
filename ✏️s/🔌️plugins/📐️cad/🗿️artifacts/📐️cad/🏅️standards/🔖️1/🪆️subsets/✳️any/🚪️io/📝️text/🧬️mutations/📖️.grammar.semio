@@ -14,9 +14,9 @@ create-energy-model = "create-energy-model" "child-id" "=" IDENT "target" "=" ar
 delete-energy-model = "delete-energy-model"
 create-structure-classic-model = "create-structure-classic-model" "child-id" "=" IDENT "target" "=" artifact-reference
 delete-structure-classic-model = "delete-structure-classic-model"
-create-drawing = "create-drawing" "child-id" "=" IDENT "target" "=" artifact-reference
+create-drawing = "create-drawing" "child-id" "=" IDENT "target" "=" artifact-reference ("index" "=" INTEGER)?
 delete-drawing = "delete-drawing" "child-id" "=" IDENT
-create-node = "create-node" node-block
+create-node = "create-node" node-block ("index" "=" INTEGER)?
 delete-node = "delete-node" "node-id" "=" IDENT
 rename-node = "rename-node" "node-id" "=" IDENT "new-label" "=" TEXT
 change-reference-hidden = "change-reference-hidden" "model-definition-id" "=" IDENT "reference-id" "=" IDENT "new-hidden" "=" BOOL

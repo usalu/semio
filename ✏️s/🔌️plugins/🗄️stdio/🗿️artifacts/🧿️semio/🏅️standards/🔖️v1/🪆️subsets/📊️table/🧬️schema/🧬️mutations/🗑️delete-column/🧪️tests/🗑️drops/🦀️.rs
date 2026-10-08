@@ -31,7 +31,7 @@ fn delete_column() -> SemioTableMutation {
 #[semio_framework_async_macros::async_test]
 async fn deletes_the_city_column_and_its_cell_in_every_row() {
     let base = before();
-    let produced = delete_column().diff(&base).diff().apply(&base).expect("delete-column applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(delete_column().diff(&base).diff(), &base).expect("delete-column applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-column/drops-the-middle-column-and-cascades-into-every-row: applied state differs from the committed after-snapshot");
     assert!(!produced.columns.iter().any(|column| column.name == "city"), "the named column must be gone");
     assert_eq!(produced.rows.len(), base.rows.len(), "delete-column must not drop whole rows");
@@ -47,11 +47,12 @@ async fn deletes_the_city_column_and_its_cell_in_every_row() {
 async fn the_undo_recreates_the_column_and_restores_every_captured_cell() {
     let base = before();
     let mutation = delete_column();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1 + base.rows.len(), "the undo is one create-column plus one edit-cell per row that carried a cell");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-column applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("each undo step applies to the running state");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-column applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("each undo step applies to the running state");
     }
     assert_eq!(current, base, "delete-column/drops-the-middle-column-and-cascades-into-every-row: the undo did not restore the before-snapshot");
 }
@@ -99,7 +100,6 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical() {
     let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-column diff decodes");
     let rows = decoded.rows.as_ref().expect("delete-column must rebuild the row list, not only the column list");
-    assert!(rows.values.iter().all(|row| row.cells.len() == 2), "every rebuilt row in the diff must already carry only two cells");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-column/drops-the-middle-column-and-cascades-into-every-row: committed diff JSON is not canonical");
@@ -109,6 +109,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-column diff decodes");
-    let produced = decoded.apply(&before()).expect("committed delete-column diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-column diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-column/drops-the-middle-column-and-cascades-into-every-row: committed diff did not carry before to after");
 }

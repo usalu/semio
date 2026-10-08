@@ -1,0 +1,41 @@
+{
+  "sources": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/🟦️.ts",
+      "sha256": "657a8c5571fb2e6bb9a1659afe09b267b6c8b89b54c3b3073520e5eb382f2fb7",
+      "byteLength": 34895
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️publication/🟦️.ts",
+      "sha256": "b0545afdab9f19529f11e6e1a1c22c6ce00a3ff4055e47d90c907792ecbe621a",
+      "byteLength": 18131
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔎️verification/🧾️publication/🧬️schema/🔣️.json",
+      "sha256": "efd12568470ab21f04ff4550066578a651eb5f8b7284041290c61dd2ef901573",
+      "byteLength": 6131
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/🧾️publication/🧫️fixtures/🔣️.json",
+      "sha256": "613ff82c919919ae829956bd31339722c69b9f282c9eac7fe74753495f93d9f4",
+      "byteLength": 1041
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/🧾️publication/🧪️tests/🟦️.ts",
+      "sha256": "653a0e3a1f1472995ef0e3032dadc102631f4a115db6a4e84aec3b9ca119570d",
+      "byteLength": 17517
+    },
+    {
+      "path": "🌎️hub/📦️packages/🦀️rust/📜️script.ts",
+      "sha256": "c1f85fbeba8aedbed06636167cb701c79ebd713428faaf0dea730c46ab4943f8",
+      "byteLength": 1250887
+    }
+  ],
+  "newScope": "os.dev.verification.publication",
+  "productionStatus": "held: WGPU58744 terminal owned cancellationNx130 beforeTrunk; no native or normal protected publication proof",
+  "removedCollectionEndpoints": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/🧾️publication/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/🧾️publication/🧬️schema/🔣️.json"
+  ],
+  "sourceFreezeStatus": "current: full registered source54215/e79003 Nx0/29.0s; actuallockedPlaywright+Chromium53009/15ec7f Nx0/53.7s; sixsourceSHA refreshed; no RxJS dependency"
+}

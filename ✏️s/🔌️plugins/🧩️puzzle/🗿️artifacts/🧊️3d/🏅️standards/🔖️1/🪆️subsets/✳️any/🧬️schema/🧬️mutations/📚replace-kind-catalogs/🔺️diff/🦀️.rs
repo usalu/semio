@@ -1,5 +1,5 @@
-//! 🔺️ Sparse diff builder for `ReplaceKindCatalogs` — patches the document `meta.kindCatalogs`.
-use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
+//! 🔺️ Sparse diff builder for `ReplaceKindCatalogs` — sets `meta.kindCatalogs`.
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dDiff, Puzzle3dMetaPatch};
 use crate::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
@@ -9,8 +9,6 @@ pub fn diff(payload: &super::mutation::ReplaceKindCatalogs, base: &Puzzle3dSnaps
     if payload.new_catalogs == base.meta.kind_catalogs {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Kind catalogs are unchanged.");
     }
-    let mut meta = base.meta.clone();
-    meta.kind_catalogs = payload.new_catalogs.clone();
-    protocol::MutationOutcome::new(Puzzle3dDiff { meta: Some(meta), ..Default::default() })
+    protocol::MutationOutcome::new(Puzzle3dDiff { meta: Some(Puzzle3dMetaPatch { kind_catalogs: Some(payload.new_catalogs.clone()), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

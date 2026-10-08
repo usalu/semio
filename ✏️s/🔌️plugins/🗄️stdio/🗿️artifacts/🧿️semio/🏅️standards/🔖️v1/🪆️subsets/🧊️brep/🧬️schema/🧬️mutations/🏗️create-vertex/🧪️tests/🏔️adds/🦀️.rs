@@ -33,7 +33,7 @@ fn mutation() -> SemioBrepMutation {
 #[semio_framework_async_macros::async_test]
 async fn adds_the_apex_vertex_without_touching_any_other_collection() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("create-vertex applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("create-vertex applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "create-vertex/adds-an-apex-vertex-above-the-square: applied state differs from the committed after-snapshot");
     assert_eq!(produced.vertices.len(), base.vertices.len() + 1, "create-vertex adds exactly one vertex");
     let created = produced.vertices.last().expect("the created vertex is appended — id-keyed collections have no insertion index");
@@ -48,11 +48,12 @@ async fn adds_the_apex_vertex_without_touching_any_other_collection() {
 async fn the_undo_delete_vertex_removes_the_apex_again() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "creating a vertex nothing references undoes as exactly one delete-vertex");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward create-vertex applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo delete-vertex applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward create-vertex applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo delete-vertex applies");
     }
     assert_eq!(current, base, "create-vertex/adds-an-apex-vertex-above-the-square: the undo did not restore the before-snapshot");
 }
@@ -94,7 +95,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded = decode_semio_brep_diff_json(DIFF).expect("committed create-vertex diff decodes");
-    let produced = decoded.apply(&before()).expect("committed create-vertex diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed create-vertex diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-vertex/adds-an-apex-vertex-above-the-square: committed diff did not carry before to after");
 }
 

@@ -1,139 +1,452 @@
-# 🧬️ En1993 diff schema — sparse scalar fields and ordered per-collection row edits.
-
-enum En1993RowOp {
-  INSERT
-  REMOVE
-  REPLACE
-}
+# 🧬️ En1993 diff schema — sparse scalar fields plus keyed row deltas.
 
 type En1993Diff {
   annex: String @state(class: ARTIFACT)
-  materials: [En1993MaterialEdit!]! @state(class: ARTIFACT)
-  sections: [En1993SectionEdit!]! @state(class: ARTIFACT)
-  members: [En1993MemberEdit!]! @state(class: ARTIFACT)
-  loadCases: [En1993LoadCaseEdit!]! @state(class: ARTIFACT)
-  memberActions: [En1993MemberActionEdit!]! @state(class: ARTIFACT)
-  joints: [En1993JointEdit!]! @state(class: ARTIFACT)
-  fatigueDetails: [En1993FatigueDetailEdit!]! @state(class: ARTIFACT)
-  fireExposures: [En1993FireExposureEdit!]! @state(class: ARTIFACT)
-  coldFormedMembers: [En1993ColdFormedMemberEdit!]! @state(class: ARTIFACT)
-  platedPanels: [En1993PlatedPanelEdit!]! @state(class: ARTIFACT)
-  siloShells: [En1993SiloShellEdit!]! @state(class: ARTIFACT)
-  tensionComponents: [En1993TensionComponentEdit!]! @state(class: ARTIFACT)
-  bridgeFatigue: [En1993BridgeFatigueEdit!]! @state(class: ARTIFACT)
-  towerLegs: [En1993TowerLegEdit!]! @state(class: ARTIFACT)
-  piles: [En1993PileEdit!]! @state(class: ARTIFACT)
-  craneRunways: [En1993CraneRunwayEdit!]! @state(class: ARTIFACT)
+  materials: En1993MaterialDelta! @state(class: ARTIFACT)
+  sections: En1993SectionDelta! @state(class: ARTIFACT)
+  members: En1993MemberDelta! @state(class: ARTIFACT)
+  loadCases: En1993LoadCaseDelta! @state(class: ARTIFACT)
+  memberActions: En1993MemberActionDelta! @state(class: ARTIFACT)
+  joints: En1993JointDelta! @state(class: ARTIFACT)
+  fatigueDetails: En1993FatigueDetailDelta! @state(class: ARTIFACT)
+  fireExposures: En1993FireExposureDelta! @state(class: ARTIFACT)
+  coldFormedMembers: En1993ColdFormedMemberDelta! @state(class: ARTIFACT)
+  platedPanels: En1993PlatedPanelDelta! @state(class: ARTIFACT)
+  siloShells: En1993SiloShellDelta! @state(class: ARTIFACT)
+  tensionComponents: En1993TensionComponentDelta! @state(class: ARTIFACT)
+  bridgeFatigue: En1993BridgeFatigueDelta! @state(class: ARTIFACT)
+  towerLegs: En1993TowerLegDelta! @state(class: ARTIFACT)
+  piles: En1993PileDelta! @state(class: ARTIFACT)
+  craneRunways: En1993CraneRunwayDelta! @state(class: ARTIFACT)
 }
 
-type En1993MaterialEdit {
-  op: En1993RowOp!
-  index: Int!
-  id: String!
-  value: SteelMaterial
+type En1993MaterialDelta {
+  removed: [String!]!
+  added: [En1993MaterialAddition!]!
+  modified: [En1993MaterialModification!]!
 }
 
-type En1993SectionEdit {
-  op: En1993RowOp!
-  index: Int!
-  id: String!
-  value: SteelSection
+type En1993MaterialAddition {
+  after: String
+  row: SteelMaterial!
 }
 
-type En1993MemberEdit {
-  op: En1993RowOp!
-  index: Int!
-  id: String!
-  value: SteelMember
+type En1993MaterialModification {
+  key: String!
+  patch: En1993MaterialPatch!
 }
 
-type En1993LoadCaseEdit {
-  op: En1993RowOp!
-  index: Int!
-  id: String!
-  value: LoadCase
+type En1993MaterialPatch {
+  grade: String
+  fy: Float
+  fu: Float
+  eModulus: Float
+  gModulus: Float
+  subgrade: String
+  kind: String
 }
 
-type En1993MemberActionEdit {
-  op: En1993RowOp!
-  index: Int!
-  id: String!
-  value: MemberAction
+type En1993SectionDelta {
+  removed: [String!]!
+  added: [En1993SectionAddition!]!
+  modified: [En1993SectionModification!]!
 }
 
-type En1993JointEdit {
-  op: En1993RowOp!
-  index: Int!
-  id: String!
-  value: SteelJoint
+type En1993SectionAddition {
+  after: String
+  row: SteelSection!
 }
 
-type En1993FatigueDetailEdit {
-  op: En1993RowOp!
-  index: Int!
-  id: String!
-  value: FatigueDetail
+type En1993SectionModification {
+  key: String!
+  patch: En1993SectionPatch!
 }
 
-type En1993FireExposureEdit {
-  op: En1993RowOp!
-  index: Int!
-  id: String!
-  value: FireExposure
+type En1993SectionPatch {
+  designation: String
+  kind: String
+  h: Float
+  b: Float
+  tw: Float
+  tf: Float
+  r: Float
+  area: Float
+  shearAreaY: Float
+  shearAreaZ: Float
+  iy: Float
+  iz: Float
+  it: Float
+  iw: Float
+  wElY: Float
+  wElZ: Float
+  wPlY: Float
+  wPlZ: Float
+  areaNet: Float
 }
 
-type En1993ColdFormedMemberEdit {
-  op: En1993RowOp!
-  index: Int!
-  id: String!
-  value: ColdFormedMember
+type En1993MemberDelta {
+  removed: [String!]!
+  added: [En1993MemberAddition!]!
+  modified: [En1993MemberModification!]!
 }
 
-type En1993PlatedPanelEdit {
-  op: En1993RowOp!
-  index: Int!
-  id: String!
-  value: PlatedPanel
+type En1993MemberAddition {
+  after: String
+  row: SteelMember!
 }
 
-type En1993SiloShellEdit {
-  op: En1993RowOp!
-  index: Int!
-  id: String!
-  value: SiloShell
+type En1993MemberModification {
+  key: String!
+  patch: En1993MemberPatch!
 }
 
-type En1993TensionComponentEdit {
-  op: En1993RowOp!
-  index: Int!
-  id: String!
-  value: TensionComponent
+type En1993MemberPatch {
+  label: String
+  memberType: String
+  sectionId: String
+  materialId: String
+  length: Float
+  bucklingLengthY: Float
+  bucklingLengthZ: Float
+  ltbLength: Float
+  ltbRestraintSpacing: Float
+  loadApplication: String
+  endMomentRatioPsi: Float
+  momentDiagram: String
+  deflectionLimitRatio: Float
+  analysis: String
 }
 
-type En1993BridgeFatigueEdit {
-  op: En1993RowOp!
-  index: Int!
-  id: String!
-  value: BridgeFatigue
+type En1993LoadCaseDelta {
+  removed: [String!]!
+  added: [En1993LoadCaseAddition!]!
+  modified: [En1993LoadCaseModification!]!
 }
 
-type En1993TowerLegEdit {
-  op: En1993RowOp!
-  index: Int!
-  id: String!
-  value: TowerLeg
+type En1993LoadCaseAddition {
+  after: String
+  row: LoadCase!
 }
 
-type En1993PileEdit {
-  op: En1993RowOp!
-  index: Int!
-  id: String!
-  value: SteelPile
+type En1993LoadCaseModification {
+  key: String!
+  patch: En1993LoadCasePatch!
 }
 
-type En1993CraneRunwayEdit {
-  op: En1993RowOp!
-  index: Int!
-  id: String!
-  value: CraneRunway
+type En1993LoadCasePatch {
+  name: String
+  kind: String
+  category: String
+}
+
+type En1993MemberActionDelta {
+  removed: [String!]!
+  added: [En1993MemberActionAddition!]!
+  modified: [En1993MemberActionModification!]!
+}
+
+type En1993MemberActionAddition {
+  after: String
+  row: MemberAction!
+}
+
+type En1993MemberActionModification {
+  key: String!
+  patch: En1993MemberActionPatch!
+}
+
+type En1993MemberActionPatch {
+  memberId: String
+  loadCaseId: String
+  action: String
+}
+
+type En1993JointDelta {
+  removed: [String!]!
+  added: [En1993JointAddition!]!
+  modified: [En1993JointModification!]!
+}
+
+type En1993JointAddition {
+  after: String
+  row: SteelJoint!
+}
+
+type En1993JointModification {
+  key: String!
+  patch: En1993JointPatch!
+}
+
+type En1993JointPatch {
+  kind: String
+  memberId: String
+  boltClass: String
+  boltDiameter: Float
+  boltRows: Int
+  boltsPerRow: Int
+  pitch: Float
+  gauge: Float
+  endDistance: Float
+  edgeDistance: Float
+  shearPlanes: Int
+  plateThickness: Float
+  plateFu: Float
+  weldThroat: Float
+  weldLength: Float
+  weldFu: Float
+  weldGrade: String
+  actions: String
+  category: String
+  frictionMu: Float
+  preloadForce: Float
+  slipFactorKs: Float
+  frictionSurfaces: Int
+}
+
+type En1993FatigueDetailDelta {
+  removed: [String!]!
+  added: [En1993FatigueDetailAddition!]!
+  modified: [En1993FatigueDetailModification!]!
+}
+
+type En1993FatigueDetailAddition {
+  after: String
+  row: FatigueDetail!
+}
+
+type En1993FatigueDetailModification {
+  key: String!
+  patch: En1993FatigueDetailPatch!
+}
+
+type En1993FatigueDetailPatch {
+  memberId: String
+  category: Int
+  method: String
+  spectrum: String
+}
+
+type En1993FireExposureDelta {
+  removed: [String!]!
+  added: [En1993FireExposureAddition!]!
+  modified: [En1993FireExposureModification!]!
+}
+
+type En1993FireExposureAddition {
+  after: String
+  row: FireExposure!
+}
+
+type En1993FireExposureModification {
+  key: String!
+  patch: En1993FireExposurePatch!
+}
+
+type En1993FireExposurePatch {
+  memberId: String
+  rating: String
+  protectionThickness: Float
+  sectionFactor: Float
+  mu0: Float
+  designTemperature: Float
+  protectionConductivity: Float
+  protectionDensity: Float
+  protectionSpecificHeat: Float
+}
+
+type En1993ColdFormedMemberDelta {
+  removed: [String!]!
+  added: [En1993ColdFormedMemberAddition!]!
+  modified: [En1993ColdFormedMemberModification!]!
+}
+
+type En1993ColdFormedMemberAddition {
+  after: String
+  row: ColdFormedMember!
+}
+
+type En1993ColdFormedMemberModification {
+  key: String!
+  patch: En1993ColdFormedMemberPatch!
+}
+
+type En1993ColdFormedMemberPatch {
+  bBar: Float
+  thickness: Float
+  kSigma: Float
+  psi: Float
+  fy: Float
+  grossResistance: Float
+  actions: String
+}
+
+type En1993PlatedPanelDelta {
+  removed: [String!]!
+  added: [En1993PlatedPanelAddition!]!
+  modified: [En1993PlatedPanelModification!]!
+}
+
+type En1993PlatedPanelAddition {
+  after: String
+  row: PlatedPanel!
+}
+
+type En1993PlatedPanelModification {
+  key: String!
+  patch: En1993PlatedPanelPatch!
+}
+
+type En1993PlatedPanelPatch {
+  a: Float
+  b: Float
+  thickness: Float
+  fy: Float
+  kSigma: Float
+  actions: String
+}
+
+type En1993SiloShellDelta {
+  removed: [String!]!
+  added: [En1993SiloShellAddition!]!
+  modified: [En1993SiloShellModification!]!
+}
+
+type En1993SiloShellAddition {
+  after: String
+  row: SiloShell!
+}
+
+type En1993SiloShellModification {
+  key: String!
+  patch: En1993SiloShellPatch!
+}
+
+type En1993SiloShellPatch {
+  thickness: Float
+  radius: Float
+  depth: Float
+  k: Float
+  gamma: Float
+  fy: Float
+}
+
+type En1993TensionComponentDelta {
+  removed: [String!]!
+  added: [En1993TensionComponentAddition!]!
+  modified: [En1993TensionComponentModification!]!
+}
+
+type En1993TensionComponentAddition {
+  after: String
+  row: TensionComponent!
+}
+
+type En1993TensionComponentModification {
+  key: String!
+  patch: En1993TensionComponentPatch!
+}
+
+type En1993TensionComponentPatch {
+  fUk: Float
+  fK: Float
+  actions: String
+}
+
+type En1993BridgeFatigueDelta {
+  removed: [String!]!
+  added: [En1993BridgeFatigueAddition!]!
+  modified: [En1993BridgeFatigueModification!]!
+}
+
+type En1993BridgeFatigueAddition {
+  after: String
+  row: BridgeFatigue!
+}
+
+type En1993BridgeFatigueModification {
+  key: String!
+  patch: En1993BridgeFatiguePatch!
+}
+
+type En1993BridgeFatiguePatch {
+  memberId: String
+  lambda: Float
+  phi2: Float
+  deltaSigmaP: Float
+  category: Int
+  method: String
+}
+
+type En1993TowerLegDelta {
+  removed: [String!]!
+  added: [En1993TowerLegAddition!]!
+  modified: [En1993TowerLegModification!]!
+}
+
+type En1993TowerLegAddition {
+  after: String
+  row: TowerLeg!
+}
+
+type En1993TowerLegModification {
+  key: String!
+  patch: En1993TowerLegPatch!
+}
+
+type En1993TowerLegPatch {
+  memberId: String
+  forceCoefficient: Float
+  dynamicFactor: Float
+  actions: String
+}
+
+type En1993PileDelta {
+  removed: [String!]!
+  added: [En1993PileAddition!]!
+  modified: [En1993PileModification!]!
+}
+
+type En1993PileAddition {
+  after: String
+  row: SteelPile!
+}
+
+type En1993PileModification {
+  key: String!
+  patch: En1993PilePatch!
+}
+
+type En1993PilePatch {
+  sectionId: String
+  materialId: String
+  drivingStress: Float
+  embeddedLength: Float
+  shaftPerimeter: Float
+  actions: String
+}
+
+type En1993CraneRunwayDelta {
+  removed: [String!]!
+  added: [En1993CraneRunwayAddition!]!
+  modified: [En1993CraneRunwayModification!]!
+}
+
+type En1993CraneRunwayAddition {
+  after: String
+  row: CraneRunway!
+}
+
+type En1993CraneRunwayModification {
+  key: String!
+  patch: En1993CraneRunwayPatch!
+}
+
+type En1993CraneRunwayPatch {
+  memberId: String
+  wheelContactLength: Float
+  dispersion: Float
+  webThickness: Float
+  fy: Float
+  phi: Float
+  actions: String
 }

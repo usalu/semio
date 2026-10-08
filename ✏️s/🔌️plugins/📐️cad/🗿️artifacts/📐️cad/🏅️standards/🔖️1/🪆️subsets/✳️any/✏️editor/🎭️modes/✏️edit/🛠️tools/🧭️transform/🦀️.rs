@@ -238,7 +238,7 @@ pub fn cad_tool_yields(models: &CadPaneModels, entries: &[CadToolEntry]) -> Vec<
             if outcome.messages().iter().any(|message| message.level >= semio_framework_diagnostic::Severity::Error || message.code.0 == "mutation.no-op") {
                 continue;
             }
-            let Ok(next) = protocol::MutationDiff::apply(outcome.diff(), state) else { continue };
+            let Ok(next) = protocol::apply_diff(outcome.diff(), state) else { continue };
             *state = next;
             yields.push((key, CadToolLeaf { pane, leaf }));
         }

@@ -42,8 +42,7 @@ fn json_spec(kind: &str, params: Json) -> Json {
 /// ↩️ The semantically correct inverse spec for one forward `(kind, params)` pair, mirroring the per-variant
 /// `PlyMutation::inverse()` semantics independently: whatever pre-mutation state it needs is read out of `base` through
 /// the oracle's own `ply-rs` reading ([`ply_snapshot_wire`]), and every spec it returns carries the leaf wire payload
-/// like the feature's rows. `set-snapshot`'s inverse is a REAL `set-snapshot` carrying the original document — never a
-/// hand-back of the pristine input bytes, which would let the scenario pass without `ply-rs` re-serializing anything.
+/// like the feature's rows. No inverse is a hand-back of the pristine input bytes, which would let the scenario pass without `ply-rs` re-serializing anything.
 fn inverse_spec(spec: &Json, base: &[u8]) -> Result<Json, String> {
     let kind = spec.str("kind");
     let params = spec.get("params").cloned().unwrap_or(Json::Null);
@@ -56,7 +55,6 @@ fn inverse_spec(spec: &Json, base: &[u8]) -> Result<Json, String> {
     let element = |name: &str| elements.iter().position(|element| element.str("name") == name).map(|at| (at, elements[at].clone())).ok_or_else(|| format!("the real document declares no element {name:?}"));
     let at = |items: Vec<Json>, index: usize, what: &str| items.get(index).cloned().ok_or_else(|| format!("the real document has no {what} {index}"));
     Ok(match kind.as_str() {
-        "set-snapshot" | "patch-snapshot" => json_spec("set-snapshot", json_obj(vec![("snapshot", snapshot.clone())])),
         "set-format" => json_spec("set-format", json_obj(vec![("format", Json::String(snapshot.str("format")))])),
         "insert-comment" => json_spec("remove-comment", json_obj(vec![("index", Json::Number(number("index")?.min(snapshot.array("comments").len()) as f64))])),
         "remove-comment" => {
@@ -100,9 +98,8 @@ fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
     Ok(Outcome::with_raw(bytes, projection))
 }
 
-/// ↩️ The inverse law, asserted HERE rather than deferred to the parity phase: every kind —
-/// INCLUDING `set-snapshot`, which now inverts through a real `set-snapshot` of the original
-/// document instead of returning the pristine bytes — is applied forward and then undone, and the
+/// ↩️ The inverse law, asserted HERE rather than deferred to the parity phase: every kind
+/// is applied forward and then undone, and the
 /// restored document's independent `ply-rs` projection must equal the REAL original's own, within
 /// `semantic-ply-v1`'s own declared tolerance and no stricter.
 fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
@@ -173,7 +170,7 @@ mod subject {
         Ok(Outcome::with_raw(bytes, projection))
     }
 
-    /// ↩️ Every kind, INCLUDING `set-snapshot`, is applied forward and then undone by the production inverse computed
+    /// ↩️ Every kind is applied forward and then undone by the production inverse computed
     /// against the pre-mutation snapshot.
     pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode(&mutable_input(ctx)?)?;

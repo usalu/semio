@@ -3,40 +3,72 @@ scalar UInt32
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
 
 type ShootingDiff {
-  artifact: ShootingArtifact @state(class: ARTIFACT)
   schema: String @state(class: ARTIFACT)
   assets: ShootingAssetsDelta @state(class: ARTIFACT)
   savedCameras: ShootingSavedCamerasDelta @state(class: ARTIFACT)
-  scene: ShootingSceneLighting @state(class: ARTIFACT)
+  scene: ShootingScenePatch @state(class: ARTIFACT)
   shots: ShootingShotsDelta @state(class: ARTIFACT)
   activeShotId: String @state(class: ARTIFACT)
   activeAssetId: String @state(class: ARTIFACT)
-  emblem: ArtifactChild @state(class: ARTIFACT)
+  emblem: ShootingAssignedEmblem @state(class: ARTIFACT)
 }
 
-type ShootingStringList {
-  values: [String!]!
+type ShootingAssignedEmblem {
+  value: ArtifactChild
+}
+
+type ShootingAssignedQuaternion {
+  value: [Float!]
+}
+
+type ShootingAssignedVector {
+  value: [Float!]
+}
+
+type ShootingAssignedString {
+  value: String
+}
+
+enum ShootingEditKind {
+  ADD
+  REMOVE
+  MOVE
+}
+
+type ShootingAssetEdit {
+  edit: ShootingEditKind!
+  index: UInt32
+  id: String
+  item: ShootingAsset
+}
+
+type ShootingShotEdit {
+  edit: ShootingEditKind!
+  index: UInt32
+  id: String
+  item: ShootingShot
+}
+
+type ShootingSavedCameraEdit {
+  edit: ShootingEditKind!
+  index: UInt32
+  id: String
+  item: ShootingSavedCamera
 }
 
 type ShootingAssetsDelta {
-  added: [ShootingAsset!]!
-  removed: [String!]!
+  edits: [ShootingAssetEdit!]!
   patched: [ShootingAssetPatchEntry!]!
-  reordered: [String!]
 }
 
 type ShootingShotsDelta {
-  added: [ShootingShot!]!
-  removed: [String!]!
+  edits: [ShootingShotEdit!]!
   patched: [ShootingShotPatchEntry!]!
-  reordered: [String!]
 }
 
 type ShootingSavedCamerasDelta {
-  added: [ShootingSavedCamera!]!
-  removed: [String!]!
+  edits: [ShootingSavedCameraEdit!]!
   patched: [ShootingSavedCameraPatchEntry!]!
-  reordered: [String!]
 }
 
 type ShootingAssetPatchEntry {
@@ -57,9 +89,10 @@ type ShootingSavedCameraPatchEntry {
 type ShootingAssetPatch {
   name: String
   url: String
+  format: String
   origin: [Float!]
-  orientation: [Float!]
-  scale: [Float!]
+  orientation: ShootingAssignedQuaternion
+  scale: ShootingAssignedVector
 }
 
 type ShootingShotPatch {
@@ -68,11 +101,33 @@ type ShootingShotPatch {
   height: UInt32
   format: String
   shape: String
+  background: ShootingAssignedString
+  cameraId: ShootingAssignedString
 }
 
 type ShootingSavedCameraPatch {
   label: String
   camera: ShootingCamera
+}
+
+type ShootingScenePatch {
+  background: String
+  sunEnabled: Boolean
+  sunAzimuth: Float
+  sunElevation: Float
+  sunIntensity: Float
+  sunColor: String
+  ambientIntensity: Float
+  ambientColor: String
+  shadowEnabled: Boolean
+  shadowOpacity: Float
+  shadowSoftness: Float
+  materialColor: String
+  materialMetalness: Float
+  materialRoughness: Float
+  materialEmissive: String
+  materialEmissiveIntensity: Float
+  materialStroke: String
 }
 
 type ShootingArtifact {

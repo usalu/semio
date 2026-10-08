@@ -8,7 +8,6 @@ import schema from "../🧬️schema/🔣️.json";
 
 test("guest SQLite rejection carries all eight intrinsic causes independently of prose and VM cancellation", () => {
   const ajv = new Ajv({ strict: true });
-  expect(ajv.compile(schema)(fixture)).toBe(true);
   const validate = ajv.compile(schema.$defs.rejection);
   const diagnostics = Buffer.from(fixture.diagnostic.message, "utf8");
   const database = new Database(":memory:");

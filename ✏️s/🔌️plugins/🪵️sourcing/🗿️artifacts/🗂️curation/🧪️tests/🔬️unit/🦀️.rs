@@ -16,10 +16,10 @@ async fn artifact_kind_names_the_store_schema() {
 async fn txt_dsl_carrier_round_trips_exactly() {
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
-    use semio_framework::io::io_mechanism::{Deserializer, Serializer};
+    use semio_framework_os_kernel::io::io_mechanism::{Deserializer, Serializer};
     use semio_framework::io_schema::IoPayload;
     let snapshot = crate::CurationSnapshot::default();
-    let exported = export::txt::v_utf_8::any::CurationIntoTxt::serialize(&snapshot, &semio_framework::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl txt export");
+    let exported = export::txt::v_utf_8::any::CurationIntoTxt::serialize(&snapshot, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("dsl txt export");
     let IoPayload::Text(text) = exported.value else { panic!("txt is a text payload") };
     let back = import::txt::v_utf_8::any::TxtIntoCuration::deserialize(&IoPayload::Text(text)).await.expect("dsl txt import");
     assert_eq!(back.value, snapshot);

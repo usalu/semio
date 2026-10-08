@@ -129,7 +129,7 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{change_material_alpha_mode,change_material_double_sided,create_image,create_material,create_sampler,create_texture,delete_image,delete_material,delete_sampler,delete_texture,move_image,move_material,move_sampler,move_texture,reorder_images,reorder_materials,reorder_samplers,reorder_textures};
+    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{apply_gltf_mutation,change_material_alpha_mode,change_material_double_sided,create_image,create_material,create_sampler,create_texture,delete_image,delete_material,delete_sampler,delete_texture,move_image,move_material,move_sampler,move_texture,reorder_images,reorder_materials,reorder_samplers,reorder_textures};
 use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutations::{gltf_inverse_restored_document};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::{GltfAlphaMode, GltfSnapshot};
     use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::project_gltf;
@@ -176,36 +176,30 @@ use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutati
     //#endregion 🔖️Params
 
     //#region 🔖️Dispatch
-    /// 📐️ Full parse → typed leaf `apply()` → re-serialize from the model alone — the
+    /// 📐️ Full parse → typed leaf mutation through the central applier → re-serialize from the model alone — the
     /// no-byte-pass-through rule this wave exists to enforce. Dispatches through each of the 18
-    /// leaves' own real `apply()` directly, same shape `🎥️camera`/`🦴️skin`'s adapters already
+    /// leaves' own mutation and the central applier, same shape `🎥️camera`/`🦴️skin`'s adapters already
     /// established.
     fn apply_kind(before: &GltfSnapshot, kind: &str, params: &Json) -> Result<GltfSnapshot, String> {
         match kind {
-            "create-material" => create_material::apply(&create_material::GltfCreateMaterialPayload { position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "delete-material" => delete_material::apply(&delete_material::GltfDeleteMaterialPayload { index: num(params, "index")? }, before).map_err(|error| error.detail),
-            "move-material" => move_material::apply(&move_material::GltfMoveMaterialPayload { index: num(params, "index")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "reorder-materials" => reorder_materials::apply(&reorder_materials::GltfReorderMaterialsPayload { order: order(params, "order")? }, before).map_err(|error| error.detail),
-            "create-texture" => create_texture::apply(&create_texture::GltfCreateTexturePayload { position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "delete-texture" => delete_texture::apply(&delete_texture::GltfDeleteTexturePayload { index: num(params, "index")? }, before).map_err(|error| error.detail),
-            "move-texture" => move_texture::apply(&move_texture::GltfMoveTexturePayload { index: num(params, "index")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "reorder-textures" => reorder_textures::apply(&reorder_textures::GltfReorderTexturesPayload { order: order(params, "order")? }, before).map_err(|error| error.detail),
-            "create-image" => create_image::apply(&create_image::GltfCreateImagePayload { position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "delete-image" => delete_image::apply(&delete_image::GltfDeleteImagePayload { index: num(params, "index")? }, before).map_err(|error| error.detail),
-            "move-image" => move_image::apply(&move_image::GltfMoveImagePayload { index: num(params, "index")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "reorder-images" => reorder_images::apply(&reorder_images::GltfReorderImagesPayload { order: order(params, "order")? }, before).map_err(|error| error.detail),
-            "create-sampler" => create_sampler::apply(&create_sampler::GltfCreateSamplerPayload { position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "delete-sampler" => delete_sampler::apply(&delete_sampler::GltfDeleteSamplerPayload { index: num(params, "index")? }, before).map_err(|error| error.detail),
-            "move-sampler" => move_sampler::apply(&move_sampler::GltfMoveSamplerPayload { index: num(params, "index")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "reorder-samplers" => reorder_samplers::apply(&reorder_samplers::GltfReorderSamplersPayload { order: order(params, "order")? }, before).map_err(|error| error.detail),
-            "change-material-alpha-mode" => {
-                let mut next = before.clone();
-                change_material_alpha_mode::apply(&mut next, &change_material_alpha_mode::GltfChangeMaterialAlphaModePayload { material: num(params, "material")?, alpha_mode: alpha_mode(params, "alphaMode")? }).map(|()| next).map_err(|error| error.detail)
-            }
-            "change-material-double-sided" => {
-                let mut next = before.clone();
-                change_material_double_sided::apply(&mut next, &change_material_double_sided::GltfChangeMaterialDoubleSidedPayload { material: num(params, "material")?, double_sided: boolean(params, "doubleSided")? }).map(|()| next).map_err(|error| error.detail)
-            }
+            "create-material" => apply_gltf_mutation(before, &create_material::mutation(create_material::GltfCreateMaterialPayload { position: num(params, "position")?, material: None })),
+            "delete-material" => apply_gltf_mutation(before, &delete_material::mutation(delete_material::GltfDeleteMaterialPayload { index: num(params, "index")? })),
+            "move-material" => apply_gltf_mutation(before, &move_material::mutation(move_material::GltfMoveMaterialPayload { index: num(params, "index")?, position: num(params, "position")? })),
+            "reorder-materials" => apply_gltf_mutation(before, &reorder_materials::mutation(reorder_materials::GltfReorderMaterialsPayload { order: order(params, "order")? })),
+            "create-texture" => apply_gltf_mutation(before, &create_texture::mutation(create_texture::GltfCreateTexturePayload { position: num(params, "position")?, texture: None })),
+            "delete-texture" => apply_gltf_mutation(before, &delete_texture::mutation(delete_texture::GltfDeleteTexturePayload { index: num(params, "index")? })),
+            "move-texture" => apply_gltf_mutation(before, &move_texture::mutation(move_texture::GltfMoveTexturePayload { index: num(params, "index")?, position: num(params, "position")? })),
+            "reorder-textures" => apply_gltf_mutation(before, &reorder_textures::mutation(reorder_textures::GltfReorderTexturesPayload { order: order(params, "order")? })),
+            "create-image" => apply_gltf_mutation(before, &create_image::mutation(create_image::GltfCreateImagePayload { position: num(params, "position")?, image: None })),
+            "delete-image" => apply_gltf_mutation(before, &delete_image::mutation(delete_image::GltfDeleteImagePayload { index: num(params, "index")? })),
+            "move-image" => apply_gltf_mutation(before, &move_image::mutation(move_image::GltfMoveImagePayload { index: num(params, "index")?, position: num(params, "position")? })),
+            "reorder-images" => apply_gltf_mutation(before, &reorder_images::mutation(reorder_images::GltfReorderImagesPayload { order: order(params, "order")? })),
+            "create-sampler" => apply_gltf_mutation(before, &create_sampler::mutation(create_sampler::GltfCreateSamplerPayload { position: num(params, "position")?, sampler: None })),
+            "delete-sampler" => apply_gltf_mutation(before, &delete_sampler::mutation(delete_sampler::GltfDeleteSamplerPayload { index: num(params, "index")? })),
+            "move-sampler" => apply_gltf_mutation(before, &move_sampler::mutation(move_sampler::GltfMoveSamplerPayload { index: num(params, "index")?, position: num(params, "position")? })),
+            "reorder-samplers" => apply_gltf_mutation(before, &reorder_samplers::mutation(reorder_samplers::GltfReorderSamplersPayload { order: order(params, "order")? })),
+            "change-material-alpha-mode" => apply_gltf_mutation(before, &change_material_alpha_mode::mutation(change_material_alpha_mode::GltfChangeMaterialAlphaModePayload { material: num(params, "material")?, alpha_mode: alpha_mode(params, "alphaMode")? })),
+            "change-material-double-sided" => apply_gltf_mutation(before, &change_material_double_sided::mutation(change_material_double_sided::GltfChangeMaterialDoubleSidedPayload { material: num(params, "material")?, double_sided: boolean(params, "doubleSided")? })),
             other => Err(format!("unrecognised mutation kind {other:?}")),
         }
     }

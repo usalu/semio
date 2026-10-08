@@ -2,19 +2,19 @@ grammar StdioSemioKitMutations;
 op : createObject | deleteObject | createModel | deleteModel | createProperties | deleteProperties
    | bindRepresentation | unbindRepresentation | changeRepresentationPin
    | addType | removeType | renameType | addDesign | removeDesign | editDesign ;
-createObject : 'createObject' ':' HEX ',' reference ;
+createObject : 'createObject' ':' HEX ',' reference (',' INT)? ;
 deleteObject : 'deleteObject' ':' HEX ;
-createModel : 'createModel' ':' HEX ',' reference ;
+createModel : 'createModel' ':' HEX ',' reference (',' INT)? ;
 deleteModel : 'deleteModel' ':' HEX ;
 createProperties : 'createProperties' ':' HEX ',' reference ;
 deleteProperties : 'deleteProperties' ;
-bindRepresentation : 'bindRepresentation' ':' reference ',' pin ',' HEX ;
+bindRepresentation : 'bindRepresentation' ':' reference ',' pin ',' HEX (',' INT)? ;
 unbindRepresentation : 'unbindRepresentation' ':' INT ;
 changeRepresentationPin : 'changeRepresentationPin' ':' INT ',' pin ;
-addType : 'addType' ':' HEX ',' HEX ',' HEX ;
+addType : 'addType' ':' HEX ',' HEX ',' HEX (',' INT)? ;
 removeType : 'removeType' ':' HEX ;
 renameType : 'renameType' ':' HEX ',' HEX ;
-addDesign : 'addDesign' ':' HEX ',' HEX ;
+addDesign : 'addDesign' ':' HEX ',' HEX (',' INT)? ;
 removeDesign : 'removeDesign' ':' HEX ;
 editDesign : 'editDesign' ':' HEX ',' pieceList ',' connectionList ;
 pieceList : '[' (piece (',' piece)*)? ']' ;

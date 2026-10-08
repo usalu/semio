@@ -1,0 +1,10 @@
+{
+  "authoredModuleIds": [
+    "beams",
+    "windows",
+    "slabs",
+    "reuse"
+  ],
+  "selectedModuleId": "beams",
+  "emptyAdmittedRosterFindsModule": false
+}

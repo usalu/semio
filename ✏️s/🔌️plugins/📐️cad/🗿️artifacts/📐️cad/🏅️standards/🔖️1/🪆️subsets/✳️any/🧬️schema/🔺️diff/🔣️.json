@@ -5,17 +5,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "artifact": {
-      "oneOf": [
-        {
-          "type": "null"
-        },
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "schema": {
       "type": [
         "string",
@@ -38,7 +27,7 @@
           "type": "null"
         },
         {
-          "$ref": "#/$defs/CadModelChild"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json#/$defs/CadModelSlot"
         }
       ]
     },
@@ -50,7 +39,7 @@
           "type": "null"
         },
         {
-          "$ref": "#/$defs/CadModelChild"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json#/$defs/CadModelSlot"
         }
       ]
     },
@@ -62,7 +51,7 @@
           "type": "null"
         },
         {
-          "$ref": "#/$defs/CadModelChild"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json#/$defs/CadModelSlot"
         }
       ]
     },
@@ -74,7 +63,7 @@
           "type": "null"
         },
         {
-          "$ref": "#/$defs/CadModelChild"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json#/$defs/CadModelSlot"
         }
       ]
     },
@@ -84,7 +73,7 @@
           "type": "null"
         },
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json#/$defs/CadDrawingChildList"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json#/$defs/CadDrawingsDelta"
         }
       ],
       "x-semio-state": "artifact",
@@ -96,7 +85,7 @@
           "type": "null"
         },
         {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json#/$defs/CadBrepChildList"
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json#/$defs/CadBrepsDelta"
         }
       ],
       "x-semio-state": "artifact",
@@ -110,7 +99,7 @@
         {
           "type": "object",
           "additionalProperties": {
-            "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json#/$defs/CadReferenceList"
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/cad/cad/artifact.json#/$defs/CadReferencesDelta"
           }
         }
       ],

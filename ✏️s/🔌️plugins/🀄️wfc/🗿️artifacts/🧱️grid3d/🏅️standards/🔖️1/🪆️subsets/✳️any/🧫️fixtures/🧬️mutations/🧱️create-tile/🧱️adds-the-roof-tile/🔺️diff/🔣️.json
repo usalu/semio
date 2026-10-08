@@ -10,10 +10,9 @@
   "periodicX": null,
   "periodicY": null,
   "periodicZ": null,
-  "tilesRemoved": [],
-  "tilesUpserted": [
-    [
-      2,
+  "tiles": {
+    "removed": [],
+    "added": [
       {
         "id": "roof",
         "label": "Roof",
@@ -32,12 +31,22 @@
           }
         }
       }
-    ]
-  ],
-  "rulesRemoved": [],
-  "rulesUpserted": [],
-  "pinnedRemoved": [],
-  "pinnedUpserted": [],
-  "maskedRemoved": [],
-  "maskedUpserted": []
+    ],
+    "patched": []
+  },
+  "rules": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "pinned": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "masked": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  }
 }

@@ -46,6 +46,25 @@
           "maximum": 4294967295
         }
       }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Where the item is inserted; absent appends.",
+          "de": "Wo der Eintrag eingefügt wird; fehlt die Angabe, wird angehängt."
+        },
+        "group": "value",
+        "order": 20,
+        "step": 1
+      }
     }
   }
 }

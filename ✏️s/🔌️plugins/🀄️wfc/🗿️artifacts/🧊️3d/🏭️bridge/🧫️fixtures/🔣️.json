@@ -1,0 +1,36 @@
+{
+  "artifact": "s.wfc.wfc3d",
+  "producedBy": "semio-wfc-mutation-bridge",
+  "excludedOwnerSegments": [
+    "👁️viewer",
+    "✏️editor"
+  ],
+  "aggregates": [
+    "Wfc3dConfigMutation",
+    "Wfc3dTransientMutation",
+    "Wfc3dMutation"
+  ],
+  "coordinates": [
+    {
+      "artifact": "s.wfc.wfc3d",
+      "standard": "1",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any"
+    },
+    {
+      "artifact": "s.wfc.wfc3d",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🎚️config",
+      "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config"
+    },
+    {
+      "artifact": "s.wfc.wfc3d",
+      "standard": "1",
+      "subset": "any",
+      "surface": "✏️editor/🫧️transient",
+      "owner": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient"
+    }
+  ]
+}

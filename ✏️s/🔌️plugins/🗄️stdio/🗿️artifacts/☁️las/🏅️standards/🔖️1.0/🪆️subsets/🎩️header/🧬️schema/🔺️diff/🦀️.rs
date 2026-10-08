@@ -163,6 +163,27 @@ fn absorb_indexed_triple<Item: Clone, D: Clone + Default + PartialEq>(
 }
 //#endregion 🔖️IndexedAbsorb
 
+//#region 🔖️IndexedInverse
+/// ↩️ Negative rows for an index-keyed collection triple against its BASE items: added rows become removals at their final index,
+/// removed rows return at their base index, and each modified row restores its base fields at the index the row has after the
+/// diff. Every list comes back ascending, the normal form [`absorb_indexed_triple`] emits.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_indexed_triple<Item: Clone, D>(removed: &[usize], modified: &[(usize, D)], added: &[(usize, Item)], base_items: &[Item], diff_inverse: impl Fn(&D, &Item) -> D) -> IndexedDiffParts<D, Item> {
+    let mut removed_sorted = removed.to_vec();
+    removed_sorted.sort_unstable();
+    let mut added_final: Vec<usize> = added.iter().map(|(index, _)| *index).collect();
+    added_final.sort_unstable();
+    let after_index = |index: usize| {
+        let survivor = index - removed_sorted.iter().filter(|dropped| **dropped < index).count();
+        added_final.iter().fold(survivor, |position, inserted| if *inserted <= position { position + 1 } else { position })
+    };
+    let mut inverse_modified: Vec<(usize, D)> = modified.iter().filter_map(|(index, diff)| base_items.get(*index).map(|item| (after_index(*index), diff_inverse(diff, item)))).collect();
+    inverse_modified.sort_by_key(|(index, _)| *index);
+    let inverse_added = removed_sorted.iter().filter_map(|index| base_items.get(*index).map(|item| (*index, item.clone()))).collect();
+    (added_final, inverse_modified, inverse_added)
+}
+//#endregion 🔖️IndexedInverse
+
 //#region 🔖️VlrDiff
 /// 📦️ Sparse per-field patch for one `LasVlr`. `data` is retained/replaced byte-verbatim
 /// (weak-value raw-retention field, never sub-diffed).
@@ -193,6 +214,11 @@ fn apply_vlr_diff(vlr: &mut LasVlr, diff: &LasVlrDiff) {
     if let Some(v) = &diff.data {
         vlr.data = v.clone();
     }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn vlr_inverse(diff: &LasVlrDiff, base: &LasVlr) -> LasVlrDiff {
+    LasVlrDiff { user_id: diff.user_id.as_ref().map(|_| base.user_id.clone()), record_id: diff.record_id.map(|_| base.record_id), description: diff.description.as_ref().map(|_| base.description.clone()), data: diff.data.as_ref().map(|_| base.data.clone()) }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -280,6 +306,15 @@ impl LasVlrsDiff {
     pub fn apply(&self, base: &[LasVlr]) -> MutationApplyResult<Vec<LasVlr>> {
         validate_indexed_targets(base.len(), &self.removed, self.modified.iter().map(|value| value.index), self.added.iter().map(|value| value.index), "vlrs")?;
         Ok(self.apply_unchecked(base))
+    }
+
+    /// ↩️ The negative triple against the base VLRs.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base: &[LasVlr]) -> Self {
+        let modified: Vec<(usize, LasVlrDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
+        let added: Vec<(usize, LasVlr)> = self.added.iter().map(|a| (a.index, a.vlr.clone())).collect();
+        let (removed, modified, added) = inverse_indexed_triple(&self.removed, &modified, &added, base, vlr_inverse);
+        Self { removed, modified: modified.into_iter().map(|(index, diff)| LasVlrModified { index, diff }).collect(), added: added.into_iter().map(|(index, vlr)| LasVlrAdded { index, vlr }).collect() }
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -400,6 +435,26 @@ fn apply_point_diff(p: &mut LasPoint, diff: &LasPointDiff) {
     }
     if let Some(v) = diff.rgb {
         p.rgb = v;
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_inverse(diff: &LasPointDiff, base: &LasPoint) -> LasPointDiff {
+    LasPointDiff {
+        x: diff.x.map(|_| base.x),
+        y: diff.y.map(|_| base.y),
+        z: diff.z.map(|_| base.z),
+        intensity: diff.intensity.map(|_| base.intensity),
+        return_number: diff.return_number.map(|_| base.return_number),
+        number_of_returns: diff.number_of_returns.map(|_| base.number_of_returns),
+        scan_direction_flag: diff.scan_direction_flag.map(|_| base.scan_direction_flag),
+        edge_of_flight_line: diff.edge_of_flight_line.map(|_| base.edge_of_flight_line),
+        classification: diff.classification.map(|_| base.classification),
+        scan_angle_rank: diff.scan_angle_rank.map(|_| base.scan_angle_rank),
+        user_data: diff.user_data.map(|_| base.user_data),
+        point_source_id: diff.point_source_id.map(|_| base.point_source_id),
+        gps_time: diff.gps_time.map(|_| base.gps_time),
+        rgb: diff.rgb.map(|_| base.rgb),
     }
 }
 
@@ -526,6 +581,15 @@ impl LasPointsDiff {
     pub fn apply(&self, base: &[LasPoint]) -> MutationApplyResult<Vec<LasPoint>> {
         validate_indexed_targets(base.len(), &self.removed, self.modified.iter().map(|value| value.index), self.added.iter().map(|value| value.index), "points")?;
         Ok(self.apply_unchecked(base))
+    }
+
+    /// ↩️ The negative triple against the base points.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn inverse(&self, base: &[LasPoint]) -> Self {
+        let modified: Vec<(usize, LasPointDiff)> = self.modified.iter().map(|m| (m.index, m.diff.clone())).collect();
+        let added: Vec<(usize, LasPoint)> = self.added.iter().map(|a| (a.index, a.point.clone())).collect();
+        let (removed, modified, added) = inverse_indexed_triple(&self.removed, &modified, &added, base, point_inverse);
+        Self { removed, modified: modified.into_iter().map(|(index, diff)| LasPointModified { index, diff }).collect(), added: added.into_iter().map(|(index, point)| LasPointAdded { index, point }).collect() }
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -841,20 +905,39 @@ impl MutationDiff<LasSnapshot> for LasDiff {
 }
 
 impl DiffAlgebra<LasSnapshot> for LasDiff {
-    /// 🔁️ Diff-level undo, derived generically: the state delta from `self.apply(base)` back to
-    /// `base` — `between` is the single source of truth for turning a state pair into a diff.
+    /// 🔁️ The negative diff: every touched header scalar restores its base value and the `vlrs`/`points` triples invert against the
+    /// base rows.
     fn inverse(&self, base: &LasSnapshot) -> Self {
-        let mutated = {
-            let mut header = base.header.clone();
-            apply_header_diff(&mut header, self);
-            LasSnapshot {
-                schema: base.schema.clone(),
-                header,
-                vlrs: self.vlrs.as_ref().map_or_else(|| base.vlrs.clone(), |value| value.apply_unchecked(&base.vlrs)),
-                points: self.points.as_ref().map_or_else(|| base.points.clone(), |value| value.apply_unchecked(&base.points)),
-            }
-        };
-        Self::between(&mutated, base)
+        let header = &base.header;
+        LasDiff {
+            version_major: self.version_major.map(|_| header.version_major),
+            version_minor: self.version_minor.map(|_| header.version_minor),
+            system_identifier: self.system_identifier.as_ref().map(|_| header.system_identifier.clone()),
+            generating_software: self.generating_software.as_ref().map(|_| header.generating_software.clone()),
+            creation_day_of_year: self.creation_day_of_year.map(|_| header.creation_day_of_year),
+            creation_year: self.creation_year.map(|_| header.creation_year),
+            header_size: self.header_size.map(|_| header.header_size),
+            offset_to_point_data: self.offset_to_point_data.map(|_| header.offset_to_point_data),
+            number_of_vlrs: self.number_of_vlrs.map(|_| header.number_of_vlrs),
+            point_data_format_id: self.point_data_format_id.map(|_| header.point_data_format_id),
+            point_data_record_length: self.point_data_record_length.map(|_| header.point_data_record_length),
+            number_of_point_records: self.number_of_point_records.map(|_| header.number_of_point_records),
+            points_by_return: self.points_by_return.map(|_| header.points_by_return),
+            x_scale: self.x_scale.map(|_| header.x_scale),
+            y_scale: self.y_scale.map(|_| header.y_scale),
+            z_scale: self.z_scale.map(|_| header.z_scale),
+            x_offset: self.x_offset.map(|_| header.x_offset),
+            y_offset: self.y_offset.map(|_| header.y_offset),
+            z_offset: self.z_offset.map(|_| header.z_offset),
+            max_x: self.max_x.map(|_| header.max_x),
+            min_x: self.min_x.map(|_| header.min_x),
+            max_y: self.max_y.map(|_| header.max_y),
+            min_y: self.min_y.map(|_| header.min_y),
+            max_z: self.max_z.map(|_| header.max_z),
+            min_z: self.min_z.map(|_| header.min_z),
+            vlrs: self.vlrs.as_ref().map(|vlrs| vlrs.inverse(&base.vlrs)),
+            points: self.points.as_ref().map(|points| points.inverse(&base.points)),
+        }
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): header scalars compared field-by-field; `vlrs`/
@@ -901,12 +984,6 @@ impl DiffAlgebra<LasSnapshot> for LasDiff {
     }
 }
 
-/// 🧩 `SetSnapshot`'s diff is the sparse field-by-field `between(base, next)` — no full-replace
-/// slot exists on `LasDiff` to short-circuit into.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &LasSnapshot, next: &LasSnapshot) -> LasDiff {
-    LasDiff::between(base, next)
-}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_version(major: u8, minor: u8) -> LasDiff {
     LasDiff { version_major: Some(major), version_minor: Some(minor), ..Default::default() }

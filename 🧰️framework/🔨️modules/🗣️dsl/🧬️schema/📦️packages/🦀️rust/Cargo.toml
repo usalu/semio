@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../../../../.."
 name = "semio-framework-dsl-record"
 version = "0.1.0"
 edition = "2021"
@@ -23,7 +23,9 @@ semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packa
 semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+serde = { version = "1.0", features = ["derive"] }
 semio-framework-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }
+semio-framework-trace = { path = "../../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../✨️derive/📦️packages/🦀️rust" }
 serde_json = { version = "1.0", features = ["float_roundtrip"] }
@@ -35,3 +37,7 @@ path = "../../🧪️tests/🪆️refusal/🚪️public/🦀️.rs"
 [[test]]
 name = "native_decoding"
 path = "../../🧪️tests/🛬️decoding/🦀️.rs"
+
+[[test]]
+name = "native_retirement"
+path = "../../🧪️tests/♻️retirement/🦀️.rs"

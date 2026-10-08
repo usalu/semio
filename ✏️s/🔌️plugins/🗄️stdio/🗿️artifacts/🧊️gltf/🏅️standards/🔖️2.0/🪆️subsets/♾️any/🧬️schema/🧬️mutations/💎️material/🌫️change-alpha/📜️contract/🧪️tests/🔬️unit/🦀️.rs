@@ -19,8 +19,7 @@ fn canonical_vectors_execute_direct_mutation_and_codec_laws() {
         let mut expected = base.clone();
         expected.document.materials[0].alpha_mode = decode(&vector["after"]["alphaMode"]);
         assert_eq!(base.document.materials[0].alpha_mode, decode(&vector["undo"]["alphaMode"]));
-        let mut direct = base.clone();
-        mutation::apply(&mut direct, &payload).unwrap();
+        let direct = protocol::apply_diff(&mutation::plan(&payload, &base).unwrap(), &base).unwrap();
         assert_eq!(direct, expected);
         assert_eq!(mutation::validate(&payload, &direct).unwrap_err().code, "gltf.mutation.no-observable-change");
         assert_laws(&mutation::ChangeMaterialAlphaModeMutation::Apply(payload.clone()), &base, &expected);

@@ -173,6 +173,13 @@ fn committed_vectors_are_this_implementations_answer() {
     assert!(missing.is_empty(), "kinds without a committed applied vector or wire witness: {missing:?}");
 }
 
+/// ✅️ The committed vector's concrete inverse sums to the negative of its diff (L3), through the framework law.
+async fn assert_inverse_sum_law(leaf: &str, scenario: &str) {
+    let bundle = root().join(leaf).join(scenario);
+    let mutation = decode_din4108_mutation_json(&read(&bundle.join("🦠️mutation/🔣️.json"))).unwrap_or_else(|error| panic!("{}: {error}", bundle.display()));
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &snapshot(&bundle.join("📸️snapshot/⬅️before/🔣️.json"))).await;
+}
+
 //#region 🧫️CanonicalVectorTests
 #[path = "../../🌦️change-climate-zone/🧪️tests/✅apply/🦀️.rs"]
 mod change_climate_zone;

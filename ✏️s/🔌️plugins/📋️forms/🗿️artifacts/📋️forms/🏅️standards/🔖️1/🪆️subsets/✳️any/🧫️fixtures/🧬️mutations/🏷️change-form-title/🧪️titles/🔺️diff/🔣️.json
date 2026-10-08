@@ -1,3 +1,5 @@
 {
-  "title": "Site Survey"
+  "title": {
+    "value": "Site Survey"
+  }
 }

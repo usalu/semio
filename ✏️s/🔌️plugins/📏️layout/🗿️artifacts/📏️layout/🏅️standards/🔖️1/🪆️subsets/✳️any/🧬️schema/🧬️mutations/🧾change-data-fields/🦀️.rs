@@ -41,7 +41,22 @@ pub fn diff_change_data_fields(payload: &ChangeDataFields, base: &LayoutSnapshot
     if base.data_fields == payload.new_fields {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Data fields are already set to that value.");
     }
-    protocol::MutationOutcome::new(LayoutDiff { data_fields: Some(crate::standards::v1::subsets::any::schema::diff::FormDictionaryChange {dictionary:payload.new_fields.clone()}), ..Default::default() })
+    use crate::standards::v1::subsets::any::schema::diff::{DataFieldsPresence, LayoutDataEntriesDelta, LayoutDataEntryPatchEntry, LayoutDataFieldsDelta};
+    let delta = match (&base.data_fields, &payload.new_fields) {
+        (None, Some(next)) => LayoutDataFieldsDelta { presence: Some(DataFieldsPresence::Created), entries: Some(LayoutDataEntriesDelta { added: next.entries.clone(), ..Default::default() }) },
+        (Some(_), None) => LayoutDataFieldsDelta { presence: Some(DataFieldsPresence::Deleted), entries: None },
+        (Some(held), Some(next)) => {
+            let removed: Vec<String> = held.entries.iter().filter(|entry| next.entries.iter().all(|candidate| candidate.question_id != entry.question_id)).map(|entry| entry.question_id.clone()).collect();
+            let added: Vec<_> = next.entries.iter().filter(|entry| held.entries.iter().all(|candidate| candidate.question_id != entry.question_id)).cloned().collect();
+            let patched: Vec<LayoutDataEntryPatchEntry> = next.entries.iter().filter(|entry| held.entries.iter().any(|candidate| candidate.question_id == entry.question_id && candidate != *entry)).map(|entry| LayoutDataEntryPatchEntry { id: entry.question_id.clone(), item: entry.clone() }).collect();
+            let natural: Vec<&str> = held.entries.iter().filter(|entry| !removed.contains(&entry.question_id)).map(|entry| entry.question_id.as_str()).chain(added.iter().map(|entry| entry.question_id.as_str())).collect();
+            let target: Vec<&str> = next.entries.iter().map(|entry| entry.question_id.as_str()).collect();
+            let reordered = (natural != target).then(|| target.into_iter().map(str::to_string).collect());
+            LayoutDataFieldsDelta { presence: None, entries: Some(LayoutDataEntriesDelta { added, removed, patched, reordered }) }
+        }
+        (None, None) => LayoutDataFieldsDelta::default(),
+    };
+    protocol::MutationOutcome::new(LayoutDiff { data_fields: Some(delta), ..Default::default() })
 }
 //#endregion 🧾ChangeDataFields
 

@@ -5,7 +5,7 @@ mod tests {
     use crate::standards::v_ecma_376::subsets::strict::schema::stamp_strict_namespace;
     use crate::standards::v_ecma_376::subsets::transitional::schema::CODE_NAMESPACE_MISMATCH;
     use crate::standards::v_ecma_376::subsets::transitional::io::XlsxTransitionalBuilderConstruction as XlsxTransitionalBuilder;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder as _};
+    use semio_framework_plugin::{io::AnalyzeSource, ArtifactBuilder as _};
 
     #[semio_framework_async_macros::async_test]
     async fn conforming_builder_snapshot_composes_and_stamps_transitional() {

@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../../../.."
 name = "semio-s-artifact-stdio-contract"
 version.workspace = true
 edition.workspace = true
@@ -43,6 +43,7 @@ name = "table_arena_headroom"
 path = "../../🧪️tests/📊️table-arena-headroom/🦀️.rs"
 
 [dev-dependencies]
+semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", features = ["mutation-testing"] }
 base64 = "0.22.1"
 json-patch = "4.1.0"
 semio-framework-ui-scene = { workspace = true }

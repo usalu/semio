@@ -1,7 +1,5 @@
-//! ➖️ `remove-entity-arg` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! ➖️ `remove-entity-arg` — authored as its own mutation leaf. It builds its own sparse diff and concrete
+//! inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -17,15 +15,20 @@ pub struct RemoveEntityArg {
 impl protocol::MutationKind<StepSnapshot, StepMutation> for RemoveEntityArg {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "entity-arg", kind: "remove-entity-arg", record: "RemoveEntityArg" };
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepMutation as Mutation<StepSnapshot>>::Diff> {
-        agg_diff(&StepMutation::RemoveEntityArg(self.clone()), base)
+    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
+        let Self { id, arg_index } = self;
+        protocol::MutationOutcome::new(StepDiff {
+            entities: Some(StepEntitiesDiff { modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { args: Some(StepArgsDiff { removed: vec![*arg_index], ..Default::default() }), ..Default::default() } }], ..Default::default() }),
+            ..Default::default()
+        })
     }
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&StepMutation::RemoveEntityArg(self.clone()), base)?
-    
-    })
-}
+        let Self { id, arg_index } = self;
+        Ok(match base.entities.iter().find(|e| e.id == *id).and_then(|e| e.args.get(*arg_index)) {
+            Some(v) => vec![StepMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id: *id, arg_index: *arg_index, value: v.clone() })],
+            None => Vec::new(),
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove entity arg", "Entitätsargument entfernen")
     }

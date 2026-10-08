@@ -75,29 +75,16 @@
       "capability": "pptx-ecma-376-mutate",
       "standardDirectoryName": "🔖️ecma-376",
       "subsetDirectoryName": "🧱️base",
-      "vectors": [
-        {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
-          "scenarios": [
-            {
-              "id": "retitles-and-lowers-the-title-placeholder",
-              "directoryName": "🏷️retitles"
-            }
-          ]
-        }
-      ],
+      "vectors": [],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "insert-slide",
         "remove-slide",
         "move-slide",
         "insert-shape",
         "remove-shape",
         "set-shape-text",
-        "set-shape-position"
+        "set-shape-position",
+        "replace-xml-node"
       ]
     }
   ],
@@ -266,29 +253,7 @@
           ]
         },
         {
-          "id": "set-snapshot",
-          "capability": "pptx-ecma-376-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "pptx-ecma-376-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "python-pptx-pptx-ecma-376-mutate-reader"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
+          "id": "replace-xml-node",
           "capability": "pptx-ecma-376-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
@@ -296,9 +261,9 @@
             "rejected"
           ],
           "productionDispatch": {
-            "operation": "patch-snapshot",
+            "operation": "replace-xml-node",
             "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
+            "variant": "ReplaceXmlNode"
           },
           "oracleRequirements": [
             {

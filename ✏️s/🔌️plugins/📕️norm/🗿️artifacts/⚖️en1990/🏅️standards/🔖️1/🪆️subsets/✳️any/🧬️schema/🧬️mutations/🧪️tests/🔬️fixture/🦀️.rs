@@ -97,6 +97,13 @@ pub(crate) fn assert_vector(vector: Vector) {
         assert!(declared.contains(&status.as_str()), "{kind}: the descriptor does not declare the committed {status:?} outcome");
     }
 }
+
+/// ✅️ The vector's concrete inverse sums to the negative of its diff (L3), through the framework law.
+pub(crate) async fn assert_inverse_sum_law(vector: Vector) {
+    let op: En1990Mutation = semio_framework_pack_json::from_json_str(vector.mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed mutation decodes");
+    let before: En1990Snapshot = semio_framework_pack_json::from_json_str(vector.before, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed before-snapshot decodes");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&op, &before).await;
+}
 //#endregion 🧾️Vector
 
 //#region 🧪️Cases

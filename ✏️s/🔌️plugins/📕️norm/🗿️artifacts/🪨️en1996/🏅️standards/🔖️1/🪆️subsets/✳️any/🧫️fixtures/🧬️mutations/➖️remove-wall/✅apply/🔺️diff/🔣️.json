@@ -1,10 +1,13 @@
 {
-  "artifact": null,
   "annex": null,
   "masonryClass": null,
   "designSituation": null,
   "storeys": null,
   "walls": {
-    "values": []
+    "removed": [
+      "wall-north"
+    ],
+    "added": [],
+    "modified": []
   }
 }

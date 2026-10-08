@@ -1,5 +1,5 @@
 use super::*;
-use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+use protocol::{Mutation, OpBinary, OpText};
 
 const SCHEMA: &str = include_str!("../../🧬️schema/🔣️.json");
 
@@ -12,14 +12,14 @@ fn language_neutral_settings_mutations_match_the_serde_oracle_and_restore_the_ba
         assert_eq!(mutation, serde_json::from_value::<EnergyModelConfigMutation>(vector["mutation"].clone()).unwrap());
         assert_eq!(base, serde_json::from_value::<EnergyModelConfig>(vector["base"].clone()).unwrap());
         assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().unwrap());
-        let next = mutation.diff(&base).diff().apply(&base).unwrap();
+        let next = protocol::apply_diff(mutation.diff(&base).diff(), &base).unwrap();
         assert_eq!(next, serde_json::from_value::<EnergyModelConfig>(vector["after"].clone()).unwrap());
         assert_eq!(next.is_valid(), vector["valid"].as_bool().unwrap());
         assert_eq!(EnergyModelConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
         assert_eq!(EnergyModelConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
         let mut restored = next;
         for inverse in mutation.inverse(&base).expect("valid retained mutation inverse fixture") {
-            restored = inverse.diff(&restored).diff().apply(&restored).unwrap();
+            restored = protocol::apply_diff(inverse.diff(&restored).diff(), &restored).unwrap();
         }
         assert_eq!(restored, base);
     }
@@ -66,7 +66,7 @@ fn changing_the_result_field_leaves_the_run_settings_and_the_run_pointers_alone(
     use crate::editor::model::results::{result_field, ResultField};
     let base = EnergyModelConfig { zone_timestep_minutes: 10, system_timestep_minutes: 2, warmup_days: 3, result_field: "conductionLoss".into() };
     let mutation = EnergyModelConfigMutation::ChangeResultField(ChangeResultField { field: "solarTransmitted".into() });
-    let next = mutation.diff(&base).diff().apply(&base).unwrap();
+    let next = protocol::apply_diff(mutation.diff(&base).diff(), &base).unwrap();
     assert_eq!((next.zone_timestep_minutes, next.system_timestep_minutes, next.warmup_days), (10, 2, 3), "the run settings survive a recolour");
     assert_eq!(result_field(&next), ResultField::SolarTransmitted);
     assert_eq!(next.simulation_template(), base.simulation_template(), "the engine template is untouched, so a live run is never reconfigured");
@@ -76,7 +76,7 @@ fn changing_the_result_field_leaves_the_run_settings_and_the_run_pointers_alone(
     );
     let mut restored = next;
     for inverse in mutation.inverse(&base).expect("valid retained mutation inverse fixture") {
-        restored = inverse.diff(&restored).diff().apply(&restored).unwrap();
+        restored = protocol::apply_diff(inverse.diff(&restored).diff(), &restored).unwrap();
     }
     assert_eq!(restored, base);
 }
@@ -85,6 +85,6 @@ fn changing_the_result_field_leaves_the_run_settings_and_the_run_pointers_alone(
 fn changing_the_run_settings_keeps_whatever_result_field_the_base_had() {
     let base = EnergyModelConfig { zone_timestep_minutes: 60, system_timestep_minutes: 60, warmup_days: 7, result_field: "solarAbsorbed".into() };
     let mutation = EnergyModelConfigMutation::ChangeSimulationSettings(ChangeSimulationSettings { zone_timestep_minutes: 15, system_timestep_minutes: 15, warmup_days: 2 });
-    let next = mutation.diff(&base).diff().apply(&base).unwrap();
+    let next = protocol::apply_diff(mutation.diff(&base).diff(), &base).unwrap();
     assert_eq!(next.result_field, "solarAbsorbed", "a settings change must not silently reset the colour field");
 }

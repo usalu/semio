@@ -1,48 +1,44 @@
 {
-  "artifact": null,
-  "hostSnapshot": {
-    "schema": "flow.hostSnapshot",
-    "camera": {
-      "x": 0.0,
-      "y": 0.0,
-      "zoom": 1.0
-    },
-    "widgets": [
+  "schema": null,
+  "camera": null,
+  "widgets": {
+    "added": [],
+    "removed": [],
+    "patched": [
       {
-        "kind": "inputNote",
-        "id": "node-a",
-        "text": "Base plate"
-      },
-      {
-        "kind": "neuron",
         "id": "extrude__gumball_scale",
-        "neuronKind": "brep.xform.scale",
-        "params": {
-          "factor": {
-            "$schema": "vector",
-            "x": 2.0,
-            "y": 2.0,
-            "z": 0.5
-          },
-          "center": {
-            "$schema": "point",
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
+        "patch": {
+          "kind": "replace",
+          "widget": {
+            "kind": "neuron",
+            "id": "extrude__gumball_scale",
+            "neuronKind": "brep.xform.scale",
+            "params": {
+              "factor": {
+                "$schema": "vector",
+                "x": 2.0,
+                "y": 2.0,
+                "z": 0.5
+              },
+              "center": {
+                "$schema": "point",
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              }
+            },
+            "inputPorts": [],
+            "outputPorts": [],
+            "preview": false
           }
-        },
-        "inputPorts": [],
-        "outputPorts": [],
-        "preview": false
+        }
       }
     ],
-    "synapses": [],
-    "layout": {
-      "node-a": {
-        "x": 0.0,
-        "y": 0.0
-      }
-    }
+    "reordered": null
   },
-  "generation": null
+  "synapses": null,
+  "layout": null,
+  "generations": null,
+  "selectedGeneration": null,
+  "previewText": null
 }

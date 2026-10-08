@@ -1,0 +1,25 @@
+{
+  "catalogueName": null,
+  "manufacturerName": null,
+  "productGroups": null,
+  "productClasses": null,
+  "productSeries": null,
+  "products": null,
+  "productIndexes": null,
+  "propertyDefinitions": {
+    "added": [],
+    "removed": [
+      "prop.height-m1"
+    ],
+    "order": null
+  },
+  "subjects": null,
+  "geometryObjects": null,
+  "selectionClassId": null,
+  "selectionSeriesId": null,
+  "selectionConstraints": null,
+  "partNumberRule": null,
+  "partNumberInputs": null,
+  "scriptLimits": null,
+  "exchangeProcess": null
+}

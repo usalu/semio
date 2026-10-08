@@ -28,7 +28,7 @@ async fn editor_declares_the_tree_window() {
 }
 
 #[test]
-fn natural_file_route_exports_xml_and_reopens_through_one_mutation() {
+fn natural_file_route_exports_xml_and_reopens_the_same_document() {
     use quick_xml::events::Event;
     let source = br#"<?xml version="1.0"?><document><title>Natural Open Save</title><body>Edited</body></document>"#;
     let edited = XmlSnapshot::import_utf8(source).expect("XML fixture");
@@ -44,10 +44,7 @@ fn natural_file_route_exports_xml_and_reopens_through_one_mutation() {
     }
     assert!(text.iter().any(|value| value == "Natural Open Save"));
     let reopened = <XmlAnyEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("XML natural bytes reopen");
-    let Some(XmlMutation::SetSnapshot(crate::schema::mutations::set_snapshot::SetSnapshot { snapshot: opened })) = <XmlAnyEditor as ArtifactEditor>::whole_document_operation(reopened) else {
-        panic!("natural XML opens through one event-sourced snapshot mutation")
-    };
-    assert_eq!(opened, edited);
+    assert_eq!(reopened, edited);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -110,7 +107,7 @@ async fn the_example_switch_joins_its_exact_retained_factory() {
 
 /// ⚖️ LAW: the natural-source draft applies what it shows. The curated catalog's rendered source (declaration, DOCTYPE,
 /// comment, processing instruction, escaped text, CDATA) is a no-op through the root `set-node` when unchanged, and a text
-/// change is exactly one whole-document mutation whose document quick-xml reads back with the edited text. (S18's served
+/// change is exactly the net text leaf whose document quick-xml reads back with the edited text. (S18's served
 /// matrix saw every source apply refused on a build whose demo asset no longer decoded — the editor had opened an empty
 /// document.)
 #[test]
@@ -124,8 +121,12 @@ fn the_natural_source_draft_applies_what_it_shows() {
     let edited = source.replacen("Tom", "Tim", 1);
     assert_ne!(edited, source, "the curated catalog carries the text the law edits");
     let emit = apply(edited).expect("a text change applies");
-    let [XmlMutation::SetSnapshot(set)] = emit.artifact_mutations.as_slice() else { panic!("a source apply is one whole-document mutation") };
-    let printed = crate::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text_checked(&set.snapshot.doc).expect("the applied document prints");
+    assert!(matches!(emit.artifact_mutations.as_slice(), [XmlMutation::SetText(_)]), "a source text change is one net set-text leaf: {:?}", emit.artifact_mutations);
+    let mut applied = snapshot.clone();
+    for leaf in &emit.artifact_mutations {
+        crate::schema::mutations::apply_xml_mutation(&mut applied, leaf);
+    }
+    let printed = crate::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text_checked(&applied.doc).expect("the applied document prints");
     let mut reader = quick_xml::reader::Reader::from_str(&printed);
     let (mut inside, mut item) = (false, String::new());
     loop {

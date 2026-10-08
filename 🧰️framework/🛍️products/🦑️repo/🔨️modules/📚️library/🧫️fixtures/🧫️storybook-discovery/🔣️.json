@@ -2085,7 +2085,7 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📖️stories/🎭️graph-wasm-canvas/🧪️.story.tsx",
-      "title": "♾️infinite/GraphWasmCanvas",
+      "title": "♾️infinite/WasmCanvas",
       "stories": [
         {
           "exportName": "MockSession",

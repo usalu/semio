@@ -1,6 +1,6 @@
 pub(crate) mod retirement {
     use crate::host::owned::{RasterSnapshotRetirementFactory,RASTER_OWNED_FIELD_BYTES};
-use crate::standards::v1::subsets::any::io::binary::mutations::{RasterSnapshot};
+use crate::standards::v1::subsets::any::schema::snapshot::RasterSnapshot;
 
     
     pub(crate) fn retire_raster_snapshot(snapshot: RasterSnapshot) {
@@ -1337,7 +1337,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
 #[test]
 fn retained_mask_mutations_match_cold_apply_and_undo() {
-    use protocol::{Mutation, MutationDiff};
+    use protocol::Mutation;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧬️schema/🧬️mutations/🎭️change-layer-mask/🧪️tests/🔣️.json")).unwrap();
     for (index, case) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let mut source = fixture["before"].clone();
@@ -1347,7 +1347,7 @@ fn retained_mask_mutations_match_cold_apply_and_undo() {
         let operation: RasterMutation = semio_framework_pack_json::from_json_str(&serde_json::json!({"mutation":"changeLayerMask","layerId":"paint","expected":resolve(&case["before"]),"mask":resolve(&case["after"])}).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let inverse = operation.inverse(&base).expect("valid retained mutation inverse fixture").remove(0);
         let (diff, _) = operation.diff(&base).into_parts();
-        let cold = diff.apply(&base).unwrap();
+        let cold = protocol::apply_diff(&diff, &base).unwrap();
         let candidate = drive_raster_candidate(&base, &operation, 930 + index as u64);
         assert_eq!(candidate, cold);
         let restored = drive_raster_candidate(&candidate, &inverse, 940 + index as u64);
@@ -1361,7 +1361,7 @@ fn retained_mask_mutations_match_cold_apply_and_undo() {
 
 #[test]
 fn retained_adjustment_parameters_match_cold_apply_and_undo() {
-    use protocol::{Mutation,MutationDiff};
+    use protocol::Mutation;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🧬️mutations/🎛️change-layer/🧪️tests/🔣️.json")).unwrap();
     for (index,row) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let parameter=row["parameter"].as_str().unwrap();
@@ -1369,7 +1369,7 @@ fn retained_adjustment_parameters_match_cold_apply_and_undo() {
         if !row["before"].is_null() {source["layers"][0]["params"][parameter]=row["before"].clone();}
         let before:RasterSnapshot=semio_framework_pack_json::from_json_str(&source.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let operation:RasterMutation=semio_framework_pack_json::from_json_str(&serde_json::json!({"mutation":"changeLayerAdjustmentParameter","layerId":"tone","parameter":parameter,"expected":row["before"],"value":row["after"]}).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let inverse=operation.inverse(&before).expect("valid retained mutation inverse fixture").remove(0);let (diff,_)=operation.diff(&before).into_parts();let cold=diff.apply(&before).unwrap();
+        let inverse=operation.inverse(&before).expect("valid retained mutation inverse fixture").remove(0);let (diff,_)=operation.diff(&before).into_parts();let cold=protocol::apply_diff(&diff, &before).unwrap();
         let candidate=drive_raster_candidate(&before,&operation,960+index as u64);assert_eq!(candidate,cold);
         let restored=drive_raster_candidate(&candidate,&inverse,970+index as u64);assert_eq!(restored,before);
         diff.retire_cold();for document in [before,cold,candidate,restored] {retirement::retire_raster_snapshot(document);}

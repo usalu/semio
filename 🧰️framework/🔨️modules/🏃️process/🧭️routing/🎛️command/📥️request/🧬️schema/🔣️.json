@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cwd",
+    "command",
+    "args",
+    "manifests",
+    "preparation"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cwd": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^\\u0000]*$"
+    },
+    "command": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^\\u0000]*$"
+    },
+    "args": {
+      "type": "array",
+      "maxItems": 65536,
+      "items": {
+        "type": "string",
+        "pattern": "^[^\\u0000]*$"
+      }
+    },
+    "manifests": {
+      "type": "array",
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[^\\u0000]*$"
+      }
+    },
+    "preparation": {
+      "enum": [
+        "none",
+        "required"
+      ]
+    }
+  }
+}

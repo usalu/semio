@@ -100,7 +100,7 @@ fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-edge-geometry/repositions-edge-1: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed["edges"]["patched"][0]["id"].as_str(), Some("edge-1"), "replace-edge-geometry/repositions-edge-1: the diff must patch edge-1");
-    assert_eq!(committed["edges"]["patched"][0]["patch"]["replacement"]["gap"].as_f64(), Some(2.0), "replace-edge-geometry/repositions-edge-1: the replacement must carry the new gap");
+    assert_eq!(committed["edges"]["patched"][0]["patch"]["gap"].as_f64(), Some(2.0), "replace-edge-geometry/repositions-edge-1: the patch must carry the new gap");
     assert!(committed["nodes"].is_null(), "replace-edge-geometry/repositions-edge-1: an edge repose never republishes a node");
 }
 
@@ -118,6 +118,13 @@ fn committed_diff_is_canonical() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff as protocol::MutationDiff<Puzzle2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-edge-geometry/repositions-edge-1: committed diff did not carry before to after");
+}
+
+/// ➕️ The concrete inverse rows' diffs sum to exactly the negative of the forward diff (law L3): replaying them restores `before`,
+/// the absorbed sum carries the applied state back, and it equals `diff.inverse(before)`.
+#[test]
+fn inverse_sums_to_the_negative_diff() {
+    ::semio_framework_async::poll::resolve_ready(protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()));
 }

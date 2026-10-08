@@ -21,7 +21,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.zones.push(zone(1, "ZONE ONE"));
     model.surfaces.push(fixtures::surface(3, "WALL SOUTH", 1, 2));
     model.surfaces.push(fixtures::surface(6, "WALL NORTH", 1, 2));
-    (snapshot(model), super::connect_surfaces(crate::model::EntityId(3), crate::model::EntityId(3)))
+    (snapshot(model), super::connect_surfaces(crate::model::EntityId(3), crate::model::EntityId(3), None))
 }
 
 fn case() -> Case {

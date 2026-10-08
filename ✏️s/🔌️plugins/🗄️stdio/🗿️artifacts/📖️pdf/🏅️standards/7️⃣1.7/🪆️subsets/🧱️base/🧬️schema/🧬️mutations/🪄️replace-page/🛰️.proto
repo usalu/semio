@@ -1,0 +1,11 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.replace_page;
+
+import "../../📸️snapshot/🛰️.proto";
+import "../../🔺️diff/🛰️.proto";
+
+// 🪄️ Direct replace-page protobuf payload.
+message ReplacePageMutation {
+  uint64 index = 1;
+  PdfPage page = 2;
+}

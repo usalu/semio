@@ -17,7 +17,8 @@ import { canonicalJson } from "../../../../🦑️repo/🔨️modules/📚️lib
 export type BrowserComponentCore = Readonly<{ name: string; bytes: Uint8Array }>;
 export type BrowserComponentFactoryControl = Readonly<{ importInterfaces?: readonly string[]; cancelled?: () => boolean; progress?: (completedBytes: number, totalBytes: number) => void }>;
 export type BrowserActorPort = import("./🌐️host/🟦️.ts").BrowserHostPort & Readonly<{ wasi?: import("./🌐️wasi/🟦️.ts").BrowserWasiPort }>;
-export type ClosedBrowserActorArtifactV1 = Readonly<{ schema: "semio.os.closed-browser-actor.v1"; codegenPolicy: "semio.os.browser-jco-1.34.0-jspi.v1"; policySha256: string; policyCanonical: string; componentSha256: string; sha256: string; byteLength: number; importInterfaces: readonly string[]; bytes: Uint8Array }>;
+export type BrowserActorPhysicalInputV1 = Readonly<{ logicalPath:string;path:string;sha256:string;byteLength:number }>;
+export type ClosedBrowserActorArtifactV1 = Readonly<{ schema: "semio.os.closed-browser-actor.v1"; codegenPolicy: "semio.os.browser-jco-1.34.0-jspi.v1"; policySha256: string; policyCanonical: string; componentSha256: string; sha256: string; byteLength: number; importInterfaces: readonly string[]; bytes: Uint8Array; producer: Readonly<{runtime: Readonly<{path:string;sha256:string;byteLength:number}>;inputs:readonly BrowserActorPhysicalInputV1[];compiler:Readonly<{bytes:Uint8Array;sha256:string;byteLength:number}>}> }>;
 export type BrowserActorBuildControl = Readonly<{ cancelled?: () => boolean; progress?: (phase: "snapshot" | "policy" | "codegen" | "closure" | "hash", completedBytes: number, totalBytes: number) => void }>;
 
 const browserActorRepoRoot = resolve(import.meta.dir, "../../../../../..");
@@ -265,7 +266,7 @@ function closeBrowserCodegenModule(source: string, cores: readonly BrowserCompon
 }
 
 type BrowserCodegenSourceDigest = Readonly<{ logicalPath: string; sha256: string; byteLength: number }>;
-type BrowserActorRuntimeSnapshot = ReadonlyMap<string, Readonly<{ bytes: Uint8Array; row: BrowserCodegenSourceDigest }>>;
+type BrowserActorRuntimeSnapshot = ReadonlyMap<string, Readonly<{ bytes: Uint8Array; path: string; row: BrowserCodegenSourceDigest }>>;
 
 /** 🫙️ Captures the only two first-party actor runtime modules before asynchronous code generation. */
 function captureBrowserActorRuntime(root: string, check: () => void): BrowserActorRuntimeSnapshot {
@@ -273,7 +274,7 @@ function captureBrowserActorRuntime(root: string, check: () => void): BrowserAct
   return new Map(["host", "wasi"].map(name => {
     const logicalPath = `🌐️${name}/🟦️.ts`;
     const bytes = readStableBuildFile(join(root, logicalPath), 512 * 1024, admission, check);
-    return [name, Object.freeze({ bytes, row: Object.freeze({ logicalPath: "browser/" + logicalPath, sha256: createHash("sha256").update(bytes).digest("hex"), byteLength: bytes.byteLength }) })];
+    return [name, Object.freeze({ bytes, path: resolve(root,logicalPath), row: Object.freeze({ logicalPath: "browser/" + logicalPath, sha256: createHash("sha256").update(bytes).digest("hex"), byteLength: bytes.byteLength }) })];
   }));
 }
 
@@ -294,9 +295,10 @@ function sealBrowserCodegenPolicy<T>(input: T): Readonly<{ record: T; canonical:
 /** 🧭️ Captures the fixed build-host policy inputs independently of caller roots and scratch evidence. */
 function captureBrowserCodegenPolicyInputs(runtime: BrowserActorRuntimeSnapshot, check: () => void) {
   const admission = { remaining: browserActorMaximumBytes };
-  const read = (path: string) => readStableBuildFile(path, 16 * 1024 * 1024, admission, check);
+  const physicalInputs: BrowserActorPhysicalInputV1[] = [...runtime.values()].map(value=>({...value.row,path:value.path}));
+  const read = (path: string, logicalPath: string) => {const bytes=readStableBuildFile(path,16*1024*1024,admission,check);physicalInputs.push({logicalPath,path:resolve(path),sha256:createHash("sha256").update(bytes).digest("hex"),byteLength:bytes.byteLength});return bytes;};
   const hash = (bytes: Uint8Array | string) => createHash("sha256").update(bytes).digest("hex");
-  const lockBytes = read(join(browserActorRepoRoot, "bun.lock"));
+  const lockBytes = read(join(browserActorRepoRoot, "bun.lock"),"toolchain/bun.lock");
   const lock = ts.parseConfigFileTextToJson("bun.lock", new TextDecoder("utf-8", { fatal: true }).decode(lockBytes));
   if (lock.error || !lock.config?.packages) throw new Error("browser actor artifact: invalid toolchain lock");
   const locked = (name: string, version: string) => {
@@ -310,12 +312,12 @@ function captureBrowserCodegenPolicyInputs(runtime: BrowserActorRuntimeSnapshot,
     { name: "@bytecodealliance/preview2-shim", version: "0.25.0", path: dirname(dirname(dirname(fileURLToPath(import.meta.resolve("@bytecodealliance/preview2-shim/io"))))) },
   ];
   const packages = packageRoots.map(({ name, version, path }) => {
-    const bytes = read(join(path, "package.json")), manifest = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    const bytes = read(join(path, "package.json"),name+"/package.json"), manifest = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
     if (manifest.name !== name || manifest.version !== version) throw new Error("browser actor artifact: unqualified tool manifest");
     return Object.freeze({ name, version, manifestSha256: hash(bytes), lockSha256: locked(name, version) });
   });
   const parserPath = fileURLToPath(import.meta.resolve("typescript"));
-  const parserBytes = read(parserPath), parserManifestBytes = read(join(dirname(parserPath), "../package.json"));
+  const parserBytes = read(parserPath,"typescript/lib/typescript.js"), parserManifestBytes = read(join(dirname(parserPath), "../package.json"),"typescript/package.json");
   const parserManifest = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(parserManifestBytes));
   if (parserManifest.name !== "typescript" || parserManifest.version !== "5.9.3" || ts.version !== "5.9.3") throw new Error("browser actor artifact: unqualified parser");
   const parser = { name: "typescript", version: "5.9.3", manifestSha256: hash(parserManifestBytes), lockRowSha256: locked("typescript", "5.9.3"), entry: { logicalPath: "typescript/lib/typescript.js", sha256: hash(parserBytes), byteLength: parserBytes.byteLength } };
@@ -327,15 +329,15 @@ function captureBrowserCodegenPolicyInputs(runtime: BrowserActorRuntimeSnapshot,
   ];
   const firstParty = [...runtime.values()].map(value => value.row);
   for (const { logicalPath, path } of paths) {
-    const bytes = read(path);
+    const bytes = read(path,logicalPath);
     firstParty.push(Object.freeze({ logicalPath, sha256: hash(bytes), byteLength: bytes.byteLength }));
   }
   firstParty.sort((left, right) => left.logicalPath < right.logicalPath ? -1 : left.logicalPath > right.logicalPath ? 1 : 0);
-  return Object.freeze({ packages: Object.freeze(packages), parser: Object.freeze(parser), firstParty: Object.freeze(firstParty) });
+  return Object.freeze({ packages: Object.freeze(packages), parser: Object.freeze(parser), firstParty: Object.freeze(firstParty), physicalInputs:Object.freeze(physicalInputs) });
 }
 
 /** 📚️ Supplies bounded captured JS to Bun and proves every metafile input was captured exactly once. */
-async function captureBrowserCodegenSources(entrypoint: string, roots: readonly Readonly<{ name: string; path: string }>[], check: () => void, captured?: (path: string) => void): Promise<Readonly<{ source: string; inputs: readonly BrowserCodegenSourceDigest[] }>> {
+async function captureBrowserCodegenSources(entrypoint: string, roots: readonly Readonly<{ name: string; path: string }>[], check: () => void, captured?: (path: string) => void): Promise<Readonly<{ source: string; inputs: readonly BrowserCodegenSourceDigest[]; physicalInputs:readonly BrowserActorPhysicalInputV1[] }>> {
   check();
   const admittedRoots = roots.map(root => ({ ...root, path: realpathSync(root.path) }));
   const buildCwd = process.cwd();
@@ -365,18 +367,18 @@ async function captureBrowserCodegenSources(entrypoint: string, roots: readonly 
   const paths = Object.keys(result.metafile.inputs).map(path => isAbsolute(path) ? path : resolve(buildCwd, path)).sort();
   if (JSON.stringify(paths) !== JSON.stringify([...snapshots.keys()].sort())) throw new Error("browser actor artifact: compiler source coverage");
   if (result.outputs[0].size > 8 * 1024 * 1024) throw new Error("browser actor artifact: compiler source output bound");
-  return Object.freeze({ source: await result.outputs[0].text(), inputs: Object.freeze([...snapshots.values()].map(snapshot => snapshot.row).sort((left, right) => left.logicalPath < right.logicalPath ? -1 : left.logicalPath > right.logicalPath ? 1 : 0)) });
+  return Object.freeze({ source: await result.outputs[0].text(), physicalInputs:Object.freeze([...snapshots].map(([path,snapshot])=>({...snapshot.row,path})).sort((left,right)=>left.logicalPath<right.logicalPath?-1:left.logicalPath>right.logicalPath?1:0)), inputs: Object.freeze([...snapshots.values()].map(snapshot => snapshot.row).sort((left, right) => left.logicalPath < right.logicalPath ? -1 : left.logicalPath > right.logicalPath ? 1 : 0)) });
 }
 
 /** 🧬️ Closes the public browser compiler entry with its two component cores in one private build directory. */
-async function buildBrowserCodegenModule(evidence: string, check: () => void): Promise<Readonly<{ path: string; sha256: string; byteLength: number; inputs: readonly BrowserCodegenSourceDigest[]; cores: readonly BrowserCodegenSourceDigest[] }>> {
+async function buildBrowserCodegenModule(evidence: string, check: () => void): Promise<Readonly<{ path: string; sha256: string; byteLength: number; inputs: readonly BrowserCodegenSourceDigest[]; cores: readonly BrowserCodegenSourceDigest[]; physicalInputs:readonly BrowserActorPhysicalInputV1[] }>> {
   check();
   const entrypoint = fileURLToPath(import.meta.resolve("@bytecodealliance/jco/component"));
   const vendor = fileURLToPath(import.meta.resolve("@bytecodealliance/jco-transpile/component"));
   const shim = dirname(dirname(fileURLToPath(import.meta.resolve("@bytecodealliance/preview2-shim/io"))));
   const packageBytes = readStableBuildFile(join(dirname(entrypoint), "../package.json"), 64 * 1024, { remaining: 64 * 1024 }, check);
   if (JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(packageBytes)).version !== "1.34.0") throw new Error("browser actor artifact: unqualified JCO version");
-  const { source, inputs } = await captureBrowserCodegenSources(entrypoint, [
+  const { source, inputs, physicalInputs } = await captureBrowserCodegenSources(entrypoint, [
     { name: "@bytecodealliance/jco/dist", path: dirname(entrypoint) },
     { name: "@bytecodealliance/jco-transpile/vendor", path: dirname(vendor) },
     { name: "@bytecodealliance/preview2-shim/dist/browser", path: join(shim, "browser") },
@@ -388,7 +390,28 @@ async function buildBrowserCodegenModule(evidence: string, check: () => void): P
   const closed = closeBrowserCodegenModule(source, cores);
   const path = join(evidence, "compiler.mjs");
   writeFileSync(path, closed, { mode: 0o600 });
-  return Object.freeze({ path, sha256: createHash("sha256").update(closed).digest("hex"), byteLength: Buffer.byteLength(closed), inputs, cores: Object.freeze(cores.map(core => Object.freeze({ logicalPath: "@bytecodealliance/jco-transpile/vendor/" + core.name, sha256: createHash("sha256").update(core.bytes).digest("hex"), byteLength: core.bytes.byteLength }))) });
+  return Object.freeze({ path, sha256: createHash("sha256").update(closed).digest("hex"), byteLength: Buffer.byteLength(closed), inputs, physicalInputs:Object.freeze([{logicalPath:"@bytecodealliance/jco/qualification-package.json",path:resolve(dirname(entrypoint),"../package.json"),sha256:createHash("sha256").update(packageBytes).digest("hex"),byteLength:packageBytes.byteLength},...physicalInputs,...cores.map(core=>({logicalPath:"@bytecodealliance/jco-transpile/vendor/"+core.name,path:resolve(dirname(vendor),core.name),sha256:createHash("sha256").update(core.bytes).digest("hex"),byteLength:core.bytes.byteLength}))]), cores: Object.freeze(cores.map(core => Object.freeze({ logicalPath: "@bytecodealliance/jco-transpile/vendor/" + core.name, sha256: createHash("sha256").update(core.bytes).digest("hex"), byteLength: core.bytes.byteLength }))) });
+}
+
+export type BrowserActorProducerInputsV1 = Readonly<{policyCanonical:string;policySha256:string;runtime:Readonly<{path:string;sha256:string;byteLength:number}>;compiler:Readonly<{path:string;sha256:string;byteLength:number}>;inputs:readonly BrowserActorPhysicalInputV1[]}>;
+
+function observedBrowserCodegenPolicy(executable:{sha256:string;byteLength:number},compiler:Awaited<ReturnType<typeof buildBrowserCodegenModule>>,inputs:Omit<ReturnType<typeof captureBrowserCodegenPolicyInputs>,"physicalInputs">){
+  return sealBrowserCodegenPolicy({schema:"semio.os.browser-codegen-policy.v1",revision:1,runtime:{kind:"bun",version:"1.3.14",executable:{sha256:executable.sha256,byteLength:executable.byteLength}},compiler:{module:{sha256:compiler.sha256,byteLength:compiler.byteLength},inputs:compiler.inputs,cores:compiler.cores},...inputs,options:{jco:"1.34.0",entrypoint:"@bytecodealliance/jco/component",target:"browser",format:"esm",name:"browser-actor",instantiation:"async",asyncMode:"jspi",nodejsCompat:false,base64Cutoff:0,importInterfaces:browserActorInterfaces,asyncImports:browserActorAsyncImports}});
+}
+
+/** 🔬️ Verifies surviving original compiler/policy evidence against the complete current factory-owned input roster. */
+export async function verifyBrowserActorProducerInputsV1(observation:BrowserActorProducerInputsV1,control:BrowserActorBuildControl={}):Promise<Readonly<{inputs:readonly BrowserActorPhysicalInputV1[];importInterfaces:readonly string[]}>>{
+  const check=()=>{if(control.cancelled?.())throw Error("browser actor producer: cancelled");},denied=():never=>{throw Error("browser actor producer: original input evidence differs from current owned factory");};
+  check();const [admit,admitPolicy]=await Promise.all([browserBundleValidator("BrowserActorProducerInputsV1"),browserBundleValidator("CodegenPolicyV1")]);if(!admit(observation))denied();
+  const originalPolicy=JSON.parse(observation.policyCanonical);if(!admitPolicy(originalPolicy)||canonicalJson(originalPolicy)!==observation.policyCanonical||createHash("sha256").update(observation.policyCanonical).digest("hex")!==observation.policySha256)denied();
+  const executable=exactExecutableFingerprint(realpathSync(process.execPath),{cancelled:control.cancelled,progress:(completed,total)=>control.progress?.("policy",completed,total)});if(canonicalJson(executable)!==canonicalJson(observation.runtime))denied();
+  const originalCompiler=readStableBuildFile(observation.compiler.path,browserActorMaximumBytes,{remaining:browserActorMaximumBytes},check);if(originalCompiler.byteLength!==observation.compiler.byteLength||createHash("sha256").update(originalCompiler).digest("hex")!==observation.compiler.sha256)denied();
+  const managerPath=join(browserActorRepoRoot,"package.json"),manager=readStableBuildFile(managerPath,1024*1024,{remaining:1024*1024},check);if(Bun.version!=="1.3.14"||JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(manager)).packageManager!=="bun@1.3.14")denied();
+  const runtime=captureBrowserActorRuntime(import.meta.dir,check),{physicalInputs,...policyInputs}=captureBrowserCodegenPolicyInputs(runtime,check),scratchRoot=process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir();mkdirSync(scratchRoot,{recursive:true});const scratch=mkdtempSync(join(scratchRoot,"browser-producer-verification-"));
+  try{control.progress?.("closure",0,1);const compiler=await buildBrowserCodegenModule(scratch,check),current=observedBrowserCodegenPolicy(executable,compiler,policyInputs),inputs=[{logicalPath:"toolchain/package.json",path:managerPath,sha256:createHash("sha256").update(manager).digest("hex"),byteLength:manager.byteLength},...physicalInputs,...compiler.physicalInputs];
+    const ordered=(rows:readonly BrowserActorPhysicalInputV1[])=>rows.map(row=>({...row,path:resolve(row.path)})).sort((a,b)=>a.logicalPath.localeCompare(b.logicalPath)),keys=new Set(observation.inputs.map(row=>row.logicalPath));if(keys.size!==observation.inputs.length||canonicalJson(ordered(inputs))!==canonicalJson(ordered(observation.inputs))||current.canonical!==observation.policyCanonical||compiler.sha256!==observation.compiler.sha256||compiler.byteLength!==observation.compiler.byteLength)denied();
+    for(const row of observation.inputs){const bytes=readStableBuildFile(row.path,browserActorMaximumBytes,{remaining:browserActorMaximumBytes},check);if(bytes.byteLength!==row.byteLength||createHash("sha256").update(bytes).digest("hex")!==row.sha256)denied();}if(createHash("sha256").update(readFileSync(observation.compiler.path)).digest("hex")!==observation.compiler.sha256)denied();check();control.progress?.("closure",1,1);return Object.freeze({inputs:Object.freeze(inputs),importInterfaces:browserActorInterfaces});
+  }finally{rmSync(scratch,{recursive:true,force:true});}
 }
 
 /** 🏗️ Derives closed actor bytes without caller-selected paths or compiler authority. */
@@ -408,7 +431,8 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, contr
   browserActorBuildOccupied = true;
   let snapshot: Uint8Array | undefined, evidence: string | undefined;
   try {
-    if (typeof Bun === "undefined" || Bun.version !== "1.3.14" || JSON.parse(readFileSync(join(browserActorRepoRoot, "package.json"), "utf8")).packageManager !== "bun@1.3.14") throw new Error("browser actor artifact: unqualified build runtime");
+    const packageManagerPath=join(browserActorRepoRoot,"package.json"),packageManagerBytes=readStableBuildFile(packageManagerPath,1024*1024,{remaining:1024*1024},check);
+    if (typeof Bun === "undefined" || Bun.version !== "1.3.14" || JSON.parse(new TextDecoder("utf-8",{fatal:true}).decode(packageManagerBytes)).packageManager !== "bun@1.3.14") throw new Error("browser actor artifact: unqualified build runtime");
     if (!(component instanceof Uint8Array) || component.byteLength < 8 || component.byteLength > browserActorMaximumBytes || ![0, 97, 115, 109, 13, 0, 1, 0].every((value, index) => component[index] === value)) throw new Error("browser actor artifact: component header or byte bound");
     snapshot = Uint8Array.from(component);
     const actorRuntime = captureBrowserActorRuntime(import.meta.dir, check);
@@ -418,7 +442,7 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, contr
     const imports = browserActorImportAdmissionV1(snapshot);
     if (imports.refused.length > 0) throw new Error(`browser actor artifact: unsupported import interface ${imports.refused.join(", ")}`);
     const executable = exactExecutableFingerprint(realpathSync(process.execPath), { cancelled: control.cancelled, progress: (completed, total) => control.progress?.("policy", completed, total) });
-    const policyInputs = captureBrowserCodegenPolicyInputs(actorRuntime, check);
+    const {physicalInputs: policyPhysicalInputs,...policyInputs} = captureBrowserCodegenPolicyInputs(actorRuntime, check);
     const scratchRoot = evidenceRoot ?? process.env.SEMIO_TEST_ARTIFACT_DIR ?? tmpdir();
     mkdirSync(scratchRoot, { recursive: true });
     evidence = mkdtempSync(join(scratchRoot, "browser-actor-codegen-"));
@@ -431,13 +455,7 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, contr
     control.progress?.("codegen", 0, snapshot.byteLength);
     check();
     const compiler = await buildBrowserCodegenModule(evidence, check);
-    const policy = sealBrowserCodegenPolicy({
-      schema: "semio.os.browser-codegen-policy.v1", revision: 1,
-      runtime: { kind: "bun", version: "1.3.14", executable: { sha256: executable.sha256, byteLength: executable.byteLength } },
-      compiler: { module: { sha256: compiler.sha256, byteLength: compiler.byteLength }, inputs: compiler.inputs, cores: compiler.cores },
-      ...policyInputs,
-      options: { jco: "1.34.0", entrypoint: "@bytecodealliance/jco/component", target: "browser", format: "esm", name: "browser-actor", instantiation: "async", asyncMode: "jspi", nodejsCompat: false, base64Cutoff: 0, importInterfaces: browserActorInterfaces, asyncImports: browserActorAsyncImports },
-    });
+    const policy = observedBrowserCodegenPolicy(executable,compiler,policyInputs);
     writeFileSync(join(evidence, "codegen-policy.json"), policy.canonical, { mode: 0o600 });
     check();
     const generated = await captureOwnedProcess(executable.path, ["--no-install", "--no-env-file", "--conditions=browser", "--config=" + configPath, "--eval", `
@@ -498,7 +516,9 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, contr
     const sha256 = createHash("sha256").update(bytes).digest("hex");
     control.progress?.("hash", byteLength, byteLength);
     check();
-    return Object.freeze({ schema: "semio.os.closed-browser-actor.v1", codegenPolicy: "semio.os.browser-jco-1.34.0-jspi.v1", policySha256: policy.sha256, policyCanonical: policy.canonical, componentSha256, sha256, byteLength, importInterfaces: Object.freeze([...manifest.importInterfaces]), bytes });
+    const compilerSnapshot=readStableBuildFile(compiler.path,browserActorMaximumBytes,{remaining:browserActorMaximumBytes},check);
+    if(compilerSnapshot.byteLength!==compiler.byteLength||createHash("sha256").update(compilerSnapshot).digest("hex")!==compiler.sha256)throw new Error("browser actor artifact: retained compiler changed");
+    return Object.freeze({ schema: "semio.os.closed-browser-actor.v1", codegenPolicy: "semio.os.browser-jco-1.34.0-jspi.v1", policySha256: policy.sha256, policyCanonical: policy.canonical, componentSha256, sha256, byteLength, importInterfaces: Object.freeze([...manifest.importInterfaces]), bytes, producer:Object.freeze({runtime:Object.freeze({path:executable.path,sha256:executable.sha256,byteLength:executable.byteLength}),inputs:Object.freeze([{logicalPath:"toolchain/package.json",path:packageManagerPath,sha256:createHash("sha256").update(packageManagerBytes).digest("hex"),byteLength:packageManagerBytes.byteLength},...policyPhysicalInputs,...compiler.physicalInputs]),compiler:Object.freeze({bytes:compilerSnapshot,sha256:compiler.sha256,byteLength:compiler.byteLength})}) });
   } finally {
     snapshot?.fill(0);
     try { if (evidenceRoot === undefined && evidence !== undefined) rmSync(evidence, { recursive: true, force: true, maxRetries: 3 }); }
@@ -892,10 +912,15 @@ export type BrowserBundleTestDependencies = Readonly<{
   readonly writeFileSync: typeof writeFileSync;
 }>;
 /** 🧪️ Loads component isolation examples only for an explicit test invocation. */
-export async function testClosedBrowserComponentFactory(repoRoot: string): Promise<void> {
+async function browserBundleTestOwners() {
   const { createBrowserBundleTests } = await import("../🧪️tests/🌐️browser-bundle/🟦️.ts");
-  await createBrowserBundleTests({ browserActorAsyncImports, browserActorImportAdmissionV1, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, validateAsyncTaskReturnLift, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, sealBrowserCodegenPolicy, ts, writeFileSync }, { directory: import.meta.dir, url: import.meta.url }).testClosedBrowserComponentFactory(repoRoot);
+  return createBrowserBundleTests({ browserActorAsyncImports, browserActorImportAdmissionV1, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, validateAsyncTaskReturnLift, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, sealBrowserCodegenPolicy, ts, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
 }
+
+/** 🧪️ Executes existing component isolation laws through their explicit test owner. */
+export async function testClosedBrowserComponentFactory(repoRoot:string):Promise<void> {await (await browserBundleTestOwners()).testClosedBrowserComponentFactory(repoRoot);}
+/** 🧾️ Executes actual closed actor producer observations and independent JCO byte oracles. */
+export async function testClosedBrowserActorProducerV1(repoRoot:string):Promise<void> {await (await browserBundleTestOwners()).testClosedBrowserActorBundle(repoRoot);}
 
 if (import.meta.main) {
   if (process.argv[2] === "test" && process.argv[3] === "descriptor-contract") {

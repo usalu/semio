@@ -2,7 +2,7 @@
 
 use super::insert_launch_action::InsertLaunchAction;
 use super::PdfAMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -22,11 +22,10 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveLaunchAction {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        support::action_with(base, "Launch", "F", &self.target).map(|_| PdfAMutation::InsertLaunchAction(InsertLaunchAction { target: self.target.clone() })).into_iter().collect()
-    
-    })())
-}
+        Ok({
+            support::action_with(base, "Launch", "F", &self.target).map(|id| PdfAMutation::InsertLaunchAction(InsertLaunchAction { target: self.target.clone(), placements: support::placements_of(base, &[id]) })).into_iter().collect()
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove launch action", "Launch-Aktion entfernen")

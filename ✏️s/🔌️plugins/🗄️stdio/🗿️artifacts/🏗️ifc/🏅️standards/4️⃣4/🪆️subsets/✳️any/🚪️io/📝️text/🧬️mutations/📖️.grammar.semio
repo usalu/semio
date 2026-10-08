@@ -9,10 +9,8 @@ dialect grammar
 grammar stdio.ifc.mutation
 start document
 
-document = set-snapshot | patch-snapshot | set-file-description | set-file-name | set-file-schema | insert-entity | remove-entity | set-entity-name | set-entity-arg | insert-entity-arg | remove-entity-arg
+document = set-file-description | set-file-name | set-file-schema | insert-entity | remove-entity | set-entity-name | set-entity-arg | insert-entity-arg | remove-entity-arg
 
-patch-snapshot = "patch-snapshot" "patch" "=" hex
-set-snapshot = "set-snapshot" "snapshot" "=" ifc-snapshot
 set-file-description = "set-file-description" "values" "=" ifc-value-list
 set-file-name = "set-file-name" "values" "=" ifc-value-list
 set-file-schema = "set-file-schema" "values" "=" ifc-value-list
@@ -52,5 +50,3 @@ entity-csv = {entity {"," entity}*}?
 # self-bracketed `ifc-value-list`s (IFC's `IfcHeader` stores each HEADER record as a raw
 # `Vec<IfcValue>`, never a typed struct like STEP's own `StepFileDescription`/etc.).
 ifc-header = "[" ifc-value-list "," ifc-value-list "," ifc-value-list "]"
-# `enc_ifc_snapshot` (only reachable via `SetSnapshot`'s payload): `[schema,header,[entities]]`.
-ifc-snapshot = "[" hex "," ifc-header "," entity-list "]"

@@ -1,14 +1,19 @@
 {
   "schema": null,
   "seed": null,
-  "slotsRemoved": [],
-  "slotsUpserted": [],
-  "edgesRemoved": [],
-  "edgesUpserted": [],
-  "tilesRemoved": [],
-  "tilesUpserted": [
-    [
-      2,
+  "slots": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "edges": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "tiles": {
+    "removed": [],
+    "added": [
       {
         "id": "tile-window",
         "weight": 1.5,
@@ -63,8 +68,12 @@
           }
         }
       }
-    ]
-  ],
-  "rulesRemoved": [],
-  "rulesUpserted": []
+    ],
+    "patched": []
+  },
+  "rules": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  }
 }

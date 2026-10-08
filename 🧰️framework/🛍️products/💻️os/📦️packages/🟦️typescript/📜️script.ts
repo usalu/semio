@@ -25,6 +25,14 @@ class MediaTransportTestScript extends BundleScript {
   }
 }
 
+/** 📡️ Validates the defining OS browser producer against neutral General scene wire vectors. */
+class SceneWireSourceScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{
+    if(segments.length)throw Error("test-scene-wire-source accepts no arguments");
+    await runOwnedCommand(process.execPath,["test",join(this.root,"../../🧪️tests/📡️scene-wire/🟦️.ts")],this.repoRoot,"os-scene-wire",TEST_LEVEL_BUDGET_MS.long);
+  }
+}
+
 /** 🏪️ Runs the store's language-neutral history oracles (supersede replay, tool transaction, deferred reprojection, viewer head, supersede law) under `bun:test`. */
 class StoreOraclesTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -194,6 +202,7 @@ class TypecheckScript extends BundleScript {
 const router = new ScriptRouter(import.meta.dir)
   .register("test", TestScript)
   .register("test-media-transport", MediaTransportTestScript)
+  .register("test-scene-wire-source",SceneWireSourceScript)
   .register("test-store-oracles", StoreOraclesTestScript)
   .register("test-channel-oracles", ChannelOraclesTestScript)
   .register("typecheck", TypecheckScript)

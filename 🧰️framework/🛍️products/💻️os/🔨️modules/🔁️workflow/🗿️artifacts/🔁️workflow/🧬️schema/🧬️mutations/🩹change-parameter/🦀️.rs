@@ -23,8 +23,8 @@ impl protocol::MutationKind<WorkflowSnapshot, WorkflowMutation> for ChangeParame
     fn inverse(&self, base: &WorkflowSnapshot) -> Result<Vec<WorkflowMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         base.parameters.iter().find(|entry| workflow_parameter_entity_id(entry) == self.parameter_id).map_or_else(
-            || vec![WorkflowMutation::ChangeParameter(ChangeParameter { parameter_id: self.parameter_id.clone(), parameter: self.parameter.clone() })],
-            |current| vec![WorkflowMutation::ChangeParameter(ChangeParameter { parameter_id: self.parameter_id.clone(), parameter: Box::new(current.clone()) })],
+            Vec::new,
+            |current| vec![WorkflowMutation::ChangeParameter(ChangeParameter { parameter_id: workflow_parameter_entity_id(&self.parameter).to_string(), parameter: Box::new(current.clone()) })],
         )
     
     })())

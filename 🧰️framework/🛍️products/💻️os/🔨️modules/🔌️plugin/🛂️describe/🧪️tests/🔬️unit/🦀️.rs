@@ -4,7 +4,7 @@ use super::*;
 /// registry order — the deserializer as an import into its native dialect, the serializer as an export out of it.
 #[semio_framework_async_macros::async_test]
 async fn package_descriptor_lists_its_io_mechanism_rows_with_their_native_side() {
-    use semio_framework::io::io_mechanism::{io_register, IoEntry, IoEntryDirection as Side};
+    use semio_framework_os_kernel::io::io_mechanism::{io_register, IoEntry, IoEntryDirection as Side};
     use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
     const NATIVE: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.describe-io.native", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") };
     const FOREIGN: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.describe-io-foreign.format", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") };

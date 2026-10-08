@@ -908,8 +908,8 @@ fn pdf_export_omits_a_frame_on_a_hidden_layer() {
     use crate::mutations::LayoutMutation;
     use protocol::{Mutation, MutationDiff};
     let base = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
-    let created = LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-2".into(), name: "Notes".into(), remove: false }).diff(&base).diff().apply(&base).expect("layer");
-    let mut snapshot = LayoutMutation::SetFrameLayer(SetFrameLayer { page_id: "page-1".into(), frame_id: "frame-1".into(), layer_id: "layer-2".into() }).diff(&created).diff().apply(&created).expect("move");
+    let created = protocol::apply_diff(LayoutMutation::CreateLayer(CreateLayer { page_id: "page-1".into(), id: "layer-2".into(), name: "Notes".into(), remove: false, index: None }).diff(&base).diff(), &base).expect("layer");
+    let mut snapshot = protocol::apply_diff(LayoutMutation::SetFrameLayer(SetFrameLayer { page_id: "page-1".into(), frame_id: "frame-1".into(), layer_id: "layer-2".into() }).diff(&created).diff(), &created).expect("move");
     snapshot.pages[0].layers.iter_mut().find(|layer| layer.id == "layer-2").unwrap().visible = false;
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let bytes = decode_base64(&all.data).expect("base64 pdf");
@@ -1251,7 +1251,7 @@ fn pdf_export_prints_edited_drawing_text() {
     let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     snapshot.background_drawing = Some(crate::background_drawing_child_handle("dwg", &content));
     let mutation = LayoutMutation::SetDrawingText(SetDrawingText { index: 0, text: "Title".into() });
-    let edited = mutation.diff(&snapshot).diff().apply(&snapshot).expect("rename");
+    let edited = protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).expect("rename");
     let mut engine = crate::editor::layout::engine::scene::LayoutEngine::new();
     let list = crate::editor::layout::engine::scene::build_display_list_for_page(&mut engine, &edited, &edited.pages[0], "", &[], None, false);
     assert!(list.text_runs.iter().any(|run| run.content == "Title"));
@@ -1283,7 +1283,7 @@ fn pdf_export_prints_a_front_rect_after_the_image() {
         if outcome.diff().pages.is_none() {
             break;
         }
-        snapshot = outcome.diff().apply(&snapshot).expect("forward");
+        snapshot = protocol::apply_diff(outcome.diff(), &snapshot).expect("forward");
     }
     let all = headless_batch_export(LayoutExportKind::Pdf, &snapshot, Some("page-1"), None).expect("page pdf");
     let bytes = decode_base64(&all.data).expect("base64 pdf");

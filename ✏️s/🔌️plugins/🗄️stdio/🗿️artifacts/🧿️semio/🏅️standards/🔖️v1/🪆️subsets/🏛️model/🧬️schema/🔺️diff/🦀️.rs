@@ -10,7 +10,7 @@
 //! `f6-final-summary.md` §4.4, minus the container type itself, which now has one shared home).
 
 use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
-use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff, NamedAdded};
 
 
 
@@ -23,7 +23,7 @@ use protocol::{DiffCodec, MutationDiff};
 /// shared `NamedTripleDiff<K,D,T>` container, written once and instantiated per collection below
 /// (mirrors bcf's own local copy, `💬️bcf/…/🔺️diff/🦀️.rs` §GenericNamedEngine).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, T>>
+fn between_named<K, T, D>(base: &[T], other: &[T], key_of: impl Fn(&T) -> K, diff_item: impl Fn(&T, &T) -> Option<D>) -> Option<NamedTripleDiff<K, D, NamedAdded<T>>>
 where
     K: PartialEq + Clone,
     T: Clone + PartialEq,
@@ -43,18 +43,17 @@ where
         }
     }
     let mut added = Vec::new();
-    for o in other {
+    for (index, o) in other.iter().enumerate() {
         let ok = key_of(o);
         if !base.iter().any(|b| key_of(b) == ok) {
-            added.push(o.clone());
+            added.push(NamedAdded { index, item: o.clone() });
         }
-    }
-    let faithful = reproduces_order(base, other, &removed, &added, &key_of);
-    if !faithful {
-        return Some(NamedTripleDiff { removed: base.iter().map(&key_of).collect(), modified: Vec::new(), added: other.to_vec() });
     }
     if removed.is_empty() && modified.is_empty() && added.is_empty() {
         return None;
+    }
+    if !reproduces_order(base, other, &removed, &added, &key_of) {
+        return Some(NamedTripleDiff { removed: base.iter().map(&key_of).collect(), modified: Vec::new(), added: other.iter().cloned().enumerate().map(|(index, item)| NamedAdded { index, item }).collect() });
     }
     Some(NamedTripleDiff { removed, modified, added })
 }
@@ -73,23 +72,22 @@ where
 /// order included, and now it does. Reached here through `diff_set_snapshot`, which is why every
 /// spelling of a whole-collection replacement is covered rather than only the reordering one.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn reproduces_order<K, T>(base: &[T], other: &[T], removed: &[K], added: &[T], key_of: &impl Fn(&T) -> K) -> bool
+fn reproduces_order<K, T>(base: &[T], other: &[T], removed: &[K], added: &[NamedAdded<T>], key_of: &impl Fn(&T) -> K) -> bool
 where
     K: PartialEq,
 {
-    let produced = base.iter().map(key_of).filter(|k| !removed.contains(k)).chain(added.iter().map(key_of));
-    let mut target = other.iter().map(key_of);
-    for key in produced {
-        match target.next() {
-            Some(expected) if expected == key => {}
-            _ => return false,
-        }
+    let mut keys: Vec<K> = base.iter().map(key_of).filter(|k| !removed.contains(k)).collect();
+    let mut ascending: Vec<&NamedAdded<T>> = added.iter().collect();
+    ascending.sort_by_key(|a| a.index);
+    for a in ascending {
+        let at = a.index.min(keys.len());
+        keys.insert(at, key_of(&a.item));
     }
-    target.next().is_none()
+    keys.len() == other.len() && keys.iter().zip(other.iter().map(key_of)).all(|(produced, expected)| *produced == expected)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
+fn apply_named<K, T, D>(items: &mut Vec<T>, diff: &NamedTripleDiff<K, D, NamedAdded<T>>, key_of: impl Fn(&T) -> K, apply_item: impl Fn(&mut T, &D))
 where
     K: PartialEq + Clone,
     T: Clone,
@@ -100,43 +98,42 @@ where
             apply_item(item, &m.diff);
         }
     }
-    for item in &diff.added {
-        items.push(item.clone());
+    let mut ascending: Vec<&NamedAdded<T>> = diff.added.iter().collect();
+    ascending.sort_by_key(|a| a.index);
+    for a in ascending {
+        let at = a.index.min(items.len());
+        items.insert(at, a.item.clone());
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, T>
+fn inverse_named<K, T, D>(base_items: &[T], diff: &NamedTripleDiff<K, D, NamedAdded<T>>, key_of: impl Fn(&T) -> K, inverse_item: impl Fn(&T, &D) -> D) -> NamedTripleDiff<K, D, NamedAdded<T>>
 where
     K: PartialEq + Clone,
     T: Clone,
 {
-    let removed: Vec<K> = diff.added.iter().map(&key_of).collect();
+    let removed: Vec<K> = diff.added.iter().map(|a| key_of(&a.item)).collect();
     let mut modified = Vec::new();
     for m in &diff.modified {
         if let Some(original) = base_items.iter().find(|i| key_of(i) == m.key) {
             modified.push(NamedModified { key: m.key.clone(), diff: inverse_item(original, &m.diff) });
         }
     }
-    let mut added = Vec::new();
-    for k in &diff.removed {
-        if let Some(original) = base_items.iter().find(|i| &key_of(i) == k) {
-            added.push(original.clone());
-        }
-    }
+    let mut added: Vec<NamedAdded<T>> = diff.removed.iter().filter_map(|k| base_items.iter().position(|i| &key_of(i) == k).map(|index| NamedAdded { index, item: base_items[index].clone() })).collect();
+    added.sort_by_key(|a| a.index);
     NamedTripleDiff { removed, modified, added }
 }
 
 /// 🧮️ Name/id-keyed absorb — identity is the KEY (not position): a `d2`-removal of a `d1`-added
 /// key annihilates the add; a `d2`-modify of a `d1`-added key patches into the carried payload.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, T>, d2: &NamedTripleDiff<K, D, T>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, T>
+fn absorb_named<K, T, D>(d1: NamedTripleDiff<K, D, NamedAdded<T>>, d2: &NamedTripleDiff<K, D, NamedAdded<T>>, key_of: impl Fn(&T) -> K, absorb_item: impl Fn(D, D) -> D, apply_item: impl Fn(&mut T, &D)) -> NamedTripleDiff<K, D, NamedAdded<T>>
 where
     K: PartialEq + Clone,
     T: Clone,
     D: Clone,
 {
-    let d1_added_keys: Vec<K> = d1.added.iter().map(&key_of).collect();
+    let d1_added_keys: Vec<K> = d1.added.iter().map(|a| key_of(&a.item)).collect();
     let mut removed = d1.removed.clone();
     let mut annihilated: Vec<K> = Vec::new();
     for k in &d2.removed {
@@ -146,11 +143,11 @@ where
             removed.push(k.clone());
         }
     }
-    let mut working_added: Vec<T> = d1.added.into_iter().filter(|a| !annihilated.contains(&key_of(a))).collect();
+    let mut working_added: Vec<NamedAdded<T>> = d1.added.into_iter().filter(|a| !annihilated.contains(&key_of(&a.item))).collect();
     let mut modified: Vec<NamedModified<K, D>> = d1.modified.into_iter().filter(|m| !removed.contains(&m.key)).collect();
     for m2 in &d2.modified {
-        if let Some(added) = working_added.iter_mut().find(|a| key_of(a) == m2.key) {
-            apply_item(added, &m2.diff);
+        if let Some(added) = working_added.iter_mut().find(|a| key_of(&a.item) == m2.key) {
+            apply_item(&mut added.item, &m2.diff);
             continue;
         }
         if removed.contains(&m2.key) {
@@ -162,8 +159,8 @@ where
         }
     }
     for a2 in &d2.added {
-        let k2 = key_of(a2);
-        match working_added.iter_mut().find(|a| key_of(a) == k2) {
+        let k2 = key_of(&a2.item);
+        match working_added.iter_mut().find(|a| key_of(&a.item) == k2) {
             Some(existing) => *existing = a2.clone(),
             None => working_added.push(a2.clone()),
         }
@@ -173,9 +170,9 @@ where
 //#endregion 🔖️GenericNamedEngine
 
 //#region 🔖️DiffTypes
-pub type SpatialDiff = NamedTripleDiff<String, SpatialNodeDiff, SpatialNode>;
-pub type ElementsDiff = NamedTripleDiff<String, SemioModelElementDiff, SemioModelElement>;
-pub type RelationsDiff = NamedTripleDiff<String, ModelRelationDiff, ModelRelation>;
+pub type SpatialDiff = NamedTripleDiff<String, SpatialNodeDiff, NamedAdded<SpatialNode>>;
+pub type ElementsDiff = NamedTripleDiff<String, SemioModelElementDiff, NamedAdded<SemioModelElement>>;
+pub type RelationsDiff = NamedTripleDiff<String, ModelRelationDiff, NamedAdded<ModelRelation>>;
 
 /// 🔺️ Per-spatial-node sparse diff. `parent_id` is tri-state (`Some(None)` = detached from its
 /// parent, becomes a root).
@@ -239,15 +236,15 @@ impl MutationDiff<SemioModelSnapshot> for SemioModelDiff {
     fn apply(&self, base: &SemioModelSnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioModelSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.spatial {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.spatial, d, |item| item.id.clone(), |item| item.id.clone(), ["spatial"])?;
+            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.spatial, d, |item| item.id.clone(), |added| added.item.id.clone(), ["spatial"])?;
             apply_named(&mut next.spatial, d, |n: &SpatialNode| n.id.clone(), apply_spatial);
         }
         if let Some(d) = &self.elements {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.elements, d, |item| item.id.clone(), |item| item.id.clone(), ["elements"])?;
+            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.elements, d, |item| item.id.clone(), |added| added.item.id.clone(), ["elements"])?;
             apply_named(&mut next.elements, d, |e: &SemioModelElement| e.id.clone(), apply_element);
         }
         if let Some(d) = &self.relations {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.relations, d, |item| item.id.clone(), |item| item.id.clone(), ["relations"])?;
+            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.relations, d, |item| item.id.clone(), |added| added.item.id.clone(), ["relations"])?;
             apply_named(&mut next.relations, d, |r: &ModelRelation| r.id.clone(), apply_relation);
         }
         Ok(next)
@@ -456,13 +453,7 @@ fn absorb_relation_diff(mut a: ModelRelationDiff, b: ModelRelationDiff) -> Model
 }
 //#endregion 🔖️DiffAlgebra
 
-//#region 🔖️SetSnapshot
-/// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No
-/// `snapshot: Option<SemioModelSnapshot>` full-replace slot -- this IS `SemioModelDiff::between`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &SemioModelSnapshot, next: &SemioModelSnapshot) -> SemioModelDiff {
-    SemioModelDiff::between(base, next)
-}
+
 //#endregion 🔖️SetSnapshot
 
 //#region 🔖️HandcraftedDiffCodec
@@ -623,19 +614,19 @@ pub(crate) fn demo_diff_cases() -> Vec<SemioModelDiff> {
     let b = sweep_b();
     let mut cases = vec![SemioModelDiff::default(), <SemioModelDiff as DiffAlgebra<SemioModelSnapshot>>::between(&a, &b), <SemioModelDiff as DiffAlgebra<SemioModelSnapshot>>::between(&b, &a)];
     cases.push(SemioModelDiff {
-        spatial: Some(NamedTripleDiff { added: vec![SpatialNode { id: "demo-spatial".into(), kind: SpatialKind::Space, name: "Demo".into(), parent_id: None, placement: SemioTransform::identity() }], ..Default::default() }),
+        spatial: Some(NamedTripleDiff { added: vec![NamedAdded { index: 0, item: SpatialNode { id: "demo-spatial".into(), kind: SpatialKind::Space, name: "Demo".into(), parent_id: None, placement: SemioTransform::identity() } }], ..Default::default() }),
         elements: None,
         relations: None,
     });
     cases.push(SemioModelDiff {
         spatial: None,
         elements: Some(NamedTripleDiff {
-            added: vec![SemioModelElement { id: "demo-element".into(), class: ElementClass::Beam, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] }],
+            added: vec![NamedAdded { index: 0, item: SemioModelElement { id: "demo-element".into(), class: ElementClass::Beam, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] } }],
             ..Default::default()
         }),
         relations: None,
     });
-    cases.push(SemioModelDiff { spatial: None, elements: None, relations: Some(NamedTripleDiff { added: vec![ModelRelation { id: "demo-relation".into(), kind: RelationKind::ConnectsTo, from: "a".into(), to: "b".into() }], ..Default::default() }) });
+    cases.push(SemioModelDiff { spatial: None, elements: None, relations: Some(NamedTripleDiff { added: vec![NamedAdded { index: 0, item: ModelRelation { id: "demo-relation".into(), kind: RelationKind::ConnectsTo, from: "a".into(), to: "b".into() } }], ..Default::default() }) });
     cases
 }
 //#endregion 🔖️Demo

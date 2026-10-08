@@ -1,16 +1,7 @@
 {
   "runs": {
-    "values": [
-      {
-        "language": "en",
-        "content": "Alpha",
-        "marks": []
-      },
-      {
-        "language": "en",
-        "content": "Gamma",
-        "marks": []
-      }
+    "removed": [
+      1
     ]
   }
 }

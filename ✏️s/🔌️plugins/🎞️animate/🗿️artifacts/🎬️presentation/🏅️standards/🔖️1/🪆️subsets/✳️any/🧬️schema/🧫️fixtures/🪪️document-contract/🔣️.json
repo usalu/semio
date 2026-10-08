@@ -37,43 +37,6 @@
     }
   },
   "diff": {
-    "artifact": {
-      "schema": "animate.presentation",
-      "source": {
-        "src": "/fixture-deck.png",
-        "kind": "figure",
-        "frame": {
-          "x": 0.0,
-          "y": 0.0,
-          "width": 1.0,
-          "height": 1.0
-        },
-        "sourceAspect": 1.5
-      },
-      "tiles": [],
-      "presentation": {
-        "childId": "presentation-fixture",
-        "target": {
-          "artifactId": "presentation-fixture",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "presentation"
-          }
-        }
-      },
-      "animation": {
-        "childId": "animation-fixture",
-        "target": {
-          "artifactId": "animation-fixture",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "animation"
-          }
-        }
-      }
-    },
     "schema": "animate.presentation",
     "source": {
       "src": "/fixture-deck.png",
@@ -84,20 +47,28 @@
         "width": 1.0,
         "height": 1.0
       },
-      "sourceAspect": 1.5
+      "sourceAspect": {
+        "value": 1.5
+      },
+      "pdfPage": null
     },
-    "tiles": [
-      {
-        "id": "t1",
-        "name": "A",
-        "crop": {
-          "x": 0.0,
-          "y": 0.0,
-          "width": 0.5,
-          "height": 0.5
+    "tiles": {
+      "added": [
+        {
+          "id": "t1",
+          "name": "A",
+          "crop": {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 0.5,
+            "height": 0.5
+          }
         }
-      }
-    ],
+      ],
+      "removed": [],
+      "patched": [],
+      "reordered": null
+    },
     "presentation": {
       "childId": "presentation-fixture",
       "target": {
@@ -205,7 +176,11 @@
       ]
     },
     {
-      "source": {}
+      "source": {
+        "frame": {
+          "x": 0.0
+        }
+      }
     },
     {
       "animation": {

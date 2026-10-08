@@ -99,13 +99,13 @@ pub fn fem3d_mutation_report_json(base_json: &str, mutation_json: &str, after_js
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
     let mutation: Fem3dMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let mut applied = base.clone();
-    let forward = <Fem3dMutation as Mutation<Fem3dSnapshot>>::diff(&mutation, &base).apply_to(&mut applied);
+    let (applied, forward) = store::apply_outcome(&base, <Fem3dMutation as Mutation<Fem3dSnapshot>>::diff(&mutation, &base));
     let inverse = <Fem3dMutation as Mutation<Fem3dSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     for step in &inverse {
-        let outcome = <Fem3dMutation as Mutation<Fem3dSnapshot>>::diff(step, &undone).apply_to(&mut undone);
+        let (next, outcome) = store::apply_outcome(&undone, <Fem3dMutation as Mutation<Fem3dSnapshot>>::diff(step, &undone));
+        undone = next;
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
     let report = semio_framework_value::DslValue::object([

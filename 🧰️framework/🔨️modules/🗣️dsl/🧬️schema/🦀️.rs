@@ -36,6 +36,9 @@ pub use controlled_decoding::{parse_exact_controlled,parse_expr_text_controlled}
 mod controlled_encoding;
 pub use controlled_encoding::{print_controlled,print_expr_controlled,RetainedRecordWriter};
 
+#[path = "♻️retirement/🦀️.rs"]
+mod retirement;
+
 #[path = "🏭️producer/🦀️.rs"]
 pub mod producer;
 pub use producer::{NativeSchemaControl,RecordSpecProducer};

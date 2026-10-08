@@ -3,9 +3,28 @@ package semio.s.animate.presentation.diff;
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
 import "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🛰️.proto";
 message PresentationDiff {
-  optional semio.s.animate.presentation.PresentationArtifact artifact = 1;
-  optional string schema = 2;
-  optional semio.os.store.ArtifactChild presentation = 3;
-  optional semio.s.animate.presentation.FigureTileSource source = 4;
-  optional semio.s.animate.presentation.FigureTileDraftList tiles = 5;
+  optional string schema = 1;
+  optional PresentationSourcePatch source = 2;
+  optional PresentationTilesDelta tiles = 3;
+  optional semio.os.store.ArtifactChild presentation = 4;
+}
+message PresentationSourcePatch {
+  optional string src = 1;
+  optional string kind = 2;
+  optional semio.s.animate.presentation.FigureTileFrame frame = 3;
+  optional PresentationOptionalAspect source_aspect = 4;
+  optional PresentationOptionalPage pdf_page = 5;
+}
+message PresentationOptionalAspect { optional double value = 1; }
+message PresentationOptionalPage { optional uint32 value = 1; }
+message PresentationTilesDelta {
+  repeated semio.s.animate.presentation.FigureTileDraft added = 1;
+  repeated string removed = 2;
+  repeated PresentationTilePatch patched = 3;
+  repeated string reordered = 4;
+}
+message PresentationTilePatch {
+  string id = 1;
+  optional string name = 2;
+  optional semio.s.animate.presentation.FigureTileFrame crop = 3;
 }

@@ -1,0 +1,10 @@
+{
+  "grants": [1, 3, 64],
+  "cancelAfterSteps": [0, 1, 3, 9, 33],
+  "cases": [
+    {"id": "singleRotation", "initial": [], "operations": [{"kind":"set","key":"3","value":3},{"kind":"set","key":"2","value":2},{"kind":"set","key":"1","value":1},{"kind":"remove","key":"2"}]},
+    {"id": "doubleRotation", "initial": [], "operations": [{"kind":"set","key":"3","value":3},{"kind":"set","key":"1","value":1},{"kind":"set","key":"2","value":2},{"kind":"set","key":"2","value":22}]},
+    {"id": "successorRebuild", "initial": [["4",4],["2",2],["6",6],["1",1],["3",3],["5",5],["7",7]], "operations": [{"kind":"remove","key":"4"},{"kind":"remove","key":"6"},{"kind":"remove","key":"absent"}]},
+    {"id": "unicodeComparison", "initial": [["雪😀a",1],["雪😀c",3]], "operations": [{"kind":"set","key":"雪😀b","value":2},{"kind":"remove","key":"雪😀a"}]}
+  ]
+}

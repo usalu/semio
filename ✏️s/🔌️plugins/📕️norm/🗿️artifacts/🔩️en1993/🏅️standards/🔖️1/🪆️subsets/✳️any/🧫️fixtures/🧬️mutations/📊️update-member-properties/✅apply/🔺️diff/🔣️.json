@@ -1,40 +1,106 @@
 {
-  "artifact": null,
   "annex": null,
-  "materials": null,
-  "sections": null,
-  "members": {
-    "values": [
-      {
-        "id": "member-b1",
-        "label": "Beam-column B1",
-        "memberType": "beamColumn",
-        "sectionId": "sec-heb240",
-        "materialId": "mat-s355",
-        "length": 9.0,
-        "bucklingLengthY": 4.0,
-        "bucklingLengthZ": 4.0,
-        "ltbLength": 4.0,
-        "ltbRestraintSpacing": 2.0,
-        "loadApplication": "shearCenter",
-        "endMomentRatioPsi": -1.0,
-        "momentDiagram": "linear",
-        "deflectionLimitRatio": 300.0,
-        "analysis": "elastic"
-      }
-    ]
+  "materials": {
+    "removed": [],
+    "added": [],
+    "modified": []
   },
-  "loadCases": null,
-  "memberActions": null,
-  "joints": null,
-  "fatigueDetails": null,
-  "fireExposures": null,
-  "coldFormedMembers": null,
-  "platedPanels": null,
-  "siloShells": null,
-  "tensionComponents": null,
-  "bridgeFatigue": null,
-  "towerLegs": null,
-  "piles": null,
-  "craneRunways": null
+  "sections": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [
+      "member-b1"
+    ],
+    "added": [
+      {
+        "after": null,
+        "row": {
+          "id": "member-b1",
+          "label": "Beam-column B1",
+          "memberType": "beamColumn",
+          "sectionId": "sec-heb240",
+          "materialId": "mat-s355",
+          "length": 9.0,
+          "bucklingLengthY": 4.0,
+          "bucklingLengthZ": 4.0,
+          "ltbLength": 4.0,
+          "ltbRestraintSpacing": 2.0,
+          "loadApplication": "shearCenter",
+          "endMomentRatioPsi": -1.0,
+          "momentDiagram": "linear",
+          "deflectionLimitRatio": 300.0,
+          "analysis": "elastic"
+        }
+      }
+    ],
+    "modified": []
+  },
+  "loadCases": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "memberActions": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "joints": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "fatigueDetails": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "fireExposures": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "coldFormedMembers": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "platedPanels": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "siloShells": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "tensionComponents": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "bridgeFatigue": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "towerLegs": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "piles": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "craneRunways": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

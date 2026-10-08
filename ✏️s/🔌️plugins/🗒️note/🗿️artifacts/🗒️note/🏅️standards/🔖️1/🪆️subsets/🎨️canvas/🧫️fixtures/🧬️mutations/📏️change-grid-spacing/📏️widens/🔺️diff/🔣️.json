@@ -1,17 +1,18 @@
 {
-  "artifact": null,
-  "assets": null,
-  "blocks": null,
-  "eraserRadius": null,
-  "gridOpacity": null,
-  "gridSpacing": 48.0,
-  "gridSubdivisions": null,
-  "gridVisible": null,
-  "id": null,
-  "linkedArtifact": null,
-  "pencilWidth": null,
   "schema": null,
+  "id": null,
+  "title": null,
+  "blocks": null,
+  "gridVisible": null,
+  "gridSpacing": {
+    "value": 48.0
+  },
+  "gridSubdivisions": null,
+  "gridOpacity": null,
   "snapEnabled": null,
   "snapGridSpacing": null,
-  "title": null
+  "pencilWidth": null,
+  "eraserRadius": null,
+  "assets": null,
+  "linkedArtifact": null
 }

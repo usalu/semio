@@ -4,7 +4,7 @@
 
 use crate::editor::semio_text::modes::edit;
 use crate::editor::semio_text::modes::edit::windows::main;
-use crate::standards::v1::subsets::text::schema::mutations::{patch_snapshot, set_snapshot as snapshot_edit_set_snapshot, SemioTextMutation};
+use crate::standards::v1::subsets::text::schema::mutations::{SemioTextMutation};
 use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -166,6 +166,9 @@ impl ArtifactOwnedToolJobFactory for SemioTextEditorExampleFactory {
     const DOCUMENT_SCHEMA: &'static str = SEMIO_TEXT_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_TEXT_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
+#[path = "🧮️net/🦀️.rs"]
+pub(crate) mod net;
+
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
 pub struct SemioTextEditor;
@@ -288,7 +291,7 @@ impl editing::SnapshotEditingEditor for SemioTextEditor {
         match command { SemioTextEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_patch(event, snapshot, |patch| SemioTextMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| SemioTextMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot })))
+        editing::snapshot_edit_net(event, snapshot, net::net)
     }
 }
 

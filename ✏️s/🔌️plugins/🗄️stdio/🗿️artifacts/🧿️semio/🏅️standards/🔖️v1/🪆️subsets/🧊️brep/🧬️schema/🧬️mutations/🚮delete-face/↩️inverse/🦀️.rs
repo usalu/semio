@@ -10,12 +10,8 @@ pub fn inverse(payload: &super::DeleteFace, base: &SemioBrepSnapshot) -> Result<
     let Some(index) = base.faces.iter().position(|x| x.id == payload.id) else {
         return Vec::new();
     };
-    let tail = &base.faces[index..];
-    let mut undo: Vec<SemioBrepMutation> = tail.iter().skip(1).map(|x| SemioBrepMutation::DeleteFace(delete_face::DeleteFace { id: x.id.clone() })).collect();
-    undo.extend(
-        tail.iter().map(|x| SemioBrepMutation::CreateFace(create_face::CreateFace { id: x.id.clone(), outer_loop: x.outer_loop.clone(), inner_loops: x.inner_loops.clone(), surface: x.surface.clone(), orientation: x.orientation, tol: x.tol })),
-    );
-    undo
+    let x = &base.faces[index];
+    vec![SemioBrepMutation::CreateFace(create_face::CreateFace { id: x.id.clone(), outer_loop: x.outer_loop.clone(), inner_loops: x.inner_loops.clone(), surface: x.surface.clone(), orientation: x.orientation, tol: x.tol, at: Some(index) })]
 
     })())
 }

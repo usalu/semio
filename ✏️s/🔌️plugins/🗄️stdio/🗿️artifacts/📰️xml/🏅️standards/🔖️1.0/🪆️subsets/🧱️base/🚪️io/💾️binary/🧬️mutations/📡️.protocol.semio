@@ -23,7 +23,3 @@ record set-attribute tag=5
 field payload bytes
 record set-text tag=6
 field payload bytes
-record set-snapshot tag=7
-field payload bytes
-record patch-snapshot tag=8
-field payload bytes

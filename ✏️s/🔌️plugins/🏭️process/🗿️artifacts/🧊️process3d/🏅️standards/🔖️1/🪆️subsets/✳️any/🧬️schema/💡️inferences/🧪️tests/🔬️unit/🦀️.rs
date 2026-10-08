@@ -137,3 +137,27 @@ async fn timber_document_replays_every_step_with_monotone_subtractive_volume() {
     }
     eprintln!("[DEBUG] Process timber native replay matched all five independent volume prefixes");
 }
+
+#[test]
+fn semantic_memo_hashes_literal_words_without_transport() {
+    use semio_framework_value::{DslValue, Number};
+    let text = include_str!("🧫️fixtures/🔣️semantic-memo.json");
+    let independent: serde_json::Value = serde_json::from_str(text).unwrap();
+    let DslValue::Array(literals) = semio_framework_pack_json::from_json_str::<DslValue>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap() else { panic!("neutral array"); };
+    assert_eq!(literals.len(), independent.as_array().unwrap().len());
+    let mut hashes = std::collections::HashSet::new();
+    let mut independent_keys = std::collections::HashSet::new();
+    for (literal, oracle) in literals.iter().zip(independent.as_array().unwrap()) {
+        let DslValue::Object(fields) = literal else { panic!("neutral literal"); };
+        let text = |name: &str| match &fields.iter().find(|(key, _)| key == name).unwrap().1 { DslValue::String(value) => value.as_str(), _ => panic!("neutral text") };
+        assert_eq!(text("kind"), oracle["kind"].as_str().unwrap());
+        assert_eq!(text("word"), oracle["word"].as_str().unwrap());
+        assert!(independent_keys.insert(serde_json::to_string(oracle).unwrap()));
+        let value = DslValue::Number(match text("kind") { "uint" => Number::UInt(text("word").parse().unwrap()), "int" => Number::Int(text("word").parse().unwrap()), "float" => Number::Float(f64::from_bits(u64::from_str_radix(text("word"), 16).unwrap())), _ => panic!("neutral number kind") });
+        let hash = super::hash_value(&value);
+        assert_eq!(hash, super::hash_value(&value));
+        assert!(hashes.insert(hash), "distinct literal {}", text("word"));
+    }
+    assert_eq!(hashes.len(), independent_keys.len());
+    eprintln!("[DEBUG] Process semantic memo matched {} exact neutral words and independent JSON keys", hashes.len());
+}

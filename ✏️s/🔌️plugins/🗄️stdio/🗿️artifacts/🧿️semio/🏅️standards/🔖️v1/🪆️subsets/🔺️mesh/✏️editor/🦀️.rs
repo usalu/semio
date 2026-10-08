@@ -4,7 +4,7 @@
 
 use crate::editor::semio_mesh::modes::edit;
 use crate::editor::semio_mesh::modes::edit::windows::main;
-use crate::standards::v1::subsets::mesh::schema::mutations::{patch_snapshot, set_snapshot, SemioMeshMutation};
+use crate::standards::v1::subsets::mesh::schema::mutations::{SemioMeshMutation};
 use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_framework::DslValue;
 use semio_framework_plugin::app::InteractionView;
@@ -231,6 +231,9 @@ fn semio_mesh_set_vertex_work(_tool_id: &'static str) -> Box<dyn ArtifactCommand
 }
 //#endregion 🔖️Command
 
+#[path = "🧮️net/🦀️.rs"]
+pub(crate) mod net;
+
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
 pub struct SemioMeshEditor;
@@ -321,7 +324,7 @@ impl editing::SnapshotEditingEditor for SemioMeshEditor {
     }
 
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_patch(event, snapshot, |patch| SemioMeshMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| SemioMeshMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))
+        editing::snapshot_edit_net(event, snapshot, net::net)
     }
 }
 

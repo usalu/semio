@@ -7,7 +7,7 @@ pub mod board_host {
     #![allow(clippy::missing_errors_doc, reason = "Graph board host is internal to directed port normal.")]
     #![allow(clippy::too_many_arguments, reason = "Immediate-mode paint helpers take one positional arg per geometry/style input; grouping them into structs would obscure call sites more than it clarifies.")]
 
-    use crate::infinite::canvas::{Affine, Circle, Color, CubicBez, FillRule, OpaqueSceneRetirementStep, OpaqueSceneRetirementToken, Point, Rect, Scene, Stroke, Vec2};
+    use semio_framework_canvas::{Affine, Circle, Color, CubicBez, FillRule, OpaqueSceneRetirementStep, OpaqueSceneRetirementToken, Point, Rect, Scene, Stroke, Vec2};
     use serde::Deserialize;
     use std::collections::{BTreeMap, BTreeSet};
 
@@ -21,8 +21,8 @@ pub mod board_host {
         EdgeTipGeometry, BoardSnapshotJson, GestureStage, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate, NodeShape, RegionData, RegionDescJson,
         RegionGrip, SceneDescriptorJson, SelectionOptions, TransformGumballFlags, WireData, WireKindDef,
     };
-    use crate::infinite::canvas::camera::Camera;
-    use crate::infinite::canvas::geom_sel::{
+    use semio_framework_canvas::camera::Camera;
+    use semio_framework_canvas::geom_sel::{
         cubic_bezier_axis_bounds, cubic_bezier_point, inflate_world_box, point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box, world_box_contains_box,
         world_box_contains_point, world_box_from_points, world_boxes_overlap, WorldBox,
     };
@@ -31,9 +31,9 @@ pub mod board_host {
     use std::cell::{Cell, RefCell};
     use std::collections::HashMap;
 
-    pub use crate::infinite::canvas::camera::{CANVAS_CAMERA_ZOOM_MAX as BOARD_CAMERA_ZOOM_MAX, CANVAS_CAMERA_ZOOM_MIN as BOARD_CAMERA_ZOOM_MIN};
+    pub use semio_framework_canvas::camera::{CANVAS_CAMERA_ZOOM_MAX as BOARD_CAMERA_ZOOM_MAX, CANVAS_CAMERA_ZOOM_MIN as BOARD_CAMERA_ZOOM_MIN};
 
-    use crate::infinite::canvas::lod::{Lod, LodScale};
+    use semio_framework_canvas::lod::{Lod, LodScale};
 
     //#region ⚠️ Errors
     /// ⚠️ Errors from board host theme/catalog/layout JSON mutators and manifest validation.
@@ -3772,7 +3772,7 @@ pub mod board_host {
             let Some(token) = self.opaque_scene_retirement.get() else {
                 return true;
             };
-            match infinite::canvas::advance_opaque_scene_retirement(token, 1, 4096) {
+            match semio_framework_canvas::advance_opaque_scene_retirement(token, 1, 4096) {
                 OpaqueSceneRetirementStep::Blocked | OpaqueSceneRetirementStep::Pending { .. } => false,
                 OpaqueSceneRetirementStep::Complete { .. } => {
                     self.opaque_scene_retirement.set(None);
@@ -3787,7 +3787,7 @@ pub mod board_host {
 
         fn publish_opaque_scene_retirement(&self, token: OpaqueSceneRetirementToken, scene: Scene) {
             assert!(self.opaque_scene_retirement.get().is_none(), "board retains at most one exact opaque scene retirement");
-            infinite::canvas::publish_opaque_scene_retirement(token, scene);
+            semio_framework_canvas::publish_opaque_scene_retirement(token, scene);
             self.opaque_scene_retirement.set(Some(token));
         }
 
@@ -3800,7 +3800,7 @@ pub mod board_host {
             if cache.is_none() {
                 return true;
             }
-            let Some(token) = infinite::canvas::reserve_opaque_scene_retirement() else {
+            let Some(token) = semio_framework_canvas::reserve_opaque_scene_retirement() else {
                 self.opaque_scene_fault.set(true);
                 return false;
             };
@@ -4201,12 +4201,12 @@ pub mod board_host {
             self.content_scene_generation
         }
 
-        fn viewport(&self) -> infinite::canvas::camera::Viewport {
-            infinite::canvas::camera::Viewport { width: self.width, height: self.height, dpr: self.dpr }
+        fn viewport(&self) -> semio_framework_canvas::camera::Viewport {
+            semio_framework_canvas::camera::Viewport { width: self.width, height: self.height, dpr: self.dpr }
         }
 
         fn camera_content_affine(&self) -> Affine {
-            infinite::canvas::camera::camera_content_affine(&self.camera, &self.viewport())
+            semio_framework_canvas::camera::camera_content_affine(&self.camera, &self.viewport())
         }
     }
 
@@ -4390,7 +4390,7 @@ pub mod board_host {
         }
 
         fn set_camera_internal(&mut self, x: f64, y: f64, zoom: f64, emit_event: bool) {
-            let zoom = infinite::canvas::camera::clamp_zoom(zoom);
+            let zoom = semio_framework_canvas::camera::clamp_zoom(zoom);
             if (self.camera.x - x).abs() < 1e-9 && (self.camera.y - y).abs() < 1e-9 && (self.camera.zoom - zoom).abs() < 1e-9 {
                 return;
             }
@@ -5096,7 +5096,7 @@ pub mod board_host {
         }
 
         fn edge_stroke_for_kind_pattern(pattern: EdgeStrokePattern, width: f64) -> Stroke {
-            use crate::infinite::canvas::Cap;
+            use semio_framework_canvas::Cap;
             let mut stroke = Stroke::new(width);
             match pattern {
                 EdgeStrokePattern::Solid => {}
@@ -5149,7 +5149,7 @@ pub mod board_host {
         }
 
         fn append_edge_tip(scene: &mut Scene, tip: Point, dir: Vec2, color: Color, stroke_width: f64, tip_def: &EdgeTipDef) {
-            use crate::infinite::canvas::BezPath;
+            use semio_framework_canvas::BezPath;
             let len = dir.hypot();
             if len < 1e-9 {
                 return;
@@ -8256,12 +8256,12 @@ pub mod board_host {
             match operation.plan.kind {
                 BoardPointerPlanKind::Idle => true,
                 BoardPointerPlanKind::Pan { camera } => {
-                    self.camera = Camera { x: camera[0], y: camera[1], zoom: infinite::canvas::camera::clamp_zoom(camera[2]) };
+                    self.camera = Camera { x: camera[0], y: camera[1], zoom: semio_framework_canvas::camera::clamp_zoom(camera[2]) };
                     true
                 }
                 BoardPointerPlanKind::FinishPan { camera } => match operation.phase {
                     0 => {
-                        self.camera = Camera { x: camera[0], y: camera[1], zoom: infinite::canvas::camera::clamp_zoom(camera[2]) };
+                        self.camera = Camera { x: camera[0], y: camera[1], zoom: semio_framework_canvas::camera::clamp_zoom(camera[2]) };
                         operation.phase = 1;
                         false
                     }
@@ -9070,11 +9070,11 @@ pub mod board_host {
         }
 
         pub fn world_to_screen(&self, p: Point) -> Point {
-            infinite::canvas::camera::world_to_screen(&self.camera, &self.viewport(), p)
+            semio_framework_canvas::camera::world_to_screen(&self.camera, &self.viewport(), p)
         }
 
         pub fn screen_to_world(&self, p: Point) -> Point {
-            infinite::canvas::camera::screen_to_world(&self.camera, &self.viewport(), p)
+            semio_framework_canvas::camera::screen_to_world(&self.camera, &self.viewport(), p)
         }
 
         fn node_kind_scale(&self, node_kind: &str) -> f64 {
@@ -10534,7 +10534,7 @@ pub mod board_host {
             let origin = self.world_to_screen(Point::new(0.0, 0.0));
             let x_off = ((origin.x % step) + step) % step;
             let y_off = ((origin.y % step) + step) % step;
-            let mut p = infinite::canvas::BezPath::new();
+            let mut p = semio_framework_canvas::BezPath::new();
             let mut x = x_off;
             while x <= w {
                 p.move_to(Point::new(x, 0.0));
@@ -11029,7 +11029,7 @@ pub mod board_host {
             let needs_rebuild = cache.as_ref().is_none_or(|c| c.generation != generation || c.lod != lod);
             if needs_rebuild && self.opaque_scene_retirement.get().is_none() {
                 if cache.is_some() {
-                    let Some(token) = infinite::canvas::reserve_opaque_scene_retirement() else {
+                    let Some(token) = semio_framework_canvas::reserve_opaque_scene_retirement() else {
                         self.opaque_scene_fault.set(true);
                         return;
                     };
@@ -11124,7 +11124,7 @@ pub mod board_host {
             }
             if let Some(ref pts) = self.selection_screen_preview {
                 if pts.len() >= 2 {
-                    let mut path = infinite::canvas::BezPath::new();
+                    let mut path = semio_framework_canvas::BezPath::new();
                     path.move_to(pts[0]);
                     for p in pts.iter().skip(1) {
                         path.line_to(*p);
@@ -11226,7 +11226,7 @@ pub mod board_host {
 
         pub fn plan_wheel(&self, sx: f64, sy: f64, delta_y: f64) -> BoardWheelPlan {
             let mut next = self.camera.clone();
-            infinite::canvas::camera::wheel_screen(&mut next, &self.viewport(), sx, sy, delta_y);
+            semio_framework_canvas::camera::wheel_screen(&mut next, &self.viewport(), sx, sy, delta_y);
             BoardWheelPlan { revision: self.interaction_revision, expected: self.camera.clone(), next }
         }
 
@@ -12441,11 +12441,11 @@ pub mod board_host {
             match plan.kind {
                 BoardPointerPlanKind::Idle => {}
                 BoardPointerPlanKind::Pan { camera } => {
-                    self.camera = Camera { x: camera[0], y: camera[1], zoom: infinite::canvas::camera::clamp_zoom(camera[2]) };
+                    self.camera = Camera { x: camera[0], y: camera[1], zoom: semio_framework_canvas::camera::clamp_zoom(camera[2]) };
                 }
                 BoardPointerPlanKind::DragMove | BoardPointerPlanKind::FinishDrag => unreachable!("drag plans are committed through the retained pointer authority"),
                 BoardPointerPlanKind::FinishPan { camera } => {
-                    self.camera = Camera { x: camera[0], y: camera[1], zoom: infinite::canvas::camera::clamp_zoom(camera[2]) };
+                    self.camera = Camera { x: camera[0], y: camera[1], zoom: semio_framework_canvas::camera::clamp_zoom(camera[2]) };
                     self.interaction = Interaction::None;
                 }
                 BoardPointerPlanKind::SelectionPreview { start, start_screen } => {
@@ -13321,7 +13321,7 @@ pub mod board_host {
             scene.fill(FillRule::NonZero, Affine::IDENTITY, color, None, &Circle::new(center, self.draw_space_len(TRANSFORM_RING_HIT_TOLERANCE_PX / self.camera.zoom.max(1e-9) * 0.25, world_space)));
             if let Some(ref drag) = self.transform_drag {
                 let spoke = rotate_point_about(drag.pivot, Point::new(drag.pivot.x + radius_world, drag.pivot.y), drag.radians);
-                let mut path = infinite::canvas::BezPath::new();
+                let mut path = semio_framework_canvas::BezPath::new();
                 path.move_to(center);
                 path.line_to(self.draw_space_point(spoke, world_space));
                 scene.stroke(&Stroke::new(ui_styling::strokes::SELECTION_PREVIEW), Affine::IDENTITY, color, None, &path);
@@ -13775,7 +13775,7 @@ pub mod board_host {
         }
     }
 
-    impl infinite::canvas::canvas_content::CanvasContent for BoardHost {
+    impl semio_framework_canvas::canvas_content::CanvasContent for BoardHost {
         fn build_scene(&self) -> Scene {
             self.build_vector_scene()
         }
@@ -13848,5 +13848,5 @@ pub use crate::infinite::board::normal::undirected::{
     apply_redraw_layout_to_board_snapshot_json as apply_normal_undirected_redraw_layout_to_board_snapshot_json, ForceGraphLayoutOptions as UndirectedForceGraphLayoutOptions,
 };
 pub use crate::infinite::board::ports::directed::*;
-pub use crate::infinite::canvas;
+pub use semio_framework_canvas as canvas;
 pub use board_host::*;

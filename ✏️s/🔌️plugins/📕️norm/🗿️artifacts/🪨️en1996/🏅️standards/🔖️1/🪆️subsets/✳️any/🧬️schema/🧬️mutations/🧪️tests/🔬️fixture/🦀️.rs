@@ -112,6 +112,14 @@ fn vector_breaches(bundle: &Path, mutation: &En1996Mutation, reached: &mut BTree
     breaches
 }
 
+/// 🧾️ The committed applied vector of the leaf `kind`: its mutation and its before-snapshot.
+pub(crate) fn applied_vector(kind: &str) -> (En1996Mutation, En1996Snapshot) {
+    let leaf = directories(&root()).into_iter().find(|leaf| leaf.file_name().is_some_and(|name| name.to_string_lossy().trim_start_matches(|c: char| !c.is_ascii_alphabetic()) == kind)).unwrap_or_else(|| panic!("no committed fixtures for {kind}"));
+    let bundle = leaf.join("✅apply");
+    let mutation = decode_en1996_mutation_json(&read(&bundle.join("🦠️mutation/🔣️.json"))).unwrap_or_else(|error| panic!("{}: {error}", bundle.display()));
+    (mutation, snapshot(&bundle.join("📸️snapshot/⬅️before/🔣️.json")))
+}
+
 /// 🎯️ The canonical assertion one vector's own test makes: its bundle holds with no breach.
 fn assert_vector(leaf: &str, scenario: &str) {
     let bundle = root().join(leaf).join(scenario);

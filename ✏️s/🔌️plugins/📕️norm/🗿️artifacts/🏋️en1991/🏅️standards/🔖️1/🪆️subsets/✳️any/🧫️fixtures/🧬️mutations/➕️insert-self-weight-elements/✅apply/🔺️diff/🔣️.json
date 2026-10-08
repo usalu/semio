@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "annex": null,
   "snowZone": null,
   "altitude": null,
@@ -65,24 +64,39 @@
   "assumedSiloPressure": null,
   "assumedSiloPatch": null,
   "assumedSiloWallFriction": null,
-  "floors": null,
-  "selfWeightElements": {
-    "values": [
-      {
-        "id": "slab-rc",
-        "material": "reinforced_concrete",
-        "thickness": 0.2,
-        "assumedGk": 2000.0
-      },
-      {
-        "id": "screed",
-        "material": "cement_screed",
-        "thickness": 0.05,
-        "assumedGk": 1100.0
-      }
-    ]
+  "floors": {
+    "removed": [],
+    "added": [],
+    "modified": []
   },
-  "roofs": null,
-  "windFaces": null,
-  "accidentalCases": null
+  "selfWeightElements": {
+    "removed": [],
+    "added": [
+      {
+        "after": "slab-rc",
+        "row": {
+          "id": "screed",
+          "material": "cement_screed",
+          "thickness": 0.05,
+          "assumedGk": 1100.0
+        }
+      }
+    ],
+    "modified": []
+  },
+  "roofs": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "windFaces": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "accidentalCases": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

@@ -2,7 +2,7 @@
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow, empty_space_index_snapshot};
 use protocol::Mutation;
-use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_mutation_inverse_sum_law};
 
 fn sample_row(id: &str) -> SpaceArtifactRow {
     SpaceArtifactRow {
@@ -46,31 +46,45 @@ async fn dispatch_registers_semantic_descriptors() {
 async fn create_artifact_inverse_law() {
     let base = empty_space_index_snapshot("space-1");
     assert_mutation_inverse_law(&base, &create_artifact(sample_row("artifact-1"))).await;
+    assert_mutation_inverse_sum_law(&create_artifact(sample_row("artifact-1")), &base).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_artifact_inverse_law() {
     let base = seeded_snapshot();
     assert_mutation_inverse_law(&base, &delete_artifact("artifact-1".into())).await;
+    assert_mutation_inverse_sum_law(&delete_artifact("artifact-1".into()), &base).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn artifact_edits_in_the_middle_of_the_index_restore_their_original_index() {
+    let mut base = empty_space_index_snapshot("space-1");
+    base.artifacts = ["a", "b", "c", "d"].map(sample_row).to_vec();
+    for mutation in [delete_artifact("b".into()), delete_artifact("a".into()), create_artifact_at(sample_row("x"), 0), create_artifact_at(sample_row("x"), 2), create_artifact_at(sample_row("x"), 9), create_artifact(sample_row("x"))] {
+        assert_mutation_inverse_law(&base, &mutation).await;
+        assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn rename_artifact_inverse_law() {
     let base = seeded_snapshot();
     assert_mutation_inverse_law(&base, &rename_artifact("artifact-1".into(), "Renamed".into())).await;
+    assert_mutation_inverse_sum_law(&rename_artifact("artifact-1".into(), "Renamed".into()), &base).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn touch_artifact_inverse_law() {
     let base = seeded_snapshot();
     assert_mutation_inverse_law(&base, &touch_artifact("artifact-1".into(), 99, "user:3".into())).await;
+    assert_mutation_inverse_sum_law(&touch_artifact("artifact-1".into(), 99, "user:3".into()), &base).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn create_artifact_diff_absorb_law() {
     let base = empty_space_index_snapshot("space-1");
     let d1 = create_artifact(sample_row("artifact-1")).diff(&base).diff().clone();
-    let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
+    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
     let d2 = touch_artifact("artifact-1".into(), 55, "user:4".into()).diff(&mid).diff().clone();
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }

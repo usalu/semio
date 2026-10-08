@@ -20,11 +20,12 @@ pub struct ConnectKindCompatibility {
     pub bidirectional: bool,
     pub important: bool,
     pub specificity: Puzzle2dCompatSpecificity,
+    pub index: Option<usize>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn connect_kind_compatibility(source: PagedUtf8<{ usize::MAX }>, target: PagedUtf8<{ usize::MAX }>, bidirectional: bool, important: bool, specificity: Puzzle2dCompatSpecificity) -> Puzzle2dMutation {
-    Puzzle2dMutation::ConnectKindCompatibility(ConnectKindCompatibility { source, target, bidirectional, important, specificity })
+pub fn connect_kind_compatibility(source: PagedUtf8<{ usize::MAX }>, target: PagedUtf8<{ usize::MAX }>, bidirectional: bool, important: bool, specificity: Puzzle2dCompatSpecificity, index: Option<usize>) -> Puzzle2dMutation {
+    Puzzle2dMutation::ConnectKindCompatibility(ConnectKindCompatibility { source, target, bidirectional, important, specificity, index })
 }
 
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ConnectKindCompatibility {

@@ -94,6 +94,10 @@ class LintScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments.length === 1 && segments[0] === "runtime-fixture-graph") {
+      await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "runtime-fixture-graph"), budgetMs: 120_000 });
+      return;
+    }
     if (segments[0] === "artifact-io-ownership") {
       if (segments.length !== 1) throw Error("Expected test artifact-io-ownership");
       for(const suite of ["../../🧪️tests/🚪️artifact-io-ownership/🟦️.ts", "../../🚪️io/🏛️architecture/🧪️tests/physical-codecs/🟦️.ts", "../../../../../../🔨️modules/🌱️value/📝️text/🧪️tests/📏️utf8/🟦️.ts"]){
@@ -752,6 +756,18 @@ class TestScript extends BundleScript {
       if (segments.length !== 1) throw new Error("Gherkin description inline code accepts no extra arguments");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥒️gherkin-description-inline-code/🟦️.ts");
       await runRepositoryTestCommand(process.execPath, ["test", source], { cwd: this.repoRoot });
+      return;
+    }
+    if (segments[0] === "cargo-native-owner-discovery") {
+      if(segments.length!==1)throw Error("Expected test cargo-native-owner-discovery");
+      const source=join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🧭️native-discovery/🟦️.ts");
+      await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"cargo-native-owner-discovery")});
+      return;
+    }
+    if(segments[0]==="cargo-nextest-configuration"){
+      if(segments.length!==1)throw Error("Expected test cargo-nextest-configuration");
+      const source=join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🏎️nextest-configuration/🟦️.ts");
+      await runRepositoryTestCommand(process.execPath,["test",source],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"cargo-nextest-configuration")});
       return;
     }
     if (segments[0] === "composition-policy") {

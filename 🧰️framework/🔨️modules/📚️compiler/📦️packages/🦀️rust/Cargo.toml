@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../.."
+workspace = "../../../.."
 name = "semio-framework-compiler"
 version = "0.1.0"
 edition = "2021"
@@ -26,7 +26,7 @@ semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️r
 # `📤️svg`) back the crate's real glyph-shaping/outline/raster/math-table engine (`🔤️text`,
 # `🧮️math`, `📤️svg`) — genuinely needed to paint or precisely measure real typography, but a WASI
 # guest component never paints (icon painting is unconditionally host-only, see
-# `♾️infinite/🖼️canvas`'s `IconPaintCache::get_or_build`) and the one guest-reachable consumer
+# `🧰️framework/🔨️modules/🖼️canvas`'s `IconPaintCache::get_or_build`) and the one guest-reachable consumer
 # (`preview_media_natural_size`'s dimension query) only ever reads a resolved SVG's declared
 # `width`/`height` attributes, never real glyph geometry. `compile_{snippet,text,emoji,code}_to_svg`
 # therefore carry a `wasm32-wasip2` arm that estimates size from character count instead — see

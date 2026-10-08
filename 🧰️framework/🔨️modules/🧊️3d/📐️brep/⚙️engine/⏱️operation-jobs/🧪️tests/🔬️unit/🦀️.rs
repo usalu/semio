@@ -352,30 +352,6 @@ fn assert_progress(id: &str, progress: &[BrepOperationProgress]) {
     assert_eq!(last.done, last.total, "{id}: a ready job has done everything it planned");
 }
 
-/// 🧪️ Prints the measurements a fixture expectation is written from (run with `--ignored`).
-#[test]
-#[ignore = "prints fixture expectations for authoring"]
-fn record_fixture_expectations() {
-    for case in fixture()["cases"].as_array().unwrap() {
-        let id = case["id"].as_str().unwrap();
-        if !selected(id) {
-            continue;
-        }
-        let started = std::time::Instant::now();
-        let mut scene = Scene::new(case);
-        let operation = scene.operation(case);
-        let before = snapshot(&scene.kernel);
-        match drive(&mut scene, operation, 1, &before) {
-            Ok(trace) => {
-                let operation_time = started.elapsed();
-                let measured = scene.measure(&trace.handles, mesh_measure(case));
-                println!("[DEBUG] record {id} {measured} calls={} total={} operation={operation_time:?} measured={:?}", trace.calls, trace.progress.last().unwrap().total, started.elapsed());
-            }
-            Err(error) => println!("[DEBUG] record {id} ERR {error} {:?}", started.elapsed()),
-        }
-    }
-}
-
 /// 🔁️ The one-shot facade of every operation reproduces the fixture.
 #[test]
 fn oneshot_facade_matches_fixture() {

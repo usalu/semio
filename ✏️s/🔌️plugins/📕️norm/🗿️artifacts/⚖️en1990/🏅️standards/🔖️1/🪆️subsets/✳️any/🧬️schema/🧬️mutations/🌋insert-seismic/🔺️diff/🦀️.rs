@@ -2,8 +2,7 @@
 //! `mutation.clamped` warning and an id the document already holds is a `mutation.duplicate-id`.
 
 use super::InsertSeismic;
-use crate::diff::En1990RowEdit as _;
-use crate::diff::{En1990Diff, En1990SeismicEdit};
+use crate::diff::{En1990Diff, En1990SeismicDelta};
 use crate::En1990Snapshot;
 use protocol::MutationOutcome;
 
@@ -13,7 +12,7 @@ pub fn diff(payload: &InsertSeismic, base: &En1990Snapshot) -> MutationOutcome<E
         return MutationOutcome::fatal("mutation.duplicate-id", format!("The seismic action '{key}' already exists."), [key]);
     }
     let index = payload.index.min(base.seismics.len());
-    let outcome = MutationOutcome::new(En1990Diff { seismics: vec![En1990SeismicEdit::insert(index, payload.item.clone())], ..En1990Diff::default() });
+    let outcome = MutationOutcome::new(En1990Diff { seismics: En1990SeismicDelta::insertion(&base.seismics, index, payload.item.clone()), ..En1990Diff::default() });
     if index == payload.index {
         return outcome;
     }

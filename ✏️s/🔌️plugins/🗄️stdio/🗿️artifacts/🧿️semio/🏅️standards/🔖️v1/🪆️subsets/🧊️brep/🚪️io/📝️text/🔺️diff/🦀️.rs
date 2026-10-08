@@ -23,7 +23,7 @@ use protocol::{DiffText,DiffBinary};
 use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_triple, enc_named_triple};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_added, dec_named_triple, enc_named_added, enc_named_triple};
 use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
 use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot};
@@ -39,22 +39,22 @@ use protocol::MutationDiff;
 pub(crate) fn print_brep_diff(d: &SemioBrepDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();
     if let Some(v) = &d.vertices {
-        tokens.push(format!("vertices={}", enc_named_triple(v, |k: &String| enc_str(k), enc_vertex_diff, enc_vertex)));
+        tokens.push(format!("vertices={}", enc_named_triple(v, |k: &String| enc_str(k), enc_vertex_diff, |a| enc_named_added(a, enc_vertex))));
     }
     if let Some(v) = &d.edges {
-        tokens.push(format!("edges={}", enc_named_triple(v, |k: &String| enc_str(k), enc_edge_diff, enc_edge)));
+        tokens.push(format!("edges={}", enc_named_triple(v, |k: &String| enc_str(k), enc_edge_diff, |a| enc_named_added(a, enc_edge))));
     }
     if let Some(v) = &d.loops {
-        tokens.push(format!("loops={}", enc_named_triple(v, |k: &String| enc_str(k), enc_loop_diff, enc_loop)));
+        tokens.push(format!("loops={}", enc_named_triple(v, |k: &String| enc_str(k), enc_loop_diff, |a| enc_named_added(a, enc_loop))));
     }
     if let Some(v) = &d.faces {
-        tokens.push(format!("faces={}", enc_named_triple(v, |k: &String| enc_str(k), enc_face_diff, enc_face)));
+        tokens.push(format!("faces={}", enc_named_triple(v, |k: &String| enc_str(k), enc_face_diff, |a| enc_named_added(a, enc_face))));
     }
     if let Some(v) = &d.shells {
-        tokens.push(format!("shells={}", enc_named_triple(v, |k: &String| enc_str(k), enc_shell_diff, enc_shell)));
+        tokens.push(format!("shells={}", enc_named_triple(v, |k: &String| enc_str(k), enc_shell_diff, |a| enc_named_added(a, enc_shell))));
     }
     if let Some(v) = &d.solids {
-        tokens.push(format!("solids={}", enc_named_triple(v, |k: &String| enc_str(k), enc_solid_diff, enc_solid)));
+        tokens.push(format!("solids={}", enc_named_triple(v, |k: &String| enc_str(k), enc_solid_diff, |a| enc_named_added(a, enc_solid))));
     }
     tokens.join(" ")
 }
@@ -67,17 +67,17 @@ pub(crate) fn parse_brep_diff(line: &str) -> Result<SemioBrepDiff, String> {
     }
     for token in line.split(' ') {
         if let Some(rest) = token.strip_prefix("vertices=") {
-            d.vertices = Some(dec_named_triple(rest, dec_str, dec_vertex_diff, dec_vertex)?);
+            d.vertices = Some(dec_named_triple(rest, dec_str, dec_vertex_diff, |t| dec_named_added(t, dec_vertex))?);
         } else if let Some(rest) = token.strip_prefix("edges=") {
-            d.edges = Some(dec_named_triple(rest, dec_str, dec_edge_diff, dec_edge)?);
+            d.edges = Some(dec_named_triple(rest, dec_str, dec_edge_diff, |t| dec_named_added(t, dec_edge))?);
         } else if let Some(rest) = token.strip_prefix("loops=") {
-            d.loops = Some(dec_named_triple(rest, dec_str, dec_loop_diff, dec_loop)?);
+            d.loops = Some(dec_named_triple(rest, dec_str, dec_loop_diff, |t| dec_named_added(t, dec_loop))?);
         } else if let Some(rest) = token.strip_prefix("faces=") {
-            d.faces = Some(dec_named_triple(rest, dec_str, dec_face_diff, dec_face)?);
+            d.faces = Some(dec_named_triple(rest, dec_str, dec_face_diff, |t| dec_named_added(t, dec_face))?);
         } else if let Some(rest) = token.strip_prefix("shells=") {
-            d.shells = Some(dec_named_triple(rest, dec_str, dec_shell_diff, dec_shell)?);
+            d.shells = Some(dec_named_triple(rest, dec_str, dec_shell_diff, |t| dec_named_added(t, dec_shell))?);
         } else if let Some(rest) = token.strip_prefix("solids=") {
-            d.solids = Some(dec_named_triple(rest, dec_str, dec_solid_diff, dec_solid)?);
+            d.solids = Some(dec_named_triple(rest, dec_str, dec_solid_diff, |t| dec_named_added(t, dec_solid))?);
         } else {
             return Err(format!("brep diff: unknown token {token:?}"));
         }

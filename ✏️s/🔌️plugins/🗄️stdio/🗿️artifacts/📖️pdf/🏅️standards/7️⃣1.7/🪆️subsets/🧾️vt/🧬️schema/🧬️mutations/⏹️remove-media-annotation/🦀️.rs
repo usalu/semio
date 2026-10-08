@@ -2,7 +2,7 @@
 
 use super::insert_media_annotation::InsertMediaAnnotation;
 use super::PdfVtMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -23,11 +23,10 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveMediaAnnotation {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfVtMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        support::media_annotation(base, &self.subtype, &self.title).map(|_| PdfVtMutation::InsertMediaAnnotation(InsertMediaAnnotation { subtype: self.subtype.clone(), title: self.title.clone() })).into_iter().collect()
-    
-    })())
-}
+        Ok({
+            support::media_annotation(base, &self.subtype, &self.title).map(|id| PdfVtMutation::InsertMediaAnnotation(InsertMediaAnnotation { subtype: self.subtype.clone(), title: self.title.clone(), placements: support::placements_of(base, &[id]) })).into_iter().collect()
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove {} media annotation", self.subtype), &format!("{} Medienanmerkung entfernen", self.subtype))

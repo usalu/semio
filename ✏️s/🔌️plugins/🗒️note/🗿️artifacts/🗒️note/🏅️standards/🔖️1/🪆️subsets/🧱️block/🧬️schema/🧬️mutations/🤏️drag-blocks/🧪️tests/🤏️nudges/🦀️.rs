@@ -100,7 +100,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "drag-blocks/nudges-ink-and-the-whole-group-subtree: committed diff did not carry before to after");
 }
 
@@ -117,4 +117,10 @@ async fn relative_offset_recurses_into_the_dragged_group_subtree() {
     assert_eq!((group_x, group_y), (352.0, 192.0), "the group itself takes the same offset");
     let (badge_x, badge_y, ..) = block_bounds(find_block(&applied.blocks, "blk-nested").expect("the nested badge exists"));
     assert_eq!((badge_x, badge_y), (362.0, 202.0), "a dragged group carries its children: the offset recurses into the subtree");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `UpdateCameraCalibration`, in the vocabulary's one guard order:
 //! missing target ⇒ Error, non-finite intrinsics/distortion ⇒ Fatal, identical resubmission ⇒ Warning.
-use crate::diff::RemodelingDiff;
+use crate::diff::{RemodelingDiff, RemodelingRow};
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
@@ -22,10 +22,6 @@ pub fn diff(payload: &super::UpdateCameraCalibration, base: &RemodelingSnapshot)
     if existing == &payload.camera {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Camera calibration \"{}\" is already up to date.", payload.camera.id));
     }
-    let mut calibration = base.calibration.clone();
-    if let Some(existing) = calibration.cameras.iter_mut().find(|camera| camera.id == payload.camera.id) {
-        *existing = payload.camera.clone();
-    }
-    protocol::MutationOutcome::new(RemodelingDiff { calibration: Some(calibration), ..Default::default() })
+    protocol::MutationOutcome::new(RemodelingDiff::camera_rows(vec![RemodelingRow::Replace { entity: payload.camera.clone() }]))
 }
 //#endregion 🔖️Diff

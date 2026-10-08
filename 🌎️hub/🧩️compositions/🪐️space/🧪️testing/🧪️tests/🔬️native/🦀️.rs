@@ -43,7 +43,7 @@ async fn actual_export_command_forwards_original_demo_content_to_the_media_handl
     use crate::engine::space::unit_tests::context::studio_emit;
     const FORMAT: &str = "test.space.fixture.source";
     const PROBE_KIND: &str = "test.space.fixture.document";
-    semio_framework::register_format_descriptors([semio_framework::FormatDescriptor {
+    directory::io::register_format_descriptors([directory::io::FormatDescriptor {
         kind_id: FORMAT.into(), short_id: FORMAT.into(), aliases: Vec::new(), mimes: vec!["application/vnd.semio.space-fixture-probe+json".into()], extensions: vec![".space-fixture-probe".into()], name: "Fixture source probe".into(), full_name: "Space fixture source probe".into(), neutral: true, dir_name: "fixture-probe".into(), is_binary: false,
     }]).await.unwrap();
     semio_framework_os::workflow::register_os_media_export_handler_kind(PROBE_KIND, FORMAT, |document| {

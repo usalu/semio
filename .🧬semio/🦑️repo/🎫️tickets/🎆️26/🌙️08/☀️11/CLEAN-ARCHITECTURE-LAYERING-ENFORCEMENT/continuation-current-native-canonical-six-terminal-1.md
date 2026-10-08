@@ -1,0 +1,71 @@
+# Current Native Canonical Six Terminal Ledger
+
+The General UI engine target completed through its actual registered repository owner-command wrapper, with cache skipped and the original long policy, `wgpu-engine` feature, and `--lib` selector. The second complete invocation compiled that native library test binary and passed all 787 selected tests with zero skipped. Nextest run identity: `cd7abb0d-cc67-4111-89ce-9d22cfed7545`; assertion duration: 22.183 seconds; terminal handle: 32262; final status: 0. That result predates the subsequently identified zero-index GPU guard correction. The third complete invocation, handle 91298, subsequently failed its retained pipeline census after 452 passed tests: current physical source had 19 pipelines while the explicit fixture named 17. The two actual section pipeline owners are now represented in the exact fixture and all its controls. The fourth original full route, handle17368, subsequently closed status0: compiled in8m21 and ran all787 tests,787 passed,0skipped in11.911s. It includes the current zero-index source guards and exact19-pipeline corpus correction. This is an actual shared-workspace current owner result, without atomic or historical source identity claims.
+
+The first complete invocation is retained as a failure: 305 of 787 tests ran, 304 passed and one failed, before fail-fast cancellation. Its unchanged heap-first slot law measured 166040 bytes per element against the stale descriptor's 165984. The current descriptor now records that actual element measurement while retaining capacity 64, owner size 520 bytes, conversion threshold 65536 bytes, and explicit bounded thread stack 1048576 bytes. The second full run validated that law.
+
+The current registered General UI feature ownership target also completed through its actual repository wrapper, status 0, six tests passed, zero failed, 237 expectations. All 73 law names and ten engine-owned assignments are retained. Independent Node hashing witnesses all 73 law bodies and all 16 helper bodies. Its version-2 language-neutral schema explicitly binds helpers to canonical sources, and the actual wrong-owner mutation is rejected. Five current law hashes and one current moved helper hash were reconciled only after assessing retained assertions and the canonical shared paint-policy extraction. The original failing source check remains reported separately.
+
+The current UI package `check commands` command completed through Nx orchestration, status 0. It type-checked the declared package script and native-command, feature-ownership, and ring-press tests with `--noEmit --incremental false`.
+
+The canonical Infinite Board DAG unit source retains all 104 original law names and is mounted through its real `board::ports::directed_dag` module. The full unfiltered owning Infinite invocation compiled successfully and executed 547 tests: 541 passed and six failed, zero ignored and zero filtered, status 1. Four Board and two world source/fixture inconsistencies are assessed in the failure report below; corrections are authored. The follow-up full build 22219 failed before assertions, including an incorrectly placed new selected-JSON fixture; that input is now at its defining DAG fixture directory. The next exact full rerun is live under handle 47107. The removed General UI Board feature was not restored.
+
+The current General UI package script's static Bun build succeeded with 17 inputs. The combined UI/Cargo-owner/Product script static build refused optional `chromium-bidi` references in Playwright's bundled core before a metafile receipt could be published. The Product package script itself imports successfully in actual Bun runtime. A fresh ordinary runtime interval subsequently held 889 exact bodies, including complete file membership of all five observed external packages, and imported the four canonical command entrypoints: 303 actual file modules, 19 system modules, zero unheld loaded modules, zero body advances, and zero external membership advances. This establishes qualified current import interval custody, separately from atomic capture, deferred native execution imports, and readiness of the held-source release gate. Missing epoch-2 output was not reconstructed.
+
+These results establish the current General UI owning route's actual compiler and assertions on this host, using the shared concurrently editable workspace. They do not establish historical captured-source identity, atomic current-source custody, cross-platform runtime execution, Product renderer native acceptance, or Infinite Board native acceptance. Following the explicit continuation instruction, the current unfiltered Infinite and whole native Product routes are now both live; the optional static bundler refusal is qualified separately rather than blocking current read-only native verification. Their invocation and scope are recorded in the supporting report below.
+
+The later complete Infinite47107 execution ran all556 current tests:552passed/four world failures/zero ignored or filtered. Its original104 Board law names passed. Product23743 reached274passed/two original solid pointer failures before fail-fast; explicit neutral solid pick preconditions now retain the original asserted target with an independent Three witness. Infinite29094,DAG24515 and Flow54866 later failed during root-wide full cursor grant publication at a defining PackJson stale signature, before assertions. Their closed failures remain separate from source observations. Product76554 closed status1 after284run282pass2originalsolid-pick failures; the line-inclusive witness and explicit screen-clearance precondition now await a fresh full owner. Infinite97222 and DAG78542 closed status1 before assertions at the defining replication Cow message capacity compiler port. Flow84355 compiled and selected251 originals but failed five assertions; its residual CPU-active original retirement loops were canceled through the verified owner wrapper and it closed status1. The canonical original gesture caller is corrected; defining Neural demand propagation remains Root-owned and fresh full Flow acceptance remains pending. UI17368’s actual787pass result precedes that later neutral cursor publication.
+
+## Source File Ledger
+
+| File | Change |
+| --- | --- |
+| `🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧊️feature-ownership/🟦️.ts` | Schema admission, effective negative control, explicit canonical helper-source checks, independent Node law and helper witnesses |
+| `🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🧊️feature-ownership/🔣️.json` | Current version-2 corpus, explicit helper source paths, assessed current hashes |
+| `🧰️framework/🔨️modules/🖱️ui/🧬️schema/🧊️feature-ownership/🔣️.json` | New strict language-neutral current ownership schema |
+| `🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json` | Current measured slot element descriptor and report provenance |
+| `.vscode/launch.json` | Exact current General UI, unfiltered Infinite, whole native Product, DAG artifact, Flow and extracted independent Product pick oracle commands with ticket storage and explicit long/build-memory controls |
+| `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs` | Permit original zero-index primitives while preserving zero-vertex refusal, exact zero index count, and bounded GPU owner retirement |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs` | Canonical host schema admission and exact short-control escapes in bounded JSON cursor |
+| Same Board DAG `🧪️tests/🔬️unit/🦀️.rs` | All 104 law names retained, canonical schema literals, exact neutral numeric assertions and independent JSON oracle, actual offscreen minimap precondition, neutral selected-byte cursor vectors |
+| Same Board DAG `🧪️tests/🔗️wire-edit/🦀️.rs` | Canonical host schema producer |
+| Same Board DAG `🧪️tests/🧪️node-graph-edit-rows/🦀️.rs` | Canonical host schema producer |
+| Same Board DAG `🧫️fixtures/🎯️selected-json.json` | New language-neutral exact cursor vectors |
+| Infinite artifact DAG `🧫️fixtures/📥️host-kind-admission/🔣️.json` | Canonical host schema in all neutral admission vectors |
+| OS Flow `🖥️host/🦀️.rs` | Canonical host schema in both existing producers |
+| Infinite world `🦀️.rs` | Changed scene-bridge publication carries a checked next view authority revision |
+| Infinite world `🧪️tests/🔬️unit/🦀️.rs` | Original live-source law also requires unchanged-source revision idempotence; original zero-index primitive law requires an actual zero-byte resident index buffer |
+| UI `🧪️tests/🔬️targets-wgpu-gpu-prepared-present/🦀️.rs` | Original exact composite pipeline law includes all 19 physical owners and validates the language-neutral positive and negative controls |
+| UI `🧫️fixtures/🎨️encoded-world-pipelines/🔣️.json` | Exact closed 19-pipeline corpus with both actual section pipeline owners in every control |
+| Renderer `🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json` | Only observed EngineSurfaceRegistry element measurement90608 bytes and report provenance, retaining all original ownership/stack budgets |
+| Infinite DAG artifact `🌿️vcs/🦀️.rs` | Actual test store close driver uses published exact demand, admits receipts and bounds eventual completion with a phase witness |
+| Infinite DAG artifact `🧵️retained/🦀️.rs` and original `🧪️tests/🔬️unit/🦀️.rs` | Full cursor grants, explicit zero-item refusal, truthful logical receipts, typed failures and exact original caller |
+| Flow artifact `🌿️vcs/🦀️.rs` and original `🧪️tests/🌿️vcs/🦀️.rs` | Full cursor grants, exact continuation capacity admission, zero-item refusal, typed failures and original caller |
+| Flow `🧪️tests/🎒️mesh-pack-wire/🦀️.rs` | Actual removed mesh conversion caller now uses canonical FromValue port and preserves original bounded/oracle/cancellation law |
+| Flow host original `🧪️tests/🔬️unit/🦀️.rs` | Exact canonical empty, move and setSlider journal laws without whole-snapshot compatibility |
+| EngineCanvas original `🧪️tests/🧩️wgpu-engine-surfaces/🦀️.rs` and neutral `🧫️fixtures/🧩️wgpu-engine-surfaces/🔣️.json` | Original solid domain pointer law uses explicit neutral interior point and independent Three raycast witness |
+
+No runtime dependency, script filename other than 📜️script.ts, compatibility route, migration script, Git mutation, worktree, or AGENTS edit was introduced. Existing Nx targets and explicit GUI launch commands cover the owning executions. The ticket-only extracted Product oracle helper adds 📜️script.ts and minimal Nx/project inputs; its registered verification actually passed through Nx and is independently qualified from native execution. The initial Infinite and Product requests failed before native execution at the authority graph guard and its dependent missing cache; a second Infinite request also failed at that guard. Those outputs and the later real 547-test native failure remain preserved. Product 39520 failed with 14 dependency compiler errors; Flow 31654 failed with compiler errors including incorrectly changed host field references, now corrected while retaining canonical schema strings. Product 58988 then compiled and selected 1676 original long tests (11 policy skips), ran 265, passed 264 and failed its original EngineCanvas fixed-slot descriptor law. The observed one-row measurement is now reconciled and the fresh complete retry is live under Product 23743, alongside Infinite47107 and Flow43178; UI17368 has now closed status0 with all787 passed. DAG artifact 20047 compiled and selected all 70 tests; its four CPU-active store tests were canceled through the owned wrapper after assessing their discarded Pending receipts at a fixed 4096-byte close grant. Its status1 cancellation is preserved; the exact-demand caller correction awaits a complete fresh terminal. No run was restarted merely for a lock or elapsed duration. Temporary generated evidence and Cargo output remain under `🗑️generated/current-native-canonical-6` while the parent ticket remains active; the ticket owner must remove generated output when finishing the ticket.
+
+## Supporting Reports
+
+- [Invocation](continuation-current-native-canonical-six-invocation-1.md)
+- [Preserved Feature Failure](continuation-current-native-canonical-six-feature-ownership-failure-1.md)
+- [Current Corpus Reconciliation](continuation-current-native-canonical-six-corpus-reconciliation-1.md)
+- [Actual Slot Budget and Full Engine Result](continuation-current-native-canonical-six-slot-budget-1.md)
+- [Current Board and Runtime Module Observations](continuation-current-native-canonical-six-board-module-observation-1.md)
+- [Current Infinite and Product Invocation](continuation-current-native-canonical-six-infinite-product-invocation-1.md)
+- [Ordinary Runtime Import Interval Custody](continuation-current-native-canonical-six-runtime-interval-custody-1.md)
+- [Real Unfiltered Infinite Failure and Corrections](continuation-current-native-canonical-six-infinite-failure-1.md)
+- [Real Product Compiler Failure](continuation-current-native-canonical-six-product-compile-failure-1.md)
+- [Follow-Up Build and Pipeline Census Failures](continuation-current-native-canonical-six-followup-failures-1.md)
+- [Actual Product Slot Descriptor Failure](continuation-current-native-canonical-six-product-slot-budget-1.md)
+- [Actual DAG Artifact Retirement Stall](continuation-current-native-canonical-six-dag-retirement-stall-1.md)
+- [Later Complete Infinite Runtime](continuation-current-native-canonical-six-infinite-followup-runtime-1.md)
+- [Original Flow Mesh Caller](continuation-current-native-canonical-six-flow-mesh-caller-1.md)
+- [Coordinated Cursor Grant Port and Frontier Qualification](continuation-current-native-canonical-six-cursor-grant-port-1.md)
+- [Original Product Domain Pick](continuation-current-native-canonical-six-product-domain-pick-1.md)
+- [Actual Original Pick Retry and Line-Inclusive Witness](continuation-current-native-canonical-six-product-domain-pick-2.md)
+- [Actual Flow Runtime and Canonical Journal Caller](continuation-current-native-canonical-six-flow-runtime-1.md)
+
+Repository MCP goals and ticket tools remain absent from the currently exposed inventory. The parent remains responsible for the existing ticket's final ledger and closure when those tools become available.

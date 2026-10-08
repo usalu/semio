@@ -1,35 +1,42 @@
 {
-  "artifact": null,
   "annex": null,
   "thetaRmC": null,
   "outdoorCo2Ppm": null,
-  "zones": null,
-  "ventSystems": {
-    "values": [
-      {
-        "id": "vent-central",
-        "name": "Central AHU",
-        "systemType": "central_mech",
-        "sfpWM3S": 950.0,
-        "sfpRequiredClass": 3,
-        "heatRecoveryEta": 0.75,
-        "odaClass": "ODA2",
-        "filterSupClass": "ePM1_55",
-        "yearsSinceInspection": 1,
-        "humidificationRequiredKgH": 0.0,
-        "humidificationProvidedKgH": 0.0,
-        "fanQVM3S": 0.28,
-        "fanTRunH": 2500.0,
-        "ductClass": "C",
-        "ductTestPressurePa": 400.0,
-        "ductLeakageM3SM2": 0.08,
-        "designAirflowM3H": 1200.0
-      }
-    ]
-  },
   "envelopeN50HInv": null,
   "envelopeVolumeM3": null,
   "cellarAreaM2": null,
   "cellarVentilationM3H": null,
-  "nightSetbackK": null
+  "nightSetbackK": null,
+  "zones": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "ventSystems": {
+    "removed": [],
+    "added": [],
+    "modified": [
+      {
+        "key": "vent-central",
+        "patch": {
+          "name": null,
+          "systemType": null,
+          "sfpWM3S": null,
+          "sfpRequiredClass": null,
+          "heatRecoveryEta": null,
+          "odaClass": null,
+          "filterSupClass": null,
+          "yearsSinceInspection": null,
+          "humidificationRequiredKgH": null,
+          "humidificationProvidedKgH": null,
+          "fanQVM3S": null,
+          "fanTRunH": null,
+          "ductClass": null,
+          "ductTestPressurePa": null,
+          "ductLeakageM3SM2": null,
+          "designAirflowM3H": 1200.0
+        }
+      }
+    ]
+  }
 }

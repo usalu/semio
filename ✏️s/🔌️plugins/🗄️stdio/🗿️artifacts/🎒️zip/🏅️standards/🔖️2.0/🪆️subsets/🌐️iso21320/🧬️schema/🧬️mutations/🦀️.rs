@@ -51,8 +51,6 @@ pub mod rename_entry;
 pub mod set_archive_comment;
 #[path = "✍️set-entry-data/🦀️.rs"]
 pub mod set_entry_data;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 //#endregion 🔖️Leaves
 
 /// 📐️ Typed content mutation for `stdio.zip` 2.0/🌐️iso21320. `NoMutation` was dropped:
@@ -62,7 +60,6 @@ pub mod set_snapshot;
 #[mutations(snapshot = ZipSnapshot, diff = ZipDiff, schema = "ZipIso21320Mutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum ZipIso21320Mutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
     /// 💬️ Sets the archive-level (EOCD) comment.
     SetArchiveComment(set_archive_comment::SetArchiveComment),
     /// ➕️ Adds a member the profile declares uncompressed (method 0).
@@ -81,12 +78,11 @@ pub enum ZipIso21320Mutation {
 /// `kinds` list `../../🔣️oracle.json`'s `mutationCatalogs` entry declares. The framework
 /// never parses this enum; `kinds_matches_enum_variants_and_manifest` below is what keeps the two
 /// declarations honest against each other.
-pub const KINDS: &[&str] = &["set-snapshot", "set-archive-comment", "add-stored-entry", "add-deflated-entry", "remove-entry", "rename-entry", "set-entry-data"];
+pub const KINDS: &[&str] = &["set-archive-comment", "add-stored-entry", "add-deflated-entry", "remove-entry", "rename-entry", "set-entry-data"];
 
 /// 🏷️ The `KINDS` spelling of one mutation's own variant, exhaustively matched.
 pub fn kind_of(mutation: &ZipIso21320Mutation) -> &'static str {
     match mutation {
-        ZipIso21320Mutation::SetSnapshot(_) => "set-snapshot",
         ZipIso21320Mutation::SetArchiveComment(_) => "set-archive-comment",
         ZipIso21320Mutation::AddStoredEntry(_) => "add-stored-entry",
         ZipIso21320Mutation::AddDeflatedEntry(_) => "add-deflated-entry",
@@ -112,7 +108,7 @@ pub fn declared_method(mutation: &ZipIso21320Mutation) -> Option<ZipIso21320Meth
 /// imperative apply path.
 pub fn apply_zip_iso21320_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipIso21320Mutation) -> protocol::MutationOutcome<ZipDiff> {
     let outcome = <ZipIso21320Mutation as protocol::Mutation<ZipSnapshot>>::diff(mutation, snapshot);
-    match protocol::MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -122,67 +118,51 @@ pub fn apply_zip_iso21320_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipIso
 }
 //#endregion 🔖️Apply
 
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &ZipIso21320Mutation, base: &ZipSnapshot) -> protocol::MutationOutcome<ZipDiff> {
-    match this {
-        ZipIso21320Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => protocol::MutationOutcome::new(diff::diff_set_snapshot(base, snapshot)),
-        ZipIso21320Mutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment, comment_utf8 }) => protocol::MutationOutcome::new(diff::diff_set_archive_comment(comment, *comment_utf8)),
-        ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry, before }) | ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry, before }) => {
-            if base.entries.iter().any(|existing| existing.name == entry.name) {
-                return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("a member named {:?} already exists -- ISO/IEC 21320-1 containers address members by name", entry.name), [entry.name.clone()]);
-            }
-            if before.as_ref().is_some_and(|name| !base.entries.iter().any(|entry| &entry.name == name)) {
-                return protocol::MutationOutcome::error("mutation.target-missing", "ZIP insertion anchor no longer exists", ["entries"]);
-            }
-            let mut entry = entry.clone();
-            entry.metadata.compression_method = declared_method(this).expect("add mutation declares compression").wire_code();
-            protocol::MutationOutcome::new(diff::diff_add_entry(base, entry, before.as_deref()))
-        }
-        ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name }) => protocol::MutationOutcome::new(diff::diff_remove_entry(name)),
-        ZipIso21320Mutation::RenameEntry(rename_entry::RenameEntry { name, new_name }) => {
-            if base.entries.iter().any(|existing| existing.name == *new_name) {
-                return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("a member named {new_name:?} already exists"), [new_name.clone()]);
-            }
-            protocol::MutationOutcome::new(diff::diff_rename_entry(name, new_name))
-        }
-        ZipIso21320Mutation::SetEntryData(set_entry_data::SetEntryData { name, data }) => protocol::MutationOutcome::new(diff::diff_set_entry_data(name, data.clone())),
+//#region 🔖️Net
+/// 🧮️ The leaves that carry `base` to exactly `next`: the archive comment, then the members that vanished, then — in `next` order —
+/// every changed payload and every new member inserted before the next member that already exists. The snapshot `schema` is a
+/// constant of the artifact and never differs; a move or a metadata change is no leaf and is refused by the exact net.
+pub fn net_mutations(base: &ZipSnapshot, next: &ZipSnapshot) -> Vec<ZipIso21320Mutation> {
+    let mut leaves = Vec::new();
+    if (&base.comment, base.comment_utf8) != (&next.comment, next.comment_utf8) {
+        leaves.push(ZipIso21320Mutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: next.comment.clone(), comment_utf8: next.comment_utf8 }));
     }
-}
-
-/// ↩️ An added member is undone by removing it; which of the two profile methods declared it is
-/// irrelevant to the undo, so both add kinds share one inverse.
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &ZipIso21320Mutation, base: &ZipSnapshot) -> Result<Vec<ZipIso21320Mutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    match this {
-        ZipIso21320Mutation::SetSnapshot(_) => vec![ZipIso21320Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        ZipIso21320Mutation::SetArchiveComment(_) => vec![ZipIso21320Mutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: base.comment.clone(), comment_utf8: base.comment_utf8 })],
-        ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry, .. }) => vec![ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })],
-        ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry, .. }) => vec![ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })],
-        ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name }) => base
-            .entries
-            .iter()
-            .position(|entry| entry.name == *name)
-            .map(|index| {
-                let entry = base.entries[index].clone();
-                let before = base.entries.get(index + 1).map(|entry| entry.name.clone());
-                if entry.metadata.compression_method == ZipIso21320Method::Stored.wire_code() {
-                    vec![ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry, before })]
+    leaves.extend(base.entries.iter().filter(|entry| !next.entries.iter().any(|kept| kept.name == entry.name)).map(|entry| ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })));
+    let mut present: Vec<&str> = base.entries.iter().filter(|entry| next.entries.iter().any(|kept| kept.name == entry.name)).map(|entry| entry.name.as_str()).collect();
+    for (index, entry) in next.entries.iter().enumerate() {
+        match base.entries.iter().find(|existing| existing.name == entry.name) {
+            Some(existing) if existing.data != entry.data => leaves.push(ZipIso21320Mutation::SetEntryData(set_entry_data::SetEntryData { name: entry.name.clone(), data: entry.data.clone() })),
+            Some(_) => {}
+            None => {
+                let before = next.entries[index + 1..].iter().map(|following| following.name.clone()).find(|name| present.contains(&name.as_str()));
+                leaves.push(if entry.metadata.compression_method == ZipIso21320Method::Stored.wire_code() {
+                    ZipIso21320Mutation::AddStoredEntry(add_stored_entry::AddStoredEntry { entry: entry.clone(), before })
                 } else {
-                    vec![ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry, before })]
-                }
-            })
-            .unwrap_or_default(),
-        ZipIso21320Mutation::RenameEntry(rename_entry::RenameEntry { name, new_name }) => vec![ZipIso21320Mutation::RenameEntry(rename_entry::RenameEntry { name: new_name.clone(), new_name: name.clone() })],
-        ZipIso21320Mutation::SetEntryData(set_entry_data::SetEntryData { name, .. }) => {
-            base.entries.iter().find(|entry| entry.name == *name).map(|entry| vec![ZipIso21320Mutation::SetEntryData(set_entry_data::SetEntryData { name: name.clone(), data: entry.data.clone() })]).unwrap_or_default()
+                    ZipIso21320Mutation::AddDeflatedEntry(add_deflated_entry::AddDeflatedEntry { entry: entry.clone(), before })
+                });
+                present.push(entry.name.as_str());
+            }
         }
     }
-
-    })())
+    leaves
 }
-//#endregion 🔖️MutationTrait
+//#endregion 🔖️Net
+
+//#region 🔖️AddEntry
+/// ➕️ The diff both authoring kinds share: the member lands under the compression method the kind declares, refused when its name
+/// is taken or its insertion anchor is gone.
+fn added_entry_diff(base: &ZipSnapshot, entry: &ZipEntry, before: Option<&str>, method: ZipIso21320Method) -> protocol::MutationOutcome<ZipDiff> {
+    if base.entries.iter().any(|existing| existing.name == entry.name) {
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("a member named {:?} already exists -- ISO/IEC 21320-1 containers address members by name", entry.name), [entry.name.clone()]);
+    }
+    if before.is_some_and(|name| !base.entries.iter().any(|entry| entry.name == name)) {
+        return protocol::MutationOutcome::error("mutation.target-missing", "ZIP insertion anchor no longer exists", ["entries"]);
+    }
+    let mut entry = entry.clone();
+    entry.metadata.compression_method = method.wire_code();
+    protocol::MutationOutcome::new(diff::diff_add_entry(base, entry, before))
+}
+//#endregion 🔖️AddEntry
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

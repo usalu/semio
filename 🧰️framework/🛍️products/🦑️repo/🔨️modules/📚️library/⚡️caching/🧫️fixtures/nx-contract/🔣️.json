@@ -541,7 +541,7 @@
   },
   "fontAssets": {
     "project": "semio-framework-os-infinite",
-    "toolProject": "semio-framework-os-font-assets",
+    "toolProject": "semio-framework-canvas-font-assets",
     "tool": "build",
     "producer": "fonts",
     "toolOutput": "{projectRoot}/dist/build",

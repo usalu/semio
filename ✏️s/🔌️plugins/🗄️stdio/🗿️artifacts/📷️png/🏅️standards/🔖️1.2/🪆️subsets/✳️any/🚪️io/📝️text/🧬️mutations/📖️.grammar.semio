@@ -2,9 +2,9 @@ dialect grammar
 grammar stdio.png.mutations
 start op
 comment none
-op = set-snapshot-op | patch-snapshot-op | change-gamma-op | patch-pixels-op | paint-native-samples-op
-set-snapshot-op = "set-snapshot" "snapshot" "=" hex
-patch-snapshot-op = "patch-snapshot" "patch" "=" hex
+op = replace-image-op | change-gamma-op | patch-pixels-op | paint-native-samples-op
 change-gamma-op = "change-gamma" "payload" "=" hex
 patch-pixels-op = "patch-pixels" "payload" "=" hex
 paint-native-samples-op = "paint-native-samples" "payload" "=" hex
+
+replace-image-op = "replace-image" "image" "=" hex

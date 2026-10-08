@@ -105,7 +105,7 @@ fn filter_bar(cfg: &SourcingCurationConfig, labels: &SourcingLabels) -> UiAssemb
     let (query_action, _) = sourcing_action("setFilterQuery", None)?;
     let query = ui::input(InputKind::Text).value(ui_text(&filters.query)?).placeholder(ui_label(labels.search_placeholder.as_str())?);
     children.try_push(query.try_id("sourcing-filter-query").map_err(|_| filter_error("query-id"))?.try_on(Trigger::Change, query_action).map_err(|_| filter_error("query-binding"))?.try_build().map_err(|_| filter_error("query-build"))?).map_err(|_| filter_error("children"))?;
-    let modules = available_modules(&cfg.contributions_json);
+    let modules = available_modules(crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules(&cfg.contributions_json));
     for module in &modules {
         let pressed = filters.module_ids.iter().any(|id| id == &module.module_id);
         let (action, args) = sourcing_action("setFilterModule", Some(ui_value_map([("moduleId", ui_value_text(&module.module_id)?), ("enabled", ui_value_bool(!pressed))])?))?;

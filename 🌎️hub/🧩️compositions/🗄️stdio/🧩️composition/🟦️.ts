@@ -1,3 +1,5 @@
+import {fileURLToPath} from "node:url";
+import {observeCargoPreparationSourceV1,observeCargoPreparationInputV1,observeCargoPreparationOutputV1} from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🟦️.ts";
 /** 🏗️ Publishes the concrete Stdio composition from present artifact-owned contributions. */
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -18,11 +20,11 @@ function physical(root: string, path: string, file = true): string {
   }
   const info = lstatSync(absolute);
   if (file ? !info.isFile() || info.size > boundary : !info.isDirectory()) throw new Error(`Composition input has an invalid physical shape: ${path}`);
-  return absolute;
+  if(!file)observeCargoPreparationInputV1(absolute,"presence");return absolute;
 }
 
 function read(root: string, path: string): string {
-  return readFileSync(physical(root, path), "utf8");
+  const absolute=physical(root,path),bytes=readFileSync(absolute);observeCargoPreparationInputV1(absolute,"file",bytes);return bytes.toString("utf8");
 }
 
 function owners(value: unknown): OwnerV1[] {
@@ -61,15 +63,18 @@ export function readStdioCompositionInputs(repoRoot: string, hubRoot: string): I
   const inputs: InputV1[] = [];
   for (const root of roots) {
     const directory = physical(repoRoot, relative(repoRoot, resolve(hubRoot, "📦️packages/🦀️rust", root)), false);
+    observeCargoPreparationInputV1(directory,"directory");
     for (const entry of readdirSync(directory, { withFileTypes: true }).sort((a, b) => Buffer.compare(Buffer.from(a.name), Buffer.from(b.name)))) {
       if (entry.isSymbolicLink()) throw new Error(`Stdio contribution owner is a symlink: ${entry.name}`);
       if (!entry.isDirectory()) continue;
       const artifactRoot = resolve(directory, entry.name), packagePath = resolve(artifactRoot, "📦️packages/🦀️rust/Cargo.toml");
+      for(const candidate of [packagePath,resolve(artifactRoot,"🧩️composition/🔣️.json"),resolve(artifactRoot,"📜️artifact-definition.json")])observeCargoPreparationInputV1(candidate,"presence");
       if (!existsSync(packagePath) && !existsSync(resolve(artifactRoot, "🧩️composition/🔣️.json")) && !existsSync(resolve(artifactRoot, "📜️artifact-definition.json"))) continue;
       if (!existsSync(packagePath)) throw new Error(`Present Stdio artifact has no Cargo owner: ${entry.name}`);
       const observed = new Map<string, string>();
       const capture = (path: string): string => {
         const bytes = readFileSync(physical(artifactRoot, relative(artifactRoot, path)));
+        observeCargoPreparationInputV1(path,"file",bytes);
         observed.set(path, createHash("sha256").update(bytes).digest("hex"));
         return bytes.toString("utf8");
       };
@@ -105,6 +110,7 @@ export function readStdioCompositionInputs(repoRoot: string, hubRoot: string): I
 
 /** 📦️ Refreshes only this composition's authored output regions and source projections. */
 export function prepareStdioComposition(repoRoot: string, hubRoot: string): { contributions: number; apps: number; receipts: number } {
+  observeCargoPreparationSourceV1(fileURLToPath(import.meta.url),fileURLToPath(new URL("../../../../✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🟦️.ts",import.meta.url)));
   const inputs = readStdioCompositionInputs(repoRoot, hubRoot), rows = selectCompositionContributionsV1(inputs.map((input) => input.contribution), "full").map(row => ({ ...row, nativeReceipts: inputs.find(input => input.contribution.package === row.package)!.nativeReceipts }));
   const ownerSource = read(hubRoot, "🧩️composition/🔣️.json"), config = owners(JSON.parse(ownerSource)), ids = new Set(config.map((owner) => owner.id));
   if (rows.some((row) => row.apps.some((app) => !ids.has(app.owner)) || row.playgrounds.some((entry) => !ids.has(entry.owner)))) throw new Error("Artifact app contribution targets an undeclared composition owner");
@@ -172,5 +178,6 @@ export function prepareStdioComposition(repoRoot: string, hubRoot: string): { co
   for (const input of inputs) for (const [path, digest] of input.observed) if (createHash("sha256").update(readFileSync(physical(repoRoot, relative(repoRoot, path)))).digest("hex") !== digest) throw new Error(`Composition input changed during publication: ${path}`);
   for (const [path, output] of outputs) if ((existsSync(path) ? readFileSync(path, "utf8") : undefined) !== output.previous) throw new Error(`Composition output changed during publication: ${path}`);
   for (const [path, output] of outputs) if (output.previous !== output.next) { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, output.next); }
+  for(const [path,output] of outputs)observeCargoPreparationOutputV1(path,output.next);
   return { contributions: rows.length, apps: rows.reduce((sum, row) => sum + row.apps.length, 0), receipts: receipts.length };
 }

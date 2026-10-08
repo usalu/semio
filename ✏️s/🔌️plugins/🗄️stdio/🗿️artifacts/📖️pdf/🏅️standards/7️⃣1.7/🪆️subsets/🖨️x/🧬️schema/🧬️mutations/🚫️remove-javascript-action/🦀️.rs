@@ -2,7 +2,7 @@
 
 use super::insert_javascript_action::InsertJavascriptAction;
 use super::PdfXMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -22,11 +22,10 @@ impl MutationKind<PdfSnapshot, PdfXMutation> for RemoveJavascriptAction {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfXMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        support::action_with(base, "JavaScript", "JS", &self.script).map(|_| PdfXMutation::InsertJavascriptAction(InsertJavascriptAction { script: self.script.clone() })).into_iter().collect()
-    
-    })())
-}
+        Ok({
+            support::action_with(base, "JavaScript", "JS", &self.script).map(|id| PdfXMutation::InsertJavascriptAction(InsertJavascriptAction { script: self.script.clone(), placements: support::placements_of(base, &[id]) })).into_iter().collect()
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove JavaScript action", "JavaScript-Aktion entfernen")

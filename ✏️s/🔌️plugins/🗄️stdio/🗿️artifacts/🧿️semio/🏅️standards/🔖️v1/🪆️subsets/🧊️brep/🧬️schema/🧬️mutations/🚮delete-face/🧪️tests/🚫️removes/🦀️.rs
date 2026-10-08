@@ -32,7 +32,7 @@ fn mutation() -> SemioBrepMutation {
 #[semio_framework_async_macros::async_test]
 async fn removes_the_face_without_cascading_either_way() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("delete-face applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-face applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-face/removes-the-only-face-and-leaves-its-loop-behind: applied state differs from the committed after-snapshot");
     assert!(produced.faces.is_empty(), "the only face must be gone");
     assert_eq!(produced.loops, base.loops, "delete-face must NOT cascade down into the loop it bounded");
@@ -44,15 +44,16 @@ async fn removes_the_face_without_cascading_either_way() {
 async fn the_undo_create_face_restores_the_full_captured_face() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "delete-face of an existing face undoes as exactly one create-face");
     let SemioBrepMutation::CreateFace(recreate) = &undo[0] else { panic!("delete-face must undo as create-face") };
     assert_eq!(recreate.surface, base.faces[0].surface, "the undo must recapture the deleted face's own surface");
     assert_eq!(recreate.orientation, base.faces[0].orientation, "the undo must recapture the deleted face's own orientation");
     assert_eq!(recreate.tol, base.faces[0].tol, "the undo must recapture the deleted face's nonzero tolerance");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-face applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo create-face applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-face applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo create-face applies");
     }
     assert_eq!(current, base, "delete-face/removes-the-only-face-and-leaves-its-loop-behind: the undo did not restore the before-snapshot");
 }
@@ -109,6 +110,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded = decode_semio_brep_diff_json(DIFF).expect("committed delete-face diff decodes");
-    let produced = decoded.apply(&before()).expect("committed delete-face diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-face diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-face/removes-the-only-face-and-leaves-its-loop-behind: committed diff did not carry before to after");
 }

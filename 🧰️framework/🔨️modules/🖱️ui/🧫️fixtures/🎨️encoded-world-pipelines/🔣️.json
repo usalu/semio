@@ -4,6 +4,8 @@
   "pipelines": [
     "world3d_pipeline",
     "world3d_pipeline_translucent",
+    "world3d_section_stencil_pipeline",
+    "world3d_section_cap_pipeline",
     "world3d_line_pipeline",
     "world3d_standard_translucent_pipeline",
     "world3d_painted_pipeline",
@@ -22,10 +24,12 @@
   ],
   "controls": [
     {
-      "id": "closed-seventeen",
+      "id": "closed-nineteen",
       "labels": [
         "world3d_pipeline",
         "world3d_pipeline_translucent",
+        "world3d_section_stencil_pipeline",
+        "world3d_section_cap_pipeline",
         "world3d_line_pipeline",
         "world3d_standard_translucent_pipeline",
         "world3d_painted_pipeline",
@@ -59,6 +63,8 @@
         1,
         1,
         1,
+        1,
+        1,
         1
       ],
       "accepted": true
@@ -68,6 +74,8 @@
       "labels": [
         "world3d_pipeline",
         "world3d_pipeline_translucent",
+        "world3d_section_stencil_pipeline",
+        "world3d_section_cap_pipeline",
         "world3d_line_pipeline",
         "world3d_standard_translucent_pipeline",
         "world3d_painted_pipeline",
@@ -101,6 +109,8 @@
         1,
         1,
         1,
+        1,
+        1,
         1
       ],
       "accepted": false
@@ -110,6 +120,8 @@
       "labels": [
         "world3d_pipeline",
         "world3d_pipeline_translucent",
+        "world3d_section_stencil_pipeline",
+        "world3d_section_cap_pipeline",
         "world3d_line_pipeline",
         "world3d_standard_translucent_pipeline",
         "world3d_painted_pipeline",
@@ -141,6 +153,8 @@
         1,
         1,
         1,
+        1,
+        1,
         1
       ],
       "accepted": false
@@ -150,6 +164,8 @@
       "labels": [
         "world3d_pipeline",
         "world3d_pipeline_translucent",
+        "world3d_section_stencil_pipeline",
+        "world3d_section_cap_pipeline",
         "world3d_line_pipeline",
         "world3d_standard_translucent_pipeline",
         "world3d_painted_pipeline",
@@ -183,6 +199,8 @@
         1,
         1,
         1,
+        1,
+        1,
         1
       ],
       "accepted": false
@@ -192,6 +210,8 @@
       "labels": [
         "world3d_pipeline",
         "world3d_pipeline_translucent",
+        "world3d_section_stencil_pipeline",
+        "world3d_section_cap_pipeline",
         "world3d_line_pipeline",
         "world3d_standard_translucent_pipeline",
         "world3d_painted_pipeline",
@@ -209,6 +229,8 @@
         "foreign-pipeline"
       ],
       "targets": [
+        1,
+        1,
         1,
         1,
         1,

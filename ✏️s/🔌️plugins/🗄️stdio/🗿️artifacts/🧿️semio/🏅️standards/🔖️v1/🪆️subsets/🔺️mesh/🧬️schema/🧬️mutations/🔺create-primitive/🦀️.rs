@@ -9,6 +9,8 @@ use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, S
 pub struct CreatePrimitive {
     pub mesh_id: String,
     pub primitive: SemioPrimitive,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation> for CreatePrimitive {

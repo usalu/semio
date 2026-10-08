@@ -1,0 +1,7 @@
+# Defining General Command API
+
+The command request includes exact cwd, argv, ordered manifest custody and declared preparation none or required. A required preparation host returns an exact matching cwd/manifest receipt and a release callback held until the child completes. Execution policy contains the existing General owner context, Cargo policies, optional Vitest policy, optional Cargo artifact policy and explicit output, timeout and artifact controls. Nested policies are admitted through their existing defining read APIs. Missing Cargo policy for any declared manifest refuses execution.
+
+The General CLI accepts --config and --cwd explicitly, an optional --manifest plus variable --test-manifest arguments, then -- followed by the actual child command and argv. Paths resolve against the explicitly configured workspace; the configuration itself resolves against caller cwd. General config names the separate General Cargo workspace and its nextest configuration, compiler/cache/artifact stores, system tools and level budgets. No package catalogue, Root marker search, Specific provider or fixture catalogue is required. The aggregate router receives this exact workspace via explicit environment.
+
+The cold-start law will copy the actual defining General sources, configs and resources while refusing Specific source loads. It will invoke an actual configured General target and observe debug output and a completed owned receipt, independently of the static AST/esbuild probe.

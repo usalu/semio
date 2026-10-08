@@ -34,7 +34,11 @@ pub fn diff(payload: &super::CreateHumidistat, base: &EnergyModelSnapshot) -> pr
     if !payload.dehumidifying_throttle_range.is_finite() || payload.dehumidifying_throttle_range <= 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", format!("A dehumidifying throttle range must be a positive finite number, got {}.", payload.dehumidifying_throttle_range), [payload.id.0.to_string()]);
     }
-    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { humidistats: Rows::inserting(base.model.humidistats.len(), crate::model::Humidistat {
+    let position = payload.index.map_or(base.model.humidistats.len(), |index| index as usize);
+    if position > base.model.humidistats.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} humidistats.", position, base.model.humidistats.len()), [payload.id.0.to_string()]);
+    }
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { humidistats: Rows::inserting(position, crate::model::Humidistat {
         id: payload.id,
         zone_id: payload.zone_id,
         humidifying_setpoint_schedule_id: payload.humidifying_setpoint_schedule_id,

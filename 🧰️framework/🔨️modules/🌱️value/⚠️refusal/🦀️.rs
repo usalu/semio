@@ -1,4 +1,4 @@
-//! ⚠️ Owned refusal identity survives path decoration and controlled codec boundaries.
+//! ⚠️ Refusal identity and explicit prose ownership survive controlled codec boundaries.
 /// 🏷️ Stable semantic failure identity declared by the refusal schema.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -11,14 +11,16 @@ impl ValueRefusalKind {
 }
 /// 🚨️ An owned typed refusal with its complete dotted display path.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ValueError { pub kind: ValueRefusalKind, pub message: String }
+pub struct ValueError { pub kind: ValueRefusalKind, pub message: std::borrow::Cow<'static, str> }
 impl ValueError {
     /// 🧭️ Constructs one refusal with an explicit authority at its actual failure site.
-    pub fn new(kind: ValueRefusalKind, message: impl Into<String>) -> Self { Self { kind, message: message.into() } }
+    pub fn new(kind: ValueRefusalKind, message: impl Into<String>) -> Self { Self { kind, message: std::borrow::Cow::Owned(message.into()) } }
+    /// 🧱️ Returns immutable refusal prose without spending denied allocation credit.
+    pub const fn literal(kind: ValueRefusalKind, message: &'static str) -> Self { Self { kind, message: std::borrow::Cow::Borrowed(message) } }
     /// 🪆️ Adds a parent field or ordinal while retaining the original refusal authority.
     pub fn under(self, segment: impl std::fmt::Display) -> Self { Self::new(self.kind, format!("{segment}.{}", self.message)) }
     /// 🗣️ Moves the prose at a declared terminal text-only boundary.
-    pub fn into_message(self) -> String { self.message }
+    pub fn into_message(self) -> String { self.message.into_owned() }
 }
 impl std::fmt::Display for ValueError { fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { formatter.write_str(&self.message) } }
 impl std::error::Error for ValueError {}

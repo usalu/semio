@@ -620,7 +620,11 @@
             "en": "The shape to operate on.",
             "de": "Die Form, auf die der Vorgang angewendet wird."
           },
-          "type": "shape"
+          "type": "shape",
+          "shapeKinds": [
+            "solid",
+            "compound"
+          ]
         }
       ],
       "outputs": [

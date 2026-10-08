@@ -1,0 +1,332 @@
+[
+  {
+    "name": "⚖️check🀄️wfc-2d🦀️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/wfc-2d-rs:mutation-inventory-check --excludeTaskDependencies --skip-nx-cache",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/nx-data",
+      "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-target",
+      "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-build",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-build\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/leases\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-target\",\"captureDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"${workspaceFolder}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-target\",\"nextest\":false,\"configPath\":\"${workspaceFolder}/.config/nextest.toml\",\"level\":\"fundamental\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"${workspaceFolder}\",\"cacheRoot\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cache\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/leases\"}"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.04
+    }
+  },
+  {
+    "name": "⚖️inventory-s.wfc.wfc2d-document🀄️wfc-2d🦀️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/wfc-2d-rs:mutation-inventory --excludeTaskDependencies --skip-nx-cache -- s.wfc.wfc2d 1 any --maximum-units 1000000000 --maximum-owned-bytes 16777216 --budget-ms 1800000",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/nx-data",
+      "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-target",
+      "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-build",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-build\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/leases\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-target\",\"captureDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"${workspaceFolder}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-target\",\"nextest\":false,\"configPath\":\"${workspaceFolder}/.config/nextest.toml\",\"level\":\"fundamental\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"${workspaceFolder}\",\"cacheRoot\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cache\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/leases\"}"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.0400099999999
+    }
+  },
+  {
+    "name": "⚖️inventory-s.wfc.wfc2d-✏️editor/🎚️config🀄️wfc-2d🦀️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/wfc-2d-rs:mutation-inventory --excludeTaskDependencies --skip-nx-cache -- s.wfc.wfc2d 1 any ✏️editor/🎚️config --maximum-units 1000000000 --maximum-owned-bytes 16777216 --budget-ms 1800000",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/nx-data",
+      "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-target",
+      "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-build",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-build\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/leases\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-target\",\"captureDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"${workspaceFolder}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-target\",\"nextest\":false,\"configPath\":\"${workspaceFolder}/.config/nextest.toml\",\"level\":\"fundamental\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"${workspaceFolder}\",\"cacheRoot\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cache\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/leases\"}"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.0400199999999
+    }
+  },
+  {
+    "name": "⚖️inventory-s.wfc.wfc2d-✏️editor/🫧️transient🀄️wfc-2d🦀️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/wfc-2d-rs:mutation-inventory --excludeTaskDependencies --skip-nx-cache -- s.wfc.wfc2d 1 any ✏️editor/🫧️transient --maximum-units 1000000000 --maximum-owned-bytes 16777216 --budget-ms 1800000",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/nx-data",
+      "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-target",
+      "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-build",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-build\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/leases\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-target\",\"captureDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"${workspaceFolder}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-target\",\"nextest\":false,\"configPath\":\"${workspaceFolder}/.config/nextest.toml\",\"level\":\"fundamental\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"${workspaceFolder}\",\"cacheRoot\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/cache\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/2d/leases\"}"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.04003
+    }
+  },
+  {
+    "name": "⚖️check🀄️wfc-3d🦀️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/wfc-3d-rs:mutation-inventory-check --excludeTaskDependencies --skip-nx-cache",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/nx-data",
+      "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-target",
+      "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-build",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-build\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/leases\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-target\",\"captureDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"${workspaceFolder}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-target\",\"nextest\":false,\"configPath\":\"${workspaceFolder}/.config/nextest.toml\",\"level\":\"fundamental\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"${workspaceFolder}\",\"cacheRoot\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cache\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/leases\"}"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.04104
+    }
+  },
+  {
+    "name": "⚖️inventory-s.wfc.wfc3d-document🀄️wfc-3d🦀️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/wfc-3d-rs:mutation-inventory --excludeTaskDependencies --skip-nx-cache -- s.wfc.wfc3d 1 any --maximum-units 1000000000 --maximum-owned-bytes 16777216 --budget-ms 1800000",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/nx-data",
+      "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-target",
+      "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-build",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-build\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/leases\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-target\",\"captureDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"${workspaceFolder}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-target\",\"nextest\":false,\"configPath\":\"${workspaceFolder}/.config/nextest.toml\",\"level\":\"fundamental\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"${workspaceFolder}\",\"cacheRoot\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cache\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/leases\"}"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.0410499999999
+    }
+  },
+  {
+    "name": "⚖️inventory-s.wfc.wfc3d-✏️editor/🎚️config🀄️wfc-3d🦀️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/wfc-3d-rs:mutation-inventory --excludeTaskDependencies --skip-nx-cache -- s.wfc.wfc3d 1 any ✏️editor/🎚️config --maximum-units 1000000000 --maximum-owned-bytes 16777216 --budget-ms 1800000",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/nx-data",
+      "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-target",
+      "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-build",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-build\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/leases\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-target\",\"captureDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"${workspaceFolder}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-target\",\"nextest\":false,\"configPath\":\"${workspaceFolder}/.config/nextest.toml\",\"level\":\"fundamental\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"${workspaceFolder}\",\"cacheRoot\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cache\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/leases\"}"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.0410599999999
+    }
+  },
+  {
+    "name": "⚖️inventory-s.wfc.wfc3d-✏️editor/🫧️transient🀄️wfc-3d🦀️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/wfc-3d-rs:mutation-inventory --excludeTaskDependencies --skip-nx-cache -- s.wfc.wfc3d 1 any ✏️editor/🫧️transient --maximum-units 1000000000 --maximum-owned-bytes 16777216 --budget-ms 1800000",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/nx-data",
+      "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-target",
+      "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-build",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-build\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/leases\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-target\",\"captureDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"${workspaceFolder}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-target\",\"nextest\":false,\"configPath\":\"${workspaceFolder}/.config/nextest.toml\",\"level\":\"fundamental\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"${workspaceFolder}\",\"cacheRoot\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/cache\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/3d/leases\"}"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.04107
+    }
+  },
+  {
+    "name": "⚖️check🀄️wfc-bitmap🦀️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/wfc-bitmap-rs:mutation-inventory-check --excludeTaskDependencies --skip-nx-cache",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/nx-data",
+      "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-target",
+      "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-build",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-build\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/leases\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-target\",\"captureDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"${workspaceFolder}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-target\",\"nextest\":false,\"configPath\":\"${workspaceFolder}/.config/nextest.toml\",\"level\":\"fundamental\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"${workspaceFolder}\",\"cacheRoot\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cache\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/leases\"}"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.0420799999999
+    }
+  },
+  {
+    "name": "⚖️inventory-s.wfc.bitmap-document🀄️wfc-bitmap🦀️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/wfc-bitmap-rs:mutation-inventory --excludeTaskDependencies --skip-nx-cache -- s.wfc.bitmap 1 any --maximum-units 1000000000 --maximum-owned-bytes 16777216 --budget-ms 1800000",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/nx-data",
+      "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-target",
+      "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-build",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-build\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/leases\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-target\",\"captureDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"${workspaceFolder}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-target\",\"nextest\":false,\"configPath\":\"${workspaceFolder}/.config/nextest.toml\",\"level\":\"fundamental\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"${workspaceFolder}\",\"cacheRoot\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cache\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/leases\"}"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.0420899999999
+    }
+  },
+  {
+    "name": "⚖️inventory-s.wfc.bitmap-✏️editor/🫧️transient🀄️wfc-bitmap🦀️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/wfc-bitmap-rs:mutation-inventory --excludeTaskDependencies --skip-nx-cache -- s.wfc.bitmap 1 any ✏️editor/🫧️transient --maximum-units 1000000000 --maximum-owned-bytes 16777216 --budget-ms 1800000",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/nx-data",
+      "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-target",
+      "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-build",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-build\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/leases\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-target\",\"captureDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"${workspaceFolder}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-target\",\"nextest\":false,\"configPath\":\"${workspaceFolder}/.config/nextest.toml\",\"level\":\"fundamental\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"${workspaceFolder}\",\"cacheRoot\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/cache\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/bitmap/leases\"}"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.0420999999999
+    }
+  },
+  {
+    "name": "⚖️check🀄️wfc-grid2d🦀️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/wfc-grid2d-rs:mutation-inventory-check --excludeTaskDependencies --skip-nx-cache",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/nx-data",
+      "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/cargo-target",
+      "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/cargo-build",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/cargo-build\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/leases\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/cargo-target\",\"captureDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"${workspaceFolder}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/cargo-target\",\"nextest\":false,\"configPath\":\"${workspaceFolder}/.config/nextest.toml\",\"level\":\"fundamental\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"${workspaceFolder}\",\"cacheRoot\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/cache\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/leases\"}"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.04311
+    }
+  },
+  {
+    "name": "⚖️inventory-s.wfc.grid2d-document🀄️wfc-grid2d🦀️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/wfc-grid2d-rs:mutation-inventory --excludeTaskDependencies --skip-nx-cache -- s.wfc.grid2d 1 any --maximum-units 1000000000 --maximum-owned-bytes 16777216 --budget-ms 1800000",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/nx-data",
+      "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/cargo-target",
+      "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/cargo-build",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/cargo-build\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/leases\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/cargo-target\",\"captureDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"${workspaceFolder}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/cargo-target\",\"nextest\":false,\"configPath\":\"${workspaceFolder}/.config/nextest.toml\",\"level\":\"fundamental\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"${workspaceFolder}\",\"cacheRoot\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/cache\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid2d/leases\"}"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.04312
+    }
+  },
+  {
+    "name": "⚖️check🀄️wfc-grid3d🦀️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/wfc-grid3d-rs:mutation-inventory-check --excludeTaskDependencies --skip-nx-cache",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/nx-data",
+      "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/cargo-target",
+      "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/cargo-build",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/cargo-build\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/leases\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/cargo-target\",\"captureDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"${workspaceFolder}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/cargo-target\",\"nextest\":false,\"configPath\":\"${workspaceFolder}/.config/nextest.toml\",\"level\":\"fundamental\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"${workspaceFolder}\",\"cacheRoot\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/cache\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/leases\"}"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.04413
+    }
+  },
+  {
+    "name": "⚖️inventory-s.wfc.grid3d-document🀄️wfc-grid3d🦀️",
+    "type": "node-terminal",
+    "request": "launch",
+    "command": "bun nx run @semio-tech/wfc-grid3d-rs:mutation-inventory --excludeTaskDependencies --skip-nx-cache -- s.wfc.grid3d 1 any --maximum-units 1000000000 --maximum-owned-bytes 16777216 --budget-ms 1800000",
+    "cwd": "${workspaceFolder}",
+    "env": {
+      "NX_DAEMON": "false",
+      "NX_ISOLATE_PLUGINS": "false",
+      "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/nx-cache",
+      "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/nx-data",
+      "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/cargo-target",
+      "CARGO_BUILD_BUILD_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/cargo-build",
+      "SEMIO_MUTATION_INVENTORY_POLICY": "{\"version\":1,\"maximumUnits\":1000000000,\"maximumOwnedBytes\":16777216,\"maximumCaptureBytes\":67108864,\"budgetMs\":1800000,\"compilerStorage\":{\"buildDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/cargo-build\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/leases\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/cargo-target\",\"captureDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/captures\"}}",
+      "SEMIO_CARGO_TEST_POLICY": "{\"version\":1,\"manifestPath\":\"${workspaceFolder}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust/Cargo.toml\",\"targetDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/cargo-target\",\"nextest\":false,\"configPath\":\"${workspaceFolder}/.config/nextest.toml\",\"level\":\"fundamental\",\"assertionBudgets\":{\"fundamental\":60000,\"quick\":60000,\"long\":60000,\"exhaustive\":60000},\"buildBudgetMs\":1800000,\"assertionThreads\":1,\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/cargo-captures\",\"retainArtifacts\":true,\"coverageEnabled\":false,\"coveragePath\":null,\"rustMinStack\":\"67108864\"}",
+      "SEMIO_PROCESS_OWNER_CONTEXT": "{\"version\":1,\"cwd\":\"${workspaceFolder}\",\"cacheRoot\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/cache\",\"leaseDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/wfc-child-inventory/grid3d/leases\"}"
+    },
+    "presentation": {
+      "group": "4_gate",
+      "order": 900.04414
+    }
+  }
+]

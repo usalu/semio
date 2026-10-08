@@ -192,19 +192,6 @@ fn line_ending_param(value: &Json, key: &str) -> Result<Option<TsvLineEnding>, S
         _ => Ok(None),
     }
 }
-/// 🩹️ The reference's own `TsvSnapshot` reading of `input` ([`read_tsv`]) that a `patch-snapshot` row's pointer operation
-/// addresses.
-#[cfg(feature = "oracles")]
-fn snapshot_wire(input: &[u8]) -> Result<Json, String> {
-    let body = read_tsv(input)?;
-    let records = body.records.iter().map(|row| Json::Array(row.iter().map(|cell| Json::String(cell.clone())).collect())).collect();
-    Ok(Json::Object(vec![
-        ("schema".to_string(), Json::String("stdio.tsv".to_string())),
-        ("records".to_string(), Json::Array(records)),
-        ("trailingNewline".to_string(), Json::Bool(body.trailing_newline)),
-        ("lineEnding".to_string(), Json::String(body.line_ending.as_json().to_string())),
-    ]))
-}
 //#endregion 🔖️SpecReaders
 
 //#region 🔖️Dispatch
@@ -216,10 +203,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
-        "set-snapshot" => {
-            let snapshot = params.get("snapshot").cloned().unwrap_or(Json::Null);
-            write_tsv(&TsvBody { records: rows(&snapshot, "records"), trailing_newline: boolean(&snapshot, "trailingNewline").unwrap_or(false), line_ending: line_ending_param(&snapshot, "lineEnding")?.unwrap_or(TsvLineEnding::Lf) })
-        }
         "set-trailing-newline" => {
             let mut body = read_tsv(input)?;
             body.trailing_newline = boolean(&params, "trailingNewline").ok_or("set-trailing-newline: missing `trailingNewline`")?;
@@ -257,10 +240,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             }
             row[field_index] = value;
             write_tsv(&body)
-        }
-        "patch-snapshot" => {
-            let patched = semio_repo_test_host::law::patched_snapshot(&snapshot_wire(input)?, params.get("patch").ok_or("patch-snapshot: missing `patch`")?)?;
-            oracle_apply_mutation(input, &Json::Object(vec![("kind".to_string(), Json::String("set-snapshot".to_string())), ("params".to_string(), Json::Object(vec![("snapshot".to_string(), patched)]))]))
         }
         kind => Err(format!("mutation kind {kind:?} has no oracle implementation ({} input byte(s))", input.len())),
     }

@@ -5,15 +5,15 @@ use crate::{Block3dVortexKind, Block3dVortexTemplate};
 use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule, BlockRepresentation};
 use protocol::MutationDiff;
 use protocol::SemanticMutation;
-use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_mutation_inverse_sum_law};
 
 fn round_trip(base: &Block3dSnapshot, mutation: &Block3dMutation) -> Block3dSnapshot {
-    let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
+    let forward = protocol::apply_diff(mutation.diff(base).diff(), base).expect("valid mutation diff");
     let mut restored = forward.clone();
     let mut backward = mutation.inverse(base).expect("valid retained mutation inverse fixture");
     backward.reverse();
     for undo in &backward {
-        restored = undo.diff(&restored).diff().apply(&restored).expect("valid mutation diff");
+        restored = protocol::apply_diff(undo.diff(&restored).diff(), &restored).expect("valid mutation diff");
     }
     assert_eq!(&restored, base, "inverse must restore the pre-mutation snapshot");
     forward
@@ -184,10 +184,53 @@ async fn every_mutation_kind_satisfies_the_inverse_law() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn every_mutation_kind_satisfies_the_inverse_sum_law() {
+    let base = seeded_snapshot();
+
+    assert_mutation_inverse_sum_law(&rename_object_kind("x".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_object_kind_label("x".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_object_kind_variant(Some("v2".into())), &base).await;
+    assert_mutation_inverse_sum_law(&change_object_kind_description("d".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_object_kind_icon(Some("i".into())), &base).await;
+    assert_mutation_inverse_sum_law(&change_object_kind_unit(Some("m".into())), &base).await;
+    assert_mutation_inverse_sum_law(&create_representation(BlockRepresentation { id: "r1".into(), name: "r1".into(), mesh_url: None, tags: Vec::new(), lod: None, description: String::new(), attributes: Vec::new() }), &base).await;
+    assert_mutation_inverse_sum_law(&delete_representation("r0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&rename_representation("r0".into(), "renamed".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_representation_mesh_url("r0".into(), Some("https://example/x".into())), &base).await;
+    assert_mutation_inverse_sum_law(&change_representation_lod("r0".into(), Some("lod1".into())), &base).await;
+    assert_mutation_inverse_sum_law(&change_representation_description("r0".into(), "d".into()), &base).await;
+    assert_mutation_inverse_sum_law(&add_representation_tag("r0".into(), "lod2".into()), &base).await;
+    assert_mutation_inverse_sum_law(&remove_representation_tag("r0".into(), "lod0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&add_representation_attribute("r0".into(), BlockAttribute { key: "color".into(), value: "red".into(), definition: None }), &base).await;
+    assert_mutation_inverse_sum_law(&remove_representation_attribute("r0".into(), "finish".into()), &base).await;
+    assert_mutation_inverse_sum_law(&create_vortex_kind(Block3dVortexKind { id: "vk1".into(), name: "vk1".into(), label: "VK1".into(), color: "#000".into(), default_cable_kind: "cable.link".into() }), &base).await;
+    assert_mutation_inverse_sum_law(&delete_vortex_kind("vk0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&rename_vortex_kind("vk0".into(), "renamed".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_vortex_kind_label("vk0".into(), "Renamed".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_vortex_kind_color("vk0".into(), "#fff".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_vortex_kind_default_cable_kind("vk0".into(), "cable.power".into()), &base).await;
+    assert_mutation_inverse_sum_law(&create_vortex(Block3dVortexTemplate { id: "v1".into(), vortex_kind: "vk0".into(), position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius: 0.2, label: None }), &base).await;
+    assert_mutation_inverse_sum_law(&delete_vortex("v0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&move_vortex("v0".into(), [1.0, 1.0, 1.0], [0.0, 1.0, 0.0]), &base).await;
+    assert_mutation_inverse_sum_law(&resize_vortex("v0".into(), 0.9), &base).await;
+    assert_mutation_inverse_sum_law(&change_vortex_vortex_kind("v0".into(), "vk0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_vortex_label("v0".into(), Some("label".into())), &base).await;
+    assert_mutation_inverse_sum_law(&add_compatibility_rule(BlockCompatibilityRule { id: "c1".into(), source: "a".into(), target: "c".into(), bidirectional: false }), &base).await;
+    assert_mutation_inverse_sum_law(&remove_compatibility_rule("c0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&add_attribute(BlockAttribute { key: "weight".into(), value: "10".into(), definition: None }), &base).await;
+    assert_mutation_inverse_sum_law(&remove_attribute("material".into()), &base).await;
+    assert_mutation_inverse_sum_law(&add_author(BlockAuthor { id: "a1".into(), name: "Bo".into(), email: None }), &base).await;
+    assert_mutation_inverse_sum_law(&remove_author("a0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&move_camera3d([3.0, 4.0, 5.0], [0.0, 0.0, 0.0]), &base).await;
+    assert_mutation_inverse_sum_law(&scale_camera3d(1.5), &base).await;
+    assert_mutation_inverse_sum_law(&change_meta_description("notes".into()), &base).await;
+}
+
+#[semio_framework_async_macros::async_test]
 async fn change_object_kind_label_diff_absorb_law() {
     let base = empty_block3d_snapshot();
     let d1 = change_object_kind_label("first".into()).diff(&base).into_parts().0;
-    let mid = d1.apply(&base).expect("valid mutation diff");
+    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
     let d2 = change_object_kind_label("second".into()).diff(&mid).into_parts().0;
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
@@ -196,7 +239,7 @@ async fn change_object_kind_label_diff_absorb_law() {
 async fn move_vortex_diff_absorb_law() {
     let base = seeded_snapshot();
     let d1 = move_vortex("v0".into(), [0.5, 0.0, 0.0], [1.0, 0.0, 0.0]).diff(&base).into_parts().0;
-    let mid = d1.apply(&base).expect("valid mutation diff");
+    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
     let d2 = move_vortex("v0".into(), [1.1, 0.6, 0.0], [0.0, 1.0, 0.0]).diff(&mid).into_parts().0;
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
@@ -256,3 +299,58 @@ fn kinds_match_the_enum_and_the_catalog() {
     }
 }
 //#endregion 🧪️KindsCatalog
+
+#[semio_framework_async_macros::async_test]
+async fn deleting_or_creating_a_middle_row_restores_its_original_index() {
+    let mut base = empty_block3d_snapshot();
+    let kinds: Vec<Block3dVortexKind> = (0..3).map(|n| Block3dVortexKind { id: format!("vk{n}"), name: format!("vk{n}"), label: format!("VK{n}"), color: "#888".into(), default_cable_kind: "cable.link".into() }).collect();
+    crate::set_vortex_kinds(&mut base, &kinds);
+    for n in 0..3 {
+        base.vortices.push(Block3dVortexTemplate { id: format!("v{n}"), vortex_kind: "vk0".into(), position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius: 0.3, label: None });
+        base.compatibility.push(BlockCompatibilityRule { id: format!("c{n}"), source: "a".into(), target: "b".into(), bidirectional: true });
+        base.attributes.push(BlockAttribute { key: format!("k{n}"), value: "v".into(), definition: None });
+        base.authors.push(BlockAuthor { id: format!("a{n}"), name: format!("A{n}"), email: None });
+        base.representations.push(BlockRepresentation {
+            id: format!("r{n}"),
+            name: format!("r{n}"),
+            mesh_url: None,
+            tags: vec!["t0".into(), "t1".into(), "t2".into()],
+            lod: None,
+            description: String::new(),
+            attributes: (0..3).map(|m| BlockAttribute { key: format!("ak{m}"), value: "v".into(), definition: None }).collect(),
+        });
+    }
+    for removal in [
+        delete_vortex("v1".into()),
+        delete_vortex_kind("vk1".into()),
+        remove_compatibility_rule("c1".into()),
+        remove_attribute("k1".into()),
+        remove_author("a1".into()),
+        delete_representation("r1".into()),
+        remove_representation_tag("r1".into(), "t1".into()),
+        remove_representation_attribute("r1".into(), "ak1".into()),
+    ] {
+        assert_mutation_inverse_sum_law(&removal, &base).await;
+        round_trip(&base, &removal);
+    }
+    let representation = BlockRepresentation { id: "rx".into(), name: "rx".into(), mesh_url: None, tags: Vec::new(), lod: None, description: String::new(), attributes: Vec::new() };
+    let created = round_trip(&base, &create_representation_at(representation.clone(), 1));
+    assert_eq!(created.representations.iter().map(|item| item.id.as_str()).collect::<Vec<_>>(), ["r0", "rx", "r1", "r2"]);
+    let tagged = round_trip(&base, &add_representation_tag_at("r1".into(), "tx".into(), 1));
+    assert_eq!(tagged.representations[1].tags, ["t0", "tx", "t1", "t2"]);
+    let attributed = round_trip(&base, &add_representation_attribute_at("r1".into(), BlockAttribute { key: "akx".into(), value: "v".into(), definition: None }, 1));
+    assert_eq!(attributed.representations[1].attributes.iter().map(|item| item.key.as_str()).collect::<Vec<_>>(), ["ak0", "akx", "ak1", "ak2"]);
+    for insertion in [
+        create_representation_at(representation, 1),
+        add_representation_tag_at("r1".into(), "tx".into(), 1),
+        add_representation_attribute_at("r1".into(), BlockAttribute { key: "akx".into(), value: "v".into(), definition: None }, 1),
+        create_vortex_at(Block3dVortexTemplate { id: "vx".into(), vortex_kind: "vk0".into(), position: [0.0, 0.0, 0.0], direction: [0.0, 1.0, 0.0], radius: 0.3, label: None }, 1),
+        create_vortex_kind_at(Block3dVortexKind { id: "vkx".into(), name: "vkx".into(), label: "VKX".into(), color: "#888".into(), default_cable_kind: "cable.link".into() }, 1),
+        add_compatibility_rule_at(BlockCompatibilityRule { id: "cx".into(), source: "a".into(), target: "b".into(), bidirectional: true }, 1),
+        add_attribute_at(BlockAttribute { key: "kx".into(), value: "v".into(), definition: None }, 1),
+        add_author_at(BlockAuthor { id: "ax".into(), name: "AX".into(), email: None }, 1),
+    ] {
+        assert_mutation_inverse_sum_law(&insertion, &base).await;
+        round_trip(&base, &insertion);
+    }
+}

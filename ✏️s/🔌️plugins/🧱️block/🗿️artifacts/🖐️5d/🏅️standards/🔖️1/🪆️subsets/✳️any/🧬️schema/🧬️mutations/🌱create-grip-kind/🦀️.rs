@@ -15,11 +15,17 @@ use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
 pub struct CreateGripKind {
     #[dsl(block)]
     pub grip_kind: Block5dGripKind,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
 pub fn create_grip_kind(grip_kind: Block5dGripKind) -> Block5dMutation {
-    Block5dMutation::CreateGripKind(CreateGripKind { grip_kind })
+    Block5dMutation::CreateGripKind(CreateGripKind { grip_kind, index: None })
+}
+
+/// 📍️ Builder — like [`create_grip_kind`] but inserts the row at `index`.
+pub fn create_grip_kind_at(grip_kind: Block5dGripKind, index: u32) -> Block5dMutation {
+    Block5dMutation::CreateGripKind(CreateGripKind { grip_kind, index: Some(index) })
 }
 
 impl protocol::MutationKind<Block5dSnapshot, Block5dMutation> for CreateGripKind {

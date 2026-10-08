@@ -1,2 +1,0 @@
-# 📸️ canonical set-snapshot/SetSnapshot
-input SetSnapshotPayload { snapshot: TxtSnapshotInput! }

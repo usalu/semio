@@ -4,4 +4,5 @@ input SetDictEntryMutationInput {
   path: [PdfPathSegmentInput!]
   key: String
   value: PdfObjectInput
+  index: Int
 }

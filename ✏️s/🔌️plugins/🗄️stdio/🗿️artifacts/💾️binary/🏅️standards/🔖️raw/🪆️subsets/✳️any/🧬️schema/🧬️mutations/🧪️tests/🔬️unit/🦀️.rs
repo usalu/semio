@@ -15,7 +15,7 @@ async fn mutation_diff_law() {
         let returned = apply_binary_mutation(&mut via_apply, &m);
         let expected_diff = m.diff(&b);
         assert_eq!(returned, expected_diff, "returned diff mismatch for {m:?}");
-        assert_eq!(via_apply, expected_diff.diff().apply(&b).unwrap(), "apply mismatch for {m:?}");
+        assert_eq!(via_apply, protocol::apply_diff(expected_diff.diff(), &b).unwrap(), "apply mismatch for {m:?}");
     }
 }
 
@@ -32,9 +32,9 @@ async fn inverse_law() {
     }
     for m in demo_mutation_cases() {
         let d = m.diff(&b);
-        let next = d.diff().apply(&b).unwrap();
+        let next = protocol::apply_diff(d.diff(), &b).unwrap();
         let inv = d.diff().inverse(&b);
-        assert_eq!(inv.apply(&next).unwrap(), b, "diff-level inverse round-trip failed for {m:?}");
+        assert_eq!(protocol::apply_diff(&inv, &next).unwrap(), b, "diff-level inverse round-trip failed for {m:?}");
     }
 }
 
@@ -46,21 +46,21 @@ async fn absorb_law_cartesian() {
     let mut rejected_compositions = 0;
     for m1 in &variants {
         let d1 = m1.diff(&b);
-        let mid = d1.diff().apply(&b).unwrap();
+        let mid = protocol::apply_diff(d1.diff(), &b).unwrap();
         for m2 in &variants {
             let d2 = m2.diff(&mid);
-            let Ok(after) = d2.diff().apply(&mid) else {
+            let Ok(after) = protocol::apply_diff(d2.diff(), &mid) else {
                 rejected_compositions += 1;
                 continue;
             };
             let mut merged = d1.diff().clone();
             merged.absorb(d2.diff().clone());
-            assert_eq!(merged.apply(&b).unwrap(), after, "absorb({m1:?}, {m2:?}) mismatch");
+            assert_eq!(protocol::apply_diff(&merged, &b).unwrap(), after, "absorb({m1:?}, {m2:?}) mismatch");
             valid_compositions += 1;
         }
     }
-    assert_eq!(valid_compositions, 15, "the representative matrix must exercise every valid sequential composition");
-    assert_eq!(rejected_compositions, 1, "only the deliberate short-snapshot/out-of-range replace-byte-range pair is outside the algebra domain");
+    assert_eq!(valid_compositions, 9, "the representative matrix must exercise every valid sequential composition");
+    assert_eq!(rejected_compositions, 0, "no representative pair leaves the algebra domain");
 }
 
 /// 🧪️ F6-PILOT: `OpText`/`OpBinary` round-trip laws (handcrafted impls over the
@@ -91,7 +91,6 @@ async fn op_text_binary_roundtrip_law() {
 async fn kinds_cover_every_variant() {
     fn kind_of(mutation: &BinaryMutation) -> &'static str {
         match mutation {
-            BinaryMutation::SetSnapshot(_) => "set-snapshot",
             BinaryMutation::ReplaceByteRange(_) => "replace-byte-range",
             BinaryMutation::AppendBytes(_) => "append-bytes",
             BinaryMutation::TruncateAt(_) => "truncate-at",
@@ -103,6 +102,15 @@ async fn kinds_cover_every_variant() {
     let mut declared: Vec<&str> = KINDS.to_vec();
     declared.sort_unstable();
     assert_eq!(exercised, declared, "KINDS must name exactly the variants demo_mutation_cases() exercises");
-    assert_eq!(KINDS.len(), 4, "binary-raw-any declares 4 BinaryMutation variants");
+    assert_eq!(KINDS.len(), 3, "binary-raw-any declares 3 BinaryMutation variants");
 }
 //#endregion 🔖️KindsCoverageLaw
+
+/// ⚖️ `mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff.
+#[semio_framework_async_macros::async_test]
+async fn mutation_inverse_sum_law_holds_for_every_leaf() {
+    let b = base();
+    for mutation in demo_mutation_cases() {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &b).await;
+    }
+}

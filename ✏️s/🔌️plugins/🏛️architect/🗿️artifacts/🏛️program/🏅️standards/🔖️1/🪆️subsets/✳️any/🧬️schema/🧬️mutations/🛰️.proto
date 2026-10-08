@@ -276,6 +276,7 @@ message ProgramMutation {
 
 message CreateInformationRequirement {
   bytes information_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteInformationRequirement {
@@ -293,6 +294,7 @@ message ReplaceInformationRequirement {
 
 message CreateSustainabilityRequirement {
   bytes sustainability_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteSustainabilityRequirement {
@@ -310,6 +312,7 @@ message ReplaceSustainabilityRequirement {
 
 message CreateAccessibilityRequirement {
   bytes accessibility_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteAccessibilityRequirement {
@@ -327,6 +330,7 @@ message ReplaceAccessibilityRequirement {
 
 message CreateConflict {
   bytes conflict = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteConflict {
@@ -344,6 +348,7 @@ message ReplaceConflict {
 
 message CreateOptionEvaluation {
   bytes option_evaluation = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteOptionEvaluation {
@@ -361,6 +366,7 @@ message ReplaceOptionEvaluation {
 
 message CreateFunction {
   bytes function = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteFunction {
@@ -378,6 +384,7 @@ message ReplaceFunction {
 
 message CreateRisk {
   bytes risk = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteRisk {
@@ -395,6 +402,7 @@ message ReplaceRisk {
 
 message CreateDecision {
   bytes decision = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteDecision {
@@ -412,6 +420,7 @@ message ReplaceDecision {
 
 message CreateValidationRecord {
   bytes validation_record = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteValidationRecord {
@@ -429,6 +438,7 @@ message ReplaceValidationRecord {
 
 message CreatePriorityRecord {
   bytes priority_record = 1;
+  optional uint32 index = 2;
 }
 
 message DeletePriorityRecord {
@@ -446,6 +456,7 @@ message ReplacePriorityRecord {
 
 message CreateFlowRequirement {
   bytes flow_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteFlowRequirement {
@@ -463,6 +474,7 @@ message ReplaceFlowRequirement {
 
 message CreateEnvironmentalRequirement {
   bytes environmental_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteEnvironmentalRequirement {
@@ -480,6 +492,7 @@ message ReplaceEnvironmentalRequirement {
 
 message CreateWorkshop {
   bytes workshop = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteWorkshop {
@@ -497,6 +510,7 @@ message ReplaceWorkshop {
 
 message CreateScenario {
   bytes scenario = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteScenario {
@@ -514,6 +528,7 @@ message ReplaceScenario {
 
 message CreateBenchmarkRecord {
   bytes benchmark_record = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteBenchmarkRecord {
@@ -531,6 +546,7 @@ message ReplaceBenchmarkRecord {
 
 message CreateActivity {
   bytes activity = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteActivity {
@@ -548,6 +564,7 @@ message ReplaceActivity {
 
 message CreateInfrastructureRequirement {
   bytes infrastructure_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteInfrastructureRequirement {
@@ -565,6 +582,7 @@ message ReplaceInfrastructureRequirement {
 
 message CreateOrganizationalRequirement {
   bytes organizational_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteOrganizationalRequirement {
@@ -582,6 +600,7 @@ message ReplaceOrganizationalRequirement {
 
 message CreateIssue {
   bytes issue = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteIssue {
@@ -599,6 +618,7 @@ message ReplaceIssue {
 
 message CreateApprovalRecord {
   bytes approval_record = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteApprovalRecord {
@@ -616,6 +636,7 @@ message ReplaceApprovalRecord {
 
 message CreateStakeholder {
   bytes stakeholder = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteStakeholder {
@@ -633,6 +654,7 @@ message ReplaceStakeholder {
 
 message CreateQualityRecord {
   bytes quality_record = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteQualityRecord {
@@ -650,6 +672,7 @@ message ReplaceQualityRecord {
 
 message CreateResilienceRequirement {
   bytes resilience_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteResilienceRequirement {
@@ -667,6 +690,7 @@ message ReplaceResilienceRequirement {
 
 message CreateAssumption {
   bytes assumption = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteAssumption {
@@ -684,6 +708,7 @@ message ReplaceAssumption {
 
 message CreateCostRequirement {
   bytes cost_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteCostRequirement {
@@ -701,6 +726,7 @@ message ReplaceCostRequirement {
 
 message CreateDocument {
   bytes document = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteDocument {
@@ -718,6 +744,7 @@ message ReplaceDocument {
 
 message CreateScheduleRequirement {
   bytes schedule_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteScheduleRequirement {
@@ -735,6 +762,7 @@ message ReplaceScheduleRequirement {
 
 message CreateGrowthPlan {
   bytes growth_plan = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteGrowthPlan {
@@ -752,6 +780,7 @@ message ReplaceGrowthPlan {
 
 message CreatePerformanceCriterion {
   bytes performance_criterion = 1;
+  optional uint32 index = 2;
 }
 
 message DeletePerformanceCriterion {
@@ -769,6 +798,7 @@ message ReplacePerformanceCriterion {
 
 message CreateOperationalRequirement {
   bytes operational_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteOperationalRequirement {
@@ -786,6 +816,7 @@ message ReplaceOperationalRequirement {
 
 message CreateRequirement {
   bytes requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteRequirement {
@@ -803,6 +834,7 @@ message ReplaceRequirement {
 
 message CreateSiteContext {
   bytes site_context = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteSiteContext {
@@ -820,6 +852,7 @@ message ReplaceSiteContext {
 
 message CreateTemplateRecord {
   bytes template_record = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteTemplateRecord {
@@ -837,6 +870,7 @@ message ReplaceTemplateRecord {
 
 message CreateReportRecord {
   bytes report_record = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteReportRecord {
@@ -854,6 +888,7 @@ message ReplaceReportRecord {
 
 message CreateAuditEvent {
   bytes audit_event = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteAuditEvent {
@@ -871,6 +906,7 @@ message ReplaceAuditEvent {
 
 message CreateKnowledgeRecord {
   bytes knowledge_record = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteKnowledgeRecord {
@@ -888,6 +924,7 @@ message ReplaceKnowledgeRecord {
 
 message CreateRegulatoryRequirement {
   bytes regulatory_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteRegulatoryRequirement {
@@ -905,6 +942,7 @@ message ReplaceRegulatoryRequirement {
 
 message CreateChangeRecord {
   bytes change_record = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteChangeRecord {
@@ -922,6 +960,7 @@ message ReplaceChangeRecord {
 
 message CreateCommunicationRequirement {
   bytes communication_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteCommunicationRequirement {
@@ -939,6 +978,7 @@ message ReplaceCommunicationRequirement {
 
 message CreateResource {
   bytes resource = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteResource {
@@ -956,6 +996,7 @@ message ReplaceResource {
 
 message CreateStatusRecord {
   bytes status_record = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteStatusRecord {
@@ -973,6 +1014,7 @@ message ReplaceStatusRecord {
 
 message CreateProcess {
   bytes process = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteProcess {
@@ -990,6 +1032,7 @@ message ReplaceProcess {
 
 message CreateSearchFilter {
   bytes search_filter = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteSearchFilter {
@@ -1007,6 +1050,7 @@ message ReplaceSearchFilter {
 
 message CreateAccessRule {
   bytes access_rule = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteAccessRule {
@@ -1024,6 +1068,7 @@ message ReplaceAccessRule {
 
 message CreatePrivacyRequirement {
   bytes privacy_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeletePrivacyRequirement {
@@ -1041,6 +1086,7 @@ message ReplacePrivacyRequirement {
 
 message CreateRelationship {
   bytes relationship = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteRelationship {
@@ -1058,6 +1104,7 @@ message ReplaceRelationship {
 
 message CreateQuantityRequirement {
   bytes quantity_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteQuantityRequirement {
@@ -1075,6 +1122,7 @@ message ReplaceQuantityRequirement {
 
 message CreateAnalysisRecord {
   bytes analysis_record = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteAnalysisRecord {
@@ -1092,6 +1140,7 @@ message ReplaceAnalysisRecord {
 
 message CreateStorageRequirement {
   bytes storage_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteStorageRequirement {
@@ -1109,6 +1158,7 @@ message ReplaceStorageRequirement {
 
 message CreateMeetingRecord {
   bytes meeting_record = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteMeetingRecord {
@@ -1126,6 +1176,7 @@ message ReplaceMeetingRecord {
 
 message CreateSurvey {
   bytes survey = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteSurvey {
@@ -1143,6 +1194,7 @@ message ReplaceSurvey {
 
 message CreateDeliveryConstraint {
   bytes delivery_constraint = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteDeliveryConstraint {
@@ -1160,6 +1212,7 @@ message ReplaceDeliveryConstraint {
 
 message CreateConstraintRecord {
   bytes constraint_record = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteConstraintRecord {
@@ -1177,6 +1230,7 @@ message ReplaceConstraintRecord {
 
 message CreateComplianceRecord {
   bytes compliance_record = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteComplianceRecord {
@@ -1194,6 +1248,7 @@ message ReplaceComplianceRecord {
 
 message CreateServiceRequirement {
   bytes service_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteServiceRequirement {
@@ -1211,6 +1266,7 @@ message ReplaceServiceRequirement {
 
 message CreateEquipment {
   bytes equipment = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteEquipment {
@@ -1228,6 +1284,7 @@ message ReplaceEquipment {
 
 message CreateSecurityRequirement {
   bytes security_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteSecurityRequirement {
@@ -1245,6 +1302,7 @@ message ReplaceSecurityRequirement {
 
 message CreateCollaborationRecord {
   bytes collaboration_record = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteCollaborationRecord {
@@ -1262,6 +1320,7 @@ message ReplaceCollaborationRecord {
 
 message CreateSafetyRequirement {
   bytes safety_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteSafetyRequirement {
@@ -1279,6 +1338,7 @@ message ReplaceSafetyRequirement {
 
 message CreateUserProfile {
   bytes user_profile = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteUserProfile {
@@ -1296,6 +1356,7 @@ message ReplaceUserProfile {
 
 message CreateHumanFactorRequirement {
   bytes human_factor_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteHumanFactorRequirement {
@@ -1313,6 +1374,7 @@ message ReplaceHumanFactorRequirement {
 
 message CreateFlexibilityRequirement {
   bytes flexibility_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteFlexibilityRequirement {
@@ -1330,6 +1392,7 @@ message ReplaceFlexibilityRequirement {
 
 message CreateWayfindingRequirement {
   bytes wayfinding_requirement = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteWayfindingRequirement {
@@ -1347,6 +1410,7 @@ message ReplaceWayfindingRequirement {
 
 message CreateProgramElement {
   bytes program_element = 1;
+  optional uint32 index = 2;
 }
 
 message DeleteProgramElement {
@@ -1364,6 +1428,7 @@ message ReplaceProgramElement {
 
 message ConnectAdjacency {
   bytes adjacency = 1;
+  optional uint32 index = 2;
 }
 
 message DisconnectAdjacency {
@@ -1372,6 +1437,7 @@ message DisconnectAdjacency {
 
 message ConnectTrace {
   bytes trace = 1;
+  optional uint32 index = 2;
 }
 
 message DisconnectTrace {

@@ -9,7 +9,7 @@
 
 use crate::mutations::CadMutation;
 use crate::CadSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖇️replace-reference-media/🖼️reattaches/📸️snapshot/➡️after/🔣️.json");
@@ -28,7 +28,7 @@ fn mutation() -> CadMutation {
 }
 fn applied() -> CadSnapshot {
     let base = before();
-    mutation().diff(&base).diff().apply(&base).expect("replace-reference-media applies to its committed before-snapshot")
+    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("replace-reference-media applies to its committed before-snapshot")
 }
 
 /// ▶️ `replace-reference-media` rewrites url/kind/scale/opacity together; `origin`, `width_world`, `hidden` and `locked` are placement, not media.
@@ -64,7 +64,7 @@ async fn inverse_reattaches_the_original_plan_bundle() {
     }
     let mut snapshot = applied();
     for step in &inverse {
-        snapshot = step.diff(&snapshot).diff().apply(&snapshot).expect("replace-reference-media/reattaches-the-shape-reference-to-a-new-plan: inverse step applies");
+        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("replace-reference-media/reattaches-the-shape-reference-to-a-new-plan: inverse step applies");
     }
     assert_eq!(snapshot, base, "replace-reference-media/reattaches-the-shape-reference-to-a-new-plan: inverse did not restore the before-snapshot");
 }
@@ -125,6 +125,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: crate::diff::CadDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes into the artifact's diff type");
-    let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-reference-media/reattaches-the-shape-reference-to-a-new-plan: committed diff did not carry before to after");
+}
+
+/// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

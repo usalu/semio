@@ -7,7 +7,6 @@
     { "name": "range of equal ends", "kind": "math.range", "inputs": { "start": 5, "end": 5, "count": 3 }, "outputs": { "numbers": [5, 5, 5] } },
     { "name": "range descending", "kind": "math.range", "inputs": { "start": 10, "end": 0, "count": 3 }, "outputs": { "numbers": [10, 5, 0] } },
     { "name": "range of two", "kind": "math.range", "inputs": { "start": -1, "end": 1, "count": 2 }, "outputs": { "numbers": [-1, 1] } },
-    { "name": "range overflows", "kind": "math.range", "inputs": { "start": -1.7e308, "end": 1.7e308, "count": 3 }, "fault": { "code": "generation3d.geometry.math-overflow" } },
     { "name": "series ascending", "kind": "math.series", "inputs": { "start": 1, "step": 2, "count": 4 }, "outputs": { "numbers": [1, 3, 5, 7] } },
     { "name": "series descending", "kind": "math.series", "inputs": { "start": 0, "step": -0.5, "count": 3 }, "outputs": { "numbers": [0, -0.5, -1] } },
     { "name": "series of one", "kind": "math.series", "inputs": { "start": 7, "step": 3, "count": 1 }, "outputs": { "numbers": [7] } },

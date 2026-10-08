@@ -1,0 +1,7 @@
+# Current Source Admission 17
+
+The registered receiving predecessor run returned Nx 1 before any original law executed: a bundled first-party manifest-request module resolved its schema URL relative to the generated executable. Complete runtime stdout, stderr, compiled bytes and original source bodies remain in `🗑️generated/controlled-cargo-callers/current-general-receiving-red-17`. This is a harness failure, not a genuine feature red.
+
+Both registered metadata refusal/current checks returned Nx 0. The source stage returned Nx 1 on the exact Cargo core preimage guard after the physical nearest Nextest configuration helper advanced. Its held candidate and prior preimage remain immutable. Receiving current, inspection and whole 17 were not invoked. No physical source publication occurred.
+
+Successor 18 preserves actual first-party module dir/url/filename origins through syntax-only replacements and records every loaded first-party body. Its mandatory source join admits the current nearest-ancestor Nextest helper and receiving policy law, including all five portable profile rows and independent Iarna TOML assertions. Both original finite stdin Git fixture callers now await the owned async capture with the original bytes/output/status assertions and 60000 ms controls. The current preparation program source/lock closure is retained before subprocess execution and in the final observation. The whole scope still includes all original 41 law modules and all current additions; no selected pass is whole acceptance.

@@ -1,13 +1,13 @@
-# Direct identities: set-snapshot, patch-snapshot, paint-indexed-region, paint-direct-region
+# Direct identities: paint-indexed-region, paint-direct-region
 dialect grammar
 grammar stdio.bmp.mutations
 start op
 
 comment none
 
-op = set-snapshot | patch-snapshot | paint-indexed-region | paint-direct-region
+op = replace-image | paint-indexed-region | paint-direct-region
 
-patch-snapshot = "patch-snapshot" "patch" "=" hex
-set-snapshot = "set-snapshot" "snapshot" "=" hex
 paint-indexed-region = "paint-indexed-region" "payload" "=" hex
 paint-direct-region = "paint-direct-region" "payload" "=" hex
+
+replace-image = "replace-image" "payload" "=" hex

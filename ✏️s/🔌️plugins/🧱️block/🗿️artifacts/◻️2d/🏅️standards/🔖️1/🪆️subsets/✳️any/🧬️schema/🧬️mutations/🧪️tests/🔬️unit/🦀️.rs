@@ -4,15 +4,15 @@ use crate::standards::v1::subsets::any::io::text::snapshot::empty_block2d_snapsh
 use crate::{BlockAttribute, BlockAuthor, BlockCompatibilityRule};
 use protocol::MutationDiff;
 use protocol::SemanticMutation;
-use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_mutation_inverse_sum_law};
 
 fn round_trip(base: &Block2dSnapshot, mutation: &Block2dMutation) -> Block2dSnapshot {
-    let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
+    let forward = protocol::apply_diff(mutation.diff(base).diff(), base).expect("valid mutation diff");
     let mut restored = forward.clone();
     let mut backward = mutation.inverse(base).expect("valid retained mutation inverse fixture");
     backward.reverse();
     for undo in &backward {
-        restored = undo.diff(&restored).diff().apply(&restored).expect("valid mutation diff");
+        restored = protocol::apply_diff(undo.diff(&restored).diff(), &restored).expect("valid mutation diff");
     }
     assert_eq!(&restored, base, "inverse must restore the pre-mutation snapshot");
     forward
@@ -146,10 +146,47 @@ async fn every_mutation_kind_satisfies_the_inverse_law() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn every_mutation_kind_satisfies_the_inverse_sum_law() {
+    let mut base = empty_block2d_snapshot();
+    base.handle_kinds.push(crate::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() });
+    base.handles.push(crate::Block2dHandleTemplate { id: "h0".into(), handle_kind: "hk0".into(), angle: 0.2, radius: 0.3 });
+    base.compatibility.push(BlockCompatibilityRule { id: "c0".into(), source: "a".into(), target: "b".into(), bidirectional: true });
+    base.attributes.push(BlockAttribute { key: "material".into(), value: "concrete".into(), definition: None });
+    base.authors.push(BlockAuthor { id: "a0".into(), name: "Ada".into(), email: None });
+
+    assert_mutation_inverse_sum_law(&rename_node_kind("x".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_node_kind_label("x".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_node_kind_variant(Some("v2".into())), &base).await;
+    assert_mutation_inverse_sum_law(&change_node_kind_description("d".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_node_kind_icon(Some("i".into())), &base).await;
+    assert_mutation_inverse_sum_law(&change_node_kind_unit(Some("m".into())), &base).await;
+    assert_mutation_inverse_sum_law(&update_presentation(Some("s".into()), Some(1.0), None, None, None, None), &base).await;
+    assert_mutation_inverse_sum_law(&create_handle_kind(crate::Block2dHandleKind { id: "hk1".into(), name: "hk1".into(), label: "HK1".into(), color: "#000".into(), default_wire_kind: "cable.link".into() }), &base).await;
+    assert_mutation_inverse_sum_law(&delete_handle_kind("hk0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&rename_handle_kind("hk0".into(), "renamed".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_handle_kind_label("hk0".into(), "Renamed".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_handle_kind_color("hk0".into(), "#fff".into()), &base).await;
+    assert_mutation_inverse_sum_law(&change_handle_kind_default_wire_kind("hk0".into(), "cable.power".into()), &base).await;
+    assert_mutation_inverse_sum_law(&create_handle(crate::Block2dHandleTemplate { id: "h1".into(), handle_kind: "hk0".into(), angle: 0.1, radius: 0.2 }), &base).await;
+    assert_mutation_inverse_sum_law(&delete_handle("h0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&move_handle("h0".into(), 1.5, 0.9), &base).await;
+    assert_mutation_inverse_sum_law(&change_handle_handle_kind("h0".into(), "hk0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&add_compatibility_rule(BlockCompatibilityRule { id: "c1".into(), source: "a".into(), target: "c".into(), bidirectional: false }), &base).await;
+    assert_mutation_inverse_sum_law(&remove_compatibility_rule("c0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&add_attribute(BlockAttribute { key: "finish".into(), value: "matte".into(), definition: None }), &base).await;
+    assert_mutation_inverse_sum_law(&remove_attribute("material".into()), &base).await;
+    assert_mutation_inverse_sum_law(&add_author(BlockAuthor { id: "a1".into(), name: "Bo".into(), email: None }), &base).await;
+    assert_mutation_inverse_sum_law(&remove_author("a0".into()), &base).await;
+    assert_mutation_inverse_sum_law(&move_camera2d(3.0, 4.0), &base).await;
+    assert_mutation_inverse_sum_law(&scale_camera2d(1.5), &base).await;
+    assert_mutation_inverse_sum_law(&change_meta_description("notes".into()), &base).await;
+}
+
+#[semio_framework_async_macros::async_test]
 async fn change_node_kind_label_diff_absorb_law() {
     let base = empty_block2d_snapshot();
     let d1 = change_node_kind_label("first".into()).diff(&base).into_parts().0;
-    let mid = d1.apply(&base).expect("valid mutation diff");
+    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
     let d2 = change_node_kind_label("second".into()).diff(&mid).into_parts().0;
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
@@ -160,7 +197,7 @@ async fn move_handle_diff_absorb_law() {
     base.handle_kinds.push(crate::Block2dHandleKind { id: "hk0".into(), name: "hk0".into(), label: "HK0".into(), color: "#888".into(), default_wire_kind: "cable.link".into() });
     base.handles.push(crate::Block2dHandleTemplate { id: "h0".into(), handle_kind: "hk0".into(), angle: 0.0, radius: 0.2 });
     let d1 = move_handle("h0".into(), 0.5, 0.3).diff(&base).into_parts().0;
-    let mid = d1.apply(&base).expect("valid mutation diff");
+    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
     let d2 = move_handle("h0".into(), 1.1, 0.6).diff(&mid).into_parts().0;
     assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
@@ -230,3 +267,34 @@ fn kinds_match_the_enum_and_the_catalog() {
     }
 }
 //#endregion 🧪️KindsCatalog
+
+#[semio_framework_async_macros::async_test]
+async fn deleting_or_creating_a_middle_row_restores_its_original_index() {
+    let mut base = empty_block2d_snapshot();
+    for n in 0..3 {
+        base.handle_kinds.push(crate::Block2dHandleKind { id: format!("hk{n}"), name: format!("hk{n}"), label: format!("HK{n}"), color: "#888".into(), default_wire_kind: "cable.link".into() });
+        base.handles.push(crate::Block2dHandleTemplate { id: format!("h{n}"), handle_kind: "hk0".into(), angle: 0.1 * f64::from(n), radius: 0.3 });
+        base.compatibility.push(BlockCompatibilityRule { id: format!("c{n}"), source: "a".into(), target: "b".into(), bidirectional: true });
+        base.attributes.push(BlockAttribute { key: format!("k{n}"), value: "v".into(), definition: None });
+        base.authors.push(BlockAuthor { id: format!("a{n}"), name: format!("A{n}"), email: None });
+    }
+    for removal in [delete_handle("h1".into()), delete_handle_kind("hk1".into()), remove_compatibility_rule("c1".into()), remove_attribute("k1".into()), remove_author("a1".into())] {
+        assert_mutation_inverse_sum_law(&removal, &base).await;
+        round_trip(&base, &removal);
+    }
+    let handle = crate::Block2dHandleTemplate { id: "hx".into(), handle_kind: "hk0".into(), angle: 0.0, radius: 0.3 };
+    let created = round_trip(&base, &create_handle_at(handle.clone(), 1));
+    assert_eq!(created.handles.iter().map(|item| item.id.as_str()).collect::<Vec<_>>(), ["h0", "hx", "h1", "h2"]);
+    assert_eq!(round_trip(&base, &create_handle_at(handle.clone(), 3)).handles.last().map(|item| item.id.as_str()), Some("hx"));
+    assert_eq!(round_trip(&base, &create_handle_at(handle, 99)).handles.last().map(|item| item.id.as_str()), Some("hx"));
+    let kind = crate::Block2dHandleKind { id: "hkx".into(), name: "hkx".into(), label: "HKX".into(), color: "#888".into(), default_wire_kind: "cable.link".into() };
+    for insertion in [
+        create_handle_kind_at(kind, 1),
+        add_compatibility_rule_at(BlockCompatibilityRule { id: "cx".into(), source: "a".into(), target: "b".into(), bidirectional: true }, 1),
+        add_attribute_at(BlockAttribute { key: "kx".into(), value: "v".into(), definition: None }, 1),
+        add_author_at(BlockAuthor { id: "ax".into(), name: "AX".into(), email: None }, 1),
+    ] {
+        assert_mutation_inverse_sum_law(&insertion, &base).await;
+        round_trip(&base, &insertion);
+    }
+}

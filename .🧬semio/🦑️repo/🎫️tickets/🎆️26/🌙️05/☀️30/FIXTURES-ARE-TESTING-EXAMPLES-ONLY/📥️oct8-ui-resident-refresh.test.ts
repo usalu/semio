@@ -1,0 +1,32 @@
+import {test,expect} from 'bun:test';
+import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
+import Ajv from 'ajv';
+const root=resolve(import.meta.dir,'../../../../../../..');
+const owner='🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🔄️refresh';
+const preimage=JSON.parse(readFileSync(resolve(import.meta.dir,'📥️oct8-ui-resident-refresh-preimage.json'),'utf8'));
+const schema=JSON.parse(readFileSync(resolve(root,owner,'🧬️schema/🔣️.json'),'utf8'));
+const fixture=JSON.parse(readFileSync(resolve(root,owner,'🧫️fixtures/🔣️.json'),'utf8'));
+test('ResidentRefresh genuine payload leaves retain independent Ajv behavior',()=>{
+  const before=JSON.parse(preimage.schema);
+  expect(Object.keys(schema.$defs)).toEqual(['ResidentRefreshSurface','ResidentRefreshMeasurement']);
+  expect(schema.allOf).toBeUndefined();
+  for(const name of Object.keys(schema.$defs))expect(schema.$defs[name]).toEqual(before.$defs[name]);
+  const ajv=new Ajv({strict:true}).addSchema(schema);
+  const surface=ajv.getSchema(schema.$id+'#/$defs/ResidentRefreshSurface')!;
+  const measurement=ajv.getSchema(schema.$id+'#/$defs/ResidentRefreshMeasurement')!;
+  for(const row of fixture.surfaces)expect(surface(row)).toBe(true);
+  expect(surface({id:'',nodes:1})).toBe(false);
+  expect(surface({id:'runtime',nodes:129})).toBe(false);
+  expect(measurement(fixture.measured)).toBe(true);
+  expect(measurement({...fixture.measured,capacityFaults:1})).toBe(false);
+  console.log('[DEBUG] independent Ajv preserves actual Surface/Measurement leaf payload behavior');
+});
+test('ResidentRefresh native workload fixtures and five exact test bodies remain unchanged',()=>{
+  expect(readFileSync(resolve(root,owner,'🧫️fixtures/🔣️.json'),'utf8')).toBe(preimage.fixture);
+  const rust=readFileSync(resolve(root,owner,'🧪️tests/🔄️refresh/🦀️.rs'),'utf8');
+  expect(rust).toBe(preimage.rust);
+  expect(rust.match(/#\[test\]/g)?.length).toBe(5);
+  expect(readFileSync(resolve(root,'🧰️framework/🔨️modules/🖱️ui/🧬️contract/📃️document/🦀️.rs'),'utf8')).toContain('#[cfg(test)]\n#[path = "../🎟️resident/🔄️refresh/🧪️tests/🔄️refresh/🦀️.rs"]\nmod resident_refresh_tests;');
+  console.log('[DEBUG] native fixture and five permit/assembly/lease laws retained byte-for-byte behind cfg(test)');
+});

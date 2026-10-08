@@ -644,7 +644,7 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
             _ => panic!("publisher refusal retains the verified publication owner"),
         }
     };
-    let expected_parent = directory::os_io::ArtifactRef { artifact_id: document_key(&scope), dialect: directory::os_io::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() } };
+    let expected_parent = semio_framework_artifact_reference::ArtifactRef { artifact_id: document_key(&scope), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() } };
     assert_eq!(parent_reference, expected_parent);
     assert_eq!(drawing_reference.to_uri(), "gismap-drawing!s.stdio.semio@v1/drawing");
     assert_eq!(drawing_owner, directory::os_store::OwnerRef { parent: expected_parent.clone(), slot: "drawing".into(), child_id: "gismap-drawing".into() });

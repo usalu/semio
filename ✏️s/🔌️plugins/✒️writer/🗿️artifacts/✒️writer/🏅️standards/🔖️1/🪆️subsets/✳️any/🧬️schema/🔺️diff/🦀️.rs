@@ -14,8 +14,6 @@ use framework_schema::ArtifactSchema;
 #[artifact_schema(id = "s.writer.writer")]
 pub struct WriterDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::schema::WriterArtifact>>,
-    #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]
     pub id: Option<String>,
@@ -33,101 +31,75 @@ pub struct WriterDiff {
 }
 //#endregion 🔖️Diff
 
-use crate::schema::WriterArtifact;
 use crate::document_child_handle_with_text;
 use crate::WriterSnapshot;
 use protocol::MutationDiff;
 use super::*;
 
-
-
-impl WriterDiff {
-    /// 🧬️ Applies every sparse entry onto a full artifact.
-    pub fn apply_to_artifact(&self, artifact: &WriterArtifact) -> protocol::MutationApplyResult<WriterArtifact> {
-        Ok({
-            if let Some(replacement) = &self.artifact {
-                return Ok((**replacement).clone());
-            }
-            let mut next = artifact.clone();
-            if let Some(schema) = &self.schema {
-                next.schema = schema.clone();
-            }
-            if let Some(id) = &self.id {
-                next.id = id.clone();
-            }
-            if let Some(language_id) = &self.language_id {
-                next.language_id = language_id.clone();
-            }
-            if let Some(uri) = &self.uri {
-                next.uri = uri.clone();
-            }
-            if let Some(text) = &self.text {
-                next.text = text.clone();
-            }
-            if let Some(document) = &self.document {
-                next.document = document.clone();
-            }
-            next
-        })
-    }
-}
-
 impl MutationDiff<WriterSnapshot> for WriterDiff {
-    fn apply(&self, snapshot: &WriterSnapshot) -> protocol::MutationApplyResult<WriterSnapshot> {
-        Ok({
-            if let Some(replacement) = &self.artifact {
-                return Ok(replacement.to_snapshot());
-            }
-            let mut next = snapshot.clone();
-            if let Some(schema) = &self.schema {
-                next.schema = schema.clone();
-            }
-            if let Some(id) = &self.id {
-                next.id = id.clone();
-            }
-            if let Some(language_id) = &self.language_id {
-                next.language_id = language_id.clone();
-            }
-            if let Some(uri) = &self.uri {
-                next.uri = uri.clone();
-            }
-            if let Some(text) = &self.text {
-                next.text = text.clone();
-            }
-            if let Some(document) = &self.document {
-                next.document = document.clone();
-            }
-            next
-        })
+    fn apply(&self, snapshot: &WriterSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<WriterSnapshot> {
+        let mut next = snapshot.clone();
+        if let Some(schema) = &self.schema {
+            next.schema = schema.clone();
+        }
+        if let Some(id) = &self.id {
+            next.id = id.clone();
+        }
+        if let Some(language_id) = &self.language_id {
+            next.language_id = language_id.clone();
+        }
+        if let Some(uri) = &self.uri {
+            next.uri = uri.clone();
+        }
+        if let Some(text) = &self.text {
+            next.text = text.clone();
+        }
+        if let Some(document) = &self.document {
+            next.document = document.clone();
+        }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
-        if other.artifact.is_some() {
-            *self = other;
-            return;
+        macro_rules! take {
+            ($field:ident) => {
+                if other.$field.is_some() {
+                    self.$field = other.$field;
+                }
+            };
         }
-        if other.schema.is_some() {
-            self.schema = other.schema;
-        }
-        if other.id.is_some() {
-            self.id = other.id;
-        }
-        if other.language_id.is_some() {
-            self.language_id = other.language_id;
-        }
-        if other.uri.is_some() {
-            self.uri = other.uri;
-        }
-        if other.text.is_some() {
-            self.text = other.text;
-        }
-        if other.document.is_some() {
-            self.document = other.document;
-        }
+        take!(schema);
+        take!(id);
+        take!(language_id);
+        take!(uri);
+        take!(text);
+        take!(document);
     }
 }
 
-pub fn diff_set_snapshot(snapshot: &WriterSnapshot) -> WriterDiff {
-    WriterDiff { artifact: Some(Box::new(WriterArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
+impl protocol::DiffAlgebra<WriterSnapshot> for WriterDiff {
+    fn inverse(&self, base: &WriterSnapshot) -> Self {
+        Self {
+            schema: self.schema.as_ref().map(|_| base.schema.clone()),
+            id: self.id.as_ref().map(|_| base.id.clone()),
+            language_id: self.language_id.as_ref().map(|_| base.language_id.clone()),
+            uri: self.uri.as_ref().map(|_| base.uri.clone()),
+            text: self.text.as_ref().map(|_| base.text.clone()),
+            document: self.document.as_ref().map(|_| base.document.clone()),
+        }
+    }
+    fn between(base: &WriterSnapshot, other: &WriterSnapshot) -> Self {
+        Self {
+            schema: (base.schema != other.schema).then(|| other.schema.clone()),
+            id: (base.id != other.id).then(|| other.id.clone()),
+            language_id: (base.language_id != other.language_id).then(|| other.language_id.clone()),
+            uri: (base.uri != other.uri).then(|| other.uri.clone()),
+            text: (base.text != other.text).then(|| other.text.clone()),
+            document: (base.document != other.document).then(|| other.document.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.schema.is_none() && self.id.is_none() && self.language_id.is_none() && self.uri.is_none() && self.text.is_none() && self.document.is_none()
+    }
 }
 
 /// 🔺️ Mints a new content-addressed `document` handle for the whole-body replacement `text` and

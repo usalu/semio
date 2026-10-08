@@ -2,6 +2,9 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/mutation/delete-material/schema.json",
   "title": "GltfDeleteMaterialPayload",
+  "x-semio-inverse-rows": {
+    "bounded": 1025
+  },
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -30,41 +33,21 @@
   },
   "$defs": {
     "DeleteMaterialMutation": {
-      "description": "The whole wire of DeleteMaterialMutation: the editable apply payload (this document's root) or the inert restore.",
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "phase",
-            "value"
-          ],
-          "properties": {
-            "phase": {
-              "const": "apply"
-            },
-            "value": {
-              "$ref": "#"
-            }
-          }
+      "description": "The whole wire of DeleteMaterialMutation: the editable apply payload (this document's root).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "value"
+      ],
+      "properties": {
+        "phase": {
+          "const": "apply"
         },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "phase",
-            "value"
-          ],
-          "properties": {
-            "phase": {
-              "const": "restore"
-            },
-            "value": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gltf/2.0/any/diff.json"
-            }
-          }
+        "value": {
+          "$ref": "#"
         }
-      ]
+      }
     }
   }
 }

@@ -112,7 +112,154 @@ impl Default for Process3dConfig {
     }
 }
 
-store::impl_whole_record_config!(Process3dConfig);
+impl store::ConfigRecord for Process3dConfig {}
+
+/// 🧱️ Carries an optional value as a present slot, so clearing it stays distinct from leaving it untouched on every wire.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Process3dOptionalCursor {
+    pub value: Option<usize>,
+}
+
+/// 🔺️ Sparse field delta over [`Process3dConfig`]: every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Process3dConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub engagement_input: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera_position: Option<[f64; 3]>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera_target: Option<[f64; 3]>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera_fov: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub sun_enabled: Option<bool>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub sun_azimuth: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub sun_elevation: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub sun_intensity: Option<f64>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub sun_color: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub contributions_json: Option<String>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub resolved_up_to: Option<Process3dOptionalCursor>,
+}
+
+impl protocol::MutationDiff<Process3dConfig> for Process3dConfigDiff {
+    fn apply(&self, base: &Process3dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Process3dConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.engagement_input {
+            next.engagement_input = value.clone();
+        }
+        if let Some(value) = &self.camera_position {
+            next.camera_position = value.clone();
+        }
+        if let Some(value) = &self.camera_target {
+            next.camera_target = value.clone();
+        }
+        if let Some(value) = &self.camera_fov {
+            next.camera_fov = value.clone();
+        }
+        if let Some(value) = &self.sun_enabled {
+            next.sun_enabled = value.clone();
+        }
+        if let Some(value) = &self.sun_azimuth {
+            next.sun_azimuth = value.clone();
+        }
+        if let Some(value) = &self.sun_elevation {
+            next.sun_elevation = value.clone();
+        }
+        if let Some(value) = &self.sun_intensity {
+            next.sun_intensity = value.clone();
+        }
+        if let Some(value) = &self.sun_color {
+            next.sun_color = value.clone();
+        }
+        if let Some(value) = &self.contributions_json {
+            next.contributions_json = value.clone();
+        }
+        if let Some(value) = &self.resolved_up_to {
+            next.resolved_up_to = value.value.clone();
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.engagement_input.is_some() {
+            self.engagement_input = other.engagement_input;
+        }
+        if other.camera_position.is_some() {
+            self.camera_position = other.camera_position;
+        }
+        if other.camera_target.is_some() {
+            self.camera_target = other.camera_target;
+        }
+        if other.camera_fov.is_some() {
+            self.camera_fov = other.camera_fov;
+        }
+        if other.sun_enabled.is_some() {
+            self.sun_enabled = other.sun_enabled;
+        }
+        if other.sun_azimuth.is_some() {
+            self.sun_azimuth = other.sun_azimuth;
+        }
+        if other.sun_elevation.is_some() {
+            self.sun_elevation = other.sun_elevation;
+        }
+        if other.sun_intensity.is_some() {
+            self.sun_intensity = other.sun_intensity;
+        }
+        if other.sun_color.is_some() {
+            self.sun_color = other.sun_color;
+        }
+        if other.contributions_json.is_some() {
+            self.contributions_json = other.contributions_json;
+        }
+        if other.resolved_up_to.is_some() {
+            self.resolved_up_to = other.resolved_up_to;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<Process3dConfig> for Process3dConfigDiff {
+    fn inverse(&self, base: &Process3dConfig) -> Self {
+        Self {
+            engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()),
+            camera_position: self.camera_position.as_ref().map(|_| base.camera_position.clone()),
+            camera_target: self.camera_target.as_ref().map(|_| base.camera_target.clone()),
+            camera_fov: self.camera_fov.as_ref().map(|_| base.camera_fov.clone()),
+            sun_enabled: self.sun_enabled.as_ref().map(|_| base.sun_enabled.clone()),
+            sun_azimuth: self.sun_azimuth.as_ref().map(|_| base.sun_azimuth.clone()),
+            sun_elevation: self.sun_elevation.as_ref().map(|_| base.sun_elevation.clone()),
+            sun_intensity: self.sun_intensity.as_ref().map(|_| base.sun_intensity.clone()),
+            sun_color: self.sun_color.as_ref().map(|_| base.sun_color.clone()),
+            contributions_json: self.contributions_json.as_ref().map(|_| base.contributions_json.clone()),
+            resolved_up_to: self.resolved_up_to.as_ref().map(|_| Process3dOptionalCursor { value: base.resolved_up_to.clone() }),
+        }
+    }
+    fn between(base: &Process3dConfig, other: &Process3dConfig) -> Self {
+        Self {
+            engagement_input: (base.engagement_input != other.engagement_input).then(|| other.engagement_input.clone()),
+            camera_position: (base.camera_position != other.camera_position).then(|| other.camera_position.clone()),
+            camera_target: (base.camera_target != other.camera_target).then(|| other.camera_target.clone()),
+            camera_fov: (base.camera_fov != other.camera_fov).then(|| other.camera_fov.clone()),
+            sun_enabled: (base.sun_enabled != other.sun_enabled).then(|| other.sun_enabled.clone()),
+            sun_azimuth: (base.sun_azimuth != other.sun_azimuth).then(|| other.sun_azimuth.clone()),
+            sun_elevation: (base.sun_elevation != other.sun_elevation).then(|| other.sun_elevation.clone()),
+            sun_intensity: (base.sun_intensity != other.sun_intensity).then(|| other.sun_intensity.clone()),
+            sun_color: (base.sun_color != other.sun_color).then(|| other.sun_color.clone()),
+            contributions_json: (base.contributions_json != other.contributions_json).then(|| other.contributions_json.clone()),
+            resolved_up_to: (base.resolved_up_to != other.resolved_up_to).then(|| Process3dOptionalCursor { value: other.resolved_up_to.clone() }),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.engagement_input.is_none() && self.camera_position.is_none() && self.camera_target.is_none() && self.camera_fov.is_none() && self.sun_enabled.is_none() && self.sun_azimuth.is_none() && self.sun_elevation.is_none() && self.sun_intensity.is_none() && self.sun_color.is_none() && self.contributions_json.is_none() && self.resolved_up_to.is_none()
+    }
+}
+
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
@@ -185,7 +332,235 @@ impl protocol::OpBinary for Process3dConfigMutation {
 //#endregion 🔖️OpCodec
 
 impl Mutation<Process3dConfig> for Process3dConfigMutation {
-    type Diff = Process3dConfig;
+    type Diff = Process3dConfigDiff;
+
+    /// 🧾️ Leaf metadata for the view-state vocabulary. ⚠️ PROVISIONAL: none of the six `owner`
+    /// paths below name a directory that exists on disk — this enum has no `🎚️config/<slug>` leaf
+    /// triads of its own (every field lives flat in this file), so every entry is a metadata
+    /// placeholder to satisfy `protocol::Mutation`, matching `🪵️sourcing`'s own config precedent.
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⌨️set",
+            semantic_kind: "set-engagement-input",
+            display_name: "Set Engagement Input",
+            emoji: "⌨️",
+            aggregate_variant: "SetEngagementInput",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🎥️set-camera",
+            semantic_kind: "set-camera",
+            display_name: "Set Camera",
+            emoji: "🎥️",
+            aggregate_variant: "SetCamera",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/☀️set-sun",
+            semantic_kind: "set-sun",
+            display_name: "Set Sun",
+            emoji: "☀️",
+            aggregate_variant: "SetSun",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🤝️set-contributions",
+            semantic_kind: "set-contributions",
+            display_name: "Set Contributions",
+            emoji: "🤝️",
+            aggregate_variant: "SetContributions",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⏱️set-cursor",
+            semantic_kind: "set-cursor",
+            display_name: "Set Replay Cursor",
+            emoji: "⏱️",
+            aggregate_variant: "SetCursor",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
+    ];
+
+    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
+        match self {
+            Process3dConfigMutation::SetEngagementInput { .. } => &Self::DESCRIPTORS[0],
+            Process3dConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[1],
+            Process3dConfigMutation::SetSun { .. } => &Self::DESCRIPTORS[2],
+            Process3dConfigMutation::SetContributions { .. } => &Self::DESCRIPTORS[3],
+            Process3dConfigMutation::SetCursor { .. } => &Self::DESCRIPTORS[4],
+        }
+    }
+
+    fn diff(&self, base: &Process3dConfig) -> protocol::MutationOutcome<Process3dConfigDiff> {
+        protocol::MutationOutcome::new(match self {
+            Process3dConfigMutation::SetEngagementInput { value } => Process3dConfigDiff { engagement_input: (base.engagement_input != *value).then(|| value.clone()), ..Default::default() },
+            Process3dConfigMutation::SetCamera { position, target, fov } => Process3dConfigDiff {
+                camera_position: (base.camera_position != *position).then_some(*position),
+                camera_target: (base.camera_target != *target).then_some(*target),
+                camera_fov: (base.camera_fov != *fov).then_some(*fov),
+                ..Default::default()
+            },
+            Process3dConfigMutation::SetSun { enabled, azimuth, elevation, intensity, color } => Process3dConfigDiff {
+                sun_enabled: (base.sun_enabled != *enabled).then_some(*enabled),
+                sun_azimuth: (base.sun_azimuth != *azimuth).then_some(*azimuth),
+                sun_elevation: (base.sun_elevation != *elevation).then_some(*elevation),
+                sun_intensity: (base.sun_intensity != *intensity).then_some(*intensity),
+                sun_color: (base.sun_color != *color).then(|| color.clone()),
+                ..Default::default()
+            },
+            Process3dConfigMutation::SetContributions { json } => Process3dConfigDiff { contributions_json: (base.contributions_json != *json).then(|| json.clone()), ..Default::default() },
+            Process3dConfigMutation::SetCursor { value } => Process3dConfigDiff { resolved_up_to: (base.resolved_up_to != *value).then(|| Process3dOptionalCursor { value: *value }), ..Default::default() },
+        })
+    }
+
+    fn inverse(&self, base: &Process3dConfig) -> Self {
+        Self {
+            engagement_input: self.engagement_input.as_ref().map(|_| base.engagement_input.clone()),
+            camera_position: self.camera_position.as_ref().map(|_| base.camera_position.clone()),
+            camera_target: self.camera_target.as_ref().map(|_| base.camera_target.clone()),
+            camera_fov: self.camera_fov.as_ref().map(|_| base.camera_fov.clone()),
+            sun_enabled: self.sun_enabled.as_ref().map(|_| base.sun_enabled.clone()),
+            sun_azimuth: self.sun_azimuth.as_ref().map(|_| base.sun_azimuth.clone()),
+            sun_elevation: self.sun_elevation.as_ref().map(|_| base.sun_elevation.clone()),
+            sun_intensity: self.sun_intensity.as_ref().map(|_| base.sun_intensity.clone()),
+            sun_color: self.sun_color.as_ref().map(|_| base.sun_color.clone()),
+            contributions_json: self.contributions_json.as_ref().map(|_| base.contributions_json.clone()),
+            resolved_up_to: self.resolved_up_to.as_ref().map(|_| Process3dOptionalCursor { value: base.resolved_up_to.clone() }),
+        }
+    }
+    fn between(base: &Process3dConfig, other: &Process3dConfig) -> Self {
+        Self {
+            engagement_input: (base.engagement_input != other.engagement_input).then(|| other.engagement_input.clone()),
+            camera_position: (base.camera_position != other.camera_position).then(|| other.camera_position.clone()),
+            camera_target: (base.camera_target != other.camera_target).then(|| other.camera_target.clone()),
+            camera_fov: (base.camera_fov != other.camera_fov).then(|| other.camera_fov.clone()),
+            sun_enabled: (base.sun_enabled != other.sun_enabled).then(|| other.sun_enabled.clone()),
+            sun_azimuth: (base.sun_azimuth != other.sun_azimuth).then(|| other.sun_azimuth.clone()),
+            sun_elevation: (base.sun_elevation != other.sun_elevation).then(|| other.sun_elevation.clone()),
+            sun_intensity: (base.sun_intensity != other.sun_intensity).then(|| other.sun_intensity.clone()),
+            sun_color: (base.sun_color != other.sun_color).then(|| other.sun_color.clone()),
+            contributions_json: (base.contributions_json != other.contributions_json).then(|| other.contributions_json.clone()),
+            resolved_up_to: (base.resolved_up_to != other.resolved_up_to).then(|| Process3dOptionalCursor { value: other.resolved_up_to.clone() }),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.engagement_input.is_none() && self.camera_position.is_none() && self.camera_target.is_none() && self.camera_fov.is_none() && self.sun_enabled.is_none() && self.sun_azimuth.is_none() && self.sun_elevation.is_none() && self.sun_intensity.is_none() && self.sun_color.is_none() && self.contributions_json.is_none() && self.resolved_up_to.is_none()
+    }
+}
+
+//#endregion 🔖️Config
+
+//#region 🔖️ConfigOperations
+/// 🧮️ [`Process3dConfig`]'s operation enum — one variant per settled interaction (mirrors the pre-B1
+/// `Process3dRuntime` field writes). Every field already carries its own setter, so `backwards()`
+/// returns the SAME variant re-addressed at `base`'s old value — a targeted, in-kind inverse per
+/// this ticket's ban on whole-record replace, rather than a generic whole-config snapshot.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
+pub enum Process3dConfigMutation {
+    #[dsl(key = "engagement-input")]
+    SetEngagementInput { value: String },
+    #[dsl(key = "camera")]
+    SetCamera {
+        #[dsl(coord)]
+        position: [f64; 3],
+        #[dsl(coord)]
+        target: [f64; 3],
+        fov: f64,
+    },
+    #[dsl(key = "sun")]
+    SetSun { enabled: bool, azimuth: f64, elevation: f64, intensity: f64, color: String },
+    #[dsl(key = "contributions")]
+    SetContributions { json: String },
+    #[dsl(key = "cursor")]
+    SetCursor { value: Option<usize> },
+}
+
+//#region 🔖️OpCodec
+impl protocol::OpText for Process3dConfigMutation {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        semio_framework_dsl_record::variants_text::parse_op(line)
+    }
+    fn print_op(&self) -> String {
+        semio_framework_dsl_record::variants_text::print_op(self)
+    }
+}
+
+/// 🎯️ Handcrafted OpBinary (P6).
+impl protocol::OpBinary for Process3dConfigMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
+        let spec = (variants[ordinal].1.ordinary)();
+        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
+        let mut out = Vec::with_capacity(body.len() + 3);
+        out.push(OP_BINARY_FORMAT);
+        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
+        out.extend_from_slice(&body);
+        Ok(out)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut reader = store::pack_rt::ByteReader::new(bytes);
+        let format = reader.read_u8()?;
+        if format != OP_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+        }
+        let ordinal = reader.read_varint_u64()?;
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
+        let spec = (spec_fn.ordinary)();
+        let body = &bytes[reader.position()..];
+        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
+    }
+}
+
+//#endregion 🔖️OpCodec
+
+impl Mutation<Process3dConfig> for Process3dConfigMutation {
+    type Diff = Process3dConfigDiff;
 
     /// 🧾️ Leaf metadata for the view-state vocabulary. ⚠️ PROVISIONAL: none of the six `owner`
     /// paths below name a directory that exists on disk — this enum has no `🎚️config/<slug>` leaf
@@ -333,3 +708,18 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod law_tests {
+    use super::*;
+
+    /// ⚖️ The inverse diffs sum to the negative of the forward diff (L3).
+    #[semio_framework_async_macros::async_test]
+    async fn inverse_diffs_sum_to_the_negative_diff() {
+        let base = Process3dConfig::default();
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&Process3dConfigMutation::SetEngagementInput { value: "x".into() }, &base).await;
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&Process3dConfigMutation::SetCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 1.0], fov: 30.0 }, &base).await;
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&Process3dConfigMutation::SetSun { enabled: true, azimuth: 10.0, elevation: 20.0, intensity: 0.5, color: "#fff".into() }, &base).await;
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&Process3dConfigMutation::SetCursor { value: Some(2) }, &base).await;
+    }
+}

@@ -3,8 +3,8 @@ import type {GltfCreateBufferViewPayload,CreateBufferViewMutation} from "../../.
 export type * from "../../../../../🧬️schema/🧬️mutations/🪟️buffer-view/🌱️create/🟦️.ts";
 /** 🌱️ `create-buffer-view` wire twin: the flat `Apply` payload `GltfCreateBufferViewPayload` and the phase wire `CreateBufferViewMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
-import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireIndex, gltfWireObject, gltfWireRequired, gltfWireOptional, parseGltfBufferView } from "../../../📸️snapshot/🔣️json/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
-export const parseGltfCreateBufferViewPayload = gltfWireObject<GltfCreateBufferViewPayload>({ position: gltfWireRequired(gltfWireIndex), buffer: gltfWireRequired(gltfWireIndex), byteOffset: gltfWireRequired(gltfWireIndex), byteLength: gltfWireRequired(gltfWireIndex) });
-export const parseCreateBufferViewMutation = gltfWirePhase(parseGltfCreateBufferViewPayload, parseGltfDiff);
+export const parseGltfCreateBufferViewPayload = gltfWireObject<GltfCreateBufferViewPayload>({ position: gltfWireRequired(gltfWireIndex), buffer: gltfWireRequired(gltfWireIndex), byteOffset: gltfWireRequired(gltfWireIndex), byteLength: gltfWireRequired(gltfWireIndex), bufferView: gltfWireOptional(parseGltfBufferView) });
+export const parseCreateBufferViewMutation = gltfWireApplyPhase(parseGltfCreateBufferViewPayload);

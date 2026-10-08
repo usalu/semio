@@ -1,11 +1,34 @@
-# 🧬️ Presentation durable diff composed from shared presentation and animation child identities.
+# 🧬️ Presentation durable diff: a field patch of the working source, an id-keyed tile row delta and the re-minted presentation child handle.
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
-# import PresentationArtifact from "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
-# import FigureTileSource, FigureTileDraft from "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️.graphql"
+# import FigureTileFrame, FigureTileDraft from "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️.graphql"
 type PresentationDiff {
-  artifact: PresentationArtifact @state(class: ARTIFACT)
   schema: String @state(class: ARTIFACT)
-  source: FigureTileSource @state(class: ARTIFACT)
-  tiles: [FigureTileDraft!] @state(class: ARTIFACT)
+  source: PresentationSourcePatch @state(class: ARTIFACT)
+  tiles: PresentationTilesDelta @state(class: ARTIFACT)
   presentation: ArtifactChild @state(class: ARTIFACT)
+}
+
+type PresentationSourcePatch {
+  src: String
+  kind: String
+  frame: FigureTileFrame
+  sourceAspect: PresentationOptionalAspect
+  pdfPage: PresentationOptionalPage
+}
+
+type PresentationOptionalAspect { value: Float }
+
+type PresentationOptionalPage { value: Int }
+
+type PresentationTilesDelta {
+  added: [FigureTileDraft!]!
+  removed: [String!]!
+  patched: [PresentationTilePatch!]!
+  reordered: [String!]
+}
+
+type PresentationTilePatch {
+  id: String!
+  name: String
+  crop: FigureTileFrame
 }

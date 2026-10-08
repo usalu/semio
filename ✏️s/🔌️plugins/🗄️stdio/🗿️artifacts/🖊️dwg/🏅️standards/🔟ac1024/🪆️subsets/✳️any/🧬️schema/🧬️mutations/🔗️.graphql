@@ -1,4 +1,3 @@
-enum DwgMutationKind { SET_SNAPSHOT SET_VERSION_INFO }
-type DwgSetSnapshotMutation { kind: DwgMutationKind!, snapshot: DwgSnapshot! }
+enum DwgMutationKind { SET_VERSION_INFO }
 type DwgSetVersionInfoMutation { kind: DwgMutationKind!, version: String!, maintenanceVersion: Int!, codepage: Int! }
-union DwgMutation = DwgSetSnapshotMutation | DwgSetVersionInfoMutation
+union DwgMutation = DwgSetVersionInfoMutation

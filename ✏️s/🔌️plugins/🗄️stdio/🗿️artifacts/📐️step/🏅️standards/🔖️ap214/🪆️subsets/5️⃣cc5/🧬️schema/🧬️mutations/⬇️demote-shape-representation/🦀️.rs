@@ -1,10 +1,9 @@
-//! ⬇️️ `demote-shape-representation` — one axis of this conformance class, authored as its own mutation leaf.
-//! The class-neutral edit is performed by the shared ladder module; this file names the axis and
-//! routes to it, so each rule has ONE implementation and every class calls it.
+//! ⬇️ `demote-shape-representation` -- rewrites an over-rung representation onto this class's ceiling type; the prior instance is restored exactly.
 
-use crate::standards::v_ap214::engine::ladder::ClassEdit;
-use crate::standards::v_ap214::subsets::cc5::schema::mutations::StepCc5Mutation;
-use crate::standards::v_ap214::subsets::cc5::schema::mutations::{class_diff, class_inverse};
+use crate::schema::diff::StepDiff;
+use crate::standards::v_ap214::engine::ladder;
+use crate::standards::v_ap214::subsets::cc5::schema::MAX_RUNG;
+use crate::standards::v_ap214::subsets::cc5::schema::mutations::{rejected, restored, StepCc5Mutation, CLASS};
 use crate::StepSnapshot;
 
 //#region 🔖️Payload
@@ -17,18 +16,21 @@ pub struct DemoteShapeRepresentation {
 impl protocol::MutationKind<StepSnapshot, StepCc5Mutation> for DemoteShapeRepresentation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "shape-representation", kind: "demote-shape-representation", record: "DemotedShapeRepresentation" };
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepCc5Mutation as protocol::Mutation<StepSnapshot>>::Diff> {
-        class_diff(base, &ClassEdit::Demotion { id: self.id })
+    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
+        match ladder::demotion_diff(base, CLASS, MAX_RUNG, self.id) {
+            Ok(diff) => protocol::MutationOutcome::new(diff),
+            Err(message) => rejected(message),
+        }
     }
+
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepCc5Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        class_inverse(base, &ClassEdit::Demotion { id: self.id })?
-    
-    })
-}
+        Ok(restored(ladder::restore_entity_rows(base, self.id)))
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Demote shape representation #{} onto this class's ceiling", self.id), &format!("Formrepräsentation #{} auf die Obergrenze dieser Klasse herabstufen", self.id))
     }
+
     fn target(&self) -> Vec<String> {
         vec![self.id.to_string()]
     }

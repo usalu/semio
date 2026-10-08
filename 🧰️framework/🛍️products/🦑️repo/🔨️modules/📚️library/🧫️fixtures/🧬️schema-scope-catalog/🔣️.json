@@ -4468,6 +4468,3394 @@
         "diagnosticCodes": [],
         "placementPaths": []
       }
+    },
+    {
+      "id": "guard2-compass-companion",
+      "reason": "Contract filename/facet identity cannot be waived; marker-free grammar is schema authority while declared ordinary parser specimens stay data.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/📐️schema.json": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "count"
+          ]
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": [
+          "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/📐️schema.json"
+        ]
+      },
+      "schemaGrammar": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/📐️schema.json": true
+      }
+    },
+    {
+      "id": "guard2-symbol-companion",
+      "reason": "Contract filename/facet identity cannot be waived; marker-free grammar is schema authority while declared ordinary parser specimens stay data.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️schema.json": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "count"
+          ]
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": [
+          "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️schema.json"
+        ]
+      },
+      "schemaGrammar": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️schema.json": true
+      }
+    },
+    {
+      "id": "guard2-helix-companion",
+      "reason": "Contract filename/facet identity cannot be waived; marker-free grammar is schema authority while declared ordinary parser specimens stay data.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema.json": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "count"
+          ]
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": [
+          "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema.json"
+        ],
+        "fixtureAuthorityPaths": [
+          "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema.json"
+        ]
+      },
+      "schemaGrammar": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema.json": true
+      }
+    },
+    {
+      "id": "guard2-ascii-companion",
+      "reason": "Contract filename/facet identity cannot be waived; marker-free grammar is schema authority while declared ordinary parser specimens stay data.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/schema.json": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "count"
+          ]
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": [
+          "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/schema.json"
+        ]
+      },
+      "schemaGrammar": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/schema.json": true
+      }
+    },
+    {
+      "id": "guard2-authority-name-boolean-true",
+      "reason": "Contract filename/facet identity cannot be waived; marker-free grammar is schema authority while declared ordinary parser specimens stay data.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/schema.json": true
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": [
+          "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/schema.json"
+        ]
+      },
+      "schemaGrammar": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/schema.json": true
+      }
+    },
+    {
+      "id": "guard2-authority-name-boolean-false",
+      "reason": "Contract filename/facet identity cannot be waived; marker-free grammar is schema authority while declared ordinary parser specimens stay data.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/📐️schema.json": false
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": [
+          "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/📐️schema.json"
+        ]
+      },
+      "schemaGrammar": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/📐️schema.json": true
+      }
+    },
+    {
+      "id": "guard2-authority-name-inert-refusal",
+      "reason": "Contract filename/facet identity cannot be waived; marker-free grammar is schema authority while declared ordinary parser specimens stay data.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️schema.json": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "count"
+          ]
+        },
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json": {
+          "inertSchemaData": [
+            "🔣️schema.json"
+          ]
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": [
+          "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️schema.json"
+        ]
+      },
+      "schemaGrammar": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️schema.json": true
+      }
+    },
+    {
+      "id": "guard2-authority-facet-marker-free",
+      "reason": "Contract filename/facet identity cannot be waived; marker-free grammar is schema authority while declared ordinary parser specimens stay data.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🔣️.json": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "count"
+          ]
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": [
+          "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🔣️.json"
+        ]
+      },
+      "schemaGrammar": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "guard2-renamed-root-marker-free",
+      "reason": "Contract filename/facet identity cannot be waived; marker-free grammar is schema authority while declared ordinary parser specimens stay data.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/record.json": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "count"
+          ]
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": [
+          "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/record.json"
+        ]
+      },
+      "schemaGrammar": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/record.json": true
+      }
+    },
+    {
+      "id": "guard2-root-reference-marker-free",
+      "reason": "Contract filename/facet identity cannot be waived; marker-free grammar is schema authority while declared ordinary parser specimens stay data.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/reference.json": {
+          "$ref": "#/definitions/Row",
+          "definitions": {
+            "Row": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": [
+          "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/reference.json"
+        ]
+      },
+      "schemaGrammar": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/reference.json": true
+      }
+    },
+    {
+      "id": "guard2-root-combinator-marker-free",
+      "reason": "Contract filename/facet identity cannot be waived; marker-free grammar is schema authority while declared ordinary parser specimens stay data.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/alternatives.json": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": [
+          "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/alternatives.json"
+        ]
+      },
+      "schemaGrammar": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/alternatives.json": true
+      }
+    },
+    {
+      "id": "guard2-ordinary-parser-inert",
+      "reason": "Contract filename/facet identity cannot be waived; marker-free grammar is schema authority while declared ordinary parser specimens stay data.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧾️schema-input.json": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "count"
+          ]
+        },
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🔣️.json": {
+          "inertSchemaData": [
+            "🧾️schema-input.json"
+          ]
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": []
+      },
+      "schemaGrammar": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/🧾️schema-input.json": true
+      }
+    },
+    {
+      "id": "guard2-ordinary-boolean",
+      "reason": "Contract filename/facet identity cannot be waived; marker-free grammar is schema authority while declared ordinary parser specimens stay data.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/enabled.json": true
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": []
+      },
+      "schemaGrammar": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/enabled.json": true
+      }
+    },
+    {
+      "id": "guard2-ordinary-graph-properties-array",
+      "reason": "Contract filename/facet identity cannot be waived; marker-free grammar is schema authority while declared ordinary parser specimens stay data.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/graph.json": {
+          "properties": [
+            {
+              "name": "color",
+              "value": "red"
+            }
+          ],
+          "type": "graph"
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": []
+      },
+      "schemaGrammar": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/graph.json": false
+      }
+    },
+    {
+      "id": "guard2-ordinary-value-type-name",
+      "reason": "Contract filename/facet identity cannot be waived; marker-free grammar is schema authority while declared ordinary parser specimens stay data.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/record.json": {
+          "type": "steel",
+          "required": [
+            "grade"
+          ],
+          "properties": {
+            "grade": "S355"
+          }
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": []
+      },
+      "schemaGrammar": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/record.json": false
+      }
+    },
+    {
+      "id": "guard2-instance-schema-reference",
+      "reason": "Contract filename/facet identity cannot be waived; marker-free grammar is schema authority while declared ordinary parser specimens stay data.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/instance.json": {
+          "$schema": "https://json.schemas.assets.semio-tech.com/value/record.json",
+          "count": 2
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": []
+      }
+    },
+    {
+      "id": "guard2-actual-control-0",
+      "reason": "Actual retired corpus control structure is refused even after its title and schema marker are changed.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "maximumTurnBytes",
+                "maximumSymbols",
+                "maximumSymbolBytes",
+                "constructorBytes",
+                "valid",
+                "invalid",
+                "large"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "neutral.owner/v1"
+                },
+                "maximumTurnBytes": {
+                  "const": 4096
+                },
+                "maximumSymbols": {
+                  "const": 2048
+                },
+                "maximumSymbolBytes": {
+                  "const": 262144
+                },
+                "constructorBytes": {
+                  "const": 0
+                },
+                "large": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "word",
+                    "repetitions",
+                    "bytes",
+                    "emptySymbols"
+                  ],
+                  "properties": {
+                    "word": {
+                      "const": "🧬\u0000é"
+                    },
+                    "repetitions": {
+                      "const": 20000
+                    },
+                    "bytes": {
+                      "const": 140000
+                    },
+                    "emptySymbols": {
+                      "const": 2048
+                    }
+                  }
+                },
+                "valid": {
+                  "type": "array",
+                  "minItems": 4,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "name",
+                      "hex",
+                      "symbols",
+                      "prefixBytes",
+                      "sourceOffset"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "hex": {
+                        "type": "string",
+                        "pattern": "^(?:[0-9a-f]{2})*$"
+                      },
+                      "symbols": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "prefixBytes": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "sourceOffset": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                },
+                "invalid": {
+                  "type": "array",
+                  "minItems": 6,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "name",
+                      "hex",
+                      "refusal"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "hex": {
+                        "type": "string",
+                        "pattern": "^(?:[0-9a-f]{2})*$"
+                      },
+                      "refusal": {
+                        "enum": [
+                          "incomplete",
+                          "noncanonical",
+                          "utf8",
+                          "symbol-count",
+                          "symbol-length"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "guard2-actual-control-1",
+      "reason": "Actual retired corpus control structure is refused even after its title and schema marker are changed.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "cases"
+              ],
+              "properties": {
+                "cases": {
+                  "type": "array",
+                  "minItems": 3,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "mode",
+                      "timeoutMs",
+                      "settleMs",
+                      "expected"
+                    ],
+                    "properties": {
+                      "mode": {
+                        "enum": [
+                          "timeout",
+                          "abort",
+                          "stop"
+                        ]
+                      },
+                      "timeoutMs": {
+                        "type": "integer",
+                        "minimum": 100,
+                        "maximum": 5000
+                      },
+                      "settleMs": {
+                        "type": "integer",
+                        "minimum": 1000,
+                        "maximum": 8000
+                      },
+                      "expected": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "settled",
+                          "survivors",
+                          "unrelatedAlive",
+                          "reason"
+                        ],
+                        "properties": {
+                          "settled": {
+                            "const": true
+                          },
+                          "survivors": {
+                            "const": 0
+                          },
+                          "unrelatedAlive": {
+                            "const": true
+                          },
+                          "reason": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "guard2-actual-control-2",
+      "reason": "Actual retired corpus control structure is refused even after its title and schema marker are changed.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "lanes",
+                "grants",
+                "maximumItems",
+                "coldBirthCredited",
+                "terminalDropBytes"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "neutral.owner/v1"
+                },
+                "lanes": {
+                  "const": [
+                    "applied",
+                    "redo",
+                    "cursorApplied",
+                    "cursorRedo",
+                    "appliedRevision",
+                    "redoRevision"
+                  ]
+                },
+                "grants": {
+                  "const": [
+                    "zero",
+                    "below",
+                    "exact"
+                  ]
+                },
+                "maximumItems": {
+                  "const": 1
+                },
+                "coldBirthCredited": {
+                  "const": false
+                },
+                "terminalDropBytes": {
+                  "const": 0
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "guard2-actual-control-3",
+      "reason": "Actual retired corpus control structure is refused even after its title and schema marker are changed.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "WorkRecord": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "copyBytes",
+                "grants",
+                "cancelStops",
+                "elements"
+              ],
+              "properties": {
+                "copyBytes": {
+                  "const": 64
+                },
+                "grants": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "cancelStops": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "elements": {
+                  "type": "array",
+                  "minItems": 2,
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct WorkRecord;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "guard2-renamed-corpus-report",
+      "reason": "Test corpus structure, including titleless roots, cannot become a schema authority. Actual per-value domains remain valid.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CorpusReport": {
+              "type": "object",
+              "properties": {
+                "cases": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "expectedPolicy": {
+                        "type": "string"
+                      },
+                      "input": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CorpusReport;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "guard2-noncanonical-schema-child",
+      "reason": "A corpus schema excluded from catalog facets is still physical schema authority.",
+      "files": {
+        "🧰️framework/🔨️modules/🔷️probe/🧬️schema/🌳️ownership/🔣️.json": {
+          "type": "object",
+          "properties": {
+            "cases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "input": {
+                    "type": "string"
+                  },
+                  "expected": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      }
+    },
+    {
+      "id": "guard2-ordinary-type-string",
+      "reason": "Instance tags and value maps are ordinary data; coherent schema constraints remain authority.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/record.json": {
+          "type": "string",
+          "value": "hello"
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": []
+      }
+    },
+    {
+      "id": "guard2-ordinary-type-object",
+      "reason": "Instance tags and value maps are ordinary data; coherent schema constraints remain authority.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/record.json": {
+          "type": "object",
+          "id": "sample"
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": []
+      }
+    },
+    {
+      "id": "guard2-ordinary-property-value-map",
+      "reason": "Instance tags and value maps are ordinary data; coherent schema constraints remain authority.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/record.json": {
+          "type": "object",
+          "properties": {
+            "color": {
+              "value": "red"
+            }
+          }
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": []
+      }
+    },
+    {
+      "id": "guard2-constrained-string",
+      "reason": "Instance tags and value maps are ordinary data; coherent schema constraints remain authority.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/record.json": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": [
+          "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/record.json"
+        ]
+      }
+    },
+    {
+      "id": "guard2-coherent-property-map",
+      "reason": "Instance tags and value maps are ordinary data; coherent schema constraints remain authority.",
+      "files": {
+        "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/record.json": {
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "expected": {
+        "scopes": {},
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": [],
+        "fixtureAuthorityPaths": [
+          "🌎️hub/💡️inference/🧫️fixtures/🧫️approval/record.json"
+        ]
+      }
+    },
+    {
+      "id": "actual-fixture-verification-variable-observations-retain-contract",
+      "reason": "Source-backed verifyFixture returns variable measured SHA/missing/ok records; an equivalent pinned expected/actual roster remains testing authority.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "FixtureVerification": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "fixture",
+                "role",
+                "path",
+                "expected",
+                "actual",
+                "ok",
+                "missing"
+              ],
+              "properties": {
+                "fixture": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "expected": {
+                  "type": "string"
+                },
+                "actual": {
+                  "type": "string"
+                },
+                "ok": {
+                  "type": "boolean"
+                },
+                "missing": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct FixtureVerification;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "FixtureVerification": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "actual-fixture-verification-fixed-outcomes-remain-corpus",
+      "reason": "Source-backed verifyFixture returns variable measured SHA/missing/ok records; an equivalent pinned expected/actual roster remains testing authority.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "FixtureVerification": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "fixture",
+                "role",
+                "path",
+                "expected",
+                "actual",
+                "ok",
+                "missing"
+              ],
+              "properties": {
+                "fixture": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "expected": {
+                  "type": "string",
+                  "const": "sha256:expected"
+                },
+                "actual": {
+                  "type": "string",
+                  "const": "sha256:actual"
+                },
+                "ok": {
+                  "type": "boolean"
+                },
+                "missing": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct FixtureVerification;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "actual-relocated-root-const-corpus-remains-testing-authority",
+      "reason": "The exact removed Value intrinsic whole-corpus const cannot acquire domain schema authority through an ordinary title or placement.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "const": {
+                "version": 1,
+                "maximumItems": 1,
+                "maximumCopyBytes": 3,
+                "maximumDepth": 64,
+                "maximumTurns": 100000,
+                "cases": [
+                  {
+                    "kind": "null",
+                    "value": null,
+                    "payloadBytes": 0
+                  },
+                  {
+                    "kind": "bool",
+                    "value": true,
+                    "payloadBytes": 1
+                  },
+                  {
+                    "kind": "uint",
+                    "value": 42,
+                    "payloadBytes": 8
+                  },
+                  {
+                    "kind": "int",
+                    "value": -42,
+                    "payloadBytes": 8
+                  },
+                  {
+                    "kind": "float",
+                    "value": 1.25,
+                    "payloadBytes": 8
+                  },
+                  {
+                    "kind": "text",
+                    "value": "groß🧬",
+                    "payloadBytes": 9
+                  },
+                  {
+                    "kind": "bytes",
+                    "value": [
+                      0,
+                      127,
+                      255
+                    ],
+                    "payloadBytes": 3
+                  },
+                  {
+                    "kind": "array",
+                    "value": [
+                      true,
+                      "ö",
+                      [
+                        42,
+                        null
+                      ]
+                    ],
+                    "payloadBytes": 11
+                  },
+                  {
+                    "kind": "object",
+                    "value": {
+                      "a": [
+                        false,
+                        "🧬"
+                      ],
+                      "ö": -7
+                    },
+                    "payloadBytes": 16
+                  },
+                  {
+                    "kind": "reserved-text",
+                    "value": "",
+                    "capacity": 128,
+                    "payloadBytes": 0
+                  },
+                  {
+                    "kind": "reserved-bytes",
+                    "value": [],
+                    "capacity": 17,
+                    "payloadBytes": 0
+                  },
+                  {
+                    "kind": "reserved-array",
+                    "value": [],
+                    "capacity": 5,
+                    "payloadBytes": 0
+                  },
+                  {
+                    "kind": "reserved-object",
+                    "value": {},
+                    "capacity": 5,
+                    "payloadBytes": 0
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "actual-relocated-fixed-json-retirement-controls-remain-testing-authority",
+      "reason": "The source-backed fixed source/budget/cancellation plan remains whole-corpus authority under an ordinary domain policy title; genuine variable controls retain their production contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "source",
+                "maximumItems",
+                "maximumCopyBytes",
+                "maximumDepth",
+                "maximumTurns",
+                "cancelUnits"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "json.controlled-retirement/v1"
+                },
+                "source": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "maximumItems": {
+                  "const": 1
+                },
+                "maximumCopyBytes": {
+                  "const": 3
+                },
+                "maximumDepth": {
+                  "const": 4096
+                },
+                "maximumTurns": {
+                  "const": 65536
+                },
+                "cancelUnits": {
+                  "const": [
+                    0,
+                    1,
+                    8,
+                    64
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "variable-domain-controls-preserve-production-policy-authority",
+      "reason": "Source and variable limits/cancellation arrays are domain control data; only the fixed entire example plan creates a testing corpus authority.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "source",
+                "maximumItems",
+                "maximumCopyBytes",
+                "maximumDepth",
+                "maximumTurns",
+                "cancelUnits"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "json.controlled-retirement/v1"
+                },
+                "source": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "maximumItems": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumCopyBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumDepth": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumTurns": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "cancelUnits": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalPolicy": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "actual-relocated-frozen-retirement-plans-remain-testing-authority",
+      "reason": "Exact fixed frontier prefix/budget, original-owner failure and Neural logical-page plans remain testing authority under ordinary policy identities.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "type": "object",
+              "required": [
+                "version",
+                "prefixTurns",
+                "maximumItems",
+                "maximumCopyBytes",
+                "maximumDepth",
+                "maximumTurns"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "version": {
+                  "const": 1
+                },
+                "prefixTurns": {
+                  "const": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    8,
+                    16
+                  ]
+                },
+                "maximumItems": {
+                  "const": 1
+                },
+                "maximumCopyBytes": {
+                  "const": 3
+                },
+                "maximumDepth": {
+                  "const": 64
+                },
+                "maximumTurns": {
+                  "const": 100000
+                }
+              }
+            },
+            "CanonicalLimits": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "text",
+                "reservedCapacity",
+                "maximumCopyBytes",
+                "maximumItems",
+                "maximumDepth",
+                "maximumTurns",
+                "unsupportedKind"
+              ],
+              "properties": {
+                "text": {
+                  "const": "typed original owner 雪"
+                },
+                "reservedCapacity": {
+                  "const": 8193
+                },
+                "maximumCopyBytes": {
+                  "const": 3
+                },
+                "maximumItems": {
+                  "const": 1
+                },
+                "maximumDepth": {
+                  "const": 4096
+                },
+                "maximumTurns": {
+                  "const": 65536
+                },
+                "unsupportedKind": {
+                  "const": "unsupportedOwner"
+                }
+              }
+            },
+            "CanonicalOwnership": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "text",
+                "reservedCapacity",
+                "logicalPage",
+                "maximumTurns",
+                "unsupportedFullGrantKind"
+              ],
+              "properties": {
+                "text": {
+                  "const": "typed original owner 雪"
+                },
+                "reservedCapacity": {
+                  "const": 8193
+                },
+                "logicalPage": {
+                  "const": 3
+                },
+                "maximumTurns": {
+                  "const": 65536
+                },
+                "unsupportedFullGrantKind": {
+                  "const": "unsupportedOwner"
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\npub struct CanonicalLimits;\npub struct CanonicalOwnership;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema",
+          "schema-fixture-defines-schema",
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "variable-retirement-controls-preserve-domain-authority",
+      "reason": "Variable original text/capacity, limits and cancellation scheduling remain ordinary domain data; no fixed test roster is admitted.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "type": "object",
+              "required": [
+                "version",
+                "prefixTurns",
+                "maximumItems",
+                "maximumCopyBytes",
+                "maximumDepth",
+                "maximumTurns"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "version": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "prefixTurns": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "maximumItems": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumCopyBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumDepth": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumTurns": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "CanonicalLimits": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "text",
+                "reservedCapacity",
+                "maximumCopyBytes",
+                "maximumItems",
+                "maximumDepth",
+                "maximumTurns",
+                "unsupportedKind"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "reservedCapacity": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumCopyBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumItems": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumDepth": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumTurns": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "unsupportedKind": {
+                  "type": "string"
+                }
+              }
+            },
+            "CanonicalOwnership": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "text",
+                "reservedCapacity",
+                "logicalPage",
+                "maximumTurns",
+                "unsupportedFullGrantKind"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "reservedCapacity": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "logicalPage": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumTurns": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "unsupportedFullGrantKind": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\npub struct CanonicalLimits;\npub struct CanonicalOwnership;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalPolicy": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalLimits": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalOwnership": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "actual-whole-constant-frontier-and-completed-frame-plans-remain-testing-authority",
+      "reason": "Exact fixed frontier prefix envelope and completed JSON frame grant plan remain corpus authority under ordinary canonical policy identities.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "const": {
+                "version": 1,
+                "prefixTurns": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  8,
+                  16
+                ],
+                "maximumItems": 1,
+                "maximumCopyBytes": 3,
+                "maximumDepth": 64,
+                "maximumTurns": 100000
+              }
+            },
+            "CanonicalLimits": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "source",
+                "maximumBytes",
+                "maximumItems",
+                "maximumCopyBytes",
+                "maximumTurns"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "json.completed-frame-retirement/v1"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "maximumBytes": {
+                  "const": 4000000
+                },
+                "maximumItems": {
+                  "const": 1
+                },
+                "maximumCopyBytes": {
+                  "const": 3
+                },
+                "maximumTurns": {
+                  "const": 65536
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\npub struct CanonicalLimits;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema",
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "variable-frontier-and-completed-frame-policies-remain-domain-authority",
+      "reason": "Variable production prefix selection and frame resource policy remain public domain contracts rather than admitting a fixed test plan.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "version",
+                "prefixTurns",
+                "maximumItems",
+                "maximumCopyBytes",
+                "maximumDepth",
+                "maximumTurns"
+              ],
+              "properties": {
+                "version": {
+                  "const": 1
+                },
+                "prefixTurns": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "maximumItems": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumCopyBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumDepth": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumTurns": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "CanonicalLimits": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "source",
+                "maximumBytes",
+                "maximumItems",
+                "maximumCopyBytes",
+                "maximumTurns"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "json.completed-frame-retirement/v1"
+                },
+                "source": {
+                  "type": "string"
+                },
+                "maximumBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumItems": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumCopyBytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "maximumTurns": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\npub struct CanonicalLimits;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalPolicy": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalLimits": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "actual-frozen-surface-ports-and-tile-inventory-remain-testing-authority",
+      "reason": "Actual frozen selection/hover/viewport proof and exact file-byte-layer inventory stay corpus authority after ordinary policy renaming.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "version",
+                "ports",
+                "selection",
+                "hover",
+                "methods",
+                "viewport"
+              ],
+              "properties": {
+                "version": {
+                  "const": 1
+                },
+                "ports": {
+                  "const": [
+                    {
+                      "name": "DomainHover",
+                      "providerPackage": "semio-framework-replication"
+                    },
+                    {
+                      "name": "DomainSelection",
+                      "providerPackage": "semio-framework-replication"
+                    },
+                    {
+                      "name": "SelectionMethod",
+                      "providerPackage": "semio-framework-replication"
+                    },
+                    {
+                      "name": "Viewport2d",
+                      "providerPackage": "semio-framework-ui-viewport"
+                    }
+                  ]
+                },
+                "selection": {
+                  "const": {
+                    "granularity": "node",
+                    "ids": [
+                      "α",
+                      "🧬"
+                    ],
+                    "anchorId": "α"
+                  }
+                },
+                "hover": {
+                  "const": {
+                    "channel": "pointer",
+                    "ids": [
+                      "🧬"
+                    ]
+                  }
+                },
+                "methods": {
+                  "const": [
+                    "pick",
+                    "rectangle",
+                    "lasso"
+                  ]
+                },
+                "viewport": {
+                  "const": {
+                    "x": -12.5,
+                    "y": 8.0,
+                    "zoom": 1.25
+                  }
+                }
+              }
+            },
+            "CanonicalLimits": {
+              "const": {
+                "version": 1,
+                "tiles": [
+                  {
+                    "key": "0-0-0",
+                    "file": "0-0-0/🛰️.pbf",
+                    "sha256": "ea66b3cbc159e31458c2ef1d7def233b5d6368bb13d1c4ffa26d3fc7e36aefc1",
+                    "bytes": 101760,
+                    "layers": [
+                      {
+                        "name": "centroids",
+                        "extent": 4096,
+                        "features": 250,
+                        "geometryTypes": [
+                          0,
+                          250,
+                          0,
+                          0
+                        ]
+                      },
+                      {
+                        "name": "countries",
+                        "extent": 4096,
+                        "features": 239,
+                        "geometryTypes": [
+                          0,
+                          0,
+                          0,
+                          239
+                        ]
+                      },
+                      {
+                        "name": "geolines",
+                        "extent": 4096,
+                        "features": 6,
+                        "geometryTypes": [
+                          0,
+                          0,
+                          6,
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "key": "1-1-0",
+                    "file": "1-1-0/🛰️.pbf",
+                    "sha256": "c149422787969410cb13ab35380d2ff13a6f3748ca974c9918f494b8fd276573",
+                    "bytes": 71284,
+                    "layers": [
+                      {
+                        "name": "centroids",
+                        "extent": 4096,
+                        "features": 136,
+                        "geometryTypes": [
+                          0,
+                          136,
+                          0,
+                          0
+                        ]
+                      },
+                      {
+                        "name": "countries",
+                        "extent": 4096,
+                        "features": 143,
+                        "geometryTypes": [
+                          0,
+                          0,
+                          0,
+                          143
+                        ]
+                      },
+                      {
+                        "name": "geolines",
+                        "extent": 4096,
+                        "features": 4,
+                        "geometryTypes": [
+                          0,
+                          0,
+                          4,
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "key": "2-2-1",
+                    "file": "2-2-1/🛰️.pbf",
+                    "sha256": "3a3ef4f62a616ad4cba73d68c2e7dfb16e3f15bafee594a36e41862042359764",
+                    "bytes": 69624,
+                    "layers": [
+                      {
+                        "name": "centroids",
+                        "extent": 4096,
+                        "features": 104,
+                        "geometryTypes": [
+                          0,
+                          104,
+                          0,
+                          0
+                        ]
+                      },
+                      {
+                        "name": "countries",
+                        "extent": 4096,
+                        "features": 113,
+                        "geometryTypes": [
+                          0,
+                          0,
+                          0,
+                          113
+                        ]
+                      },
+                      {
+                        "name": "geolines",
+                        "extent": 4096,
+                        "features": 4,
+                        "geometryTypes": [
+                          0,
+                          0,
+                          4,
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "key": "3-4-2",
+                    "file": "3-4-2/🛰️.pbf",
+                    "sha256": "0f9b2ced5422b54d80007a624af47b1ce27025f5a5be528012aca4b9dd67e3b6",
+                    "bytes": 52867,
+                    "layers": [
+                      {
+                        "name": "centroids",
+                        "extent": 4096,
+                        "features": 39,
+                        "geometryTypes": [
+                          0,
+                          39,
+                          0,
+                          0
+                        ]
+                      },
+                      {
+                        "name": "countries",
+                        "extent": 4096,
+                        "features": 45,
+                        "geometryTypes": [
+                          0,
+                          0,
+                          0,
+                          45
+                        ]
+                      },
+                      {
+                        "name": "geolines",
+                        "extent": 4096,
+                        "features": 2,
+                        "geometryTypes": [
+                          0,
+                          0,
+                          2,
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "key": "4-8-5",
+                    "file": "4-8-5/🛰️.pbf",
+                    "sha256": "2be78476386db3dace1988ab1040b27e708d7c4e10e3cebfdc3dbb588ad14f2f",
+                    "bytes": 39889,
+                    "layers": [
+                      {
+                        "name": "centroids",
+                        "extent": 4096,
+                        "features": 26,
+                        "geometryTypes": [
+                          0,
+                          26,
+                          0,
+                          0
+                        ]
+                      },
+                      {
+                        "name": "countries",
+                        "extent": 4096,
+                        "features": 34,
+                        "geometryTypes": [
+                          0,
+                          0,
+                          0,
+                          34
+                        ]
+                      },
+                      {
+                        "name": "geolines",
+                        "extent": 4096,
+                        "features": 1,
+                        "geometryTypes": [
+                          0,
+                          0,
+                          1,
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "key": "5-17-11",
+                    "file": "5-17-11/🛰️.pbf",
+                    "sha256": "f9603e7e497947dd5261abca5de5debd2bdab4ec33b0deea6c66f2f62e07141b",
+                    "bytes": 20209,
+                    "layers": [
+                      {
+                        "name": "centroids",
+                        "extent": 4096,
+                        "features": 14,
+                        "geometryTypes": [
+                          0,
+                          14,
+                          0,
+                          0
+                        ]
+                      },
+                      {
+                        "name": "countries",
+                        "extent": 4096,
+                        "features": 20,
+                        "geometryTypes": [
+                          0,
+                          0,
+                          0,
+                          20
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\npub struct CanonicalLimits;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema",
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "variable-surface-ports-and-tile-inventory-remain-domain-authority",
+      "reason": "Variable domain port/selection/hover/viewport and tile resource/layer contracts retain genuine production authority.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "version",
+                "ports",
+                "selection",
+                "hover",
+                "methods",
+                "viewport"
+              ],
+              "properties": {
+                "version": {
+                  "const": 1
+                },
+                "ports": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "selection": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "hover": {
+                  "type": "object",
+                  "additionalProperties": true
+                },
+                "methods": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "viewport": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            },
+            "CanonicalLimits": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "version",
+                "tiles"
+              ],
+              "properties": {
+                "version": {
+                  "const": 1
+                },
+                "tiles": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "key",
+                      "file",
+                      "sha256",
+                      "bytes",
+                      "layers"
+                    ],
+                    "properties": {
+                      "key": {
+                        "type": "string"
+                      },
+                      "file": {
+                        "type": "string"
+                      },
+                      "sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "bytes": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "layers": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "name",
+                            "extent",
+                            "features",
+                            "geometryTypes"
+                          ],
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "extent": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "features": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "geometryTypes": {
+                              "type": "array",
+                              "items": {
+                                "type": "integer",
+                                "minimum": 0
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\npub struct CanonicalLimits;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalPolicy": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalLimits": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "actual-inline-activation-and-boot-plans-remain-testing-authority",
+      "reason": "Actual owner-map trial with relay expectation and boot input/expected cases stay corpus authority under ordinary policy identities.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "rows",
+                "relay"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "os.artifact-activation/v1"
+                },
+                "rows": {
+                  "type": "array",
+                  "minItems": 3,
+                  "items": {
+                    "type": "array",
+                    "items": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    ],
+                    "additionalItems": false,
+                    "minItems": 2
+                  }
+                },
+                "relay": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "artifactRef",
+                    "role",
+                    "expectedOwner"
+                  ],
+                  "properties": {
+                    "artifactRef": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "role": {
+                      "enum": [
+                        "editor",
+                        "viewer"
+                      ]
+                    },
+                    "expectedOwner": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              }
+            },
+            "CanonicalLimits": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "cases",
+                "catalog"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "os.boot-selection/v1"
+                },
+                "cases": {
+                  "type": "array",
+                  "minItems": 9,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "variant",
+                      "programs",
+                      "expected"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "variant": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "role": {
+                        "enum": [
+                          "editor",
+                          "viewer"
+                        ]
+                      },
+                      "appId": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "programs": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "pluginId",
+                            "appIds"
+                          ],
+                          "properties": {
+                            "pluginId": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "appIds": {
+                              "type": "array",
+                              "minItems": 1,
+                              "items": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "expected": {
+                        "oneOf": [
+                          {
+                            "type": "null"
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "index",
+                              "appId"
+                            ],
+                            "properties": {
+                              "index": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "appId": {
+                                "type": "string",
+                                "minLength": 1
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "catalog": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "plugins",
+                    "playgrounds"
+                  ],
+                  "properties": {
+                    "plugins": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "pluginId",
+                          "dependsOn"
+                        ],
+                        "properties": {
+                          "pluginId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "dependsOn": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "playgrounds": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "variant",
+                          "pluginId",
+                          "app",
+                          "aliases"
+                        ],
+                        "properties": {
+                          "variant": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "pluginId": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "app": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "aliases": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\npub struct CanonicalLimits;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema",
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "variable-owner-map-and-boot-request-remain-domain-authority",
+      "reason": "A variable production owner-map and relay request, and a variable boot request, remain real domain contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "rows",
+                "relay"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "os.artifact-activation/v1"
+                },
+                "rows": {
+                  "type": "array",
+                  "minItems": 0,
+                  "items": {
+                    "type": "array",
+                    "items": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    ],
+                    "additionalItems": false,
+                    "minItems": 2
+                  }
+                },
+                "relay": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "artifactRef",
+                    "role",
+                    "expectedOwner"
+                  ],
+                  "properties": {
+                    "artifactRef": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "role": {
+                      "enum": [
+                        "editor",
+                        "viewer"
+                      ]
+                    },
+                    "expectedOwner": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              }
+            },
+            "CanonicalLimits": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "variant",
+                "programs",
+                "catalog"
+              ],
+              "properties": {
+                "variant": {
+                  "type": "string"
+                },
+                "programs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "catalog": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\npub struct CanonicalLimits;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalPolicy": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalLimits": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "frozen-process-outcome-roster-remains-testing-authority",
+      "reason": "A frozen array of actual lifecycle trial expectations remains a corpus contract under an ordinary identity.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "const": [
+                {
+                  "name": "declared-owner",
+                  "outcome": "spawned",
+                  "expectedAlive": true
+                },
+                {
+                  "name": "missing-executable",
+                  "outcome": "refused",
+                  "expectedAlive": false
+                },
+                {
+                  "name": "cancelled-startup",
+                  "outcome": "refused",
+                  "expectedAlive": false
+                }
+              ]
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [
+          "schema-fixture-defines-schema"
+        ],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
+    },
+    {
+      "id": "variable-process-outcome-and-literal-domain-array-remain-domain-authority",
+      "reason": "A variable process outcome value and a fixed literal protocol array are genuine production contracts.",
+      "files": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "$id": "https://json.schemas.assets.semio-tech.com/s/probe/thing/artifact.json",
+          "title": "ThingArtifact",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "corner": {
+              "$ref": "#/$defs/Corner"
+            }
+          },
+          "$defs": {
+            "Corner": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "x": {
+                  "type": "number"
+                }
+              }
+            },
+            "CanonicalPolicy": {
+              "type": "array",
+              "minItems": 0,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "outcome",
+                  "alive"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "outcome": {
+                    "enum": [
+                      "spawned",
+                      "refused"
+                    ]
+                  },
+                  "alive": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "CanonicalLimits": {
+              "const": [
+                "spawned",
+                "refused"
+              ]
+            }
+          }
+        },
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs": "pub struct ThingArtifact;\npub struct Corner;\npub struct CanonicalPolicy;\npub struct CanonicalLimits;\n"
+      },
+      "expected": {
+        "scopes": {
+          "s.probe.thing": {
+            "path": "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema",
+            "level": "artifact-standard-subset",
+            "exports": {
+              "Corner": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "ThingArtifact": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalPolicy": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              },
+              "CanonicalLimits": {
+                "file": "🔣️.json",
+                "facet": "artifact"
+              }
+            },
+            "dependsOn": []
+          }
+        },
+        "diagnosticCodes": [],
+        "placementPaths": []
+      },
+      "schemaGrammar": {
+        "✏️s/🔌️plugins/🔷️probe/🗿️artifacts/🔶️thing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json": true
+      }
     }
   ]
 }

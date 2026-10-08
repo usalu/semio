@@ -67,7 +67,6 @@ Feature: Apply every typed semio ANIMATION mutation to the real committed walk c
     Then the independent implementation and the subject agree on the resulting snapshot
     Examples:
       | id                        | mutation                                                                                                                                                                                                                                                                            |
-      | set-snapshot              | {"mutation":"setSnapshot","snapshot":{"schema":"s.stdio.semio.animation","timelines":[{"name":null,"channels":[{"target":{"node":"root","property":{"kind":"translation"}},"interpolation":"linear","keyframes":[{"t":0,"value":{"kind":"vec3","value":{"x":0,"y":0,"z":0}}}]}]}]}} |
       | insert-timeline           | {"mutation":"insertTimeline","index":0,"timeline":{"name":"wave","channels":[]}}                                                                                                                                                                                                    |
       | remove-timeline           | {"mutation":"removeTimeline","index":0}                                                                                                                                                                                                                                             |
       | set-timeline-name         | {"mutation":"setTimelineName","index":0,"name":null}                                                                                                                                                                                                                                |
@@ -79,18 +78,6 @@ Feature: Apply every typed semio ANIMATION mutation to the real committed walk c
       | remove-keyframe           | {"mutation":"removeKeyframe","timelineIndex":0,"channelIndex":0,"index":0}                                                                                                                                                                                                          |
       | set-keyframe-time         | {"mutation":"setKeyframeTime","timelineIndex":0,"channelIndex":1,"index":0,"t":0.25}                                                                                                                                                                                                |
       | set-keyframe-value        | {"mutation":"setKeyframeValue","timelineIndex":0,"channelIndex":2,"index":0,"value":{"kind":"weights","values":[0.25,0.5,0.75]}}                                                                                                                                                    |
-      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/timelines/0/channels/1/interpolation", "value": "step"}} |
-
-  @id-no-mutation-baseline-mutate
-  @level-exhaustive
-  @mode-differential
-  Scenario: Apply no-mutation to the real committed walk cycle
-    Given the real committed animation artifact asset://🚶️walk/🗣️.dsl.semio
-    When the no-mutation mutation is applied to the walk cycle parsed from it
-      """
-      {"mutation":"noMutation"}
-      """
-    Then the independent implementation and the subject agree on the resulting snapshot
 
   @id-inverse
   @level-exhaustive
@@ -104,7 +91,6 @@ Feature: Apply every typed semio ANIMATION mutation to the real committed walk c
     Then both sides restore the walk cycle and agree on the mutated and the restored snapshot
     Examples:
       | id                        | mutation                                                                                                                                                                                                                                                                            |
-      | set-snapshot              | {"mutation":"setSnapshot","snapshot":{"schema":"s.stdio.semio.animation","timelines":[{"name":null,"channels":[{"target":{"node":"root","property":{"kind":"translation"}},"interpolation":"linear","keyframes":[{"t":0,"value":{"kind":"vec3","value":{"x":0,"y":0,"z":0}}}]}]}]}} |
       | insert-timeline           | {"mutation":"insertTimeline","index":0,"timeline":{"name":"wave","channels":[]}}                                                                                                                                                                                                    |
       | remove-timeline           | {"mutation":"removeTimeline","index":0}                                                                                                                                                                                                                                             |
       | set-timeline-name         | {"mutation":"setTimelineName","index":0,"name":null}                                                                                                                                                                                                                                |
@@ -116,18 +102,6 @@ Feature: Apply every typed semio ANIMATION mutation to the real committed walk c
       | remove-keyframe           | {"mutation":"removeKeyframe","timelineIndex":0,"channelIndex":0,"index":0}                                                                                                                                                                                                          |
       | set-keyframe-time         | {"mutation":"setKeyframeTime","timelineIndex":0,"channelIndex":1,"index":0,"t":0.25}                                                                                                                                                                                                |
       | set-keyframe-value        | {"mutation":"setKeyframeValue","timelineIndex":0,"channelIndex":2,"index":0,"value":{"kind":"weights","values":[0.25,0.5,0.75]}}                                                                                                                                                    |
-      | patch-snapshot | {"mutation": "patchSnapshot", "patch": {"operation": "set", "path": "/timelines/0/channels/1/interpolation", "value": "step"}} |
-
-  @id-no-mutation-baseline-inverse
-  @level-exhaustive
-  @mode-differential
-  Scenario: Undoing no-mutation restores the real committed walk cycle
-    Given the real committed animation artifact asset://🚶️walk/🗣️.dsl.semio
-    When the no-mutation mutation is applied to the walk cycle parsed from it and each side undoes it with its own computed inverse
-      """
-      {"mutation":"noMutation"}
-      """
-    Then both sides restore the walk cycle and agree on the mutated and the restored snapshot
 
   @id-spec-vector
   @level-exhaustive
@@ -138,8 +112,6 @@ Feature: Apply every typed semio ANIMATION mutation to the real committed walk c
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id | fixture |
-      | no-mutation | ⏸️no-mutation |
-      | set-snapshot | 📸️set-snapshot |
       | insert-timeline | 🎬insert-timeline |
       | remove-timeline | 🧹remove-timeline |
       | set-timeline-name | 🏷️set-timeline-name |
@@ -157,6 +129,6 @@ Feature: Apply every typed semio ANIMATION mutation to the real committed walk c
   @mode-round-trip
   Scenario: Re-emit the committed encoding of the real walk cycle from the parsed snapshot
     Given the real committed animation artifact asset://🚶️walk/🗣️.dsl.semio
-    And the committed specification vector shared://🎞️mutate-semio-animation/⏸️no-mutation/🦠️mutation/🔣️.json whose before-snapshot is that artifact decoded
+    And the committed specification vector shared://🎞️mutate-semio-animation/🎬insert-timeline/🦠️mutation/🔣️.json whose before-snapshot is that artifact decoded
     When each implementation parses the artifact, prints it back and parses the printed text again
     Then both reproduce the committed file byte for byte and agree on the walk cycle and on the digest of what they emitted

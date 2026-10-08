@@ -26,7 +26,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemovePattern {
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.patterns.iter().find(|item| item.id == self.id).map(|item| PdfMutation::SetPattern(super::set_pattern::SetPattern { pattern: item.clone() })).into_iter().collect()
+        base.patterns.iter().position(|item| item.id == self.id).map(|index| PdfMutation::SetPattern(super::set_pattern::SetPattern { pattern: base.patterns[index].clone(), index: Some(index) })).into_iter().collect()
     
     })())
 }

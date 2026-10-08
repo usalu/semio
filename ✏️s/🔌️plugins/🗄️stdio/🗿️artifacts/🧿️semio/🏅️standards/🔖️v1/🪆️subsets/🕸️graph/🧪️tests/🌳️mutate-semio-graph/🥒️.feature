@@ -104,7 +104,6 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
       | set-edge-property    | {"prepare":[{"AddEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"index":0,"property":{"key":"ConnectionKind","value":{"kind":"str","value":"pipe"}}}}],"mutation":{"SetEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"key":"ConnectionKind","value":{"kind":"str","value":"duct"}}}} |
       | add-edge-property    | {"prepare":[],"mutation":{"AddEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"index":0,"property":{"key":"ConnectionKind","value":{"kind":"str","value":"pipe"}}}}} |
       | remove-edge-property | {"prepare":[{"AddEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"index":0,"property":{"key":"ConnectionKind","value":{"kind":"str","value":"pipe"}}}}],"mutation":{"RemoveEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"key":"ConnectionKind"}}} |
-      | patch-snapshot | {"prepare": [], "mutation": {"PatchSnapshot": {"patch": {"operation": "set", "path": "/nodes/0/label", "value": "Kapsel, gepatcht"}}}} |
 
   @id-inverse
   @level-exhaustive
@@ -136,7 +135,6 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
       | set-edge-property    | {"prepare":[{"AddEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"index":0,"property":{"key":"ConnectionKind","value":{"kind":"str","value":"pipe"}}}}],"mutation":{"SetEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"key":"ConnectionKind","value":{"kind":"str","value":"duct"}}}} |
       | add-edge-property    | {"prepare":[],"mutation":{"AddEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"index":0,"property":{"key":"ConnectionKind","value":{"kind":"str","value":"pipe"}}}}} |
       | remove-edge-property | {"prepare":[{"AddEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"index":0,"property":{"key":"ConnectionKind","value":{"kind":"str","value":"pipe"}}}}],"mutation":{"RemoveEdgeProperty":{"edge_id":{"value":"3NLh69tTrEpfV9iDbwoXYL"},"key":"ConnectionKind"}}} |
-      | patch-snapshot | {"prepare": [], "mutation": {"PatchSnapshot": {"patch": {"operation": "set", "path": "/nodes/0/label", "value": "Kapsel, gepatcht"}}}} |
 
   @id-spec-vector
   @level-exhaustive

@@ -43,7 +43,7 @@ from __future__ import annotations
 import json
 import struct
 
-from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot, snapshot_patch_inverse
+from semio_repo_test import Adapter, Context, Outcome, digest
 
 # endregion 🔖️Imports
 
@@ -633,7 +633,6 @@ TAG_OF_KIND = {
     "add-design": "AddDesign",
     "remove-design": "RemoveDesign",
     "edit-design": "EditDesign",
-    "patch-snapshot": "PatchSnapshot",
 }
 CHILD_SLOT_OF_TAG = {"CreateObject": "objects", "DeleteObject": "objects", "CreateModel": "models", "DeleteModel": "models"}
 
@@ -672,8 +671,6 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     never a silent no-op — a quietly skipped mutation would report as a pass."""
     result = clone(document)
     tag, args = tagged(mutation)
-    if tag == "PatchSnapshot":
-        return patched_snapshot(document, args["patch"])
     if tag in CHILD_SLOT_OF_TAG:
         slot = CHILD_SLOT_OF_TAG[tag]
         if tag.startswith("Create"):
@@ -725,8 +722,6 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     removed DESIGN needs two steps, because `add-design` creates an empty one and only `edit-design`
     can put its pieces and connections back."""
     tag, args = tagged(mutation)
-    if tag == "PatchSnapshot":
-        return [{"PatchSnapshot": {"patch": snapshot_patch_inverse(document, args["patch"])}}]
     if tag in CHILD_SLOT_OF_TAG:
         slot = CHILD_SLOT_OF_TAG[tag]
         if tag.startswith("Create"):

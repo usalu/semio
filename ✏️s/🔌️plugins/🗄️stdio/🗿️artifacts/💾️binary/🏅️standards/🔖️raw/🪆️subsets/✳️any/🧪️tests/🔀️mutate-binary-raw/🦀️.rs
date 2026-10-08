@@ -60,11 +60,9 @@ fn projection_of(bytes: &[u8]) -> Json {
 //#region 🔖️Inverse
 /// ↩️ The independent reference's own undo of one forward `(kind, params)` witness, in the same wire
 /// vocabulary and computed from the REAL pristine `input` bytes at run time — the `truncate-at`
-/// example alone removes a 283 KB real tail no literal could carry legibly. `set-snapshot` inverts
-/// through a REAL `set-snapshot` carrying the pristine buffer, never a hand-back of the input.
+/// example alone removes a 283 KB real tail no literal could carry legibly.
 fn inverse_spec(kind: &str, input: &[u8], params: &Json) -> Result<Json, String> {
     match kind {
-        "set-snapshot" => Ok(json_spec("set-snapshot", json_obj(vec![("snapshot", json_obj(vec![("schema", Json::String("stdio.binary".to_string())), ("bytes", bytes_json(input))]))]))),
         "replace-byte-range" => {
             let offset = usize_field(params, "offset")?.min(input.len());
             let remove_len = usize_field(params, "remove_len")?;

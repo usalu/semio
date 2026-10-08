@@ -1,0 +1,1612 @@
+{
+  "created": [
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🦀️.rs",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧮️compiler/🦀️.rs",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧫️fixtures/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧬️schema/🔣️.json"
+  ],
+  "updated": [
+    ".vscode/launch.json",
+    ".vscode/🧩️launch.seed.jsonc",
+    "package.json",
+    "✏️s/Cargo.lock",
+    "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔮️oracles/📦️packages/🦀️rust/Cargo.lock",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔨️modules/📜️imperative/🧩️extension_sdk/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust/Cargo.toml",
+    "📋️project.json",
+    "📜️script.ts",
+    "🧰️framework/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🌱️value/✨️derive/🦀️.rs",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎚️ring-press/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🔄️refresh/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🔬️tool-run-actions/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/📚️catalog/🧪️tests/🔬️unit/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧪️tests/💰️allocation/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️graph/🤝️group/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🌱️birth/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🧪️tests/🔬️unit/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🌱️genesis/🧪️tests/🔬️unit/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📏️birth/🧪️tests/🔬️unit/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️catalog/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧫️fixtures/🔢️payload-contracts/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/↩️restore-n/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/↩️restore-n/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/↩️restore-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/↩️restore-n/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/🔢️set-n/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/↩️restore-n/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/↩️restore-n/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/↩️restore-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/↩️restore-n/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/⚠️set-warning-n/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🔢️set-n/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🚫️set-error-n/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🛑️set-fatal-n/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️restore-n/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️restore-n/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️restore-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️restore-n/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/🔢️set-n/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️restore-n/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️restore-n/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️restore-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️restore-n/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/➕️add-n/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🔢️set-n/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🗑️delete-n/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/♻️snapshot-read-retirement/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/👁️group-visibility/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/📦️native-codec-send/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔢️testing-payload-contracts/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️deferred-reprojection/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-demo-restore-n/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-severity-restore-n/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-timestamped-restore-n/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-validated-restore-n/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️replay-retirement/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️supersede-law/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️supersede-replay/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🎚️config/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️builder/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📽️projection/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🕰️wgpu-host-temporal-door/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/📦️native-dependencies/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🔣️.json"
+  ],
+  "removed": [
+    "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎚️ring-press/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/♻️retirement/📦️backing/🧫️fixtures/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/📚️catalog/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧵️send/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️graph/🤝️group/🧫️fixtures/📐️schema.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🌱️birth/🧫️fixtures/📐️schema.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧫️fixtures/📐️schema.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🧫️fixtures/🔐️projection/📐️schema.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🧫️fixtures/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🌱️genesis/🧫️fixtures/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📏️birth/🧫️fixtures/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️catalog/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🧬️schema/📄️inline.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/↩️assign-n",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/↩️assign-n",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️assign-n",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️assign-n",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-demo-assign-n",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-severity-assign-n",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-timestamped-assign-n",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-validated-assign-n",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/📏️reprojection-operation-authority.schema.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🧫️fixtures/📏️physical-demand/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🧫️fixtures/📏️store-entry/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🧫️fixtures/📦️release-pages/🧬️schema/🔣️.json"
+  ],
+  "observedCurrentOwnerPathsNoWriterAttribution": [
+    "🧰️framework/Cargo.toml",
+    "🧰️framework/.config/nextest.toml",
+    "🧰️framework/🔨️modules/🖼️canvas",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/build.rs"
+  ],
+  "bounds": {
+    "sourceTests": "21262 workspace22/0/643 and98483 runtime99/0/1139",
+    "production": "16550 WGPU prerequisite failure;77035 source gate refused before schema; Trunk NOT RUN/current full runtime and mount proof pending",
+    "coOwned": "Root/runtime core callsite and selected resource contracts; Plugin generic completed writer/relay; own exact checksum helper and strict consumers are narrow shared edits",
+    "historicalMoves": "semantic source ledger retains former directory identity; current moved file expansions do not claim peer Canvas authorship"
+  },
+  "currentEndpoints": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🦀️.rs",
+      "present": true,
+      "sha256": "9912f35da05db8610f051c4d4b048b638536b23e2e17e1df38c2e66f594ee02f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧮️compiler/🦀️.rs",
+      "present": true,
+      "sha256": "cf9f4167f124b4a8c8e5fa677b62bfde107f7e2cb8407cc0e60960841e202616"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts",
+      "present": true,
+      "sha256": "2b6aeaf9ef1910e5108f18e06c69935092fcf745ee7ad1592b526c14864b2e5b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔣️.json",
+      "present": true,
+      "sha256": "660bf7bbba98fced5c89efa1bf5502be0f9d5b72657ea17e5229db964a2fc361"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts",
+      "present": true,
+      "sha256": "e2fe15b0f0d87e6640df55fde9561f86f376383999e38fbeb26b1c922dfc5ee6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🟦️.ts",
+      "present": true,
+      "sha256": "b10207114477761fe164ffb167175cf148b21bda77afc0ddb3134200e0c67981"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧫️fixtures/🔣️.json",
+      "present": true,
+      "sha256": "b3502826f8ce0c355f288148457ef7dd1e740ff6b7b18a84d5e305b7f5de3374"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧬️schema/🔣️.json",
+      "present": true,
+      "sha256": "3690533367c57d80211db7b8541a7b48a15911313b7180d64a92fda34a166806"
+    },
+    {
+      "path": ".vscode/launch.json",
+      "present": true,
+      "sha256": "b4f069ba0d26bd4cd4bea27e2b9b18550c6e464be32581aab321ba202b49e594"
+    },
+    {
+      "path": ".vscode/🧩️launch.seed.jsonc",
+      "present": true,
+      "sha256": "14aeede4be4dc82fc86c0b37cac244f3130b91d7f0366010ec968ddba7003cf4"
+    },
+    {
+      "path": "package.json",
+      "present": true,
+      "sha256": "0004b0c123aa6cfefa6ba2e66b89356d290fd67d66754c01ebd2a8971f3f2eca"
+    },
+    {
+      "path": "✏️s/Cargo.lock",
+      "present": true,
+      "sha256": "2111a251db6dbdf88b51d1dc4e9ad15eecee96fdb75616a1f02959cdd4d618dc"
+    },
+    {
+      "path": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "230197267b772bd68578e8377ee616276efdb908ea72de1f5608c79fc30c7865"
+    },
+    {
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "69af8d8cf1da0871f3a82468a6c1d113f87f1b21c01f9e99af45823c56f947d7"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/⚙️engine/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "bae9d1e338921fe3fd5af0015c102a9f170c45dbed17ed4cb2c1c69392efdadd"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "bfa877c9f0a400bdb71717212527460d91c964ab5b4e02bcc0a7f7e49df8a70b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "22539d826b2f09d183c470ec8b28659041bbb3e6d47b138f349fde0bb94eb7f5"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "dd04e8ceed58fb46f1a25993e59c5a65ca24731b2a06dd3da0b5cb54c3cfaef7"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "db88d2a2f83944fc6ea7989406f638e6871356d90bdb94653d5f7a3f2e35fbf3"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "15eb5dcba56549ff421dc2e133c9040ee30917345d24aab602c5444a28e785d3"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "42d07c6d15c3f2d0903096e74f0cfed635325982c14f9d8a5c7a67cb83105590"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "28359cc9993552f0e9f9e9d408501d095945c85193d0a7720189b154ea5bc7b0"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "8af2f48ecb5303ec7dc07460af080c39cb7d03639e0bdff2952c73b2c8a9da30"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "727ba14d9c3f4809d833f772074700fc76ea0de9b5d83ebcedb69ea38516b8d2"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "adc59b34a05f7dbe30f109968bca52b6c62aaa19df3074ed7f8a640ffa82656e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "24ec3fa8c5ede93aac7b2beea982e968f8f288c2b44b2a826f0c4f26aaa7b05f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "48f017b97a5061758a4cd3daed8be90cc1e4f18a3f26407e679a025a564f8478"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "90db4a4c958578fedd5efc76cbd85b985c400139b47f5ba79b10b3cb5f73c2ea"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "69bcf090a20c01fb0d508c747f7ee94a03b627456126334da928c23a0731e205"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "8acf961123b885b19c1eadcc82e0490aa4a4255e93fe0605dba5624e716b6f7b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "f0ab602da905422e172dce8eb073e95e144d5d9201ef22fef266d2f87d80519b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "aa91a87ff22a7c4af40a2d0201ac6a318944969abd95c3e0ad48f9b4171542fb"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "9d5a9ff0b75f10bf42339d0b474600cfac7298fc5f0e3c9c8463aa71cb2db805"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "cea90abb610a245d9b1e0951cbfe0b09e3eaa463de582b8087ed07466541b288"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "a316c41ae613e15d01b7fa737a7e12ec55d6f2e9965a0fe0a65dfe7f4986058c"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "0bf3e5596014bcfb6839c6b82b870c979c9c49f80520f77b72d0e480a9c89d11"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "b906c719498a97683b3ff63228cafb5d99b633a91b3badc750b2367d027f2a6e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "8628a1fc9f3318cdc0f06c22f7a3fba859bc3c6055023377454537ae96beee1f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "51df51f1ccd8f889270b09e849d0e530b375cdd8073d80905fa1651a75d3d073"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "a58c078bcbea852f0620cea1efe8f4f32dd47bd2b9b3c9fff7b4f2f34fd5cb26"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "69c7a6ceab0fe4dcc6f9159c5d395c147fe1465bd0003ea5aed0b95e22be15e8"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "31f91eeda14366ecf50bac79d3f73b8045f7dceb7bfc0271519eecb6dcb2a736"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "860df79d1484cac1339d35247258c7e4cc5f880ac3efd82dac6ad51e1bdf166a"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "b4177854e92d92e00a2286b953d592ad43fa3dbed0be4dd97cb63e351da3476b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "a0373b1158c608aac93785701e94069a175d8bb0563e9cd0ecc726f3674e6280"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "cdac5aa1a6cff97f702bdc311b14e2990faf2fc07d4d0f65fcf850b602ec384c"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "8a5889c8df3f51ef49d99c6a3323e1b0ff05c96e954ad3d438de4477782219a9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "aa88be82e12819cb956bc869741f9091670bc57029ac5be2d8468f148e48fb6a"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "8dbdec8ba624669181a7aac2f6c8ef53d078c2c4cc2c497383455f2c2578b603"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "97ecc970d90d10ba3447a940c6815604fe3cce5bdf1949d0ea990026fd357090"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "9691406a84734a89921eb68aed37d0e5d8c73098fffd78c28c186c4baf497a24"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "bf5e78f76255320ecf3594e3d7c355b092e38a251c74c58a7de4c28378938a5f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "dd1c8ccfd8379654a9a1e4dd90159873fa70c33ead7b5927fd7f4d0616685b42"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "93029734b97f4b965f9b81e943c62edcd0c91a1c0020042f029dd95b21fb9237"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "57ff4f06c8681b1dafe90921339fa902f0c183c85c9cd8a6e370b56c91065e61"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "5d08aa5dc14b94bd41fcf62194d065f5935964958d9fbe92167afa127d24bffe"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "5433e06f68466050ec2b5ab8151365a30d1909b898a7e063f4cfd0ea149a7a5f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "924d4913df3a034c26afdb86a968527ebda763844607f9c6a03dbd2e359a7a3f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "eab92b33d92b6ecf008eaac43fc27c659d1893faac709b781acb01695fa3cdd3"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "1c19d40a40b92366faacda1b6d230ab3d121f07e43c29daa33f6da2a0a25d1aa"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "543ddd6f3828aa15e58a50066fbc74376e9450870b4c2b78e17fe5aba352607a"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "aadd77057a4e2acd974576f70b20d01f84c58d4a9a57d0aa8d9f46768cebb5d2"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🐚️shell/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "db4719538b24a7c400399caa23312322993e38142c0d2a0d76cd11c5a920db47"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "733fd35b8adf8a354546ea1d4fa75c9a9da76306a2c927cedb21c8fd20735ecb"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "471ea32a4fdbddaa1daeeff0806de7101ae86261df7b064f65b94a1738a1af50"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "0a2f39b8e0f4ea65714c4b0b0a9b986d605142bc5a036280714d237500f65a41"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "2991c22ddf0fe967251cfb1924c47c36d830dc9c44dd1f5944cc6c5d2ed92f75"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "b5ea07d06aaf6e4c6e56c3508d5ca70377a6b08991e45474a81ce8416255a33f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "5081aac513e5bfdebc35026de6a892c67897359268f743f8f6285e39f6d4cfd8"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "62df09488ff1014ea8dae5f0d7972dba17c21ba41bfcb7dfbb336fd5c56354bb"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "4c950f1d5f202463e5a10d7e9185d812b572074843e3e8d5370d6fd6a96b3d34"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "00f597b0cb2a88ddb3bdebe5c9bd4872047844fdfc39ccfa6650bb0c02f27368"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "93ff53fc9d90e456f8ab3895bd9f8fba3f25b24349980f4f4d6f105f41092444"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "dc08d67333d8d4d001326ec97c3360a2561094bc6c7666652770a02a684682a1"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "3b6f4bc539d50907498d950f0b875607bf255b7295e0fa859874c0cee7ccbcb8"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "2a0f7cf11019c65400c8a55fda1844b1e2797ab6a75da69997ed7b8924e820b6"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "6cbe9295cec72303daadbbc0c881698fadc77e9e6041add61920cb9e83295626"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "e2a94e7d9df3c1cd532349e3d716516df734628d14fb8fe836ac5b530be1557a"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "407e8e405e551d75b4a0506d7eb5e85962bdb5700f2d7fb976a91fede7b302ce"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "41b68152461ef6cfb8a60d4d54de5acd7a7a07b1b70b0874d1575c72229a4968"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "1b6c27f1049898d1656a78d0460d480b20cc337ea06f782efe1faf0b92ad5c8d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "b63f52f9c3d80427622e1bbc94b34da939dd5c5e1ca4da6d018ad3e611892bb8"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "d22ffc9490d6e607d0d203becebb288fe06517949242c95705f2201de96fbd51"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "0ba3843b13e9c6d1edbf0e4137fdc323fa8c400062bcc509ec587e515b4d1ad6"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "a68583db26e6491e0955269621a5664e26e137fcf8ff56410921d5f8ac4541cf"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "f4906a2b5a4a1f2481ba3e260866d98f23c2b820f3c31c4a130e77ad41cd71f9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "fc13212da35029f09276358ca46f409136b01ef118e98476b9cbbe3fd025d9c7"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "8e404b59f91450b08d92ddf7960ccced11c5d5bc98f50e56ace722b43608fab1"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "672cc0870ca37256381b607da6e4d45ae617653d57fd6f18a16260f8190e4987"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "8c6a050089d210f5b6818ddfe61440700141b425217bdc22afec28b635a8632c"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "363ad986670658b807e05d4d9ac0f950340fc21bb39c2e933e9449d3bfdc1c24"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "fc62b142b68e55ce45b14ba4c87f0403a9aacee6b5dff082f11d1e8132be7767"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "44384b53f4978970c15d1f78bfabbddce19d3084102aae9bd617abf519c5efad"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "db92dc8a129a5200b9823b53b1c534bba168fcc3efe381093efac0917c93f900"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "5b549c399ab0cff2677221009e3d7fa875b3cd58bd049a29a342319cbdedff61"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "50d56deb28aadc1334e957e957c268c4bd52fd6779acf68b89d4ddaa3d2531e1"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "b9e0fd1a7e99b0f11a2391423b2e05b6668505f9c3be6903ccc4244856a22a60"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "c41747b64c84a815c190720bdda9ff4aab8f8bda6f93558fbc37326df58f8dd1"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "b56a517f65970bab280b7df83ca7d1cfa96af297104dcea65dfc45720941e4f7"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "970e352a2ec1329d66e615bef1b0e2f93dd25cddd236f5a634a421df35414fd9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "779670dd663682ede50978c53fbda10bd5f6c9b530df16a6d82a7ca121a8409e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "01d5742e9015819c340f13a5334403154c61a6062b2cd8ab7480ddcbfbe00832"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "233c6d83816876a0439d8af5a8b8a9260639076ceff347821e14a54370b4ef8c"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "286668749468ff77392fbe0bb88998766b21a9f1588c318ab0347eb8730faaf8"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "36672f6e17afd50bc71497ac3a0864faeae6c53a85081b13af51257da9e2b025"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🔮️oracles/📦️packages/🦀️rust/Cargo.lock",
+      "present": true,
+      "sha256": "26dd2e671d56040d0b6410cf68888f88722237b7f3384d6a07635903e465ef37"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "64182dd7c921b5601bc44ae19efd4e741cf4cce768dafd8676a26cd3be41513d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "376beaa9dc22487d92c995d0367e7affaefd47fa1b9e905082508ab5d1f7dd0f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "336857c0c2d29e8eefc2c6d243a8ee67187bcde3bb3f9097182cab1b974c61f8"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "d407d840d06cb2170035aa5415cde5c9cdfec679405f539011baf721a40e884f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "ec521e49b507d478d985cd95436bd16bfbb7b7b632026fba395c99a2ef7848fc"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "a728ad0362bf3a5aaaab713a7f58863e24635fa8f73f3218b72c382de657b28f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "38dc438abcb5a3e3726f790907e586fbd7d22d8a5e2bb95211085d0f5592a7a9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "ca05141d99ad38e3ff36c78b6a3f9a4c4f640287a5c1ee2eb2e64c4c6892ff74"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "299f3facaccffb9b442a29df9c64beeba0638fea70fca5eca18139d0cc983dbc"
+    },
+    {
+      "path": "✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "262f4497570e9bbdf335a12ddf2e7a5a35c806358e8d60013101ea6f65303333"
+    },
+    {
+      "path": "✏️s/🔨️modules/📜️imperative/🧩️extension_sdk/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "322231c503f3a9931b820dc0c232e472a1376426e90adedeb4376c953667ca54"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/💡️services/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "5e7527bfb66bbd351e0b82723a98afd3be57f447f3113a30fb4eb020aeec804d"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "818bdddbefb055fdaf583ac840af435aa430c317e9daab8630697c1d03f7eb9f"
+    },
+    {
+      "path": "✏️s/🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "75c4e8a3536627dbc51e482c068cca90e235e354e22bfd8de228a3e62bc2902a"
+    },
+    {
+      "path": "📋️project.json",
+      "present": true,
+      "sha256": "cbea2261ed5b972c58bab5d51ef33bd84af8d1d5b824b5b5f813227ad88a5a97"
+    },
+    {
+      "path": "📜️script.ts",
+      "present": true,
+      "sha256": "55042b2441a8adb1531f47f55dba31202423358c8ef961378d7ece61ba9d260c"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "daba99b3c93c1fa37472d6bfcc19d6830cc34fbe3de3ec79a23b423647e7cc54"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🦀️.rs",
+      "present": true,
+      "sha256": "5f5196b020273d7ff9884bb9f6dc59d36eac21a30cecb0e0f3a74f4c6c53fdda"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🟦️.ts",
+      "present": true,
+      "sha256": "61d3948b47ad8a7322f4141be0750a700fa6bc8da5fe86160a22ec11f16012fd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎚️ring-press/🟦️.ts",
+      "present": true,
+      "sha256": "b1c8ef769e1611395cf9726d279637b34a14cdf36197dec81831f56317e8f002"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎟️resident/🔄️refresh/🧬️schema/🔣️.json",
+      "present": true,
+      "sha256": "6db11ac9cb7afa2abc9352612223c6afe11f933b9b3dbb2e1b3a79bc580afc7b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "d6e1c0dc7b9a504bac40dac54a113540415c6eb7677270ac73355d9d2b271595"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛂️manifest/🧪️tests/🔬️tool-run-actions/🟦️.ts",
+      "present": true,
+      "sha256": "a099daaed57bc4583fb4d007bef7fab32e5f1905b78e4834f7a8eb5e9abe584f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "e56b5b8d229fdfa52aae528cfcb1ea2d406e01dc4e657f4f44730a9a2b9d1d2a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "78bdeb74db5ef0e138def478c25203e1fb24eb32f7e2716c04ca2c9b60fde729"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
+      "present": true,
+      "sha256": "09e701f5fd36d77314d745fb6d18c6ce98d0b1ec5f41d49cd522355ad9adea18"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "ba3f1a157151a1d8f0a834e48a8bb2e7a6c2bac70d0f6d53c35826461a80cd59"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "f2bbee7ef9b77a41392ea9eb51d0c7662ec9b60a5d4d7863ac6eb3b33538c86f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "3718105c66e7c769d5b0f0da8a08a6fa89ae5a8d7f99156b5463cf1aaf87d7b1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "04b9dec5bb4a5cfaaf26ed5261ab11949cb8222098a84d38fcd55abb68feec0f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "549c0aca132cac01e9c44df02cd95420030b7935a2cad537a19cffd344d3ce35"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "0ccd1da82e6cf3f65b7ffd48ece31301971eed585e64dad12ba98bd888fa55bf"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/📚️catalog/🧪️tests/🔬️unit/🟦️.ts",
+      "present": true,
+      "sha256": "e2251d88b8dc46afb940ff50d8703c2c467d64ccb017ef76c5b02c8dcdd18eea"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🪶️snapshot-capability/🧪️tests/💰️allocation/🟦️.ts",
+      "present": true,
+      "sha256": "f3cf6beb31fafe092c958f25cd26ab77b55031f345d5f6714f2b3f8361f41a49"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️graph/🤝️group/🧪️tests/🟦️.ts",
+      "present": true,
+      "sha256": "8032039a5ecb0c06f8f1868624085b2a67d5571322d275eabeb762ac6cfab0a5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🌱️birth/🧪️tests/🟦️.ts",
+      "present": true,
+      "sha256": "17a95cdaa331cc95f670a3caf46fa31dc521feca49a9464170cafcdd1471fe1f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts",
+      "present": true,
+      "sha256": "ffe945ea0e4cb4a3acc7b960487dbebfe0b68f45602b09f909e3dc8654d66f86"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🧪️tests/🔬️unit/🟦️.ts",
+      "present": true,
+      "sha256": "f63f5519f7bd1a9ad623c2eaf5e31f7707c89588293e90e456176475bdd912fa"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🌱️genesis/🧪️tests/🔬️unit/🟦️.ts",
+      "present": true,
+      "sha256": "85a8dc930ea8541a4c18e3c0e2ad22647dc821b71716c5bec734322c0e36442f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📏️birth/🧪️tests/🔬️unit/🟦️.ts",
+      "present": true,
+      "sha256": "27ebf7846a8b08d435656283cfa16d92f90bd60a71a46077873adc3610415c70"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️catalog/🧪️tests/🟦️.ts",
+      "present": true,
+      "sha256": "dede09eeb0be2aa8884ac560231ecf364924e656806860b8a3b9d915fda5a300"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts",
+      "present": true,
+      "sha256": "1d7a20909e52d9ccdbd4cadba4040378c596a259c4e23a7ba59658af417dd1fc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🟦️.ts",
+      "present": true,
+      "sha256": "2335be93d84f557b131486a53a7ca34d2c7083026cd77c8f52081f9a18827066"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧫️fixtures/🔢️payload-contracts/🔣️.json",
+      "present": true,
+      "sha256": "5ea610d753f9af0d2f362345b13d37ab1504ad45dc548e576c41f1defa6fb792"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/↩️restore-n/🔣️.json",
+      "present": true,
+      "sha256": "a3d82498928427b12289137d9ae0eda11c7cd3cdfa4d19dd0e840878362aa5db"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/↩️restore-n/🦀️.rs",
+      "present": true,
+      "sha256": "092ba42f059bc50571f4b8b32ddc6bbdf39032960929f9ef231d6e5b373b851e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/↩️restore-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json",
+      "present": true,
+      "sha256": "100fb09e26897d218e6154bde84bb7951c67625e6706dd9c7bfddd305c39ff0b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/↩️restore-n/🧬️schema/🔣️.json",
+      "present": true,
+      "sha256": "db615a6f765dbbe8fbb3352640ee066b28a353c2a64fec02badafbda8e71c5b7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/🔢️set-n/🦀️.rs",
+      "present": true,
+      "sha256": "c8edd06eeee1bf78ae5ca02de3875383659d7bace6cc6c5264e1fa1b9093608d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/🔣️.json",
+      "present": true,
+      "sha256": "d8e5590c2d56cd77b421d72f9f283e3394ecb2f8a8a5457cabaf302bb613c33d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/🦀️.rs",
+      "present": true,
+      "sha256": "6b97088af75de68108fcd403d4ff1e27a07023af051bd0332a50f8af571a3b37"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/↩️restore-n/🔣️.json",
+      "present": true,
+      "sha256": "700a232589dc3b3061918c3e1a488c726f7ae6d276319cea35db8baedd563183"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/↩️restore-n/🦀️.rs",
+      "present": true,
+      "sha256": "9cc74b200d14ceed3b6d787daf7348796ba2d18adf3407bcde095fa436bdd9e8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/↩️restore-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json",
+      "present": true,
+      "sha256": "5949e5dc9e9b6cc0c6e2b78c6500aa43aa7665176bd348ea3b4adece28993b51"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/↩️restore-n/🧬️schema/🔣️.json",
+      "present": true,
+      "sha256": "77021caf00ea45e0e66f432cfbe9c528c98812016f93c28d3102d81e9ea0f410"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/⚠️set-warning-n/🦀️.rs",
+      "present": true,
+      "sha256": "c219442e4e0d3536ca5c461ef6b25bf2aff41d0a8052dcf78126f834f4769927"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🔢️set-n/🦀️.rs",
+      "present": true,
+      "sha256": "6ea391164991a53cc5ad958d097e8dddf7d86cc83dde530d0016e193b7f44e18"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🔣️.json",
+      "present": true,
+      "sha256": "bf0ad127016b74354819a25d17d45a80006a955400f439d881c63fdd2f4e6c42"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🚫️set-error-n/🦀️.rs",
+      "present": true,
+      "sha256": "cc75251ef0e181e2648797e98cfacfae461460ebc6d6d2fc5ef316765d1bca17"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🛑️set-fatal-n/🦀️.rs",
+      "present": true,
+      "sha256": "cb7910b6be8ed51bf7dd0f3b55a12bf47e527ef4e82560bf60cd531b12d02c33"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/🦀️.rs",
+      "present": true,
+      "sha256": "acd11e7561490997ac1a2dcedf2a0dfe39afde604a40d0d65ed52003ba849b72"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️restore-n/🔣️.json",
+      "present": true,
+      "sha256": "8703f3196413d7370025885d70b380159b37823c81b8f0d0730c1ae26cfd6cd3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️restore-n/🦀️.rs",
+      "present": true,
+      "sha256": "e52da125fc22c3b155d4f7e17998b15ffbb8028736192cd5d57540ee55e00309"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️restore-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json",
+      "present": true,
+      "sha256": "5949e5dc9e9b6cc0c6e2b78c6500aa43aa7665176bd348ea3b4adece28993b51"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️restore-n/🧬️schema/🔣️.json",
+      "present": true,
+      "sha256": "7541f57edeee8271877282a6397fe4f58d627e6dc5f6451481d22d209c46e816"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/🔢️set-n/🦀️.rs",
+      "present": true,
+      "sha256": "8b5a2d625db2410cb636a4212ba2df0bc003ea784086e1912ee170b85a581273"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/🔣️.json",
+      "present": true,
+      "sha256": "197eb855be466303550c8681789238c07e49820fb270cf8d024e03ac1b3a2680"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/🦀️.rs",
+      "present": true,
+      "sha256": "9bbc00bba7cc454db67a6c7e3638367a5a912a8a1164d3556569af9c6b82d844"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️restore-n/🔣️.json",
+      "present": true,
+      "sha256": "c3c5ab0ce7804026e840137e83f2ab4a4cebaf2702906a42e3c3ef079906e0cb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️restore-n/🦀️.rs",
+      "present": true,
+      "sha256": "88546e1481d33bc2d5e2a621b636437891fc5d4b8b0a9ecad1467113c76e963b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️restore-n/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json",
+      "present": true,
+      "sha256": "9fbac00d47b5fede9eaffcc22c80e22a3ce623697ebfd07b2b5a9e31c2066108"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️restore-n/🧬️schema/🔣️.json",
+      "present": true,
+      "sha256": "5bc7c9e10f19d5df18d44e1ea91b13c0f21f59c66f0ec027150a03afbdffc11d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/➕️add-n/🦀️.rs",
+      "present": true,
+      "sha256": "4172262ed834a5c6589c9bda010754a050b6b4a04784e8ab4ca7f8f833978f15"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🔢️set-n/🦀️.rs",
+      "present": true,
+      "sha256": "36e6ff4d5f848687387c727f0c3c278314dc8d841e5169e1024da062f7b67274"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🔣️.json",
+      "present": true,
+      "sha256": "02f4fad8dca783c028eb8e1b6af602ef3a10d4ffed43982e7997c8ef826b300f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🗑️delete-n/🦀️.rs",
+      "present": true,
+      "sha256": "8d510a6723768836b9e45cad196784ee50f696db225fa6e3663d37ca1012d7b6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/🦀️.rs",
+      "present": true,
+      "sha256": "a51c3ac4b9df1952095b085b1be414742648877853f7d295e4349cf0122a9248"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/♻️snapshot-read-retirement/🟦️.ts",
+      "present": true,
+      "sha256": "98a5782cc1ce9b8bb43421843fdce7c79d9d01283f4ba2bf9f558083b62248d1"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/👁️group-visibility/🟦️.ts",
+      "present": true,
+      "sha256": "2caba5dbca7c99c51ba93f77449a510ed85df5aea45f55bca4fe48d78231ee47"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/📦️native-codec-send/🟦️.ts",
+      "present": true,
+      "sha256": "1e9bb523a0bdd7f9c6986ae285d2ecb827f225303fc1157e22405d46818a580d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔢️testing-payload-contracts/🟦️.ts",
+      "present": true,
+      "sha256": "433cb1a489c9b9839f5afdafec8568ecedf902ff2bcceb7033e4d3fda0715b24"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts",
+      "present": true,
+      "sha256": "42c3d376fc0eed3a3ab88cb06a7da02480a333f1a4fe8d56a62bd32b61898e0e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🦀️.rs",
+      "present": true,
+      "sha256": "b51cedcf7ef86623ee9c0871d5fcfbd5a09513849b5a988baf6a0889a6339fc0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️deferred-reprojection/🟦️.ts",
+      "present": true,
+      "sha256": "36c57a08b8000c6313749e17b6c36d4b872498e75c8368ead6c409dddf09b3fa"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-demo-restore-n/🦀️.rs",
+      "present": true,
+      "sha256": "2382d0a26e225ff3143cd1ce1296b0a1af0e5802117e8d18b1f9c7980cc6ab72"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-severity-restore-n/🦀️.rs",
+      "present": true,
+      "sha256": "f0a68b160d829194af68acc71976fbd13e9f2303524f01fd95a6adf03c0eb293"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-timestamped-restore-n/🦀️.rs",
+      "present": true,
+      "sha256": "c3756ad6ccd6bb9aaacbe59d1edd0659c0aa5768afba649a73c3f549b8818f13"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-validated-restore-n/🦀️.rs",
+      "present": true,
+      "sha256": "a43259a96671ce2b56c4480b71e03289f6c506e1dfbf59a7ea9f7695f95c4181"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🟦️.ts",
+      "present": true,
+      "sha256": "b1254fd6ecec9c3dead559663b7528b8250c704c0dc80176269440d66c3486fd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🦀️.rs",
+      "present": true,
+      "sha256": "8a4d97fcf59c0e5dbee57f406dcc6cf6b0a185237a808132bc75b4110e558560"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🔣️.json",
+      "present": true,
+      "sha256": "85f5bee17dc86df91a6efc1df4d273e33dfd8406cb0c7d0e4fbc746b90ca07e8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️replay-retirement/🔣️.json",
+      "present": true,
+      "sha256": "4f8266768443f227b43a2da3c7535894fa1f0be2ef57755d7573b5ae9665b5ba"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️supersede-law/🔣️.json",
+      "present": true,
+      "sha256": "d4478435565bc08ed8577f2cafea3ae0b5512eaf8a31606921feb37c44604a3c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/🧫️supersede-replay/🔣️.json",
+      "present": true,
+      "sha256": "b5ccf271d1bf17562d91028f46836eedfedf830b7e46fae3fb1daba3b1af5f31"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🔣️.json",
+      "present": true,
+      "sha256": "9c769a55646fdfa557b4429ce531f92cb3ac7467bca960ead800ddf1807d6456"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🟦️.ts",
+      "present": true,
+      "sha256": "ced41e08a3cdde77560abcaeecb534958b42a001985f61493b345430cdea2c1f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "29d741bfe34da0aeb7d8f0659ce1a3b7ede231fa03748a5aa1eb700bd2bcb628"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs",
+      "present": true,
+      "sha256": "442bbd3b4109c8ec8b5a6c68f4daa72ab4046ee5ab2f8a1c5cacc39e884a9e25"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🦀️.rs",
+      "present": true,
+      "sha256": "a4dadb73ecf40b47efef12baa871052d52f4f5730212772ee1ffa55f000861cc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🎚️config/🟦️.ts",
+      "present": true,
+      "sha256": "dc3bf23c90bbb1aeafb53f3aaa2962eee5ee3a5d6fa32b943f6262bc108367fb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/🟦️.ts",
+      "present": true,
+      "sha256": "0b02718910e80504f1510f8fd2acf64626edff7632f7d0024faaea187b1434ff"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️builder/🦀️.rs",
+      "present": true,
+      "sha256": "abc5ad370fd38a3fba6ce6466f6cf1cd4d56ca51a6d0b57a918cafc55be32258"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️compiler/🌐️wasm/📜️script.ts",
+      "present": true,
+      "sha256": "8568e1966f732075a9b64102a708f4458102b24452702b2c980f12d4b8d65823"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/📜️script.ts",
+      "present": true,
+      "sha256": "19bffc0fbe673691b1635a9364560dda397968134c638f239486ad9f0d1974dc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "1a18190f2a82b3397835cdab23c47e984ea0ebbc849731e94973ae7ea1d030a6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📽️projection/🟦️.ts",
+      "present": true,
+      "sha256": "2bdf95096bfe65b03e096b69dbe1a5357f9355b55d9b5c66bf39fb04c50ac44b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🕰️wgpu-host-temporal-door/🟦️.ts",
+      "present": true,
+      "sha256": "dfa7e8e92528f24c1cdc797ff3a20844a16db42fd56eb9db426573c2f9329a4c"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "d9cf7db5b6fe65b96d68920ff665105ed3fb568232626ba8651c5a8f3d367d3d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "c8e92a2c269ce76b645189de53d47882999c6c25b555fc7a58dfc606ea6b1c0d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
+      "present": true,
+      "sha256": "606178d8e952ac76d1c04d1aadae875a84d6070f3518f0bcf740d430ed07492b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/🔣️.json",
+      "present": true,
+      "sha256": "c32c7b89824f61ad80940311cc1c37be25ee3c7e5127dc9a01af4e2aa26d5aa0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "7fa93dcc457940366308e0a7d534de8bda01984aed6a1c083175262385f302bb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "d56d0d2fe2513f58e3ba368dee1e2f81d5a1b4cc4db9f2283f6126236d530f33"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "73aa97362dad6112fb0fb43e7cde901921e0c635d044181e468378ff82aa9743"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "2e36ad0b59cf862f3362b7284cb112e77d08a67a0e01cf50ba2ba36e75aa35eb"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/🦀️.rs",
+      "present": true,
+      "sha256": "d762c88e1efe4145559a709724eb9a87102c52c1b19dbba1eba437e610b23359"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "005a7ebc50745980673dbe0f9a481323dddfaa3793d40e8f8787ecd8797bb1aa"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "9fefd46eb5375de8a9df44ae22170e113d3caeb7067f32bc2b2a2812e81b7133"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "d4319add94d54a9faf1e3e1ee95cfe075bd91d8ee50a9588513a2e7119879500"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "f487a0b1915b433ee77deef26b20d280423a9e50c21252512d0b1d7adcc12ca4"
+    },
+    {
+      "path": "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust/Cargo.toml",
+      "present": true,
+      "sha256": "af23cb7d907fd2f0414a6ff1225ea1f829865ad1b9ae13381b23fe304a165967"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts",
+      "present": true,
+      "sha256": "0588e7f1fe4ba2c40430ffcb653f7fdf75554a7d9e3193c22037fd0417122730"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️native-dependencies/🟦️.ts",
+      "present": true,
+      "sha256": "3754dc56442bbbd8c28599edeba241c15ad9e6aaf7f6c8cb5d9c75cab0b74e09"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/📦️native-dependencies/🔣️.json",
+      "present": true,
+      "sha256": "b3980bb38a313efd23855c580f22a1a7d9cbc8bd2904ef5af76e9aa77eb9d509"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
+      "present": true,
+      "sha256": "7b497bd2cfb59d0f537c4d603409f85c4b5dfc8cf265a4badae019edb5edaae7"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+      "present": true,
+      "sha256": "a884b81379089db10c3dd946ceaaeb0a021a9bb4e91c1575e96db00c9c5b5a83"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "present": true,
+      "sha256": "7643a7612cd12b67d706fab6b1859d9e41aa3d5f9b89e319f1e99ef687778ddd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "present": true,
+      "sha256": "4274ccaf5d6902c832fbda977daba275aa5ed675ba89427d1cff7d5bea14ca5d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "present": true,
+      "sha256": "d22df546cc058149c426ae5137009eb1236b19ac318431371aa5ddc26641e8a6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts",
+      "present": true,
+      "sha256": "1ae15e906948fcfd8a9ed6ac014accf63c76501c44a75ad84cc146e2bd3303e6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts",
+      "present": true,
+      "sha256": "ec0c0d4be04c60be9d36c7d03851590b488b70c009791fde5d6ac0ec827f0fd0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🔣️.json",
+      "present": true,
+      "sha256": "9b483167485887c7d62013b016680454e0e401dce9f67307bdaae213206200d2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🧬️schema/🎚️ring-press/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/♻️retirement/📦️backing/🧫️fixtures/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/📚️catalog/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧵️send/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️graph/🤝️group/🧫️fixtures/📐️schema.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🌱️birth/🧫️fixtures/📐️schema.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧫️fixtures/📐️schema.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🧫️fixtures/🔐️projection/📐️schema.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🧫️fixtures/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🌱️genesis/🧫️fixtures/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📏️birth/🧫️fixtures/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️catalog/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🧬️schema/📄️inline.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/📏️retirement/🧫️fixtures/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/⏱️timestamped/🧬️mutations/↩️assign-n",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🚦️severity/🧬️mutations/↩️assign-n",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🛂️validated/🧬️mutations/↩️assign-n",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧬️mutations/🧮️demo/🧬️mutations/↩️assign-n",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-demo-assign-n",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-severity-assign-n",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-timestamped-assign-n",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️fixture-validated-assign-n",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/📏️reprojection-operation-authority.schema.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🧫️fixtures/📏️physical-demand/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🧫️fixtures/📏️store-entry/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🧫️fixtures/📦️release-pages/🧬️schema/🔣️.json",
+      "present": false,
+      "sha256": null
+    }
+  ]
+}

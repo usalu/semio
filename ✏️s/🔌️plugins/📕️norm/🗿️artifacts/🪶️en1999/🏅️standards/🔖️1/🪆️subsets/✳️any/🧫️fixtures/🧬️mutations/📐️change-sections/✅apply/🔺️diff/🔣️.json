@@ -1,54 +1,53 @@
 {
-  "artifact": null,
   "annex": null,
   "materials": null,
-  "sections": [
-    {
-      "id": "sec-i120",
-      "kind": "extrudedI",
-      "height": 0.168,
-      "width": 0.07,
-      "flangeThickness": 0.01,
-      "webThickness": 0.008,
-      "outerDiameter": 0.0,
-      "elements": [
-        {
-          "id": "flange-top",
-          "width": 0.031000000000000003,
-          "thickness": 0.01,
-          "outstand": true,
-          "welded": true,
-          "weldPosition": 0.005
-        },
-        {
-          "id": "flange-bot",
-          "width": 0.031000000000000003,
-          "thickness": 0.01,
-          "outstand": true,
-          "welded": true,
-          "weldPosition": 0.005
-        },
-        {
-          "id": "web",
-          "width": 0.12000000000000001,
-          "thickness": 0.008,
-          "outstand": false,
-          "welded": true,
-          "weldPosition": 0.005
-        }
-      ]
-    },
-    {
-      "id": "sec-chs168",
-      "kind": "tube",
-      "height": 0.0,
-      "width": 0.0,
-      "flangeThickness": 0.0,
-      "webThickness": 0.005,
-      "outerDiameter": 0.1683,
-      "elements": []
-    }
-  ],
+  "sections": {
+    "added": [
+      {
+        "id": "sec-i120",
+        "kind": "extrudedI",
+        "height": 0.168,
+        "width": 0.07,
+        "flangeThickness": 0.01,
+        "webThickness": 0.008,
+        "outerDiameter": 0.0,
+        "elements": [
+          {
+            "id": "flange-top",
+            "width": 0.031000000000000003,
+            "thickness": 0.01,
+            "outstand": true,
+            "welded": true,
+            "weldPosition": 0.005
+          },
+          {
+            "id": "flange-bot",
+            "width": 0.031000000000000003,
+            "thickness": 0.01,
+            "outstand": true,
+            "welded": true,
+            "weldPosition": 0.005
+          },
+          {
+            "id": "web",
+            "width": 0.12000000000000001,
+            "thickness": 0.008,
+            "outstand": false,
+            "welded": true,
+            "weldPosition": 0.005
+          }
+        ]
+      }
+    ],
+    "removed": [
+      "sec-i120"
+    ],
+    "modified": [],
+    "order": [
+      "sec-i120",
+      "sec-chs168"
+    ]
+  },
   "members": null,
   "connections": null,
   "fireScenarios": null,

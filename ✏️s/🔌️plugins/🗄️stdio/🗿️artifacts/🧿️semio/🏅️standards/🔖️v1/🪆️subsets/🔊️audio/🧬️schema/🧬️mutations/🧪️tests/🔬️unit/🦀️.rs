@@ -21,12 +21,12 @@ fn base_snapshot() -> SemioAudioSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trips(base: &SemioAudioSnapshot, mutation: SemioAudioMutation) {
     let diff = mutation.diff(base);
-    let mutated = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(diff.diff(), base).expect("apply must succeed for a well-formed fixture");
+    let mutated = protocol::apply_diff(diff.diff(), base).expect("apply must succeed for a well-formed fixture");
     let inverses = mutation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = mutated.clone();
-    for inv in &inverses {
+    for inv in inverses.iter().rev() {
         let inv_diff = inv.diff(&restored);
-        restored = <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(inv_diff.diff(), &restored).expect("apply must succeed for a well-formed fixture");
+        restored = protocol::apply_diff(inv_diff.diff(), &restored).expect("apply must succeed for a well-formed fixture");
     }
     assert_eq!(&restored, base, "apply(inverse(m), apply(m, base)) must recover base for {mutation:?}");
 }
@@ -34,7 +34,6 @@ fn round_trips(base: &SemioAudioSnapshot, mutation: SemioAudioMutation) {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn all_variants(base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {
     vec![
-        SemioAudioMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: SemioAudioSnapshot { sample_rate: 9_000, ..base.clone() } }),
         SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: 48_000 }),
         SemioAudioMutation::SetFormat(set_format::SetFormat { format: SemioAudioFormat::Float32 }),
         SemioAudioMutation::InsertChannel(insert_channel::InsertChannel { index: 1, channel: sample_channel(9.0) }),
@@ -53,12 +52,13 @@ async fn mutation_diff_law() {
     let base = base_snapshot();
     for mutation in all_variants(&base) {
         let mut snap = base.clone();
-        let returned_diff = apply_semio_audio_mutation(&mut snap, &mutation);
+        let (__next, returned_diff) = crate::applied(&snap, &mutation);
+        snap = __next;
         let expected_diff = mutation.diff(&base);
         assert_eq!(returned_diff, expected_diff, "returned diff must equal mutation.diff(base) for {mutation:?}");
         assert_eq!(
             snap,
-            <SemioAudioDiff as protocol::MutationDiff<SemioAudioSnapshot>>::apply(expected_diff.diff(), &base).expect("apply must succeed for a well-formed fixture"),
+            protocol::apply_diff(expected_diff.diff(), &base).expect("apply must succeed for a well-formed fixture"),
             "apply_semio_audio_mutation must match diff.diff().apply(base) for {mutation:?}"
         );
     }
@@ -77,7 +77,7 @@ async fn mutation_apply_inverse_round_trips_every_variant() {
 async fn remove_channel_out_of_range_is_noop_not_panic() {
     let base = base_snapshot();
     let mut snap = base.clone();
-    apply_semio_audio_mutation(&mut snap, &SemioAudioMutation::RemoveChannel(remove_channel::RemoveChannel { index: 99 }));
+    snap = crate::applied(&snap, &SemioAudioMutation::RemoveChannel(remove_channel::RemoveChannel { index: 99 })).0;
     assert_eq!(snap, base);
 }
 

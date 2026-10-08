@@ -19,10 +19,10 @@ async fn insert_then_remove_before_matches_canonical_shape() {
 
     let base = TxtSnapshot { lines: lines(&["a", "b", "c", "d"]), ..Default::default() };
     let sequential = {
-        let mid = d1.apply(&base).unwrap();
-        d2.apply(&mid).unwrap()
+        let mid = protocol::apply_diff(&d1, &base).unwrap();
+        protocol::apply_diff(&d2, &mid).unwrap()
     };
-    assert_eq!(merged.apply(&base).unwrap(), sequential);
+    assert_eq!(protocol::apply_diff(&merged, &base).unwrap(), sequential);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -33,10 +33,10 @@ async fn insert_insert_same_index_both_survive() {
     merged.absorb(d2.clone());
     let base = TxtSnapshot { lines: lines(&["a", "b", "c", "d"]), ..Default::default() };
     let sequential = {
-        let mid = d1.apply(&base).unwrap();
-        d2.apply(&mid).unwrap()
+        let mid = protocol::apply_diff(&d1, &base).unwrap();
+        protocol::apply_diff(&d2, &mid).unwrap()
     };
-    assert_eq!(merged.apply(&base).unwrap(), sequential);
+    assert_eq!(protocol::apply_diff(&merged, &base).unwrap(), sequential);
     assert!(sequential.lines.contains(&"f".to_string()) && sequential.lines.contains(&"g".to_string()));
 }
 
@@ -52,10 +52,10 @@ async fn add_then_set_field_patches_into_added() {
 
     let base = TxtSnapshot { lines: lines(&["a", "b", "c"]), ..Default::default() };
     let sequential = {
-        let mid = d1.apply(&base).unwrap();
-        d2.apply(&mid).unwrap()
+        let mid = protocol::apply_diff(&d1, &base).unwrap();
+        protocol::apply_diff(&d2, &mid).unwrap()
     };
-    assert_eq!(merged.apply(&base).unwrap(), sequential);
+    assert_eq!(protocol::apply_diff(&merged, &base).unwrap(), sequential);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -70,10 +70,10 @@ async fn modify_then_remove_drops_the_modify() {
 
     let base = TxtSnapshot { lines: lines(&["a", "b"]), ..Default::default() };
     let sequential = {
-        let mid = d1.apply(&base).unwrap();
-        d2.apply(&mid).unwrap()
+        let mid = protocol::apply_diff(&d1, &base).unwrap();
+        protocol::apply_diff(&d2, &mid).unwrap()
     };
-    assert_eq!(merged.apply(&base).unwrap(), sequential);
+    assert_eq!(protocol::apply_diff(&merged, &base).unwrap(), sequential);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -92,21 +92,21 @@ async fn absorb_associative_over_a_triple() {
     let mut right = d1.clone();
     right.absorb(mid);
 
-    assert_eq!(left.apply(&base).unwrap(), right.apply(&base).unwrap());
+    assert_eq!(protocol::apply_diff(&left, &base).unwrap(), protocol::apply_diff(&right, &base).unwrap());
     let sequential = {
-        let s1 = d1.apply(&base).unwrap();
-        let s2 = d2.apply(&s1).unwrap();
-        d3.apply(&s2).unwrap()
+        let s1 = protocol::apply_diff(&d1, &base).unwrap();
+        let s2 = protocol::apply_diff(&d2, &s1).unwrap();
+        protocol::apply_diff(&d3, &s2).unwrap()
     };
-    assert_eq!(left.apply(&base).unwrap(), sequential);
+    assert_eq!(protocol::apply_diff(&left, &base).unwrap(), sequential);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn between_roundtrip_synthetic() {
     let a = TxtSnapshot { lines: lines(&["a", "b", "c"]), trailing_newline: true, line_ending: LineEnding::Lf, ..Default::default() };
     let b = TxtSnapshot { lines: lines(&["a", "x", "c", "d"]), trailing_newline: false, line_ending: LineEnding::CrLf, ..Default::default() };
-    assert_eq!(TxtDiff::between(&a, &b).apply(&a).unwrap(), b);
-    assert_eq!(TxtDiff::between(&b, &a).apply(&b).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&TxtDiff::between(&a, &b), &a).unwrap(), b);
+    assert_eq!(protocol::apply_diff(&TxtDiff::between(&b, &a), &b).unwrap(), a);
     assert!(TxtDiff::between(&a, &a).is_empty());
 }
 
@@ -114,9 +114,9 @@ async fn between_roundtrip_synthetic() {
 async fn inverse_diff_level_roundtrip() {
     let base = TxtSnapshot { lines: lines(&["a", "b"]), trailing_newline: false, line_ending: LineEnding::Lf, ..Default::default() };
     let d = TxtDiff { lines: Some(TxtLinesDiff { removed: vec![0], modified: vec![], added: vec![TxtLineAdded { index: 0, text: "z".into() }] }), trailing_newline: Some(true), line_ending: Some(LineEnding::CrLf) };
-    let next = d.apply(&base).unwrap();
+    let next = protocol::apply_diff(&d, &base).unwrap();
     let inv = d.inverse(&base);
-    assert_eq!(inv.apply(&next).unwrap(), base);
+    assert_eq!(protocol::apply_diff(&inv, &next).unwrap(), base);
 }
 
 /// 🧪️ F6: `DiffCodec` round-trip laws (derived via `dsl::DslDiff`) — exercises the empty

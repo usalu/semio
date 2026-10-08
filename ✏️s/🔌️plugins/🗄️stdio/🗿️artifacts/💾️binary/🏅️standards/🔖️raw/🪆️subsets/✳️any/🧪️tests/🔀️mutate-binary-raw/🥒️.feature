@@ -48,7 +48,6 @@ Feature: Apply every typed raw-binary mutation to a real-world byte buffer
     Then the oracle and the subject agree on the exact output bytes
     Examples:
       | id                 | params                                                                   |
-      | set-snapshot       | {"snapshot":{"schema":"stdio.binary","bytes":[82,69,80,76,65,67,69,68]}} |
       | replace-byte-range | {"offset":6,"remove_len":5,"insert":[65,66,67]}                          |
       | append-bytes       | {"data":[84,82,65,73,76,69,82]}                                          |
       | truncate-at        | {"offset":200000}                                                        |
@@ -66,7 +65,6 @@ Feature: Apply every typed raw-binary mutation to a real-world byte buffer
     Then the buffer matches its pre-mutation exact bytes
     Examples:
       | id                 | params                                                                   |
-      | set-snapshot       | {"snapshot":{"schema":"stdio.binary","bytes":[82,69,80,76,65,67,69,68]}} |
       | replace-byte-range | {"offset":6,"remove_len":5,"insert":[65,66,67]}                          |
       | append-bytes       | {"data":[84,82,65,73,76,69,82]}                                          |
       | truncate-at        | {"offset":200000}                                                        |

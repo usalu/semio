@@ -98,7 +98,7 @@ fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "scale-node/doubles-node-a: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert_eq!(committed["nodes"]["patched"][0]["patch"]["replacement"]["scale"].as_f64(), Some(2.0), "scale-node/doubles-node-a: the replacement must carry the new scale");
+    assert_eq!(committed["nodes"]["patched"][0]["patch"]["scale"].as_f64(), Some(2.0), "scale-node/doubles-node-a: the patch must carry the new scale");
     assert!(committed["camera"].is_null(), "scale-node/doubles-node-a: scaling a node is not a camera zoom");
 }
 
@@ -116,6 +116,13 @@ fn committed_diff_is_canonical() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff as protocol::MutationDiff<Puzzle2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "scale-node/doubles-node-a: committed diff did not carry before to after");
+}
+
+/// ➕️ The concrete inverse rows' diffs sum to exactly the negative of the forward diff (law L3): replaying them restores `before`,
+/// the absorbed sum carries the applied state back, and it equals `diff.inverse(before)`.
+#[test]
+fn inverse_sums_to_the_negative_diff() {
+    ::semio_framework_async::poll::resolve_ready(protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()));
 }

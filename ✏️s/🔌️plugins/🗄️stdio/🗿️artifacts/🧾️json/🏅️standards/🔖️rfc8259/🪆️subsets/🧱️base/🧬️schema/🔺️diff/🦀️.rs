@@ -1,8 +1,7 @@
 //! 🔺️ JsonDiff — recursive, handcrafted diff mirroring `JsonValue`'s shape. `Array` gets an
 //! index-keyed triple, `Object` gets a name-keyed triple; scalars get a `Replace` fallback when
 //! the node KIND changes at a position, or a direct field diff when the kind is stable. No
-//! `snapshot: Option<JsonSnapshot>` full-replace slot anywhere — `SetSnapshot`'s own diff is the
-//! sparse `between(base, next)` just like every other mutation.
+//! `snapshot: Option<JsonSnapshot>` full-replace slot anywhere: every mutation names the value rows it changes.
 
 use crate::schema::snapshot::JsonMember;
 use crate::JsonSnapshot;
@@ -157,12 +156,9 @@ impl MutationDiff<JsonSnapshot> for JsonDiff {
 }
 
 impl DiffAlgebra<JsonSnapshot> for JsonDiff {
-    /// 🔁️ Diff-level undo, derived generically from `between`: `mid = self.apply(base)`, then
-    /// `between(mid, base)` is — by the `between_roundtrip_law` — exactly the diff that restores
-    /// `base` when applied to `mid`.
+    /// 🔁️ The negative diff: walked structurally against the base value, never by applying the diff and differencing the result.
     fn inverse(&self, base: &JsonSnapshot) -> Self {
-        let mid = apply_json_diff_unchecked(self, base);
-        Self::between(&mid, base)
+        JsonDiff { value: self.value.as_ref().map(|diff| inverse_value_diff(diff, &base.value)) }
     }
 
     fn between(base: &JsonSnapshot, other: &JsonSnapshot) -> Self {
@@ -175,20 +171,50 @@ impl DiffAlgebra<JsonSnapshot> for JsonDiff {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn apply_json_diff_unchecked(diff: &JsonDiff, base: &JsonSnapshot) -> JsonSnapshot {
-    let mut next = base.clone();
-    if let Some(value) = &diff.value {
-        next.value = apply_value_diff(value, &base.value);
+fn inverse_value_diff(diff: &JsonValueDiff, base: &JsonValue) -> JsonValueDiff {
+    match (diff, base) {
+        (JsonValueDiff::Bool { .. }, JsonValue::Bool { value }) => JsonValueDiff::Bool { value: *value },
+        (JsonValueDiff::Number { .. }, JsonValue::Number { lexeme }) => JsonValueDiff::Number { lexeme: lexeme.clone() },
+        (JsonValueDiff::String { .. }, JsonValue::String { value }) => JsonValueDiff::String { value: value.clone() },
+        (JsonValueDiff::Array { diff }, JsonValue::Array { items }) => JsonValueDiff::Array { diff: inverse_array_diff(diff, items) },
+        (JsonValueDiff::Object { diff }, JsonValue::Object { members }) => JsonValueDiff::Object { diff: inverse_object_diff(diff, members) },
+        _ => JsonValueDiff::Replace { value: base.clone() },
     }
-    next
 }
 
-/// 🧩 Builds the sparse `between(base, next)` diff for a `SetSnapshot` mutation — NOT a full
-/// `snapshot: Option<JsonSnapshot>` replace slot.
+/// ↩️ Negative array rows against the base items: added rows become removals at their final index, removed rows return at their base
+/// index, and each modified row inverts against its base item at the index the row has after the diff.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &JsonSnapshot, next: &JsonSnapshot) -> JsonDiff {
-    JsonDiff::between(base, next)
+fn inverse_array_diff(diff: &JsonArrayDiff, base: &[JsonValue]) -> JsonArrayDiff {
+    let mut removed_base = diff.removed.clone();
+    removed_base.sort_unstable();
+    removed_base.dedup();
+    let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
+    added_final.sort_unstable();
+    let after_index = |index: usize| {
+        let survivor = index - removed_base.iter().filter(|dropped| **dropped < index).count();
+        added_final.iter().fold(survivor, |position, inserted| if *inserted <= position { position + 1 } else { position })
+    };
+    let mut modified: Vec<JsonArrayModified> = diff.modified.iter().filter_map(|m| base.get(m.index).map(|item| JsonArrayModified { index: after_index(m.index), diff: inverse_value_diff(&m.diff, item) })).collect();
+    modified.sort_by_key(|m| m.index);
+    let added = removed_base.iter().filter_map(|index| base.get(*index).map(|item| JsonArrayAdded { index: *index, item: item.clone() })).collect();
+    JsonArrayDiff { removed: added_final, modified, added }
 }
+
+/// ↩️ Negative object rows against the base members: added members are removed by key, removed members return at their base
+/// position, and each modified member inverts against its base value.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_object_diff(diff: &JsonObjectDiff, base: &[JsonMember]) -> JsonObjectDiff {
+    let mut added_by_position: Vec<&JsonObjectAdded> = diff.added.iter().collect();
+    added_by_position.sort_by_key(|added| added.index);
+    let removed = added_by_position.iter().map(|added| added.key.clone()).collect();
+    let modified = diff.modified.iter().filter_map(|m| base.iter().find(|member| member.key == m.key).map(|member| JsonObjectModified { key: m.key.clone(), diff: inverse_value_diff(&m.diff, &member.value) })).collect();
+    let mut dropped: Vec<(usize, &JsonMember)> = base.iter().enumerate().filter(|(_, member)| diff.removed.contains(&member.key)).collect();
+    dropped.sort_by_key(|(position, _)| *position);
+    let added = dropped.into_iter().map(|(position, member)| JsonObjectAdded { index: position, key: member.key.clone(), item: member.value.clone() }).collect();
+    JsonObjectDiff { removed, modified, added }
+}
+
 //#endregion 🔖️Diff
 
 //#region 🔖️Apply

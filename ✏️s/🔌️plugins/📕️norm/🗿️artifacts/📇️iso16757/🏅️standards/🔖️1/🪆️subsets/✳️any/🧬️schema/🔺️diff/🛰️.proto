@@ -1,36 +1,105 @@
 syntax = "proto3";
 package semio.s.norm.iso16757.diff;
 
+message Iso16757ProductGroupsPatch {
+  string id = 1;
+  optional string name = 2;
+}
+
+message Iso16757ProductGroupsRows {
+  repeated string removed = 1;
+  repeated Iso16757ProductGroupsPatch modified = 2;
+  repeated string order = 3;
+}
+
+message Iso16757ProductClassesRows {
+  repeated string removed = 1;
+  repeated string order = 2;
+}
+
+message Iso16757ProductSeriesRows {
+  repeated string removed = 1;
+  repeated string order = 2;
+}
+
+message Iso16757ProductsPatch {
+  string id = 1;
+  optional string name = 2;
+}
+
+message Iso16757ProductsRows {
+  repeated string removed = 1;
+  repeated Iso16757ProductsPatch modified = 2;
+  repeated string order = 3;
+}
+
+message Iso16757ProductIndexesRows {
+  repeated string removed = 1;
+  repeated string order = 2;
+}
+
+message Iso16757PropertyDefinitionsRows {
+  repeated string removed = 1;
+  repeated string order = 2;
+}
+
+message Iso16757SubjectsRows {
+  repeated string removed = 1;
+  repeated string order = 2;
+}
+
+message Iso16757GeometryObjectsEntry {
+  string key = 1;
+}
+
+message Iso16757GeometryObjectsRows {
+  repeated Iso16757GeometryObjectsEntry added = 1;
+  repeated string removed = 2;
+}
+
+message Iso16757SelectionSeriesIdValue {
+  optional string value = 1;
+}
+
+message Iso16757SelectionConstraintsInserted {
+  uint64 index = 1;
+}
+
+message Iso16757SelectionConstraintsRows {
+  repeated uint64 removed = 1;
+  repeated Iso16757SelectionConstraintsInserted inserted = 2;
+}
+
+message Iso16757PartNumberInputsEntry {
+  string key = 1;
+}
+
+message Iso16757PartNumberInputsRows {
+  repeated Iso16757PartNumberInputsEntry added = 1;
+  repeated string removed = 2;
+  repeated Iso16757PartNumberInputsEntry modified = 3;
+}
+
+message Iso16757ScriptLimitsPatch {
+  optional uint32 max_steps = 1;
+  optional uint32 max_recursion = 2;
+  optional uint64 timeout_ms = 3;
+}
+
 message Iso16757Diff {
-  // @state artifact
-  optional Iso16757Artifact artifact = 1;
-  // @state artifact
-  optional string catalogue = 2;
-  // @state artifact
-  optional string dictionary = 3;
-  // @state artifact
-  optional string geometry = 4;
-  // @state artifact
-  optional string selection = 5;
-  // @state artifact
-  optional string part_number_rule = 6;
-  // @state artifact
-  optional map<string, string> part_number_inputs = 7;
-  // @state artifact
-  optional string script_limits = 8;
-  // @state artifact
-  optional string exchange_process = 9;
+  optional string catalogue_name = 1;
+  optional string manufacturer_name = 2;
+  optional Iso16757ProductGroupsRows product_groups = 3;
+  optional Iso16757ProductClassesRows product_classes = 4;
+  optional Iso16757ProductSeriesRows product_series = 5;
+  optional Iso16757ProductsRows products = 6;
+  optional Iso16757ProductIndexesRows product_indexes = 7;
+  optional Iso16757PropertyDefinitionsRows property_definitions = 8;
+  optional Iso16757SubjectsRows subjects = 9;
+  optional Iso16757GeometryObjectsRows geometry_objects = 10;
+  optional string selection_class_id = 11;
+  optional Iso16757SelectionSeriesIdValue selection_series_id = 12;
+  optional Iso16757SelectionConstraintsRows selection_constraints = 13;
+  optional Iso16757PartNumberInputsRows part_number_inputs = 14;
+  optional Iso16757ScriptLimitsPatch script_limits = 15;
 }
-
-message Iso16757Artifact {
-  string catalogue = 1;
-  string dictionary = 2;
-  string geometry = 3;
-  string selection = 4;
-  string part_number_rule = 5;
-  map<string, string> part_number_inputs = 6;
-  string script_limits = 7;
-  string exchange_process = 8;
-}
-
-message Iso16757StringList { repeated string values = 1; }

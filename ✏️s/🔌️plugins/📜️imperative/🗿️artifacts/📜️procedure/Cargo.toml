@@ -1,0 +1,221 @@
+cargo-features = [ "trim-paths" ]
+
+[workspace]
+resolver = "2"
+members = [ "📦️packages/🦀️rust" ]
+exclude = [
+  "**/🏅️standards/**",
+  "**/👽️guest/**",
+  "**/🔮️oracles/**",
+  "**/🏭️bridge/**"
+]
+
+[workspace.metadata.semio.repository]
+schema-version = 1
+exclude-patterns = [
+  "**/🏅️standards/**",
+  "**/👽️guest/**",
+  "**/🔮️oracles/**",
+  "**/🏭️bridge/**"
+]
+member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
+
+  [workspace.package]
+  version = "0.1.0"
+  edition = "2021"
+  rust-version = "1.95"
+
+[workspace.dependencies.semio-framework]
+path = "../../../../../🧰️framework/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-artifact-reference]
+path = "../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-job]
+path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-plugin]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-ui-contract]
+path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-csv]
+path = "../../../🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-json]
+path = "../../../🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-md]
+path = "../../../🗄️stdio/🗿️artifacts/📝️md/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio]
+path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-txt]
+path = "../../../🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🦀️rust"
+
+[workspace.dependencies.serde]
+version = "1.0.228"
+features = [ "derive" ]
+
+[workspace.dependencies.serde_json]
+version = "1.0.149"
+features = [ "raw_value" ]
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+  [workspace.lints.rust.future_incompatible]
+  level = "warn"
+  priority = -1
+
+  [workspace.lints.rust.rust_2018_idioms]
+  level = "warn"
+  priority = -1
+
+[workspace.lints.clippy]
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"
+
+  [workspace.lints.clippy.all]
+  level = "warn"
+  priority = -1
+
+[profile.dev]
+debug = false
+incremental = false
+
+  [profile.dev.build-override]
+  opt-level = 3
+
+[profile.dev.package.wasmtime]
+opt-level = 3
+
+[profile.dev.package.wasmtime-environ]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-core]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-cranelift]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-fiber]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-unwinder]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-cache]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-component-util]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-jit-debug]
+opt-level = 3
+
+[profile.dev.package.wasmtime-internal-jit-icache-coherence]
+opt-level = 3
+
+[profile.dev.package.wasmtime-wasi]
+opt-level = 3
+
+[profile.dev.package.wasmtime-wasi-io]
+opt-level = 3
+
+[profile.dev.package.cranelift-codegen]
+opt-level = 3
+
+[profile.dev.package.cranelift-frontend]
+opt-level = 3
+
+[profile.dev.package.cranelift-entity]
+opt-level = 3
+
+[profile.dev.package.cranelift-bforest]
+opt-level = 3
+
+[profile.dev.package.cranelift-bitset]
+opt-level = 3
+
+[profile.dev.package.cranelift-control]
+opt-level = 3
+
+[profile.dev.package.cranelift-native]
+opt-level = 3
+
+[profile.dev.package.cranelift-codegen-shared]
+opt-level = 3
+
+[profile.dev.package.cranelift-assembler-x64]
+opt-level = 3
+
+[profile.dev.package.regalloc2]
+opt-level = 3
+
+[profile.dev.package.wasmparser]
+opt-level = 3
+
+[profile.dev.package.pulley-interpreter]
+opt-level = 3
+
+[profile.dev.package.gimli]
+opt-level = 3
+
+[profile.dev.package.object]
+opt-level = 3
+
+[profile.dev.package.wit-parser]
+opt-level = 3
+
+[profile.dev.package.semio-framework-plugin-host]
+opt-level = 3
+
+[profile.dev.package.semio-framework-hash]
+opt-level = 3
+
+[profile.wasm-dev]
+inherits = "dev"
+codegen-units = 1
+incremental = false
+
+[profile.wasm-dev.package.semio-framework-os-flow]
+opt-level = 2
+
+[profile.wasm-dev.package.semio-framework-os-kernel-neural-engine]
+opt-level = 2
+
+[profile.wasm-dev.package.semio-framework-replication]
+opt-level = 2
+
+[profile.wasm-dev.package.semio-framework-pack]
+opt-level = 2
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"
+incremental = false
+trim-paths = "object"
+
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+incremental = false
+trim-paths = "object"
+
+[profile.wasm-release.package.semio-framework-os-kernel]
+codegen-units = 1

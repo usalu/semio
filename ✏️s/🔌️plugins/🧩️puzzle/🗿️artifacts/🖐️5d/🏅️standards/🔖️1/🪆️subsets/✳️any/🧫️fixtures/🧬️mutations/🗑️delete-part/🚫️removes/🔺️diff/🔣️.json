@@ -1,27 +1,24 @@
 {
   "artifact": null,
-  "schema": null,
   "domain": null,
-  "label": null,
-  "meta": null,
-  "kindCatalogs": null,
-  "kindCatalogsExtra": null,
-  "kindCompatibility": null,
-  "parts": {
-    "added": [],
-    "removed": [
-      "part-a"
-    ],
-    "patched": [],
-    "reordered": null
-  },
   "fasteners": {
     "added": [],
+    "patched": [],
     "removed": [
       "fast-1"
     ],
-    "patched": [],
     "reordered": null
   },
+  "kindCompatibility": null,
+  "meta": null,
+  "parts": {
+    "added": [],
+    "patched": [],
+    "removed": [
+      "part-a"
+    ],
+    "reordered": null
+  },
+  "schema": null,
   "targetVolumes": null
 }

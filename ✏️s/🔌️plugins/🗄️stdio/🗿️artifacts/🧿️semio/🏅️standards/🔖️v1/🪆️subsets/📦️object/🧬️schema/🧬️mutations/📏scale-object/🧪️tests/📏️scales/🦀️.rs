@@ -30,7 +30,7 @@ fn scale_object() -> SemioObjectMutation {
 #[semio_framework_async_macros::async_test]
 async fn replaces_the_scale_with_a_non_uniform_one() {
     let base = before();
-    let produced = scale_object().diff(&base).diff().apply(&base).expect("scale-object applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(scale_object().diff(&base).diff(), &base).expect("scale-object applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "scale-object/scales-the-object-non-uniformly: applied state differs from the committed after-snapshot");
     assert_eq!((produced.transform.scale.x, produced.transform.scale.y, produced.transform.scale.z), (2.0, 0.5, 4.0), "the scale must become the payload's absolute per-axis values");
     assert!(produced.transform.scale.x != produced.transform.scale.y, "this case is deliberately NON-uniform — a uniform scale would not exercise per-axis handling");
@@ -43,11 +43,12 @@ async fn replaces_the_scale_with_a_non_uniform_one() {
 async fn the_undo_scale_object_restores_the_unit_scale() {
     let base = before();
     let mutation = scale_object();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "scale-object undoes as exactly one scale-object");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward scale-object applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo scale-object applies to the scaled object");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward scale-object applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo scale-object applies to the scaled object");
     }
     assert_eq!(current, base, "scale-object/scales-the-object-non-uniformly: the undo did not restore the before-snapshot");
 }
@@ -102,6 +103,6 @@ async fn committed_diff_is_canonical_and_touches_only_the_transform_slot() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed scale-object diff decodes");
-    let produced = decoded.apply(&before()).expect("committed scale-object diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed scale-object diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "scale-object/scales-the-object-non-uniformly: committed diff did not carry before to after");
 }

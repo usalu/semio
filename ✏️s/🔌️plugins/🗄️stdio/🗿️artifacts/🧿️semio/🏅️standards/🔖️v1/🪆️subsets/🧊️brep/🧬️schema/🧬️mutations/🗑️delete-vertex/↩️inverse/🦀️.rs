@@ -10,15 +10,10 @@ pub fn inverse(payload: &super::DeleteVertex, base: &SemioBrepSnapshot) -> Resul
     let Some(index) = base.vertices.iter().position(|v| v.id == payload.id) else {
         return Vec::new();
     };
-    let disturbed = &base.vertices[index..];
-    let touches = |start: &str, end: &str| disturbed.iter().any(|v| v.id == start || v.id == end);
-    let first_edge = base.edges.iter().position(|e| touches(&e.start_vertex, &e.end_vertex)).unwrap_or(base.edges.len());
-    let edge_tail = &base.edges[first_edge..];
-
-    let mut undo: Vec<SemioBrepMutation> = edge_tail.iter().filter(|e| !touches(&e.start_vertex, &e.end_vertex)).map(|e| SemioBrepMutation::DeleteEdge(delete_edge::DeleteEdge { id: e.id.clone() })).collect();
-    undo.extend(disturbed.iter().skip(1).map(|v| SemioBrepMutation::DeleteVertex(super::DeleteVertex { id: v.id.clone() })));
-    undo.extend(disturbed.iter().map(|v| SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: v.id.clone(), point: v.point, tol: v.tol })));
-    undo.extend(edge_tail.iter().map(|e| SemioBrepMutation::CreateEdge(create_edge::CreateEdge { id: e.id.clone(), start_vertex: e.start_vertex.clone(), end_vertex: e.end_vertex.clone(), curve: e.curve.clone(), tol: e.tol })));
+    let v = &base.vertices[index];
+    let mut undo = vec![SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: v.id.clone(), point: v.point, tol: v.tol, at: Some(index) })];
+    undo.extend(base.edges.iter().enumerate().filter(|(_, e)| e.start_vertex == payload.id || e.end_vertex == payload.id).map(|(at, e)| SemioBrepMutation::CreateEdge(create_edge::CreateEdge { id: e.id.clone(), start_vertex: e.start_vertex.clone(), end_vertex: e.end_vertex.clone(), curve: e.curve.clone(), tol: e.tol, at: Some(at) })));
+    undo.reverse();
     undo
 
     })())

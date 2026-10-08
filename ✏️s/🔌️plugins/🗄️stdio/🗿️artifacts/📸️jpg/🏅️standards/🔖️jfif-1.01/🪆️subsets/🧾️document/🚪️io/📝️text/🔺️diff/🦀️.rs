@@ -14,7 +14,7 @@ mod diff_codec {
 use super::*;
 use crate::standards::v_jfif_1_01::subsets::document::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
-use crate::schema::snapshot::{JfifDensityUnits, JfifThumbnail, JpgFrameComponent, JpgFrameHeader, JpgHuffmanClass, JpgHuffmanTable, JpgQuantTable, JpgSegment};
+use crate::schema::snapshot::{JfifDensityUnits, JfifThumbnail, JpgSegment};
 use crate::JpgSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
@@ -120,14 +120,10 @@ pub(crate) fn dec_density_units(s: &str) -> Result<JfifDensityUnits, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_huffman_class(c: &JpgHuffmanClass) -> String {
-    c.to_u8().to_string()
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_huffman_class(s: &str) -> Result<JpgHuffmanClass, String> {
-    JpgHuffmanClass::from_u8(parse_u8(s)?)
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_version(v: &(u8, u8)) -> String {
@@ -175,66 +171,34 @@ pub(crate) fn dec_thumbnail(s: &str) -> Result<JfifThumbnail, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_frame_component(c: &JpgFrameComponent) -> String {
-    format!("[{},{},{},{}]", c.id, c.h_sampling, c.v_sampling, c.quant_table_id)
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_frame_component(s: &str) -> Result<JpgFrameComponent, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, h, v, q] = parts.as_slice() else { return Err(format!("frame component: expected 4 fields, got {}", parts.len())) };
-    Ok(JpgFrameComponent { id: parse_u8(id)?, h_sampling: parse_u8(h)?, v_sampling: parse_u8(v)?, quant_table_id: parse_u8(q)? })
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_frame_header(f: &JpgFrameHeader) -> String {
-    let comps = f.components.iter().map(enc_frame_component).collect::<Vec<_>>().join(",");
-    format!("[{},{},{},[{}]]", f.precision, f.width, f.height, comps)
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_frame_header(s: &str) -> Result<JpgFrameHeader, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [precision, width, height, components] = parts.as_slice() else { return Err(format!("frame header: expected 4 fields, got {}", parts.len())) };
-    let components = split_top_level(strip_brackets(components)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_frame_component).collect::<Result<Vec<_>, String>>()?;
-    Ok(JpgFrameHeader { precision: parse_u8(precision)?, width: parse_u16(width)?, height: parse_u16(height)?, components })
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_quant_table(t: &JpgQuantTable) -> String {
-    format!("[{},{},{}]", t.id, t.precision, enc_quant_values(&t.values))
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_quant_table(s: &str) -> Result<JpgQuantTable, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, precision, values] = parts.as_slice() else { return Err(format!("quant table: expected 3 fields, got {}", parts.len())) };
-    Ok(JpgQuantTable { id: parse_u8(id)?, precision: parse_u8(precision)?, values: dec_quant_values(values)? })
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_huffman_table(t: &JpgHuffmanTable) -> String {
-    format!("[{},{},{},{}]", t.id, enc_huffman_class(&t.class), enc_bits16(&t.bits), hex_encode(&t.values))
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_huffman_table(s: &str) -> Result<JpgHuffmanTable, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [id, class, bits, values] = parts.as_slice() else { return Err(format!("huffman table: expected 4 fields, got {}", parts.len())) };
-    Ok(JpgHuffmanTable { id: parse_u8(id)?, class: dec_huffman_class(class)?, bits: dec_bits16(bits)?, values: hex_decode(values)? })
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_huffman_key(k: &JpgHuffmanTableKey) -> String {
-    format!("[{},{}]", enc_huffman_class(&k.class), k.id)
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_huffman_key(s: &str) -> Result<JpgHuffmanTableKey, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [class, id] = parts.as_slice() else { return Err(format!("huffman key: expected 2 fields, got {}", parts.len())) };
-    Ok(JpgHuffmanTableKey { class: dec_huffman_class(class)?, id: parse_u8(id)? })
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_segment(s: &JpgSegment) -> String {
@@ -249,136 +213,40 @@ pub(crate) fn dec_segment(s: &str) -> Result<JpgSegment, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_component_diff(d: &JpgComponentDiff) -> String {
-    format!("[{},{},{}]", encode_option(&d.h_sampling, |v| v.to_string()), encode_option(&d.v_sampling, |v| v.to_string()), encode_option(&d.quant_table_id, |v| v.to_string()),)
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_component_diff(s: &str) -> Result<JpgComponentDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [h, v, q] = parts.as_slice() else { return Err(format!("component diff: expected 3 fields, got {}", parts.len())) };
-    Ok(JpgComponentDiff { h_sampling: decode_option(h, parse_u8)?, v_sampling: decode_option(v, parse_u8)?, quant_table_id: decode_option(q, parse_u8)? })
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_components_diff(d: &JpgComponentsDiff) -> String {
-    let removed = d.removed.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(",");
-    let modified = d.modified.iter().map(|m| format!("{}:{}", m.id, enc_component_diff(&m.diff))).collect::<Vec<_>>().join(",");
-    let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_frame_component(&a.item))).collect::<Vec<_>>().join(",");
-    format!("[{removed}];[{modified}];[{added}]")
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_components_diff(body: &str) -> Result<JpgComponentsDiff, String> {
-    let three = split_top_level(body, ';');
-    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("components diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u8).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(|entry| {
-            let (id, rest) = entry.split_once(':').ok_or_else(|| format!("component modified: bad entry {entry:?}"))?;
-            Ok(JpgComponentModified { id: parse_u8(id)?, diff: dec_component_diff(rest)? })
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(|entry| {
-            let (index, rest) = entry.split_once(':').ok_or_else(|| format!("component added: bad entry {entry:?}"))?;
-            Ok(JpgComponentAdded { index: parse_usize(index)?, item: dec_frame_component(rest)? })
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    Ok(JpgComponentsDiff { removed, modified, added })
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_quant_table_diff(d: &JpgQuantTableDiff) -> String {
-    format!("[{},{}]", encode_option(&d.precision, |v| v.to_string()), encode_option(&d.values, enc_quant_values))
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_quant_table_diff(s: &str) -> Result<JpgQuantTableDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [precision, values] = parts.as_slice() else { return Err(format!("quant table diff: expected 2 fields, got {}", parts.len())) };
-    Ok(JpgQuantTableDiff { precision: decode_option(precision, parse_u8)?, values: decode_option(values, dec_quant_values)? })
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_quant_tables_diff(d: &JpgQuantTablesDiff) -> String {
-    let removed = d.removed.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(",");
-    let modified = d.modified.iter().map(|m| format!("{}:{}", m.id, enc_quant_table_diff(&m.diff))).collect::<Vec<_>>().join(",");
-    let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_quant_table(&a.item))).collect::<Vec<_>>().join(",");
-    format!("[{removed}];[{modified}];[{added}]")
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_quant_tables_diff(body: &str) -> Result<JpgQuantTablesDiff, String> {
-    let three = split_top_level(body, ';');
-    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("quant tables diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u8).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(|entry| {
-            let (id, rest) = entry.split_once(':').ok_or_else(|| format!("quant table modified: bad entry {entry:?}"))?;
-            Ok(JpgQuantTableModified { id: parse_u8(id)?, diff: dec_quant_table_diff(rest)? })
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(|entry| {
-            let (index, rest) = entry.split_once(':').ok_or_else(|| format!("quant table added: bad entry {entry:?}"))?;
-            Ok(JpgQuantTableAdded { index: parse_usize(index)?, item: dec_quant_table(rest)? })
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    Ok(JpgQuantTablesDiff { removed, modified, added })
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_huffman_table_diff(d: &JpgHuffmanTableDiff) -> String {
-    format!("[{},{}]", encode_option(&d.bits, enc_bits16), encode_option(&d.values, |v| hex_encode(v)))
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_huffman_table_diff(s: &str) -> Result<JpgHuffmanTableDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [bits, values] = parts.as_slice() else { return Err(format!("huffman table diff: expected 2 fields, got {}", parts.len())) };
-    Ok(JpgHuffmanTableDiff { bits: decode_option(bits, dec_bits16)?, values: decode_option(values, hex_decode)? })
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_huffman_tables_diff(d: &JpgHuffmanTablesDiff) -> String {
-    let removed = d.removed.iter().map(enc_huffman_key).collect::<Vec<_>>().join(",");
-    let modified = d.modified.iter().map(|m| format!("{}:{}", enc_huffman_key(&m.key), enc_huffman_table_diff(&m.diff))).collect::<Vec<_>>().join(",");
-    let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_huffman_table(&a.item))).collect::<Vec<_>>().join(",");
-    format!("[{removed}];[{modified}];[{added}]")
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_huffman_tables_diff(body: &str) -> Result<JpgHuffmanTablesDiff, String> {
-    let three = split_top_level(body, ';');
-    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("huffman tables diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_huffman_key).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(|entry| {
-            let (key, rest) = entry.split_once(':').ok_or_else(|| format!("huffman table modified: bad entry {entry:?}"))?;
-            Ok(JpgHuffmanTableModified { key: dec_huffman_key(key)?, diff: dec_huffman_table_diff(rest)? })
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(|entry| {
-            let (index, rest) = entry.split_once(':').ok_or_else(|| format!("huffman table added: bad entry {entry:?}"))?;
-            Ok(JpgHuffmanTableAdded { index: parse_usize(index)?, item: dec_huffman_table(rest)? })
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    Ok(JpgHuffmanTablesDiff { removed, modified, added })
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_segment_diff(d: &JpgSegmentDiff) -> String {
@@ -427,35 +295,16 @@ pub(crate) fn dec_other_segments_diff(body: &str) -> Result<JpgOtherSegmentsDiff
 /// 🌲 `JpgFrameChange`'s tag prefix: `M[fields-diff]` (Modify) / `R[frame-opt]` (Replace) — mirrors
 /// `enc_xml_node`/`enc_node_diff`'s single-letter-tag convention (svg/gif precedent).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_frame_change(fc: &JpgFrameChange) -> String {
-    match fc {
-        JpgFrameChange::Modify(fd) => format!("M[{}]", enc_frame_fields_diff(fd)),
-        JpgFrameChange::Replace { frame } => format!("R[{}]", encode_option(frame, enc_frame_header)),
-    }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_frame_change(s: &str) -> Result<JpgFrameChange, String> {
-    let (tag, rest) = s.split_at(1);
-    let inner = strip_brackets(rest)?;
-    match tag {
-        "M" => Ok(JpgFrameChange::Modify(dec_frame_fields_diff(inner)?)),
-        "R" => Ok(JpgFrameChange::Replace { frame: decode_option(inner, dec_frame_header)? }),
-        other => Err(format!("frame change: unknown tag {other:?}")),
-    }
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_frame_fields_diff(fd: &JpgFrameFieldsDiff) -> String {
-    format!("[{},{},{},{}]", encode_option(&fd.precision, |v| v.to_string()), encode_option(&fd.width, |v| v.to_string()), encode_option(&fd.height, |v| v.to_string()), encode_option(&fd.components, enc_components_diff),)
-}
+
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_frame_fields_diff(s: &str) -> Result<JpgFrameFieldsDiff, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [precision, width, height, components] = parts.as_slice() else { return Err(format!("frame fields diff: expected 4 fields, got {}", parts.len())) };
-    Ok(JpgFrameFieldsDiff { precision: decode_option(precision, parse_u8)?, width: decode_option(width, parse_u16)?, height: decode_option(height, parse_u16)?, components: decode_option(components, dec_components_diff)? })
-}
+
 
 /// 🧾 Top-level line: space-separated `name=value` tokens, one per changed field, absent token =
 /// unchanged (recipe convention). Tri-state fields (`re-encode-quality`/`jfif-thumbnail`/
@@ -488,24 +337,6 @@ pub(crate) fn print_jpg_diff(d: &JpgDiff) -> String {
     if let Some(v) = &d.jfif_thumbnail {
         tokens.push(format!("jfif-thumbnail={}", encode_option(v, enc_thumbnail)));
     }
-    if let Some(v) = &d.frame {
-        tokens.push(format!("frame={}", enc_frame_change(v)));
-    }
-    if let Some(v) = d.sof_marker {
-        tokens.push(format!("sof-marker={v}"));
-    }
-    if let Some(v) = d.arithmetic {
-        tokens.push(format!("arithmetic={}", if v { 1 } else { 0 }));
-    }
-    if let Some(v) = &d.quant_tables {
-        tokens.push(format!("quant-tables={}", enc_quant_tables_diff(v)));
-    }
-    if let Some(v) = &d.huffman_tables {
-        tokens.push(format!("huffman-tables={}", enc_huffman_tables_diff(v)));
-    }
-    if let Some(v) = &d.restart_interval {
-        tokens.push(format!("restart-interval={}", encode_option(v, |ri| ri.to_string())));
-    }
     if let Some(v) = &d.other_segments {
         tokens.push(format!("other-segments={}", enc_other_segments_diff(v)));
     }
@@ -535,18 +366,6 @@ pub(crate) fn parse_jpg_diff(line: &str) -> Result<JpgDiff, String> {
             d.jfif_y_density = Some(parse_u16(rest)?);
         } else if let Some(rest) = token.strip_prefix("jfif-thumbnail=") {
             d.jfif_thumbnail = Some(decode_option(rest, dec_thumbnail)?);
-        } else if let Some(rest) = token.strip_prefix("frame=") {
-            d.frame = Some(dec_frame_change(rest)?);
-        } else if let Some(rest) = token.strip_prefix("sof-marker=") {
-            d.sof_marker = Some(parse_u8(rest)?);
-        } else if let Some(rest) = token.strip_prefix("arithmetic=") {
-            d.arithmetic = Some(parse_bool(rest)?);
-        } else if let Some(rest) = token.strip_prefix("quant-tables=") {
-            d.quant_tables = Some(dec_quant_tables_diff(rest)?);
-        } else if let Some(rest) = token.strip_prefix("huffman-tables=") {
-            d.huffman_tables = Some(dec_huffman_tables_diff(rest)?);
-        } else if let Some(rest) = token.strip_prefix("restart-interval=") {
-            d.restart_interval = Some(decode_option(rest, parse_u16)?);
         } else if let Some(rest) = token.strip_prefix("other-segments=") {
             d.other_segments = Some(dec_other_segments_diff(rest)?);
         } else {

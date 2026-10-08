@@ -157,7 +157,8 @@ impl RetireOwned for KitSnapshot {
 
 struct CatalogRoot(ManuallyDrop<Option<Arc<SemioKitSnapshot>>>);
 impl RetirementCursor for CatalogRoot {
-    fn close_step(&mut self, _: usize) -> RetirementStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> RetirementStep {
+        if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
         self.0.take().and_then(Arc::into_inner).map_or(RetirementStep::Complete, |value| RetirementStep::Child(KitSnapshot(value).retirement()))
     }
 
@@ -173,7 +174,8 @@ impl Drop for CatalogRoot {
 
 struct SnapshotRetirement(ManuallyDrop<Option<Block3dSnapshot>>);
 impl RetirementCursor for SnapshotRetirement {
-    fn close_step(&mut self, _: usize) -> RetirementStep {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> RetirementStep {
+        if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
         let Some(value) = self.0.as_mut() else { return RetirementStep::Complete };
         let catalog_owner = match value.catalog.take_local_owner::<SemioKitSnapshot>() {
             Ok(owner) => owner,

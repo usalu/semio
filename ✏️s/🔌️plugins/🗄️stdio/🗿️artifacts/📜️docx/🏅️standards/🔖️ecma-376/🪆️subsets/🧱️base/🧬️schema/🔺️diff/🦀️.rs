@@ -1,6 +1,5 @@
 //! 🔺️ DocxDiff — handcrafted sparse diff over `DocxSnapshot` (`opc: OpcPackage` +
-//! `document: DocxDocument`). No `snapshot: Option<DocxSnapshot>` full-replace slot — even
-//! `SetSnapshot`'s diff is the sparse field-by-field `DocxDiff::between(base, next)`.
+//! `document: DocxDocument`). No `snapshot: Option<DocxSnapshot>` full-replace slot.
 //!
 //! `document.body` is a recursive tree (`DocxBlock::Table` nests `rows -> cells -> blocks`, same
 //! shape as WordprocessingML itself), diffed with the same index-keyed recursive-triple pattern
@@ -886,7 +885,7 @@ fn apply_xml_part(part: &mut DocxXmlPart, diff: &DocxXmlPartDiff) -> MutationApp
         part.content_type.clone_from(content_type);
     }
     if let Some(document) = &diff.document {
-        let next = document.apply(&xml_snapshot(&part.document))?.doc;
+        let next = protocol::apply_diff(document, &xml_snapshot(&part.document))?.doc;
         part.replace_document(next).map_err(|error| MutationApplyError::new("mutation.apply.ownership", error.into_message()).at(["document"]))?;
     }
     Ok(())
@@ -1071,15 +1070,6 @@ impl DiffAlgebra<DocxSnapshot> for DocxDiff {
 }
 //#endregion 🔖️DiffAlgebra
 
-//#region 🔖️SetSnapshot
-/// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
-/// Option<DocxSnapshot>` full-replace slot -- this IS `DocxDiff::between`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &DocxSnapshot, next: &DocxSnapshot) -> DocxDiff {
-    DocxDiff::between(base, next)
-}
-
-//#endregion 🔖️SetSnapshot
 
 //#region 🔖️HandcraftedDiffCodec
 /// 🧪️ F6: **hand-rolled** `protocol::DiffCodec` for `DocxDiff` (real compile errors captured above

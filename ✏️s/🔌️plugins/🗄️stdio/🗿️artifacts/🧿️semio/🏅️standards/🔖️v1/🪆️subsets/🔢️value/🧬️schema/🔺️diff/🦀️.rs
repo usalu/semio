@@ -9,7 +9,7 @@
 //! like every other mutation. Structural template (Replace-on-kind-change fallback, recursive
 //! between/apply/absorb) copied from `json`'s own `JsonDiff` (this subset's informing source).
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+use crate::standards::v1::subsets::base::schema::triples::{inverse_indexed_rows, IndexAdded, IndexModified, IndexedRow, IndexedTripleDiff, NamedModified, NamedTripleDiff};
 
 
 
@@ -170,11 +170,10 @@ impl MutationDiff<SemioValueSnapshot> for SemioValueTreeDiff {
 }
 
 impl DiffAlgebra<SemioValueSnapshot> for SemioValueTreeDiff {
-    /// 🔁️ Diff-level undo, derived generically from `between`: `mid = self.apply(base)`, then
-    /// `between(mid, base)` is exactly the diff that restores `base` when applied to `mid`.
+    /// 🔁️ Concrete negative diff: the root restores the base node (kind-stable scalars restore their base value, lists and maps
+    /// restore row by row with the base positions), the graph restores row by row.
     fn inverse(&self, base: &SemioValueSnapshot) -> Self {
-        let mid = self.apply(base).unwrap();
-        Self::between(&mid, base)
+        SemioValueTreeDiff { root: self.root.as_ref().map(|diff| inverse_value_diff(diff, &base.root)), nodes: self.nodes.as_ref().map(|diff| inverse_nodes_diff(diff, &base.nodes)) }
     }
 
     fn between(base: &SemioValueSnapshot, other: &SemioValueSnapshot) -> Self {
@@ -189,12 +188,6 @@ impl DiffAlgebra<SemioValueSnapshot> for SemioValueTreeDiff {
     }
 }
 
-/// 🧩 Builds the sparse `between(base, next)` diff for a `SetSnapshot` mutation — NOT a full
-/// `snapshot: Option<SemioValueSnapshot>` replace slot.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &SemioValueSnapshot, next: &SemioValueSnapshot) -> SemioValueTreeDiff {
-    SemioValueTreeDiff::between(base, next)
-}
 //#endregion 🔖️Diff
 
 //#region 🔖️Apply
@@ -499,6 +492,70 @@ fn is_value_diff_effectively_empty(d: &SemioValueDiff) -> bool {
     }
 }
 //#endregion 🔖️Between
+
+//#region 🔖️Inverse
+impl IndexedRow<SemioValue> for SemioValueDiff {
+    fn apply_row(&self, base: &SemioValue) -> SemioValue {
+        apply_value_diff(self, base)
+    }
+    fn inverse_row(&self, base: &SemioValue) -> Self {
+        inverse_value_diff(self, base)
+    }
+    fn absorb_row(&mut self, other: Self) {
+        *self = absorb_value_diff(self.clone(), other);
+    }
+    fn row_is_empty(&self) -> bool {
+        is_value_diff_effectively_empty(self)
+    }
+    fn between_row(base: &SemioValue, other: &SemioValue) -> Self {
+        value_diff_between(base, other).unwrap_or(SemioValueDiff::List { diff: IndexedTripleDiff::default() })
+    }
+}
+
+/// ↩️ The negative of a node diff against its BASE node: a whole-node replace restores the base node, a kind-stable scalar diff
+/// restores the base scalar, and list / map diffs restore row by row.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_value_diff(diff: &SemioValueDiff, base: &SemioValue) -> SemioValueDiff {
+    match (diff, base) {
+        (SemioValueDiff::Bool { .. }, SemioValue::Bool { value }) => SemioValueDiff::Bool { value: *value },
+        (SemioValueDiff::Int { .. }, SemioValue::Int { lexeme }) => SemioValueDiff::Int { lexeme: lexeme.clone() },
+        (SemioValueDiff::Float { .. }, SemioValue::Float { lexeme }) => SemioValueDiff::Float { lexeme: lexeme.clone() },
+        (SemioValueDiff::Str { .. }, SemioValue::Str { value }) => SemioValueDiff::Str { value: value.clone() },
+        (SemioValueDiff::Bytes { .. }, SemioValue::Bytes { value }) => SemioValueDiff::Bytes { value: value.clone() },
+        (SemioValueDiff::Ref { .. }, SemioValue::Ref { id }) => SemioValueDiff::Ref { id: id.clone() },
+        (SemioValueDiff::List { diff }, SemioValue::List { items }) => SemioValueDiff::List { diff: inverse_indexed_rows(diff, items) },
+        (SemioValueDiff::Map { diff }, SemioValue::Map { entries }) => SemioValueDiff::Map {
+            diff: inverse_named_positional(&diff.removed, &diff.modified, &diff.added, entries, |entry| entry.key.clone(), |entry| entry.key.clone(), |d, entry| inverse_value_diff(d, &entry.value)),
+        },
+        _ => SemioValueDiff::Replace { value: base.clone() },
+    }
+}
+
+/// ↩️ The negative of the top-level value-graph diff against its BASE nodes.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse_nodes_diff(diff: &NamedTripleDiff<ValueId, SemioValueDiff, NamedAdded<SemioValueNode>>, base: &[SemioValueNode]) -> NamedTripleDiff<ValueId, SemioValueDiff, NamedAdded<SemioValueNode>> {
+    inverse_named_positional(&diff.removed, &diff.modified, &diff.added, base, |node| node.id.clone(), |node| node.id.clone(), |d, node| inverse_value_diff(d, &node.value))
+}
+
+/// ↩️ Negative of a name-keyed triple whose `added` rows carry their final position: the added keys are removed, every removed row
+/// returns at its BASE position, and every modified row inverts against its base row.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_named_positional<K: Clone + PartialEq, T: Clone>(
+    removed: &[K],
+    modified: &[NamedModified<K, SemioValueDiff>],
+    added: &[NamedAdded<T>],
+    base: &[T],
+    key_of_base: impl Fn(&T) -> K,
+    key_of_added: impl Fn(&T) -> K,
+    invert_row: impl Fn(&SemioValueDiff, &T) -> SemioValueDiff,
+) -> NamedTripleDiff<K, SemioValueDiff, NamedAdded<T>> {
+    let inverse_removed: Vec<K> = added.iter().map(|a| key_of_added(&a.item)).collect();
+    let inverse_modified: Vec<NamedModified<K, SemioValueDiff>> = modified.iter().filter_map(|m| base.iter().find(|row| key_of_base(row) == m.key).map(|row| NamedModified { key: m.key.clone(), diff: invert_row(&m.diff, row) })).collect();
+    let mut inverse_added: Vec<NamedAdded<T>> = removed.iter().filter_map(|key| base.iter().position(|row| key_of_base(row) == *key).map(|index| NamedAdded { index, item: base[index].clone() })).collect();
+    inverse_added.sort_by_key(|a| a.index);
+    NamedTripleDiff { removed: inverse_removed, modified: inverse_modified, added: inverse_added }
+}
+//#endregion 🔖️Inverse
 
 //#region 🔖️Absorb
 /// ➕️ Diff-level absorb (base→mid composed with mid→after). `d2` always wins on a full `Replace`;

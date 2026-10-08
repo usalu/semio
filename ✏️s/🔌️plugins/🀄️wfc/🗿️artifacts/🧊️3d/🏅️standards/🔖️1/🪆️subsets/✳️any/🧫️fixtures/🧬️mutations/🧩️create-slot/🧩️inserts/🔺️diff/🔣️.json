@@ -1,1 +1,34 @@
-{"schema":null,"seed":null,"slotsRemoved":[],"slotsUpserted":[[3,{"id":"room-c","x":3.0,"y":0.0,"z":0.0,"width":1.0,"height":1.0,"depth":1.0}]],"edgesRemoved":[],"edgesUpserted":[],"tilesRemoved":[],"tilesUpserted":[],"rulesRemoved":[],"rulesUpserted":[]}
+{
+  "schema": null,
+  "seed": null,
+  "slots": {
+    "removed": [],
+    "added": [
+      {
+        "id": "room-c",
+        "x": 3.0,
+        "y": 0.0,
+        "z": 0.0,
+        "width": 1.0,
+        "height": 1.0,
+        "depth": 1.0
+      }
+    ],
+    "patched": []
+  },
+  "edges": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "tiles": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "rules": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  }
+}

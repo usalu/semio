@@ -15,11 +15,12 @@ pub struct AddOutputVariable {
     pub name: String,
     pub key: String,
     pub reporting_frequency: crate::model::OutputReportFrequency,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn add_output_variable(name: String, key: String, reporting_frequency: crate::model::OutputReportFrequency) -> EnergyModelMutation {
-    EnergyModelMutation::AddOutputVariable(AddOutputVariable { name, key, reporting_frequency })
+pub fn add_output_variable(name: String, key: String, reporting_frequency: crate::model::OutputReportFrequency, index: Option<u32>) -> EnergyModelMutation {
+    EnergyModelMutation::AddOutputVariable(AddOutputVariable { name, key, reporting_frequency, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for AddOutputVariable {

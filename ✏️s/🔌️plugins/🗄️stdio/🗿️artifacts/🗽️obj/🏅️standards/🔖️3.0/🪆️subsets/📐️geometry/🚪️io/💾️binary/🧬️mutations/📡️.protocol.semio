@@ -11,8 +11,6 @@ framing record
 header fixed 2
 field format u8
 field tag varint
-record set-snapshot tag=0
-field payload bytes
 record insert-vertex tag=1
 field payload bytes
 record remove-vertex tag=2
@@ -52,6 +50,4 @@ field payload bytes
 record set-smoothing-groups tag=19
 field payload bytes
 record set-unknown-statements tag=20
-field payload bytes
-record patch-snapshot tag=21
 field payload bytes

@@ -18,11 +18,11 @@ fn ref_of(subset: &str, id: &str) -> semio_framework_artifact_reference::Artifac
 /// (📌️important.md Trap #1: the `din4108`-derived helper got this wrong).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(base: &SemioObjectSnapshot, operation: &SemioObjectMutation) -> SemioObjectSnapshot {
-    let forward = operation.diff(base).diff().apply(base).expect("apply must succeed for a well-formed fixture");
+    let forward = protocol::apply_diff(operation.diff(base).diff(), base).expect("apply must succeed for a well-formed fixture");
     let backwards = operation.inverse(base).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
-    for back in &backwards {
-        restored = back.diff(&restored).diff().apply(&restored).expect("apply must succeed for a well-formed fixture");
+    for back in backwards.iter().rev() {
+        restored = protocol::apply_diff(back.diff(&restored).diff(), &restored).expect("apply must succeed for a well-formed fixture");
     }
     assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture");
     forward
@@ -68,7 +68,7 @@ async fn delete_brep_of_an_absent_slot_has_an_empty_inverse() {
     base.brep = None;
     let delete = SemioObjectMutation::DeleteBrep(delete_brep::DeleteBrep {});
     assert!(delete.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "deleting an already-absent slot has nothing to undo");
-    assert_eq!(delete.diff(&base).diff().apply(&base).expect("apply must succeed for a well-formed fixture"), base, "deleting an absent slot is a no-op");
+    assert_eq!(protocol::apply_diff(delete.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "deleting an absent slot is a no-op");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -79,7 +79,7 @@ async fn create_brep_rejects_an_occupied_slot_without_displacing_its_child() {
     let outcome = create.diff(&base);
     assert_eq!(outcome.messages()[0].code.0.as_str(), "mutation.duplicate-id");
     assert!(create.inverse(&base).expect("valid retained mutation inverse fixture").is_empty(), "rejected duplicate creation has no inverse effect");
-    assert_eq!(outcome.diff().apply(&base).expect("rejected create has no diff"), base);
+    assert_eq!(protocol::apply_diff(outcome.diff(), &base).expect("rejected create has no diff"), base);
 }
 
 #[semio_framework_async_macros::async_test]

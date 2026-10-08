@@ -1,0 +1,18 @@
+{
+  "annex": null,
+  "materials": null,
+  "sections": null,
+  "members": {
+    "added": [],
+    "removed": [
+      "post-chs"
+    ],
+    "modified": [],
+    "order": null
+  },
+  "connections": null,
+  "fireScenarios": null,
+  "fatigueDetails": null,
+  "coldFormed": null,
+  "shells": null
+}

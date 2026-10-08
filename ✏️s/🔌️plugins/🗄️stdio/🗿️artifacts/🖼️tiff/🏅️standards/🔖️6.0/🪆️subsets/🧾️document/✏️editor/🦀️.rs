@@ -181,20 +181,6 @@ fn tiffAnyEditor_direct_mutation(event: &editing::SnapshotEditEvent, snapshot: &
     }
     Ok(None)
 }
-fn tiffAnyEditor_bounded_edit(event: &editing::SnapshotEditEvent, snapshot: &TiffSnapshot) -> Result<TiffSnapshot, Fault> {
-    let patch = editing::prepare_snapshot_patch(snapshot, event).map_err(|error| tiffAnyEditor_edit_fault(error.code, error.to_string()))?;
-    editing::apply_snapshot_patch_for_dialect(snapshot, &patch, TIFF_ANY_DIALECT, STDIO_TIFF_DOCUMENT_SCHEMA).map_err(|error| tiffAnyEditor_edit_fault(error.code, error.to_string()))
-}
-/// 🎯️ The domain leaf exactly as granular as a set of one whole field or tag — the byte order, one IFD entry — else `None`, and the
-/// edit publishes as a path-scoped patch (design §19.3: a whole-record leaf for one field masks history edits of its siblings).
-fn tiffAnyEditor_compact_mutation(event: &editing::SnapshotEditEvent, next: &TiffSnapshot, base: &TiffSnapshot) -> Option<TiffMutation> {
-    let editing::SnapshotEditEvent::SetValue { path, .. } = event else { return None };
-    let (ifd, entry, None) = tiffAnyEditor_entry_path(path)? else { return None };
-    let ifd_index = tiffAnyEditor_index(ifd, base.ifds.len(), false).ok()?;
-    let entry = tiffAnyEditor_index(entry, next.ifds[ifd_index].entries.len(), false).ok()?;
-    let tag = next.ifds[ifd_index].entries[entry].clone();
-    Some(TiffMutation::ReplaceTag(ReplaceTagMutation { ifd_index, tag: tag.tag, values: tag.values }))
-}
 struct TiffAnyEditorExampleFactory { keys: Vec<ToolFactoryKey> }
 impl TiffAnyEditorExampleFactory { fn new(controller_id: &str) -> Self { Self { keys: STDIO_TIFF_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() } } }
 impl ToolJobFactory for TiffAnyEditorExampleFactory {
@@ -378,11 +364,7 @@ impl editing::SnapshotEditingEditor for TiffAnyEditor {
         if let Some(mutation) = tiffAnyEditor_direct_mutation(event, snapshot)? {
             return Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() });
         }
-        let next = tiffAnyEditor_bounded_edit(event, snapshot)?;
-        if let Some(mutation) = tiffAnyEditor_compact_mutation(event, &next, snapshot) {
-            return Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() });
-        }
-        editing::snapshot_edit_patch(event, snapshot, |patch| TiffMutation::PatchSnapshot(crate::standards::v6_0::subsets::document::schema::mutations::patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| TiffMutation::SetSnapshot(crate::standards::v6_0::subsets::document::schema::mutations::set_snapshot::SetSnapshot { snapshot })))
+        editing::snapshot_edit_net_exact(event, snapshot, crate::standards::v6_0::subsets::document::schema::mutations::net_mutations)
     }
 }
 

@@ -24,7 +24,7 @@ pub struct Mp3Diff {
 }
 
 impl MutationDiff<Mp3Snapshot> for Mp3Diff {
-    fn apply(&self, base: &Mp3Snapshot) -> protocol::MutationApplyResult<Mp3Snapshot> {
+    fn apply(&self, base: &Mp3Snapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Mp3Snapshot> {
         let mut next = base.clone();
         if let Some(v) = &self.id3v2 {
             next.id3v2 = v.clone();
@@ -62,11 +62,6 @@ impl DiffAlgebra<Mp3Snapshot> for Mp3Diff {
     }
 }
 
-/// 🧩 Builds a set-snapshot diff: the sparse field-by-field delta, never a full-replace slot.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &Mp3Snapshot, snapshot: &Mp3Snapshot) -> Mp3Diff {
-    Mp3Diff::between(base, snapshot)
-}
 /// 🧩 Builds a set-id3v2 diff (`None` clears the tag).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_id3v2(id3v2: Option<Id3v2Tag>) -> Mp3Diff {

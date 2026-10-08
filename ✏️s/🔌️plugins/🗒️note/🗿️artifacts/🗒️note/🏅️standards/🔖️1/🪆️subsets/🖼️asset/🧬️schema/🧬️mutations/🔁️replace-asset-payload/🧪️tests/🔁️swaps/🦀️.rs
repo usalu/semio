@@ -99,7 +99,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-asset-payload/swaps-logo-payload-for-svg: committed diff did not carry before to after");
 }
 
@@ -115,4 +115,10 @@ async fn whole_asset_value_is_swapped_dropping_the_old_dimensions() {
     assert_eq!(next.mime, "image/svg+xml", "the replaced asset must carry the new mime");
     assert_eq!(next.data, "PHN2Zy8+", "the replaced asset must carry the new payload");
     assert_eq!((next.width, next.height), (None, None), "a WHOLE-VALUE swap drops the prior dimensions instead of merging them forward");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

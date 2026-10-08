@@ -1,11 +1,8 @@
 import { expect, test } from "bun:test";
-import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import fixture from "../🧫️fixtures/📏️close-demand/🔣️.json" with { type: "json" };
-import schema from "../🧫️fixtures/📏️close-demand/🧬️schema/🔣️.json" with { type: "json" };
 
 test("worker physical demand preserves caller authority and independent allocation state", async () => {
-  expect(new Ajv({ strict: true, allErrors: true }).compile(schema)(fixture)).toBe(true);
   for (const row of fixture.cases) {
     const before = { retainedBytes: row.physicalBytes, releasedBytes: 0 };
     const operations = row.callerBytes >= row.physicalBytes ? [

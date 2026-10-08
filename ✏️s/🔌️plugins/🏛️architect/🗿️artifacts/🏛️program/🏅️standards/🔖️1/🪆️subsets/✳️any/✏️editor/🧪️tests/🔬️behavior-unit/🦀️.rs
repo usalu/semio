@@ -1,7 +1,8 @@
 mod tests {
     use super::*;
     use crate::sample_plugin;
-    use crate::standards::v1::subsets::any::schema::inferences::{export_registers_csv, export_registers_tsv};
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::export_registers_csv;
+    use crate::standards::v1::subsets::any::io::export::serializers::artifacts::tsv::v_iana::any::export_registers_tsv;
 
     fn fold(program: &ProgramSnapshot, mutations: &[ProgramMutation]) -> ProgramSnapshot {
         use protocol::Mutation;
@@ -132,7 +133,7 @@ mod tests {
         let program = sample_plugin();
         assert!(!program.adjacencies.is_empty(), "sample_plugin must carry adjacencies for this fidelity case");
         let csv = export_registers_csv(&program).expect("csv export");
-        let elements: Vec<ProgramMutation> = program.elements.iter().map(|element| ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element: element.clone() })).collect();
+        let elements: Vec<ProgramMutation> = program.elements.iter().map(|element| ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element: element.clone(), index: None })).collect();
         let reloaded = import_registers_csv(&fold(&crate::empty_plugin(), &elements), &csv, MergeStrategy::Upsert).expect("csv import").snapshot;
         assert_eq!(reloaded.adjacencies.len(), program.adjacencies.len());
         for expected in &program.adjacencies {
@@ -180,5 +181,24 @@ mod tests {
         );
         let program = import_registers_csv(&program, &csv, MergeStrategy::Upsert).expect("rename import").snapshot;
         assert_eq!(program.adjacencies.iter().find(|a| a.header.id == id).expect("row").header.name, "Renamed Pair");
+    }
+    #[semio_framework_async_macros::async_test]
+    async fn csv_import_emits_mutations_that_replay_to_the_imported_program() {
+        let program = sample_plugin();
+        let csv = export_registers_csv(&program).expect("csv export");
+        let import = import_registers_csv(&crate::empty_plugin(), &csv, MergeStrategy::Upsert).expect("csv import");
+        assert!(!import.mutations.is_empty());
+        assert_eq!(fold(&crate::empty_plugin(), &import.mutations), import.snapshot, "folding the emitted mutations through the central applier reproduces the imported program");
+        assert!(import.mutations.iter().all(|mutation| matches!(mutation, ProgramMutation::CreateProgramElement(_) | ProgramMutation::CreateStakeholder(_) | ProgramMutation::CreateRequirement(_) | ProgramMutation::CreateRelationship(_) | ProgramMutation::ConnectAdjacency(_) | ProgramMutation::CreateKnowledgeRecord(_) | ProgramMutation::CreateBenchmarkRecord(_))), "an import into an empty program only creates rows");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn replace_strategy_import_deletes_then_recreates_rows_through_mutations() {
+        let program = sample_plugin();
+        let csv = export_registers_csv(&program).expect("csv export");
+        let import = import_registers_csv(&program, &csv, MergeStrategy::Replace).expect("csv import");
+        assert!(import.mutations.iter().any(|mutation| matches!(mutation, ProgramMutation::DeleteProgramElement(_))), "replace removes the matching rows with delete mutations");
+        assert_eq!(fold(&program, &import.mutations), import.snapshot);
+        assert_eq!(import.snapshot.elements.len(), program.elements.len());
     }
 }

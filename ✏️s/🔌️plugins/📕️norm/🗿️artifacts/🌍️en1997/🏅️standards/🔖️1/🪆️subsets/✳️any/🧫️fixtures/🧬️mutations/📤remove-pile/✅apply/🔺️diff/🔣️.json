@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "structureId": null,
   "geotechnicalCategory": null,
   "designSituation": null,
@@ -10,7 +9,12 @@
   "layers": null,
   "footings": null,
   "piles": {
-    "values": []
+    "added": [],
+    "removed": [
+      "pile-P1"
+    ],
+    "modified": [],
+    "order": null
   },
   "retainingWalls": null,
   "slopes": null,

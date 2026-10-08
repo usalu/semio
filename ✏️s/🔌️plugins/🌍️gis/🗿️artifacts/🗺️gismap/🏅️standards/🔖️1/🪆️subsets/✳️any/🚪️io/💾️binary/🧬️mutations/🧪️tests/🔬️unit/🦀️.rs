@@ -1,3 +1,4 @@
+use crate::{GisMapMutation, MapFeature};
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
 use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data};
 use crate::standards::v1::subsets::any::io::text::snapshot::{default_document};

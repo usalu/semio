@@ -1,6 +1,7 @@
 {
   "CreateCharacterStyle": {
     "id": "char-emphasis",
-    "name": "Emphasis"
+    "name": "Emphasis",
+    "index": null
   }
 }

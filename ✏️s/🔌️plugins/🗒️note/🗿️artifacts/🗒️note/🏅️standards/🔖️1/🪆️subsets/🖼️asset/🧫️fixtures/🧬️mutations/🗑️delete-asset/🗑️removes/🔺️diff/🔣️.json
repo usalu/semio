@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "title": null,
@@ -13,9 +12,12 @@
   "pencilWidth": null,
   "eraserRadius": null,
   "assets": {
-    "entries": {
-      "asset-logo": null
-    }
+    "rows": [
+      {
+        "row": "remove",
+        "key": "asset-logo"
+      }
+    ]
   },
   "linkedArtifact": null
 }

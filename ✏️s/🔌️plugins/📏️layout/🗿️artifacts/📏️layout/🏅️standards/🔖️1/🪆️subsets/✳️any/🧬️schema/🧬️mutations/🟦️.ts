@@ -311,6 +311,7 @@ export interface UpdateLayer {
 export interface CreateCharacterStyle {
   id: string;
   name: string | null;
+  index: number | null;
 }
 
 export interface DeleteCharacterStyle {
@@ -372,6 +373,7 @@ export interface CreateLayer {
   pageId: string;
   id: string;
   name: string;
+  index: number | null;
   remove?: boolean;
 }
 

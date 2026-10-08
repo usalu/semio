@@ -2,30 +2,30 @@
 # import LinkPin from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️link/🧬️schema/🔗️.graphql"
 # import SemioKitPiece, SemioKitConnection from "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🔗️.graphql"
 # import EmptyRecord from "🧰️framework/🔨️modules/🧬️schema/🧾️record/🔗️.graphql"
-type CreateObject { child_id: String! target: ArtifactRef! }
+type CreateObject { child_id: String! target: ArtifactRef! at: Int }
 type CreateObjectMutation { CreateObject: CreateObject! }
 type DeleteObject { child_id: String! }
 type DeleteObjectMutation { DeleteObject: DeleteObject! }
-type CreateModel { child_id: String! target: ArtifactRef! }
+type CreateModel { child_id: String! target: ArtifactRef! at: Int }
 type CreateModelMutation { CreateModel: CreateModel! }
 type DeleteModel { child_id: String! }
 type DeleteModelMutation { DeleteModel: DeleteModel! }
 type CreateProperties { child_id: String! target: ArtifactRef! }
 type CreatePropertiesMutation { CreateProperties: CreateProperties! }
 type DeletePropertiesMutation { DeleteProperties: EmptyRecord! }
-type BindRepresentation { target: ArtifactRef! pin: LinkPin! role: String! }
+type BindRepresentation { target: ArtifactRef! pin: LinkPin! role: String! at: Int }
 type BindRepresentationMutation { BindRepresentation: BindRepresentation! }
 type UnbindRepresentation { index: Int! }
 type UnbindRepresentationMutation { UnbindRepresentation: UnbindRepresentation! }
 type ChangeRepresentationPin { index: Int! pin: LinkPin! }
 type ChangeRepresentationPinMutation { ChangeRepresentationPin: ChangeRepresentationPin! }
-type AddType { id: String! name: String! category: String! }
+type AddType { id: String! name: String! category: String! at: Int }
 type AddTypeMutation { AddType: AddType! }
 type RemoveType { id: String! }
 type RemoveTypeMutation { RemoveType: RemoveType! }
 type RenameType { id: String! new_name: String! }
 type RenameTypeMutation { RenameType: RenameType! }
-type AddDesign { id: String! name: String! }
+type AddDesign { id: String! name: String! at: Int }
 type AddDesignMutation { AddDesign: AddDesign! }
 type RemoveDesign { id: String! }
 type RemoveDesignMutation { RemoveDesign: RemoveDesign! }

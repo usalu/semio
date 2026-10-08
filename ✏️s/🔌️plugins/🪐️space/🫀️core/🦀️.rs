@@ -606,7 +606,7 @@ where
     admit_space_retained_mutation::<P, M>(&mutation, maximum_bytes)?;
     let inverse = ::protocol::Mutation::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
     let diff = ::protocol::Mutation::diff(&mutation, base).into_parts().0;
-    let post = ::protocol::MutationDiff::apply(&diff, base).map_err(|_| "s.space.retained.diff-apply".to_string())?;
+    let post = ::protocol::apply_diff(&diff, base).map_err(|_| "s.space.retained.diff-apply".to_string())?;
     Ok((post, inverse, mutation))
 }
 

@@ -2376,6 +2376,12 @@ impl ArtifactStoreDisplacedRetirements {
         let Some(owner) = self.owners.front_mut() else {
             return if self.owner_reservations.iter().any(Option::is_some) { Ok(SnapshotRetirementStep::Blocked) } else { Ok(SnapshotRetirementStep::Complete) };
         };
+        if owner.terminal_is_empty() {
+            let bytes = std::mem::size_of_val(owner.as_ref());
+            if bytes > maximum_bytes { return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+            drop(self.owners.pop_front());
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+        }
         match owner.close_step(maximum_items, maximum_bytes)? {
             SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => Ok(SnapshotRetirementStep::Pending { released_items, released_bytes }),
             SnapshotRetirementStep::Pending { .. } => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store displaced owner exceeded its exact item or byte grant")),
@@ -2384,9 +2390,7 @@ impl ArtifactStoreDisplacedRetirements {
                 if !owner.terminal_is_empty() {
                     return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact store displaced owner reported Complete without its exact terminal-empty witness"));
                 }
-                let owner = self.owners.pop_front().expect("validated displaced owner remains present");
-                drop(owner);
-                Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
             }
         }
     }
@@ -2394,6 +2398,8 @@ impl ArtifactStoreDisplacedRetirements {
     fn terminal_is_empty(&self) -> bool {
         self.owners.is_empty() && self.owner_reservations.iter().all(Option::is_none)
     }
+
+    fn next_close_byte_demand(&self) -> usize { self.owners.front().map_or(0, artifact_retirement_box_byte_demand) }
 
     /// 🔭️ Why this queue is not terminal — a queued owner the closer is draining, or a RESERVED
     /// slot no owner ever filled. The two answer `Blocked` from the same arm and need different
@@ -2442,6 +2448,8 @@ where
     pub fn maintenance_retirements_terminal_is_empty(&self) -> bool {
         self.store.maintenance_retirements_terminal_is_empty()
     }
+
+    pub fn maintenance_retirements_next_close_byte_demand(&self) -> usize { self.store.maintenance_retirements_next_close_byte_demand() }
 
     pub fn maintenance_retirements_under_pressure(&self) -> bool {
         self.store.maintenance_retirements_under_pressure()
@@ -2527,7 +2535,7 @@ where
 {
     fn close_step(&mut self, store: &mut ArtifactStoreCloseView<'_, P, Mutation>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>;
     fn terminal_is_empty(&self, store: &ArtifactStore<P, Mutation>) -> bool;
-    fn next_close_byte_demand(&self) -> usize;
+    fn next_close_byte_demand(&self, store: &ArtifactStore<P, Mutation>) -> usize;
     fn close_uninstalled_step(&mut self, maximum_items: usize) -> Result<SnapshotRetirementStep, semio_framework_value::ValueError>;
     fn uninstalled_terminal_is_empty(&self) -> bool;
 
@@ -2628,8 +2636,8 @@ where
         }
     }
 
-    fn next_close_byte_demand(&self) -> usize {
-        self.active.as_ref().map_or(usize::from(self.phase != ArtifactStoreCursorDisposerPhase::Complete), artifact_retirement_box_byte_demand)
+    fn next_close_byte_demand(&self, store: &ArtifactStore<P, Mutation>) -> usize {
+        self.active.as_ref().map_or_else(|| if self.phase == ArtifactStoreCursorDisposerPhase::Displaced { store.displaced_retirements.next_close_byte_demand() } else { usize::from(self.phase != ArtifactStoreCursorDisposerPhase::Complete) }, artifact_retirement_box_byte_demand)
     }
 
     fn terminal_is_empty(&self, store: &ArtifactStore<P, Mutation>) -> bool {
@@ -4436,7 +4444,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 /// `🔖️Backbone` below use) — NOT new `Shape` variants: the design doc's deviation D1 deliberately
 /// keeps `Shape` closed (it is exhaustively matched in ~20 files) and represents every new value
 /// type here as an ordinary `Shape::Record`. Targets use the canonical literal
-/// `crate::os_io::ArtifactRef` record so each owned reference component remains independent.
+/// `semio_framework_artifact_reference::ArtifactRef` record so each owned reference component remains independent.
 // 🚫️async: E4 fn-pointer slot — value stored in `Shape::Record(fn() -> RecordSpec)`
 impl<S> semio_framework_dsl_record::BorrowedDslRecord for ArtifactChild<S>{
  const RECORD:semio_framework_dsl_record::BorrowedRecordSpec=semio_framework_dsl_record::BorrowedRecordSpec{keyword:None,layout:semio_framework_dsl_record::RecordLayout::Inline,fields:&[
@@ -11715,7 +11723,7 @@ pub trait ArtifactPack: Sized {
     /// 📣️ The actual native factory may declare one exact zero-touch registry coordinate.
     fn native_snapshot_registration() -> Option<(semio_framework_artifact_reference::Dialect, ArtifactCodec)> { None }
     /// 📣️ An explicit artifact owner publishes its native capability during construction or hydration.
-    fn publish_native_snapshot() -> Result<(),crate::os_io::ArtifactAssemblyRegistryError> { Ok(()) }
+    fn publish_native_snapshot() -> Result<(),crate::io::ArtifactAssemblyRegistryError> { Ok(()) }
 
     /// 🪶️ Optional relational snapshot capability declared by this snapshot owner.
     fn sqlite_snapshot_codec() -> Option<ArtifactSqliteSnapshotCodec> {
@@ -12885,37 +12893,355 @@ where
 /// 🧮️ Config snapshots use the same DSL law as documents — `ConfigRecord` marks config types.
 pub trait ConfigRecord: ArtifactDsl {}
 
-/// 🎯️ Marks `$ty` as whole-record (no field-level diff — an operation replaces the entire
-/// config) with the trivial `ConfigRecord` + `MutationDiff<Self>` pair every hand-rolled
-/// `impl crate::os_store::ConfigRecord for XConfig {}` + `impl crate::os_spr::MutationDiff<XConfig> for XConfig {
-/// fn apply(...) -> XConfig { self.clone() } fn absorb(...) { *self = other; } }` duo repeated
-/// (~33 crates) — `impl_whole_record_config!(XConfig);` replaces both; `$ty` must be `PartialEq`, and its algebra is the
-/// whole record (`inverse` = the base record, `between` = the other record). The orphan rule still
-/// requires the macro invoked from `$ty`'s own crate (relies on the caller already having
-/// `protocol` in scope by name, exactly as every hand-rolled impl this replaces already did).
+/// 🧬️ Generates the sparse per-field diff of `$record` from its field list: one `Option<FieldType>` slot per field, `absorb` is
+/// later-slot-wins, `inverse` is the base values of the set slots, `is_empty` is every slot `None`, `apply` builds the record from
+/// the set slots over `base` (the struct literal names every field, so a field added to the record without joining the list fails
+/// to compile), and `$diff::replacing(&record)` sets every slot — the diff of a `replace-<entity>` kind. Schema-derived concrete
+/// code, not a runtime generic: the invoking crate owns the emitted type. `$record` must be `Clone + PartialEq`, every field type
+/// `Clone + PartialEq + ToValue + FromValue`.
 #[macro_export]
-macro_rules! impl_whole_record_config {
-    ($ty:ty) => {
-        impl $crate::ConfigRecord for $ty {}
-        impl ::protocol::DiffAlgebra<$ty> for $ty {
-            fn inverse(&self, base: &$ty) -> Self {
-                base.clone()
+macro_rules! sparse_record_diff {
+    (record: $record:ident, diff: $diff:ident, whole $(,)?) => {
+        $crate::sparse_whole_diff! { record: $record, diff: $diff }
+    };
+    (record: $record:ident, diff: $diff:ident, fields: { $($field:ident : $ty:ty),+ $(,)? } $(,)?) => {
+        #[doc = concat!("🔺️ Sparse diff of [`", stringify!($record), "`]: one optional slot per field.")]
+        #[derive(Clone, Debug, Default, PartialEq)]
+        pub struct $diff {
+            $(pub $field: Option<$ty>),+
+        }
+
+        impl $diff {
+            #[doc = concat!("🧱️ The diff that sets every slot to the value `record` holds — the diff of a whole-`", stringify!($record), "` replacement.")]
+            pub fn replacing(record: &$record) -> Self {
+                Self { $($field: Some(record.$field.clone())),+ }
             }
-            fn between(_base: &$ty, other: &$ty) -> Self {
-                other.clone()
+
+            #[doc = concat!("🧱️ The diff that sets exactly the slots where `record` differs from `base` — the sparse diff of a `replace-", stringify!($record), "` kind, read from its payload and its base.")]
+            pub fn changing(base: &$record, record: &$record) -> Self {
+                Self { $($field: (base.$field != record.$field).then(|| record.$field.clone())),+ }
             }
+        }
+
+        impl $crate::__value::ToValue for $diff {
+            fn to_value(&self) -> $crate::__value::DslValue {
+                let mut entries: Vec<(String, $crate::__value::DslValue)> = Vec::new();
+                $(if let Some(value) = &self.$field {
+                    entries.push((stringify!($field).to_string(), $crate::__value::ToValue::to_value(value)));
+                })+
+                $crate::__value::DslValue::object(entries)
+            }
+        }
+
+        impl $crate::__value::FromValue for $diff {
+            fn from_value(value: $crate::__value::DslValue) -> Result<Self, $crate::__value::ValueError> {
+                let mut diff = Self::default();
+                for (key, entry) in value.into_object()? {
+                    $(if key == stringify!($field) {
+                        diff.$field = Some(<$ty as $crate::__value::FromValue>::from_value(entry).map_err(|error| error.under(stringify!($field)))?);
+                        continue;
+                    })+
+                    return Err($crate::__value::ValueError::new($crate::__value::ValueRefusalKind::InvalidValue, format!("unknown {} field {key}", stringify!($diff))));
+                }
+                Ok(diff)
+            }
+        }
+
+        impl $crate::DiffAlgebra<$record> for $diff {
+            fn inverse(&self, base: &$record) -> Self {
+                Self { $($field: self.$field.as_ref().map(|_| base.$field.clone())),+ }
+            }
+
+            fn between(base: &$record, other: &$record) -> Self {
+                Self { $($field: (base.$field != other.$field).then(|| other.$field.clone())),+ }
+            }
+
             fn is_empty(&self) -> bool {
-                false
+                true $(&& self.$field.is_none())+
             }
         }
-        impl ::protocol::MutationDiff<$ty> for $ty {
-            fn apply(&self, _base: &$ty, _capability: ::protocol::ApplyCapability) -> ::protocol::MutationApplyResult<$ty> {
-                Ok(self.clone())
+
+        impl $crate::MutationDiff<$record> for $diff {
+            fn apply(&self, base: &$record, _capability: $crate::ApplyCapability) -> $crate::MutationApplyResult<$record> {
+                Ok($record { $($field: self.$field.clone().unwrap_or_else(|| base.$field.clone())),+ })
             }
+
             fn absorb(&mut self, other: Self) {
-                *self = other;
+                $(if other.$field.is_some() {
+                    self.$field = other.$field;
+                })+
             }
         }
+    };
+}
+
+/// 🧬️ The `whole` arm of [`sparse_record_diff!`] for a record that is one indivisible entity (an `Arc`-shared root, an opaque
+/// engine state): a single `replacement` slot, set exactly when the requested record differs from the base.
+#[doc(hidden)]
+#[macro_export]
+macro_rules! sparse_whole_diff {
+    (record: $record:ident, diff: $diff:ident) => {
+        #[doc = concat!("🔺️ Diff of the indivisible [`", stringify!($record), "`]: its replacement, or nothing.")]
+        #[derive(Clone, Debug, Default, PartialEq)]
+        pub struct $diff {
+            pub replacement: Option<$record>,
+        }
+
+        impl $diff {
+            #[doc = "🧱️ The diff that installs `record`."]
+            pub fn replacing(record: &$record) -> Self {
+                Self { replacement: Some(record.clone()) }
+            }
+
+            #[doc = "🧱️ The diff that installs `record` unless `base` already holds it."]
+            pub fn changing(base: &$record, record: &$record) -> Self {
+                Self { replacement: (base != record).then(|| record.clone()) }
+            }
+        }
+
+        impl $crate::__value::ToValue for $diff {
+            fn to_value(&self) -> $crate::__value::DslValue {
+                let mut entries: Vec<(String, $crate::__value::DslValue)> = Vec::new();
+                if let Some(value) = &self.replacement {
+                    entries.push(("replacement".to_string(), $crate::__value::ToValue::to_value(value)));
+                }
+                $crate::__value::DslValue::object(entries)
+            }
+        }
+
+        impl $crate::__value::FromValue for $diff {
+            fn from_value(value: $crate::__value::DslValue) -> Result<Self, $crate::__value::ValueError> {
+                let mut diff = Self::default();
+                for (key, entry) in value.into_object()? {
+                    if key == "replacement" {
+                        diff.replacement = Some(<$record as $crate::__value::FromValue>::from_value(entry).map_err(|error| error.under("replacement"))?);
+                        continue;
+                    }
+                    return Err($crate::__value::ValueError::new($crate::__value::ValueRefusalKind::InvalidValue, format!("unknown {} field {key}", stringify!($diff))));
+                }
+                Ok(diff)
+            }
+        }
+
+        impl $crate::DiffAlgebra<$record> for $diff {
+            fn inverse(&self, base: &$record) -> Self {
+                Self { replacement: self.replacement.as_ref().map(|_| base.clone()) }
+            }
+
+            fn between(base: &$record, other: &$record) -> Self {
+                Self::changing(base, other)
+            }
+
+            fn is_empty(&self) -> bool {
+                self.replacement.is_none()
+            }
+        }
+
+        impl $crate::MutationDiff<$record> for $diff {
+            fn apply(&self, base: &$record, _capability: $crate::ApplyCapability) -> $crate::MutationApplyResult<$record> {
+                Ok(self.replacement.clone().unwrap_or_else(|| base.clone()))
+            }
+
+            fn absorb(&mut self, other: Self) {
+                if other.replacement.is_some() {
+                    self.replacement = other.replacement;
+                }
+            }
+        }
+    };
+}
+
+/// 🎚️ Generates `$set`, the per-field set mutations of `$record`: one `Set…(value)` variant per field whose diff sets that one
+/// slot of `$diff` (empty when the base already holds the value) and whose inverse is the same variant carrying the base value.
+/// An optional `replace: Variant { field } wire "…" kind "…" name "…"` variant replaces the whole record through
+/// `$diff::changing` (the slots where the payload record differs from the base) and inverts to itself over the base record. The enum owns its leaf descriptors (`owner/kind`), its
+/// `{"kind": …, "value": …}` wire shape and its JSON op text and binary, so the invoking crate writes none of it.
+#[macro_export]
+macro_rules! field_set_mutations {
+    (
+        record: $record:ident,
+        diff: $diff:ident,
+        set: $set:ident,
+        owner: $owner:literal,
+        payload_schema: $schema:literal,
+        emoji: $emoji:literal,
+        $(replace: $rv:ident { $rf:ident } wire $rwire:literal kind $rkind:literal name $rname:literal,)?
+        fields: { $($field:ident : $ty:ty => $variant:ident $kind:literal),+ $(,)? } $(,)?
+    ) => {
+        #[doc = concat!("🎚️ The set mutations of [`", stringify!($record), "`].")]
+        #[derive(Clone, Debug, PartialEq)]
+        pub enum $set {
+            $($rv { $rf: $record },)?
+            $($variant($ty)),+
+        }
+
+        impl $crate::__value::ToValue for $set {
+            fn to_value(&self) -> $crate::__value::DslValue {
+                match self {
+                    $(Self::$rv { $rf } => $crate::__value::DslValue::object(vec![
+                        ("kind".to_string(), $crate::__value::DslValue::String($rwire.to_string())),
+                        (stringify!($rf).to_string(), $crate::__value::ToValue::to_value($rf)),
+                    ]),)?
+                    $(Self::$variant(value) => $crate::__value::DslValue::object(vec![
+                        ("kind".to_string(), $crate::__value::DslValue::String($kind.to_string())),
+                        ("value".to_string(), $crate::__value::ToValue::to_value(value)),
+                    ]),)+
+                }
+            }
+        }
+
+        impl $crate::__value::FromValue for $set {
+            fn from_value(value: $crate::__value::DslValue) -> Result<Self, $crate::__value::ValueError> {
+                let entries = value.into_object()?;
+                let kind = match entries.iter().find(|(key, _)| key == "kind") {
+                    Some((_, $crate::__value::DslValue::String(kind))) => kind.clone(),
+                    _ => return Err($crate::__value::ValueError::new($crate::__value::ValueRefusalKind::InvalidValue, concat!(stringify!($set), " requires a string kind"))),
+                };
+                let entry = |name: &str| {
+                    entries
+                        .iter()
+                        .find(|(key, _)| key == name)
+                        .map(|(_, value)| value.clone())
+                        .ok_or_else(|| $crate::__value::ValueError::new($crate::__value::ValueRefusalKind::InvalidValue, format!("{} {kind} requires {name}", stringify!($set))))
+                };
+                $(if kind == $rwire {
+                    return Ok(Self::$rv { $rf: <$record as $crate::__value::FromValue>::from_value(entry(stringify!($rf))?).map_err(|error| error.under(stringify!($rf)))? });
+                })?
+                $(if kind == $kind {
+                    return Ok(Self::$variant(<$ty as $crate::__value::FromValue>::from_value(entry("value")?).map_err(|error| error.under("value"))?));
+                })+
+                Err($crate::__value::ValueError::new($crate::__value::ValueRefusalKind::InvalidValue, format!("unknown {} kind {kind}", stringify!($set))))
+            }
+        }
+
+        impl $crate::Mutation<$record> for $set {
+            type Diff = $diff;
+
+            const DESCRIPTORS: &'static [$crate::MutationLeafDescriptor] = &[
+                $($crate::MutationLeafDescriptor {
+                    schema_version: 1,
+                    owner: concat!($owner, "/", $rkind),
+                    semantic_kind: $rkind,
+                    display_name: $rname,
+                    emoji: $emoji,
+                    aggregate_variant: stringify!($rv),
+                    payload_schema: $schema,
+                    text_opcode: None,
+                    binary_tag: None,
+                    invertibility: $crate::MutationInvertibility::ExplicitMutation,
+                    diff_participation: $crate::MutationDiffParticipation::Detect,
+                    outcome_classes: &[$crate::MutationOutcomeClass::Applied],
+                    composition: $crate::MutationComposition::Atomic,
+                    required_language_surfaces: &[$crate::MutationLanguageSurface::Rust, $crate::MutationLanguageSurface::JsonSchema],
+                },)?
+                $($crate::MutationLeafDescriptor {
+                    schema_version: 1,
+                    owner: concat!($owner, "/", $kind),
+                    semantic_kind: $kind,
+                    display_name: $kind,
+                    emoji: $emoji,
+                    aggregate_variant: stringify!($variant),
+                    payload_schema: $schema,
+                    text_opcode: None,
+                    binary_tag: None,
+                    invertibility: $crate::MutationInvertibility::ExplicitMutation,
+                    diff_participation: $crate::MutationDiffParticipation::Detect,
+                    outcome_classes: &[$crate::MutationOutcomeClass::Applied],
+                    composition: $crate::MutationComposition::Atomic,
+                    required_language_surfaces: &[$crate::MutationLanguageSurface::Rust, $crate::MutationLanguageSurface::JsonSchema],
+                }),+
+            ];
+
+            fn descriptor(&self) -> &'static $crate::MutationLeafDescriptor {
+                let variant = match self {
+                    $(Self::$rv { .. } => stringify!($rv),)?
+                    $(Self::$variant(_) => stringify!($variant)),+
+                };
+                Self::DESCRIPTORS.iter().find(|descriptor| descriptor.aggregate_variant == variant).expect("every set mutation variant declares its descriptor")
+            }
+
+            fn diff(&self, base: &$record) -> $crate::MutationOutcome<$diff> {
+                match self {
+                    $(Self::$rv { $rf } => {
+                        let changed = <$diff>::changing(base, $rf);
+                        if changed == <$diff as Default>::default() {
+                            return $crate::MutationOutcome::empty();
+                        }
+                        $crate::MutationOutcome::new(changed)
+                    })?
+                    $(Self::$variant(value) => {
+                        if base.$field == *value {
+                            return $crate::MutationOutcome::empty();
+                        }
+                        $crate::MutationOutcome::new($diff { $field: Some(value.clone()), ..<$diff as Default>::default() })
+                    })+
+                }
+            }
+
+            fn inverse(&self, base: &$record) -> Result<Vec<Self>, $crate::__value::ValueError> {
+                Ok(vec![match self {
+                    $(Self::$rv { .. } => Self::$rv { $rf: base.clone() },)?
+                    $(Self::$variant(_) => Self::$variant(base.$field.clone())),+
+                }])
+            }
+        }
+
+        impl $crate::OpText for $set {
+            fn parse_op(line: &str) -> Result<Self, $crate::__diagnostic::TextError> {
+                $crate::__pack_json::from_json_str(line, $crate::__pack_json::JsonMemberPolicy::Reject).map_err(|error| $crate::__diagnostic::TextError::from_value_error(error, $crate::__diagnostic::TextSpan::at(1, 1)))
+            }
+
+            fn print_op(&self) -> String {
+                $crate::__pack_json::to_json_string(self)
+            }
+        }
+
+        impl $crate::OpBinary for $set {
+            fn encode_op(&self) -> Result<Vec<u8>, $crate::ProtocolError> {
+                Ok($crate::__pack_json::to_json_string(self).into_bytes())
+            }
+
+            fn decode_op(bytes: &[u8]) -> Result<Self, $crate::ProtocolError> {
+                let text = std::str::from_utf8(bytes).map_err(|error| $crate::ProtocolError::from($crate::PackError::from($crate::__value::ValueError::from(error))))?;
+                $crate::__pack_json::from_json_str(text, $crate::__pack_json::JsonMemberPolicy::Reject).map_err(|error| $crate::ProtocolError::from($crate::PackError::from(error)))
+            }
+        }
+    };
+}
+
+/// 🎯️ Declares a config record's sparse diff ([`sparse_record_diff!`]), its per-field set mutations ([`field_set_mutations!`]) and
+/// its `ConfigRecord` mark in one invocation: `config_record! { record: X, diff: XDiff, set: XSet, owner: "…", payload_schema:
+/// "…", emoji: "…", fields: { field: Type => SetField "set-field", … } }`. Configs that keep a hand-written mutation enum use
+/// `config_diff!` for the diff alone.
+#[macro_export]
+macro_rules! config_record {
+    (
+        record: $record:ident,
+        diff: $diff:ident,
+        set: $set:ident,
+        owner: $owner:literal,
+        payload_schema: $schema:literal,
+        emoji: $emoji:literal,
+        $(replace: $rv:ident { $rf:ident } wire $rwire:literal kind $rkind:literal name $rname:literal,)?
+        fields: { $($field:ident : $ty:ty => $variant:ident $kind:literal),+ $(,)? } $(,)?
+    ) => {
+        impl $crate::ConfigRecord for $record {}
+        $crate::sparse_record_diff! { record: $record, diff: $diff, fields: { $($field: $ty),+ } }
+        $crate::field_set_mutations! {
+            record: $record, diff: $diff, set: $set, owner: $owner, payload_schema: $schema, emoji: $emoji,
+            $(replace: $rv { $rf } wire $rwire kind $rkind name $rname,)?
+            fields: { $($field: $ty => $variant $kind),+ }
+        }
+    };
+}
+
+/// 🎯️ Declares a config record's `ConfigRecord` mark and sparse diff ([`sparse_record_diff!`]) for a config whose mutation enum is
+/// hand-written: `config_diff! { record: X, diff: XDiff, fields: { field: Type, … } }`.
+#[macro_export]
+macro_rules! config_diff {
+    (record: $record:ident, diff: $diff:ident, fields: { $($field:ident : $ty:ty),+ $(,)? } $(,)?) => {
+        impl $crate::ConfigRecord for $record {}
+        $crate::sparse_record_diff! { record: $record, diff: $diff, fields: { $($field: $ty),+ } }
     };
 }
 
@@ -19756,6 +20082,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         self.displaced_retirements.terminal_is_empty()
     }
 
+    /// 📏️ Borrows the queued original owner's next payload or terminal frame release.
+    pub fn maintenance_retirements_next_close_byte_demand(&self) -> usize { self.displaced_retirements.next_close_byte_demand() }
+
     /// 🌡️ True while the displaced-owner queue holds at least [`ARTIFACT_STORE_DISPLACED_PRESSURE_OCCUPANCY`] owners.
     pub fn maintenance_retirements_under_pressure(&self) -> bool {
         self.displaced_retirements.under_pressure()
@@ -19777,7 +20106,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     pub fn next_close_byte_demand(&self) -> usize {
         if self.owned_disposer_terminal { return 0; }
         self.owned_disposer.as_ref().map_or(1, |owner| {
-            if !owner.terminal_is_empty(self) { return owner.next_close_byte_demand(); }
+            if !owner.terminal_is_empty(self) { return owner.next_close_byte_demand(self); }
             if !self.resident_backings_terminal_is_empty() { return self.next_resident_backing_byte_demand(); }
             if self.snapshot_read_leases.0.is_some() { return self.snapshot_read_leases.frame_byte_demand(); }
             if self.factory_aliases_present() { return 0; }
@@ -28797,7 +29126,7 @@ pub struct ChildGenesis {
 /// accept/reject — carried through unchanged rather than recomputed, so a successful receipt's
 /// messages are byte-identical to what a `preview_wire` dry run of the same ops would have reported
 /// (§C2 LAW 3, determinism). Each message's `target` is prefixed with the ORIGINATING member's own
-/// `crate::os_io::ArtifactRef::to_uri()` (outermost segment), so a caller with several members in
+/// `semio_framework_artifact_reference::ArtifactRef::to_uri()` (outermost segment), so a caller with several members in
 /// flight can always tell which member a given message came from — the same discipline §C4 mandates
 /// for composite step paths. Empty when every op's outcome was silent.
 pub struct GroupReceipt<M> {
@@ -29189,7 +29518,7 @@ async fn mint_invocation_id(parent_id: &str, parent_edit_fingerprint: &[u8], chi
     content_addressed_entity_id("invocation", &payload).await
 }
 
-/// 🏷️ Prepends `member_path` (that member's own `crate::os_io::ArtifactRef::to_uri()`) as the
+/// 🏷️ Prepends `member_path` (that member's own `semio_framework_artifact_reference::ArtifactRef::to_uri()`) as the
 /// OUTERMOST segment of every message's `target` — the discipline §C4 mandates for composite step
 /// paths, generalized to a composition group: a caller unioning messages from several members must
 /// still be able to tell which member produced which message.
@@ -29406,7 +29735,7 @@ impl TransactionCoordinator {
     /// **Phase 1 — preview-all, zero side effects.** Every non-empty op slice (`parent_ops`, each
     /// `ChildDispatch.ops`) is dry-run via `SpaceMember::preview_wire` against that member's CURRENT
     /// snapshot and its messages unioned into one `all_messages` list, each stamped with its
-    /// originating member's own `crate::os_io::ArtifactRef::to_uri()` as the outermost `target`
+    /// originating member's own `semio_framework_artifact_reference::ArtifactRef::to_uri()` as the outermost `target`
     /// segment (`prefix_message_target`). Under `Owned`, every `children` entry's claimed ownership
     /// is ALSO checked against `self.graph` (`VcsError::OwnershipViolation` if the graph does not
     /// currently track `parent_ref` as that child's owner) — a STRUCTURAL failure, returned

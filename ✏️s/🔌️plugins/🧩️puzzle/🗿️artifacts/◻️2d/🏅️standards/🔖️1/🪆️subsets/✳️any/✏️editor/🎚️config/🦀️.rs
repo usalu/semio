@@ -258,56 +258,169 @@ impl store::ArtifactPack for Puzzle2dConfig {
     }
 }
 
-store::impl_whole_record_config!(Puzzle2dConfig);
+impl store::ConfigRecord for Puzzle2dConfig {}
+
+/// 🔺️ Sparse typed delta of the shared Puzzle 2D configuration: names only the fields a mutation changes.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Puzzle2dConfigDiff {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub node_kind_weights: Option<BTreeMap<String, f64>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub handle_kind_weights: Option<BTreeMap<String, f64>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub fill_count: Option<u32>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub contact_tolerance: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub brush_placement_overlap_budget: Option<f64>,
+}
+
+impl Puzzle2dConfigDiff {
+    /// 🎯️ Every field set to `state`'s value.
+    pub fn of(state: &Puzzle2dConfig) -> Self {
+        Self { node_kind_weights: Some(state.node_kind_weights.clone()), handle_kind_weights: Some(state.handle_kind_weights.clone()), fill_count: Some(state.fill_count), contact_tolerance: Some(state.contact_tolerance), brush_placement_overlap_budget: Some(state.brush_placement_overlap_budget) }
+    }
+    /// ✂️ The named fields that differ from `base`.
+    pub fn changed(&self, base: &Puzzle2dConfig) -> Self {
+        Self { node_kind_weights: self.node_kind_weights.as_ref().filter(|value| **value != base.node_kind_weights).cloned(), handle_kind_weights: self.handle_kind_weights.as_ref().filter(|value| **value != base.handle_kind_weights).cloned(), fill_count: self.fill_count.as_ref().filter(|value| **value != base.fill_count).cloned(), contact_tolerance: self.contact_tolerance.as_ref().filter(|value| **value != base.contact_tolerance).cloned(), brush_placement_overlap_budget: self.brush_placement_overlap_budget.as_ref().filter(|value| **value != base.brush_placement_overlap_budget).cloned() }
+    }
+    /// ↩️ The named fields at the values `base` holds.
+    pub fn restoring(&self, base: &Puzzle2dConfig) -> Self {
+        Self { node_kind_weights: self.node_kind_weights.as_ref().map(|_| base.node_kind_weights.clone()), handle_kind_weights: self.handle_kind_weights.as_ref().map(|_| base.handle_kind_weights.clone()), fill_count: self.fill_count.as_ref().map(|_| base.fill_count), contact_tolerance: self.contact_tolerance.as_ref().map(|_| base.contact_tolerance), brush_placement_overlap_budget: self.brush_placement_overlap_budget.as_ref().map(|_| base.brush_placement_overlap_budget) }
+    }
+}
+
+impl protocol::MutationDiff<Puzzle2dConfig> for Puzzle2dConfigDiff {
+    fn apply(&self, base: &Puzzle2dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle2dConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.node_kind_weights {
+            next.node_kind_weights = value.clone();
+        }
+        if let Some(value) = &self.handle_kind_weights {
+            next.handle_kind_weights = value.clone();
+        }
+        if let Some(value) = &self.fill_count {
+            next.fill_count = *value;
+        }
+        if let Some(value) = &self.contact_tolerance {
+            next.contact_tolerance = *value;
+        }
+        if let Some(value) = &self.brush_placement_overlap_budget {
+            next.brush_placement_overlap_budget = *value;
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.node_kind_weights.is_some() {
+            self.node_kind_weights = other.node_kind_weights;
+        }
+        if other.handle_kind_weights.is_some() {
+            self.handle_kind_weights = other.handle_kind_weights;
+        }
+        if other.fill_count.is_some() {
+            self.fill_count = other.fill_count;
+        }
+        if other.contact_tolerance.is_some() {
+            self.contact_tolerance = other.contact_tolerance;
+        }
+        if other.brush_placement_overlap_budget.is_some() {
+            self.brush_placement_overlap_budget = other.brush_placement_overlap_budget;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<Puzzle2dConfig> for Puzzle2dConfigDiff {
+    fn inverse(&self, base: &Puzzle2dConfig) -> Self {
+        self.restoring(base)
+    }
+    fn between(base: &Puzzle2dConfig, other: &Puzzle2dConfig) -> Self {
+        Self { node_kind_weights: (base.node_kind_weights != other.node_kind_weights).then(|| other.node_kind_weights.clone()), handle_kind_weights: (base.handle_kind_weights != other.handle_kind_weights).then(|| other.handle_kind_weights.clone()), fill_count: (base.fill_count != other.fill_count).then(|| other.fill_count), contact_tolerance: (base.contact_tolerance != other.contact_tolerance).then(|| other.contact_tolerance), brush_placement_overlap_budget: (base.brush_placement_overlap_budget != other.brush_placement_overlap_budget).then(|| other.brush_placement_overlap_budget) }
+    }
+    fn is_empty(&self) -> bool {
+        self.node_kind_weights.is_none() && self.handle_kind_weights.is_none() && self.fill_count.is_none() && self.contact_tolerance.is_none() && self.brush_placement_overlap_budget.is_none()
+    }
+}
+
+impl Puzzle2dConfig {
+    /// 🔁️ One field mutation per field `next` changes — the config's event vocabulary, never a whole-config restore.
+    pub fn mutations_to(&self, next: &Puzzle2dConfig) -> Vec<Puzzle2dConfigMutation> {
+        let mut mutations = Vec::new();
+        if self.node_kind_weights != next.node_kind_weights {
+            mutations.push(Puzzle2dConfigMutation::SetNodeKindWeights { value: next.node_kind_weights.clone() });
+        }
+        if self.handle_kind_weights != next.handle_kind_weights {
+            mutations.push(Puzzle2dConfigMutation::SetHandleKindWeights { value: next.handle_kind_weights.clone() });
+        }
+        if self.fill_count != next.fill_count {
+            mutations.push(Puzzle2dConfigMutation::SetFillCount { value: next.fill_count });
+        }
+        if self.contact_tolerance != next.contact_tolerance {
+            mutations.push(Puzzle2dConfigMutation::SetContactTolerance { value: next.contact_tolerance });
+        }
+        if self.brush_placement_overlap_budget != next.brush_placement_overlap_budget {
+            mutations.push(Puzzle2dConfigMutation::SetBrushPlacementOverlapBudget { value: next.brush_placement_overlap_budget });
+        }
+        mutations
+    }
+}
+
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutation
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Puzzle2dConfigMutation {
-    Snapshot { config: Puzzle2dConfig },
+    SetNodeKindWeights { value: BTreeMap<String, f64> },
+    SetHandleKindWeights { value: BTreeMap<String, f64> },
+    SetFillCount { value: u32 },
+    SetContactTolerance { value: f64 },
+    SetBrushPlacementOverlapBudget { value: f64 },
 }
 
 impl protocol::Mutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
-    type Diff = Puzzle2dConfig;
+    type Diff = Puzzle2dConfigDiff;
 
-    /// 🧷️ Hand-written (no `dsl::Mutations` derive on this enum). ⚠️ PROVISIONAL: neither
-    /// `owner` leaf directory below exists on disk yet — these are metadata placeholders to
-    /// satisfy `protocol::Mutation`, not real registrations.
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
-        schema_version: 1,
-        owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot",
-        semantic_kind: "snapshot",
-        display_name: "Snapshot",
-        emoji: "📄",
-        aggregate_variant: "Snapshot",
-        payload_schema: "🧬️schema/🔣️.json",
-        text_opcode: None,
-        binary_tag: None,
-        invertibility: protocol::MutationInvertibility::ExplicitMutation,
-        diff_participation: protocol::MutationDiffParticipation::Detect,
-        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-        composition: protocol::MutationComposition::Atomic,
-        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }];
+    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-node-kind-weights", display_name: "Set Puzzle 2D Node Kind Weights", emoji: "🎚️", aggregate_variant: "SetNodeKindWeights", payload_schema: "puzzle.2dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-handle-kind-weights", display_name: "Set Puzzle 2D Handle Kind Weights", emoji: "🎚️", aggregate_variant: "SetHandleKindWeights", payload_schema: "puzzle.2dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-fill-count", display_name: "Set Puzzle 2D Fill Count", emoji: "🎚️", aggregate_variant: "SetFillCount", payload_schema: "puzzle.2dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-contact-tolerance", display_name: "Set Puzzle 2D Contact Tolerance", emoji: "🎚️", aggregate_variant: "SetContactTolerance", payload_schema: "puzzle.2dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-brush-placement-overlap-budget", display_name: "Set Puzzle 2D Brush Placement Overlap Budget", emoji: "🎚️", aggregate_variant: "SetBrushPlacementOverlapBudget", payload_schema: "puzzle.2dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+    ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Puzzle2dConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Self::SetNodeKindWeights { .. } => &Self::DESCRIPTORS[0],
+            Self::SetHandleKindWeights { .. } => &Self::DESCRIPTORS[1],
+            Self::SetFillCount { .. } => &Self::DESCRIPTORS[2],
+            Self::SetContactTolerance { .. } => &Self::DESCRIPTORS[3],
+            Self::SetBrushPlacementOverlapBudget { .. } => &Self::DESCRIPTORS[4],
         }
     }
 
-    fn diff(&self, _base: &Puzzle2dConfig) -> protocol::MutationOutcome<Puzzle2dConfig> {
-        protocol::MutationOutcome::new(match self {
-            Puzzle2dConfigMutation::Snapshot { config } => config.clone(),
-        })
+    fn diff(&self, base: &Puzzle2dConfig) -> protocol::MutationOutcome<Puzzle2dConfigDiff> {
+        let diff = match self {
+            Self::SetNodeKindWeights { value } => Puzzle2dConfigDiff { node_kind_weights: (value != &base.node_kind_weights).then(|| value.clone()), ..Default::default() },
+            Self::SetHandleKindWeights { value } => Puzzle2dConfigDiff { handle_kind_weights: (value != &base.handle_kind_weights).then(|| value.clone()), ..Default::default() },
+            Self::SetFillCount { value } => Puzzle2dConfigDiff { fill_count: (value != &base.fill_count).then_some(*value), ..Default::default() },
+            Self::SetContactTolerance { value } => Puzzle2dConfigDiff { contact_tolerance: (value != &base.contact_tolerance).then_some(*value), ..Default::default() },
+            Self::SetBrushPlacementOverlapBudget { value } => Puzzle2dConfigDiff { brush_placement_overlap_budget: (value != &base.brush_placement_overlap_budget).then_some(*value), ..Default::default() },
+        };
+        if protocol::DiffAlgebra::<Puzzle2dConfig>::is_empty(&diff) {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The configuration already holds this value.");
+        }
+        protocol::MutationOutcome::new(diff)
     }
 
     fn inverse(&self, base: &Puzzle2dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Puzzle2dConfigMutation::Snapshot { config: base.clone() }]
-    
-    })())
-}
+        Ok(vec![match self {
+            Self::SetNodeKindWeights { .. } => Self::SetNodeKindWeights { value: base.node_kind_weights.clone() },
+            Self::SetHandleKindWeights { .. } => Self::SetHandleKindWeights { value: base.handle_kind_weights.clone() },
+            Self::SetFillCount { .. } => Self::SetFillCount { value: base.fill_count },
+            Self::SetContactTolerance { .. } => Self::SetContactTolerance { value: base.contact_tolerance },
+            Self::SetBrushPlacementOverlapBudget { .. } => Self::SetBrushPlacementOverlapBudget { value: base.brush_placement_overlap_budget },
+        }])
+    }
 }
 
 impl protocol::OpBinary for Puzzle2dConfigMutation {

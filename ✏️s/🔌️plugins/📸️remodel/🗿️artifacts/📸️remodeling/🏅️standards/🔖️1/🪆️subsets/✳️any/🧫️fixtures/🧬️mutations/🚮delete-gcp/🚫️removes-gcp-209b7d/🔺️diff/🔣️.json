@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "streams": null,
@@ -8,16 +7,10 @@
   "calibration": null,
   "params": null,
   "gcps": {
-    "values": [
+    "rows": [
       {
-        "id": "gcp-ridge",
-        "name": "Ridge",
-        "worldPosition": [
-          4.0,
-          5.0,
-          6.0
-        ],
-        "observations": []
+        "row": "remove",
+        "key": "gcp-corner"
       }
     ]
   },

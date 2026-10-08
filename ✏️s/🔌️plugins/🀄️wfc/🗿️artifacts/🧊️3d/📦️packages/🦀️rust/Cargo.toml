@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../.."
 name = "semio-s-artifact-wfc-3d"
 version.workspace = true
 edition.workspace = true
@@ -15,11 +15,18 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[[bin]]
+name = "semio-wfc-3d-mutation-bridge"
+path = "../../🏭️bridge/🦀️.rs"
+required-features = ["mutation-inventory"]
+
 [features]
 default = []
+mutation-inventory = ["dep:semio-framework-test-mutation-inventory", "component-app-assembly"]
 component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract"]
 
 [dependencies]
+semio-framework-test-mutation-inventory = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust", optional = true, features = ["replication"] }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
@@ -53,6 +60,7 @@ semio-framework-ui-contract = { workspace = true, optional = true }
 semio-framework-tool-machine = { workspace = true, optional = true }
 
 [dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async-macros = { workspace = true }
 serde = { workspace = true }

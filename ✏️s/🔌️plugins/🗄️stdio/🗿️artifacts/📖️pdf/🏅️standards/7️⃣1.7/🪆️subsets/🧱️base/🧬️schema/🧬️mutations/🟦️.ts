@@ -1,6 +1,7 @@
 /** 🧬️ Transparent PDF mutation TypeScript union assembled from direct owners. */
 
 import type { InsertPageMutation } from './📥️insert-page/🟦️.ts';
+import type { ReplacePageMutation } from './🪄️replace-page/🟦️.ts';
 import type { RemovePageMutation } from './🗑️remove-page/🟦️.ts';
 import type { SetPageMediaBoxMutation } from './📐️set-page-media-box/🟦️.ts';
 import type { SetPageCropBoxMutation } from './✂️set-page-crop-box/🟦️.ts';
@@ -121,4 +122,5 @@ export type PdfMutation =
   | SetDocumentIdMutation
   | SetEncryptionMutation
   | SetCatalogEntryMutation
-  | RemoveCatalogEntryMutation;
+  | RemoveCatalogEntryMutation
+  | ReplacePageMutation;

@@ -10,10 +10,11 @@ async fn mutation_diff_law() {
     for mutation in demo_mutation_cases() {
         let base = fixture();
         let diff_direct = Mutation::diff(&mutation, &base);
-        let applied_via_diff = protocol::MutationDiff::apply(diff_direct.diff(), &base).expect("apply must succeed for a well-formed fixture");
+        let applied_via_diff = protocol::apply_diff(diff_direct.diff(), &base).expect("apply must succeed for a well-formed fixture");
 
         let mut via_apply = base.clone();
-        let diff_from_apply = apply_semio_flow_mutation(&mut via_apply, &mutation);
+        let (__next, diff_from_apply) = crate::applied(&via_apply, &mutation);
+        via_apply = __next;
 
         assert_eq!(applied_via_diff, via_apply, "mutation_diff_law: apply mismatch for {mutation:?}");
         assert_eq!(diff_direct, diff_from_apply, "mutation_diff_law: diff mismatch for {mutation:?}");
@@ -28,16 +29,16 @@ async fn inverse_law() {
         let base = fixture();
 
         let mut round_tripped = base.clone();
-        apply_semio_flow_mutation(&mut round_tripped, &mutation);
-        for inverse_mutation in <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
-            apply_semio_flow_mutation(&mut round_tripped, &inverse_mutation);
+        round_tripped = crate::applied(&round_tripped, &mutation).0;
+        for inverse_mutation in <SemioFlowMutation as Mutation<SemioFlowSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+            round_tripped = crate::applied(&round_tripped, &inverse_mutation).0;
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
         let diff = Mutation::diff(&mutation, &base);
-        let next = protocol::MutationDiff::apply(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
+        let next = protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
-        let restored = protocol::MutationDiff::apply(&inverse_diff, &next).expect("apply must succeed for a well-formed fixture");
+        let restored = protocol::apply_diff(&inverse_diff, &next).expect("apply must succeed for a well-formed fixture");
         assert_eq!(restored, base, "inverse_law (diff-level).await failed for {mutation:?}");
     }
 }
@@ -86,12 +87,12 @@ fn kinds_match_the_enum_and_the_catalog() {
 #[semio_framework_async_macros::async_test]
 async fn insert_then_remove_node_apply_and_inverse() {
     let base = fixture();
-    let insert = SemioFlowMutation::InsertNode(insert_node::InsertNode { node: node("n3", "transform", "T", 5.0, 5.0) });
+    let insert = SemioFlowMutation::InsertNode(insert_node::InsertNode { node: node("n3", "transform", "T", 5.0, 5.0), at: None });
     let mut after = base.clone();
-    apply_semio_flow_mutation(&mut after, &insert);
+    after = crate::applied(&after, &insert).0;
     assert_eq!(after.nodes.len(), 3);
-    for inv in Mutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture") {
-        apply_semio_flow_mutation(&mut after, &inv);
+    for inv in Mutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+        after = crate::applied(&after, &inv).0;
     }
     assert_eq!(after, base);
 }
@@ -99,21 +100,21 @@ async fn insert_then_remove_node_apply_and_inverse() {
 #[semio_framework_async_macros::async_test]
 async fn node_param_mutations_apply_and_inverse() {
     let base = fixture();
-    let set = SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id: "n1".into(), key: "k".into(), value: "new".into() });
+    let set = SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id: "n1".into(), key: "k".into(), value: "new".into(), at: None });
     let mut after = base.clone();
-    apply_semio_flow_mutation(&mut after, &set);
+    after = crate::applied(&after, &set).0;
     assert_eq!(param_value_at(&after, "n1", "k"), Some("new"));
-    for inv in Mutation::inverse(&set, &base).expect("valid retained mutation inverse fixture") {
-        apply_semio_flow_mutation(&mut after, &inv);
+    for inv in Mutation::inverse(&set, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+        after = crate::applied(&after, &inv).0;
     }
     assert_eq!(after, base);
 
-    let add = SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id: "n1".into(), key: "fresh".into(), value: "added".into() });
+    let add = SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id: "n1".into(), key: "fresh".into(), value: "added".into(), at: None });
     let mut after2 = base.clone();
-    apply_semio_flow_mutation(&mut after2, &add);
+    after2 = crate::applied(&after2, &add).0;
     assert_eq!(param_value_at(&after2, "n1", "fresh"), Some("added"));
-    for inv in Mutation::inverse(&add, &base).expect("valid retained mutation inverse fixture") {
-        apply_semio_flow_mutation(&mut after2, &inv);
+    for inv in Mutation::inverse(&add, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+        after2 = crate::applied(&after2, &inv).0;
     }
     assert_eq!(after2, base);
 }
@@ -123,10 +124,10 @@ async fn edge_mutations_apply_and_inverse() {
     let base = fixture();
     let set = SemioFlowMutation::SetEdgeEndpoints(set_edge_endpoints::SetEdgeEndpoints { id: "e1".into(), from: PortRef { node: "n2".into(), port: "out".into() }, to: PortRef { node: "n1".into(), port: "in".into() } });
     let mut after = base.clone();
-    apply_semio_flow_mutation(&mut after, &set);
+    after = crate::applied(&after, &set).0;
     assert_eq!(edge_at(&after, "e1").unwrap().from.node, "n2");
-    for inv in Mutation::inverse(&set, &base).expect("valid retained mutation inverse fixture") {
-        apply_semio_flow_mutation(&mut after, &inv);
+    for inv in Mutation::inverse(&set, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
+        after = crate::applied(&after, &inv).0;
     }
     assert_eq!(after, base);
 }
@@ -140,13 +141,14 @@ async fn drag_nodes_moves_relative_to_its_base_and_undoes_exactly() {
     let base = fixture();
     let drag = SemioFlowMutation::DragNodes(drag_nodes::DragNodes { targets: vec!["n1".into(), "n2".into()], dx: 12.5, dy: -4.0 });
     let mut after = base.clone();
-    let outcome = apply_semio_flow_mutation(&mut after, &drag);
+    let (__next, outcome) = crate::applied(&after, &drag);
+    after = __next;
     assert!(outcome.messages().is_empty(), "{:?}", outcome.messages());
     assert_eq!((after.nodes[0].position.x, after.nodes[0].position.y), (12.5, -4.0));
     assert_eq!((after.nodes[1].position.x, after.nodes[1].position.y), (22.5, 6.0));
     let mut restored = after.clone();
     for step in inverse_semio_flow_mutation(&drag, &base).expect("valid retained mutation inverse fixture") {
-        apply_semio_flow_mutation(&mut restored, &step);
+        restored = crate::applied(&restored, &step).0;
     }
     assert_eq!(restored, base, "drag-nodes' undo restores every base position exactly");
     let partial = Mutation::diff(&SemioFlowMutation::DragNodes(drag_nodes::DragNodes { targets: vec!["n1".into(), "ghost".into()], dx: 1.0, dy: 0.0 }), &base);
@@ -177,7 +179,6 @@ fn paged_flow_original_source_keeps_all_fourteen_frames_and_exact_owner_policy()
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📦️operation-source.json")).unwrap();
     let mut operations=Vec::new();
     for case in fixture["cases"].as_array().unwrap(){let operation=SemioFlowMutation::parse_op(case["text"].as_str().unwrap()).unwrap();let mut literal=vec![1,case["tag"].as_u64().unwrap()as u8];literal.extend_from_slice(case["body"].as_str().unwrap().as_bytes());assert_eq!(operation.encode_op().unwrap(),literal);operations.push(operation);}
-    let patch=semio_s_artifact_stdio_contract::editing::SnapshotPatch::parse_op(fixture["patchJson"].as_str().unwrap()).unwrap();let patch=SemioFlowMutation::PatchSnapshot(patch_snapshot::PatchSnapshot{patch});let mut literal=vec![1,13];literal.extend_from_slice(fixture["patchJson"].as_str().unwrap().as_bytes());assert_eq!(patch.encode_op().unwrap(),literal);operations.push(patch);assert_eq!(operations.len(),KINDS.len());
     operations.push(SemioFlowMutation::SetNodePosition(set_node_position::SetNodePosition{id:"n".into(),position:SemioPoint2{x:f64::MAX,y:f64::from_bits(1)}}));
     operations.push(SemioFlowMutation::SetNodeLabel(set_node_label::SetNodeLabel{id:"n".into(),label:fixture["word"].as_str().unwrap().repeat(fixture["payloadBytes"].as_u64().unwrap()as usize)}));
     let allocation=fixture["allocationBytes"].as_u64().unwrap()as usize;let items=fixture["maximumCloseItems"].as_u64().unwrap()as usize;let bytes=fixture["maximumCloseBytes"].as_u64().unwrap()as usize;
@@ -195,3 +196,27 @@ fn paged_flow_original_source_keeps_all_fourteen_frames_and_exact_owner_policy()
     assert_eq!(kind(operation.encode_op_into(&options,&mut prefix,&mut encoding).unwrap_err()),ValueRefusalKind::Canceled);assert!(prefix.len()<expected.len());assert!(prefix.iter().eq(expected[..prefix.len()].iter().copied()));close(&mut prefix,expected.len()+fixture["closeStepScaffold"].as_u64().unwrap()as usize);
     println!("[DEBUG] Original fourteen Flow headers and text/Patch JSON bodies preserve neutral literal octets; original8194 label and extreme native f64 Display use fixed source cells, caller policy/refused prefixes and terminal4096 page grants");
 }
+
+/// 🎯️ Position law: removing ANY node, edge or param (first, middle, last) is undone at its original index, and the inverse sums to the negative diff.
+#[semio_framework_async_macros::async_test]
+async fn removals_invert_at_every_position() {
+    let mut base = fixture();
+    base.nodes.push(node("n3", "transform", "T", 5.0, 5.0));
+    base.nodes.push(node("n4", "transform", "U", 6.0, 6.0));
+    base.edges.push(edge("e2", "n2", "n1", "back"));
+    base.edges.push(edge("e3", "n3", "n1", "back"));
+    for key in ["a", "b", "c"] {
+        base.nodes[0].params.push(crate::standards::v1::subsets::flow::schema::snapshot::FlowParam { key: key.into(), value: key.into() });
+    }
+    assert!(base.nodes.len() >= 3 && base.edges.len() >= 3, "the law needs a middle row");
+    for item in &base.nodes {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id: item.id.clone() }), &base).await;
+    }
+    for item in &base.edges {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioFlowMutation::RemoveEdge(remove_edge::RemoveEdge { id: item.id.clone() }), &base).await;
+    }
+    for param in &base.nodes[0].params {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioFlowMutation::RemoveNodeParam(remove_node_param::RemoveNodeParam { id: base.nodes[0].id.clone(), key: param.key.clone() }), &base).await;
+    }
+}
+

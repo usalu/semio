@@ -428,8 +428,7 @@ mod subject {
         let expected = snapshot_at(ctx, &vector, "📸️snapshot/➡️after/🔣️.json", &kind)?;
         let mutation = mutation_at(ctx, &vector, &kind)?;
         let declared = parse_json(&text_at(ctx, &vector, "🎯️outcome/🔣️.json")?)?;
-        let mut current = base.clone();
-        let outcome = apply_program_mutation_outcome(&mut current, &mutation);
+        let (current, outcome) = apply_program_mutation_outcome(&base, &mutation);
         let raised: Vec<String> = outcome.messages().iter().map(|message| message.code.0.clone()).collect();
         if raised != declared_codes(&declared) {
             return Err(format!("mutate-{kind}: raised {raised:?}, the committed 🎯️outcome vector declares {:?}", declared_codes(&declared)));
@@ -453,10 +452,9 @@ mod subject {
         let base = snapshot_at(ctx, &vector, "📸️snapshot/⬅️before/🔣️.json", &kind)?;
         let mutation = mutation_at(ctx, &vector, &kind)?;
         let original = projection(&base)?;
-        let mut current = base.clone();
-        apply_program_mutation_outcome(&mut current, &mutation);
+        let (mut current, _) = apply_program_mutation_outcome(&base, &mutation);
         for step in inverse_program_mutation_steps(&mutation, &base).expect("valid retained mutation inverse fixture") {
-            apply_program_mutation_outcome(&mut current, &step);
+            current = apply_program_mutation_outcome(&current, &step).0;
         }
         let restored = projection(&current)?;
         law::inverse_restores(&kind, &restored, &original)?;

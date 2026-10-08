@@ -16,7 +16,7 @@ fn ops() -> Vec<Puzzle5dMutation> {
     vec![
         create_part(part, Some(0)),
         delete_part("p1".into()),
-        connect_grips("f1".into(), "p1:g0".into(), "p2:g0".into(), Some("fk".into()), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 0.0, 0.0),
+        connect_grips("f1".into(), "p1:g0".into(), "p2:g0".into(), Some("fk".into()), 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 0.0, 0.0, None),
         disconnect_grips("f1".into()),
         change_domain("architecture".into()),
         change_description("a scene".into()),

@@ -5,17 +5,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "artifact": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/artifact.json"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "annex": {
       "anyOf": [
         {
@@ -74,16 +63,7 @@
     "concreteGrades": {
       "anyOf": [
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/properties/concreteGrades"
-            }
-          }
+          "$ref": "#/$defs/En1992ConcreteGradesRows"
         },
         {
           "type": "null"
@@ -94,16 +74,7 @@
     "reinforcementGrades": {
       "anyOf": [
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/properties/reinforcementGrades"
-            }
-          }
+          "$ref": "#/$defs/En1992ReinforcementGradesRows"
         },
         {
           "type": "null"
@@ -114,16 +85,7 @@
     "prestressSteels": {
       "anyOf": [
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/properties/prestressSteels"
-            }
-          }
+          "$ref": "#/$defs/En1992PrestressSteelsRows"
         },
         {
           "type": "null"
@@ -134,16 +96,7 @@
     "members": {
       "anyOf": [
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/properties/members"
-            }
-          }
+          "$ref": "#/$defs/En1992MembersRows"
         },
         {
           "type": "null"
@@ -154,22 +107,545 @@
     "anchors": {
       "anyOf": [
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "values"
-          ],
-          "properties": {
-            "values": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/properties/anchors"
-            }
-          }
+          "$ref": "#/$defs/En1992AnchorsRows"
         },
         {
           "type": "null"
         }
       ],
       "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "En1992AnchorsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "hEf",
+        "aS"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "hEf": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/Anchor/properties/hEf"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "aS": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/Anchor/properties/aS"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1992AnchorsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "modified",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/Anchor"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992AnchorsPatch"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1992ConcreteGradesPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fCk"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "fCk": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/ConcreteGrade/properties/fCk"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1992ConcreteGradesRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "modified",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/ConcreteGrade"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992ConcreteGradesPatch"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1992MembersActionsPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mK",
+        "nK",
+        "vK"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "mK": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/LoadCaseActions/properties/mK"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nK": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/LoadCaseActions/properties/nK"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "vK": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/LoadCaseActions/properties/vK"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1992MembersActionsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modified"
+      ],
+      "properties": {
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992MembersActionsPatch"
+          }
+        }
+      }
+    },
+    "En1992MembersLongitudinalPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "diameter",
+        "count"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "diameter": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/BarLayer/properties/diameter"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/BarLayer/properties/count"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1992MembersLongitudinalRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modified"
+      ],
+      "properties": {
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992MembersLongitudinalPatch"
+          }
+        }
+      }
+    },
+    "En1992MembersPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "exposure",
+        "width",
+        "height",
+        "effectiveDepth",
+        "cover",
+        "span",
+        "fireRating",
+        "fireAxisDistance",
+        "stirrupsSpacing",
+        "longitudinal",
+        "actions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "exposure": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/RcMember/properties/exposure"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "width": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/RcMember/properties/width"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "height": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/RcMember/properties/height"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effectiveDepth": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/RcMember/properties/effectiveDepth"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cover": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/RcMember/properties/cover"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "span": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/RcMember/properties/span"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fireRating": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/FireSpec/properties/rating"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fireAxisDistance": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/FireSpec/properties/axisDistance"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stirrupsSpacing": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/Stirrups/properties/spacing"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "longitudinal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/En1992MembersLongitudinalRows"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/En1992MembersActionsRows"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1992MembersRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "modified",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/RcMember"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992MembersPatch"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1992PrestressSteelsRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/PrestressSteel"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1992ReinforcementGradesPatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fYk"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "fYk": {
+          "anyOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/ReinforcementGrade/properties/fYk"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "En1992ReinforcementGradesRows": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "modified",
+        "order"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/ReinforcementGrade"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/En1992ReinforcementGradesPatch"
+          }
+        },
+        "order": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
     }
   }
 }

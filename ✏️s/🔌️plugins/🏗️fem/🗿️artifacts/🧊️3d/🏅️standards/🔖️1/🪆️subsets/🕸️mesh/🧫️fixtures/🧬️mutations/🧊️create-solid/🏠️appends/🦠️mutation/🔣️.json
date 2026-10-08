@@ -28,5 +28,6 @@
     "meshSize": 0.5,
     "materialId": "c30",
     "axis": "z"
-  }
+  },
+  "index": null
 }

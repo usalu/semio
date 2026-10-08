@@ -1,6 +1,4 @@
-//! 🗑️ `remove-chunk` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🗑️ `remove-chunk` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -17,14 +15,18 @@ impl protocol::MutationKind<AviSnapshot, AviMutation> for RemoveChunk {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "chunk", kind: "remove-chunk", record: "RemoveChunk" };
 
     fn diff(&self, base: &AviSnapshot) -> protocol::MutationOutcome<<AviMutation as Mutation<AviSnapshot>>::Diff> {
-        agg_diff(&AviMutation::RemoveChunk(self.clone()), base)
+        let Self { stream_index, index } = self;
+        protocol::MutationOutcome::new(chunk_diff_for(*stream_index, IndexedDiff { removed: vec![*index], modified: vec![], added: vec![] }))
     }
     fn inverse(&self, base: &AviSnapshot) -> Result<Vec<AviMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&AviMutation::RemoveChunk(self.clone()), base)?
-    
-    })
-}
+        let Self { stream_index, index } = self;
+        Ok({
+            match base.streams.get(*stream_index).and_then(|s| s.chunks.get(*index)) {
+                Some(chunk) => vec![AviMutation::InsertChunk(insert_chunk::InsertChunk { stream_index: *stream_index, index: *index, chunk: chunk.clone() })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove chunk", "Chunk entfernen")
     }

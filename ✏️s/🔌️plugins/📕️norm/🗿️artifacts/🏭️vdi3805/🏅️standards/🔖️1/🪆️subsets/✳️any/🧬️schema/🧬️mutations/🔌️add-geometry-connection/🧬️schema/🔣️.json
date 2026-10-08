@@ -44,6 +44,29 @@
         "group": "geometry",
         "order": 20
       }
+    },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based position among the geometry's connections; a larger value or none appends.",
+          "de": "Nullbasierte Position unter den Anschlüssen der Geometrie; ein größerer Wert oder keiner hängt am Ende an."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 30
+      }
     }
   }
 }

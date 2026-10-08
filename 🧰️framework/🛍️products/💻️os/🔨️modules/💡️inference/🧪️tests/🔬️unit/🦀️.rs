@@ -510,7 +510,7 @@ impl InferredField<DagSnapshot> for OpaqueSum {
         Opaque(Arc::new(chain))
     }
     fn value_bytes(value: &Self::Value) -> usize {
-        value.0.len() * std::mem::size_of::<i64>()
+        value.0.len() * size_of::<i64>()
     }
 }
 

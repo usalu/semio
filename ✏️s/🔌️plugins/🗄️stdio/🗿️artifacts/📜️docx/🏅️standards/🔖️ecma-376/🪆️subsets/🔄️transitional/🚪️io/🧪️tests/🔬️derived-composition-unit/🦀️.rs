@@ -2,7 +2,7 @@ mod tests {
     use super::*;
     use crate::schema::snapshot::DocxXmlPart;
     use crate::standards::v_ecma_376::subsets::transitional::schema::conformance::CODE_STRICT_NS_PRESENT;
-    use semio_framework_plugin::AnalyzeSource;
+    use semio_framework_plugin::io::AnalyzeSource;
     use semio_s_artifact_stdio_zip::opc::{OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
     const TRANSITIONAL_MAIN_NS: &str = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";

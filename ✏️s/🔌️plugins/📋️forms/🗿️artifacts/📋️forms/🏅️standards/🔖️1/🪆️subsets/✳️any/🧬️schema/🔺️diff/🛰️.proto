@@ -1,21 +1,48 @@
 syntax = "proto3";
 package semio.s.forms.forms.diff;
 import "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🛰️.proto";
+import "🧰️framework/🔨️modules/🌱️value/🧬️schema/🛰️.proto";
 import "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️definition/🛰️.proto";
 import "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📨️response/🛰️.proto";
-message FormsTitleChange {
-  oneof operation {
-    string value = 1;
-    bool clear = 2;
-  }
+message FormsOptionalText { optional string value = 1; }
+message FormsBlockField { string field = 1; semio.framework.value.DslValue value = 2; }
+message FormsQuestionPatch {
+  string id = 1;
+  optional string kind = 2;
+  repeated FormsBlockField changes = 3;
+}
+message FormsQuestionsDelta {
+  repeated semio.s.forms.forms.definition.FormQuestion added = 1;
+  repeated string removed = 2;
+  repeated FormsQuestionPatch patched = 3;
+  repeated string reordered = 4;
+}
+message FormsStepPatch {
+  string id = 1;
+  optional string title = 2;
+  optional FormsOptionalText description = 3;
+  optional FormsQuestionsDelta blocks = 4;
+}
+message FormsStepsDelta {
+  repeated semio.s.forms.forms.definition.FormStep added = 1;
+  repeated string removed = 2;
+  repeated FormsStepPatch patched = 3;
+  repeated string reordered = 4;
+}
+message FormsResponsePatch { string id = 1; }
+message FormsResponsesDelta {
+  repeated semio.s.forms.forms.response.FormsResponse added = 1;
+  repeated string removed = 2;
+  repeated FormsResponsePatch patched = 3;
+  repeated string reordered = 4;
 }
 message FormsDiff {
   optional string schema = 1;
   optional string id = 2;
   optional string version = 3;
-  FormsTitleChange title = 4;
-  semio.os.store.ArtifactChild structure = 5;
-  semio.os.store.ArtifactChild results = 6;
-  semio.s.forms.forms.definition.FormsDefinition definition = 7;
-  semio.s.forms.forms.response.FormsResponsesChange responses = 8;
+  optional FormsOptionalText title = 4;
+  optional FormsStepsDelta steps = 5;
+  optional FormsResponsesDelta responses = 6;
+  semio.os.store.ArtifactChild structure = 7;
+  semio.os.store.ArtifactChild results = 8;
 }

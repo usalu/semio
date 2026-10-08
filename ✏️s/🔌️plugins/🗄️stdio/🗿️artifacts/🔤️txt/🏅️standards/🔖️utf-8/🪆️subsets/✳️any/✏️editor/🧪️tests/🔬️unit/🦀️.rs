@@ -41,7 +41,7 @@ async fn native_body_codec_preserves_crlf_extra_carriage_returns_and_empty_text(
 }
 
 #[test]
-fn natural_file_route_exports_utf8_and_reopens_through_one_mutation() {
+fn natural_file_route_exports_utf8_and_reopens_the_same_document() {
     let edited = TxtSnapshot::from_body("Natural Open Save\r\nGrüße 🌍\r\n");
     let bytes = <TxtEditor as ArtifactEditor>::encode_natural_file(&edited).expect("TXT natural bytes");
     let (lines, trailing_newline, is_crlf) = semio_s_artifact_stdio_txt_test_oracle::standards::v_utf_8::subsets::any::bstr_split(&bytes).expect("bstr reads exported TXT");
@@ -49,10 +49,7 @@ fn natural_file_route_exports_utf8_and_reopens_through_one_mutation() {
     assert!(trailing_newline);
     assert!(is_crlf);
     let reopened = <TxtEditor as ArtifactEditor>::decode_natural_file(&bytes).expect("TXT natural bytes reopen");
-    let Some(TxtMutation::SetSnapshot(SetSnapshotMutation { snapshot: opened })) = <TxtEditor as ArtifactEditor>::whole_document_operation(reopened) else {
-        panic!("natural TXT opens through one event-sourced snapshot mutation")
-    };
-    assert_eq!(opened, edited);
+    assert_eq!(reopened, edited);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -76,7 +73,7 @@ async fn direct_text_edit_is_revision_guarded_and_noop_preserving() {
     for mutation in &emit.artifact_mutations {
         let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, &next);
         assert!(outcome.messages().is_empty(), "native mutation {mutation:?} refused: {:?}", outcome.messages());
-        next = protocol::MutationDiff::apply(outcome.diff(), &next).expect("native mutation applies");
+        next = protocol::apply_diff(outcome.diff(), &next).expect("native mutation applies");
     }
     assert_eq!(next.to_body(), "x\r\r\ny\r\n");
 }
@@ -97,7 +94,7 @@ fn every_replacement_lowers_through_native_documents_only() {
             for mutation in &emit.artifact_mutations {
                 let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, &next);
                 assert!(outcome.messages().is_empty(), "{old_body:?} → {new_body:?}: {mutation:?} refused: {:?}", outcome.messages());
-                next = protocol::MutationDiff::apply(outcome.diff(), &next).expect("native mutation applies");
+                next = protocol::apply_diff(outcome.diff(), &next).expect("native mutation applies");
             }
             assert_eq!(next.to_body(), new_body, "{old_body:?} → {new_body:?}");
             let mut expected = TxtSnapshot::from_body(new_body);
@@ -253,7 +250,7 @@ fn an_applied_text_is_exactly_the_corpus_net_line_leaves() {
         for mutation in &emit.artifact_mutations {
             let outcome = <TxtMutation as protocol::Mutation<TxtSnapshot>>::diff(mutation, &next);
             assert!(outcome.messages().is_empty(), "{id}: {mutation:?} refused: {:?}", outcome.messages());
-            next = protocol::MutationDiff::apply(outcome.diff(), &next).expect("native mutation applies");
+            next = protocol::apply_diff(outcome.diff(), &next).expect("native mutation applies");
         }
         assert_eq!(next.to_body(), after, "{id}: the edit lands on the applied text");
         match case["leaves"].as_array() {

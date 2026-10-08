@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "nodes": null,
   "elements": null,
   "regions": null,
@@ -12,25 +11,10 @@
     "patched": [
       {
         "id": "live",
-        "item": {
-          "id": "live",
+        "patch": {
           "name": "Imposed Load",
-          "loads": [
-            {
-              "kind": "nodal",
-              "id": "l6",
-              "nodeId": "p8_l1",
-              "dof": "Ty",
-              "value": -12000.0
-            },
-            {
-              "kind": "area",
-              "id": "l7",
-              "regionId": "r1",
-              "pressure": 1500.0
-            }
-          ],
-          "selfWeight": false
+          "selfWeight": null,
+          "loads": null
         }
       }
     ],

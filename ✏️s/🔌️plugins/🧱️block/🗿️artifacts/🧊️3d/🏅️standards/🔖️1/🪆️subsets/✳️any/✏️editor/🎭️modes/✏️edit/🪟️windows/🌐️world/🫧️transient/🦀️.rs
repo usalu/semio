@@ -68,16 +68,49 @@ impl store::ArtifactPack for Block3dWorldWindowTransient {
     }
 }
 
-impl protocol::MutationDiff<Block3dWorldWindowTransient> for Block3dWorldWindowTransient {
-    fn apply(&self, _base: &Block3dWorldWindowTransient) -> protocol::MutationApplyResult<Block3dWorldWindowTransient> {
-        Ok(self.clone())
-    }
+semio_s_plugin_block::block_optional!(test; /// 🖌️ The optional brush preview set to a value or cleared.
+    Block3dBrushPreviewSet(Block3dBrushPreview));
 
-    fn absorb(&mut self, other: Self) {
-        *self = other;
+
+/// 🔺️ Field-sparse diff of [`Block3dWorldWindowTransient`]: each field is an optional absolute value.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+pub struct Block3dWorldWindowTransientDiff {
+    pub brush_preview: Option<Block3dBrushPreviewSet>,
+}
+
+impl protocol::DiffAlgebra<Block3dWorldWindowTransient> for Block3dWorldWindowTransientDiff {
+    fn inverse(&self, base: &Block3dWorldWindowTransient) -> Self {
+        Self {
+            brush_preview: self.brush_preview.as_ref().map(|_| Block3dBrushPreviewSet { value: base.brush_preview.clone() }),
+        }
+    }
+    fn between(base: &Block3dWorldWindowTransient, other: &Block3dWorldWindowTransient) -> Self {
+        Self {
+            brush_preview: (base.brush_preview != other.brush_preview).then(|| Block3dBrushPreviewSet { value: other.brush_preview.clone() }),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.brush_preview.is_none()
     }
 }
 
+impl protocol::MutationDiff<Block3dWorldWindowTransient> for Block3dWorldWindowTransientDiff {
+    fn apply(&self, base: &Block3dWorldWindowTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Block3dWorldWindowTransient> {
+        let mut next = base.clone();
+        if let Some(value) = &self.brush_preview {
+            next.brush_preview.clone_from(&value.value);
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, later: Self) {
+        if later.brush_preview.is_some() {
+            self.brush_preview = later.brush_preview;
+        }
+    }
+}
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::*;

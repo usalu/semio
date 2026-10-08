@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "annex": null,
   "snowZone": null,
   "altitude": null,
@@ -66,10 +65,30 @@
   "assumedSiloPatch": null,
   "assumedSiloWallFriction": null,
   "floors": {
-    "values": []
+    "removed": [
+      "office-l1"
+    ],
+    "added": [],
+    "modified": []
   },
-  "selfWeightElements": null,
-  "roofs": null,
-  "windFaces": null,
-  "accidentalCases": null
+  "selfWeightElements": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "roofs": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "windFaces": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "accidentalCases": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

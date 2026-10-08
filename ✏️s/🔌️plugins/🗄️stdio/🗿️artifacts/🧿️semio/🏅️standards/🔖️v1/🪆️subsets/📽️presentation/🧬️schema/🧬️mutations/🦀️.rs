@@ -5,7 +5,7 @@
 //! mutation-leaf migration recipe.
 
 use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
-use crate::standards::v1::subsets::presentation::schema::diff::{diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide, diff_remove_layout, diff_remove_master, diff_remove_shape, diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout, diff_set_slide_notes, diff_set_snapshot, diff_set_textbox_blocks, frame_of, SemioPresentationDiff};
+use crate::standards::v1::subsets::presentation::schema::diff::{diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide, diff_remove_layout, diff_remove_master, diff_remove_shape, diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout, diff_set_slide_notes, diff_set_textbox_blocks, frame_of, SemioPresentationDiff};
 
 
 
@@ -110,7 +110,7 @@ pub enum SemioPresentationMutation {
 /// against (catalog `semio-v1-presentation` in `../../🔣️oracle.json`). 
 /// `kinds_match_the_enum_and_the_catalog` keeps it honest against the enum, the manifest and the
 /// `💾️binary/📡️.protocol.semio` records that carry each kind's wire tag.
-pub const KINDS: &[&str] = &["insert-slide", "remove-slide", "set-slide-layout", "set-slide-notes", "insert-shape", "remove-shape", "set-shape-frame", "set-text-box-blocks", "insert-master", "remove-master", "insert-layout", "remove-layout", "set-layout-master", "patch-snapshot"];
+pub const KINDS: &[&str] = &["insert-slide", "remove-slide", "set-slide-layout", "set-slide-notes", "insert-shape", "remove-shape", "set-shape-frame", "set-text-box-blocks", "insert-master", "remove-master", "insert-layout", "remove-layout", "set-layout-master"];
 //#endregion 🔖️Mutations
 
 /// 🧮️ Pure diff face of [`Mutation::diff`], named only in this subset's own reachable types (`protocol` is a private
@@ -194,9 +194,9 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioPresentationMutation> {
         SemioPresentationMutation::RemoveShape(remove_shape::RemoveShape { slide_index: 0, shape_index: 0 }),
         SemioPresentationMutation::SetShapeFrame(set_shape_frame::SetShapeFrame { slide_index: 0, shape_index: 0, frame }),
         SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index: 0, shape_index: 0, blocks: vec![DocBlock::paragraph("changed"), DocBlock::Heading { level: 1, style_id: Some("s".into()), runs: Vec::new() }] }),
-        SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: SlideMaster { id: "m2".into(), shapes: Vec::new() } }),
+        SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: SlideMaster { id: "m2".into(), shapes: Vec::new() }, at: None }),
         SemioPresentationMutation::RemoveMaster(remove_master::RemoveMaster { id: "master1".into() }),
-        SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout: SlideLayout { id: "l2".into(), master_id: "master1".into(), shapes: Vec::new() } }),
+        SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout: SlideLayout { id: "l2".into(), master_id: "master1".into(), shapes: Vec::new() }, at: None }),
         SemioPresentationMutation::RemoveLayout(remove_layout::RemoveLayout { id: "layout1".into() }),
         SemioPresentationMutation::SetLayoutMaster(set_layout_master::SetLayoutMaster { id: "layout1".into(), master_id: "master1".into() }),
         SemioPresentationMutation::InsertShape(insert_shape::InsertShape { slide_index: 0, shape_index: 1, shape: SlideShape::Picture { frame, image: SlidePictureImage { asset_id: "x".into(), mime: "image/png".into(), bytes: vec![7, 8] } } }),

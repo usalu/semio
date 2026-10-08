@@ -27,7 +27,7 @@ function misplacedWireImplementations(source: string, representation: string): s
 
 /** 🏠️ Keeps document-store and publication authorities in the host owner. */
 function nativeHostAuthorities(source:string):string[]{
-  return [...new Set(rustTokens(source).filter(token=>token.kind!=="string"&&/^(?:ArtifactStore|DocumentStoreOwners|\w*PublicationLease)$/u.test(token.text)).map(token=>token.text))].sort();
+  return [...new Set(rustTokens(source).filter(token=>token.kind!=="string"&&/^(?:ArtifactStore|DocumentStoreOwners|ArtifactEnvelope(?:Snapshot|Mutation|Vcs)FieldAuthority|\w*(?:PublicationLease|ProjectionAdoptionTarget))$/u.test(token.text)).map(token=>token.text))].sort();
 }
 
 /** 🧠️ Identifies semantic mutation and diff declarations misplaced in a physical representation. */
@@ -79,6 +79,13 @@ export function schemaRustWireDependencies(source: string): string[] {
 /** 🧵️ Finds physical TypeScript APIs through the platform parser without interpreting comments or literals. */
 export function schemaTypeScriptWireSymbols(source: string): string[] {
   return new Bun.Transpiler({loader: "ts"}).scan(source).exports.filter(name => /(?:To|From)(?:Native)?Json(?:Text|Value|Projection)?$|Json(?:Text|Projection)$|^(?:decode|encode|write).*Json(?:Value)?$|^decode.*Protobuf$|^floatLexeme$|^jsonGeometry$|^TxtProtobuf|^txtProtobuf(?:Key|String)$|^decodeRemodeling(?:Snapshot|Diff|Mutation|Artifact)$|^(?:render|infer).*Tikz(?:Plan)?$/u.test(name)).sort();
+}
+
+/** 🧱️ Finds implemented exports while retaining separately owned public facades. */
+function typeScriptImplementedExports(source: string): string[] {
+  const parser = new Bun.Transpiler({ loader: "ts" });
+  const code = parser.transformSync(source).replace(/^export\s+(?:\*\s*(?:as\s+\w+\s*)?|\{[^}]*\})\s+from\s+[^;\n]+;?\s*$/gmu, "");
+  return parser.scan(code).exports.sort();
 }
 
 /** 🧭️ Reads actual TypeScript module dependencies, including type-only declarations. */
@@ -202,6 +209,11 @@ export function artifactIoArchitectureBreaches(repoRoot: string, roots: readonly
         if (facetPath.split("/")[1] === "📝️text") coverage.text.push(source);
         if (facetPath.split("/")[1] === "💾️binary") coverage.binary.push(source);
         if (semantic.length) add(path, "io-semantic-implementation", `Mutation application and diff construction belong to schema: ${semantic.join(", ")}.`);
+      } else if (entry.name.endsWith(".ts") && taxonomy.representationDirs.includes(facetPath.split("/")[1] ?? "")) {
+        try {
+          const semantic = typeScriptImplementedExports(policyReadFileSafe(repoRoot, path)).filter(name => /^(?:apply\w*(?:Diff|Mutation)|diff[A-Z]\w*)$/u.test(name) && !/(?:To|From)Json$/u.test(name));
+          if (semantic.length) add(path, "io-semantic-implementation", `Mutation application and diff construction belong to schema: ${semantic.join(", ")}.`);
+        } catch (error) { add(path, "io-source", `Physical TypeScript source is invalid: ${String(error)}.`); }
       }
     }
   };
@@ -215,6 +227,12 @@ export function artifactIoArchitectureBreaches(repoRoot: string, roots: readonly
           for (const module of inspectRustModuleGraphFacts(policyReadFileSafe(repoRoot, path)).modules) {
             if (!module.conditional && module.modulePath.includes("schema") && module.pathTarget?.split("/").includes("🚪️io")) add(path, "schema-codec-mount", `Owner assembly mounts I/O source in semantic namespace ${module.modulePath.join("::")}.`);
           }
+        } else if (entry.name === "🟦️.ts") {
+          try {
+            const implemented = new Set(typeScriptImplementedExports(policyReadFileSafe(repoRoot, path)));
+            const physical = schemaTypeScriptWireSymbols(policyReadFileSafe(repoRoot, path)).filter(name => implemented.has(name));
+            if (physical.length) add(path, "root-codec-implementation", `Owner roots assemble public facades; physical implementations belong to I/O: ${physical.join(", ")}.`);
+          } catch (error) { add(path, "root-source", `Owner TypeScript source is invalid: ${String(error)}.`); }
         }
         continue;
       }

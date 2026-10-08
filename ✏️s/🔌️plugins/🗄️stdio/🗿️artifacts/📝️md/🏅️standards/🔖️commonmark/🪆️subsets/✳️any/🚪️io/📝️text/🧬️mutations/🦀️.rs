@@ -29,7 +29,7 @@ use crate::standards::v_commonmark::subsets::any::io::binary::diff::{read_str_bi
 use crate::standards::v_commonmark::subsets::any::io::binary::diff::{write_str_bin};
 use crate::standards::v_commonmark::subsets::any::io::binary::diff::{dec_block_bin};
 use crate::standards::v_commonmark::subsets::any::io::binary::diff::{enc_block_bin};
-use crate::schema::diff::{diff_at_path, diff_set_snapshot, MdBlockDiff, MdBlocksLeafDiff, MdDiff};
+use crate::schema::diff::{diff_at_path, MdBlockDiff, MdBlocksLeafDiff, MdDiff};
 use crate::schema::snapshot::{MdBlock, MdInline};
 use crate::MdSnapshot;
 use protocol::{Mutation, OpText};
@@ -90,7 +90,6 @@ pub(crate) fn dec_md_snapshot(s: &str) -> Result<MdSnapshot, String> {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_md_mutation(m: &MdMutation) -> String {
     match m {
-        MdMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => format!("set-snapshot snapshot={}", enc_md_snapshot(snapshot)),
         MdMutation::InsertBlock(insert_block::InsertBlock { path, index, block }) => format!("insert-block path={} index={index} block={}", enc_path(path), enc_block(block)),
         MdMutation::RemoveBlock(remove_block::RemoveBlock { path, index }) => format!("remove-block path={} index={index}", enc_path(path)),
         MdMutation::ReplaceBlock(replace_block::ReplaceBlock { path, index, block }) => format!("replace-block path={} index={index} block={}", enc_path(path), enc_block(block)),
@@ -105,7 +104,6 @@ pub(crate) fn parse_md_mutation(line: &str) -> Result<MdMutation, String> {
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("md mutation: missing arg '{k}' for '{keyword}'"));
     let usize_arg = |k: &str| -> Result<usize, String> { arg(k)?.parse().map_err(|e: std::num::ParseIntError| e.to_string()) };
     match keyword {
-        "set-snapshot" => Ok(MdMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: dec_md_snapshot(arg("snapshot")?)? })),
         "insert-block" => Ok(MdMutation::InsertBlock(insert_block::InsertBlock { path: dec_path(arg("path")?)?, index: usize_arg("index")?, block: dec_block(arg("block")?)? })),
         "remove-block" => Ok(MdMutation::RemoveBlock(remove_block::RemoveBlock { path: dec_path(arg("path")?)?, index: usize_arg("index")? })),
         "replace-block" => Ok(MdMutation::ReplaceBlock(replace_block::ReplaceBlock { path: dec_path(arg("path")?)?, index: usize_arg("index")?, block: dec_block(arg("block")?)? })),

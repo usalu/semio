@@ -1,0 +1,181 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "version",
+    "maximumItems",
+    "maximumCopyBytes",
+    "maximumDepth",
+    "maximumTurns",
+    "fieldKinds",
+    "shapeKinds",
+    "expressionKinds",
+    "wireNodeOptions",
+    "wireEdgeChoices",
+    "wireLabelOptions",
+    "emptyFieldCapacity",
+    "recursiveDepth",
+    "writerPrefixes",
+    "text",
+    "intrinsic"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumItems": {
+      "const": 1
+    },
+    "maximumCopyBytes": {
+      "const": 3
+    },
+    "maximumDepth": {
+      "const": 64
+    },
+    "maximumTurns": {
+      "const": 100000
+    },
+    "fieldKinds": {
+      "const": [
+        "Bool",
+        "Int",
+        "UInt",
+        "Float",
+        "Text",
+        "Bytes64",
+        "Enum",
+        "Tuple",
+        "List",
+        "Record",
+        "Block",
+        "Statements",
+        "Map",
+        "Value",
+        "Wire",
+        "Expr",
+        "Absent"
+      ]
+    },
+    "shapeKinds": {
+      "const": [
+        "Bool",
+        "Int",
+        "UInt",
+        "Float",
+        "Text",
+        "Bytes64",
+        "Enum",
+        "Tuple",
+        "List",
+        "Record",
+        "Block",
+        "Statements",
+        "Map",
+        "Value",
+        "Table",
+        "Wire",
+        "Quantity",
+        "Angle",
+        "Ref",
+        "Coord",
+        "Dir",
+        "Dim",
+        "Range",
+        "Count",
+        "Expr",
+        "Embed",
+        "EmbedFrom"
+      ]
+    },
+    "expressionKinds": {
+      "const": [
+        "Num",
+        "Var",
+        "Neg",
+        "Binary",
+        "Call"
+      ]
+    },
+    "wireNodeOptions": {
+      "const": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    "wireEdgeChoices": {
+      "const": [
+        null,
+        [
+          false,
+          0
+        ],
+        [
+          false,
+          1
+        ],
+        [
+          false,
+          2
+        ],
+        [
+          false,
+          3
+        ],
+        [
+          true,
+          0
+        ],
+        [
+          true,
+          1
+        ],
+        [
+          true,
+          2
+        ],
+        [
+          true,
+          3
+        ]
+      ]
+    },
+    "wireLabelOptions": {
+      "const": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    "emptyFieldCapacity": {
+      "const": 5
+    },
+    "recursiveDepth": {
+      "const": 16
+    },
+    "writerPrefixes": {
+      "const": [
+        0,
+        1,
+        64,
+        512,
+        4096
+      ]
+    },
+    "text": {
+      "const": "groß🧬"
+    },
+    "intrinsic": {
+      "const": {
+        "a": [
+          false,
+          "🧬"
+        ],
+        "ö": -7
+      }
+    }
+  }
+}

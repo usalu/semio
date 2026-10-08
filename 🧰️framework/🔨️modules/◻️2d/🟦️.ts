@@ -1,7 +1,7 @@
 // #region 🧲️Header
 /// <reference types="vite/client" />
 /// <reference types="vitest/importMeta" />
-/** 🖊️ `@semio-tech/s-2d-js` — 2D drawing scene contracts, canvas raster, and export ports. */
+/** 🖊️ `@semio-tech/framework-2d-js` — 2D drawing scene contracts, canvas raster, and export ports. */
 // #endregion 🧲️Header
 import { drawingTextLines, DRAWING_TEXT_LINE_HEIGHT } from "./📝️text/🟦️.ts";
 export { drawingTextLines, drawingTextFallbackExtent, DRAWING_TEXT_LINE_HEIGHT } from "./📝️text/🟦️.ts";
@@ -342,7 +342,7 @@ export function drawingSceneFromPreviewPayload(payload: unknown): DrawingScene |
 
 // #region 🧪️Tests
 if (import.meta.vitest) {
-  const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-s-2d-js/🟦️.ts");
+  const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-framework-2d-js/🟦️.ts");
   await registerTests1(import.meta.vitest, { canvasDrawingPngExportPort, drawingSceneFromPreviewPayload, isDrawingRef }, { directory: import.meta.dir, url: import.meta.url });
 }
 // #endregion 🧪️Tests

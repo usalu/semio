@@ -2,7 +2,7 @@
 
 use super::set_dpart_metadata::SetDpartMetadata;
 use super::PdfVtMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -15,15 +15,14 @@ impl MutationKind<PdfSnapshot, PdfVtMutation> for RemoveDpartMetadata {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "remove", entity: "dpart-metadata", kind: "remove-dpart-metadata", record: "Remove" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::graph_edit(support::dpart_job_rows(base, None)))
+        MutationOutcome::new(diff::graph_edit(support::dpart_job_rows(base, None, None)))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfVtMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        support::dpart_job(base).map(|job| PdfVtMutation::SetDpartMetadata(SetDpartMetadata { job })).into_iter().collect()
-    
-    })())
-}
+        Ok({
+            support::dpart_job(base).map(|job| PdfVtMutation::SetDpartMetadata(SetDpartMetadata { job, entry_index: support::dpart_root_node(base).and_then(|node| support::entry_position(base, node, "DPM")) })).into_iter().collect()
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove PDF/VT partition metadata", "PDF/VT-Partitionsmetadaten entfernen")

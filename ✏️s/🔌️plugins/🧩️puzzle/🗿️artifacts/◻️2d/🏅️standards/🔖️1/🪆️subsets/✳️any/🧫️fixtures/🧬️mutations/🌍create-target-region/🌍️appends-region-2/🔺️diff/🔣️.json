@@ -1,24 +1,24 @@
 {
   "artifact": null,
-  "schema": null,
   "camera": null,
-  "nodes": null,
   "edges": null,
+  "meta": null,
+  "nodes": null,
+  "schema": null,
   "targetRegions": {
     "added": [
       {
-        "id": "region-2",
-        "x": 100.5,
-        "y": 0.5,
-        "width": 40.5,
         "height": 40.5,
         "hidden": false,
-        "locked": false
+        "id": "region-2",
+        "locked": false,
+        "width": 40.5,
+        "x": 100.5,
+        "y": 0.5
       }
     ],
-    "removed": [],
     "patched": [],
+    "removed": [],
     "reordered": null
-  },
-  "meta": null
+  }
 }

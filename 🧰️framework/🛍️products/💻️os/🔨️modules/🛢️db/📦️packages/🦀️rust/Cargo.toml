@@ -71,7 +71,7 @@ tokio = { workspace = true, features = ["rt", "rt-multi-thread", "net", "time"],
 
 [dev-dependencies]
 semio-framework-schema-composition = { path = "../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing"] }
+semio-framework-os-kernel = { path = "../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["durable-group-testing", "mutation-testing"] }
 # 🎒️ Renamed on purpose: this package's lib target is named `pack`, and cargo derives a dependency's
 # extern name from the LIB name unless the dependency key renames it — so plain
 # `semio-framework-pack` arrives as `pack`, which this crate has already bound to the os-kernel

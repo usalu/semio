@@ -161,49 +161,17 @@ fn protobuf_apply(reader: &mut FacadeProtobufReader<'_>, path: &str) -> FacadeRe
     }
 }
 
-fn protobuf_restore(reader: &mut FacadeProtobufReader<'_>, path: &str) -> FacadeResult<ChangeNodeNameMutation> {
-    let mut node = None;
-    let mut before = None;
-    let mut after = None;
-    while !reader.done() {
-        let (field, wire) = reader.key(path)?;
-        match field {
-            1 if wire == 0 && node.is_none() => node = Some(u32::try_from(reader.varint(path)?).map_err(|_| GltfChangeNodeNameFacadeError { code: "node", path: path.to_string() })?),
-            2 if wire == 2 && before.is_none() => {
-                let mut nullable = reader.message(path)?;
-                before = Some(protobuf_optional(&mut nullable, path)?);
-            }
-            3 if wire == 2 && after.is_none() => {
-                let mut nullable = reader.message(path)?;
-                after = Some(protobuf_optional(&mut nullable, path)?);
-            }
-            1..=3 if matches!(wire, 0 | 2) => return facade_error("duplicate", path),
-            1..=3 => return facade_error("wire", path),
-            _ => return facade_error("unknown", path),
-        }
-    }
-    match (node, before, after) {
-        (Some(node), Some(before), Some(after)) => Ok(ChangeNodeNameMutation::Restore(GltfChangeNodeNameRestore { node, before, after })),
-        (None, _, _) => facade_error("node", path),
-        (_, None, _) | (_, _, None) => facade_error("nullable", path),
-    }
-}
-
 pub fn decode_gltf_change_node_name_protobuf(bytes: &[u8]) -> FacadeResult<ChangeNodeNameMutation> {
     let mut reader = FacadeProtobufReader::new(bytes);
     let (field, wire) = reader.key("protobuf.phase")?;
-    if !matches!(field, 1 | 2) {
+    if field != 1 {
         return facade_error("phase", "protobuf.phase");
     }
     if wire != 2 {
         return facade_error("wire", "protobuf.phase");
     }
     let mut phase = reader.message("protobuf.phase")?;
-    let mutation = match field {
-        1 => protobuf_apply(&mut phase, "protobuf.apply")?,
-        2 => protobuf_restore(&mut phase, "protobuf.restore")?,
-        _ => unreachable!(),
-    };
+    let mutation = protobuf_apply(&mut phase, "protobuf.apply")?;
     if !phase.done() {
         return facade_error("duplicate", "protobuf.phase");
     }

@@ -29,7 +29,7 @@ fn outcome() -> serde_json::Value {
 }
 fn applied() -> LayoutSnapshot {
     let base = before();
-    mutation().diff(&base).diff().apply(&base).expect("scale-frames/doubles-both-frames-about-their-centroid: the diff applies to its committed before-snapshot")
+    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("scale-frames/doubles-both-frames-about-their-centroid: the diff applies to its committed before-snapshot")
 }
 
 /// 🗣️ `(level, code, target)` of every message `scale-frames` raises on the committed base.
@@ -95,7 +95,7 @@ fn committed_diff_is_canonical_and_complete() {
     let decoded: crate::LayoutDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("committed diff re-encodes");
     assert_eq!(reencoded, serde_json::from_str::<serde_json::Value>(DIFF).expect("committed diff reparses"), "scale-frames/doubles-both-frames-about-their-centroid: committed diff JSON is not canonical");
-    assert_eq!(decoded.apply(&before()).expect("committed diff applies"), expected_after(), "scale-frames/doubles-both-frames-about-their-centroid: committed diff did not carry before to after");
+    assert_eq!(protocol::apply_diff(&decoded, &before()).expect("committed diff applies"), expected_after(), "scale-frames/doubles-both-frames-about-their-centroid: committed diff did not carry before to after");
 }
 
 /// ↩️ Applying the payload then every step of the inverse it derives from `before` restores `before` EXACTLY — the
@@ -108,7 +108,13 @@ fn inverse_restores_before() {
     let mut snapshot = applied();
     assert_ne!(snapshot, base, "scale-frames/doubles-both-frames-about-their-centroid: an applied vector must move a frame");
     for step in &inverse {
-        snapshot = step.diff(&snapshot).diff().apply(&snapshot).expect("an inverse step applies");
+        snapshot = protocol::apply_diff(step.diff(&snapshot).diff(), &snapshot).expect("an inverse step applies");
     }
     assert_eq!(snapshot, base, "scale-frames/doubles-both-frames-about-their-centroid: the inverse did not restore the before-snapshot");
+}
+
+/// ⚖️ The inverse steps' diffs sum, by `absorb`, to the negative of the forward diff and carry the after-state back to `before`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

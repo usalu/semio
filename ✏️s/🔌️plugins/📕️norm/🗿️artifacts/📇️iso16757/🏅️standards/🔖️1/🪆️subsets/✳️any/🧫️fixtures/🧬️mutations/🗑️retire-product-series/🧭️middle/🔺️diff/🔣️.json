@@ -1,0 +1,25 @@
+{
+  "catalogueName": null,
+  "manufacturerName": null,
+  "productGroups": null,
+  "productClasses": null,
+  "productSeries": {
+    "added": [],
+    "removed": [
+      "series-pr-m1"
+    ],
+    "order": null
+  },
+  "products": null,
+  "productIndexes": null,
+  "propertyDefinitions": null,
+  "subjects": null,
+  "geometryObjects": null,
+  "selectionClassId": null,
+  "selectionSeriesId": null,
+  "selectionConstraints": null,
+  "partNumberRule": null,
+  "partNumberInputs": null,
+  "scriptLimits": null,
+  "exchangeProcess": null
+}

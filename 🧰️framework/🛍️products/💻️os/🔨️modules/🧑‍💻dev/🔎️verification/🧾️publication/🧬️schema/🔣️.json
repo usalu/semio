@@ -1,0 +1,274 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/dev/verification/publication/component.json",
+  "title": "ProtectedActorExecutionV1",
+  "$defs": {
+    "ByteClaimV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "sha256",
+        "byteLength"
+      ]
+    },
+    "ProtectedResponseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "asset": {
+          "enum": [
+            "manifest",
+            "component",
+            "descriptor",
+            "browser-actor"
+          ]
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "method": {
+          "const": "POST"
+        },
+        "status": {
+          "const": 200
+        },
+        "authenticated": {
+          "const": true
+        },
+        "intent": {
+          "type": "object"
+        },
+        "bytes": {
+          "$ref": "#/$defs/ByteClaimV1"
+        }
+      },
+      "required": [
+        "asset",
+        "url",
+        "method",
+        "status",
+        "authenticated",
+        "intent",
+        "bytes"
+      ]
+    },
+    "ChildExecutionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sourceDetached": {
+          "const": true
+        },
+        "describe": {
+          "$ref": "#/$defs/ByteClaimV1"
+        },
+        "transferCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cancelled": {
+          "const": true
+        },
+        "capacityRestored": {
+          "const": true
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "sourceDetached",
+        "describe",
+        "transferCount",
+        "cancelled",
+        "capacityRestored",
+        "stages"
+      ]
+    },
+    "ProtectedActorExecutionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "semio.dev.protected-actor-execution/v1"
+        },
+        "publication": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "dataRoot": {
+              "type": "string",
+              "minLength": 1
+            },
+            "profileId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "generationId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "publicationRevision": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "path",
+            "sha256",
+            "dataRoot",
+            "profileId",
+            "generationId",
+            "publicationRevision"
+          ]
+        },
+        "pluginId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "packageId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "spaceId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "documentId": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "spaceId",
+            "documentId"
+          ]
+        },
+        "responses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProtectedResponseV1"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "child": {
+          "$ref": "#/$defs/ChildExecutionV1"
+        },
+        "hubOwner": {
+          "$ref": "#/$defs/NormalDevHubOwnerV1"
+        },
+        "actorProducer": {
+          "$ref": "#/$defs/OriginalPhysicalClaimV1"
+        },
+        "cargoInvocations": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/OriginalPhysicalClaimV1"
+          }
+        }
+      },
+      "required": [
+        "schema",
+        "publication",
+        "pluginId",
+        "packageId",
+        "scope",
+        "responses",
+        "child",
+        "hubOwner",
+        "actorProducer",
+        "cargoInvocations"
+      ]
+    },
+    "OriginalPhysicalClaimV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "byteLength"
+      ]
+    },
+    "NormalDevHubOwnerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hubUrl": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dataRoot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "acquiredAt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "leases": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/OriginalPhysicalClaimV1"
+          }
+        }
+      },
+      "required": [
+        "hubUrl",
+        "dataRoot",
+        "pid",
+        "acquiredAt",
+        "leases"
+      ]
+    }
+  }
+}

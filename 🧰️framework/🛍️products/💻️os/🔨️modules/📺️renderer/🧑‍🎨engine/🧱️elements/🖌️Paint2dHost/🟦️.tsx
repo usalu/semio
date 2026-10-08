@@ -27,7 +27,7 @@ import {
   type ContextMenuItem,
 } from "@semio-tech/ui-react";
 import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import { createDemandFrameScheduler, frameDemandingSessionV1 } from "@semio-tech/infinite-canvas-react-renderer";
+import { createDemandFrameScheduler, frameDemandingSessionV1 } from "@semio-tech/canvas-react-renderer";
 import { GestureRecognizer, type ComponentSceneHostProps, type Paint2dScene, type ActionDescriptor, type MergeMode, type UiComponentSceneNode, type PluginContextMenuRequest, type ContextMenuItemSpec } from "@semio-tech/framework";
 import { type RasterWasmSession, createRasterSession } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";

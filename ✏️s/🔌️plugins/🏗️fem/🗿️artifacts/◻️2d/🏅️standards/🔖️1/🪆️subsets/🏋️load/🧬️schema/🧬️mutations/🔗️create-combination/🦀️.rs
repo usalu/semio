@@ -13,6 +13,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(keyword = "create-combination")]
 pub struct CreateCombination {
     pub combination: FemCombination,
+    /// 📍 Zero-based insertion position among the siblings; `None` or past the end appends.
+    pub index: Option<usize>,
 }
 
 impl MutationKind<Fem2dSnapshot, Fem2dMutation> for CreateCombination {

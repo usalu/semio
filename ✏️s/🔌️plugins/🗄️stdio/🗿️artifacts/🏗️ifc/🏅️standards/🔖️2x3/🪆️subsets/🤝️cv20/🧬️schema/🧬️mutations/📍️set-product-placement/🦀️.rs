@@ -1,6 +1,4 @@
-//! 🔖️ `set-product-placement` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 📍️ `set-product-placement` -- points a geometry-bearing product's `ObjectPlacement` at an `IfcLocalPlacement`; the prior reference (or none) is restored.
 
 use super::*;
 
@@ -15,18 +13,32 @@ pub struct SetProductPlacement {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Cv20Mutation> for SetProductPlacement {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "product-placement", kind: "set-product-placement", record: "SetProductPlacement" };
 
-    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<<Ifc2x3Cv20Mutation as Mutation<Ifc2x3Snapshot>>::Diff> {
-        agg_diff(&Ifc2x3Cv20Mutation::SetProductPlacement(self.clone()), base)
+    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
+        let Self { product, placement } = self;
+        if let Some(id) = placement {
+            let resolved = mvd::instance_type(base, *id).unwrap_or("");
+            if !resolved.eq_ignore_ascii_case("IFCLOCALPLACEMENT") {
+                return rejected(format!("#{id} is {resolved:?}, not an IFCLOCALPLACEMENT -- Coordination View 2.0 places products through IfcLocalPlacement"));
+            }
+        }
+        match mvd::argument_diff(base, *product, GEOMETRY_BEARING_PRODUCT_TYPES, PRODUCT_PLACEMENT_INDEX, mvd::optional(placement.map(Part21Value::Ref))) {
+            Ok(diff) => protocol::MutationOutcome::new(diff),
+            Err(message) => rejected(message),
+        }
     }
+
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Result<Vec<Ifc2x3Cv20Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&Ifc2x3Cv20Mutation::SetProductPlacement(self.clone()), base)?
-    
-    })
-}
+        let Self { product, .. } = self;
+        if !matches!(mvd::standing(base, *product, GEOMETRY_BEARING_PRODUCT_TYPES), mvd::Standing::Present { .. }) {
+            return Ok(Vec::new());
+        }
+        Ok(vec![Ifc2x3Cv20Mutation::SetProductPlacement(SetProductPlacement { product: *product, placement: mvd::reference_argument(base, *product, PRODUCT_PLACEMENT_INDEX) })])
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set product placement", "Produktplatzierung setzen")
     }
+
     fn target(&self) -> Vec<String> {
         Vec::new()
     }

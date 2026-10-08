@@ -31,7 +31,7 @@ fn mutation() -> SemioMeshMutation {
 #[semio_framework_async_macros::async_test]
 async fn retags_the_mime_without_re_encoding_the_payload() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("change-texture-mime applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("change-texture-mime applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "change-texture-mime/retags-the-texture-as-jpeg-without-touching-its-bytes: applied state differs from the committed after-snapshot");
     assert_eq!(produced.textures[0].mime, "image/jpeg", "the mime must become the payload's value");
     assert_eq!(produced.textures[0].bytes, base.textures[0].bytes, "retagging must NOT touch the bytes — that is replace-texture-bytes' job");
@@ -43,13 +43,14 @@ async fn retags_the_mime_without_re_encoding_the_payload() {
 async fn the_undo_change_texture_mime_restores_the_original_mime() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "change-texture-mime undoes as exactly one change-texture-mime");
     let SemioMeshMutation::ChangeTextureMime(restore) = &undo[0] else { panic!("change-texture-mime must undo as itself") };
     assert_eq!(restore.new_mime, base.textures[0].mime, "the undo must recapture BASE's own mime");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward change-texture-mime applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo change-texture-mime applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward change-texture-mime applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo change-texture-mime applies");
     }
     assert_eq!(current, base, "change-texture-mime/retags-the-texture-as-jpeg-without-touching-its-bytes: the undo did not restore the before-snapshot");
 }
@@ -107,6 +108,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-texture-mime diff decodes");
-    let produced = decoded.apply(&before()).expect("committed change-texture-mime diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed change-texture-mime diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-texture-mime/retags-the-texture-as-jpeg-without-touching-its-bytes: committed diff did not carry before to after");
 }

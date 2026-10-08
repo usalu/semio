@@ -1,33 +1,30 @@
 {
   "artifact": null,
-  "schema": null,
   "domain": null,
-  "label": null,
-  "meta": null,
-  "kindCatalogs": null,
-  "kindCatalogsExtra": null,
-  "kindCompatibility": null,
-  "parts": null,
   "fasteners": {
     "added": [
       {
-        "id": "fast-2",
-        "source": "part-a:grip-spare",
-        "target": "part-b:grip-2",
         "fastenerKind": "fastener-kind-b",
         "gap": 2.0,
-        "shift": 0.0,
+        "id": "fast-2",
         "rise": 0.0,
         "rotation": 0.0,
-        "turn": 0.0,
+        "shift": 0.0,
+        "source": "part-a:grip-spare",
+        "target": "part-b:grip-2",
         "tilt": 0.0,
+        "turn": 0.0,
         "x": 0.0,
         "y": 0.0
       }
     ],
-    "removed": [],
     "patched": [],
+    "removed": [],
     "reordered": null
   },
+  "kindCompatibility": null,
+  "meta": null,
+  "parts": null,
+  "schema": null,
   "targetVolumes": null
 }

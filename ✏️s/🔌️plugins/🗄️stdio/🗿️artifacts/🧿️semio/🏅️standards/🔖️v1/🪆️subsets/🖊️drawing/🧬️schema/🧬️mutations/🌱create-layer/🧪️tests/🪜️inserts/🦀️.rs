@@ -30,7 +30,7 @@ fn mutation() -> SemioDrawingMutation {
 #[semio_framework_async_macros::async_test]
 async fn inserts_the_overlay_layer_on_top() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("create-layer applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("create-layer applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "create-layer/inserts-a-second-layer-above-the-base-layer: applied state differs from the committed after-snapshot");
     assert_eq!(produced.layers.len(), base.layers.len() + 1, "create-layer adds exactly one layer");
     assert_eq!(produced.layers[1].id, "l2", "the new layer occupies the requested z-order slot");
@@ -44,13 +44,14 @@ async fn inserts_the_overlay_layer_on_top() {
 async fn the_undo_delete_layer_removes_the_overlay_again() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "create-layer undoes as exactly one delete-layer");
     let SemioDrawingMutation::DeleteLayer(remove) = &undo[0] else { panic!("create-layer must undo as delete-layer") };
     assert_eq!(remove.id, "l2", "the undo addresses the layer by ID even though the forward diff used a position");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward create-layer applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo delete-layer applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward create-layer applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo delete-layer applies");
     }
     assert_eq!(current, base, "create-layer/inserts-a-second-layer-above-the-base-layer: the undo did not restore the before-snapshot");
 }
@@ -108,6 +109,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioDrawingDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-layer diff decodes");
-    let produced = decoded.apply(&before()).expect("committed create-layer diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed create-layer diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-layer/inserts-a-second-layer-above-the-base-layer: committed diff did not carry before to after");
 }

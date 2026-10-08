@@ -1,16 +1,16 @@
 {
   "artifact": null,
-  "schema": null,
   "camera": null,
-  "nodes": null,
   "edges": {
     "added": [],
+    "patched": [],
     "removed": [
       "edge-1"
     ],
-    "patched": [],
     "reordered": null
   },
-  "targetRegions": null,
-  "meta": null
+  "meta": null,
+  "nodes": null,
+  "schema": null,
+  "targetRegions": null
 }

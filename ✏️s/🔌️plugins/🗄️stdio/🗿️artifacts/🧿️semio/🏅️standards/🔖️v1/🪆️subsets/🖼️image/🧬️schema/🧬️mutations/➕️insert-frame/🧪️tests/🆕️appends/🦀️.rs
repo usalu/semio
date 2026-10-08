@@ -8,16 +8,9 @@
 use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
 use crate::standards::v1::subsets::image::schema::mutations::insert_frame;
 use crate::standards::v1::subsets::image::schema::mutations::remove_frame;
-use crate::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
+use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
-
-/// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
-/// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/
-/// `mutation.target-missing`/`mutation.invariant` decision for `insert-frame` lives in that file, so the
-/// fixture asserts against it rather than against the guardless enum arm.
-#[path = "../../🔺️diff/🦀️.rs"]
-mod leaf_diff;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️insert-frame/🆕️appends/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️insert-frame/🆕️appends/📸️snapshot/➡️after/🔣️.json");
@@ -35,22 +28,21 @@ fn mutation() -> SemioImageMutation {
     semio_framework_pack_json::from_json_str(MUTATION,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("insert-frame mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index, frame }) = mutation() else { panic!("insert-frame/appends-a-second-frame-at-the-end: the committed mutation must be the insert-frame variant") };
-    leaf_diff::diff(&before(), index, frame)
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ The second frame lands at index 1, keeping its own delay and pixel buffer.
 #[semio_framework_async_macros::async_test]
 async fn appends_the_second_frame_with_its_own_delay_and_pixels() {
     let base = before();
-    let produced = leaf_outcome().diff().apply(&base).expect("insert-frame applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(leaf_outcome().diff(), &base).expect("insert-frame applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "insert-frame/appends-a-second-frame-at-the-end: applied state differs from the committed after-snapshot");
     assert_eq!(produced.frames.len(), base.frames.len() + 1, "insert-frame lengthens the frame sequence by exactly one");
     assert_eq!(produced.frames[0], base.frames[0], "the pre-existing frame must be byte-identical and keep index 0");
     assert_eq!(produced.frames[1].delay_ms, 80, "the inserted frame carries its own animation delay");
     assert_eq!(produced.frames[1].rgba8.len(), produced.width as usize * produced.height as usize * 4, "the inserted frame's buffer must match width*height*4");
     let mut in_place = before();
-    apply_semio_image_mutation(&mut in_place, &mutation());
+    in_place = crate::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -59,12 +51,13 @@ async fn appends_the_second_frame_with_its_own_delay_and_pixels() {
 async fn the_undo_remove_frame_takes_the_second_frame_back_out() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::RemoveFrame(remove_frame::RemoveFrame { index: 1 })], "insert-frame at #1 must undo as remove-frame at #1");
     let mut current = before();
-    apply_semio_image_mutation(&mut current, &mutation);
-    for step in &undo {
-        apply_semio_image_mutation(&mut current, step);
+    current = crate::applied(&current, &mutation).0;
+    for step in undo.iter().rev() {
+        current = crate::applied(&current, step).0;
     }
     assert_eq!(current, base, "insert-frame/appends-a-second-frame-at-the-end: the undo did not restore the before-snapshot");
 }
@@ -115,6 +108,6 @@ async fn committed_diff_is_canonical_and_touches_only_frames() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed insert-frame diff decodes");
-    let produced = decoded.apply(&before()).expect("committed insert-frame diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed insert-frame diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "insert-frame/appends-a-second-frame-at-the-end: committed diff did not carry before to after");
 }

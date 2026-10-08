@@ -27,8 +27,8 @@ Feature: Apply every typed BCF 2.1 markup mutation and round-trip a real-world c
     `2JJqxZjqn96xzCFMbZMpfb` ("Door-Exterior-Double-Two_Lite:my door:388452"), curtain-wall mullion
     `2lrUU8Tqz92AICLQu1TLwD`, storey `0a3v3dJi10mxIqGCVATOEH` ("First floor") and project
     `0a3v3dJi10mxIqGCSrYdxN`. Two more real elements (a slab and a second column) are exercised only
-    by the mutation scenarios below, never by the base fixture, so `insert-topic`/`set-snapshot`
-    introduce genuinely new real content rather than repeating what is already there.
+    by the mutation scenarios below, never by the base fixture, so `insert-topic`
+    introduces genuinely new real content rather than repeating what is already there.
   - Every viewpoint snapshot is real pixel data: one topic's snapshot is the real, unmodified 244 KB
     committed floor plan `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧫️fixtures/🖼️rathaus-ahlen-grundriss.png`;
     the other is a real 64×64 crop of the same PNG (182 bytes) — a genuine derived excerpt, never
@@ -75,8 +75,8 @@ Feature: Apply every typed BCF 2.1 markup mutation and round-trip a real-world c
   scenario in role when it does not: a row whose parameters make the mutation a no-op passes whenever
   the reference library merely declined to error, which is not a test. The baseline it is measured
   against runs one unzip/rezip round trip first, so the comparison isolates the mutation rather than
-  the writer's own normal form. Every row's `params` is the leaf wire payload (`set-snapshot` carries
-  the whole `BcfSnapshot`, a viewpoint snapshot its PNG bytes), decoded by `BcfMutation`'s own payload
+  the writer's own normal form. Every row's `params` is the leaf wire payload (an insert carries the whole
+  entity plus an optional `index`, a viewpoint snapshot its PNG bytes), decoded by `BcfMutation`'s own payload
   constructor.
   @id-mutate
   @level-exhaustive
@@ -91,7 +91,6 @@ Feature: Apply every typed BCF 2.1 markup mutation and round-trip a real-world c
     Then the jszip reader reads the subject's review and the committed after-document as the same BCF
     Examples:
       | id               | fixture                    | params |
-      | set-snapshot     | 🗃️set-snapshot-applied     | {"snapshot": {"schema": "stdio.bcf", "version": "2.1", "topics": [{"guid": "topic-replacement-04", "title": "Slab clash near the stair core", "description": "Replacement review: the slab intersects the stair-core column.", "status": "Open", "priority": "High", "labels": ["structural"], "creationDate": "2026-01-08T09:00:00Z", "creationAuthor": "dave@example.com", "comments": [], "viewpoints": []}], "parts": []}} |
       | set-version      | 🔢️set-version-applied      | {"version": "2.2"} |
       | insert-topic     | 📌️insert-topic-applied     | {"topic": {"guid": "topic-new-03", "title": "New topic", "description": "", "status": "Open", "priority": "", "labels": [], "creationDate": "2026-01-07T09:00:00Z", "creationAuthor": "carol@example.com", "comments": [], "viewpoints": []}} |
       | remove-topic     | 🗑️remove-topic-applied     | {"guid": "topic-review-02"} |
@@ -99,7 +98,6 @@ Feature: Apply every typed BCF 2.1 markup mutation and round-trip a real-world c
       | insert-comment   | 🗨️insert-comment-applied   | {"topicGuid": "topic-clash-01", "comment": {"guid": "comment-02", "date": "2026-01-05T11:00:00Z", "author": "bob@example.com", "text": "Confirmed, rerouting duct.", "viewpointRef": null}} |
       | remove-comment   | 🧹️remove-comment-applied   | {"topicGuid": "topic-clash-01", "guid": "comment-01"} |
       | set-comment      | ✏️set-comment-applied      | {"topicGuid": "topic-clash-01", "guid": "comment-01", "text": "Please review — updated."} |
-      | patch-snapshot | 🔢️set-version-applied | {"patch": {"operation": "set", "path": "/version", "value": "2.2"}} |
 
   @id-inverse
   @level-exhaustive
@@ -113,7 +111,6 @@ Feature: Apply every typed BCF 2.1 markup mutation and round-trip a real-world c
     Then the jszip reader reads the restored review and the committed before-document as the same BCF
     Examples:
       | id               | fixture                    | params |
-      | set-snapshot     | 🗃️set-snapshot-applied     | {"snapshot": {"schema": "stdio.bcf", "version": "2.1", "topics": [{"guid": "topic-replacement-04", "title": "Slab clash near the stair core", "description": "Replacement review: the slab intersects the stair-core column.", "status": "Open", "priority": "High", "labels": ["structural"], "creationDate": "2026-01-08T09:00:00Z", "creationAuthor": "dave@example.com", "comments": [], "viewpoints": []}], "parts": []}} |
       | set-version      | 🔢️set-version-applied      | {"version": "2.2"} |
       | insert-topic     | 📌️insert-topic-applied     | {"topic": {"guid": "topic-new-03", "title": "New topic", "description": "", "status": "Open", "priority": "", "labels": [], "creationDate": "2026-01-07T09:00:00Z", "creationAuthor": "carol@example.com", "comments": [], "viewpoints": []}} |
       | remove-topic     | 🗑️remove-topic-applied     | {"guid": "topic-review-02"} |
@@ -121,7 +118,6 @@ Feature: Apply every typed BCF 2.1 markup mutation and round-trip a real-world c
       | insert-comment   | 🗨️insert-comment-applied   | {"topicGuid": "topic-clash-01", "comment": {"guid": "comment-02", "date": "2026-01-05T11:00:00Z", "author": "bob@example.com", "text": "Confirmed, rerouting duct.", "viewpointRef": null}} |
       | remove-comment   | 🧹️remove-comment-applied   | {"topicGuid": "topic-clash-01", "guid": "comment-01"} |
       | set-comment      | ✏️set-comment-applied      | {"topicGuid": "topic-clash-01", "guid": "comment-01", "text": "Please review — updated."} |
-      | patch-snapshot | 🔢️set-version-applied | {"patch": {"operation": "set", "path": "/version", "value": "2.2"}} |
 
   @id-identity-round-trip
   @level-long

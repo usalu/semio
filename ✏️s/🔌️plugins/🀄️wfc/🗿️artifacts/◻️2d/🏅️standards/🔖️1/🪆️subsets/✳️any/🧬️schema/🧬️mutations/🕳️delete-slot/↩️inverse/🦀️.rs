@@ -15,6 +15,7 @@ pub fn inverse(payload: &super::DeleteSlot, base: &Wfc2dSnapshot) -> Result<Vec<
             restore.push(connect_slots(edge.clone()));
         }
     }
+    restore.reverse();
     restore
 
     })())

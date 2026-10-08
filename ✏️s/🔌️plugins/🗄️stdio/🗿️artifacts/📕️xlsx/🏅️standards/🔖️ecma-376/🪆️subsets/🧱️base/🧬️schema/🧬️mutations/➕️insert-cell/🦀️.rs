@@ -12,15 +12,14 @@ pub struct InsertCell {
 impl protocol::MutationKind<XlsxSnapshot, XlsxMutation> for InsertCell {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "cell", kind: "insert-cell", record: "InsertCell" };
 
-    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<<XlsxMutation as Mutation<XlsxSnapshot>>::Diff> {
-        agg_diff(&XlsxMutation::InsertCell(self.clone()), base)
+    fn diff(&self, base: &XlsxSnapshot) -> protocol::MutationOutcome<XlsxDiff> {
+        plan_outcome(canonical_edit::insert_cell_plan(base, &self.address, &self.value))
     }
+
     fn inverse(&self, base: &XlsxSnapshot) -> Result<Vec<XlsxMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&XlsxMutation::InsertCell(self.clone()), base)?
-    
-    })
-}
+        Ok(plan_inverse(canonical_edit::insert_cell_plan(base, &self.address, &self.value)))
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert cell", "Zelle einfügen")
     }

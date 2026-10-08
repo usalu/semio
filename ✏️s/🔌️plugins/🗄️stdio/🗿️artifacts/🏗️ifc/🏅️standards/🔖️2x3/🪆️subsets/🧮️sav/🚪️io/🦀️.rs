@@ -9,7 +9,7 @@ pub mod derived_composition {
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use {semio_framework_plugin::register_subset_validator,semio_framework_plugin::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposeSource,semio_framework_plugin::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::SubsetValidator,semio_framework_plugin::SubsetValidatorEntry};
+    use {semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
     use std::sync::OnceLock;
 
     const DIALECT_SAV: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("sav") };
@@ -98,7 +98,7 @@ pub mod derived_construction {
     use crate::standards::v2x3::subsets::base::schema::diff::Ifc2x3Diff;
     #[cfg(test)]
     use crate::standards::v2x3::subsets::base::schema::mutations::remove_instance;
-    use crate::standards::v2x3::subsets::base::schema::mutations::{apply_ifc2x3_mutation, upsert_instance, Ifc2x3Mutation};
+    use crate::standards::v2x3::subsets::base::schema::mutations::{upsert_instance, Ifc2x3Mutation};
     use crate::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
     use crate::standards::v2x3::subsets::sav::io::check_sav_conformance;
     use semio_framework_diagnostic::Diagnostic;
@@ -145,7 +145,8 @@ use semio_framework_diagnostic::Severity;
         /// ⚖️ Adds a load group (`IFCSTRUCTURALLOADGROUP`) instance.
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn add_load_group(mut self, id: u64) -> Self {
-            let outcome = apply_ifc2x3_mutation(&mut self.snapshot, &Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: Part21Instance { id, entities: vec![("IFCSTRUCTURALLOADGROUP".into(), vec![])] } }));
+            let (next, outcome) = store::apply_outcome(&self.snapshot, protocol::Mutation::diff(&Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: Part21Instance { id, entities: vec![("IFCSTRUCTURALLOADGROUP".into(), vec![])] }, index: None }), &self.snapshot));
+            self.snapshot = next;
             stage_mutation_errors(&mut self.diagnostics, &outcome);
             self
         }
@@ -175,11 +176,12 @@ use semio_framework_diagnostic::Severity;
             Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = apply_ifc2x3_mutation(&mut self.snapshot, &mutation);
+            let (next, diff) = store::apply_outcome(&self.snapshot, protocol::Mutation::diff(&mutation, &self.snapshot));
+            self.snapshot = next;
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            self.snapshot = <Ifc2x3Diff as protocol::MutationDiff<Ifc2x3Snapshot>>::apply(&diff, &self.snapshot)?;
+            self.snapshot = protocol::apply_diff(&diff, &self.snapshot)?;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<Diagnostic>> {
@@ -207,7 +209,7 @@ use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use {semio_framework_plugin::Analysis,semio_framework_plugin::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_plugin::IoConfidence,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     pub const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ifc", standard: StandardId("2x3"), subset: SubsetId("sav") };
 
@@ -277,7 +279,7 @@ use semio_framework_diagnostic::TextSpan;
         type Parts = Ifc2x3Parts;
         const DIALECT: Dialect = DIALECT;
 
-        fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
+        fn sniff(source: &AnalyzeSource<'_>) -> semio_framework_plugin::io::Confidence {
             Ifc2x3AnyAnalyzer::sniff(source)
         }
 
@@ -288,7 +290,7 @@ use semio_framework_diagnostic::TextSpan;
             if let Some(snapshot) = &inner.parts.snapshot {
                 let checks = check_sav_conformance(snapshot);
                 if checks.iter().any(|d| matches!(d.severity, Severity::Error | Severity::Fatal)) {
-                    confidence = IoConfidence::Low;
+                    confidence = semio_framework_plugin::io::Confidence::Low;
                 }
                 diagnostics.extend(checks);
             }

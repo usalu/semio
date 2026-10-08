@@ -1,24 +1,12 @@
 {
   "nodes": {
-    "values": [
-      {
-        "id": {
-          "value": "a"
-        },
-        "kind": "source",
-        "label": "Source",
-        "position": {
-          "x": 0.0,
-          "y": 0.0
-        },
-        "ports": [],
-        "properties": [],
-        "width": 0.0,
-        "height": 0.0
-      }
+    "removed": [
+      1
     ]
   },
   "edges": {
-    "values": []
+    "removed": [
+      0
+    ]
   }
 }

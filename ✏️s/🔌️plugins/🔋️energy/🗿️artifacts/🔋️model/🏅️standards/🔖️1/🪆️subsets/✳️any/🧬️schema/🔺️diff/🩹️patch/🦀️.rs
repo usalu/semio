@@ -82,7 +82,7 @@ impl<T: Clone + PartialEq + Debug> FieldPatch for Option<T> {
 /// 🎯️ A patch over an `Option<T>` field: absent leaves it, `Cleared` empties it, `Assigned` fills it. A typed
 /// three-state, because `Option<Option<T>>` collapses "unchanged" and "now empty" onto one JSON `null`.
 #[derive(Clone, Debug, Default, PartialEq, ToValueDerive, FromValueDerive)]
-#[value(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", content = "value", rename_all = "camelCase")]
 pub enum OptionChange<T> {
     #[default]
     Unchanged,
@@ -279,12 +279,10 @@ impl<T: Clone + PartialEq> ListEdit<T> {
         Self(Splice::replacing(was, now))
     }
 
-    /// ➡️ Moves the entry at `from` so it lands at `to`.
+    /// ➡️ Moves the entry of `list` at `from` so it lands at `to`.
     pub fn moving(list: &[T], from: usize, to: usize) -> Self {
-        let mut now = list.to_vec();
-        let entry = now.remove(from);
-        now.insert(to, entry.clone());
-        let mut edit = Self(Splice::new(vec![(from, entry.clone())], vec![(to, entry)]));
+        let Some(entry) = list.get(from) else { return Self::default() };
+        let mut edit = Self(Splice::new(vec![(from, entry.clone())], vec![(to, entry.clone())]));
         edit.0.settle();
         edit
     }
@@ -314,15 +312,6 @@ impl<T: Clone + PartialEq + Debug> FieldPatch for ListEdit<T> {
     }
 }
 
-impl<T: ToValue + Clone> ToValue for ListEdit<T> {
-    fn to_value(&self) -> DslValue {
-        DslValue::object([("removed".to_string(), cut_wires(&self.0).to_value()), ("inserted".to_string(), put_wires(&self.0).to_value())])
-    }
-    fn to_value_controlled(&self, control: &mut NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
-        Ok(DslValue::object([("removed".to_string(), cut_wires(&self.0).to_value_controlled(control)?), ("inserted".to_string(), put_wires(&self.0).to_value_controlled(control)?)]))
-    }
-}
-
 /// 📋️ The wire form of an edit: two arrays, each omitted when empty.
 #[derive(ToValueDerive, FromValueDerive)]
 struct ListEditWire<T> {
@@ -330,6 +319,15 @@ struct ListEditWire<T> {
     removed: Vec<CutWire<T>>,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     inserted: Vec<PutWire<T>>,
+}
+
+impl<T: ToValue + Clone> ToValue for ListEdit<T> {
+    fn to_value(&self) -> DslValue {
+        ListEditWire { removed: cut_wires(&self.0), inserted: put_wires(&self.0) }.to_value()
+    }
+    fn to_value_controlled(&self, control: &mut NativeEncodeControl<'_>) -> Result<DslValue, ValueError> {
+        ListEditWire { removed: cut_wires(&self.0), inserted: put_wires(&self.0) }.to_value_controlled(control)
+    }
 }
 
 impl<T: FromValue> FromValue for ListEdit<T> {
@@ -536,32 +534,58 @@ where
 }
 //#endregion 🔖️Rows
 
-//#region 🔖️Macros
-/// 🔢️ The patch type of a fixed-size array target.
-pub trait ArrayShape {
-    type Patch: Default;
+//#region 🔖️Fields
+/// 🧩️ Maps a field kind (a marker type) and the field's declared type to the patch that edits it.
+pub trait Field<T> {
+    type Patch: FieldPatch + Default;
 }
 
-impl<T: Clone + PartialEq + Debug, const N: usize> ArrayShape for [T; N] {
+/// 🎯️ Assigns a scalar-like field: `Option<T>`.
+pub struct Set;
+/// 🎯️ Sets or clears an `Option<T>` field: `OptionChange<T>`.
+pub struct Opt;
+/// 📋️ Edits an ordered list of `T`: `ListEdit<T>`.
+pub struct List;
+/// 🔢️ Assigns slots of a fixed array: `Slots<T, N>`.
+pub struct Arr;
+/// 🗂️ Patches a collection of rows addressed by patch type `P`: `Rows<P>`.
+pub struct Coll;
+/// 🧱️ Patches a nested record with its own patch `P`.
+pub struct Rec;
+
+impl<T: Clone + PartialEq + Debug> Field<T> for Set {
+    type Patch = Option<T>;
+}
+
+impl<T: Clone + PartialEq + Debug> Field<T> for Opt {
+    type Patch = OptionChange<T>;
+}
+
+impl<T: Clone + PartialEq + Debug> Field<T> for List {
+    type Patch = ListEdit<T>;
+}
+
+impl<T: Clone + PartialEq + Debug, const N: usize> Field<[T; N]> for Arr {
     type Patch = Slots<T, N>;
 }
 
-macro_rules! patch_field_ty {
-    (set $ty:ty) => { Option<$ty> };
-    (opt $ty:ty) => { OptionChange<$ty> };
-    (list $ty:ty) => { ListEdit<$ty> };
-    (slots $ty:ty) => { <$ty as ArrayShape>::Patch };
-    (rows $ty:ty) => { Rows<$ty> };
-    (with $ty:ty) => { $ty };
+impl<P: RowPatch> Field<P> for Coll {
+    type Patch = Rows<P>;
 }
 
+impl<P: FieldPatch + Default> Field<P> for Rec {
+    type Patch = P;
+}
+//#endregion 🔖️Fields
+
+//#region 🔖️Macros
 macro_rules! patch {
     (@ $(#[$meta:meta])* $patch:ident for $row:ty; [$($key:ident: $key_ty:ty)?]; $($kind:ident $field:ident: $ty:ty),*) => {
         $(#[$meta])*
         #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive)]
         pub struct $patch {
             $(pub $key: $key_ty,)?
-            $(#[value(default, skip_serializing_if = "Unchanged::unchanged")] pub $field: patch_field_ty!($kind $ty),)*
+            $(#[value(default, skip_serializing_if = "Unchanged::unchanged")] pub $field: <$kind as Field<$ty>>::Patch,)*
         }
 
         impl $patch {
@@ -589,7 +613,7 @@ macro_rules! patch {
                 Self { $($key: self.$key.clone(),)? $($field: self.$field.inverse(&base.$field),)* }
             }
             fn between(base: &$row, other: &$row) -> Self {
-                Self { $($key: base.$key.clone(),)? $($field: <patch_field_ty!($kind $ty) as FieldPatch>::between(&base.$field, &other.$field),)* }
+                Self { $($key: base.$key.clone(),)? $($field: <<$kind as Field<$ty>>::Patch as FieldPatch>::between(&base.$field, &other.$field),)* }
             }
         }
     };
@@ -626,5 +650,5 @@ macro_rules! record_patch {
     };
 }
 
-pub(crate) use {patch, patch_field_ty, record_patch, row_patch};
+pub(crate) use {patch, record_patch, row_patch};
 //#endregion 🔖️Macros

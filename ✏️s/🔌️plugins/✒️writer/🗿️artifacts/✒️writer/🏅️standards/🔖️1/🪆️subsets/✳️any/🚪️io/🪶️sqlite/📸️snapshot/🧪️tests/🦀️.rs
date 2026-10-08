@@ -126,7 +126,7 @@ fn sqlite_snapshot_writer_explicit_native_output_exact_file_frontier_and_unicode
  let limits=SqliteDatabaseLimits::default();
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text] {
   let payload=<WriterSnapshot as ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&snapshot,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
-  let length=match &payload{store::os_io::IoPayload::Binary(bytes)=>bytes.len(),store::os_io::IoPayload::Text(text)=>text.len()};
+  let length=match &payload{store::io::IoPayload::Binary(bytes)=>bytes.len(),store::io::IoPayload::Text(text)=>text.len()};
   assert!(<WriterSnapshot as ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&snapshot,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:length,..limits})).is_ok());
   assert!(<WriterSnapshot as ArtifactSqliteSnapshot>::encode_sqlite_snapshot_native(&snapshot,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:length-1,..limits})).is_err());
   let mut interior=false;
@@ -138,7 +138,7 @@ fn sqlite_snapshot_writer_explicit_native_output_exact_file_frontier_and_unicode
 #[test]
 fn sqlite_snapshot_writer_explicit_native_input_preserves_actual_fields_and_request_admission() {
  let (_,snapshot)=fixture();let limits=SqliteDatabaseLimits::default();let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();
- for payload in [store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)),store::os_io::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot))] {
+ for payload in [store::io::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)),store::io::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot))] {
   let restored=WriterSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap(),expected);WriterSnapshot::retire_sqlite_snapshot(restored);
   for limited in [SqliteDatabaseLimits{max_rows:1,..limits},SqliteDatabaseLimits{max_schema_bytes:WriterSnapshot::SQLITE_SCHEMA.len()-1,..limits},SqliteDatabaseLimits{max_value_bytes:1,..limits}] {assert!(WriterSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limited)).is_err());}
  }

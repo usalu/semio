@@ -1,92 +1,60 @@
 {
-  "artifact": null,
   "annex": null,
   "materials": null,
   "sections": null,
-  "members": [
-    {
-      "id": "purlin-1",
-      "sectionId": "sec-i120",
-      "materialId": "mat-6082",
-      "length": 6.6,
-      "support": "simplySupported",
-      "bucklingLengthY": 1.5,
-      "bucklingLengthZ": 1.5,
-      "bucklingLengthT": 1.5,
-      "ltbLength": 1.5,
-      "c1": 1.132,
-      "restrainedLtb": false,
-      "actions": [
-        {
-          "id": "G",
-          "kind": "permanent",
-          "category": "self",
-          "source": "udl",
-          "gKLine": 400.0,
-          "qKLine": 0.0,
-          "nK": 2000.0,
-          "vYK": 0.0,
-          "vZK": 0.0,
-          "mYK": 0.0,
-          "mZK": 0.0
-        },
-        {
-          "id": "Q-snow",
-          "kind": "snow",
-          "category": "snow",
-          "source": "udl",
-          "gKLine": 0.0,
-          "qKLine": 900.0,
-          "nK": 1200.0,
-          "vYK": 50.0,
-          "vZK": 200.0,
-          "mYK": 100.0,
-          "mZK": 40.0
-        }
-      ]
-    },
-    {
-      "id": "post-chs",
-      "sectionId": "sec-chs168",
-      "materialId": "mat-6082",
-      "length": 3.0,
-      "support": "cantilever",
-      "bucklingLengthY": 3.0,
-      "bucklingLengthZ": 3.0,
-      "bucklingLengthT": 3.0,
-      "ltbLength": 3.0,
-      "c1": 1.0,
-      "restrainedLtb": false,
-      "actions": [
-        {
-          "id": "G-post",
-          "kind": "permanent",
-          "category": "self",
-          "source": "external",
-          "gKLine": 50.0,
-          "qKLine": 0.0,
-          "nK": -8000.0,
-          "vYK": 20.0,
-          "vZK": 80.0,
-          "mYK": 120.0,
-          "mZK": 15.0
-        },
-        {
-          "id": "Q-post",
-          "kind": "imposed",
-          "category": "office",
-          "source": "external",
-          "gKLine": 0.0,
-          "qKLine": 40.0,
-          "nK": -2000.0,
-          "vYK": 15.0,
-          "vZK": 40.0,
-          "mYK": 50.0,
-          "mZK": 10.0
-        }
-      ]
-    }
-  ],
+  "members": {
+    "added": [
+      {
+        "id": "purlin-1",
+        "sectionId": "sec-i120",
+        "materialId": "mat-6082",
+        "length": 6.6,
+        "support": "simplySupported",
+        "bucklingLengthY": 1.5,
+        "bucklingLengthZ": 1.5,
+        "bucklingLengthT": 1.5,
+        "ltbLength": 1.5,
+        "c1": 1.132,
+        "restrainedLtb": false,
+        "actions": [
+          {
+            "id": "G",
+            "kind": "permanent",
+            "category": "self",
+            "source": "udl",
+            "gKLine": 400.0,
+            "qKLine": 0.0,
+            "nK": 2000.0,
+            "vYK": 0.0,
+            "vZK": 0.0,
+            "mYK": 0.0,
+            "mZK": 0.0
+          },
+          {
+            "id": "Q-snow",
+            "kind": "snow",
+            "category": "snow",
+            "source": "udl",
+            "gKLine": 0.0,
+            "qKLine": 900.0,
+            "nK": 1200.0,
+            "vYK": 50.0,
+            "vZK": 200.0,
+            "mYK": 100.0,
+            "mZK": 40.0
+          }
+        ]
+      }
+    ],
+    "removed": [
+      "purlin-1"
+    ],
+    "modified": [],
+    "order": [
+      "purlin-1",
+      "post-chs"
+    ]
+  },
   "connections": null,
   "fireScenarios": null,
   "fatigueDetails": null,

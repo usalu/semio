@@ -1,10 +1,32 @@
 # 🧬️ Generation2d diff schema — sparse field delta.
 
 type Generation2dDiff {
-  artifact: Generation2dArtifact @state(class: ARTIFACT)
-  hostSnapshot: FlowHostSnapshot @state(class: ARTIFACT)
-  generation: GenerationPlayState @state(class: ARTIFACT)
+  schema: String @state(class: ARTIFACT)
+  camera: CameraJson @state(class: ARTIFACT)
+  widgets: Generation2dWidgetsDelta @state(class: ARTIFACT)
+  synapses: Generation2dSynapsesDelta @state(class: ARTIFACT)
+  layout: Generation2dLayoutDelta @state(class: ARTIFACT)
+  generations: Generation2dGenerationsDelta @state(class: ARTIFACT)
+  selectedGeneration: Generation2dSelectionChange @state(class: ARTIFACT)
+  previewText: Generation2dPreviewChange @state(class: ARTIFACT)
 }
+
+type Generation2dWidgetsDelta { added: [Widget!]! removed: [String!]! patched: [Generation2dWidgetPatchEntry!]! reordered: [String!] }
+type Generation2dWidgetPatchEntry { id: String! patch: Generation2dWidgetPatch! }
+union Generation2dWidgetPatch = Generation2dWidgetReplace | Generation2dWidgetSlider
+type Generation2dWidgetReplace { kind: String! widget: Widget! }
+type Generation2dWidgetSlider { kind: String! value: Float! min: Float! max: Float! step: Float! }
+type Generation2dSynapsesDelta { added: [SynapseSpec!]! removed: [String!]! patched: [Generation2dSynapsePatchEntry!]! reordered: [String!] }
+type Generation2dSynapsePatchEntry { id: String! item: SynapseSpec! }
+type Generation2dLayoutRow { id: String! layout: WidgetLayout! }
+type Generation2dLayoutDelta { added: [Generation2dLayoutRow!]! removed: [String!]! patched: [Generation2dLayoutRow!]! }
+type Generation2dGenerationsDelta { added: [FormGeneration!]! removed: [String!]! patched: [Generation2dGenerationPatchEntry!]! reordered: [String!] }
+type Generation2dGenerationPatchEntry { id: String! patch: Generation2dGenerationPatch! }
+type Generation2dGenerationPatch { name: String values: Generation2dValuesDelta }
+type Generation2dValueRow { questionId: String! value: JSON }
+type Generation2dValuesDelta { added: [Generation2dValueRow!]! removed: [String!]! patched: [Generation2dValueRow!]! }
+type Generation2dSelectionChange { id: String }
+type Generation2dPreviewChange { text: String }
 
 type CameraJson {
   x: Float!

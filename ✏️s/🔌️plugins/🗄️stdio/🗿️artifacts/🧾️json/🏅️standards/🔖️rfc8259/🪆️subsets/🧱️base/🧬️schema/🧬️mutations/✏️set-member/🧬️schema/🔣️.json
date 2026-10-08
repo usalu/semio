@@ -52,6 +52,24 @@
           "de": "Ein JSON-Wert: null, Wahrheitswert, Zahl, Zeichenkette, Array oder Objekt."
         }
       }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Where a newly added member lands among its object's members, counted from 0; omitted appends.",
+          "de": "Wo ein neu hinzugefügtes Mitglied unter den Mitgliedern seines Objekts landet, ab 0 gezählt; ohne Angabe wird angehängt."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 40
+      }
     }
   },
   "$defs": {
@@ -87,43 +105,6 @@
             "value": {
               "type": "integer",
               "minimum": 0
-            }
-          }
-        }
-      ]
-    },
-    "SetMemberMutation": {
-      "description": "The whole wire of SetMemberMutation: the editable apply payload (this document's root) or the inert restore.",
-      "oneOf": [
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "phase",
-            "value"
-          ],
-          "properties": {
-            "phase": {
-              "const": "apply"
-            },
-            "value": {
-              "$ref": "#"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "phase",
-            "value"
-          ],
-          "properties": {
-            "phase": {
-              "const": "restore"
-            },
-            "value": {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/json/rfc8259/base/diff.json"
             }
           }
         }

@@ -1,6 +1,8 @@
+scalar GltfPrimitiveRecordV1
 # create-primitive mutation facet.
 input GltfCreatePrimitivePayloadV1 {
   mesh: Int!
   position: Int!
+  primitive: GltfPrimitiveRecordV1
 }
 type GltfCreatePrimitiveMutationV1 { id: ID!, version: Int!, accepted: Boolean!, touchedPaths: [String!]!, rejectionCode: String }

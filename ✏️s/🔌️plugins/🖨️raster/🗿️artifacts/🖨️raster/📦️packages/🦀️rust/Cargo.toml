@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../.."
 name = "semio-s-artifact-raster-raster"
 version.workspace = true
 edition.workspace = true
@@ -67,6 +67,6 @@ semio-framework-tool-machine = { workspace = true }
 [dev-dependencies]
 semio-framework-async = { workspace = true }
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest", "artifact-app-testing"], package = "semio-framework-plugin" }
-semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws"] }
+semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws", "mutation-testing"] }
 serde_json = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

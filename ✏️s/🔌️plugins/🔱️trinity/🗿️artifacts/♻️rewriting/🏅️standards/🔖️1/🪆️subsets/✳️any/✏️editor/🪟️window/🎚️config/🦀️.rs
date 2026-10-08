@@ -2,7 +2,7 @@
 
 #[path = "🧬️schema/🦀️.rs"]
 mod schema;
-pub use schema::RewritingWindowConfig;
+pub use schema::{RewritingWindowConfig, RewritingWindowConfigDiff};
 
 impl store::ArtifactDsl for RewritingWindowConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
@@ -44,7 +44,7 @@ impl store::ArtifactPack for RewritingWindowConfig {
     }
 }
 
-store::impl_whole_record_config!(RewritingWindowConfig);
+impl store::ConfigRecord for RewritingWindowConfig {}
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;

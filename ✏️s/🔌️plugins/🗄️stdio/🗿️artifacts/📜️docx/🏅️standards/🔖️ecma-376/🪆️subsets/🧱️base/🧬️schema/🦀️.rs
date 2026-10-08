@@ -39,13 +39,6 @@ impl DocxArtifact {
     pub fn from_snapshot(snapshot: DocxSnapshot) -> Self {
         Self { schema: snapshot.schema, opc: snapshot.opc, xml_parts: snapshot.xml_parts }
     }
-
-    /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: DocxSnapshot) {
-        self.schema = snapshot.schema;
-        self.opc = snapshot.opc;
-        self.xml_parts = snapshot.xml_parts;
-    }
 }
 //#endregion Conversions
 

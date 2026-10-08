@@ -2,7 +2,7 @@
 
 use super::remove_media_annotation::RemoveMediaAnnotation;
 use super::PdfEMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -12,13 +12,15 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 pub struct InsertMediaAnnotation {
     pub subtype: String,
     pub title: String,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub placements: Vec<support::ObjectPlacement>,
 }
 
 impl MutationKind<PdfSnapshot, PdfEMutation> for InsertMediaAnnotation {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "insert", entity: "media-annotation", kind: "insert-media-annotation", record: "Insert" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        let (_, rows) = support::insert_object_rows(base, support::media_annotation_object(&self.subtype, &self.title));
+        let (_, rows) = support::insert_object_rows(base, support::media_annotation_object(&self.subtype, &self.title), &self.placements);
         MutationOutcome::new(diff::graph_edit(rows))
     }
 

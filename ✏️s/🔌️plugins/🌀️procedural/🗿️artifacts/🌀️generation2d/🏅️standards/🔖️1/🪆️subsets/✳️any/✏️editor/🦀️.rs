@@ -872,7 +872,7 @@ fn prepare_generation2d_artifact(base: &Generation2dSnapshot, mutation: Generati
     admit_generation2d_artifact_mutation(&mutation)?;
     let inverse = protocol::Mutation::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?;
     let diff = protocol::Mutation::diff(&mutation, base).into_parts().0;
-    let applied = protocol::MutationDiff::apply(&diff, base);
+    let applied = protocol::apply_diff(&diff, base);
     diff.retire_cold();
     let post = applied.map_err(|_| "generation2d-artifact-diff-apply-failed".to_string())?;
     Ok((post, inverse, mutation))

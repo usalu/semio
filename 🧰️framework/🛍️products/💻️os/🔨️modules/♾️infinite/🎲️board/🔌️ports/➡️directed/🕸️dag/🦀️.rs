@@ -13,7 +13,7 @@ pub use crate::infinite::board::ports::directed::{
     self as graph, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak,
     handle_exterior_cap_triangle_stroke_path, handle_outward_at_node_rim, CanvasPalette, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, HandleRole, InteractionMode, Node, NodeId, RenderSnapshot, Selection,
 };
-pub use crate::infinite::canvas;
+pub use semio_framework_canvas as canvas;
 use graph::{handle_position, world_box_from_points, BoardEvent, WorldBox};
 
 /// 🌳️ DAG board engine alias.
@@ -40,7 +40,7 @@ impl std::fmt::Display for DagError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::SnapshotRootNotObject => formatter.write_str("snapshot root must be object"),
-            Self::SchemaMismatch => formatter.write_str("schema must be dag.host_snapshot"),
+            Self::SchemaMismatch => formatter.write_str("schema must be dag.hostDocument"),
             Self::NodesMissing => formatter.write_str("nodes array missing"),
             Self::CanvasTheme(message) => formatter.write_str(message),
             Self::UnknownAlignMode(mode) => write!(formatter, "unknown align mode: {mode}"),
@@ -295,10 +295,10 @@ fn preview_scalar_text_width(text: &str) -> f64 {
 }
 
 fn preview_media_natural_size(src: &str) -> (f64, f64) {
-    use canvas::icon_codec::{board_resolve_icon_kind, BoardResolvedIcon};
-    match board_resolve_icon_kind(src, |_| None) {
-        BoardResolvedIcon::RasterRgba8 { w, h, .. } => (f64::from(w), f64::from(h)),
-        BoardResolvedIcon::SvgPlain(s) | BoardResolvedIcon::SvgThemed(s) => {
+    use canvas::icon_codec::{resolve_icon_kind, ResolvedIcon};
+    match resolve_icon_kind(src, |_| None) {
+        ResolvedIcon::RasterRgba8 { w, h, .. } => (f64::from(w), f64::from(h)),
+        ResolvedIcon::SvgPlain(s) | ResolvedIcon::SvgThemed(s) => {
             if let Ok((_, _, bw, bh)) = canvas::svg_icon::svg_icon_content_bounds_from_str(&s) {
                 if bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite() {
                     return (bw, bh);
@@ -306,7 +306,7 @@ fn preview_media_natural_size(src: &str) -> (f64, f64) {
             }
             (64.0, 48.0)
         }
-        BoardResolvedIcon::None => (64.0, 48.0),
+        ResolvedIcon::None => (64.0, 48.0),
     }
 }
 
@@ -1171,12 +1171,12 @@ impl Default for DagLayoutOptions {
     }
 }
 
-/// 🌳️ Writes node centers from a layered DAG layout into `dag.host_snapshot`.
+/// 🌳️ Writes node centers from a layered DAG layout into `dag.hostDocument`.
 pub fn apply_dag_layout_to_host_snapshot_v1_value(snapshot: &mut Value, opts: &DagLayoutOptions) -> Result<(), DagError> {
     let Some(root) = snapshot.as_object_mut() else {
         return Err(DagError::SnapshotRootNotObject);
     };
-    if root.get("schema").and_then(|v| v.as_str()) != Some("dag.host_snapshot") {
+    if root.get("schema").and_then(|v| v.as_str()) != Some("dag.hostDocument") {
         return Err(DagError::SchemaMismatch);
     }
     let edges_json = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
@@ -1813,6 +1813,11 @@ impl DagSelectedNodesJsonCursor {
         match byte {
             b'"' => ([b'\\', b'"', 0, 0, 0, 0], 2),
             b'\\' => ([b'\\', b'\\', 0, 0, 0, 0], 2),
+            b'\x08' => ([b'\\', b'b', 0, 0, 0, 0], 2),
+            b'\x0c' => ([b'\\', b'f', 0, 0, 0, 0], 2),
+            b'\n' => ([b'\\', b'n', 0, 0, 0, 0], 2),
+            b'\r' => ([b'\\', b'r', 0, 0, 0, 0], 2),
+            b'\t' => ([b'\\', b't', 0, 0, 0, 0], 2),
             0x00..=0x1f => ([b'\\', b'u', b'0', b'0', HEX[usize::from(byte >> 4)], HEX[usize::from(byte & 0x0f)]], 6),
             _ => ([byte, 0, 0, 0, 0, 0], 1),
         }
@@ -4816,7 +4821,7 @@ impl DagHost {
 
     pub fn load_host_snapshot_json(json: &str) -> Result<Self, DagError> {
         let host_snapshot: DagHostSnapshot = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject)?;
-        if host_snapshot.schema != "dag.host_snapshot" {
+        if host_snapshot.schema != "dag.hostDocument" {
             return Err(DagError::SchemaMismatch);
         }
         Ok(Self::from_host_snapshot(host_snapshot))
@@ -6980,13 +6985,13 @@ mod wasm_session {
             let pw = ((lw as f64 * dpr).round() as u32).max(1);
             let ph = ((lh as f64 * dpr).round() as u32).max(1);
             future_to_promise(async move {
-                let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
+                let admission = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
                 let mut g = inner.borrow_mut();
                 g.width = lw;
                 g.height = lh;
                 g.dpr = dpr;
                 g.host.set_viewport(lw, lh, dpr);
-                g.gpu.finish_attach(canvas, render_ctx, renderer, surface);
+                g.gpu.finish_attach(admission);
                 Ok(JsValue::UNDEFINED)
             })
         }

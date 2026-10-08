@@ -11,6 +11,8 @@ pub struct CreateVertex {
     pub id: String,
     pub point: SemioPoint3,
     pub tol: f64,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub at: Option<usize>,
 }
 
 impl protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation> for CreateVertex {

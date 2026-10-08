@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/io/base64/schema.json",
+  "$ref": "#/$defs/Control",
+  "$defs": {
+    "OutputCapacity": {
+      "description": "Exact storage currently retained by the output owner, including a refused partial result; zero before its birth and after output transfer.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "InputRange": {
+      "description": "Half-open indices in original immutable source storage: UTF-8 bytes for Rust text and UTF-16 code units for TypeScript text. Endpoints must be character boundaries; progress counts selected ASCII payload units.",
+      "type": "object",
+      "required": ["start", "end"],
+      "additionalProperties": false,
+      "properties": {
+        "start": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "end": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+      }
+    },
+    "StepGrant": {
+      "type": "object",
+      "required": ["maximumWorkUnits"],
+      "additionalProperties": false,
+      "properties": {
+        "maximumWorkUnits": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+      }
+    },
+    "Control": {
+      "type": "object",
+      "required": ["maximumOutputBytes"],
+      "additionalProperties": false,
+      "properties": {
+        "maximumOutputBytes": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+      }
+    },
+    "Progress": {
+      "type": "object",
+      "required": ["phase", "completed", "total"],
+      "additionalProperties": false,
+      "properties": {
+        "phase": { "enum": ["encode", "validate", "decode"] },
+        "completed": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 },
+        "total": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+      }
+    }
+  }
+}

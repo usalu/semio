@@ -299,6 +299,16 @@ export function createBrowserBundleTests(dependencies: import("../../🌐️brow
     assert(validatePolicy(policy), JSON.stringify(validatePolicy.errors));
     assert.equal(artifact.policySha256, Buffer.from(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(artifact.policyCanonical))).toString("hex"));
     assert.equal(artifact.policyCanonical.includes(repoRoot), false);
+    assert(artifact.producer.inputs.length > 20);
+    assert.equal(artifact.producer.runtime.path, realpathSync(process.execPath));
+    assert.equal(artifact.producer.compiler.byteLength, artifact.producer.compiler.bytes.byteLength);
+    assert.equal(Buffer.from(await crypto.subtle.digest("SHA-256", new Uint8Array(artifact.producer.compiler.bytes).buffer)).toString("hex"), policy.compiler.module.sha256);
+    for (const row of artifact.producer.inputs) {
+      assert.equal(Buffer.from(await crypto.subtle.digest("SHA-256", readFileSync(row.path))).toString("hex"), row.sha256);
+      assert.equal(readFileSync(row.path).byteLength, row.byteLength);
+    }
+    for (const row of [...policy.firstParty,...policy.compiler.inputs,...policy.compiler.cores,policy.parser.entry]) assert(artifact.producer.inputs.some((input:any)=>input.logicalPath===row.logicalPath&&input.sha256===row.sha256&&input.byteLength===row.byteLength));
+
     assert.equal(policy.compiler.inputs.length, 11);
     assert.equal(policy.firstParty.length, 6);
     assert.deepEqual(artifact.importInterfaces, input.closed.importInterfaces);

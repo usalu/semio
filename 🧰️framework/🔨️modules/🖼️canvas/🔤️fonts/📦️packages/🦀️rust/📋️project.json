@@ -1,0 +1,25 @@
+{
+  "name": "semio-framework-canvas-font-assets",
+  "projectType": "application",
+  "tags": [
+    "language:cargo"
+  ],
+  "targets": {
+    "build": {
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts build",
+        "cwd": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust",
+        "forwardAllArgs": true
+      },
+      "executor": "nx:run-commands"
+    }
+  }
+}

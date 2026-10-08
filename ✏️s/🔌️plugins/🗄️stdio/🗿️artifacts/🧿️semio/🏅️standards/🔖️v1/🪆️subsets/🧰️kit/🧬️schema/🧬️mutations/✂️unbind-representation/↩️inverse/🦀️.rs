@@ -10,10 +10,8 @@ pub fn inverse(payload: &super::UnbindRepresentation, base: &SemioKitSnapshot) -
     if payload.index >= base.representations.len() {
         return Vec::new();
     }
-    let tail = &base.representations[payload.index..];
-    let mut undo: Vec<SemioKitMutation> = (1..tail.len()).map(|_| SemioKitMutation::UnbindRepresentation(super::UnbindRepresentation { index: payload.index })).collect();
-    undo.extend(tail.iter().map(|link| SemioKitMutation::BindRepresentation(bind_representation::BindRepresentation { target: link.target.clone(), pin: link.pin.clone(), role: link.role.clone() })));
-    undo
+    let link = &base.representations[payload.index];
+    vec![SemioKitMutation::BindRepresentation(bind_representation::BindRepresentation { target: link.target.clone(), pin: link.pin.clone(), role: link.role.clone(), at: Some(payload.index) })]
 
     })())
 }

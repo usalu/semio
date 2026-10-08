@@ -16,11 +16,12 @@ pub struct CreateSizingObject {
     pub zone_id: crate::model::EntityId,
     pub sizing_type: crate::model::SizingType,
     pub design_day_type: crate::model::DesignDayType,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub fn create_sizing_object(id: crate::model::EntityId, zone_id: crate::model::EntityId, sizing_type: crate::model::SizingType, design_day_type: crate::model::DesignDayType) -> EnergyModelMutation {
-    EnergyModelMutation::CreateSizingObject(CreateSizingObject { id, zone_id, sizing_type, design_day_type })
+pub fn create_sizing_object(id: crate::model::EntityId, zone_id: crate::model::EntityId, sizing_type: crate::model::SizingType, design_day_type: crate::model::DesignDayType, index: Option<u32>) -> EnergyModelMutation {
+    EnergyModelMutation::CreateSizingObject(CreateSizingObject { id, zone_id, sizing_type, design_day_type, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateSizingObject {

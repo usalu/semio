@@ -14,12 +14,12 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for ReplaceXmlNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "xml-node", kind: "replace-xml-node", record: "ReplaceXmlNode" };
 
     fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as Mutation<DocxSnapshot>>::Diff> {
-        agg_diff(&DocxMutation::ReplaceXmlNode(self.clone()), base)
+        addressed_outcome(&DocxMutation::ReplaceXmlNode(self.clone()), base)
     }
 
     fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
     Ok({
-        agg_inverse(&DocxMutation::ReplaceXmlNode(self.clone()), base)?
+        addressed_inverse(&DocxMutation::ReplaceXmlNode(self.clone()), base)?
     
     })
 }

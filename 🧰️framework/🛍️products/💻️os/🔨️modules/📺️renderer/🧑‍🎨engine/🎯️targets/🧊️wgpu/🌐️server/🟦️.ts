@@ -1,7 +1,7 @@
 import { createAssetBuildPluginsV1, type AssetDeliveryModeV1, type AssetDeliveryDeclarationV1 } from "../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../../🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
 import { MODULE_ROUTES } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { FONT_ASSET } from "../../../../../♾️infinite/🖼️canvas/🔤️fonts/🟦️.ts";
+import { FONT_ASSET } from "../../../../../../../../🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { existsSync, readFileSync, watch, type FSWatcher } from "node:fs";
 import { basename, dirname, join } from "node:path";

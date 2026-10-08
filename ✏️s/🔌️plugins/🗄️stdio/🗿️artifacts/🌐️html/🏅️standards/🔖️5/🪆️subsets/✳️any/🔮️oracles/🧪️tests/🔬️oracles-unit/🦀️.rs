@@ -101,28 +101,6 @@ mod tests {
     }
 
     #[test]
-    fn set_snapshot_and_its_inverse_round_trip() {
-        let input = b"<!doctype html>\n<html><body>original</body></html>";
-        let root = obj(vec![
-            ("kind", Json::String("element".into())),
-            ("name", Json::String("html".into())),
-            ("attributes", Json::Array(vec![])),
-            (
-                "children",
-                Json::Array(vec![obj(vec![
-                    ("kind", Json::String("element".into())),
-                    ("name", Json::String("body".into())),
-                    ("attributes", Json::Array(vec![])),
-                    ("children", Json::Array(vec![obj(vec![("kind", Json::String("text".into())), ("text", Json::String("replaced".into()))])])),
-                ])]),
-            ),
-        ]);
-        let snapshot = obj(vec![("schema", Json::String("stdio.html".into())), ("doctype", Json::String("DOCTYPE html".into())), ("root", root)]);
-        let round_tripped = apply_mutation_inverse(input, "set-snapshot", &obj(vec![("snapshot", snapshot)])).unwrap();
-        assert_eq!(parse(&round_tripped).unwrap(), parse(input).unwrap());
-    }
-
-    #[test]
     fn script_and_style_content_survive_as_raw_text_and_its_inverse_round_trips() {
         let input = b"<!doctype html>\n<html><head><style>.a { color: red; }</style><script>if (1 < 2) { console.log(1); }</script></head><body></body></html>";
         let doc = parse(input).unwrap();
@@ -167,49 +145,6 @@ mod tests {
     fn real_fixture_every_declared_kind_mutates_and_inverts_cleanly() {
         let base_projection = project(REAL_FIXTURE).unwrap();
         let cases: Vec<(&str, Json)> = vec![
-            (
-                "set-snapshot",
-                obj(vec![(
-                    "snapshot",
-                    obj(vec![
-                    ("schema", Json::String("stdio.html".into())),
-                    ("doctype", Json::String("DOCTYPE html".into())),
-                    (
-                        "root",
-                        obj(vec![
-                            ("kind", Json::String("element".into())),
-                            ("name", Json::String("html".into())),
-                            ("attributes", Json::Array(vec![obj(vec![("name", Json::String("lang".into())), ("value", Json::String("de".into()))])])),
-                            (
-                                "children",
-                                Json::Array(vec![
-                                    obj(vec![
-                                        ("kind", Json::String("element".into())),
-                                        ("name", Json::String("head".into())),
-                                        ("attributes", Json::Array(vec![])),
-                                        (
-                                            "children",
-                                            Json::Array(vec![obj(vec![
-                                                ("kind", Json::String("element".into())),
-                                                ("name", Json::String("title".into())),
-                                                ("attributes", Json::Array(vec![])),
-                                                ("children", Json::Array(vec![obj(vec![("kind", Json::String("text".into())), ("text", Json::String("Wave 7 Snapshot Title".into()))])])),
-                                            ])]),
-                                        ),
-                                    ]),
-                                    obj(vec![
-                                        ("kind", Json::String("element".into())),
-                                        ("name", Json::String("body".into())),
-                                        ("attributes", Json::Array(vec![])),
-                                        ("children", Json::Array(vec![obj(vec![("kind", Json::String("text".into())), ("text", Json::String("Wave 7 snapshot replacement content".into()))])])),
-                                    ]),
-                                ]),
-                            ),
-                        ]),
-                    ),
-                    ]),
-                )]),
-            ),
             ("set-doctype", obj(vec![("doctype", Json::String("DOCTYPE htmlWave7".into()))])),
             (
                 "insert-node",

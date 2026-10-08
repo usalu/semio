@@ -54,15 +54,6 @@ fn spec(kind: &str, params: Json) -> Json {
 }
 
 #[test]
-fn set_snapshot_of_the_fixture_own_snapshot_wire_is_a_true_byte_identity() {
-    let input = fixture();
-    let snapshot = snapshot_to_wire(&raw_doc::read(&input).unwrap());
-    assert_eq!(snapshot.array("vlrs")[0].get("data").unwrap().clone(), Json::Array(b"vlr-a".iter().map(|byte| Json::Number(*byte as f64)).collect()));
-    let output = oracle_apply_mutation(&input, &spec("set-snapshot", Json::Object(vec![("snapshot".to_string(), snapshot)]))).unwrap();
-    assert_eq!(output, input);
-}
-
-#[test]
 fn set_system_identifier_changes_only_that_field() {
     let input = fixture();
     let before = project_las(&input).unwrap();

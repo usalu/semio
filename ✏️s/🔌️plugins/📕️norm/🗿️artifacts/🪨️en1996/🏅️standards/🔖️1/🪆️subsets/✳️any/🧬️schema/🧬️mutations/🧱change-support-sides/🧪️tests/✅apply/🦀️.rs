@@ -1,10 +1,7 @@
-#[test]
-fn sets_four_sided_support() {
-    use crate::mutations::change_support_sides::ChangeSupportSides;
-    use crate::En1996Snapshot;
-    use protocol::MutationKind;
-    let base = En1996Snapshot::noncompliant_multi_fail();
-    let m = ChangeSupportSides { index: 0, new_support_sides: 4 };
-    let outcome = <ChangeSupportSides as MutationKind<En1996Snapshot, crate::En1996Mutation>>::diff(&m, &base);
-    assert_eq!(outcome.diff().walls.as_ref().unwrap().values[0].support_sides, 4);
+//! 🧪️ `change-support-sides` — the committed applied vector's inverse diffs sum to the negative of its forward diff.
+
+#[semio_framework_async_macros::async_test]
+async fn change_support_sides_inverse_diffs_sum_to_the_negative_diff() {
+    let (mutation, before) = crate::mutations::fixture_tests::applied_vector("change-support-sides");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
 }

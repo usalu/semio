@@ -40,7 +40,7 @@ impl store::ArtifactPack for WriterMainWindowConfig {
     }
 }
 
-store::impl_whole_record_config!(WriterMainWindowConfig);
+impl store::ConfigRecord for WriterMainWindowConfig {}
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;

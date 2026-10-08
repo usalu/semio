@@ -7,7 +7,7 @@ use super::super::*;
 pub fn inverse(payload: &super::RemoveBlock, base: &SemioCadSnapshot) -> Result<Vec<SemioCadMutation>, semio_framework_value::ValueError> {
     let super::RemoveBlock { name } = payload;
     Ok(match find_block(base, name) {
-        Some(b) => vec![SemioCadMutation::AddBlock(add_block::AddBlock { block: b.clone() })],
+        Some(b) => vec![SemioCadMutation::AddBlock(add_block::AddBlock { block: b.clone(), at: base.blocks.iter().position(|block| block.name == *name) })],
         None => Vec::new(),
     })
 }

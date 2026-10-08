@@ -509,8 +509,7 @@ fn world3d_preview_window_attaches_the_world_engine_and_paints_the_tessellated_s
 ///
 /// ⚖️ A pick reports the scene's interaction granularity, matching the shared React gesture oracle.
 ///
-/// 🎯️ Aim through the fixture camera's own target — the centre of the prism's base face, the one
-/// point guaranteed both inside the solid and inside the 45° frustum.
+/// 🎯️ Aims through the fixture's solid interior away from the independently pickable extrusion axis.
 ///
 /// 🖱️ A left press opens the marquee gesture and the RELEASE is what picks — the same
 /// press-then-click contract React's World3dHost binds, so the lane drives both halves.
@@ -522,7 +521,21 @@ fn world3d_pointer_down_law(surface_id: &str) {
     let state = states.get_mut(surface_id).expect("attached world state");
 
     let camera = state.orbit.to_camera();
-    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(bounds.w, bounds.h), ui_wgpu::wgpu::Vec3::ZERO, bounds.w, bounds.h).expect("the camera target projects");
+    let point = &fixture["world3d"]["expect"]["pickWorldPosition"];
+    let point = ui_wgpu::wgpu::Vec3::new(point[0].as_f64().unwrap() as f32, point[1].as_f64().unwrap() as f32, point[2].as_f64().unwrap() as f32);
+    let screen = ui_wgpu::wgpu::project_point(camera.view_proj(bounds.w, bounds.h), point, bounds.w, bounds.h).expect("the original solid pick target projects");
+    let tolerance = fixture["world3d"]["expect"]["pickEdgeScreenTolerancePx"].as_f64().unwrap() as f32;
+    for mesh in fixture["world3d"]["meshesJson"].as_array().unwrap() {
+        if mesh["data"]["indices"].as_array().is_some_and(|indices| !indices.is_empty()) { continue; }
+        if let Some(edges) = mesh["data"]["edgePositions"].as_array() {
+            for edge in edges.chunks_exact(6) {
+                let project = |index: usize| ui_wgpu::wgpu::project_point(camera.view_proj(bounds.w, bounds.h), ui_wgpu::wgpu::Vec3::new(edge[index].as_f64().unwrap() as f32, edge[index + 1].as_f64().unwrap() as f32, edge[index + 2].as_f64().unwrap() as f32), bounds.w, bounds.h).unwrap();
+                let (a, b) = (project(0usize), project(3usize));
+                let distance = ui_wgpu::wgpu::screen_segment_distance(screen[0], screen[1], a[0], a[1], b[0], b[1]);
+                assert!(distance > tolerance, "original solid aim intersects independent wire screen tolerance: {distance} <= {tolerance}");
+            }
+        }
+    }
     let mut actions = publish_world3d_intent(state, WorldInteractionIntent::pointer_button(screen[0], screen[1], true, 0, &PointerModifiers::default()));
     actions.extend(publish_world3d_intent(state, WorldInteractionIntent::pointer_button(screen[0], screen[1], false, 0, &PointerModifiers::default())));
     drop_world3d_states(states);
@@ -537,7 +550,12 @@ fn world3d_pointer_down_law(surface_id: &str) {
     let targets: Value = serde_json::from_str(args["targets"].as_str().expect("targets is written as JSON text")).expect("targets text parses");
     assert_eq!(targets[0]["granularity"], fixture["world3d"]["domainGranularityId"]);
     let expected_channel_id = expected_id.split_once('#').map_or(expected_id, |(channel, _)| channel);
+    let oracle = r#"import{PerspectiveCamera,Vector3,BufferGeometry,Float32BufferAttribute,Mesh,MeshBasicMaterial,DoubleSide,Raycaster,LineSegments,LineBasicMaterial}from'three';const f=JSON.parse(process.argv[1]),c=f.cameraJson,camera=new PerspectiveCamera(c.fov,800/600,.01,1000);camera.position.fromArray(c.position);camera.up.fromArray(c.up);camera.lookAt(new Vector3().fromArray(c.target));camera.updateMatrixWorld();const p=new Vector3().fromArray(f.expect.pickWorldPosition).project(camera),ray=new Raycaster();ray.params.Line.threshold=f.expect.pickEdgeScreenTolerancePx*2*Math.tan(c.fov*Math.PI/360)*camera.position.distanceTo(new Vector3().fromArray(c.target))/600;ray.setFromCamera(p,camera);const meshes=f.instancesJson.flatMap(i=>{const d=f.meshesJson.find(m=>m.id===i.meshId).data,g=new BufferGeometry();g.setAttribute('position',new Float32BufferAttribute(d.indices?.length?d.positions:d.edgePositions??d.positions,3));if(d.indices?.length)g.setIndex(d.indices);const m=d.indices?.length?new Mesh(g,new MeshBasicMaterial({side:DoubleSide})):new LineSegments(g,new LineBasicMaterial());m.position.fromArray(i.position);m.quaternion.fromArray(i.rotation);m.scale.fromArray(i.scale);m.name=i.interactionId;m.updateMatrixWorld();return[m]});const hit=ray.intersectObjects(meshes)[0];if(!hit)throw Error('original solid point misses');process.stdout.write(hit.object.name);"#;
+    let witness = std::process::Command::new("bun").args(["-e", oracle, &fixture["world3d"].to_string()]).output().expect("independent Three solid pick oracle");
+    assert!(witness.status.success(), "Three solid pick oracle: {}", String::from_utf8_lossy(&witness.stderr));
+    assert_eq!(String::from_utf8(witness.stdout).unwrap(), expected_channel_id);
     assert_eq!(targets[0]["id"].as_str(), Some(expected_channel_id), "the target is the bare channel-qualified id React's World3dHost dispatches — never `surfaceId/id` and never the render id");
+    println!("[DEBUG] Original solid domain pick matches independent Three target={expected_channel_id}/screen={screen:?}");
 }
 
 #[test]

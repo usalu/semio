@@ -1,7 +1,11 @@
 {
-  "artifact": null,
   "workshop": {
-    "machines": []
+    "added": [],
+    "removed": [
+      "saw"
+    ],
+    "patched": [],
+    "reordered": null
   },
   "stockId": null,
   "stockLabel": null,

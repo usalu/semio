@@ -12,6 +12,10 @@ extern crate semio_framework_os_kernel as store;
 mod art_cad_demo_tests;
 extern crate semio_framework_schema as framework_schema;
 
+#[cfg(test)]
+#[path = "🧪️tests/🚀️activation/🦀️.rs"]
+mod activation_tests;
+
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;

@@ -2,7 +2,7 @@
 //! (which page, which frames, which offset) are the payload, so editing the drag in history re-derives every position
 //! from whatever base it replays on.
 
-use crate::mutations::{layout_frame_selection_diff, layout_frame_selection_inverse, layout_label_frames, layout_label_number, LayoutMutation};
+use crate::mutations::{layout_frame_selection_diff, layout_frame_selection_targets, layout_frame_targets_invariant, layout_label_frames, layout_label_number, move_frame::MoveFrame, LayoutMutation};
 use crate::{FramePatch, LayoutBounds, LayoutDiff, LayoutSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -21,17 +21,21 @@ pub struct DragFrames {
     pub dy: f64,
 }
 
+impl DragFrames {
+    /// ✋️ The bounds a frame holds after the drag: the origin moves by the offset, the extent and rotation stay.
+    pub fn moved(&self, bounds: &LayoutBounds) -> LayoutBounds {
+        LayoutBounds { x: bounds.x + self.dx, y: bounds.y + self.dy, ..bounds.clone() }
+    }
+}
+
 impl MutationKind<LayoutSnapshot, LayoutMutation> for DragFrames {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "drag", entity: "frames", kind: "drag-frames", record: "DraggedFrames" };
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_drag_frames(self, base)
     }
     fn inverse(&self, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
-    Ok({
-        layout_frame_selection_inverse(base, &self.page_id, diff_drag_frames(self, base))?
-    
-    })
-}
+        inverse_drag_frames(self, base)
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         let ((dx_en, dx_de), (dy_en, dy_de)) = (layout_label_number(self.dx), layout_label_number(self.dy));
         let (en, de) = layout_label_frames(self.targets.len());
@@ -49,7 +53,20 @@ pub fn diff_drag_frames(payload: &DragFrames, base: &LayoutSnapshot) -> protocol
     if !(payload.dx.is_finite() && payload.dy.is_finite()) {
         return protocol::MutationOutcome::fatal("mutation.invariant", "A drag offset must be finite.", payload.targets.clone());
     }
-    let transform = |bounds: &LayoutBounds| LayoutBounds { x: bounds.x + payload.dx, y: bounds.y + payload.dy, ..bounds.clone() };
-    layout_frame_selection_diff(base, &payload.page_id, &payload.targets, transform, |next| FramePatch { x: Some(next.x), y: Some(next.y), ..Default::default() })
+    layout_frame_selection_diff(base, &payload.page_id, &payload.targets, |bounds| payload.moved(bounds), |next| FramePatch { x: Some(next.x), y: Some(next.y), ..Default::default() })
 }
 //#endregion 🔺️Diff
+
+//#region ↩️Inverse
+/// ↩️ One absolute origin setter per frame the drag moves, restoring the BASE origin.
+pub fn inverse_drag_frames(payload: &DragFrames, base: &LayoutSnapshot) -> Result<Vec<LayoutMutation>, semio_framework_value::ValueError> {
+    if !(payload.dx.is_finite() && payload.dy.is_finite()) || layout_frame_targets_invariant(&payload.targets).is_err() {
+        return Ok(Vec::new());
+    }
+    Ok(layout_frame_selection_targets(base, &payload.page_id, &payload.targets)
+        .into_iter()
+        .filter(|frame| payload.moved(frame.bounds()) != *frame.bounds())
+        .map(|frame| LayoutMutation::MoveFrame(MoveFrame { page_id: payload.page_id.clone(), frame_id: frame.id().to_string(), new_x: frame.bounds().x, new_y: frame.bounds().y }))
+        .collect())
+}
+//#endregion ↩️Inverse

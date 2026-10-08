@@ -144,14 +144,14 @@ pub struct Change {
 
 /// 🧩️ One owned child's checkpoint pin, captured on the parent's checkpoint so checking out
 /// the parent can restore the whole composition. `child_ref` is the pinned child artifact's real
-/// `crate::os_io::ArtifactRef` — **correction, `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/
+/// `semio_framework_artifact_reference::ArtifactRef` — **correction, `UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave1-reports/
 /// b2-store-composition-report.md`**: the prior wave (`b1-spr-vcs-report.md`) believed `ArtifactRef`
-/// (defined in `🧰️framework/🔨️modules/🚪️io/🦀️.rs`) was unreachable from this crate and fell
+/// (defined in `🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🦀️.rs`) was unreachable from this crate and fell
 /// back to the wire URI `String`. That was wrong: `io/🦀️.rs` is dual-mounted — the
 /// `semio-framework` crate mounts it as `io`, and THIS crate (`semio-framework-os-kernel`) mounts the
-/// very same source file as `os_io` (see `💻️os/📦️packages/🦀️rust/🦀️.rs:237-238`,
-/// `pub mod os_io;`) — no cross-crate dependency-direction problem exists; `store` already reaches
-/// `crate::os_io::ArtifactDialect` directly (`🏪️store/🦀️.rs:88/105/662`). Sorting for
+/// very same source file as `io` (see `💻️os/📦️packages/🦀️rust/🦀️.rs:237-238`,
+/// `pub mod io;`) — no cross-crate dependency-direction problem exists; `store` already reaches
+/// `semio_framework_artifact_reference::ArtifactDialect` directly (`🏪️store/🦀️.rs:88/105/662`). Sorting for
 /// [`content_addressed_checkpoint_id`] below is therefore by `child_ref.to_uri()` (the same
 /// deterministic string this field used to store literally), not by any `Ord` on `ArtifactRef`
 /// itself (which does not implement one).

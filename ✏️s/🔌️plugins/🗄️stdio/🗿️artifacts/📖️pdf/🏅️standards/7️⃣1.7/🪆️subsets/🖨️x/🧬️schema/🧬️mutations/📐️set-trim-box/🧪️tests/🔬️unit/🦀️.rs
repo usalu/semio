@@ -7,7 +7,7 @@ use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
 fn changes_the_owned_conformance_axis_and_plans_its_inverse() {
     let base = support::document_of(vec![support::dict(vec![("Type", PdfObject::Name("Page".to_string()))])]);
     let page = ObjRef { num: 1, gen: 0 };
-    let mutation = SetTrimBox { page_index: 0, trim_box: [1.0, 2.0, 300.0, 400.0] };
+    let mutation = SetTrimBox { page_index: 0, trim_box: [1.0, 2.0, 300.0, 400.0], entry_index: None };
     let next = applied(&base, &PdfXMutation::SetTrimBox(mutation.clone()));
     assert_eq!(support::page_box(&next, page, "TrimBox"), Some([1.0, 2.0, 300.0, 400.0]));
     assert_eq!(<SetTrimBox as MutationKind<PdfSnapshot, PdfXMutation>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture"), vec![PdfXMutation::RemoveTrimBox(RemoveTrimBox { page_index: 0 })]);
@@ -16,5 +16,5 @@ fn changes_the_owned_conformance_axis_and_plans_its_inverse() {
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_the_negative_diff() {
     let base = support::document_of(vec![support::dict(vec![("Type", PdfObject::Name("Page".to_string()))])]);
-    assert_mutation_inverse_sum_law(&PdfXMutation::SetTrimBox(SetTrimBox { page_index: 0, trim_box: [1.0, 2.0, 300.0, 400.0] }), &base).await;
+    assert_mutation_inverse_sum_law(&PdfXMutation::SetTrimBox(SetTrimBox { page_index: 0, trim_box: [1.0, 2.0, 300.0, 400.0], entry_index: None }), &base).await;
 }

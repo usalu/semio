@@ -46,10 +46,10 @@ Feature: Apply every typed PPTX ECMA-376 Transitional conformance-class mutation
 
   Every `params` cell is the leaf's own wire payload. Both implementations read that one wire: the reference engine by field name, the subject through
   `Mutation::from_payload_value`, whose re-emitted payload must equal the row exactly; the subject
-  undoes every row with `Mutation::inverse` itself. `set-snapshot` replaces the whole package, so its
-  payload is the entire stamped package and no table cell: it is the plain `mutate-set-snapshot`/
-  `inverse-set-snapshot` pair, in which the subject records `stamp_conformance_class_mutation` — one
-  `set-snapshot` of its own strict-class stamp — and the reference stamps with its own engine.
+  undoes every row with `Mutation::inverse` itself. The strict-class stamp has no table cell: it is the plain
+  `mutate-stamp-strict-class`/`inverse-stamp-strict-class` pair, in which the subject records the namespace,
+  relationship-base and conformance-attribute mutations of `stamp_conformance_class_mutations` and the reference
+  stamps with its own engine.
 
   @id-mutate
   @level-exhaustive
@@ -88,20 +88,20 @@ Feature: Apply every typed PPTX ECMA-376 Transitional conformance-class mutation
       | set-conformance-attribute    | {"value": "strict"}                                                 |
       | remove-conformance-attribute | {}                                                                  |
 
-  @id-mutate-set-snapshot
+  @id-mutate-stamp-strict-class
   @level-exhaustive
   @mode-differential
-  Scenario: Replace the real presentation package with its own strict-class stamp
+  Scenario: Stamp the real presentation package into the strict class through its concrete conformance mutations
     Given the real input package shared://📽️.pptx
-    When the whole package is replaced by its own stamp into the strict conformance class
+    When the package is stamped strict through the namespace, relationship-base and conformance-attribute mutations
     Then the oracle and the subject agree on the conformance-class projection
 
-  @id-inverse-set-snapshot
+  @id-inverse-stamp-strict-class
   @level-exhaustive
   @mode-property
-  Scenario: Undoing the strict-class stamp restores the real presentation package
+  Scenario: Undoing the strict stamp restores the real presentation package
     Given the real input package shared://📽️.pptx
-    When the whole package is replaced by its own strict-class stamp and that replacement is undone
+    When the package is stamped strict through those mutations and then stamped back
     Then the oracle and the subject agree on the conformance-class projection of the original package
 
   @id-identity-round-trip

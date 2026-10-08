@@ -256,6 +256,69 @@
       "cwd": "compiler",
       "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts native owner-command --manifest compiler/Cargo.toml --cwd compiler -- bun ./📜️script.ts preview-generated",
       "valid": false
+    },
+    {
+      "id": "framework-process-owner",
+      "ownerPath": "🧰️framework/📦️packages/🦀️rust",
+      "cwd": "🧰️framework",
+      "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts preview-generated",
+      "valid": true
+    },
+    {
+      "id": "framework-process-foreign-config",
+      "ownerPath": "🧰️framework/📦️packages/🦀️rust",
+      "cwd": "🧰️framework",
+      "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./foreign.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts preview-generated",
+      "valid": false
+    },
+    {
+      "id": "framework-process-foreign-manifest",
+      "ownerPath": "🧰️framework/📦️packages/🦀️rust",
+      "cwd": "🧰️framework",
+      "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest foreign/Cargo.toml -- bun ./📜️script.ts preview-generated",
+      "valid": false
+    },
+    {
+      "id": "framework-process-foreign-package-cwd",
+      "ownerPath": "🧰️framework/📦️packages/🦀️rust",
+      "cwd": "🧰️framework",
+      "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd foreign --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts preview-generated",
+      "valid": false
+    },
+    {
+      "id": "framework-process-foreign-preview-script",
+      "ownerPath": "🧰️framework/📦️packages/🦀️rust",
+      "cwd": "🧰️framework",
+      "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./foreign.ts preview-generated",
+      "valid": false
+    },
+    {
+      "id": "framework-process-foreign-process-ingress",
+      "ownerPath": "🧰️framework/📦️packages/🦀️rust",
+      "cwd": "🧰️framework",
+      "command": "bun ./foreign/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts preview-generated",
+      "valid": false
+    },
+    {
+      "id": "framework-process-wrong-preview-operation",
+      "ownerPath": "🧰️framework/📦️packages/🦀️rust",
+      "cwd": "🧰️framework",
+      "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts generate",
+      "valid": false
+    },
+    {
+      "id": "framework-process-foreign-root",
+      "ownerPath": "🧰️framework/📦️packages/🦀️rust",
+      "cwd": ".",
+      "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts preview-generated",
+      "valid": false
+    },
+    {
+      "id": "framework-process-parent-owner",
+      "ownerPath": "🧰️framework/../foreign",
+      "cwd": "🧰️framework",
+      "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts preview-generated",
+      "valid": false
     }
   ]
 }

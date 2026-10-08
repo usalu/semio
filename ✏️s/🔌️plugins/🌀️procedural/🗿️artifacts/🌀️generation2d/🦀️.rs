@@ -239,6 +239,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect/🧪️tests/✂️severs/🦀️.rs"]
                             mod tests_severs_link_ab_leaving_both_notes;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+                            mod tests_removes_a_middle_row;
                         }
                         #[path = "."]
                         pub mod delete_widget {
@@ -252,6 +255,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_note_a_and_flags_the_dangling_synapse;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+                            mod tests_removes_a_middle_row;
                         }
                         #[path = "."]
                         pub mod update_camera {
@@ -356,6 +362,9 @@ pub mod standards {
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-generation/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_the_selected_generation_2_and_falls_back_to_generation_1;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-generation/🧪️tests/📍️removes-a-middle-row/🦀️.rs"]
+                            mod tests_removes_a_middle_row;
                         }
                         #[path = "."]
                         pub mod rename_generation {

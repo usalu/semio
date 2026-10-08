@@ -1,13 +1,14 @@
 /** 🌱️ `create-image` wire twin: the flat `Apply` payload `GltfCreateImagePayload` and the phase wire `CreateImageMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
-import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireIndex, gltfWireObject, gltfWireRequired, gltfWireOptional, type GltfImage, parseGltfImage } from "../../../📸️snapshot/🟦️.ts";
+import { type GltfApplyPhase, gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfCreateImagePayload {
   position: bigint;
+  image?: GltfImage;
 }
 
-export type CreateImageMutation = GltfPhase<GltfCreateImagePayload, GltfDiff>;
+export type CreateImageMutation = GltfApplyPhase<GltfCreateImagePayload>;
 
-export const parseGltfCreateImagePayload = gltfWireObject<GltfCreateImagePayload>({ position: gltfWireRequired(gltfWireIndex) });
-export const parseCreateImageMutation = gltfWirePhase(parseGltfCreateImagePayload, parseGltfDiff);
+export const parseGltfCreateImagePayload = gltfWireObject<GltfCreateImagePayload>({ position: gltfWireRequired(gltfWireIndex), image: gltfWireOptional(parseGltfImage) });
+export const parseCreateImageMutation = gltfWireApplyPhase(parseGltfCreateImagePayload);

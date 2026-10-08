@@ -238,15 +238,15 @@ async fn every_boot_document_mutation_is_admissible_on_the_artifact_lane() {
     let boot = crate::standards::v1::subsets::any::io::text::snapshot::fem3d_boot_snapshot();
     let factory = Fem3dArtifactPreparationFactory;
     for solid in &boot.solids {
-        let mutation = Fem3dMutation::CreateSolid(crate::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid: solid.clone() });
+        let mutation = Fem3dMutation::CreateSolid(crate::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid: solid.clone(), index: None });
         assert!(factory.preflight(&mutation, store::HistoryLane::Document).is_ok(), "solid {} exceeds the artifact one-item envelope", solid.id);
     }
     for node in &boot.nodes {
-        let mutation = Fem3dMutation::CreateNode(crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: node.clone() });
+        let mutation = Fem3dMutation::CreateNode(crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: node.clone(), index: None });
         assert!(factory.preflight(&mutation, store::HistoryLane::Document).is_ok(), "node {} exceeds the artifact one-item envelope", node.id);
     }
     assert!(factory
-        .preflight(&Fem3dMutation::CreateNode(crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: crate::FemNode { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 } }), store::HistoryLane::Interaction)
+        .preflight(&Fem3dMutation::CreateNode(crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: crate::FemNode { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 }, index: None }), store::HistoryLane::Interaction)
         .is_err());
 }
 
@@ -565,7 +565,7 @@ async fn import_media_geometry_in_adds_a_new_solid_3d() {
     let emit = Fem3dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
     assert_eq!(emit.artifact_mutations.len(), 1);
     match &emit.artifact_mutations[0] {
-        Fem3dMutation::CreateSolid(crate::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid }) => {
+        Fem3dMutation::CreateSolid(crate::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid, .. }) => {
             assert_eq!(solid.outline, vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]);
             assert_eq!(solid.base_z, 0.5);
             assert_eq!(solid.height, 3.0);

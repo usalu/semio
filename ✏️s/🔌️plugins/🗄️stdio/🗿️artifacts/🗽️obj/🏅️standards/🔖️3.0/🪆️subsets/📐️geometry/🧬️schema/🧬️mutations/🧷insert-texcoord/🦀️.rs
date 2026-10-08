@@ -1,6 +1,4 @@
-//! 🧷️ `insert-texcoord` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🧷️ `insert-texcoord` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 //! `#[derive(dsl::DslRecord)]` gives this leaf its own `DslField` impl with the SAME field spec
 //! `record_codegen` built when these fields lived inline in the enum variant — the aggregate's
 //! tuple variant is a single-field newtype, so `#[derive(dsl::DslOps)]`'s `DslVariants` derive
@@ -24,14 +22,13 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for InsertTexcoord {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "texcoord", kind: "insert-texcoord", record: "InsertTexcoord" };
 
     fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
-        agg_diff(&ObjMutation::InsertTexcoord(self.clone()), base)
+        let Self { index, texcoord } = self;
+        protocol::MutationOutcome::new(diff_insert_texcoord(*index, texcoord.clone()))
     }
     fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&ObjMutation::InsertTexcoord(self.clone()), base)?
-    
-    })
-}
+        let Self { index, .. } = self;
+        Ok({ vec![ObjMutation::RemoveTexcoord(remove_tex_coord::RemoveTexcoord { index: (*index).min(base.texcoords.len()) })] })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert texcoord", "Texturkoordinate einfügen")
     }

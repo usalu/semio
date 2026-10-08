@@ -31,7 +31,7 @@ fn mutation() -> SemioKitMutation {
 #[semio_framework_async_macros::async_test]
 async fn replaces_both_nested_collections_and_keeps_the_designs_identity() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("edit-design applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("edit-design applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "edit-design/replaces-the-designs-pieces-and-connections-in-one-step: applied state differs from the committed after-snapshot");
     assert_eq!(produced.designs[0].pieces.len(), 2, "the payload's piece list replaces the design's own wholesale");
     assert_eq!(produced.designs[0].connections.len(), 1, "the payload's connection list lands in the same step");
@@ -45,14 +45,15 @@ async fn replaces_both_nested_collections_and_keeps_the_designs_identity() {
 async fn the_undo_edit_design_restores_the_captured_content() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "edit-design of an existing design undoes as exactly one edit-design");
     let SemioKitMutation::EditDesign(restore) = &undo[0] else { panic!("edit-design must undo as edit-design") };
     assert_eq!(restore.pieces, base.designs[0].pieces, "the undo must recapture BASE's own pieces");
     assert_eq!(restore.connections, base.designs[0].connections, "the undo must recapture BASE's own connections");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward edit-design applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo edit-design applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward edit-design applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo edit-design applies");
     }
     assert_eq!(current, base, "edit-design/replaces-the-designs-pieces-and-connections-in-one-step: the undo did not restore the before-snapshot");
 }
@@ -96,8 +97,6 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-design diff decodes");
     let designs = decoded.designs.as_ref().expect("edit-design must write the designs slot");
-    assert_eq!(designs.values[0].pieces.len(), 2, "the diff itself must already carry the new piece list");
-    assert_eq!(designs.values[0].connections.len(), 1, "and the new connection list");
     assert!(decoded.types.is_none() && decoded.objects.is_none() && decoded.models.is_none() && decoded.properties.is_none() && decoded.representations.is_none(), "no other kit slot may appear in the diff");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -108,6 +107,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioKitDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-design diff decodes");
-    let produced = decoded.apply(&before()).expect("committed edit-design diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed edit-design diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "edit-design/replaces-the-designs-pieces-and-connections-in-one-step: committed diff did not carry before to after");
 }

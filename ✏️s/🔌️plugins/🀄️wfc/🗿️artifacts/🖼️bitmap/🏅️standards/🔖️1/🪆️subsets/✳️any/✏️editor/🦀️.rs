@@ -1068,9 +1068,7 @@ impl BitmapEditor {
             return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.palette.unknown-color"), "wfc.bitmap.palette.unknown-color"));
         }
         let view = view_state.ok_or_else(|| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("wfc.bitmap.window.view-required"), "wfc.bitmap.window.view-required"))?;
-        let mut config = input::config::current(cfg);
-        config.active_color = index;
-        let mutation: WindowConfigMutation = input::config::addressed(view, config)?;
+        let mutation: WindowConfigMutation = input::config::addressed(view, input::config::BitmapInputWindowConfigMutation::SetActiveColor { color: index })?;
         Ok(Emit { window_config_mutations: vec![mutation], ..Default::default() })
     }
 }

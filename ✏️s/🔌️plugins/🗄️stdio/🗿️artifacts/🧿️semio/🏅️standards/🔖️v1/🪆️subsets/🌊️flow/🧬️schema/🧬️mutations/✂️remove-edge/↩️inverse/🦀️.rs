@@ -7,7 +7,7 @@ use super::super::*;
 pub fn inverse(payload: &super::RemoveEdge, base: &SemioFlowSnapshot) -> Result<Vec<SemioFlowMutation>, semio_framework_value::ValueError> {
     let super::RemoveEdge { id } = payload;
     Ok(match edge_at(base, id) {
-        Some(edge) => vec![SemioFlowMutation::InsertEdge(insert_edge::InsertEdge { edge: edge.clone() })],
+        Some(edge) => vec![SemioFlowMutation::InsertEdge(insert_edge::InsertEdge { edge: edge.clone(), at: base.edges.iter().position(|e| e.id == *id) })],
         None => Vec::new(),
     })
 }

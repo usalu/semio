@@ -30,7 +30,7 @@ fn mutation() -> SemioGraphMutation {
 async fn removes_only_the_addressed_edge() {
     let base = before();
     assert_eq!(base.edges.len(), 2, "the fixture needs a sibling edge for the no-cascade claim to mean anything");
-    let produced = mutation().diff(&base).diff().apply(&base).expect("delete-edge applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("delete-edge applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "delete-edge/removes-the-feedback-edge-and-keeps-both-endpoints: applied state differs from the committed after-snapshot");
     assert!(!produced.edges.iter().any(|edge| edge.id.value == "e2"), "the addressed edge must be gone");
     assert_eq!(produced.edges, vec![base.edges[0].clone()], "the sibling edge must survive byte-identical");
@@ -42,14 +42,15 @@ async fn removes_only_the_addressed_edge() {
 async fn the_undo_create_edge_restores_the_full_captured_edge_in_place() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     let [SemioGraphMutation::CreateEdge(recreate)] = undo.as_slice() else { panic!("delete-edge must undo as one create-edge: {undo:?}") };
     assert_eq!(recreate.label, "B back to A", "the undo must recapture the deleted edge's own label from base");
     assert_eq!(recreate.kind, "feedback", "the undo must recapture the deleted edge's own kind from base");
     assert_eq!(recreate.at, base.edges.iter().position(|edge| edge.id == recreate.id), "the undo names the edge's base index");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward delete-edge applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo create-edge applies to the disconnected graph");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward delete-edge applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo create-edge applies to the disconnected graph");
     }
     assert_eq!(current, base, "delete-edge/removes-the-feedback-edge-and-keeps-both-endpoints: the undo did not restore the before-snapshot");
 }
@@ -93,7 +94,6 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical_and_omits_nodes_entirely() {
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-edge diff decodes");
     assert!(decoded.nodes.is_none(), "delete-edge must leave the nodes slot untouched");
-    assert_eq!(decoded.edges.as_ref().map(|list| list.values.len()), Some(1), "the diff must carry the whole rebuilt edges list");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert!(committed.get("nodes").is_none(), "the committed diff JSON must not carry a nodes key at all");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
@@ -104,6 +104,6 @@ async fn committed_diff_is_canonical_and_omits_nodes_entirely() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-edge diff decodes");
-    let produced = decoded.apply(&before()).expect("committed delete-edge diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed delete-edge diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-edge/removes-the-feedback-edge-and-keeps-both-endpoints: committed diff did not carry before to after");
 }

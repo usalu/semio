@@ -4,3 +4,8 @@
 fn committed_vector_holds() {
     super::assert_vector("🏷️change-thermal-bridge-bb2-type", "✅apply");
 }
+
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    super::assert_inverse_sum_law("🏷️change-thermal-bridge-bb2-type", "✅apply").await;
+}

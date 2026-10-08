@@ -12,7 +12,13 @@ pub fn diff(payload: &super::AddRepresentationTag, base: &Block3dSnapshot) -> pr
     if existing.tags.contains(&payload.tag) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("representation tag \"{}\" already present", payload.tag));
     }
-    let patch = BlockRepresentationPatch { tags_added: vec![payload.tag.clone()], ..Default::default() };
+    let patch = match payload.index.map(|index| index as usize).filter(|index| *index < existing.tags.len()) {
+        Some(index) => {
+            let tail = &existing.tags[index..];
+            BlockRepresentationPatch { tags_removed: tail.to_vec(), tags_added: std::iter::once(payload.tag.clone()).chain(tail.iter().cloned()).collect(), ..Default::default() }
+        }
+        None => BlockRepresentationPatch { tags_added: vec![payload.tag.clone()], ..Default::default() },
+    };
     protocol::MutationOutcome::new(Block3dDiff { representations: Some(BlockRepresentationsDelta { patched: vec![BlockRepresentationsPatchEntry { id: payload.id.clone(), patch }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -1,9 +1,10 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "shapeModel": null,
-  "buildingModel": null,
+  "buildingModel": {
+    "child": null
+  },
   "energyModel": null,
   "structureClassicModel": null,
   "drawings": null,

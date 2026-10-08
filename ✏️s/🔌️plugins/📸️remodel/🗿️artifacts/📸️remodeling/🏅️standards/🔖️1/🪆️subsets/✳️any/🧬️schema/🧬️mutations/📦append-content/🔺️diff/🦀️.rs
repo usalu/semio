@@ -4,8 +4,8 @@
 //! differ ⇒ `mutation.target-mismatch`; a result beyond the kind's envelope ⇒ `mutation.target-mismatch`.
 //! Leaves that are already stored byte for byte ⇒ Warning `mutation.no-op`, so an identical reconstruction
 //! re-lands on the same content-addressed entry without rewriting it.
-use crate::diff::RemodelingDiff;
-use crate::{remodeling_durable_chunk, RemodelingDurableArtifact, RemodelingSnapshot};
+use crate::diff::{RemodelingContentHeader, RemodelingContentRow, RemodelingDiff};
+use crate::{remodeling_durable_chunk, RemodelingSnapshot};
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::AppendContent, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {
@@ -43,9 +43,7 @@ pub fn diff(payload: &super::AppendContent, base: &RemodelingSnapshot) -> protoc
     if total_chunks > payload.kind.max_chunks() || stored_bytes + appended_bytes > payload.kind.max_bytes() {
         return protocol::MutationOutcome::error("mutation.target-mismatch", format!("Content \"{}\" would exceed its {} envelope.", payload.content_id, payload.kind.wire()), target);
     }
-    let mut durable_artifacts = base.durable_artifacts.clone();
-    let entry = durable_artifacts.entry(payload.content_id.clone()).or_insert_with(|| RemodelingDurableArtifact { kind: payload.kind.wire().into(), mime: payload.mime.clone(), width: payload.width, height: payload.height, chunks: Vec::new() });
-    entry.chunks.extend(payload.chunks[overlap..].iter().cloned());
-    protocol::MutationOutcome::new(RemodelingDiff { durable_artifacts: Some(durable_artifacts), ..Default::default() })
+    let header = existing.is_none().then(|| RemodelingContentHeader { kind: payload.kind.wire().into(), mime: payload.mime.clone(), width: payload.width, height: payload.height });
+    protocol::MutationOutcome::new(RemodelingDiff::content_rows(vec![RemodelingContentRow::Append { id: payload.content_id.clone(), header, chunks: payload.chunks[overlap..].to_vec() }]))
 }
 //#endregion 🔖️Diff

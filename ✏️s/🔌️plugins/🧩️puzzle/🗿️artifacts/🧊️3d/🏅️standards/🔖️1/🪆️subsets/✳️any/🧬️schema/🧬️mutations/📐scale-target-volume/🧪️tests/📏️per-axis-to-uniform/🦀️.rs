@@ -98,7 +98,7 @@ fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "scale-target-volume/per-axis-to-uniform: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert!(committed["targetVolumes"]["patched"][0]["patch"]["replacement"]["scale"].is_number(), "scale-target-volume/per-axis-to-uniform: the uniform form must serialize as a bare number, not an array");
+    assert!(committed["targetVolumes"]["patched"][0]["patch"]["scale"].is_number(), "scale-target-volume/per-axis-to-uniform: the uniform form must serialize as a bare number, not an array");
     assert!(committed["references"].is_null(), "scale-target-volume/per-axis-to-uniform: scaling a box never touches a reference plane");
 }
 
@@ -116,6 +116,13 @@ fn committed_diff_is_canonical() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff as protocol::MutationDiff<Puzzle3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "scale-target-volume/per-axis-to-uniform: committed diff did not carry before to after");
+}
+
+/// ➕️ The concrete inverse rows' diffs sum to exactly the negative of the forward diff (law L3): replaying them restores `before`,
+/// the absorbed sum carries the applied state back, and it equals `diff.inverse(before)`.
+#[test]
+fn inverse_sums_to_the_negative_diff() {
+    ::semio_framework_async::poll::resolve_ready(protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()));
 }

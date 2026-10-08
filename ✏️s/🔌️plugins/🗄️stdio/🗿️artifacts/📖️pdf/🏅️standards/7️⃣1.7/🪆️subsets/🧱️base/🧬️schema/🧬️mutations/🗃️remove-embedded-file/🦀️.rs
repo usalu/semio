@@ -26,7 +26,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveEmbeddedFile {
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.embedded_files.iter().find(|item| item.id == self.id).map(|item| PdfMutation::SetEmbeddedFile(super::set_embedded_file::SetEmbeddedFile { file: item.clone() })).into_iter().collect()
+        base.embedded_files.iter().position(|item| item.id == self.id).map(|index| PdfMutation::SetEmbeddedFile(super::set_embedded_file::SetEmbeddedFile { file: base.embedded_files[index].clone(), index: Some(index) })).into_iter().collect()
     
     })())
 }

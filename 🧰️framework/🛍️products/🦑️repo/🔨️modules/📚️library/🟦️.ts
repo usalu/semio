@@ -39,7 +39,7 @@ import type { PlaygroundSelection as PlaygroundVariant } from "./🎮️playgrou
 
 import { loadFrameworkOsPlaygroundCatalog } from "./🎮️playground/🟦️.ts";
 import { getWorkspaceRoot } from "./🗂️workspaces/🟦️.ts";
-import { cargoRepositoryPackages, cargoRepositoryPackageSelections, cargoWorkspaceForManifest, selectedCargoArguments, prepareCargoWorkspaceInvocation } from "./🗂️workspaces/🦀️cargo/🟦️.ts";
+import { cargoRepositoryPackages, cargoRepositoryPackageSelections, cargoWorkspaceForManifest, cargoNextestConfiguration, selectedCargoArguments, prepareCargoWorkspaceInvocation } from "./🗂️workspaces/🦀️cargo/🟦️.ts";
 import { budgetTimeoutHint, cargoProfileDir, defaultBudgetMs, daemonBudgetOpts, orchestratorBudgetOpts, resolveWorkspaceBin, runCmd, runCmdStatus, runNodeBin, runNodeBinStatus, semioBuildMode, semioShipEnv, tryRun, type RunCmdOpts, type SemioBuildMode } from "./🏃️process/🟦️.ts";
 
 export const HUB_DATA_DIR_NAME = "🌐hub";
@@ -1410,8 +1410,7 @@ export function nextestArtifactLocation(cwd: string, env: NodeJS.ProcessEnv = pr
 export function repositoryCargoTestPolicyV1(manifestPath:string,cwd:string,env:Readonly<Record<string,string|undefined>>=process.env):CargoTestPolicyV1 {
   const repository=getWorkspaceRoot(), path=resolve(repository,manifestPath), relativePath=relative(repository,path).split(sep).join("/"), scope=cargoWorkspaceForManifest(repository,relativePath), cargo=Bun.TOML.parse(readFileSync(path,"utf8")) as {package?:{name?:string}};
   if(!cargo.package?.name)throw Error(`Cargo test policy requires a package manifest: ${manifestPath}`);
-  const level=isTestLevel(env.SEMIO_TEST_LEVEL)?env.SEMIO_TEST_LEVEL:activeTestLevel(), configPath=join(repository,scope.directory,".config","nextest.toml"), artifact=nextestArtifactLocation(cwd,env);
-  if(!existsSync(configPath))throw Error(`Selected Cargo test configuration is missing: ${configPath}`);
+  const level=isTestLevel(env.SEMIO_TEST_LEVEL)?env.SEMIO_TEST_LEVEL:activeTestLevel(), configPath=cargoNextestConfiguration(repository,scope.directory), artifact=nextestArtifactLocation(cwd,env);
   return {version:1,manifestPath:path,targetDirectory:cargoTargetDirectory(repository,env),nextest:cargoNextestAvailable(),configPath,level,assertionBudgets:Object.fromEntries(TEST_LEVELS.map(value=>[value,packageTestBudgetMs([cargo.package!.name!],value,env)])) as Record<TestLevel,number>,buildBudgetMs:buildBudgetMs(env),assertionThreads:Math.max(1,availableParallelism()-Math.max(1,Math.ceil(availableParallelism()/4))),artifactDirectory:artifact.directory,retainArtifacts:artifact.retain,coverageEnabled:env.SEMIO_COVERAGE==="1",coveragePath:join(coverageDir(repository,"rust"),`${coverageSlug(cargo.package.name)}.lcov`),rustMinStack:env.RUST_MIN_STACK??"134217728"};
 }
 

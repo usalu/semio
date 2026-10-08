@@ -1,12 +1,12 @@
 //! 🔺️ Sparse diff builder for `DisconnectSynapse` — a real id-keyed removal from the fixture's
 //! synapse collection helper (never a whole-snapshot capture).
 
-use crate::standards::v1::subsets::any::schema::diff::{diff_snapshot_from_helpers, Generation2dDiff, LayoutDiff, SynapsesDiff, WidgetsDiff};
+use crate::standards::v1::subsets::any::schema::diff::{Generation2dDiff, Generation2dSynapsesDelta};
 use crate::Generation2dSnapshot;
 
 pub fn diff(payload: &super::DisconnectSynapse, base: &Generation2dSnapshot) -> protocol::MutationOutcome<Generation2dDiff> {
     if !base.host_snapshot.synapses.iter().any(|synapse| synapse.id == payload.id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
-    protocol::MutationOutcome::new(diff_snapshot_from_helpers(base, &WidgetsDiff::default(), &SynapsesDiff { removed: vec![payload.id.clone()], set: vec![] }, &LayoutDiff::default(), None, None))
+    protocol::MutationOutcome::new(Generation2dDiff { synapses: Some(Generation2dSynapsesDelta { removed: vec![payload.id.clone()], ..Default::default() }), ..Default::default() })
 }

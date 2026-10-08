@@ -62,3 +62,52 @@ impl Default for WriterMainWindowConfig {
         Self { camera: WriterCamera::default(), editor_settings: WriterEditorSettings::default() }
     }
 }
+
+/// 🔺️ Sparse field delta over [`WriterMainWindowConfig`]: every present slot is the new value of exactly that field.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct WriterMainWindowConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera: Option<WriterCamera>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub editor_settings: Option<WriterEditorSettings>,
+}
+
+impl protocol::MutationDiff<WriterMainWindowConfig> for WriterMainWindowConfigDiff {
+    fn apply(&self, base: &WriterMainWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<WriterMainWindowConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.camera {
+            next.camera = value.clone();
+        }
+        if let Some(value) = &self.editor_settings {
+            next.editor_settings = value.clone();
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.camera.is_some() {
+            self.camera = other.camera;
+        }
+        if other.editor_settings.is_some() {
+            self.editor_settings = other.editor_settings;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<WriterMainWindowConfig> for WriterMainWindowConfigDiff {
+    fn inverse(&self, base: &WriterMainWindowConfig) -> Self {
+        Self {
+            camera: self.camera.as_ref().map(|_| base.camera.clone()),
+            editor_settings: self.editor_settings.as_ref().map(|_| base.editor_settings.clone()),
+        }
+    }
+    fn between(base: &WriterMainWindowConfig, other: &WriterMainWindowConfig) -> Self {
+        Self {
+            camera: (base.camera != other.camera).then(|| other.camera.clone()),
+            editor_settings: (base.editor_settings != other.editor_settings).then(|| other.editor_settings.clone()),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.camera.is_none() && self.editor_settings.is_none()
+    }
+}

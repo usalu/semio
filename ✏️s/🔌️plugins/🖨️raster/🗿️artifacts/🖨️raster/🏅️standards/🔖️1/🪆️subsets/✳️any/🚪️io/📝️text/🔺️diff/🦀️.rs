@@ -11,12 +11,9 @@ pub type RasterDiffText = String;
 
 
 use crate::standards::v1::subsets::any::schema::diff::*;
-use crate::standards::v1::subsets::any::schema::RasterArtifact;
 use crate::standards::v1::subsets::any::io::text::mutations::RasterImageDsl;
 use crate::{RasterLayerNode,RasterLayerPatch,RasterOwnedMap};
 use semio_framework_dsl_record::{RecordValue,RecordSpec};
-#[derive(semio_framework_dsl_record_derive::DslRecord)]
-struct RasterArtifactDsl {#[dsl(block)] document:RasterNativeDocument}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 struct RasterAssetDeltaDsl {key:String,#[dsl(block)] image:Option<RasterImageDsl>}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
@@ -30,7 +27,7 @@ struct RasterLayerMoveDsl {id:String,parent_id:Option<String>,index:usize}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 struct RasterLayersDeltaDsl {#[dsl(table)] added:Vec<RasterLayerInsertionDsl>,removed:Vec<String>,#[dsl(table)] patched:Vec<RasterLayerPatchEntryDsl>,#[dsl(table)] moved:Vec<RasterLayerMoveDsl>}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
-struct RasterDiffDsl {#[dsl(block)] artifact:Option<RasterArtifactDsl>,schema:Option<String>,id:Option<String>,title:Option<Option<String>>,#[dsl(block)] layers:Option<RasterLayersDeltaDsl>,#[dsl(block)] assets:Option<RasterAssetsDeltaDsl>}
+struct RasterDiffDsl {schema:Option<String>,id:Option<String>,title:Option<Option<String>>,#[dsl(block)] layers:Option<RasterLayersDeltaDsl>,#[dsl(block)] assets:Option<RasterAssetsDeltaDsl>}
 use crate::RasterSnapshot;
 use crate::standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument;
 fn document_to_dsl(snapshot:RasterSnapshot)->RasterNativeDocument {
@@ -47,15 +44,14 @@ fn layer_from_dsl(document:RasterNativeDocument)->Result<RasterLayerNode,semio_f
  Ok(layer)
 }
 fn admit_diff_record(wire:RasterDiffDsl)->Result<RasterDiff,semio_framework_diagnostic::TextError> {
- let artifact=wire.artifact.map(|v|v.document.ordinary_snapshot().map(|v|Box::new(RasterArtifact{schema:v.schema,id:v.id,title:v.title,layers:v.layers,assets:v.assets})).map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error,semio_framework_diagnostic::TextSpan::at(1,1)))).transpose()?;
  let layers=wire.layers.map(|v|Ok(RasterLayersDelta{added:v.added.into_iter().map(|a|Ok(RasterLayerInsertion{parent_id:a.parent_id,index:a.index,layer:layer_from_dsl(a.layer)?})).collect::<Result<Vec<_>,semio_framework_diagnostic::TextError>>()?,removed:v.removed,patched:v.patched.into_iter().map(|p|RasterLayerPatchEntry{id:p.id,patch:p.patch}).collect(),moved:v.moved.into_iter().map(|m|RasterLayerMove{id:m.id,parent_id:m.parent_id,index:m.index}).collect()})).transpose()?;
- Ok(RasterDiff{artifact,schema:wire.schema,id:wire.id,title:wire.title,layers,assets:wire.assets.map(|v|RasterAssetsDelta{entries:v.entries.into_iter().map(|a|(a.key,a.image.map(Into::into))).collect()})})
+ Ok(RasterDiff{schema:wire.schema,id:wire.id,title:wire.title,layers,assets:wire.assets.map(|v|RasterAssetsDelta{entries:v.entries.into_iter().map(|a|(a.key,a.image.map(Into::into))).collect()})})
 }
 /// 📖️ Physical record layout shared by text and binary diff codecs.
 pub(crate) fn raster_diff_record_spec()->RecordSpec {RasterDiffDsl::__dsl_spec()}
 /// 📝️ Projects a semantic delta at its physical boundary and retires copied owners.
 pub(crate) fn raster_diff_to_record(diff:&RasterDiff)->RecordValue {
- let wire=RasterDiffDsl{artifact:diff.artifact.as_ref().map(|v|RasterArtifactDsl{document:document_to_dsl(RasterSnapshot{schema:v.schema.clone(),id:v.id.clone(),title:v.title.clone(),layers:v.layers.clone(),assets:v.assets.clone()})}),schema:diff.schema.clone(),id:diff.id.clone(),title:diff.title.clone(),
+ let wire=RasterDiffDsl{schema:diff.schema.clone(),id:diff.id.clone(),title:diff.title.clone(),
   layers:diff.layers.as_ref().map(|v|RasterLayersDeltaDsl{added:v.added.iter().map(|a|RasterLayerInsertionDsl{parent_id:a.parent_id.clone(),index:a.index,layer:layer_to_dsl(&a.layer)}).collect(),removed:v.removed.clone(),patched:v.patched.iter().map(|p|RasterLayerPatchEntryDsl{id:p.id.clone(),patch:p.patch.clone()}).collect(),moved:v.moved.iter().map(|m|RasterLayerMoveDsl{id:m.id.clone(),parent_id:m.parent_id.clone(),index:m.index}).collect()}),
   assets:diff.assets.as_ref().map(|v|RasterAssetsDeltaDsl{entries:v.entries.iter().map(|(key,image)|RasterAssetDeltaDsl{key:key.clone(),image:image.as_ref().map(RasterImageDsl::from)}).collect()})};
  let record=wire.__dsl_to_record();

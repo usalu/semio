@@ -10,7 +10,7 @@ use crate::standards::v1::subsets::brep::schema::diff::*;
 use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_triple, enc_named_triple};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_added, dec_named_triple, enc_named_added, enc_named_triple};
 use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
 use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot};
@@ -178,22 +178,22 @@ fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
     }
     let mut out = vec![DIFF_BINARY_FORMAT, presence];
     if let Some(v) = &self.vertices {
-        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_vertex_diff, enc_vertex));
+        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_vertex_diff, |a| enc_named_added(a, enc_vertex)));
     }
     if let Some(v) = &self.edges {
-        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_edge_diff, enc_edge));
+        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_edge_diff, |a| enc_named_added(a, enc_edge)));
     }
     if let Some(v) = &self.loops {
-        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_loop_diff, enc_loop));
+        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_loop_diff, |a| enc_named_added(a, enc_loop)));
     }
     if let Some(v) = &self.faces {
-        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_face_diff, enc_face));
+        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_face_diff, |a| enc_named_added(a, enc_face)));
     }
     if let Some(v) = &self.shells {
-        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_shell_diff, enc_shell));
+        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_shell_diff, |a| enc_named_added(a, enc_shell)));
     }
     if let Some(v) = &self.solids {
-        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_solid_diff, enc_solid));
+        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_solid_diff, |a| enc_named_added(a, enc_solid)));
     }
     Ok(out)
 }
@@ -209,23 +209,23 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     let mut reader = store::ByteReader::new(&bytes[2..]);
     let mut next_blob = |what: &'static str| -> Result<String, protocol::ProtocolError> { read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what, offset: 2, detail: e }) };
     let vertices = if presence & 0b0000_0001 != 0 {
-        Some(dec_named_triple(&next_blob("diff vertices blob")?, dec_str, dec_vertex_diff, dec_vertex).map_err(|e| protocol::ProtocolError::Malformed { what: "diff vertices text", offset: 2, detail: e })?)
+        Some(dec_named_triple(&next_blob("diff vertices blob")?, dec_str, dec_vertex_diff, |t| dec_named_added(t, dec_vertex)).map_err(|e| protocol::ProtocolError::Malformed { what: "diff vertices text", offset: 2, detail: e })?)
     } else {
         None
     };
     let edges =
-        if presence & 0b0000_0010 != 0 { Some(dec_named_triple(&next_blob("diff edges blob")?, dec_str, dec_edge_diff, dec_edge).map_err(|e| protocol::ProtocolError::Malformed { what: "diff edges text", offset: 2, detail: e })?) } else { None };
+        if presence & 0b0000_0010 != 0 { Some(dec_named_triple(&next_blob("diff edges blob")?, dec_str, dec_edge_diff, |t| dec_named_added(t, dec_edge)).map_err(|e| protocol::ProtocolError::Malformed { what: "diff edges text", offset: 2, detail: e })?) } else { None };
     let loops =
-        if presence & 0b0000_0100 != 0 { Some(dec_named_triple(&next_blob("diff loops blob")?, dec_str, dec_loop_diff, dec_loop).map_err(|e| protocol::ProtocolError::Malformed { what: "diff loops text", offset: 2, detail: e })?) } else { None };
+        if presence & 0b0000_0100 != 0 { Some(dec_named_triple(&next_blob("diff loops blob")?, dec_str, dec_loop_diff, |t| dec_named_added(t, dec_loop)).map_err(|e| protocol::ProtocolError::Malformed { what: "diff loops text", offset: 2, detail: e })?) } else { None };
     let faces =
-        if presence & 0b0000_1000 != 0 { Some(dec_named_triple(&next_blob("diff faces blob")?, dec_str, dec_face_diff, dec_face).map_err(|e| protocol::ProtocolError::Malformed { what: "diff faces text", offset: 2, detail: e })?) } else { None };
+        if presence & 0b0000_1000 != 0 { Some(dec_named_triple(&next_blob("diff faces blob")?, dec_str, dec_face_diff, |t| dec_named_added(t, dec_face)).map_err(|e| protocol::ProtocolError::Malformed { what: "diff faces text", offset: 2, detail: e })?) } else { None };
     let shells = if presence & 0b0001_0000 != 0 {
-        Some(dec_named_triple(&next_blob("diff shells blob")?, dec_str, dec_shell_diff, dec_shell).map_err(|e| protocol::ProtocolError::Malformed { what: "diff shells text", offset: 2, detail: e })?)
+        Some(dec_named_triple(&next_blob("diff shells blob")?, dec_str, dec_shell_diff, |t| dec_named_added(t, dec_shell)).map_err(|e| protocol::ProtocolError::Malformed { what: "diff shells text", offset: 2, detail: e })?)
     } else {
         None
     };
     let solids = if presence & 0b0010_0000 != 0 {
-        Some(dec_named_triple(&next_blob("diff solids blob")?, dec_str, dec_solid_diff, dec_solid).map_err(|e| protocol::ProtocolError::Malformed { what: "diff solids text", offset: 2, detail: e })?)
+        Some(dec_named_triple(&next_blob("diff solids blob")?, dec_str, dec_solid_diff, |t| dec_named_added(t, dec_solid)).map_err(|e| protocol::ProtocolError::Malformed { what: "diff solids text", offset: 2, detail: e })?)
     } else {
         None
     };

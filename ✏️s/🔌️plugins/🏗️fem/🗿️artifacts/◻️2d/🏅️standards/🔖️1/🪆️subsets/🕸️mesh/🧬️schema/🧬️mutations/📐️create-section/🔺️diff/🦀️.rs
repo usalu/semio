@@ -3,7 +3,7 @@
 //! Guards, in the order they run: `mutation.duplicate-id` (Fatal), then the shared
 //! `guards::section_plausibility` positivity bounds (`mutation.invariant`, Fatal).
 use super::CreateSection;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dSectionsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dSectionsDelta, insertion_order};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
@@ -15,6 +15,6 @@ pub fn diff(payload: &CreateSection, base: &Fem2dSnapshot) -> protocol::Mutation
     if let Some(rejection) = guards::section_plausibility(&payload.section) {
         return rejection;
     }
-    protocol::MutationOutcome::new(Fem2dDiff { sections: Some(Fem2dSectionsDelta { added: vec![payload.section.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { sections: Some(Fem2dSectionsDelta { added: vec![payload.section.clone()], reordered: insertion_order(base.sections.iter().map(|item| item.id.as_str()), &payload.section.id, payload.index), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

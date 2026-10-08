@@ -21,7 +21,3 @@ record resize-page tag=3
 field payload bytes
 record replace-page-text tag=4
 field payload bytes
-record set-snapshot tag=5
-field payload bytes
-record patch-snapshot tag=6
-field payload bytes

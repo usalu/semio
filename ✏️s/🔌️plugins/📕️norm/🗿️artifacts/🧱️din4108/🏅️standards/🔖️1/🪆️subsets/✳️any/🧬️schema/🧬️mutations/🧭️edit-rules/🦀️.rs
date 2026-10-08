@@ -1,0 +1,55 @@
+//! 🧭️ The `setField` / `insertItem` / `removeItem` / `applyRemedy` vocabulary of the DIN 4108 editor: which value-tree path raises which concrete kind.
+
+use crate::app_surface::{InsertItemRule, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
+
+/// 📚 Every path an DIN 4108 editor edit resolves, one rule per kind that sets, inserts or removes through it.
+pub const EDIT_RULES: NormEditRules = NormEditRules {
+    set_field: &[
+        SetFieldRule { path: "elements[].adjacent", kind: "change-element-adjacent", selectors: &[SelectorKey::Id("elementId")], value: "newAdjacent" },
+        SetFieldRule { path: "thermalBridges[].lengthM", kind: "change-thermal-bridge-length", selectors: &[SelectorKey::Id("bridgeId")], value: "newLengthM" },
+        SetFieldRule { path: "zones[].windows[].gValue", kind: "change-zone-window-g-value", selectors: &[SelectorKey::Id("zoneId"), SelectorKey::Id("windowId")], value: "newGValue" },
+        SetFieldRule { path: "zones[].windows[].shadingFc", kind: "change-zone-window-shading-fc", selectors: &[SelectorKey::Id("zoneId"), SelectorKey::Id("windowId")], value: "newShadingFc" },
+        SetFieldRule { path: "bb2DetailsConform", kind: "change-bb2-details-conform", selectors: &[], value: "newBb2DetailsConform" },
+        SetFieldRule { path: "zones[].nightVentilation", kind: "change-zone-night-ventilation", selectors: &[SelectorKey::Id("zoneId")], value: "newNightVentilation" },
+        SetFieldRule { path: "elements[].layers[].lambda", kind: "change-layer-lambda", selectors: &[SelectorKey::Id("elementId"), SelectorKey::Index("index")], value: "newLambda" },
+        SetFieldRule { path: "tIntC", kind: "change-t-int-c", selectors: &[], value: "newTIntC" },
+        SetFieldRule { path: "climateZone", kind: "change-climate-zone", selectors: &[], value: "newClimateZone" },
+        SetFieldRule { path: "elements[].kind", kind: "change-element-kind", selectors: &[SelectorKey::Id("elementId")], value: "newKind" },
+        SetFieldRule { path: "elements[].layers[].applicationType", kind: "change-layer-application-type", selectors: &[SelectorKey::Id("elementId"), SelectorKey::Index("index")], value: "newApplicationType" },
+        SetFieldRule { path: "elements[].layers[].compressiveClass", kind: "change-layer-compressive-class", selectors: &[SelectorKey::Id("elementId"), SelectorKey::Index("index")], value: "newCompressiveClass" },
+        SetFieldRule { path: "thermalBridges[].bb2Type", kind: "change-thermal-bridge-bb2-type", selectors: &[SelectorKey::Id("bridgeId")], value: "newBb2Type" },
+        SetFieldRule { path: "elements[].layers[].mu", kind: "change-layer-mu", selectors: &[SelectorKey::Id("elementId"), SelectorKey::Index("index")], value: "newMu" },
+        SetFieldRule { path: "rhInt", kind: "change-rh-int", selectors: &[], value: "newRhInt" },
+        SetFieldRule { path: "hasMechanicalVentilation", kind: "change-has-mechanical-ventilation", selectors: &[], value: "newHasMechanicalVentilation" },
+        SetFieldRule { path: "airtightnessN50", kind: "change-airtightness-n50", selectors: &[], value: "newAirtightnessN50" },
+        SetFieldRule { path: "elements[].deltaUF", kind: "change-element-delta-uf", selectors: &[SelectorKey::Id("elementId")], value: "newDeltaUF" },
+        SetFieldRule { path: "elements[].deltaUG", kind: "change-element-delta-ug", selectors: &[SelectorKey::Id("elementId")], value: "newDeltaUG" },
+        SetFieldRule { path: "elements[].deltaUR", kind: "change-element-delta-ur", selectors: &[SelectorKey::Id("elementId")], value: "newDeltaUR" },
+        SetFieldRule { path: "zones[].windows[].areaM2", kind: "change-zone-window-area", selectors: &[SelectorKey::Id("zoneId"), SelectorKey::Id("windowId")], value: "newAreaM2" },
+        SetFieldRule { path: "elements[].layers[].thicknessM", kind: "change-layer-thickness", selectors: &[SelectorKey::Id("elementId"), SelectorKey::Index("index")], value: "newThicknessM" },
+        SetFieldRule { path: "elements[].inclinationDeg", kind: "change-element-inclination-deg", selectors: &[SelectorKey::Id("elementId")], value: "newInclinationDeg" },
+        SetFieldRule { path: "zones[].windows[].inclinationDeg", kind: "change-zone-window-inclination-deg", selectors: &[SelectorKey::Id("zoneId"), SelectorKey::Id("windowId")], value: "newInclinationDeg" },
+        SetFieldRule { path: "elements[].areaM2", kind: "change-element-area", selectors: &[SelectorKey::Id("elementId")], value: "newAreaM2" },
+        SetFieldRule { path: "zones[].floorAreaM2", kind: "change-zone-floor-area", selectors: &[SelectorKey::Id("zoneId")], value: "newFloorAreaM2" },
+        SetFieldRule { path: "thermalBridges[].psi", kind: "change-thermal-bridge-psi", selectors: &[SelectorKey::Id("bridgeId")], value: "newPsi" },
+        SetFieldRule { path: "usage", kind: "change-usage", selectors: &[], value: "newUsage" },
+        SetFieldRule { path: "elements[].orientationDeg", kind: "change-element-orientation-deg", selectors: &[SelectorKey::Id("elementId")], value: "newOrientationDeg" },
+        SetFieldRule { path: "zones[].windows[].orientation", kind: "change-zone-window-orientation", selectors: &[SelectorKey::Id("zoneId"), SelectorKey::Id("windowId")], value: "newOrientation" },
+        SetFieldRule { path: "zones[].heaviness", kind: "change-zone-heaviness", selectors: &[SelectorKey::Id("zoneId")], value: "newHeaviness" },
+        SetFieldRule { path: "elements[].layers[].materialId", kind: "change-layer-material-id", selectors: &[SelectorKey::Id("elementId"), SelectorKey::Index("index")], value: "newMaterialId" },
+    ],
+    insert_item: &[
+        InsertItemRule { path: "elements[].layers", kind: "insert-layer", selectors: &[SelectorKey::Id("elementId")], index: "index", item: "layer" },
+        InsertItemRule { path: "zones", kind: "insert-zone", selectors: &[], index: "index", item: "zone" },
+        InsertItemRule { path: "thermalBridges", kind: "insert-thermal-bridge", selectors: &[], index: "index", item: "bridge" },
+        InsertItemRule { path: "elements", kind: "insert-element", selectors: &[], index: "index", item: "element" },
+        InsertItemRule { path: "zones[].windows", kind: "insert-zone-window", selectors: &[SelectorKey::Id("zoneId")], index: "index", item: "window" },
+    ],
+    remove_item: &[
+        RemoveItemRule { path: "elements[].layers", kind: "remove-layer", selectors: &[SelectorKey::Id("elementId")], index: "index" },
+        RemoveItemRule { path: "zones", kind: "remove-zone", selectors: &[], index: "index" },
+        RemoveItemRule { path: "elements", kind: "remove-element", selectors: &[], index: "index" },
+        RemoveItemRule { path: "zones[].windows", kind: "remove-zone-window", selectors: &[SelectorKey::Id("zoneId")], index: "index" },
+        RemoveItemRule { path: "thermalBridges", kind: "remove-thermal-bridge", selectors: &[], index: "index" },
+    ],
+};

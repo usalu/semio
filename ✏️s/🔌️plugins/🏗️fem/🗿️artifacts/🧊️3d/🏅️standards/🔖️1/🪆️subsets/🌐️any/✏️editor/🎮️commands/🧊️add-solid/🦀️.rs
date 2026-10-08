@@ -40,5 +40,5 @@ pub fn handle(payload: &AddSolid, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &
         material_id: payload.material_id.clone(),
         axis: payload.axis.unwrap_or_default(),
     };
-    Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(crate::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid })]))
+    Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(crate::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid, index: None })]))
 }

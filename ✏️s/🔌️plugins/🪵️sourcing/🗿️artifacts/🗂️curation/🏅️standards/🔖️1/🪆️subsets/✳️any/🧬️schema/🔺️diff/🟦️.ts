@@ -1,12 +1,11 @@
 import { parseSchemaRecord } from "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧾️record/🟦️.ts";
 import { parseSemioChild, type ArtifactChild } from "../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🪆️child/🟦️.ts";
-import { parseCurationArtifact, parseCurationCount, parseCurationList, parseCurationText, parseCuratedItem, parseObjectKindExtra, type CurationArtifact, type CuratedItem, type ObjectKindExtra } from "../🟦️.ts";
+import { parseCurationCount, parseCurationList, parseCurationText, parseCuratedItem, parseObjectKindExtra, type CuratedItem, type ObjectKindExtra } from "../🟦️.ts";
 export interface CurationObjectKindExtraPatchEntry { id: string; extra: ObjectKindExtra }
 export interface CurationCuratedPatchEntry { objectId: string; count?: number | null }
 export interface CurationStockExtraDelta { added?: ObjectKindExtra[]; removed?: string[]; patched?: CurationObjectKindExtraPatchEntry[]; reordered?: string[] | null }
 export interface CurationCuratedDelta { added?: CuratedItem[]; removed?: string[]; patched?: CurationCuratedPatchEntry[]; reordered?: string[] | null }
 export interface CurationDiff {
-  /** @state artifact */ artifact?: CurationArtifact | null;
   /** @state artifact @child kind=s.stdio.semio */ catalog?: ArtifactChild | null;
   /** @state artifact */ stockExtra?: CurationStockExtraDelta | null;
   /** @state artifact */ curated?: CurationCuratedDelta | null;
@@ -31,9 +30,8 @@ function delta<T, P>(value: unknown, parse: (value: unknown, at: string) => T, p
 }
 /** 🔺 Admits sparse document edits without adding absent fields. */
 export function parseCurationDiff(value: unknown, at = "$"): CurationDiff {
-  const row = parseSchemaRecord(value, ["artifact", "catalog", "stockExtra", "curated"], at);
+  const row = parseSchemaRecord(value, ["catalog", "stockExtra", "curated"], at);
   return {
-    ...(Object.hasOwn(row, "artifact") ? { artifact: row.artifact === null ? null : parseCurationArtifact(row.artifact, at + ".artifact") } : {}),
     ...(Object.hasOwn(row, "catalog") ? { catalog: row.catalog === null ? null : parseSemioChild(row.catalog, "kit", at + ".catalog") } : {}),
     ...(Object.hasOwn(row, "stockExtra") ? { stockExtra: row.stockExtra === null ? null : delta(row.stockExtra, parseObjectKindExtra, stockPatch, at + ".stockExtra") } : {}),
     ...(Object.hasOwn(row, "curated") ? { curated: row.curated === null ? null : delta(row.curated, parseCuratedItem, parseCurationCuratedPatchEntry, at + ".curated") } : {}),

@@ -2,7 +2,7 @@ mod tests {
     use super::*;
     use crate::standards::v1_1::subsets::basic::schema::conformance::CODE_FILTER_PRIMITIVE;
     use crate::standards::v1_1::subsets::basic::io::SvgBasicBuilder;
-    use semio_framework_plugin::AnalyzeSource;
+    use semio_framework_plugin::io::AnalyzeSource;
     use semio_framework_plugin::ArtifactBuilder as _;
 
     #[semio_framework_async_macros::async_test]

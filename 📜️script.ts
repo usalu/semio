@@ -13849,6 +13849,20 @@ function repoTaxonomy(root: string): Record<string, unknown> {
 export class TestScript extends Script {
   async run(segments: string[]): Promise<void> {
     const { level, rest } = resolveTestLevel(segments);
+    if (rest[0] === "canvas") {
+      if (rest[1] !== "native" && rest[1] !== "react") throw Error("Expected test canvas native|react [arguments]");
+      const native = rest[1] === "native", cwd = join(this.root, "🧰️framework/🔨️modules/🖼️canvas", native ? "📦️packages/🦀️rust" : "🎨️react-renderer/📦️packages/🟦️typescript");
+      const { repositoryProcessOwnerContextV1, repositoryCargoTestPolicyV1, repositoryVitestPolicyV1 } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts");
+      const env = devToolingEnv({ SEMIO_PROCESS_OWNER_CONTEXT: JSON.stringify(repositoryProcessOwnerContextV1(cwd)), SEMIO_TEST_LEVEL: level });
+      if (native) {
+        const { prepareCargoWorkspaceInvocation } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts");
+        prepareCargoWorkspaceInvocation(this.root, ["test", "--manifest-path", join(cwd, "Cargo.toml")], cwd);
+        env.SEMIO_CARGO_TEST_POLICY = JSON.stringify(repositoryCargoTestPolicyV1(join(cwd, "Cargo.toml"), cwd));
+      } else env.SEMIO_VITEST_POLICY = JSON.stringify(repositoryVitestPolicyV1(cwd, env));
+      const { runOwnedCommand } = await import("./🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts");
+      await runOwnedCommand(process.execPath, [join(cwd, "📜️script.ts"), "test", level, ...rest.slice(2)], cwd, `canvas-${rest[1]}:test`, 0, { env });
+      return;
+    }
     if (rest[0] === "storybook") {
       await this.runStorybookPlaywright();
       return;
@@ -14631,8 +14645,20 @@ function assertUiStorybookDiscovery(root: string): void {
 
 //#region 🔖️BuildScript
 export class BuildScript extends Script {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const slice = segments[0];
+    if (slice === "canvas") {
+      if (segments.length !== 2 || segments[1] !== "fonts") throw Error("Expected build canvas fonts");
+      const cwd = join(this.root, "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust");
+      const { repositoryProcessOwnerContextV1 } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts");
+      const { repositoryCargoArtifactBuildPolicyV1 } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts");
+      const { prepareCargoWorkspaceInvocation } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts");
+      const { runOwnedCommand } = await import("./🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts");
+      prepareCargoWorkspaceInvocation(this.root, ["build", "--manifest-path", join(cwd, "Cargo.toml")], this.root);
+      const env = devToolingEnv({ SEMIO_PROCESS_OWNER_CONTEXT: JSON.stringify(repositoryProcessOwnerContextV1(cwd)), SEMIO_CARGO_ARTIFACT_POLICY: JSON.stringify(repositoryCargoArtifactBuildPolicyV1(cwd, this.root)) });
+      await runOwnedCommand(process.execPath, [join(cwd, "📜️script.ts"), "build"], cwd, "canvas-font-assets:build", buildBudgetMs(), { env });
+      return;
+    }
     const single: Record<string, string> = {
       assets: "@semio-tech/assets:build",
       storybook: "workspace:build-storybook",
@@ -15043,6 +15069,10 @@ export class SchemaScript extends Script {
     const rest = segments.slice(1);
     if (sub === "generate") return this.generate(rest);
     if (sub === "check") return await this.check(rest);
+    if (sub === "runtime-graph") {
+      const { verifyRuntimeFixtureGraphV1 } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🔎️verification/🟦️.ts");
+      return await verifyRuntimeFixtureGraphV1(this.root, rest);
+    }
     if (sub === "verify") return this.verify(rest);
     if (sub === "audit") return this.audit(rest);
     if (sub === "docs") return this.docs();
@@ -15147,7 +15177,7 @@ export class SchemaScript extends Script {
     const shared = await this.sharedDiagnosticCodes();
     const unshared = [...counts.keys()].filter((code) => !shared.has(code)).sort();
     console.log(`[schema check] shared-code-table=${shared.size} unshared-codes=${unshared.length}${unshared.length === 0 ? "" : `: ${unshared.join(", ")}`}`);
-    if (sorted.length > 0) process.exit(1);
+    if (sorted.length > 0) process.exitCode = 1;
   }
 
   /**
@@ -22441,7 +22471,7 @@ function policyGroupDialectsByStandard(repoRoot: string): PolicyStandardManifest
  * dirs. Real (non-`*`) subsets on stdio artifacts additionally need a registered `SubsetValidator`
  * on their subset composer — the static half of "every real subset gets a real validator"; the
  * generic runtime half (`io.subset.validator-missing`) is `run_subset_validation` in
- * `🧰️framework/🔨️modules/🚪️io/🦀️.rs`.
+ * `🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🦀️.rs`.
  */
 export function policyStandardSubsetVocabularyBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
@@ -25173,7 +25203,7 @@ export function policyDissolvedKernelsBreaches(repoRoot: string): BreachRecord[]
 
 //#region 🔧️PolicyRuleComposition
 /** 🪪️ Canonical artifact-kind grammar mirror of `ArtifactKindId::parse`/`is_canonical_artifact_kind`
- * (🧰️framework/🔨️modules/🚪️io/🦀️.rs:101-153, ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
+ * (🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🦀️.rs:101-153, ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
  * W1): exactly three dot-separated ASCII segments, the first literally `s`, the remaining two
  * lowercase-kebab (`[a-z0-9-]`, no leading/trailing/doubled hyphen). */
 function policyIsCanonicalArtifactKind(kind: string): boolean {

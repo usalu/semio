@@ -14,11 +14,7 @@ pub fn inverse(payload: &super::DeletePrimitive, base: &SemioMeshSnapshot) -> Re
     let Some(pos) = mesh.primitives.iter().position(|p| p.id == payload.primitive_id) else {
         return Vec::new();
     };
-    let tail = mesh.primitives[pos + 1..].to_vec();
-    let mut steps: Vec<SemioMeshMutation> = tail.iter().rev().map(|p| SemioMeshMutation::DeletePrimitive(super::DeletePrimitive { mesh_id: payload.mesh_id.clone(), primitive_id: p.id.clone() })).collect();
-    steps.push(SemioMeshMutation::CreatePrimitive(create_primitive::CreatePrimitive { mesh_id: payload.mesh_id.clone(), primitive: mesh.primitives[pos].clone() }));
-    steps.extend(tail.into_iter().map(|p| SemioMeshMutation::CreatePrimitive(create_primitive::CreatePrimitive { mesh_id: payload.mesh_id.clone(), primitive: p })));
-    steps
+    vec![SemioMeshMutation::CreatePrimitive(create_primitive::CreatePrimitive { mesh_id: payload.mesh_id.clone(), primitive: mesh.primitives[pos].clone(), at: Some(pos) })]
 
     })())
 }

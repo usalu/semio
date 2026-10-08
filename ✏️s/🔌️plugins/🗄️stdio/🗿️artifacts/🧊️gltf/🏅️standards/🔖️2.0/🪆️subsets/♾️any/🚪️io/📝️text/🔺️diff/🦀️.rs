@@ -543,7 +543,7 @@ pub(crate) fn dec_mesh(s: &str) -> Result<GltfMesh, String> {
 pub(crate) fn enc_mesh_diff(d: &GltfMeshDiff) -> String {
     format!(
         "[{},{},{},{},{}]",
-        encode_option(&d.primitives, |v| enc_primitive_vec(v)),
+        encode_option(&d.primitives, |v| enc_collection(v, enc_primitive, enc_primitive_diff)),
         encode_option(&d.weights, |v| enc_f64_slice(v)),
         encode_option_option(&d.name, |v| enc_str(v)),
         encode_option_option(&d.extensions, enc_json),
@@ -556,7 +556,7 @@ pub(crate) fn dec_mesh_diff(s: &str) -> Result<GltfMeshDiff, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [primitives, weights, name, extensions, extras] = parts.as_slice() else { return Err(format!("mesh diff: expected 5 fields, got {}", parts.len())) };
     Ok(GltfMeshDiff {
-        primitives: decode_option(primitives, dec_primitive_vec)?,
+        primitives: decode_option(primitives, |s| dec_collection(s, dec_primitive, dec_primitive_diff))?,
         weights: decode_option(weights, dec_f64_vec)?,
         name: decode_option_option(name, dec_str)?,
         extensions: decode_option_option(extensions, dec_json)?,
@@ -1138,6 +1138,108 @@ pub(crate) fn dec_camera(s: &str) -> Result<GltfCamera, String> {
 /// `dec_item` for both `enc_item`/`enc_diff` via `GltfWeakCollectionDiff<T> = GltfCollectionDiff<T,
 /// T>`) -- one real generic codec, not 14 hand-duplicated ones.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_target_vec(v: &[GltfMorphTarget]) -> String {
+    format!("[{}]", v.iter().map(|target| enc_attr_pairs(&target.0)).collect::<Vec<_>>().join(","))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_target_vec(s: &str) -> Result<Vec<GltfMorphTarget>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|value| !value.is_empty()).map(|value| dec_attr_pairs(value).map(GltfMorphTarget)).collect()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_channel_vec(v: &[GltfAnimationChannel]) -> String {
+    format!("[{}]", v.iter().map(enc_animation_channel).collect::<Vec<_>>().join(","))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_channel_vec(s: &str) -> Result<Vec<GltfAnimationChannel>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_animation_channel).collect()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_animation_sampler_vec(v: &[GltfAnimationSampler]) -> String {
+    format!("[{}]", v.iter().map(enc_animation_sampler).collect::<Vec<_>>().join(","))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_animation_sampler_vec(s: &str) -> Result<Vec<GltfAnimationSampler>, String> {
+    split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_animation_sampler).collect()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_primitive_diff(d: &GltfPrimitiveDiff) -> String {
+    format!("[{},{},{},{},{},{},{}]", encode_option(&d.attributes, |v| enc_attr_pairs(&v.0)), encode_option_option(&d.indices, |v| v.to_string()), encode_option_option(&d.material, |v| v.to_string()), encode_option_option(&d.mode, |v| enc_u64(*v)), encode_option(&d.targets, |v| enc_target_vec(v)), encode_option_option(&d.extensions, enc_json), encode_option_option(&d.extras, enc_json))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_primitive_diff(s: &str) -> Result<GltfPrimitiveDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [attributes, indices, material, mode, targets, extensions, extras] = parts.as_slice() else { return Err(format!("primitive diff: expected 7 fields, got {}", parts.len())) };
+    Ok(GltfPrimitiveDiff { attributes: decode_option(attributes, |s| dec_attr_pairs(s).map(GltfMorphTarget))?, indices: decode_option_option(indices, parse_usize)?, material: decode_option_option(material, parse_usize)?, mode: decode_option_option(mode, dec_u64)?, targets: decode_option(targets, dec_target_vec)?, extensions: decode_option_option(extensions, dec_json)?, extras: decode_option_option(extras, dec_json)? })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_texture_diff(d: &GltfTextureDiff) -> String {
+    format!("[{},{},{},{},{}]", encode_option_option(&d.sampler, |v| v.to_string()), encode_option_option(&d.source, |v| v.to_string()), encode_option_option(&d.name, |v| enc_str(v)), encode_option_option(&d.extensions, enc_json), encode_option_option(&d.extras, enc_json))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_texture_diff(s: &str) -> Result<GltfTextureDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [sampler, source, name, extensions, extras] = parts.as_slice() else { return Err(format!("texture diff: expected 5 fields, got {}", parts.len())) };
+    Ok(GltfTextureDiff { sampler: decode_option_option(sampler, parse_usize)?, source: decode_option_option(source, parse_usize)?, name: decode_option_option(name, dec_str)?, extensions: decode_option_option(extensions, dec_json)?, extras: decode_option_option(extras, dec_json)? })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_image_diff(d: &GltfImageDiff) -> String {
+    format!("[{},{},{},{},{},{}]", encode_option_option(&d.uri, |v| enc_str(v)), encode_option_option(&d.mime_type, |v| enc_str(v)), encode_option_option(&d.buffer_view, |v| v.to_string()), encode_option_option(&d.name, |v| enc_str(v)), encode_option_option(&d.extensions, enc_json), encode_option_option(&d.extras, enc_json))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_image_diff(s: &str) -> Result<GltfImageDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [uri, mime_type, buffer_view, name, extensions, extras] = parts.as_slice() else { return Err(format!("image diff: expected 6 fields, got {}", parts.len())) };
+    Ok(GltfImageDiff { uri: decode_option_option(uri, dec_str)?, mime_type: decode_option_option(mime_type, dec_str)?, buffer_view: decode_option_option(buffer_view, parse_usize)?, name: decode_option_option(name, dec_str)?, extensions: decode_option_option(extensions, dec_json)?, extras: decode_option_option(extras, dec_json)? })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_buffer_view_diff(d: &GltfBufferViewDiff) -> String {
+    format!("[{},{},{},{},{},{},{},{}]", encode_option(&d.buffer, |v| v.to_string()), encode_option(&d.byte_offset, |v| v.to_string()), encode_option(&d.byte_length, |v| v.to_string()), encode_option_option(&d.byte_stride, |v| v.to_string()), encode_option_option(&d.target, |v| enc_u64(*v)), encode_option_option(&d.name, |v| enc_str(v)), encode_option_option(&d.extensions, enc_json), encode_option_option(&d.extras, enc_json))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_buffer_view_diff(s: &str) -> Result<GltfBufferViewDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [buffer, byte_offset, byte_length, byte_stride, target, name, extensions, extras] = parts.as_slice() else { return Err(format!("buffer_view diff: expected 8 fields, got {}", parts.len())) };
+    Ok(GltfBufferViewDiff { buffer: decode_option(buffer, parse_usize)?, byte_offset: decode_option(byte_offset, parse_usize)?, byte_length: decode_option(byte_length, parse_usize)?, byte_stride: decode_option_option(byte_stride, parse_usize)?, target: decode_option_option(target, dec_u64)?, name: decode_option_option(name, dec_str)?, extensions: decode_option_option(extensions, dec_json)?, extras: decode_option_option(extras, dec_json)? })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_skin_diff(d: &GltfSkinDiff) -> String {
+    format!("[{},{},{},{},{},{}]", encode_option_option(&d.inverse_bind_matrices, |v| v.to_string()), encode_option_option(&d.skeleton, |v| v.to_string()), encode_option(&d.joints, |v| enc_usize_vec(v)), encode_option_option(&d.name, |v| enc_str(v)), encode_option_option(&d.extensions, enc_json), encode_option_option(&d.extras, enc_json))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_skin_diff(s: &str) -> Result<GltfSkinDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [inverse_bind_matrices, skeleton, joints, name, extensions, extras] = parts.as_slice() else { return Err(format!("skin diff: expected 6 fields, got {}", parts.len())) };
+    Ok(GltfSkinDiff { inverse_bind_matrices: decode_option_option(inverse_bind_matrices, parse_usize)?, skeleton: decode_option_option(skeleton, parse_usize)?, joints: decode_option(joints, dec_usize_vec)?, name: decode_option_option(name, dec_str)?, extensions: decode_option_option(extensions, dec_json)?, extras: decode_option_option(extras, dec_json)? })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn enc_animation_diff(d: &GltfAnimationDiff) -> String {
+    format!("[{},{},{},{},{}]", encode_option(&d.channels, |v| enc_channel_vec(v)), encode_option(&d.samplers, |v| enc_animation_sampler_vec(v)), encode_option_option(&d.name, |v| enc_str(v)), encode_option_option(&d.extensions, enc_json), encode_option_option(&d.extras, enc_json))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_animation_diff(s: &str) -> Result<GltfAnimationDiff, String> {
+    let parts = split_top_level(strip_brackets(s)?, ',');
+    let [channels, samplers, name, extensions, extras] = parts.as_slice() else { return Err(format!("animation diff: expected 5 fields, got {}", parts.len())) };
+    Ok(GltfAnimationDiff { channels: decode_option(channels, dec_channel_vec)?, samplers: decode_option(samplers, dec_animation_sampler_vec)?, name: decode_option_option(name, dec_str)?, extensions: decode_option_option(extensions, dec_json)?, extras: decode_option_option(extras, dec_json)? })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_collection<T, D>(c: &GltfCollectionDiff<T, D>, enc_item: impl Fn(&T) -> String, enc_diff: impl Fn(&D) -> String) -> String {
     let removed = c.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
     let modified = c.modified.iter().map(|m| format!("{}:{}", m.index, enc_diff(&m.diff))).collect::<Vec<_>>().join(",");
@@ -1191,7 +1293,7 @@ pub(crate) fn print_gltf_diff(d: &GltfDiff) -> String {
         tokens.push(format!("accessors={}", enc_collection(v, enc_accessor, enc_accessor_diff)));
     }
     if let Some(v) = &d.buffer_views {
-        tokens.push(format!("buffer-views={}", enc_collection(v, enc_buffer_view, enc_buffer_view)));
+        tokens.push(format!("buffer-views={}", enc_collection(v, enc_buffer_view, enc_buffer_view_diff)));
     }
     if let Some(v) = &d.buffers {
         tokens.push(format!("buffers={}", enc_collection(v, enc_buffer, enc_buffer_diff)));
@@ -1203,19 +1305,19 @@ pub(crate) fn print_gltf_diff(d: &GltfDiff) -> String {
         tokens.push(format!("materials={}", enc_collection(v, enc_material, enc_material_diff)));
     }
     if let Some(v) = &d.textures {
-        tokens.push(format!("textures={}", enc_collection(v, enc_texture, enc_texture)));
+        tokens.push(format!("textures={}", enc_collection(v, enc_texture, enc_texture_diff)));
     }
     if let Some(v) = &d.images {
-        tokens.push(format!("images={}", enc_collection(v, enc_image, enc_image)));
+        tokens.push(format!("images={}", enc_collection(v, enc_image, enc_image_diff)));
     }
     if let Some(v) = &d.samplers {
         tokens.push(format!("samplers={}", enc_collection(v, enc_sampler, enc_sampler)));
     }
     if let Some(v) = &d.skins {
-        tokens.push(format!("skins={}", enc_collection(v, enc_skin, enc_skin)));
+        tokens.push(format!("skins={}", enc_collection(v, enc_skin, enc_skin_diff)));
     }
     if let Some(v) = &d.animations {
-        tokens.push(format!("animations={}", enc_collection(v, enc_animation, enc_animation)));
+        tokens.push(format!("animations={}", enc_collection(v, enc_animation, enc_animation_diff)));
     }
     if let Some(v) = &d.cameras {
         tokens.push(format!("cameras={}", enc_collection(v, enc_camera, enc_camera)));
@@ -1258,7 +1360,7 @@ pub(crate) fn parse_gltf_diff(line: &str) -> Result<GltfDiff, String> {
         } else if let Some(rest) = token.strip_prefix("accessors=") {
             d.accessors = Some(dec_collection(rest, dec_accessor, dec_accessor_diff)?);
         } else if let Some(rest) = token.strip_prefix("buffer-views=") {
-            d.buffer_views = Some(dec_collection(rest, dec_buffer_view, dec_buffer_view)?);
+            d.buffer_views = Some(dec_collection(rest, dec_buffer_view, dec_buffer_view_diff)?);
         } else if let Some(rest) = token.strip_prefix("buffer-bytes=") {
             d.buffer_bytes = Some(dec_collection(rest, dec_bytes, dec_bytes)?);
         } else if let Some(rest) = token.strip_prefix("buffers=") {
@@ -1266,15 +1368,15 @@ pub(crate) fn parse_gltf_diff(line: &str) -> Result<GltfDiff, String> {
         } else if let Some(rest) = token.strip_prefix("materials=") {
             d.materials = Some(dec_collection(rest, dec_material, dec_material_diff)?);
         } else if let Some(rest) = token.strip_prefix("textures=") {
-            d.textures = Some(dec_collection(rest, dec_texture, dec_texture)?);
+            d.textures = Some(dec_collection(rest, dec_texture, dec_texture_diff)?);
         } else if let Some(rest) = token.strip_prefix("images=") {
-            d.images = Some(dec_collection(rest, dec_image, dec_image)?);
+            d.images = Some(dec_collection(rest, dec_image, dec_image_diff)?);
         } else if let Some(rest) = token.strip_prefix("samplers=") {
             d.samplers = Some(dec_collection(rest, dec_sampler, dec_sampler)?);
         } else if let Some(rest) = token.strip_prefix("skins=") {
-            d.skins = Some(dec_collection(rest, dec_skin, dec_skin)?);
+            d.skins = Some(dec_collection(rest, dec_skin, dec_skin_diff)?);
         } else if let Some(rest) = token.strip_prefix("animations=") {
-            d.animations = Some(dec_collection(rest, dec_animation, dec_animation)?);
+            d.animations = Some(dec_collection(rest, dec_animation, dec_animation_diff)?);
         } else if let Some(rest) = token.strip_prefix("cameras=") {
             d.cameras = Some(dec_collection(rest, dec_camera, dec_camera)?);
         } else if let Some(rest) = token.strip_prefix("extensions-used=") {

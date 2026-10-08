@@ -3,14 +3,6 @@ use protocol::command::DiffAlgebra;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn quant(id: u8, seed: u16) -> JpgQuantTable {
-    JpgQuantTable { id, precision: 0, values: [seed; 64] }
-}
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn huffman(class: JpgHuffmanClass, id: u8, seed: u8) -> JpgHuffmanTable {
-    JpgHuffmanTable { id, class, bits: [seed; 16], values: vec![seed, seed.wrapping_add(1)] }
-}
-// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn segment(marker: u8, data: Vec<u8>) -> JpgSegment {
     JpgSegment { marker, data }
 }
@@ -21,49 +13,15 @@ fn segment(marker: u8, data: Vec<u8>) -> JpgSegment {
 /// `JpgFrameChange::Replace` against both `a` and `c`.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn snap_a() -> JpgSnapshot {
-    JpgSnapshot {
-        schema: "stdio.jpg".into(),
-        width: 4,
-        height: 4,
-        pixels: vec![0u8; 16],
-        jfif_version: (1, 1),
-        jfif_density_units: JfifDensityUnits::PixelsPerInch,
-        jfif_x_density: 72,
-        jfif_y_density: 72,
-        jfif_thumbnail: Some(JfifThumbnail { width: 2, height: 1, rgb_data: vec![1, 2, 3, 4, 5, 6] }),
-        frame: Some(JpgFrameHeader { precision: 8, width: 4, height: 4, components: vec![JpgFrameComponent { id: 1, h_sampling: 2, v_sampling: 2, quant_table_id: 0 }, JpgFrameComponent { id: 9, h_sampling: 1, v_sampling: 1, quant_table_id: 1 }] }),
-        sof_marker: 0xC0,
-        arithmetic: false,
-        quant_tables: vec![quant(0, 10), quant(9, 20)],
-        huffman_tables: vec![huffman(JpgHuffmanClass::Dc, 0, 1), huffman(JpgHuffmanClass::Ac, 9, 2)],
-        restart_interval: Some(8),
-        other_segments: vec![segment(0xFE, vec![1, 2, 3]), segment(0xE1, vec![9, 9])],
-    }
+    JpgSnapshot { schema: "stdio.jpg".into(), image: crate::schema::snapshot::JpgImage { width: 4,height: 4,pixels: vec![0u8; 16],jfif_version: (1, 1),jfif_density_units: JfifDensityUnits::PixelsPerInch,jfif_x_density: 72,jfif_y_density: 72,jfif_thumbnail: Some(JfifThumbnail { width: 2, height: 1, rgb_data: vec![1, 2, 3, 4, 5, 6] }),other_segments: vec![segment(0xFE, vec![1, 2, 3]), segment(0xE1, vec![9, 9])] } }
 }
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn snap_b() -> JpgSnapshot {
-    JpgSnapshot {
-        schema: "stdio.jpg".into(),
-        width: 8,
-        height: 6,
-        pixels: vec![9u8; 12],
-        jfif_version: (1, 2),
-        jfif_density_units: JfifDensityUnits::Aspect,
-        jfif_x_density: 1,
-        jfif_y_density: 1,
-        jfif_thumbnail: None,
-        frame: Some(JpgFrameHeader { precision: 8, width: 8, height: 6, components: vec![JpgFrameComponent { id: 1, h_sampling: 1, v_sampling: 1, quant_table_id: 5 }] }),
-        sof_marker: 0xC2,
-        arithmetic: true,
-        quant_tables: vec![quant(0, 99)],
-        huffman_tables: vec![huffman(JpgHuffmanClass::Dc, 0, 7)],
-        restart_interval: None,
-        other_segments: vec![segment(0xFE, vec![4, 5, 6])],
-    }
+    JpgSnapshot { schema: "stdio.jpg".into(), image: crate::schema::snapshot::JpgImage { width: 8,height: 6,pixels: vec![9u8; 12],jfif_version: (1, 2),jfif_density_units: JfifDensityUnits::Aspect,jfif_x_density: 1,jfif_y_density: 1,jfif_thumbnail: None,other_segments: vec![segment(0xFE, vec![4, 5, 6])] } }
 }
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn snap_c() -> JpgSnapshot {
-    JpgSnapshot { frame: None, ..JpgSnapshot::default() }
+    JpgSnapshot::default()
 }
 
 /// 🧪️ F6: `DiffCodec` round-trip laws over the hand-rolled `JpgDiff` grammar — exercises the

@@ -6,6 +6,7 @@
 use crate::BlockCamera3d;
 use crate::Block3dWindowView;
 use protocol::Mutation;
+use semio_s_plugin_block::{block_rows_absorb, block_rows_apply, block_rows_between, block_rows_inverse, block_rows_is_empty, BlockOptionalText, BlockPatch};
 
 //#region 🔖️Config
 /// 🧮️ `Block3dPlayApp`'s real `ArtifactEditor::Config` — B1 pure-trait conversion. Absorbs every former
@@ -99,41 +100,142 @@ impl Default for Block3dConfig {
     }
 }
 
-store::impl_whole_record_config!(Block3dConfig);
+impl store::ConfigRecord for Block3dConfig {}
+
+//#region 🔖️ConfigDiff
+semio_s_plugin_block::block_optional!(test; /// 🎥 The optional camera set to a value or cleared.
+    Block3dOptionalCamera(BlockCamera3d));
+semio_s_plugin_block::block_patch!(test; /// 🪟 Field patch over one window view (its window id is the row identity).
+    Block3dWindowViewPatch for Block3dWindowView { plain { representation_ids: Vec<String>, arrangement: String, spacing: f64 } optional { } });
+semio_s_plugin_block::block_rows!(test; /// 📂 Row delta over the per-window views.
+    Block3dWindowsDelta, Block3dWindowsPatchEntry, Block3dWindowView, Block3dWindowViewPatch, window_id);
+
+/// 🔺️ Field-sparse diff of [`Block3dConfig`]: each field is an optional absolute value, window views are id-keyed rows.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[value(rename_all = "camelCase", default)]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+pub struct Block3dConfigDiff {
+    pub active_representation_id: Option<BlockOptionalText>,
+    pub wanted_tags: Option<Vec<String>>,
+    pub windows: Option<Block3dWindowsDelta>,
+    pub brush_vortex_kind_id: Option<BlockOptionalText>,
+    pub brush_radius: Option<f64>,
+    pub brush_flip: Option<bool>,
+    pub camera: Option<Block3dOptionalCamera>,
+}
+
+/// ✏️ The window delta that sets `patch` on `window_id`. Rows equal to the default view are never stored and rows stay sorted by window id, so every edit and its inverse land on one canonical document.
+fn window_edit(base: &Block3dConfig, window_id: &str, patch: Block3dWindowViewPatch) -> Block3dConfigDiff {
+    let current = base.windows.iter().find(|row| row.window_id == window_id);
+    let default = Block3dWindowView::for_window(window_id);
+    let next = patch.patched(current.unwrap_or(&default)).unwrap_or_else(|_| default.clone());
+    let windows = match (current, next == default) {
+        (None, true) => Block3dWindowsDelta::default(),
+        (None, false) => {
+            let slot = base.windows.partition_point(|row| row.window_id.as_str() < window_id);
+            let reordered = semio_s_plugin_block::block_insert_order(base.windows.iter().map(|row| row.window_id.as_str()), window_id, Some(slot as u32));
+            Block3dWindowsDelta { added: vec![next], reordered, ..Default::default() }
+        }
+        (Some(_), true) => Block3dWindowsDelta { removed: vec![window_id.to_string()], ..Default::default() },
+        (Some(row), false) => Block3dWindowsDelta { patched: vec![Block3dWindowsPatchEntry { id: window_id.to_string(), patch: <Block3dWindowViewPatch as BlockPatch>::between(row, &next) }], ..Default::default() },
+    };
+    Block3dConfigDiff { windows: Some(windows), ..Default::default() }
+}
+
+fn lift(error: semio_s_plugin_block::BlockPatchError) -> protocol::MutationApplyError {
+    protocol::MutationApplyError::new(error.code, error.message).at(error.target)
+}
+
+impl protocol::MutationDiff<Block3dConfig> for Block3dConfigDiff {
+    fn apply(&self, base: &Block3dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Block3dConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.active_representation_id {
+            next.active_representation_id.clone_from(&value.value);
+        }
+        if let Some(tags) = &self.wanted_tags {
+            next.wanted_tags.clone_from(tags);
+        }
+        next.windows = block_rows_apply(&self.windows, &base.windows, "windows").map_err(lift)?;
+        if let Some(value) = &self.brush_vortex_kind_id {
+            next.brush_vortex_kind_id.clone_from(&value.value);
+        }
+        if let Some(radius) = self.brush_radius {
+            next.brush_radius = radius;
+        }
+        if let Some(flip) = self.brush_flip {
+            next.brush_flip = flip;
+        }
+        if let Some(value) = &self.camera {
+            next.camera.clone_from(&value.value);
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, later: Self) {
+        if later.active_representation_id.is_some() {
+            self.active_representation_id = later.active_representation_id;
+        }
+        if later.wanted_tags.is_some() {
+            self.wanted_tags = later.wanted_tags;
+        }
+        block_rows_absorb(&mut self.windows, later.windows);
+        if later.brush_vortex_kind_id.is_some() {
+            self.brush_vortex_kind_id = later.brush_vortex_kind_id;
+        }
+        if later.brush_radius.is_some() {
+            self.brush_radius = later.brush_radius;
+        }
+        if later.brush_flip.is_some() {
+            self.brush_flip = later.brush_flip;
+        }
+        if later.camera.is_some() {
+            self.camera = later.camera;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<Block3dConfig> for Block3dConfigDiff {
+    fn inverse(&self, base: &Block3dConfig) -> Self {
+        Self {
+            active_representation_id: self.active_representation_id.as_ref().map(|_| BlockOptionalText { value: base.active_representation_id.clone() }),
+            wanted_tags: self.wanted_tags.as_ref().map(|_| base.wanted_tags.clone()),
+            windows: block_rows_inverse(&self.windows, &base.windows),
+            brush_vortex_kind_id: self.brush_vortex_kind_id.as_ref().map(|_| BlockOptionalText { value: base.brush_vortex_kind_id.clone() }),
+            brush_radius: self.brush_radius.map(|_| base.brush_radius),
+            brush_flip: self.brush_flip.map(|_| base.brush_flip),
+            camera: self.camera.as_ref().map(|_| Block3dOptionalCamera { value: base.camera.clone() }),
+        }
+    }
+    fn between(base: &Block3dConfig, other: &Block3dConfig) -> Self {
+        Self {
+            active_representation_id: (base.active_representation_id != other.active_representation_id).then(|| BlockOptionalText { value: other.active_representation_id.clone() }),
+            wanted_tags: (base.wanted_tags != other.wanted_tags).then(|| other.wanted_tags.clone()),
+            windows: block_rows_between(&base.windows, &other.windows),
+            brush_vortex_kind_id: (base.brush_vortex_kind_id != other.brush_vortex_kind_id).then(|| BlockOptionalText { value: other.brush_vortex_kind_id.clone() }),
+            brush_radius: (base.brush_radius != other.brush_radius).then_some(other.brush_radius),
+            brush_flip: (base.brush_flip != other.brush_flip).then_some(other.brush_flip),
+            camera: (base.camera != other.camera).then(|| Block3dOptionalCamera { value: other.camera.clone() }),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.active_representation_id.is_none() && self.wanted_tags.is_none() && block_rows_is_empty(&self.windows) && self.brush_vortex_kind_id.is_none() && self.brush_radius.is_none() && self.brush_flip.is_none() && self.camera.is_none()
+    }
+}
+//#endregion 🔖️ConfigDiff
+
 
 //#region 🔖️Accessors
 pub fn block3d_window_view(config: &Block3dConfig, window_id: &str) -> Block3dWindowView {
     config.windows.iter().find(|row| row.window_id == window_id).cloned().unwrap_or_else(|| Block3dWindowView::for_window(window_id))
 }
-
-pub fn upsert_window_view_index(windows: &mut Vec<Block3dWindowView>, window_id: &str) -> usize {
-    if let Some(index) = windows.iter().position(|row| row.window_id == window_id) {
-        return index;
-    }
-    windows.push(Block3dWindowView::for_window(window_id));
-    windows.len() - 1
-}
 //#endregion 🔖️Accessors
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
-/// 🧮️ `Block3dConfig`'s operation enum — one variant per settled interaction (mirrors the pre-B1
-/// `Block3dPlayApp` `RefCell` field writes), plus a generic `Snapshot` every variant's `backwards()`
-/// returns.
-// 🧯️ `large_enum_variant`: `Snapshot` deliberately carries the WHOLE `Block3dConfig` while every other
-// row carries one or two scalars — that whole-config snapshot IS the inverse mechanism every variant's
-// `backwards()` returns. Boxing it would change the derived `dsl::DslOps` wire encoding, which this
-// migration must preserve byte-for-byte, so the size skew is accepted by design (same tradeoff as gis's
-// `Gis2dConfigMutation`).
-#[allow(clippy::large_enum_variant)]
+/// 🧮️ `Block3dConfig`'s operation enum — one variant per settled interaction; each lowers to a field-sparse [`Block3dConfigDiff`].
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 pub enum Block3dConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: Block3dConfig,
-    },
     #[dsl(key = "active-representation")]
     SetActiveRepresentation { representation_id: Option<String> },
     #[dsl(key = "wanted-tags")]
@@ -154,6 +256,8 @@ pub enum Block3dConfigMutation {
     SetBrushFlip { flip: bool },
     #[dsl(key = "camera")]
     SetCamera { camera: BlockCamera3d },
+    #[dsl(key = "clear-camera")]
+    ClearCamera,
 }
 
 //#region 🔖️OpCodec
@@ -212,7 +316,7 @@ impl protocol::OpBinary for Block3dConfigMutation {
 //#endregion 🔖️OpCodec
 
 impl Mutation<Block3dConfig> for Block3dConfigMutation {
-    type Diff = Block3dConfig;
+    type Diff = Block3dConfigDiff;
 
     /// 🧷️ Hand-written (not `#[derive(dsl::Mutations)]`: this enum's `diff`/`inverse` dispatch is a
     /// plain `match`, not the derive's per-leaf `MutationKind` shape). One entry per variant, in
@@ -220,22 +324,6 @@ impl Mutation<Block3dConfig> for Block3dConfigMutation {
     /// disk yet — every `owner` below names a path that does not exist, matching puzzle3d's own
     /// `Puzzle3dConfigMutation` precedent.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor {
-            schema_version: 1,
-            owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🟤️set-snapshot",
-            semantic_kind: "set-snapshot",
-            display_name: "Set Snapshot",
-            emoji: "📄",
-            aggregate_variant: "Snapshot",
-            payload_schema: "🧬️schema/🔣️.json",
-            text_opcode: None,
-            binary_tag: None,
-            invertibility: protocol::MutationInvertibility::ExplicitMutation,
-            diff_participation: protocol::MutationDiffParticipation::Detect,
-            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-            composition: protocol::MutationComposition::Atomic,
-            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-        },
         protocol::MutationLeafDescriptor {
             schema_version: 1,
             owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧱set-active-representation",
@@ -396,67 +484,95 @@ impl Mutation<Block3dConfig> for Block3dConfigMutation {
             composition: protocol::MutationComposition::Atomic,
             required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
         },
+        protocol::MutationLeafDescriptor {
+            schema_version: 1,
+            owner: "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🈚clear-camera",
+            semantic_kind: "clear-camera",
+            display_name: "Clear Camera",
+            emoji: "🈚",
+            aggregate_variant: "ClearCamera",
+            payload_schema: "🧬️schema/🔣️.json",
+            text_opcode: None,
+            binary_tag: None,
+            invertibility: protocol::MutationInvertibility::ExplicitMutation,
+            diff_participation: protocol::MutationDiffParticipation::Detect,
+            outcome_classes: &[protocol::MutationOutcomeClass::Applied],
+            composition: protocol::MutationComposition::Atomic,
+            required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
+        },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Block3dConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
-            Block3dConfigMutation::SetActiveRepresentation { .. } => &Self::DESCRIPTORS[1],
-            Block3dConfigMutation::SetWantedTags { .. } => &Self::DESCRIPTORS[2],
-            Block3dConfigMutation::SetWindowRepresentations { .. } => &Self::DESCRIPTORS[3],
-            Block3dConfigMutation::ToggleWindowRepresentation { .. } => &Self::DESCRIPTORS[4],
-            Block3dConfigMutation::SetWindowArrangement { .. } => &Self::DESCRIPTORS[5],
-            Block3dConfigMutation::SetWindowSpacing { .. } => &Self::DESCRIPTORS[6],
-            Block3dConfigMutation::SetBrushVortexKind { .. } => &Self::DESCRIPTORS[7],
-            Block3dConfigMutation::SetBrushRadius { .. } => &Self::DESCRIPTORS[8],
-            Block3dConfigMutation::SetBrushFlip { .. } => &Self::DESCRIPTORS[9],
-            Block3dConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[10],
+            Block3dConfigMutation::SetActiveRepresentation { .. } => &Self::DESCRIPTORS[0],
+            Block3dConfigMutation::SetWantedTags { .. } => &Self::DESCRIPTORS[1],
+            Block3dConfigMutation::SetWindowRepresentations { .. } => &Self::DESCRIPTORS[2],
+            Block3dConfigMutation::ToggleWindowRepresentation { .. } => &Self::DESCRIPTORS[3],
+            Block3dConfigMutation::SetWindowArrangement { .. } => &Self::DESCRIPTORS[4],
+            Block3dConfigMutation::SetWindowSpacing { .. } => &Self::DESCRIPTORS[5],
+            Block3dConfigMutation::SetBrushVortexKind { .. } => &Self::DESCRIPTORS[6],
+            Block3dConfigMutation::SetBrushRadius { .. } => &Self::DESCRIPTORS[7],
+            Block3dConfigMutation::SetBrushFlip { .. } => &Self::DESCRIPTORS[8],
+            Block3dConfigMutation::SetCamera { .. } => &Self::DESCRIPTORS[9],
+            Block3dConfigMutation::ClearCamera => &Self::DESCRIPTORS[10],
         }
     }
 
-    fn diff(&self, base: &Block3dConfig) -> protocol::MutationOutcome<Block3dConfig> {
-        let mut next = base.clone();
+    fn diff(&self, base: &Block3dConfig) -> protocol::MutationOutcome<Block3dConfigDiff> {
+        let unchanged = || protocol::MutationOutcome::empty().warning("mutation.no-op", "The config already holds that value.");
+        let outcome = |diff: Block3dConfigDiff| protocol::MutationOutcome::new(diff);
         match self {
-            Block3dConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
-            Block3dConfigMutation::SetActiveRepresentation { representation_id } => next.active_representation_id = representation_id.clone(),
-            Block3dConfigMutation::SetWantedTags { tags } => next.wanted_tags = tags.clone(),
-            Block3dConfigMutation::SetWindowRepresentations { window_id, representation_ids } => {
-                let index = upsert_window_view_index(&mut next.windows, window_id);
-                next.windows[index].representation_ids = representation_ids.clone();
-            }
+            Block3dConfigMutation::SetActiveRepresentation { representation_id } if *representation_id == base.active_representation_id => unchanged(),
+            Block3dConfigMutation::SetActiveRepresentation { representation_id } => outcome(Block3dConfigDiff { active_representation_id: Some(BlockOptionalText { value: representation_id.clone() }), ..Default::default() }),
+            Block3dConfigMutation::SetWantedTags { tags } if *tags == base.wanted_tags => unchanged(),
+            Block3dConfigMutation::SetWantedTags { tags } => outcome(Block3dConfigDiff { wanted_tags: Some(tags.clone()), ..Default::default() }),
+            Block3dConfigMutation::SetWindowRepresentations { window_id, representation_ids } if block3d_window_view(base, window_id).representation_ids == *representation_ids => unchanged(),
+            Block3dConfigMutation::SetWindowRepresentations { window_id, representation_ids } => outcome(window_edit(base, window_id, Block3dWindowViewPatch { representation_ids: Some(representation_ids.clone()), ..Default::default() })),
             Block3dConfigMutation::ToggleWindowRepresentation { window_id, representation_id, visible } => {
-                let index = upsert_window_view_index(&mut next.windows, window_id);
-                let row = &mut next.windows[index];
-                if *visible {
-                    if !row.representation_ids.contains(representation_id) {
-                        row.representation_ids.push(representation_id.clone());
-                    }
-                } else {
-                    row.representation_ids.retain(|id| id != representation_id);
+                let current = block3d_window_view(base, window_id).representation_ids;
+                let toggled: Vec<String> = match *visible {
+                    true if current.contains(representation_id) => current.clone(),
+                    true => current.iter().cloned().chain([representation_id.clone()]).collect(),
+                    false => current.iter().filter(|id| *id != representation_id).cloned().collect(),
+                };
+                if toggled == current {
+                    return unchanged();
                 }
+                outcome(window_edit(base, window_id, Block3dWindowViewPatch { representation_ids: Some(toggled), ..Default::default() }))
             }
-            Block3dConfigMutation::SetWindowArrangement { window_id, arrangement } => {
-                let index = upsert_window_view_index(&mut next.windows, window_id);
-                next.windows[index].arrangement = arrangement.clone();
-            }
-            Block3dConfigMutation::SetWindowSpacing { window_id, spacing } => {
-                let index = upsert_window_view_index(&mut next.windows, window_id);
-                next.windows[index].spacing = *spacing;
-            }
-            Block3dConfigMutation::SetBrushVortexKind { vortex_kind_id } => next.brush_vortex_kind_id = vortex_kind_id.clone(),
-            Block3dConfigMutation::SetBrushRadius { radius } => next.brush_radius = *radius,
-            Block3dConfigMutation::SetBrushFlip { flip } => next.brush_flip = *flip,
-            Block3dConfigMutation::SetCamera { camera } => next.camera = Some(camera.clone()),
+            Block3dConfigMutation::SetWindowArrangement { window_id, arrangement } if block3d_window_view(base, window_id).arrangement == *arrangement => unchanged(),
+            Block3dConfigMutation::SetWindowArrangement { window_id, arrangement } => outcome(window_edit(base, window_id, Block3dWindowViewPatch { arrangement: Some(arrangement.clone()), ..Default::default() })),
+            Block3dConfigMutation::SetWindowSpacing { window_id, spacing } if block3d_window_view(base, window_id).spacing == *spacing => unchanged(),
+            Block3dConfigMutation::SetWindowSpacing { window_id, spacing } => outcome(window_edit(base, window_id, Block3dWindowViewPatch { spacing: Some(*spacing), ..Default::default() })),
+            Block3dConfigMutation::SetBrushVortexKind { vortex_kind_id } if *vortex_kind_id == base.brush_vortex_kind_id => unchanged(),
+            Block3dConfigMutation::SetBrushVortexKind { vortex_kind_id } => outcome(Block3dConfigDiff { brush_vortex_kind_id: Some(BlockOptionalText { value: vortex_kind_id.clone() }), ..Default::default() }),
+            Block3dConfigMutation::SetBrushRadius { radius } if *radius == base.brush_radius => unchanged(),
+            Block3dConfigMutation::SetBrushRadius { radius } => outcome(Block3dConfigDiff { brush_radius: Some(*radius), ..Default::default() }),
+            Block3dConfigMutation::SetBrushFlip { flip } if *flip == base.brush_flip => unchanged(),
+            Block3dConfigMutation::SetBrushFlip { flip } => outcome(Block3dConfigDiff { brush_flip: Some(*flip), ..Default::default() }),
+            Block3dConfigMutation::SetCamera { camera } if base.camera.as_ref() == Some(camera) => unchanged(),
+            Block3dConfigMutation::SetCamera { camera } => outcome(Block3dConfigDiff { camera: Some(Block3dOptionalCamera { value: Some(camera.clone()) }), ..Default::default() }),
+            Block3dConfigMutation::ClearCamera if base.camera.is_none() => unchanged(),
+            Block3dConfigMutation::ClearCamera => outcome(Block3dConfigDiff { camera: Some(Block3dOptionalCamera { value: None }), ..Default::default() }),
         }
-        protocol::MutationOutcome::new(next)
     }
 
     fn inverse(&self, base: &Block3dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Block3dConfigMutation::Snapshot { config: base.clone() }]
-    
-    })())
-}
+        Ok(vec![match self {
+            Block3dConfigMutation::SetActiveRepresentation { .. } => Block3dConfigMutation::SetActiveRepresentation { representation_id: base.active_representation_id.clone() },
+            Block3dConfigMutation::SetWantedTags { .. } => Block3dConfigMutation::SetWantedTags { tags: base.wanted_tags.clone() },
+            Block3dConfigMutation::SetWindowRepresentations { window_id, .. } | Block3dConfigMutation::ToggleWindowRepresentation { window_id, .. } => Block3dConfigMutation::SetWindowRepresentations { window_id: window_id.clone(), representation_ids: block3d_window_view(base, window_id).representation_ids },
+            Block3dConfigMutation::SetWindowArrangement { window_id, .. } => Block3dConfigMutation::SetWindowArrangement { window_id: window_id.clone(), arrangement: block3d_window_view(base, window_id).arrangement },
+            Block3dConfigMutation::SetWindowSpacing { window_id, .. } => Block3dConfigMutation::SetWindowSpacing { window_id: window_id.clone(), spacing: block3d_window_view(base, window_id).spacing },
+            Block3dConfigMutation::SetBrushVortexKind { .. } => Block3dConfigMutation::SetBrushVortexKind { vortex_kind_id: base.brush_vortex_kind_id.clone() },
+            Block3dConfigMutation::SetBrushRadius { .. } => Block3dConfigMutation::SetBrushRadius { radius: base.brush_radius },
+            Block3dConfigMutation::SetBrushFlip { .. } => Block3dConfigMutation::SetBrushFlip { flip: base.brush_flip },
+            Block3dConfigMutation::SetCamera { .. } | Block3dConfigMutation::ClearCamera => match &base.camera {
+                Some(camera) => Block3dConfigMutation::SetCamera { camera: camera.clone() },
+                None => Block3dConfigMutation::ClearCamera,
+            },
+        }])
+    }
 }
 //#endregion 🔖️ConfigOperations
 

@@ -33,13 +33,13 @@ async fn field_sweep_between_covers_every_field() {
     assert!(matches!(ab.id3v2, Some(Some(_))));
     assert!(ab.frames.is_some());
     assert!(matches!(ab.id3v1, Some(Some(_))));
-    assert_eq!(ab.apply(&a).unwrap(), b);
+    assert_eq!(protocol::apply_diff(&ab, &a).unwrap(), b);
 
     let ba = Mp3Diff::between(&b, &a);
     assert_eq!(ba.id3v2, Some(None));
     assert!(ba.frames.is_some());
     assert_eq!(ba.id3v1, Some(None));
-    assert_eq!(ba.apply(&b).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&ba, &b).unwrap(), a);
 
     assert!(Mp3Diff::between(&a, &a).is_empty());
 }
@@ -50,8 +50,8 @@ async fn field_sweep_between_covers_every_field() {
 async fn between_roundtrip_law() {
     let a = sweep_a();
     let b = sweep_b();
-    assert_eq!(Mp3Diff::between(&a, &b).apply(&a).unwrap(), b);
-    assert_eq!(Mp3Diff::between(&b, &a).apply(&b).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&Mp3Diff::between(&a, &b), &a).unwrap(), b);
+    assert_eq!(protocol::apply_diff(&Mp3Diff::between(&b, &a), &b).unwrap(), a);
 }
 //#endregion between_roundtrip_law
 
@@ -63,7 +63,7 @@ async fn absorb_law_disjoint_and_lww_and_associativity() {
     let d2 = diff_set_id3v1(Some(Id3v1Tag { raw: vec![1, 2, 3] }));
     let mut absorbed = d1.clone();
     absorbed.absorb(d2.clone());
-    assert_eq!(absorbed.apply(&base).unwrap(), d2.apply(&d1.apply(&base).unwrap()).unwrap());
+    assert_eq!(protocol::apply_diff(&absorbed, &base).unwrap(), protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).unwrap()).unwrap());
 
     let d3 = diff_set_id3v2(Some(Id3v2Tag { major_version: 3, minor_version: 0, flags: 0, frames: vec![] }));
     let d4 = diff_set_id3v2(None);
@@ -82,7 +82,7 @@ async fn absorb_law_disjoint_and_lww_and_associativity() {
     let mut right = da.clone();
     right.absorb(right_tail);
     assert_eq!(left, right);
-    assert_eq!(left.apply(&base).unwrap(), dc.apply(&db.apply(&da.apply(&base).unwrap()).unwrap()).unwrap());
+    assert_eq!(protocol::apply_diff(&left, &base).unwrap(), protocol::apply_diff(&dc, &protocol::apply_diff(&db, &protocol::apply_diff(&da, &base).unwrap()).unwrap()).unwrap());
 }
 //#endregion absorb_law
 
@@ -91,8 +91,8 @@ async fn absorb_law_disjoint_and_lww_and_associativity() {
 async fn inverse_law_diff_level() {
     let base = sweep_a();
     let d = Mp3Diff::between(&base, &sweep_b());
-    let applied = d.apply(&base).unwrap();
-    let undone = d.inverse(&base).apply(&applied).unwrap();
+    let applied = protocol::apply_diff(&d, &base).unwrap();
+    let undone = protocol::apply_diff(&d.inverse(&base), &applied).unwrap();
     assert_eq!(undone, base);
 }
 //#endregion inverse_law

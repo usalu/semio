@@ -2,7 +2,7 @@
 use crate::schema::mutations::JsonMutation;
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
-pub const TEXT_OPCODES: &[&str] = &["set-member", "remove-member", "insert-array-element", "remove-array-element", "set-scalar", "patch-snapshot"];
+pub const TEXT_OPCODES: &[&str] = &["set-member", "remove-member", "insert-array-element", "remove-array-element", "set-scalar"];
 fn error(detail: impl Into<String>) -> semio_framework_diagnostic::TextError {
     semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail.into(), semio_framework_diagnostic::TextSpan::at(1, 1))
 }
@@ -46,9 +46,6 @@ pub mod set_member;
 
 #[path = "📤️remove-array-element/🦀️.rs"]
 pub mod remove_array_element;
-
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
 
 #[path = "🗑️remove-member/🦀️.rs"]
 pub mod remove_member;

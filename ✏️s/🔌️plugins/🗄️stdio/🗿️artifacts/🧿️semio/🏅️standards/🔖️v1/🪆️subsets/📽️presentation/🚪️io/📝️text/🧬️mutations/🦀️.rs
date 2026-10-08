@@ -8,7 +8,7 @@ mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::presentation::schema::mutations::*;
 use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
-use crate::standards::v1::subsets::presentation::schema::diff::{diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide, diff_remove_layout, diff_remove_master, diff_remove_shape, diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout, diff_set_slide_notes, diff_set_snapshot, diff_set_textbox_blocks, frame_of, SemioPresentationDiff};
+use crate::standards::v1::subsets::presentation::schema::diff::{diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide, diff_remove_layout, diff_remove_master, diff_remove_shape, diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout, diff_set_slide_notes, diff_set_textbox_blocks, frame_of, SemioPresentationDiff};
 use crate::standards::v1::subsets::presentation::io::text::diff::{dec_shape};
 use crate::standards::v1::subsets::presentation::io::text::diff::{enc_shape};
 use crate::standards::v1::subsets::presentation::io::text::diff::{dec_slide};
@@ -41,6 +41,16 @@ use protocol::{Mutation, OpBinary, OpText};
 /// must still honor the `no-mutation` scenario id maps it to the identity `set-snapshot` mutation
 /// itself, ahead of this codec.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_at(at: Option<usize>) -> String {
+    at.map(|at| format!(" at={at}")).unwrap_or_default()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_at(args: &std::collections::BTreeMap<&str, &str>) -> Result<Option<usize>, String> {
+    args.get("at").map(|at| at.parse::<usize>().map_err(|error| error.to_string())).transpose()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_presentation_mutation(m: &SemioPresentationMutation) -> String {
     match m {
         SemioPresentationMutation::InsertSlide(insert_slide::InsertSlide { index, slide }) => format!("insert-slide index={index} slide={}", enc_slide(slide)),
@@ -53,9 +63,9 @@ pub(crate) fn print_presentation_mutation(m: &SemioPresentationMutation) -> Stri
         SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index, shape_index, blocks }) => {
             format!("set-text-box-blocks slide-index={slide_index} shape-index={shape_index} blocks={}", enc_list(blocks, enc_block))
         }
-        SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master }) => format!("insert-master master={}", enc_master(master)),
+        SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master, at }) => format!("insert-master master={}{}", enc_master(master), enc_at(*at)),
         SemioPresentationMutation::RemoveMaster(remove_master::RemoveMaster { id }) => format!("remove-master id={}", enc_str(id)),
-        SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout }) => format!("insert-layout layout={}", enc_layout(layout)),
+        SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout, at }) => format!("insert-layout layout={}{}", enc_layout(layout), enc_at(*at)),
         SemioPresentationMutation::RemoveLayout(remove_layout::RemoveLayout { id }) => format!("remove-layout id={}", enc_str(id)),
         SemioPresentationMutation::SetLayoutMaster(set_layout_master::SetLayoutMaster { id, master_id }) => format!("set-layout-master id={} master-id={}", enc_str(id), enc_str(master_id)),
     }
@@ -77,9 +87,9 @@ pub(crate) fn parse_presentation_mutation(line: &str) -> Result<SemioPresentatio
         "remove-shape" => Ok(SemioPresentationMutation::RemoveShape(remove_shape::RemoveShape { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")? })),
         "set-shape-frame" => Ok(SemioPresentationMutation::SetShapeFrame(set_shape_frame::SetShapeFrame { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, frame: dec_frame(arg("frame")?)? })),
         "set-text-box-blocks" => Ok(SemioPresentationMutation::SetTextBoxBlocks(set_textbox_blocks::SetTextBoxBlocks { slide_index: usize_arg("slide-index")?, shape_index: usize_arg("shape-index")?, blocks: dec_list(arg("blocks")?, dec_block)? })),
-        "insert-master" => Ok(SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: dec_master(arg("master")?)? })),
+        "insert-master" => Ok(SemioPresentationMutation::InsertMaster(insert_master::InsertMaster { master: dec_master(arg("master")?)?, at: dec_at(&args)? })),
         "remove-master" => Ok(SemioPresentationMutation::RemoveMaster(remove_master::RemoveMaster { id: dec_str(arg("id")?)? })),
-        "insert-layout" => Ok(SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout: dec_layout(arg("layout")?)? })),
+        "insert-layout" => Ok(SemioPresentationMutation::InsertLayout(insert_layout::InsertLayout { layout: dec_layout(arg("layout")?)?, at: dec_at(&args)? })),
         "remove-layout" => Ok(SemioPresentationMutation::RemoveLayout(remove_layout::RemoveLayout { id: dec_str(arg("id")?)? })),
         "set-layout-master" => Ok(SemioPresentationMutation::SetLayoutMaster(set_layout_master::SetLayoutMaster { id: dec_str(arg("id")?)?, master_id: dec_str(arg("master-id")?)? })),
         other => Err(format!("presentation mutation: unknown keyword {other:?}")),

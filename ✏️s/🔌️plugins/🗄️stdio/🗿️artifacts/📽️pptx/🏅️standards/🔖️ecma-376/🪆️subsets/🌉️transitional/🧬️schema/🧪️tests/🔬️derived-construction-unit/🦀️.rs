@@ -32,14 +32,14 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn hard_violation_injected_via_raw_mutate_still_fails_build() {
+    async fn hard_violation_in_the_snapshot_still_fails_build() {
         let mut violating = transitional_snapshot();
         violating.xml_parts.push(crate::schema::snapshot::PptxXmlPart {
             path: "ppt/slides/slide1.xml".into(),
             content_type: "application/vnd.openxmlformats-officedocument.presentationml.slide+xml".into(),
             document: semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text(r#"<p:sld xmlns:p="http://purl.oclc.org/ooxml/presentationml/main"/>"#).expect("valid XML"),
         });
-        let (mutated, _diff) = PptxTransitionalBuilderConstruction::from_snapshot(PptxSnapshot::default()).mutate(PptxMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: violating }));
+        let mutated = PptxTransitionalBuilderConstruction::from_snapshot(violating);
         let err = mutated.build().expect_err("a Strict namespace anywhere must fail build()");
         assert!(err.iter().any(|d| d.code.0 == crate::standards::v_ecma_376::subsets::transitional::schema::conformance::CODE_STRICT_NS_PRESENT));
     }

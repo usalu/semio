@@ -33,10 +33,11 @@ async fn mutation_diff_law() {
     let base = fixture();
     for m in demo_mutation_cases() {
         let mut snap = base.clone();
-        let returned = apply_semio_cad_mutation(&mut snap, &m);
+        let (__next, returned) = crate::applied(&snap, &m);
+        snap = __next;
         let expected_diff = m.diff(&base);
         assert_eq!(returned, expected_diff, "returned diff mismatch for {m:?}");
-        assert_eq!(snap, protocol::MutationDiff::apply(expected_diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), "apply mismatch for {m:?}");
+        assert_eq!(snap, protocol::apply_diff(expected_diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), "apply mismatch for {m:?}");
     }
 }
 //#endregion
@@ -50,17 +51,17 @@ async fn inverse_law() {
     let base = fixture();
     for m in demo_mutation_cases() {
         let mut snap = base.clone();
-        apply_semio_cad_mutation(&mut snap, &m);
+        snap = crate::applied(&snap, &m).0;
         for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
             let mut undone = snap.clone();
-            apply_semio_cad_mutation(&mut undone, &inv);
+            undone = crate::applied(&undone, &inv).0;
             assert_eq!(undone, base, "mutation-level inverse mismatch for {m:?}");
         }
 
         let d = m.diff(&base);
-        let after = protocol::MutationDiff::apply(d.diff(), &base).expect("apply must succeed for a well-formed fixture");
+        let after = protocol::apply_diff(d.diff(), &base).expect("apply must succeed for a well-formed fixture");
         let d_inv = d.diff().inverse(&base);
-        assert_eq!(protocol::MutationDiff::apply(&d_inv, &after).expect("apply must succeed for a well-formed fixture"), base, "diff-level inverse mismatch for {m:?}");
+        assert_eq!(protocol::apply_diff(&d_inv, &after).expect("apply must succeed for a well-formed fixture"), base, "diff-level inverse mismatch for {m:?}");
     }
 }
 //#endregion
@@ -82,3 +83,22 @@ async fn op_text_binary_roundtrip_law() {
     }
 }
 //#endregion
+
+/// 🎯️ Position law: removing ANY layer, block, entity or block entity (first, middle, last) is undone at its original index.
+#[semio_framework_async_macros::async_test]
+async fn removals_invert_at_every_position() {
+    let base = crate::standards::v1::subsets::cad::schema::snapshot::demo_cad_snapshot();
+    for item in &base.layers {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioCadMutation::RemoveLayer(remove_layer::RemoveLayer { name: item.name.clone() }), &base).await;
+    }
+    for item in &base.blocks {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioCadMutation::RemoveBlock(remove_block::RemoveBlock { name: item.name.clone() }), &base).await;
+        for entity in &item.entities {
+            protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioCadMutation::RemoveBlockEntity(remove_block_entity::RemoveBlockEntity { block_name: item.name.clone(), handle: entity.handle.clone() }), &base).await;
+        }
+    }
+    for item in &base.entities {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioCadMutation::RemoveEntity(remove_entity::RemoveEntity { handle: item.handle.clone() }), &base).await;
+    }
+}
+

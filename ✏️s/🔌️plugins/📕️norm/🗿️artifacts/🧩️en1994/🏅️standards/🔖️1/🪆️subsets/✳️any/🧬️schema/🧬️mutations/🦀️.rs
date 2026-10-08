@@ -3,6 +3,10 @@
 use crate::{En1994Diff, En1994Snapshot};
 
 //#region 🔖️Leaves
+#[path = "🧭️edit-rules/🦀️.rs"]
+mod edit_rules;
+pub use edit_rules::{resolve_edit, EDIT_RULES};
+
 use super::change_annex;
 use super::change_structure_kind;
 use super::change_steel_fy_pa;
@@ -299,7 +303,7 @@ mod kinds_catalog;
 pub fn apply_en1994_mutation(base: &En1994Snapshot, mutation: &En1994Mutation) -> Result<(En1994Snapshot, Vec<String>), String> {
     let raised = <En1994Mutation as protocol::Mutation<En1994Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = <En1994Diff as protocol::MutationDiff<En1994Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
 /// ↩️ The inverse steps production dispatch computes for `mutation` against `base`.
@@ -320,3 +324,7 @@ pub use tests::demo_mutation_cases;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧫️Vectors
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row;

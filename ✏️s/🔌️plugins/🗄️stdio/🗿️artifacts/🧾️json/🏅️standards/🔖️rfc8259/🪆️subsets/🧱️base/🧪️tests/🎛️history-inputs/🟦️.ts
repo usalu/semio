@@ -6,11 +6,10 @@ import {resolve} from "node:path";
 const root=resolve(import.meta.dir,"../../..");const read=(path:string)=>JSON.parse(readFileSync(resolve(root,path),"utf8"));
 const before={schema:"stdio.json",value:{kind:"object",members:[{key:"title",value:{kind:"string",value:"Old"}},{key:"enabled",value:{kind:"bool",value:false}}]}};
 const rows=[
- {subset:"🧱️base",id:"string",leaf:"🔢️set-scalar",mutation:{mutation:"setScalar",payload:{phase:"apply",value:{path:[{kind:"key",value:"title"}],value:{kind:"string",value:"Hallo 😀"}}}},patch:[{op:"replace",path:"/value/members/0/value/value",value:"Hallo 😀"}]},
- {subset:"🧱️base",id:"boolean",leaf:"🔢️set-scalar",mutation:{mutation:"setScalar",payload:{phase:"apply",value:{path:[{kind:"key",value:"enabled"}],value:{kind:"bool",value:true}}}},patch:[{op:"replace",path:"/value/members/1/value/value",value:true}]},
+ {subset:"🧱️base",id:"string",leaf:"🔢️set-scalar",mutation:{mutation:"setScalar",payload:{path:[{kind:"key",value:"title"}],value:{kind:"string",value:"Hallo 😀"}}},patch:[{op:"replace",path:"/value/members/0/value/value",value:"Hallo 😀"}]},
+ {subset:"🧱️base",id:"boolean",leaf:"🔢️set-scalar",mutation:{mutation:"setScalar",payload:{path:[{kind:"key",value:"enabled"}],value:{kind:"bool",value:true}}},patch:[{op:"replace",path:"/value/members/1/value/value",value:true}]},
  {subset:"🛜️i-json",id:"string",leaf:"🔤set-string",mutation:{mutation:"setString",path:[{kind:"key",value:"title"}],value:"Hallo 😀"},patch:[{op:"replace",path:"/value/members/0/value/value",value:"Hallo 😀"}]},
  {subset:"🛜️i-json",id:"rename",leaf:"🏷️rename-member",mutation:{mutation:"renameMember",path:[],from:"title",to:"heading"},patch:[{op:"replace",path:"/value/members/0/key",value:"heading"}]},
- {subset:"🧱️base",id:"member-key",leaf:"🩹️patch-snapshot",mutation:{mutation:"patchSnapshot",payload:{patch:{operation:"set",path:"/value/members/0/key",value:"heading"}}},patch:[{op:"replace",path:"/value/members/0/key",value:"heading"}]}
 ];
 test("JSON and I-JSON committed scalar and member intents match independent RFC6902",()=>{
  const ajv=new Ajv({strict:false});const schema=read("🧱️base/🧬️schema/📸️snapshot/🔣️.json");ajv.addSchema(schema);ajv.addSchema(JSON.parse(readFileSync(resolve(root,"../../../../../📇️registry/🧬️schema/🔣️.json"),"utf8")));const validate=ajv.compile(schema);expect(validate(before)).toBe(true);

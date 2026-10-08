@@ -29,19 +29,34 @@ async fn config_dsl_round_trips() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn config_mutation_snapshot_replaces_wholesale_and_inverse_restores() {
-    let base = SpaceIndexConfig::default();
-    let next = SpaceIndexConfig { visibility: "public".into(), ..Default::default() };
-    let mutation = SpaceIndexConfigMutation::Snapshot { config: next.clone() };
-    let forward = mutation.diff(&base).diff().clone();
-    assert_eq!(forward, next);
+async fn directory_projection_replaces_only_the_directory_slice_and_inverse_restores() {
+    let base = SpaceIndexConfig { presence: vec![SpaceIndexArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1".into() }], ..Default::default() };
+    let mutation = SpaceIndexConfigMutation::ReplaceDirectoryProjection { projection: SpaceIndexDirectoryProjection { visibility: "public".into(), ..Default::default() } };
+    let outcome = mutation.diff(&base);
+    assert_eq!(outcome.diff(), &SpaceIndexConfigDiff { visibility: Some("public".into()), ..Default::default() });
+    let forward = protocol::apply_diff(outcome.diff(), &base).expect("the projection applies");
+    assert_eq!(forward.presence, base.presence, "the directory fold never touches the live presence rows");
     let backwards = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
-    assert_eq!(backwards, vec![SpaceIndexConfigMutation::Snapshot { config: base.clone() }]);
-    let restored = backwards[0].diff(&forward).diff().clone();
-    assert_eq!(restored, base);
+    assert_eq!(backwards, vec![SpaceIndexConfigMutation::ReplaceDirectoryProjection { projection: SpaceIndexDirectoryProjection { visibility: "private".into(), ..Default::default() } }]);
+    assert_eq!(protocol::apply_diff(backwards[0].diff(&forward).diff(), &forward).expect("the inverse applies"), base);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn artifact_presence_sets_clears_and_inverts_exactly() {
+    let base = SpaceIndexConfig { presence: vec![SpaceIndexArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1".into() }], ..Default::default() };
+    for mutation in [
+        SpaceIndexConfigMutation::SetArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:2".into() },
+        SpaceIndexConfigMutation::SetArtifactPresence { artifact_id: "artifact-2".into(), actors_csv: "user:3".into() },
+        SpaceIndexConfigMutation::ClearArtifactPresence { artifact_id: "artifact-1".into() },
+    ] {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn config_mutation_op_text_round_trips() {
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceIndexConfigMutation::Snapshot { config: SpaceIndexConfig::default() });
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceIndexConfigMutation::ReplaceDirectoryProjection { projection: SpaceIndexDirectoryProjection::default() });
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceIndexConfigMutation::SetArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1".into() });
+    store::os_store::test_support::assert_op_line_round_trip(&SpaceIndexConfigMutation::ClearArtifactPresence { artifact_id: "artifact-1".into() });
 }

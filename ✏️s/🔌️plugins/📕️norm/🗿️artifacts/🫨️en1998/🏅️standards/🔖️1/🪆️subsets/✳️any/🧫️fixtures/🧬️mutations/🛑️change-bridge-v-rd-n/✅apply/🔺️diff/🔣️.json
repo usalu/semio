@@ -1,30 +1,57 @@
 {
-  "artifact": null,
   "annex": null,
   "site": null,
-  "buildings": null,
-  "bridges": [
-    {
-      "id": "br-1",
-      "periodRatio": 2.0,
-      "fundamentalPeriodS": 1.2,
-      "vRdN": 2500000.0,
-      "bearingDRdM": 0.4,
-      "permanentGkN": 8000000.0,
-      "correlatedOccupancy": true,
-      "variables": [
-        {
-          "id": "br-q1",
-          "category": "F",
-          "qkN": 1500000.0
+  "buildings": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "bridges": {
+    "removed": [],
+    "added": [],
+    "modified": [
+      {
+        "key": "br-1",
+        "patch": {
+          "periodRatio": null,
+          "fundamentalPeriodS": null,
+          "vRdN": 2500000.0,
+          "bearingDRdM": null,
+          "permanentGkN": null,
+          "correlatedOccupancy": null,
+          "variables": null
         }
-      ]
-    }
-  ],
-  "assessments": null,
-  "silos": null,
-  "tanks": null,
-  "foundations": null,
-  "retainingWalls": null,
-  "towers": null
+      }
+    ]
+  },
+  "assessments": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "silos": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "tanks": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "foundations": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "retainingWalls": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "towers": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

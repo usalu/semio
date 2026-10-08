@@ -81,8 +81,6 @@ fn sweep_b() -> EpwSnapshot {
 async fn mutation_diff_law() {
     let base = base_snapshot();
     let variants = vec![
-        EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
-        EpwMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         EpwMutation::SetLocation(set_location::SetLocation { location: location("Munich") }),
         EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: "DESIGN CONDITIONS,changed".into() }),
         EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods: data_periods() }),
@@ -92,7 +90,7 @@ async fn mutation_diff_law() {
     ];
     for m in variants {
         let diff = m.diff(&base);
-        let expected = diff.diff().apply(&base).unwrap();
+        let expected = protocol::apply_diff(diff.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
         let returned_diff = apply_epw_mutation(&mut via_apply, &m);
@@ -108,8 +106,6 @@ async fn mutation_diff_law() {
 async fn inverse_law() {
     let base = base_snapshot();
     let variants = vec![
-        EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
-        EpwMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         EpwMutation::SetLocation(set_location::SetLocation { location: location("Munich") }),
         EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: "DESIGN CONDITIONS,changed".into() }),
         EpwMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: Box::new(record("50", "1.0")) }),
@@ -125,8 +121,8 @@ async fn inverse_law() {
         assert_eq!(forward, base, "mutation-level inverse round trip failed for {m:?}");
 
         let d = m.diff(&base);
-        let mid = d.diff().apply(&base).unwrap();
-        let back = d.diff().inverse(&base).apply(&mid).unwrap();
+        let mid = protocol::apply_diff(d.diff(), &base).unwrap();
+        let back = protocol::apply_diff(d.diff().inverse(&base), &mid).unwrap();
         assert_eq!(back, base, "diff-level inverse round trip failed for {m:?}");
     }
 }
@@ -138,46 +134,46 @@ async fn absorb_law() {
     let base = base_snapshot();
 
     let d1 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: Box::new(record("40", "ins")) }).diff(&base);
-    let mid = d1.diff().apply(&base).unwrap();
+    let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: 0 }).diff(&mid);
-    let after = d2.diff().apply(&mid).unwrap();
+    let after = protocol::apply_diff(d2.diff(), &mid).unwrap();
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Remove-before absorb mismatch");
+    assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Insert+Remove-before absorb mismatch");
 
     let d1 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: Box::new(record("41", "f")) }).diff(&base);
-    let mid = d1.diff().apply(&base).unwrap();
+    let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 2, record: Box::new(record("42", "g")) }).diff(&mid);
-    let after = d2.diff().apply(&mid).unwrap();
+    let after = protocol::apply_diff(d2.diff(), &mid).unwrap();
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(composed.apply(&base).unwrap(), after, "Insert+Insert-same-index absorb mismatch");
+    assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Insert+Insert-same-index absorb mismatch");
     assert_eq!(after.records.len(), base.records.len() + 2, "both inserts must survive");
 
     let d1 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: Box::new(record("43", "orig")) }).diff(&base);
-    let mid = d1.diff().apply(&base).unwrap();
+    let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: 1, field_index: 6, value: "patched".into() }).diff(&mid);
-    let after = d2.diff().apply(&mid).unwrap();
+    let after = protocol::apply_diff(d2.diff(), &mid).unwrap();
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(composed.apply(&base).unwrap(), after, "Add+SetRecordField absorb mismatch");
+    assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Add+SetRecordField absorb mismatch");
     assert_eq!(after.records[1].dry_bulb_temp, "patched");
 
     let d1 = EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: 1, field_index: 6, value: "will-vanish".into() }).diff(&base);
-    let mid = d1.diff().apply(&base).unwrap();
+    let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: 1 }).diff(&mid);
-    let after = d2.diff().apply(&mid).unwrap();
+    let after = protocol::apply_diff(d2.diff(), &mid).unwrap();
     let mut composed = d1.diff().clone();
     composed.absorb(d2.diff().clone());
-    assert_eq!(composed.apply(&base).unwrap(), after, "Modify+Remove absorb mismatch");
+    assert_eq!(protocol::apply_diff(&composed, &base).unwrap(), after, "Modify+Remove absorb mismatch");
 
     let base = base_snapshot();
     let d1 = EpwMutation::InsertRecord(insert_record::InsertRecord { index: 0, record: Box::new(record("44", "a")) }).diff(&base);
-    let s1 = d1.diff().apply(&base).unwrap();
+    let s1 = protocol::apply_diff(d1.diff(), &base).unwrap();
     let d2 = EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: 0, field_index: 6, value: "a2".into() }).diff(&s1);
-    let s2 = d2.diff().apply(&s1).unwrap();
+    let s2 = protocol::apply_diff(d2.diff(), &s1).unwrap();
     let d3 = EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: 2 }).diff(&s2);
-    let s3 = d3.diff().apply(&s2).unwrap();
+    let s3 = protocol::apply_diff(d3.diff(), &s2).unwrap();
 
     let mut left = d1.diff().clone();
     left.absorb(d2.diff().clone());
@@ -188,9 +184,9 @@ async fn absorb_law() {
     let mut right = d1.diff().clone();
     right.absorb(d23);
 
-    assert_eq!(left.apply(&base).unwrap(), s3);
-    assert_eq!(right.apply(&base).unwrap(), s3);
-    assert_eq!(left.apply(&base).unwrap(), right.apply(&base).unwrap(), "absorb must be associative");
+    assert_eq!(protocol::apply_diff(&left, &base).unwrap(), s3);
+    assert_eq!(protocol::apply_diff(&right, &base).unwrap(), s3);
+    assert_eq!(protocol::apply_diff(&left, &base).unwrap(), protocol::apply_diff(&right, &base).unwrap(), "absorb must be associative");
 }
 //#endregion 🔖️AbsorbLaw
 
@@ -199,8 +195,8 @@ async fn absorb_law() {
 async fn between_roundtrip_law() {
     let a = base_snapshot();
     let b = sweep_b();
-    assert_eq!(EpwDiff::between(&a, &b).apply(&a).unwrap(), b);
-    assert_eq!(EpwDiff::between(&b, &a).apply(&b).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&EpwDiff::between(&a, &b), &a).unwrap(), b);
+    assert_eq!(protocol::apply_diff(&EpwDiff::between(&b, &a), &b).unwrap(), a);
     assert!(EpwDiff::between(&a, &a).is_empty());
 }
 //#endregion 🔖️BetweenRoundtripLaw
@@ -212,10 +208,10 @@ async fn field_sweep_every_mutable_field_changes() {
     let b = sweep_b();
 
     let d_ab = EpwDiff::between(&a, &b);
-    assert_eq!(d_ab.apply(&a).unwrap(), b, "between(a,b).apply(a) == b");
+    assert_eq!(protocol::apply_diff(&d_ab, &a).unwrap(), b, "between(a,b).apply(a) == b");
 
     let d_ba = EpwDiff::between(&b, &a);
-    assert_eq!(d_ba.apply(&b).unwrap(), a, "between(b,a).apply(b) == a");
+    assert_eq!(protocol::apply_diff(&d_ba, &b).unwrap(), a, "between(b,a).apply(b) == a");
 
     assert!(d_ab.location.is_some(), "location must be populated");
     assert!(d_ab.design_conditions.is_some());
@@ -246,14 +242,14 @@ async fn field_sweep_every_mutable_field_changes() {
     let d_shrink = EpwDiff::between(&a, &shorter);
     let shrink_records = d_shrink.records.as_ref().expect("records diff must be populated");
     assert!(!shrink_records.removed.is_empty(), "a shorter record list must produce a removed entry");
-    assert_eq!(d_shrink.apply(&a).unwrap(), shorter);
+    assert_eq!(protocol::apply_diff(&d_shrink, &a).unwrap(), shorter);
 
     let mut longer = a.clone();
     longer.records.push(record("4", "-5.0"));
     let d_grow = EpwDiff::between(&a, &longer);
     let grow_records = d_grow.records.as_ref().expect("records diff must be populated");
     assert!(!grow_records.added.is_empty(), "a longer record list must produce an added entry");
-    assert_eq!(d_grow.apply(&a).unwrap(), longer);
+    assert_eq!(protocol::apply_diff(&d_grow, &a).unwrap(), longer);
 
     assert!(EpwDiff::between(&a, &a).is_empty());
 }
@@ -263,8 +259,6 @@ async fn field_sweep_every_mutable_field_changes() {
 #[semio_framework_async_macros::async_test]
 async fn op_text_binary_roundtrip_law() {
     let mutations = vec![
-        EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sweep_b() }),
-        EpwMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         EpwMutation::SetLocation(set_location::SetLocation { location: location("Tricky, [City]") }),
         EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: "DESIGN CONDITIONS,tricky, [value]".into() }),
         EpwMutation::SetTypicalExtremePeriods(set_typical_extreme_periods::SetTypicalExtremePeriods { value: "TYPICAL/EXTREME PERIODS,x".into() }),
@@ -301,8 +295,6 @@ async fn op_text_binary_roundtrip_law() {
 async fn kinds_match_enum_and_catalog() {
     fn kind_of(mutation: &EpwMutation) -> &'static str {
         match mutation {
-            EpwMutation::SetSnapshot(_) => "set-snapshot",
-            EpwMutation::PatchSnapshot(_) => "patch-snapshot",
             EpwMutation::SetLocation(_) => "set-location",
             EpwMutation::SetDesignConditions(_) => "set-design-conditions",
             EpwMutation::SetTypicalExtremePeriods(_) => "set-typical-extreme-periods",
@@ -317,8 +309,6 @@ async fn kinds_match_enum_and_catalog() {
         }
     }
     let samples = [
-        EpwMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: EpwSnapshot::default() }),
-        EpwMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         EpwMutation::SetLocation(set_location::SetLocation { location: EpwLocation::default() }),
         EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: String::new() }),
         EpwMutation::SetTypicalExtremePeriods(set_typical_extreme_periods::SetTypicalExtremePeriods { value: String::new() }),
@@ -342,3 +332,24 @@ async fn kinds_match_enum_and_catalog() {
     assert_eq!(declared, KINDS, "the oracle manifest's kinds must match EpwMutation exactly");
 }
 //#endregion 🔖️KindsConformanceLaw
+
+/// ⚖️ `epw_mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff.
+#[semio_framework_async_macros::async_test]
+async fn epw_mutation_inverse_sum_law_holds_for_every_leaf() {
+    let base = base_snapshot();
+    for mutation in [
+        EpwMutation::SetLocation(set_location::SetLocation { location: location("Berlin") }),
+        EpwMutation::SetDesignConditions(set_design_conditions::SetDesignConditions { value: "DESIGN CONDITIONS,1".into() }),
+        EpwMutation::SetTypicalExtremePeriods(set_typical_extreme_periods::SetTypicalExtremePeriods { value: "TYPICAL/EXTREME PERIODS,1".into() }),
+        EpwMutation::SetGroundTemperatures(set_ground_temperatures::SetGroundTemperatures { value: "GROUND TEMPERATURES,1".into() }),
+        EpwMutation::SetHolidaysDst(set_holidays_dst::SetHolidaysDst { value: "HOLIDAYS/DAYLIGHT SAVINGS,Yes,0,0,0".into() }),
+        EpwMutation::SetComments1(set_comments1::SetComments1 { value: "COMMENTS 1,z".into() }),
+        EpwMutation::SetComments2(set_comments2::SetComments2 { value: "COMMENTS 2,w".into() }),
+        EpwMutation::SetDataPeriods(set_data_periods::SetDataPeriods { data_periods: EpwDataPeriods { records_per_hour: 2, ..data_periods() } }),
+        EpwMutation::InsertRecord(insert_record::InsertRecord { index: 1, record: Box::new(record("9", "1.0")) }),
+        EpwMutation::RemoveRecord(remove_record::RemoveRecord { index: 1 }),
+        EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: 2, field_index: 6, value: "12.3".into() }),
+    ] {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+}

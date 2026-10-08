@@ -327,8 +327,6 @@ pub fn generation2d_all_retained_mutation_fixtures_for_test() -> Vec<Generation2
 
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️retained-authority-laws/🦀️.rs"]
-mod retained_authority_laws;
+
 
 use crate::standards::v1::subsets::any::io::text::mutations::{Generation2dOperationDsl,generation2d_operation_to_dsl,generation2d_operation_from_dsl};

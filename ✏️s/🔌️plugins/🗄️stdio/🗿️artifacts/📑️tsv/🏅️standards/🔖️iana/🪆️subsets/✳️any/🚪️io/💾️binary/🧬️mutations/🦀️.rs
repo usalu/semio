@@ -7,7 +7,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 mod mutations_codec {
 use super::*;
 use crate::standards::iana::subsets::any::schema::mutations::*;
-use crate::standards::iana::subsets::any::schema::diff::{diff_set_snapshot, TsvDiff, TsvRowAdded, TsvRowDiff, TsvRowModified, TsvRowsDiff};
+use crate::standards::iana::subsets::any::schema::diff::{TsvDiff, TsvRowAdded, TsvRowDiff, TsvRowModified, TsvRowsDiff};
 use crate::standards::iana::subsets::any::io::text::diff::{dec_str};
 use crate::standards::iana::subsets::any::io::text::diff::{enc_str};
 use crate::standards::iana::subsets::any::io::text::diff::{dec_row};

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/pack/intrinsic/retained/schema.json",
+  "title": "Retained Intrinsic Materialization",
+  "$defs": {
+    "Request": {
+      "type": "object",
+      "required": ["inputBytes", "maximumOwnedBytes", "maximumDepth", "maximumItems"],
+      "properties": {
+        "inputBytes": {"type": "integer", "minimum": 0},
+        "maximumOwnedBytes": {"type": "integer", "minimum": 1},
+        "maximumDepth": {"type": "integer", "minimum": 1},
+        "maximumItems": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false,
+      "description": "Retains one immutable canonical single-field Body by borrowing it or transferring owned bytes without copying. Borrowed backing is excluded; transferred owned backing, output, symbol registry and reconstruction frontier share one cumulative admission ceiling."
+    },
+    "DocumentRequest": {
+      "allOf": [{"$ref": "#/$defs/Request"}],
+      "description": "Explicit Document framing verifies header, footer, segment checksums, catalog spans, content hash and the canonical intrinsic production schema. Verification and reconstruction replay the retained source with admitted inflater storage. Document symbols and referenced native octet chunks share the same cumulative ceiling; a Body is refused without fallback."
+    },
+    "AdvanceGrant": {
+      "type": "object",
+      "required": ["maximumUnits", "cancelled"],
+      "properties": {"maximumUnits": {"type": "integer", "minimum": 0}, "cancelled": {"type": "boolean"}},
+      "additionalProperties": false,
+      "description": "One unit admits at most one input byte, validator transition, output scalar, container attachment or exact allocation. Zero units never move ownership. Cancellation retains all partial ownership for explicit typed retirement."
+    }
+  }
+}

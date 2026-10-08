@@ -11,6 +11,64 @@
     "mutation": {
       "const": "setStructTreeRoot",
       "description": "Aggregate discriminator spliced in by PdfUaMutation; absent when the payload stands alone."
+    },
+    "placements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "index"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/pdf/1.7/base/snapshot.json#/$defs/ObjRef"
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Placements",
+          "de": "Platzierungen"
+        },
+        "description": {
+          "en": "Object number and list position of each created object, in creation order; absent objects take the next free number and are appended.",
+          "de": "Objektnummer und Listenposition jedes erzeugten Objekts in Erzeugungsreihenfolge; fehlende Objekte erhalten die nächste freie Nummer und werden angehängt."
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "entryIndex": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Entry position",
+          "de": "Eintragsposition"
+        },
+        "description": {
+          "en": "Position the dictionary entry takes when it does not exist yet, counted from 0; absent appends.",
+          "de": "Position, die der Wörterbucheintrag einnimmt, wenn er noch nicht existiert, ab 0 gezählt; fehlt sie, wird angehängt."
+        },
+        "group": "target",
+        "order": 20,
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0
+      }
     }
   }
 }

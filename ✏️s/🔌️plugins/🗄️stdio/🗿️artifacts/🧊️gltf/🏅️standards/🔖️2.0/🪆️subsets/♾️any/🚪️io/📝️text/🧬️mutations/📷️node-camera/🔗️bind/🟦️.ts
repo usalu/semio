@@ -4,7 +4,7 @@ export type * from "../../../../../🧬️schema/🧬️mutations/📷️node-ca
 /** 🔗️ `bind-node-camera` wire twin: the flat `Apply` payload `GltfBindNodeCameraPayload` and the phase wire `BindNodeCameraMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
 export const parseGltfBindNodeCameraPayload = gltfWireObject<GltfBindNodeCameraPayload>({ node: gltfWireRequired(gltfWireIndex), camera: gltfWireRequired(gltfWireIndex) });
-export const parseBindNodeCameraMutation = gltfWirePhase(parseGltfBindNodeCameraPayload, parseGltfDiff);
+export const parseBindNodeCameraMutation = gltfWireApplyPhase(parseGltfBindNodeCameraPayload);

@@ -6,16 +6,9 @@
 //! mutation must never rewrite a single pixel, which is the load-bearing claim below.
 use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
 use crate::standards::v1::subsets::image::schema::mutations::set_colorspace;
-use crate::standards::v1::subsets::image::schema::mutations::{apply_semio_image_mutation, SemioImageMutation};
+use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
 use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use protocol::{Mutation, MutationDiff};
-
-/// 🔗️ This leaf's own `🔺️diff` oracle, mounted directly: the enum-level `Mutation::diff` arm
-/// deliberately carries NO guard branches — every `mutation.no-op`/`mutation.clamped`/
-/// `mutation.target-missing`/`mutation.invariant` decision for `set-colorspace` lives in that file, so the
-/// fixture asserts against it rather than against the guardless enum arm.
-#[path = "../../🔺️diff/🦀️.rs"]
-mod leaf_diff;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌈️set-colorspace/🌈️records/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌈️set-colorspace/🌈️records/📸️snapshot/➡️after/🔣️.json");
@@ -33,21 +26,20 @@ fn mutation() -> SemioImageMutation {
     semio_framework_pack_json::from_json_str(MUTATION,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-colorspace mutation decodes")
 }
 fn leaf_outcome() -> protocol::MutationOutcome<SemioImageDiff> {
-    let SemioImageMutation::SetColorspace(set_colorspace::SetColorspace { colorspace }) = mutation() else { panic!("set-colorspace/records-the-source-colorspace-as-rgba: the committed mutation must be the set-colorspace variant") };
-    leaf_diff::diff(&before(), colorspace)
+    <SemioImageMutation as Mutation<SemioImageSnapshot>>::diff(&mutation(), &before())
 }
 
 /// ▶️ The recorded source colorspace flips to `Rgba`; the normalized pixel buffers are untouched.
 #[semio_framework_async_macros::async_test]
 async fn records_rgba_without_touching_a_single_pixel() {
     let base = before();
-    let produced = leaf_outcome().diff().apply(&base).expect("set-colorspace applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(leaf_outcome().diff(), &base).expect("set-colorspace applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "set-colorspace/records-the-source-colorspace-as-rgba: applied state differs from the committed after-snapshot");
     assert_eq!(produced.colorspace, crate::standards::v1::subsets::image::schema::snapshot::SemioColorspace::Rgba, "the recorded source colorspace must become the payload's value");
     assert_eq!(produced.frames, base.frames, "set-colorspace records provenance only — it must never rewrite a frame's RGBA8 buffer");
     assert_eq!(produced.bit_depth, base.bit_depth, "set-colorspace must not touch the recorded bit depth");
     let mut in_place = before();
-    apply_semio_image_mutation(&mut in_place, &mutation());
+    in_place = crate::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -56,12 +48,13 @@ async fn records_rgba_without_touching_a_single_pixel() {
 async fn the_undo_set_colorspace_restores_the_recorded_rgb() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "set-colorspace undoes as exactly one set-colorspace");
     let mut current = before();
-    apply_semio_image_mutation(&mut current, &mutation);
-    for step in &undo {
-        apply_semio_image_mutation(&mut current, step);
+    current = crate::applied(&current, &mutation).0;
+    for step in undo.iter().rev() {
+        current = crate::applied(&current, step).0;
     }
     assert_eq!(current, base, "set-colorspace/records-the-source-colorspace-as-rgba: the undo did not restore the before-snapshot");
 }
@@ -101,7 +94,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioImageDiff = semio_framework_pack_json::from_json_str(DIFF,semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed set-colorspace diff decodes");
-    let produced = decoded.apply(&before()).expect("committed set-colorspace diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed set-colorspace diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-colorspace/records-the-source-colorspace-as-rgba: committed diff did not carry before to after");
 }
 

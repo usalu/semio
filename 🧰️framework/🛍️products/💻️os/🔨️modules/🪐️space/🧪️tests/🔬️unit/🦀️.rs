@@ -112,12 +112,12 @@ fn space_operation_op_text_round_trips_every_variant() {
     store::test_support::assert_op_line_round_trip(&SpaceMutation::SetName { name: "Renamed".into() });
     store::test_support::assert_op_line_round_trip(&SpaceMutation::SetKind { kind: SpaceKind::Studio });
     store::test_support::assert_op_line_round_trip(&SpaceMutation::SetVisibility { visibility: SpaceVisibility::Public });
-    store::test_support::assert_op_line_round_trip(&SpaceMutation::UpsertUser { user: demo_user("u2", SpaceRole::Spectator) });
+    store::test_support::assert_op_line_round_trip(&SpaceMutation::UpsertUser { user: demo_user("u2", SpaceRole::Spectator), index: None });
     store::test_support::assert_op_line_round_trip(&SpaceMutation::RemoveUser { user_id: "u2".into() });
-    store::test_support::assert_op_line_round_trip(&SpaceMutation::AddCollection { collection: CollectionRef { id: "c2".into(), name: "Extra".into(), document_id: "doc-c2".into() } });
+    store::test_support::assert_op_line_round_trip(&SpaceMutation::AddCollection { collection: CollectionRef { id: "c2".into(), name: "Extra".into(), document_id: "doc-c2".into() }, index: None });
     store::test_support::assert_op_line_round_trip(&SpaceMutation::RemoveCollection { collection_id: "c2".into() });
     store::test_support::assert_op_line_round_trip(&SpaceMutation::RenameCollection { collection_id: "c1".into(), name: "Renamed Collection".into() });
-    store::test_support::assert_op_line_round_trip(&SpaceMutation::InstallProgram { plugin_id: "cad".into() });
+    store::test_support::assert_op_line_round_trip(&SpaceMutation::InstallProgram { plugin_id: "cad".into(), index: None });
     store::test_support::assert_op_line_round_trip(&SpaceMutation::UninstallProgram { plugin_id: "cad".into() });
     store::test_support::assert_op_line_round_trip(&SpaceMutation::InstallExtension {
         extension_id: "flow-math".into(),
@@ -125,6 +125,7 @@ fn space_operation_op_text_round_trips_every_variant() {
         source_uri: "https://example.test/flow-math.sxt".into(),
         package_hash: "hash-flow-math".into(),
         enabled: true,
+        index: Some(1),
     });
     store::test_support::assert_op_line_round_trip(&SpaceMutation::UninstallExtension { extension_id: "flow-math".into() });
     store::test_support::assert_op_line_round_trip(&SpaceMutation::SetExtensionEnabled { extension_id: "flow-math".into(), enabled: false });
@@ -134,19 +135,19 @@ fn space_operation_op_text_round_trips_every_variant() {
 fn space_operation_backwards_restores_pre_state() {
     let base = demo_space();
     store::test_support::assert_operation_round_trip(&base, SpaceMutation::SetName { name: "New Name".into() });
-    store::test_support::assert_operation_round_trip(&base, SpaceMutation::UpsertUser { user: demo_user("u2", SpaceRole::Author) });
-    store::test_support::assert_operation_round_trip(&base, SpaceMutation::UpsertUser { user: demo_user("u1", SpaceRole::Spectator) });
+    store::test_support::assert_operation_round_trip(&base, SpaceMutation::UpsertUser { user: demo_user("u2", SpaceRole::Author), index: None });
+    store::test_support::assert_operation_round_trip(&base, SpaceMutation::UpsertUser { user: demo_user("u1", SpaceRole::Spectator), index: None });
     store::test_support::assert_operation_round_trip(&base, SpaceMutation::RemoveUser { user_id: "u1".into() });
-    store::test_support::assert_operation_round_trip(&base, SpaceMutation::AddCollection { collection: CollectionRef { id: "c2".into(), name: "Extra".into(), document_id: "doc-c2".into() } });
+    store::test_support::assert_operation_round_trip(&base, SpaceMutation::AddCollection { collection: CollectionRef { id: "c2".into(), name: "Extra".into(), document_id: "doc-c2".into() }, index: None });
     store::test_support::assert_operation_round_trip(&base, SpaceMutation::RemoveCollection { collection_id: "c1".into() });
     store::test_support::assert_operation_round_trip(&base, SpaceMutation::RenameCollection { collection_id: "c1".into(), name: "Renamed".into() });
-    store::test_support::assert_operation_round_trip(&base, SpaceMutation::InstallProgram { plugin_id: "cad".into() });
+    store::test_support::assert_operation_round_trip(&base, SpaceMutation::InstallProgram { plugin_id: "cad".into(), index: None });
     let mut with_program = base.clone();
     with_program.programs.push("cad".into());
     store::test_support::assert_operation_round_trip(&with_program, SpaceMutation::UninstallProgram { plugin_id: "cad".into() });
     store::test_support::assert_operation_round_trip(
         &base,
-        SpaceMutation::InstallExtension { extension_id: "flow-math".into(), version: "1.0.0".into(), source_uri: "https://example.test/flow-math.sxt".into(), package_hash: "hash-flow-math".into(), enabled: true },
+        SpaceMutation::InstallExtension { extension_id: "flow-math".into(), version: "1.0.0".into(), source_uri: "https://example.test/flow-math.sxt".into(), package_hash: "hash-flow-math".into(), enabled: true, index: None },
     );
     let mut with_extension = base.clone();
     with_extension.extensions.push(demo_extension("flow-math", true));
@@ -154,7 +155,7 @@ fn space_operation_backwards_restores_pre_state() {
     store::test_support::assert_operation_round_trip(&with_extension, SpaceMutation::SetExtensionEnabled { extension_id: "flow-math".into(), enabled: false });
     store::test_support::assert_operation_round_trip(
         &with_extension,
-        SpaceMutation::InstallExtension { extension_id: "flow-math".into(), version: "2.0.0".into(), source_uri: "https://example.test/flow-math-v2.sxt".into(), package_hash: "hash-flow-math-v2".into(), enabled: false },
+        SpaceMutation::InstallExtension { extension_id: "flow-math".into(), version: "2.0.0".into(), source_uri: "https://example.test/flow-math-v2.sxt".into(), package_hash: "hash-flow-math-v2".into(), enabled: false, index: None },
     );
 }
 
@@ -162,12 +163,13 @@ fn space_operation_backwards_restores_pre_state() {
 fn space_diff_print_parse_and_encode_decode_round_trip() {
     let diffs = vec![
         SpaceDiff { name: Some("Renamed".into()), ..Default::default() },
-        SpaceDiff { upsert_user: Some(demo_user("u2", SpaceRole::Author)), ..Default::default() },
-        SpaceDiff { install_program: Some("cad".into()), ..Default::default() },
-        SpaceDiff { uninstall_program: Some("cad".into()), ..Default::default() },
-        SpaceDiff { install_extension: Some(demo_extension("flow-math", true)), ..Default::default() },
-        SpaceDiff { uninstall_extension_id: Some("flow-math".into()), ..Default::default() },
-        SpaceDiff { set_extension_enabled_id: Some("flow-math".into()), set_extension_enabled: Some(false), ..Default::default() },
+        SpaceDiff { users: Some(SpaceUsersDelta { added: vec![demo_user("u2", SpaceRole::Author)], ..Default::default() }), ..Default::default() },
+        SpaceDiff { users: Some(SpaceUsersDelta { patched: vec![SpaceUserPatch { id: "u1".into(), avatar: Some(SpaceOptionalAvatar { value: None }), role: Some(SpaceRole::Spectator), ..Default::default() }], ..Default::default() }), ..Default::default() },
+        SpaceDiff { programs: Some(SpaceProgramsDelta { added: vec!["cad".into()], ..Default::default() }), ..Default::default() },
+        SpaceDiff { programs: Some(SpaceProgramsDelta { removed: vec!["cad".into()], ..Default::default() }), ..Default::default() },
+        SpaceDiff { extensions: Some(SpaceExtensionsDelta { added: vec![demo_extension("flow-math", true)], ..Default::default() }), ..Default::default() },
+        SpaceDiff { extensions: Some(SpaceExtensionsDelta { removed: vec!["flow-math".into()], ..Default::default() }), ..Default::default() },
+        SpaceDiff { extensions: Some(SpaceExtensionsDelta { patched: vec![SpaceExtensionPatch { extension_id: "flow-math".into(), enabled: Some(false), ..Default::default() }], ..Default::default() }), ..Default::default() },
         SpaceDiff::default(),
     ];
     for diff in diffs {
@@ -179,6 +181,50 @@ fn space_diff_print_parse_and_encode_decode_round_trip() {
         let decoded = SpaceDiff::decode_diff(&encoded).expect("decode_diff");
         assert_eq!(decoded, diff);
     }
+}
+#[semio_framework_async_macros::async_test]
+async fn space_mutations_satisfy_the_inverse_sum_law() {
+    let mut base = demo_space();
+    base.users.push(demo_user("u2", SpaceRole::Spectator));
+    base.users.push(demo_user("u3", SpaceRole::Author));
+    base.collections.push(CollectionRef { id: "c2".into(), name: "Second".into(), document_id: "doc-c2".into() });
+    base.collections.push(CollectionRef { id: "c3".into(), name: "Third".into(), document_id: "doc-c3".into() });
+    base.programs = vec!["cad".into(), "draw".into(), "note".into()];
+    base.extensions = vec![demo_extension("flow-math", true), demo_extension("flow-text", false), demo_extension("flow-geo", true)];
+    let mutations = vec![
+        SpaceMutation::SetName { name: "Renamed".into() },
+        SpaceMutation::UpsertUser { user: SpaceUser { id: "u2".into(), name: "Renamed".into(), avatar: Some("a.png".into()), role: SpaceRole::Author }, index: None },
+        SpaceMutation::UpsertUser { user: demo_user("u4", SpaceRole::Author), index: Some(1) },
+        SpaceMutation::RemoveUser { user_id: "u2".into() },
+        SpaceMutation::AddCollection { collection: CollectionRef { id: "c4".into(), name: "Extra".into(), document_id: "doc-c4".into() }, index: Some(0) },
+        SpaceMutation::RemoveCollection { collection_id: "c2".into() },
+        SpaceMutation::RenameCollection { collection_id: "c2".into(), name: "Renamed".into() },
+        SpaceMutation::InstallProgram { plugin_id: "fem".into(), index: Some(1) },
+        SpaceMutation::UninstallProgram { plugin_id: "draw".into() },
+        SpaceMutation::SetExtensionEnabled { extension_id: "flow-text".into(), enabled: true },
+        SpaceMutation::UninstallExtension { extension_id: "flow-text".into() },
+    ];
+    for mutation in mutations {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+}
+
+#[test]
+fn space_member_removal_inverse_restores_the_original_index() {
+    let mut base = demo_space();
+    base.users.push(demo_user("u2", SpaceRole::Spectator));
+    base.users.push(demo_user("u3", SpaceRole::Author));
+    base.programs = vec!["cad".into(), "draw".into(), "note".into()];
+    let removed = SpaceMutation::RemoveUser { user_id: "u2".into() };
+    let after = store::apply_outcome(&base, removed.diff(&base)).0;
+    let restore = removed.inverse(&base).expect("inverse");
+    assert_eq!(restore, vec![SpaceMutation::UpsertUser { user: demo_user("u2", SpaceRole::Spectator), index: Some(1) }]);
+    let restored = store::apply_outcome(&after, restore[0].diff(&after)).0;
+    assert_eq!(restored, base);
+    let uninstalled = SpaceMutation::UninstallProgram { plugin_id: "draw".into() };
+    let after = store::apply_outcome(&base, uninstalled.diff(&base)).0;
+    let restore = uninstalled.inverse(&base).expect("inverse");
+    assert_eq!(store::apply_outcome(&after, restore[0].diff(&after)).0, base);
 }
 //#endregion 🧪️SpaceMutationLaws
 
@@ -251,10 +297,10 @@ fn delete_folder_cascade_removes_and_restores_whole_subtree() {
     store::test_support::assert_operation_round_trip(&collection, CollectionMutation::DeleteFolder { folder_id: "root".into() });
 
     let diff = CollectionMutation::DeleteFolder { folder_id: "root".into() }.diff(&collection).into_parts().0;
-    let mut deleted_folders = diff.deleted_folder_ids.clone().unwrap_or_default();
+    let mut deleted_folders = diff.folders.clone().unwrap_or_default().removed;
     deleted_folders.sort();
     assert_eq!(deleted_folders, vec!["child".to_string(), "root".to_string()]);
-    let mut deleted_entries = diff.deleted_entry_ids.clone().unwrap_or_default();
+    let mut deleted_entries = diff.entries.clone().unwrap_or_default().removed;
     deleted_entries.sort();
     assert_eq!(deleted_entries, vec!["e-child".to_string(), "e-root".to_string()]);
 
@@ -263,9 +309,76 @@ fn delete_folder_cascade_removes_and_restores_whole_subtree() {
     assert!(after.entries.is_empty());
 }
 
+fn nested_collection() -> CollectionSnapshot {
+    let document = |id: &str, folder: Option<&str>| CollectionEntry {
+        id: id.into(),
+        folder_id: folder.map(Into::into),
+        name: id.into(),
+        kind_id: "puzzle.2d".into(),
+        body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: format!("doc-{id}") }),
+    };
+    let folder = |id: &str, parent: Option<&str>| CollectionFolder { id: id.into(), parent_id: parent.map(Into::into), name: id.into() };
+    let mut collection = empty_collection_snapshot("Nested");
+    collection.folders = vec![folder("before", None), folder("root", None), folder("child", Some("root")), folder("grandchild", Some("child")), folder("after", None)];
+    collection.entries = vec![document("e-before", Some("before")), document("e-root", Some("root")), document("e-grandchild", Some("grandchild")), document("e-loose", None), document("e-child", Some("child"))];
+    collection
+}
+
+#[semio_framework_async_macros::async_test]
+async fn nested_folder_cascade_delete_inverse_restores_every_row_in_place() {
+    let base = nested_collection();
+    let mutation = CollectionMutation::DeleteFolder { folder_id: "root".into() };
+    let diff = mutation.diff(&base).into_parts().0;
+    let mut removed_folders = diff.folders.clone().expect("folders delta").removed;
+    removed_folders.sort();
+    assert_eq!(removed_folders, vec!["child".to_string(), "grandchild".to_string(), "root".to_string()]);
+    let mut removed_entries = diff.entries.clone().expect("entries delta").removed;
+    removed_entries.sort();
+    assert_eq!(removed_entries, vec!["e-child".to_string(), "e-grandchild".to_string(), "e-root".to_string()]);
+    let after = protocol::apply_diff(&diff, &base).expect("cascade delete applies");
+    assert_eq!(after.folders.iter().map(|folder| folder.id.as_str()).collect::<Vec<_>>(), ["before", "after"]);
+    let inverse = protocol::DiffAlgebra::inverse(&diff, &base);
+    assert_eq!(inverse.folders.as_ref().expect("restored folders").added.len(), 3);
+    assert_eq!(inverse.entries.as_ref().expect("restored entries").added.len(), 3);
+    assert_eq!(protocol::apply_diff(&inverse, &after).expect("inverse applies"), base);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn collection_mutations_satisfy_the_inverse_sum_law() {
+    let base = nested_collection();
+    let folder = CollectionFolder { id: "fresh".into(), parent_id: None, name: "Fresh".into() };
+    let entry = CollectionEntry { id: "fresh-entry".into(), folder_id: Some("after".into()), name: "fresh".into(), kind_id: "puzzle.2d".into(), body: Box::new(ArtifactBody::Document { schema: "test.puzzle2d".into(), document_id: "doc-fresh".into() }) };
+    let mutations = vec![
+        CollectionMutation::RenameCollection { new_name: "Renamed".into() },
+        CollectionMutation::CreateFolder { folder: folder.clone(), index: 2 },
+        CollectionMutation::CreateFolder { folder, index: 5 },
+        CollectionMutation::DeleteFolder { folder_id: "grandchild".into() },
+        CollectionMutation::MoveToCollection { folder_id: "child".into(), new_parent: None },
+        CollectionMutation::RenameFolder { folder_id: "child".into(), new_name: "Renamed".into() },
+        CollectionMutation::CreateEntry { entry: entry.clone(), index: 0 },
+        CollectionMutation::CreateEntry { entry, index: 5 },
+        CollectionMutation::DeleteEntry { entry_id: "e-root".into() },
+        CollectionMutation::MoveToFolder { entry_id: "e-loose".into(), new_folder: Some("after".into()) },
+        CollectionMutation::RenameEntry { entry_id: "e-loose".into(), new_name: "renamed".into() },
+        CollectionMutation::ReplaceEntryBody { entry_id: "e-loose".into(), new_body: Box::new(ArtifactBody::Blob { blob: store::BlobRef { hash: "h2".into(), size: 1, media_type: "image/png".into() } }) },
+    ];
+    for mutation in mutations {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+}
+
 #[test]
 fn collection_diff_print_parse_and_encode_decode_round_trip() {
-    let diffs = vec![CollectionDiff { renamed_collection: Some("Renamed".into()), ..Default::default() }, CollectionDiff { deleted_entry_ids: Some(vec!["e1".into()]), ..Default::default() }, CollectionDiff::default()];
+    let diffs = vec![
+        CollectionDiff { renamed_collection: Some("Renamed".into()), ..Default::default() },
+        CollectionDiff { entries: Some(CollectionEntriesDelta { removed: vec!["e1".into()], ..Default::default() }), ..Default::default() },
+        CollectionDiff {
+            folders: Some(CollectionFoldersDelta { patched: vec![CollectionFolderPatch { id: "f1".into(), parent_id: Some(CollectionOptionalLink { value: None }), name: None }], reordered: Some(vec!["f1".into()]), ..Default::default() }),
+            ..Default::default()
+        },
+        CollectionDiff::default(),
+    ];
     for diff in diffs {
         let printed = diff.print_diff();
         assert!(!printed.contains('\n'));

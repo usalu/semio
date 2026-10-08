@@ -100,9 +100,9 @@ async fn field_sweep_covers_every_mutable_field() {
     let b = sweep_b();
 
     let ab = TxtDiff::between(&a, &b);
-    assert_eq!(ab.apply(&a).unwrap(), b, "between(a,b).apply(a) must equal b");
+    assert_eq!(protocol::apply_diff(&ab, &a).unwrap(), b, "between(a,b).apply(a) must equal b");
     let ba = TxtDiff::between(&b, &a);
-    assert_eq!(ba.apply(&b).unwrap(), a, "between(b,a).apply(b) must equal a");
+    assert_eq!(protocol::apply_diff(&ba, &b).unwrap(), a, "between(b,a).apply(b) must equal a");
 
     assert!(ab.trailing_newline.is_some(), "trailing_newline must be Some in a sweep diff");
     assert!(ab.line_ending.is_some(), "line_ending must be Some in a sweep diff");

@@ -310,8 +310,6 @@
         }
       ],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "create-vertex",
         "delete-vertex",
         "create-edge",
@@ -1317,49 +1315,6 @@
             ]
           },
           "comparisonPipeline": "semantic-brep-kernel-v1"
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-brep-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "brepjs-occt"
-            }
-          ]
-        },
-        {
-          "id": "patch-snapshot",
-          "capability": "semio-v1-brep-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "semio-v1-brep-mutate",
-              "qualifyingKind": "third-party-library",
-              "oracle": "brepjs-occt"
-            }
-          ]
         }
       ]
     }

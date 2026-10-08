@@ -5,17 +5,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "artifact": {
-      "anyOf": [
-        {
-          "type": "null"
-        },
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/animate/presentation/artifact.json"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
     "schema": {
       "type": [
         "string",
@@ -29,55 +18,7 @@
           "type": "null"
         },
         {
-          "title": "FigureTileSource",
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "frame",
-            "kind",
-            "src"
-          ],
-          "properties": {
-            "src": {
-              "type": "string"
-            },
-            "kind": {
-              "type": "string"
-            },
-            "frame": {
-              "title": "FigureTileFrame",
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "height",
-                "width",
-                "x",
-                "y"
-              ],
-              "properties": {
-                "x": {
-                  "type": "number"
-                },
-                "y": {
-                  "type": "number"
-                },
-                "width": {
-                  "type": "number"
-                },
-                "height": {
-                  "type": "number"
-                }
-              }
-            },
-            "sourceAspect": {
-              "type": "number"
-            },
-            "pdfPage": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 4294967295
-            }
-          }
+          "$ref": "#/$defs/PresentationSourcePatch"
         }
       ],
       "x-semio-state": "artifact"
@@ -88,50 +29,7 @@
           "type": "null"
         },
         {
-          "type": "array",
-          "items": {
-            "title": "FigureTileDraft",
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "crop",
-              "id",
-              "name"
-            ],
-            "properties": {
-              "id": {
-                "type": "string"
-              },
-              "name": {
-                "type": "string"
-              },
-              "crop": {
-                "title": "FigureTileFrame",
-                "type": "object",
-                "additionalProperties": false,
-                "required": [
-                  "height",
-                  "width",
-                  "x",
-                  "y"
-                ],
-                "properties": {
-                  "x": {
-                    "type": "number"
-                  },
-                  "y": {
-                    "type": "number"
-                  },
-                  "width": {
-                    "type": "number"
-                  },
-                  "height": {
-                    "type": "number"
-                  }
-                }
-              }
-            }
-          }
+          "$ref": "#/$defs/PresentationTilesDelta"
         }
       ],
       "x-semio-state": "artifact"
@@ -147,6 +45,221 @@
       ],
       "x-semio-state": "artifact",
       "x-semio-child-kind": "s.stdio.semio"
+    }
+  },
+  "$defs": {
+    "FigureTileFrame": {
+      "title": "FigureTileFrame",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "height",
+        "width",
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        }
+      }
+    },
+    "FigureTileDraft": {
+      "title": "FigureTileDraft",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "crop",
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "crop": {
+          "title": "FigureTileFrame",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "height",
+            "width",
+            "x",
+            "y"
+          ],
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "width": {
+              "type": "number"
+            },
+            "height": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "PresentationSourcePatch": {
+      "title": "PresentationSourcePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "src": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "frame": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/FigureTileFrame"
+            }
+          ]
+        },
+        "sourceAspect": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/PresentationOptionalAspect"
+            }
+          ]
+        },
+        "pdfPage": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/PresentationOptionalPage"
+            }
+          ]
+        }
+      }
+    },
+    "PresentationOptionalAspect": {
+      "title": "PresentationOptionalAspect",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "PresentationOptionalPage": {
+      "title": "PresentationOptionalPage",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "PresentationTilesDelta": {
+      "title": "PresentationTilesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FigureTileDraft"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PresentationTilePatch"
+          }
+        },
+        "reordered": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ]
+    },
+    "PresentationTilePatch": {
+      "title": "PresentationTilePatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "crop": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/FigureTileFrame"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id"
+      ]
     }
   }
 }

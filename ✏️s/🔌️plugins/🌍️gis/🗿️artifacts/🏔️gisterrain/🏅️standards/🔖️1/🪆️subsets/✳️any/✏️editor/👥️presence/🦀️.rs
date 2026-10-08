@@ -34,12 +34,37 @@ impl Default for Gis3dPresence {
     }
 }
 
-impl protocol::MutationDiff<Gis3dPresence> for Gis3dPresence {
-    fn apply(&self, _base: &Gis3dPresence) -> protocol::MutationApplyResult<Gis3dPresence> {
-        Ok(self.clone())
+/// 🔺️ Sparse delta of the shareable presence: the camera, only when a mutation changes it.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[value(rename_all = "camelCase", default)]
+pub struct Gis3dPresenceDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    pub camera_json: Option<String>,
+}
+
+impl protocol::MutationDiff<Gis3dPresence> for Gis3dPresenceDiff {
+    fn apply(&self, base: &Gis3dPresence, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Gis3dPresence> {
+        Ok(Gis3dPresence { camera_json: self.camera_json.clone().unwrap_or_else(|| base.camera_json.clone()) })
     }
     fn absorb(&mut self, other: Self) {
-        *self = other;
+        if other.camera_json.is_some() {
+            self.camera_json = other.camera_json;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<Gis3dPresence> for Gis3dPresenceDiff {
+    fn inverse(&self, base: &Gis3dPresence) -> Self {
+        Self { camera_json: self.camera_json.as_ref().map(|_| base.camera_json.clone()) }
+    }
+    fn between(base: &Gis3dPresence, other: &Gis3dPresence) -> Self {
+        Self { camera_json: (base.camera_json != other.camera_json).then(|| other.camera_json.clone()) }
+    }
+    fn is_empty(&self) -> bool {
+        self.camera_json.is_none()
     }
 }
 
@@ -95,15 +120,15 @@ impl ArtifactPack for Gis3dPresence {
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub enum Gis3dPresenceMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
+    #[dsl(key = "set")]
+    Set {
         #[dsl(block)]
         presence: Gis3dPresence,
     },
 }
 
 impl Mutation<Gis3dPresence> for Gis3dPresenceMutation {
-    type Diff = Gis3dPresence;
+    type Diff = Gis3dPresenceDiff;
 
     /// 🧾️ Leaf metadata for the single presence verb. ⚠️ PROVISIONAL: the `owner` path below names
     /// no directory on disk — this enum has no `👥️presence/<slug>` leaf triad of its own, so the
@@ -111,11 +136,11 @@ impl Mutation<Gis3dPresence> for Gis3dPresenceMutation {
     /// presence precedent.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
-        owner: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/📄snapshot",
-        semantic_kind: "snapshot",
-        display_name: "Snapshot",
-        emoji: "📄",
-        aggregate_variant: "Snapshot",
+        owner: "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence",
+        semantic_kind: "set-presence",
+        display_name: "Set Presence",
+        emoji: "👥️",
+        aggregate_variant: "Set",
         payload_schema: "🧬️schema/🔣️.json",
         text_opcode: None,
         binary_tag: None,
@@ -128,27 +153,21 @@ impl Mutation<Gis3dPresence> for Gis3dPresenceMutation {
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Self::Snapshot { .. } => &Self::DESCRIPTORS[0],
+            Self::Set { .. } => &Self::DESCRIPTORS[0],
         }
     }
 
-    fn diff(&self, base: &Gis3dPresence) -> protocol::MutationOutcome<Gis3dPresence> {
-        match self {
-            Self::Snapshot { presence } => {
-                if base == presence {
-                    return protocol::MutationOutcome::empty().warning("mutation.no-op", "Presence snapshot is already identical to the requested replacement.");
-                }
-                protocol::MutationOutcome::new(presence.clone())
-            }
+    fn diff(&self, base: &Gis3dPresence) -> protocol::MutationOutcome<Gis3dPresenceDiff> {
+        let Self::Set { presence } = self;
+        if base == presence {
+            return protocol::MutationOutcome::new(Gis3dPresenceDiff::default()).warning("mutation.no-op", "Presence is already identical to the requested replacement.");
         }
+        protocol::MutationOutcome::new(Gis3dPresenceDiff { camera_json: Some(presence.camera_json.clone()) })
     }
 
     fn inverse(&self, base: &Gis3dPresence) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { presence: base.clone() }]
-    
-    })())
-}
+        Ok(vec![Self::Set { presence: base.clone() }])
+    }
 }
 
 impl protocol::OpText for Gis3dPresenceMutation {

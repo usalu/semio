@@ -1,39 +1,49 @@
-# 🧬️ Puzzle5d diff schema — sparse field delta.
+# 🧬️ Puzzle5d diff schema — sparse typed delta.
 
 type Puzzle5dDiff {
   artifact: Puzzle5dArtifact @state(class: ARTIFACT)
   schema: String @state(class: ARTIFACT)
   domain: String @state(class: ARTIFACT)
   label: String @state(class: ARTIFACT)
-  meta: Puzzle5dMeta @state(class: ARTIFACT)
-  kindCatalogs: Puzzle5dKindCatalogs @state(class: ARTIFACT)
+  meta: Puzzle5dMetaPatch @state(class: ARTIFACT)
+  kindCatalogs: ArtifactChildHandle @state(class: ARTIFACT)
   kindCatalogsExtra: Puzzle5dKindCatalogsExtra @state(class: ARTIFACT)
-  kindCompatibility: Puzzle5dKindCompatibilityList @state(class: ARTIFACT)
+  kindCompatibility: Puzzle5dKindCompatibilityDelta @state(class: ARTIFACT)
   parts: Puzzle5dPartsDelta @state(class: ARTIFACT)
   fasteners: Puzzle5dFastenersDelta @state(class: ARTIFACT)
   targetVolumes: Puzzle5dTargetVolumesDelta @state(class: ARTIFACT)
 }
 
-type Puzzle5dStringList { values: [String!]! }
+type Puzzle5dKindCompatibilityKey { source: String! target: String! }
+type Puzzle5dPart2dPatch { x: Float y: Float shape: String radius: Float width: Float height: Float text: String iconKind: String hidden: Boolean locked: Boolean }
+type Puzzle5dPart3dPatch { origin: [Float!] meshUrl: String orientation: [Float!] scale: Puzzle5dScale label: String }
+type Puzzle5dGrip2dPatch { angle: Float gripKind: String radius: Float }
+type Puzzle5dGrip3dPatch { position: [Float!] direction: [Float!] radius: Float label: String }
+type Puzzle5dGripPatch { gripKind: String _2d: Puzzle5dGrip2dPatch _3d: Puzzle5dGrip3dPatch }
+type Puzzle5dPartPatch { partKind: String anchor: Puzzle5dPartAnchor _2d: Puzzle5dPart2dPatch _3d: Puzzle5dPart3dPatch grips: Puzzle5dGripsDelta }
+type Puzzle5dFastenerPatch { source: String target: String fastenerKind: String gap: Float shift: Float rise: Float rotation: Float turn: Float tilt: Float x: Float y: Float }
+type Puzzle5dTargetVolumePatch { origin: [Float!] orientation: [Float!] scale: Puzzle5dScale hidden: Boolean locked: Boolean }
+type Puzzle5dKindCompatibilityPatch { bidirectional: Boolean important: Boolean specificity: Puzzle5dCompatSpecificity }
+type Puzzle5dMetaPatch { description: String }
+type Puzzle5dGripsDelta { added: [Puzzle5dGrip!]! removed: [String!]! patched: [Puzzle5dGripPatchEntry!]! reordered: [String!] }
+type Puzzle5dGripPatchEntry { id: String! patch: Puzzle5dGripPatch! }
 type Puzzle5dPartsDelta { added: [Puzzle5dPart!]! removed: [String!]! patched: [Puzzle5dPartPatchEntry!]! reordered: [String!] }
 type Puzzle5dPartPatchEntry { id: String! patch: Puzzle5dPartPatch! }
-type Puzzle5dPartPatch { replacement: Puzzle5dPart }
-type Puzzle5dPart { id: String! partKind: String anchor: Puzzle5dPartAnchor }
 type Puzzle5dFastenersDelta { added: [Puzzle5dFastener!]! removed: [String!]! patched: [Puzzle5dFastenerPatchEntry!]! reordered: [String!] }
 type Puzzle5dFastenerPatchEntry { id: String! patch: Puzzle5dFastenerPatch! }
-type Puzzle5dFastenerPatch { replacement: Puzzle5dFastener }
-type Puzzle5dFastener { id: String! source: String target: String gap: Float shift: Float rise: Float rotation: Float turn: Float tilt: Float x: Float y: Float }
 type Puzzle5dTargetVolumesDelta { added: [Puzzle5dTargetVolume!]! removed: [String!]! patched: [Puzzle5dTargetVolumePatchEntry!]! reordered: [String!] }
 type Puzzle5dTargetVolumePatchEntry { id: String! patch: Puzzle5dTargetVolumePatch! }
-type Puzzle5dTargetVolumePatch { replacement: Puzzle5dTargetVolume }
+type Puzzle5dKindCompatibilityDelta { added: [Puzzle5dKindCompatibility!]! removed: [Puzzle5dKindCompatibilityKey!]! patched: [Puzzle5dKindCompatibilityPatchEntry!]! reordered: [Puzzle5dKindCompatibilityKey!] }
+type Puzzle5dKindCompatibilityPatchEntry { id: Puzzle5dKindCompatibilityKey! patch: Puzzle5dKindCompatibilityPatch! }
+
+type Puzzle5dPart { id: String! partKind: String anchor: Puzzle5dPartAnchor }
+type Puzzle5dFastener { id: String! source: String target: String gap: Float shift: Float rise: Float rotation: Float turn: Float tilt: Float x: Float y: Float }
 type Puzzle5dTargetVolume { id: String! origin: [Float!] orientation: [Float!] scale: [Float!] hidden: Boolean locked: Boolean }
 type Puzzle5dKindCompatibility { source: String target: String bidirectional: Boolean important: Boolean specificity: Puzzle5dCompatSpecificity }
-type Puzzle5dArtifact { schema: String! }
 type Puzzle5dMeta { _placeholder: Boolean }
 type Puzzle5dKindCatalogs { _placeholder: Boolean }
 type Puzzle5dKindCatalogsExtra { _placeholder: Boolean }
 
-type Puzzle5dKindCompatibilityList { values: [Puzzle5dKindCompatibility!]! }
 
 enum Puzzle5dPartAnchor { FIXED DERIVED }
 enum Puzzle5dCompatSpecificity { GENERAL PART FASTENER GRIP ROPE }

@@ -1,17 +1,12 @@
 {
   "artifact": null,
-  "schema": null,
   "domain": null,
-  "label": null,
-  "meta": null,
-  "kindCatalogs": null,
-  "kindCatalogsExtra": null,
+  "fasteners": null,
   "kindCompatibility": null,
+  "meta": null,
   "parts": {
     "added": [
       {
-        "id": "part-c",
-        "partKind": "part-kind-a",
         "2d": {
           "x": 40.0,
           "y": 40.0
@@ -23,13 +18,15 @@
             4.0
           ]
         },
-        "grips": []
+        "grips": [],
+        "id": "part-c",
+        "partKind": "part-kind-a"
       }
     ],
-    "removed": [],
     "patched": [],
+    "removed": [],
     "reordered": null
   },
-  "fasteners": null,
+  "schema": null,
   "targetVolumes": null
 }

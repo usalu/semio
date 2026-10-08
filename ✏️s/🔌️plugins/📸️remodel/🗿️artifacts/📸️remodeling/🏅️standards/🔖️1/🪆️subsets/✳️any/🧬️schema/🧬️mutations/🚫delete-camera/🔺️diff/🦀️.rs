@@ -3,7 +3,7 @@
 //! owns nothing, so it may not be removed while another record still depends on it (the same
 //! ownership rule `delete-stream` and `delete-asset` follow). Refusing rather than cascading keeps
 //! `create-camera-calibration` the exact inverse: the delete never destroys a record it does not own.
-use crate::diff::RemodelingDiff;
+use crate::diff::{RemodelingDiff, RemodelingRow};
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
@@ -18,8 +18,6 @@ pub fn diff(payload: &super::DeleteCameraCalibration, base: &RemodelingSnapshot)
     if !referencing.is_empty() {
         return protocol::MutationOutcome::error("mutation.target-referenced", format!("Camera calibration \"{}\" is still referenced by {} record(s); detach them first.", payload.camera_id, referencing.len()), referencing);
     }
-    let mut calibration = base.calibration.clone();
-    calibration.cameras.retain(|camera| camera.id != payload.camera_id);
-    protocol::MutationOutcome::new(RemodelingDiff { calibration: Some(calibration), ..Default::default() })
+    protocol::MutationOutcome::new(RemodelingDiff::camera_rows(vec![RemodelingRow::Remove { key: payload.camera_id.clone() }]))
 }
 //#endregion 🔖️Diff

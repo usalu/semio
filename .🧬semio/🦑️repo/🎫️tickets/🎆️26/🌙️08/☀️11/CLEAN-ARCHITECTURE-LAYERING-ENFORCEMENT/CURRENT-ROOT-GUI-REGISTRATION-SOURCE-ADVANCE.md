@@ -1,0 +1,3 @@
+# Current Root GUI Registration Source Advance
+
+Registration129 reached its prepared full-body journal, then refused because the seed source had advanced before owned publication. The current seed matches neither the held before nor candidate after; materialized launch still matches held before. No historical or atomic batch claim follows. A fresh registration130 reads actual current endpoints and applies only the same five exact requested Interface epoch3 rows, preserving new unrelated entries. Refusal diagnostics now emit concise path-specific messages; full before/after bodies remain in the prepared journal.

@@ -17,8 +17,7 @@ use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
 //#region 🔖️Diff
-/// 🔺️ Diff for `stdio.html`. No `snapshot: Option<HtmlSnapshot>` full-replace slot — even
-/// `SetSnapshot`'s diff is the sparse field-by-field `HtmlDiff::between(base, next)`.
+/// 🔺️ Diff for `stdio.html`. No `snapshot: Option<HtmlSnapshot>` full-replace slot — every diff is sparse and field-by-field.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.html.diff")]
@@ -679,15 +678,6 @@ fn absorb_children_diff(d1: HtmlChildrenDiff, d2: &HtmlChildrenDiff) -> HtmlChil
     HtmlChildrenDiff { removed, modified, added }
 }
 //#endregion 🔖️Absorb
-
-//#region 🔖️SetSnapshot
-/// 🧩️ Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
-/// Option<HtmlSnapshot>` full-replace slot — this IS `HtmlDiff::between`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &HtmlSnapshot, next: &HtmlSnapshot) -> HtmlDiff {
-    HtmlDiff::between(base, next)
-}
-//#endregion 🔖️SetSnapshot
 
 //#region 🔖️HandcraftedDiffCodec
 /// 🧪️ Hand-rolled `protocol::DiffCodec` for `HtmlDiff`, following `SvgDiff`'s template (bracket

@@ -2,6 +2,10 @@
 
 use crate::{Din16798Diff, Din16798Snapshot};
 
+#[path = "🧭️edit-rules/🦀️.rs"]
+mod edit_rules;
+pub use edit_rules::EDIT_RULES;
+
 use super::change_annex;
 use super::change_theta_rm;
 use super::change_outdoor_co2;

@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../.."
 name = "semio-s-artifact-fem-2d"
 version.workspace = true
 edition.workspace = true
@@ -59,7 +59,7 @@ semio-framework-tool-machine = { workspace = true, optional = true }
 # 🔮 Test-only CSV ORACLE: the third-party `csv` reader parses the node table export.
 csv = "1"
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 serde = { workspace = true }

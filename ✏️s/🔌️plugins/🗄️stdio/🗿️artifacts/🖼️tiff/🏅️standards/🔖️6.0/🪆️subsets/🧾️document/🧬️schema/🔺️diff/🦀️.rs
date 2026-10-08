@@ -137,10 +137,105 @@ fn absorb_tags(d1: TiffTagsDiff, d2: TiffTagsDiff) -> TiffTagsDiff {
 }
 //#endregion 🔖️TagsTriple
 
+//#region 🔖️SampleRuns
+/// 🧱️ One contiguous run of replacement words inside block `block` of an IFD, starting at word `offset` of the block's pixel-major sample list.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TiffSampleRun {
+    pub block: usize,
+    pub offset: usize,
+    pub samples: Vec<TiffWord64>,
+}
+
+/// 🔍️ The maximal runs of `next` that differ from `current` over the same span, positioned from `offset` inside `block`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn differing_runs(block: usize, offset: usize, current: &[TiffWord64], next: &[TiffWord64]) -> Vec<TiffSampleRun> {
+    let mut runs = Vec::new();
+    let mut start = None;
+    for index in 0..=current.len().min(next.len()) {
+        let differs = index < current.len().min(next.len()) && current[index] != next[index];
+        match (start, differs) {
+            (None, true) => start = Some(index),
+            (Some(from), false) => {
+                runs.push(TiffSampleRun { block, offset: offset + from, samples: next[from..index].to_vec() });
+                start = None;
+            }
+            _ => {}
+        }
+    }
+    runs
+}
+
+/// 📐️ The normal form of a run list: ordered by block then offset, with touching runs fused into one.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn normalize_runs(mut runs: Vec<TiffSampleRun>) -> Vec<TiffSampleRun> {
+    runs.retain(|run| !run.samples.is_empty());
+    runs.sort_by_key(|run| (run.block, run.offset));
+    let mut fused: Vec<TiffSampleRun> = Vec::with_capacity(runs.len());
+    for run in runs {
+        match fused.last_mut() {
+            Some(last) if last.block == run.block && last.offset + last.samples.len() == run.offset => last.samples.extend(run.samples),
+            _ => fused.push(run),
+        }
+    }
+    fused
+}
+
+/// 🧩️ `second` written over `first`: the words of `first` that `second` covers are cut away before both are normalized together.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn overlay_runs(first: Vec<TiffSampleRun>, second: Vec<TiffSampleRun>) -> Vec<TiffSampleRun> {
+    let mut pieces = first;
+    for run in &second {
+        let (from, to) = (run.offset, run.offset + run.samples.len());
+        pieces = pieces
+            .into_iter()
+            .flat_map(|piece| {
+                let (start, end) = (piece.offset, piece.offset + piece.samples.len());
+                if piece.block != run.block || end <= from || start >= to {
+                    return vec![piece];
+                }
+                let mut parts = Vec::new();
+                if start < from {
+                    parts.push(TiffSampleRun { block: piece.block, offset: start, samples: piece.samples[..from - start].to_vec() });
+                }
+                if end > to {
+                    parts.push(TiffSampleRun { block: piece.block, offset: to, samples: piece.samples[to - start..].to_vec() });
+                }
+                parts
+            })
+            .collect();
+    }
+    pieces.extend(second);
+    normalize_runs(pieces)
+}
+
+/// ▶️ Writes the runs into `blocks`, refusing a run that leaves its block.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn write_runs(blocks: &mut [TiffSampleBlock], runs: &[TiffSampleRun]) -> bool {
+    runs.iter().all(|run| match blocks.get_mut(run.block).and_then(|block| block.samples.get_mut(run.offset..run.offset + run.samples.len())) {
+        Some(span) => {
+            span.copy_from_slice(&run.samples);
+            true
+        }
+        None => false,
+    })
+}
+
+/// ↩️ The runs that put `blocks` back: for every word a run really changes, the word `blocks` carries, fused into maximal runs.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_runs(runs: &[TiffSampleRun], blocks: &[TiffSampleBlock]) -> Vec<TiffSampleRun> {
+    let restored = runs.iter().filter_map(|run| {
+        let base = blocks.get(run.block)?.samples.get(run.offset..run.offset + run.samples.len())?;
+        Some(differing_runs(run.block, run.offset, &run.samples, base))
+    });
+    normalize_runs(restored.flatten().collect())
+}
+//#endregion 🔖️SampleRuns
+
 //#region 🔖️IfdsTriple
-/// 🗂️ The per-IFD delta: the recursive tag-triple plus a whole-value slot for that directory's own
-/// raw strip payload (`TiffIfd::pixels` — a weak value, replaced wholesale, never sub-diffed, the
-/// same treatment `TiffDiff::pixels` gives the primary raster).
+/// 🗂️ The per-IFD delta: the recursive tag-triple, a whole-value slot for that directory's raw block list (`TiffIfd::blocks`,
+/// replaced wholesale when the block geometry itself changes) and the sparse sample runs that rewrite words inside the
+/// surviving blocks (applied after the block list, so a run always addresses the block list the diff leaves behind).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TiffIfdDiff {
@@ -148,12 +243,14 @@ pub struct TiffIfdDiff {
     pub entries: TiffTagsDiff,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub blocks: Option<Vec<TiffSampleBlock>>,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
+    pub runs: Vec<TiffSampleRun>,
 }
 
 impl TiffIfdDiff {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn is_empty(&self) -> bool {
-        self.entries.is_empty() && self.blocks.is_none()
+        self.entries.is_empty() && self.blocks.is_none() && self.runs.is_empty()
     }
 }
 
@@ -253,9 +350,7 @@ fn absorb_ifds(d1: TiffIfdsDiff, d2: TiffIfdsDiff) -> TiffIfdsDiff {
             Some(Slot::Base(b)) => {
                 let entry = modified_map.entry(*b).or_default();
                 entry.entries = absorb_tags(entry.entries.clone(), m2.diff.entries.clone());
-                if m2.diff.blocks.is_some() {
-                    entry.blocks = m2.diff.blocks.clone();
-                }
+                absorb_blocks(&mut entry.blocks, &mut entry.runs, &m2.diff);
             }
             Some(Slot::Added(ai)) => {
                 if let Some(a) = added_alive[*ai].as_mut() {
@@ -263,6 +358,7 @@ fn absorb_ifds(d1: TiffIfdsDiff, d2: TiffIfdsDiff) -> TiffIfdsDiff {
                     if let Some(storage) = &m2.diff.blocks {
                         a.ifd.blocks = storage.clone();
                     }
+                    write_runs(&mut a.ifd.blocks, &m2.diff.runs);
                 }
             }
             None => {}
@@ -322,6 +418,7 @@ fn apply_ifds(base: &[TiffIfd], d: &TiffIfdsDiff) -> Vec<TiffIfd> {
             if let Some(storage) = &m.diff.blocks {
                 it.blocks = storage.clone();
             }
+            write_runs(&mut it.blocks, &m.diff.runs);
         }
     }
     let mut removed_desc = d.removed.clone();
@@ -341,12 +438,46 @@ fn apply_ifds(base: &[TiffIfd], d: &TiffIfdsDiff) -> Vec<TiffIfd> {
     items
 }
 
+/// 📐️ Whether `b` keeps the block geometry of `a` (count, rectangles, channels, word counts), so that only sample words can differ.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn same_block_shape(a: &[TiffSampleBlock], b: &[TiffSampleBlock]) -> bool {
+    a.len() == b.len() && a.iter().zip(b).all(|(x, y)| (x.x, x.y, x.width, x.height, x.channels, x.samples.len()) == (y.x, y.y, y.width, y.height, y.channels, y.samples.len()))
+}
+
+/// 🧭️ The block delta from `a` to `b`: sparse runs when the block geometry is untouched, the whole new block list otherwise.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn between_blocks(a: &[TiffSampleBlock], b: &[TiffSampleBlock]) -> (Option<Vec<TiffSampleBlock>>, Vec<TiffSampleRun>) {
+    if a == b {
+        return (None, Vec::new());
+    }
+    if !same_block_shape(a, b) {
+        return (Some(b.to_vec()), Vec::new());
+    }
+    (None, normalize_runs(a.iter().zip(b).enumerate().flat_map(|(index, (x, y))| differing_runs(index, 0, &x.samples, &y.samples)).collect()))
+}
+
+/// ➕️ Folds `later`'s block delta into an earlier one: a replacement block list wins and discards earlier runs, runs land in an owned block list or overlay earlier runs.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn absorb_blocks(blocks: &mut Option<Vec<TiffSampleBlock>>, runs: &mut Vec<TiffSampleRun>, later: &TiffIfdDiff) {
+    if let Some(replacement) = &later.blocks {
+        *blocks = Some(replacement.clone());
+        runs.clear();
+    }
+    match blocks {
+        Some(owned) => {
+            write_runs(owned, &later.runs);
+        }
+        None => *runs = overlay_runs(std::mem::take(runs), later.runs.clone()),
+    }
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn between_ifds(a: &[TiffIfd], b: &[TiffIfd]) -> Option<TiffIfdsDiff> {
     let min = a.len().min(b.len());
     let mut modified = Vec::new();
     for i in 0..min {
-        let diff = TiffIfdDiff { entries: between_tags(&a[i].entries, &b[i].entries).unwrap_or_default(), blocks: (a[i].blocks != b[i].blocks).then(|| b[i].blocks.clone()) };
+        let (blocks, runs) = between_blocks(&a[i].blocks, &b[i].blocks);
+        let diff = TiffIfdDiff { entries: between_tags(&a[i].entries, &b[i].entries).unwrap_or_default(), blocks, runs };
         if !diff.is_empty() {
             modified.push(TiffIfdModified { index: i, diff });
         }
@@ -361,6 +492,46 @@ fn between_ifds(a: &[TiffIfd], b: &[TiffIfd]) -> Option<TiffIfdsDiff> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_tags(diff: &TiffTagsDiff, base: &[TiffTag]) -> TiffTagsDiff {
+    let find = |tag: &u16| base.iter().find(|entry| entry.tag == *tag);
+    let mut removed: Vec<u16> = diff.added.iter().map(|added| added.tag).collect();
+    removed.sort_unstable();
+    let mut modified: Vec<TiffTagModified> = diff.modified.iter().filter_map(|row| find(&row.tag).filter(|entry| entry.values != row.values).map(|entry| TiffTagModified { tag: row.tag, values: entry.values.clone() })).collect();
+    modified.sort_by_key(|row| row.tag);
+    let mut added: Vec<TiffTagAdded> = diff.removed.iter().filter_map(|tag| find(tag).map(|entry| TiffTagAdded { tag: *tag, values: entry.values.clone() })).collect();
+    added.sort_by_key(|row| row.tag);
+    TiffTagsDiff { removed, modified, added }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_ifd_diff(diff: &TiffIfdDiff, base: &TiffIfd) -> TiffIfdDiff {
+    let entries = inverse_tags(&diff.entries, &base.entries);
+    match diff.blocks.as_ref().filter(|blocks| **blocks != base.blocks) {
+        Some(_) => TiffIfdDiff { entries, blocks: Some(base.blocks.clone()), runs: Vec::new() },
+        None => TiffIfdDiff { entries, blocks: None, runs: inverse_runs(&diff.runs, &base.blocks) },
+    }
+}
+
+/// ↩️ Negative rows for the IFD triple against its BASE directories: added rows become removals at their final index, removed rows return at their
+/// base index, and each modified row restores its base value at the index the row has after the diff. Every list comes back ascending.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_ifds(diff: &TiffIfdsDiff, base: &[TiffIfd]) -> TiffIfdsDiff {
+    let mut removed_sorted = diff.removed.clone();
+    removed_sorted.sort_unstable();
+    removed_sorted.dedup();
+    let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
+    added_final.sort_unstable();
+    let after_index = |index: usize| {
+        let survivor = index - removed_sorted.iter().filter(|dropped| **dropped < index).count();
+        added_final.iter().fold(survivor, |position, inserted| if *inserted <= position { position + 1 } else { position })
+    };
+    let mut modified: Vec<TiffIfdModified> = diff.modified.iter().filter_map(|row| base.get(row.index).map(|ifd| TiffIfdModified { index: after_index(row.index), diff: inverse_ifd_diff(&row.diff, ifd) })).filter(|row| !row.diff.is_empty()).collect();
+    modified.sort_by_key(|row| row.index);
+    let added = removed_sorted.iter().filter_map(|index| base.get(*index).map(|ifd| TiffIfdAdded { index: *index, ifd: ifd.clone() })).collect();
+    TiffIfdsDiff { removed: added_final, modified, added }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn absorb_ifds_opt(base: &mut Option<TiffIfdsDiff>, other: Option<TiffIfdsDiff>) {
     match (base.take(), other) {
         (None, o) => *base = o,
@@ -371,18 +542,8 @@ fn absorb_ifds_opt(base: &mut Option<TiffIfdsDiff>, other: Option<TiffIfdsDiff>)
 //#endregion 🔖️IfdsTriple
 
 //#region 🔖️Diff
-/// 🔺️ Diff for `stdio.tiff`. No `snapshot: Option<TiffSnapshot>` full-replace slot — even
-/// `SetSnapshot`'s diff is `TiffDiff::between(base, next)`.
-/// 🧪️ F6 CONFIRMED (real `cargo check`, ticket
-/// 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION): adding
-/// `#[derive(dsl::)]` here fails — `TiffValues` (12 non-unit variants: `Byte(Vec<u8>)`,
-/// `Ascii(String)`, `Short(Vec<u16>)`, … `Double(Vec<f64>)`) is a genuine data-carrying enum
-/// reachable through `ifds: Option<TiffIfdsDiff>` -> `TiffIfdModified.diff.modified[].values` /
-/// `.added[].values`, and `DslField` has no impl for it (only `DslRecord`-derived structs and
-/// `DslScalar`-derived UNIT-only enums implement `DslField` — recon report §3a): `error[E0277]:
-/// the trait bound v6_0::…::TiffValues: DslField is not satisfied`. Same root cause independently
-/// requires a direct typed codec for `ReplaceTagMutation.values`, which reaches the same
-/// `TiffValues`. `DiffBinary,DiffCodec,DiffText` is hand-rolled below (see `HandcraftedDiffCodec`).
+/// 🔺️ Diff for `stdio.tiff`: the index-keyed IFD triple. `TiffValues` is a data-carrying enum that `DslField` cannot express, so the
+/// text and binary diff codecs frame the value tree directly instead of deriving a field grammar.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[artifact_schema(id = "s.stdio.tiff.diff")]
@@ -427,6 +588,7 @@ fn validate_tiff_ifds(base: &[TiffIfd], diff: &TiffIfdsDiff) -> MutationApplyRes
             return Err(MutationApplyError::new("mutation.apply.conflicting-target", "TIFF IFD modification is missing, duplicated, or removed").at(["ifds", "modified"]));
         }
         validate_tiff_tags(&base[entry.index].entries, &entry.diff.entries)?;
+        validate_tiff_runs(entry.diff.blocks.as_deref().unwrap_or(&base[entry.index].blocks), &entry.diff.runs)?;
     }
     let final_len = base.len().saturating_sub(diff.removed.len()).saturating_add(diff.added.len());
     let mut added = std::collections::HashSet::new();
@@ -436,6 +598,14 @@ fn validate_tiff_ifds(base: &[TiffIfd], diff: &TiffIfdsDiff) -> MutationApplyRes
         }
     }
     Ok(())
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn validate_tiff_runs(blocks: &[TiffSampleBlock], runs: &[TiffSampleRun]) -> MutationApplyResult<()> {
+    match runs.iter().all(|run| blocks.get(run.block).is_some_and(|block| run.offset.checked_add(run.samples.len()).is_some_and(|end| end <= block.samples.len()))) {
+        true => Ok(()),
+        false => Err(MutationApplyError::new("mutation.apply.invalid-run", "TIFF sample run leaves its block").at(["ifds", "modified", "runs"])),
+    }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -461,11 +631,10 @@ fn validate_tiff_tags(base: &[TiffTag], diff: &TiffTagsDiff) -> MutationApplyRes
 }
 
 impl DiffAlgebra<TiffSnapshot> for TiffDiff {
-    /// 🔁️ Diff-level undo, derived generically (correct by construction): the state delta
-    /// from `self.apply(base)` back to `base`.
+    /// 🔁️ Concrete diff-level undo: removed directories come back at their base index, added directories go away again, and every
+    /// modified directory restores the tags, block list and sample words `base` carries.
     fn inverse(&self, base: &TiffSnapshot) -> Self {
-        let mutated = self.apply(base).unwrap();
-        Self::between(&mutated, base)
+        Self { ifds: self.ifds.as_ref().map(|diff| inverse_ifds(diff, &base.ifds)).filter(|diff| !diff.removed.is_empty() || !diff.modified.is_empty() || !diff.added.is_empty()) }
     }
 
     /// 🧭️ State delta (compose `GetXDiff`): index-keyed pairwise `0..min(len)` matching for
@@ -479,65 +648,7 @@ impl DiffAlgebra<TiffSnapshot> for TiffDiff {
     }
 }
 
-/// 🧩 Builds a set-snapshot diff (sparse field-by-field delta, never a full-replace slot).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &TiffSnapshot, next: &TiffSnapshot) -> TiffDiff {
-    TiffDiff::between(base, next)
-}
 //#endregion 🔖️Diff
-
-//#region 🔖️MutationDiffBuilders
-// 🧩 One handcrafted builder per `schema::mutations::TiffMutation` variant (excluding
-// `NoMutation`/`SetSnapshot`, covered above).
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
-//#endregion 🔖️MutationDiffBuilders
-
-//#region 🔖️HandcraftedDiffCodec
-/// 🧪️ F6: **hand-rolled** `protocol::DiffCodec` for `TiffDiff` — `TiffValues` (a genuine
-/// data-carrying enum, real compile error captured on the `TiffDiff` doc comment above) rules out
-/// `#[derive(dsl::DslDiff)]`. Same grammar style `GifDiff`/`SvgDiff`'s hand-rolled codecs use
-/// (bracket-depth-aware split, hex for strings/bytes, single-letter tag prefix for enums,
-/// `[removed];[modified];[added]` for collection triples) — see `f6-recon-report.md` §5 for the
-/// primitive rationale; this file re-derives its own copies of the small helper functions (no
-/// shared "hand-roll helpers" module exists yet). No `Option<T>`/tri-state wrapping is needed
-/// here — every `TiffDiff`/`TiffMutation` field is a required value, so `encode_option`/
-/// `decode_option` (present in `GifDiff`/`SvgDiff`) are deliberately omitted as dead code.
-//#region 🔖️Primitives
-// 🚫️aaasync: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-
-
-
-
-//#endregion 🔖️BinaryPrimitives
-//#endregion 🔖️Primitives
-
-//#region 🔖️ValueCodecs
-// 🚫️aaaa️a️a__️aregion 🔖️ValueCodecs
-
-//#region 🔖️ValueBinaryCodecs
-/// 🧪️a️a️__aregion 🔖️ValueBinaryCodecs
-
-//#region 🔖️DiffValueCodecs
-/// 🔺️a�️a�️aregion 🔖️DiffValueCodecs
-
-//#region 🔖️DiffValueBinaryCodecs
-/// 🧪️a️aaregion 🔖️DiffValueBinaryCodecs
-
-//#region 🔖️TopLevel
-// 🚫️aaprregion 🔖️TopLevel
-//#endregion 🔖️HandcraftedDiffCodec
 
 //#region 🔖️DemoCases
 /// 🧪️ P2-FG2: representative `TiffDiff` values (byte order, IFD tags, and storage exercised; IFD-level

@@ -12,7 +12,6 @@ seq:
     size-eos: true
 enums:
   mutation_kind:
-    7: set_snapshot
-    8: patch_snapshot
     9: paint_indexed_region
     10: paint_direct_region
+    12: replace_image

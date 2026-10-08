@@ -3,7 +3,7 @@
 //! differs from "survivors in base order, then the appended rows".
 use super::ReplaceReferences;
 use crate::diff::{CadDiff, CadReferencePatchEntry, CadReferencesDelta};
-use crate::mutations::CadReferencePatch;
+use crate::mutations::{CadOpacitySet, CadOrientationSet, CadReferencePatch, CadScaleSet};
 use crate::CadSnapshot;
 use std::collections::BTreeMap;
 
@@ -27,12 +27,12 @@ pub fn diff(payload: &ReplaceReferences, base: &CadSnapshot) -> protocol::Mutati
                 source_url: (reference.source_url != next.source_url).then(|| next.source_url.clone()),
                 media_kind: (reference.media_kind != next.media_kind).then(|| next.media_kind.clone()),
                 origin: (reference.origin != next.origin).then_some(next.origin),
-                orientation: (reference.orientation != next.orientation).then_some(next.orientation),
-                scale: (reference.scale != next.scale).then_some(next.scale),
+                orientation: (reference.orientation != next.orientation).then_some(CadOrientationSet { value: next.orientation }),
+                scale: (reference.scale != next.scale).then_some(CadScaleSet { value: next.scale }),
                 width_world: (reference.width_world != next.width_world).then_some(next.width_world),
                 hidden: (reference.hidden != next.hidden).then_some(next.hidden),
                 locked: (reference.locked != next.locked).then_some(next.locked),
-                opacity: (reference.opacity != next.opacity).then_some(next.opacity),
+                opacity: (reference.opacity != next.opacity).then_some(CadOpacitySet { value: next.opacity }),
             };
             (patch != CadReferencePatch::default()).then(|| CadReferencePatchEntry { id: next.id.clone(), patch })
         })

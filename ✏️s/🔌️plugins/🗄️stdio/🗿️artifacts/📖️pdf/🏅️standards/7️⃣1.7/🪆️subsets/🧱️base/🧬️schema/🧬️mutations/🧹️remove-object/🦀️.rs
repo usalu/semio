@@ -28,7 +28,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveObject {
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-        base.objects.iter().find(|object| object.id == self.id).map(|object| PdfMutation::InsertObject(InsertObject { id: self.id, value: object.value.clone() })).into_iter().collect()
+        base.objects.iter().position(|object| object.id == self.id).map(|position| PdfMutation::InsertObject(InsertObject { id: self.id, value: base.objects[position].value.clone(), index: Some(position) })).into_iter().collect()
     
     })())
 }

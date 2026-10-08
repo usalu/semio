@@ -10,7 +10,7 @@ use framework_schema::ArtifactSchema;
 ///
 /// 🧪️ F6-PILOT: `semio_framework_dsl_record_derive::DslRecord` added alongside the existing hand-rolled `store::ArtifactDsl`/
 /// `store::ArtifactPack` below — NOT a replacement. `DslRecord` only gives this type `DslField`
-/// (so it can be embedded as a variant payload, e.g. `BinaryMutation::SetSnapshot(set_snapshot::SetSnapshot{snapshot})`),
+/// (so it can be embedded as a block in a record),
 /// it does not touch the artifact's own honest hex-text/raw-binary envelope format.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]

@@ -14,6 +14,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[value(rename_all = "camelCase")]
 pub struct CreateGeneration {
     pub generation: FormGeneration,
+    /// 📍 Zero-based insertion position among the generations; `None` or past the end appends.
+    pub index: Option<usize>,
 }
 
 impl protocol::MutationKind<Generation3dSnapshot, Generation3dMutation> for CreateGeneration {

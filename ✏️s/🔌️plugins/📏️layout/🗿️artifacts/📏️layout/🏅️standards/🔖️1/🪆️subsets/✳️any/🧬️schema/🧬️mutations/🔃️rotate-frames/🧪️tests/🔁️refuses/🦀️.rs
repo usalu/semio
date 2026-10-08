@@ -29,7 +29,7 @@ fn outcome() -> serde_json::Value {
 }
 fn applied() -> LayoutSnapshot {
     let base = before();
-    mutation().diff(&base).diff().apply(&base).expect("rotate-frames/refuses-a-repeated-frame: the diff applies to its committed before-snapshot")
+    protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("rotate-frames/refuses-a-repeated-frame: the diff applies to its committed before-snapshot")
 }
 
 /// 🗣️ `(level, code, target)` of every message `rotate-frames` raises on the committed base.

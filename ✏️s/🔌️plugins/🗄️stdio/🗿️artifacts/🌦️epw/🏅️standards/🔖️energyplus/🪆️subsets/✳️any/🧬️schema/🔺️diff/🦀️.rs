@@ -48,6 +48,13 @@ macro_rules! epw_record_diff {
                     $( $field: (base.$field != other.$field).then(|| other.$field.clone()), )+
                 }
             }
+            /// ↩️ The patch restoring exactly the columns this patch sets back to their `base` values.
+            // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+            pub fn inverse(&self, base: &EpwRecord) -> Self {
+                Self {
+                    $( $field: self.$field.as_ref().map(|_| base.$field.clone()), )+
+                }
+            }
             /// ➕️ LWW per-field absorb: `other`'s populated columns win.
             // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
             fn absorb(&mut self, other: Self) {
@@ -165,8 +172,7 @@ fn base_len_hint(removed: &[usize], modified_indices: impl Iterator<Item = usize
 //#endregion 🔖️IndexTransport
 
 //#region 🔖️Diff
-/// 🔺️ Diff for `stdio.epw`. No `snapshot: Option<EpwSnapshot>` full-replace slot — even
-/// `SetSnapshot`'s diff is `EpwDiff::between(base, next)`.
+/// 🔺️ Diff for `stdio.epw`. No `snapshot: Option<EpwSnapshot>` full-replace slot — every diff is sparse.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.epw.diff")]
@@ -424,10 +430,39 @@ fn absorb_records(d1: EpwRecordsDiff, d2: EpwRecordsDiff) -> EpwRecordsDiff {
     EpwRecordsDiff { removed: final_removed, modified: final_modified, added: final_added }
 }
 
+/// ↩️ Negative rows for the records triple against its BASE records: added rows become removals at their final index, removed
+/// rows return at their base index, and each modified row restores its base columns at the index the row has after the diff.
+/// Every list comes back ascending, the normal form [`absorb_records`] emits.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn inverse_records(diff: &EpwRecordsDiff, base: &[EpwRecord]) -> EpwRecordsDiff {
+    let mut removed_sorted = diff.removed.clone();
+    removed_sorted.sort_unstable();
+    removed_sorted.dedup();
+    let mut added_final: Vec<usize> = diff.added.iter().map(|added| added.index).collect();
+    added_final.sort_unstable();
+    let after_index = |index: usize| {
+        let survivor = index - removed_sorted.iter().filter(|dropped| **dropped < index).count();
+        added_final.iter().fold(survivor, |position, inserted| if *inserted <= position { position + 1 } else { position })
+    };
+    let mut modified: Vec<EpwRecordModified> = diff.modified.iter().filter_map(|row| base.get(row.index).map(|record| EpwRecordModified { index: after_index(row.index), diff: row.diff.inverse(record) })).collect();
+    modified.sort_by_key(|row| row.index);
+    let added = removed_sorted.iter().filter_map(|index| base.get(*index).map(|record| EpwRecordAdded { index: *index, record: record.clone() })).collect();
+    EpwRecordsDiff { removed: added_final, modified, added }
+}
+
 impl DiffAlgebra<EpwSnapshot> for EpwDiff {
     fn inverse(&self, base: &EpwSnapshot) -> Self {
-        let applied = apply_epw_diff_unchecked(self, base);
-        Self::between(&applied, base)
+        Self {
+            location: self.location.as_ref().map(|_| base.location.clone()),
+            design_conditions: self.design_conditions.as_ref().map(|_| base.design_conditions.clone()),
+            typical_extreme_periods: self.typical_extreme_periods.as_ref().map(|_| base.typical_extreme_periods.clone()),
+            ground_temperatures: self.ground_temperatures.as_ref().map(|_| base.ground_temperatures.clone()),
+            holidays_dst: self.holidays_dst.as_ref().map(|_| base.holidays_dst.clone()),
+            comments_1: self.comments_1.as_ref().map(|_| base.comments_1.clone()),
+            comments_2: self.comments_2.as_ref().map(|_| base.comments_2.clone()),
+            data_periods: self.data_periods.as_ref().map(|_| base.data_periods.clone()),
+            records: self.records.as_ref().map(|records| inverse_records(records, &base.records)).filter(|records| !records.is_empty()),
+        }
     }
 
     fn between(base: &EpwSnapshot, other: &EpwSnapshot) -> Self {
@@ -479,11 +514,6 @@ impl DiffAlgebra<EpwSnapshot> for EpwDiff {
     }
 }
 
-/// 🧩 Builds a set-snapshot diff (sparse field-by-field delta, never a full-replace slot).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &EpwSnapshot, next: &EpwSnapshot) -> EpwDiff {
-    EpwDiff::between(base, next)
-}
 //#endregion 🔖️Diff
 
 //#region 🔖️HandcraftedDiffCodec

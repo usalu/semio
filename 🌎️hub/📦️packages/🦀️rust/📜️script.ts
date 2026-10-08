@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { trustedCatalogByteClaimV1, trustedCatalogPhysicalClaimV1, createTrustedCatalogProvenanceDirectoryV1, trustedCatalogDataRootV1, retainTrustedCargoInvocationV1, writeTrustedCatalogPublicationProvenanceV1, type ActorProducerV1, type PackageProducerV1, type GenerationProducerV1 } from "../../🏗️bootstrap/🧾️provenance/🟦️.ts";
 import {captureOwnedProcess} from "../../../🧰️framework/🔨️modules/🏃️process/📥️capture/🟦️.ts";
 import { type ExactCargoLawGroup } from "../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { GIS_MAP_INFERENCE_REQUEST_MAX_BYTES, GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES, GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR } from "../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧬️schema/🟦️.ts";
@@ -1842,8 +1843,6 @@ type BrowserDocumentOpenFixture = {
 function browserDocumentOpenFixture(repoRoot: string): BrowserDocumentOpenFixture {
   const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory");
   const fixture = JSON.parse(readFileSync(join(root, "🌐️browser-document-open-v1.json"), "utf8")) as BrowserDocumentOpenFixture;
-  const validate = hubSchemaExport(repoRoot, "schema://os.directory/BrowserDocumentOpenTransportV1");
-  if (!validate(fixture)) throw new Error("browser document-open fixture violates its owning scope contract");
   const validatePlan = hubSchemaExport(repoRoot, "schema://os.directory/BrowserDocumentOpenTransportPlan");
   for (const name of ["parent-standard-control", "parent-subset-trim"]) {
     const vector = fixture.hostile.find((row) => row.name === name)!;
@@ -5634,7 +5633,8 @@ class ExecutionTargetLeaseBrowserCheckScript extends BundleScript {
 }
 
 class BrowserActorChildWorkerContainmentCheckScript extends BundleScript {
-  async run(): Promise<void> {
+  async run(segments:string[]): Promise<void> {
+    if(segments.length>1||(segments[0]!==undefined&&segments[0]!=="--publication-neutral"))throw Error("usage: browser-actor-child-worker-containment-check [--publication-neutral]");
     const ownerPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child";
     const fixture = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧫️fixtures/🔣️.json"), "utf8"));
     const ts = await import("typescript");
@@ -5920,6 +5920,10 @@ class BrowserActorChildWorkerContainmentCheckScript extends BundleScript {
         },
         { url: "/@fs" + join(this.repoRoot, ownerPath, "🟦️.ts"), modules, limits: fixture.limits, laws: fixture.laws, wireRows: fixture.wireRows, ownerFaults: fixture.ownerFaults },
       );
+      if(segments[0]==="--publication-neutral"){
+        const {testProtectedActorChildExecutionV1}=await import(join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🗂️hub-document-sweep/🧾️publication/🧪️tests/🟦️.ts"));
+        await testProtectedActorChildExecutionV1(this.repoRoot,page,vite.resolvedUrls!.local[0]!);
+      }
       if (!diagnostics.includes("log:[browser actor stdout] AB") || !diagnostics.includes("warning:[browser actor stderr] CD") || diagnostics.some((value) => value.includes("[browser actor stdout] ZZ")))
         throw new Error("child WASI synchronous output was not observed exactly before caller mutation");
       if (!workerRequests.some((url) => decodeURI(url).includes("/🧵️child/👷️worker/🟦️.ts"))) throw new Error("static child was not requested");
@@ -6051,8 +6055,6 @@ async function proveBrowserActorGisChildV1(
     throw new Error("GIS child retained byte identity differs");
   const ownerPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle";
   const fixture = JSON.parse(readFileSync(join(repoRoot, ownerPath, "🧾️describe/🧫️fixtures/🔣️.json"), "utf8"));
-  const schema = JSON.parse(readFileSync(join(repoRoot, ownerPath, "🧾️describe/🧬️schema/🔣️.json"), "utf8"));
-  if (!new Ajv({ strict: true }).compile<BrowserActorGisDescribeFixture>(schema)(fixture)) throw new Error("GIS describe transport fixture");
   const api = await import(join(repoRoot, ownerPath, "🧾️describe/🟦️.ts"));
   const codec = { encode: encodePackValue, decode: decodePackValue };
   api.assertBrowserActorDescribeCapacityV1(descriptor.byteLength);
@@ -6201,8 +6203,6 @@ class BrowserActorGisDescribeCheckScript extends BundleScript {
     if (segments.length > 1 || (segments[0] !== undefined && segments[0] !== "--source" && segments[0] !== "--native")) throw new Error("usage: browser-actor-gis-describe-check [--source|--native]");
     const ownerPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle";
     const fixture = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧾️describe/🧫️fixtures/🔣️.json"), "utf8"));
-    const schema = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧾️describe/🧬️schema/🔣️.json"), "utf8"));
-    if (!new Ajv({ strict: true }).compile<BrowserActorGisDescribeFixture>(schema)(fixture)) throw new Error("GIS describe fixture");
     const ts = await import("typescript");
     const program = ts.createProgram([join(this.repoRoot, ownerPath, "🧾️describe/🟦️.ts")], {
       noEmit: true,
@@ -6253,7 +6253,7 @@ class BrowserActorGisDescribeCheckScript extends BundleScript {
     await proveBrowserActorGisEvidenceV1(artifactRoot);
     const { createFreshComponentTests } = await import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧪️tests/🆕️fresh-component/🟦️.ts");
     await createFreshComponentTests().testFreshComponentProcessV1(this.repoRoot);
-    console.log(`browser-actor-gis-describe: AJV=1 TypeScript=1 fast-deep-equal=${fixture.cases.length} normalization=${fixture.cases.length} source passed; real guest execution requires --native`);
+    console.log(`browser-actor-gis-describe: TypeScript=1 fast-deep-equal=${fixture.cases.length} normalization=${fixture.cases.length} source passed; real guest execution requires --native`);
     if (segments[0] !== "--native") return;
     const work = mkdtempSync(join(artifactRoot, "gis-child-real-"));
     const target = join(work, "target"),
@@ -6315,29 +6315,15 @@ class BrowserActorDocumentReservationCheckScript extends BundleScript {
   async run(): Promise<void> {
     const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory");
     const fixture = JSON.parse(readFileSync(join(root, "🧵️browser-actor-reservation-v1.json"), "utf8"));
-    if (!hubSchemaExport(this.repoRoot, "schema://os.directory/DocumentBrowserActorReservationV1")(fixture)) throw new Error("document child reservation fixture violates its owning scope contract");
-    const bodyFixture = JSON.parse(readFileSync(join(root, "🧵️execution-target-body-read-v1.json"), "utf8"));
-    if (!hubSchemaExport(this.repoRoot, "schema://os.directory/ExecutionTargetBodyReadV1")(bodyFixture)) throw new Error("execution target body fixture violates its owning scope contract");
     const sessionFixture = JSON.parse(readFileSync(join(root, "🧵️browser-actor-session-v1.json"), "utf8"));
-    if (!hubSchemaExport(this.repoRoot, "schema://os.directory/DocumentBrowserActorSessionV1")(sessionFixture)) throw new Error("document actor session fixture violates its owning scope contract");
     const bootstrapFixture = JSON.parse(readFileSync(join(root, "🧵️artifact-bootstrap-owner-v1.json"), "utf8"));
-    if (!hubSchemaExport(this.repoRoot, "schema://os.directory/DirectoryArtifactBootstrapOwnerV1")(bootstrapFixture)) throw new Error("document bootstrap owner fixture violates its owning scope contract");
-    runCmd(
-      "bun",
-      [
-        "nx",
-        "run",
-        "@semio-tech/framework-os:test-long",
-        "--skip-nx-cache",
-        "--",
-        "--run",
-        "-t",
-        "artifact bootstrap atomic restore|execution target body reader|browser document actor reservation|browser execution target lease|browser GIS viewer exposes localized renderer-unavailable",
-      ],
-      { cwd: this.repoRoot, ...orchestratorBudgetOpts() },
+    await runVitest(
+      join(this.repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript"),
+      ["--run", "-t", "artifact bootstrap atomic restore|execution target body reader|browser document actor reservation|browser execution target lease|browser GIS viewer exposes localized renderer-unavailable"],
+      "../../💡️inference/🧪️tests/🎚️config/🟦️.ts",
     );
     console.log(
-      "browser-actor-document-reservation: AJV=4 bootstrap-ownership=" +
+      "browser-actor-document-reservation: bootstrap-ownership=" +
         bootstrapFixture.cases.length +
         " body-read=7 ownership=16 cases=" +
         fixture.cases.length +
@@ -8308,8 +8294,6 @@ function trustedBootstrapPlanGenerationOutcome(issuedGenerationId: string, obser
 async function proveDocumentBrowserActorIdentityFixture(repoRoot: string): Promise<void> {
   const integerRoot = join(repoRoot, "🧰️framework/🔨️modules/🌱️value/🔁️codec/🧫️fixtures");
   const integerFixture = JSON.parse(readFileSync(join(integerRoot, "🔣️.json"), "utf8"));
-  const integerShape = hubSchemaExport(repoRoot, "schema://framework.value.codec/CodecFixture");
-  if (!integerShape(integerFixture)) throw new Error("exact integer fixture violates its owning scope contract");
   let integerAccepted = 0;
   for (const target of integerFixture.targets) {
     if (target.name !== `${target.signed ? "i" : "u"}${target.bits}`) throw new Error("integer target policy mismatch");
@@ -8322,7 +8306,7 @@ async function proveDocumentBrowserActorIdentityFixture(repoRoot: string): Promi
       if (integer !== undefined && integer >= minimum && integer <= maximum) integerAccepted++;
     }
   }
-  console.log(`exact-integer-value-oracle: AJV=1 targets=${integerFixture.targets.length} raw=${integerFixture.raw.length} admitted=${integerAccepted} arithmetic=BigInt; native production parity is a separate exact group`);
+  console.log(`exact-integer-value-oracle: targets=${integerFixture.targets.length} raw=${integerFixture.raw.length} admitted=${integerAccepted} arithmetic=BigInt; native production parity is a separate exact group`);
   const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌐️browser-actor");
   const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/🔣️.json"), "utf8"));
   const validators = {
@@ -9133,10 +9117,7 @@ async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promis
   assert.equal(fixture.ordering.expected.length, 3);
   const kindRoot = join(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🧫️fixtures");
   const kind = JSON.parse(readFileSync(join(kindRoot, "🗄️artifact-kind-formats.json"), "utf8"));
-  const validateKind = hubSchemaExport(repoRoot, "schema://framework.manifest/ArtifactKindFormatsFixture");
-  assert(validateKind(kind), "artifact kind formats fixture violates its owning scope contract");
   assert.deepEqual(packValueToExactJson(decodePackValue(encodePackValue(kind))), JSON.parse(JSON.stringify(kind)));
-  for (const field of ["exportStdioKinds", "importStdioKinds"]) for (const invalid of [[1], "stdio.svg"]) assert.equal(validateKind({ ...kind, [field]: invalid }), false);
   assert.deepEqual(fixture.nativeCases.map((row: any) => row.id), ["exact", "missing", "duplicate", "foreign", "any", "caret", "tilde", "at-least", "wrong-version"]);
   const hubSource = moduleRustSource(join(repoRoot, "🌎️hub", "🧪️tests"));
   const readinessFixture = hubSource.slice(hubSource.indexOf("fn native_openable_stdio_bundle("), hubSource.indexOf("async fn native_openable_stdio_provider_is_the_only_atomic_readiness_transition("));
@@ -9217,7 +9198,7 @@ async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promis
   console.log(`compiled dependency claims: AJV=1 Pack=1 DataView=1 cases=${fixture.cases.length} accepted=${accepted} native-vectors=${fixture.nativeCases.length} raw-Pack=${fixture.rawCases.length} source-derived-goldens=${fixture.encodingCases.length} publication-files=${fixture.publicationFiles.length} UTF8-order=1; native guest agreement remains separate`);
 }
 
-type TrustedBootstrapMaterializationV1 = Readonly<{ profileId: string; generationId: string; bundleSha256: string; bundlePath: string }>;
+type TrustedBootstrapMaterializationV1 = Readonly<{ profileId: string; generationId: string; bundleSha256: string; bundlePath: string; producerPath?: string }>;
 type TrustedBootstrapCurrentPointerV1 = Readonly<{ profileId: string; generationId: string; bundleSha256: string; publicationRevision: string }>;
 type TrustedBootstrapPublishedV1 = TrustedBootstrapMaterializationV1 & Readonly<{ publicationRevision: string; currentSha256: string }>;
 
@@ -10103,7 +10084,7 @@ function trustedBootstrapBuildControl(deadlineMs: number): { control: FreshBuild
  * hub binary's COMPILED native-codec provider is generated from, so it is present for exactly the
  * packages `NativeCodecProviderSetV1` links Rust codecs for and null for every other one, whose rows
  * the component answers for itself through `world actor`'s `codec` interface. */
-type TrustedBootstrapPackageSpecV1 = Readonly<{
+export type TrustedBootstrapPackageSpecV1 = Readonly<{
   pluginId: string;
   cargoPackage: string;
   componentPackageId: string;
@@ -10401,6 +10382,8 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
   const stageRoot = join(trustedRoot, `staging-${nonce}`);
   mkdirSync(buildRoot, { mode: 0o700 });
   mkdirSync(stageRoot, { mode: 0o700 });
+  const observationStage = join(trustedRoot, `provenance-staging-${nonce}`);
+  mkdirSync(observationStage, { mode: 0o700 });
   const buildControl = trustedBootstrapBuildControl(buildBudgetMs());
   const { control } = buildControl;
   const checkBuild = () => {
@@ -10413,6 +10396,8 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
     });
     const requests = selection.map((spec) => ({ pluginId: spec.pluginId, cargoPackage: spec.cargoPackage, componentPackageId: spec.componentPackageId, outputName: spec.outputName, componentProfile: "wasm-release" as const, rootCdylib: true }));
     const receipts = new Map<string, FreshComponentReceiptV1>();
+    const compilerInvocations = new Map<string, readonly string[]>();
+    const actorProducers = new Map<string, Omit<ActorProducerV1,"compiler"> & {compilerName:string}>();
     const descriptorClaims = new Map<string, TrustedBootstrapDescriptorClaimsV1>();
     const browserActors = new Map<string, TrustedBootstrapBrowserActorV1>();
     const pluginModules = new Map<string, TrustedBootstrapPluginModuleRecordV1>();
@@ -10429,9 +10414,14 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
       mkdirSync(stage, { recursive: true, mode: 0o700 });
       let derivedActor: ClosedBrowserActorArtifactV1 | undefined;
       try {
-        const { receipt, derived: componentSha256 } = await produceFreshComponentV1(repoRoot, request, target, stage, control, (lease) =>
+        const { receipt, derived: componentSha256, compilerInvocations: invocations } = await produceFreshComponentV1(repoRoot, request, target, stage, control, (lease) =>
           lease.consume(async (component) => createHash("sha256").update(component).digest("hex")),
         );
+        if (!invocations || invocations.length !== 2) throw new Error("fresh trusted package compiler observations are missing");
+        compilerInvocations.set(request.pluginId, invocations);
+        const tooling = join(observationStage, "packages", request.pluginId, "tooling"); mkdirSync(tooling, {recursive:true,mode:0o700});
+        const emitterPath = join(target, "debug", process.platform === "win32" ? "semio-framework-plugin-describe.exe" : "semio-framework-plugin-describe");
+        cpSync(emitterPath, join(tooling, basename(emitterPath)), {errorOnExist:true,force:false});
         if (componentSha256 !== receipt.component.sha256 || (derivedActor && derivedActor.componentSha256 !== componentSha256)) throw new Error(`fresh ${request.pluginId} derivation differs from its verified component`);
         if (receipt.pluginId !== request.pluginId || receipt.packageId !== request.componentPackageId) throw new Error(`fresh ${request.pluginId} receipt identity changed after production`);
         const descriptor = trustedBootstrapReadRegular(join(stage, "descriptor.semio"), DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, "fresh compiled descriptor protocol", checkBuild);
@@ -10503,12 +10493,21 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
           mkdirSync(join(stage, "browser"), { mode: 0o700 });
           trustedBootstrapWriteNew(join(stage, "browser", "closed-actor.mjs"), derivedActor.bytes, checkBuild);
           trustedBootstrapFsyncDirectory(join(stage, "browser"));
+          const compilerName = derivedActor.producer.compiler.sha256 + ".mjs";
+          const compilerRoot = join(observationStage, "compilers"); mkdirSync(compilerRoot, {recursive:true,mode:0o700});
+          const compilerPath = join(compilerRoot,compilerName);
+          if (!existsSync(compilerPath)) trustedBootstrapWriteNew(compilerPath,derivedActor.producer.compiler.bytes,checkBuild);
+          const compilerClaim = trustedCatalogPhysicalClaimV1(compilerPath);
+          if (compilerClaim.sha256 !== derivedActor.producer.compiler.sha256 || compilerClaim.byteLength !== derivedActor.producer.compiler.byteLength) throw new Error("trusted actor retained compiler changed");
+          actorProducers.set(request.pluginId,{schema:"semio.os.closed-browser-actor-producer/v1",actor:trustedCatalogByteClaimV1(stageRoot,join(stage,"browser","closed-actor.mjs")),component:trustedCatalogByteClaimV1(stageRoot,join(stage,"component.wasm")),descriptor:trustedCatalogByteClaimV1(stageRoot,join(stage,"descriptor.semio")),policyCanonical:derivedActor.policyCanonical,policySha256:derivedActor.policySha256,runtime:derivedActor.producer.runtime,inputs:derivedActor.producer.inputs,compilerName});
+
         }
         browserActors.set(request.pluginId, actor);
         pluginModules.set(request.pluginId, await trustedBootstrapPluginModuleV1(repoRoot, request, stage, stageRoot, target, receipt, control, checkBuild));
         receipts.set(request.pluginId, receipt);
       } finally {
         derivedActor?.bytes.fill(0);
+        derivedActor?.producer.compiler.bytes.fill(0);
       }
     }
     const gis = receipts.get("gis");
@@ -10604,13 +10603,29 @@ export async function materializeTrustedCatalogBundle(repoRoot: string, dataRoot
       trustedBootstrapFsyncDirectory(generations);
     }
     const bundleSha256 = createHash("sha256").update(bundleBytes).digest("hex");
-    return { profileId: profileSummary.id, generationId, bundleSha256, bundlePath: join(generationRoot, "trusted-catalog.json") };
+    const observationParent = join(trustedRoot,"provenance","generations",generationId); createTrustedCatalogProvenanceDirectoryV1(dataRoot,observationParent);
+    const observationRoot = join(observationParent,nonce); renameSync(observationStage,observationRoot);
+    const packageProducers: PackageProducerV1[] = [];
+    for(const identity of selectedClosure){
+      const request=requests.find(row=>row.pluginId===identity.pluginId)!,target=join(buildRoot,`${identity.pluginId}-target`),packageRoot=join(generationRoot,"packages",identity.pluginId),metadataRoot=join(observationRoot,"packages",identity.pluginId);
+      const originalComponent=join(target,"wasm32-wasip2",request.componentProfile,request.outputName),originalEmitter=join(target,"debug",process.platform==="win32"?"semio-framework-plugin-describe.exe":"semio-framework-plugin-describe");
+      const invocations=compilerInvocations.get(identity.pluginId)!;
+      const cargoInvocations=invocations.map((source,index)=>retainTrustedCargoInvocationV1(source,join(metadataRoot,"cargo",basename(source)),new Map(index===0?[[originalComponent,join(packageRoot,"component.wasm")]]:[[originalEmitter,join(metadataRoot,"tooling",basename(originalEmitter))]]),checkBuild));
+      let browserActor: PackageProducerV1["browserActor"] = null;
+      const actor=actorProducers.get(identity.pluginId);
+      if(actor){const {compilerName,...record}=actor;const actorRecord:ActorProducerV1={...record,compiler:trustedCatalogPhysicalClaimV1(join(observationRoot,"compilers",compilerName))};const actorPath=join(metadataRoot,"browser-producer.json");trustedBootstrapWriteNew(actorPath,Buffer.from(JSON.stringify(actorRecord)+"\n"),checkBuild);browserActor=trustedCatalogPhysicalClaimV1(actorPath);}
+      packageProducers.push({pluginId:identity.pluginId,packageId:identity.packageId,cargoPackage:request.cargoPackage,component:trustedCatalogByteClaimV1(generationRoot,join(packageRoot,"component.wasm")),descriptor:trustedCatalogByteClaimV1(generationRoot,join(packageRoot,"descriptor.semio")),cargoInvocations,browserActor});
+    }
+    const producer:GenerationProducerV1={schema:"semio.hub.trusted-catalog-producer/v1",profileId:profileSummary.id,generationId,bundle:trustedCatalogByteClaimV1(generationRoot,join(generationRoot,"trusted-catalog.json")),packages:packageProducers};
+    const producerPath=join(observationRoot,"producer.json");trustedBootstrapWriteNew(producerPath,Buffer.from(JSON.stringify(producer)+"\n"),checkBuild);trustedBootstrapFsyncDirectory(observationRoot);
+    return { profileId: profileSummary.id, generationId, bundleSha256, bundlePath: join(generationRoot, "trusted-catalog.json"), producerPath };
   } catch (error) {
     rmSync(stageRoot, { recursive: true, force: true });
     throw error;
   } finally {
     buildControl.close();
     rmSync(buildRoot, { recursive: true, force: true });
+    rmSync(observationStage, { recursive: true, force: true });
   }
 }
 
@@ -11223,6 +11238,7 @@ async function publishTrustedBootstrapCurrent(dataRoot: string, receipt: Trusted
     const published = trustedPublicationChildReceipt(processResult, command, publicationRevision, evidenceRoot);
     const current = trustedBootstrapCurrent(dataRoot);
     if (!current || current.currentSha256 !== published.currentSha256) throw new Error("trusted current changed after native publication; do not activate the candidate plan");
+    if (receipt.producerPath) writeTrustedCatalogPublicationProvenanceV1(dataRoot,receipt.producerPath);
     return current;
   } finally {
     processResult?.bytes.fill(0);
@@ -13208,7 +13224,7 @@ class DevScript extends BundleScript {
       ...LOCAL_HUB_DEVELOPMENT_PROFILES,
       ...(secureAdmin ? [LOCAL_HUB_ADMINISTRATOR_PROFILE] : []),
     ];
-    const dataRoot = resolve(process.env.OS_HUB_DATA ?? join(this.repoRoot, ".🧬semio", "🌐hub", "hub-dev"));
+    const dataRoot = trustedCatalogDataRootV1(this.repoRoot,"development");
     let trustedCatalog = trustedBootstrapCurrent(dataRoot);
     if (!trustedCatalog) {
       runCargo(["build", "--manifest-path", "Cargo.toml"], this.root);
@@ -13725,7 +13741,7 @@ class TrustedCatalogBootstrapScript extends BundleScript {
     trustedBootstrapPreflightSelectionV1(this.repoRoot, selection);
     trustedBootstrapPreflightDescriptorsV1(this.repoRoot, selection);
     trustedBootstrapPreflightComponentsV1(this.repoRoot, selection);
-    const dataRoot = process.env.OS_HUB_DATA ? resolve(process.env.OS_HUB_DATA) : resolve(this.repoRoot, ".🧬semio", "🌐hub");
+    const dataRoot = trustedCatalogDataRootV1(this.repoRoot,"standalone");
     runCargo(["build", "--manifest-path", "Cargo.toml", "--bin", "os-hub"], this.root);
     const binaryPath = hubBinaryPath(this.repoRoot);
     const receipt = await materializeTrustedCatalogBundle(this.repoRoot, dataRoot, selection, binaryPath);

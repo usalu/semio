@@ -323,22 +323,16 @@ mod cell_address {
 /// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
 /// reports as a passing test.
 ///
-/// `set-snapshot` writes the package its snapshot describes with the shared OPC engine
-/// (`semio_s_plugin_stdio_document_test_oracle::ooxml::write_snapshot_package`) — "the document becomes this snapshot", read back by `calamine`.
 /// `insert-shared-string`/`remove-shared-string`/`set-shared-string` do NOT go through
 /// `calamine`/`rust_xlsxwriter`: the raw pool those three address is invisible to the first's read
 /// model and unreachable by index through the second's write API. They go through the `zip` +
 /// `quick-xml` pairing instead (see the [`shared_strings`] module), which reads and rewrites
-/// `xl/sharedStrings.xml` as the OPC PART it is. `patch-snapshot` applies its one pointer operation to the shared OPC
-/// engine's own `{xmlParts}` reading of the package
-/// (`semio_s_plugin_stdio_document_test_oracle::ooxml::patched_xml_parts`), and the result is read back by `calamine`.
+/// `xl/sharedStrings.xml` as the OPC PART it is.
 #[cfg(feature = "oracles")]
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = mutation_params(spec);
     match spec.str("kind").as_str() {
         "" => Err("mutation spec carries no `kind`".to_string()),
-        "set-snapshot" => semio_s_plugin_stdio_document_test_oracle::ooxml::write_snapshot_package(params.get("snapshot").ok_or("set-snapshot: missing `snapshot`")?),
-        "patch-snapshot" => semio_s_plugin_stdio_document_test_oracle::ooxml::patched_xml_parts(input, semio_s_plugin_stdio_document_test_oracle::ooxml::XmlPartsShape::Tree, params.get("patch").ok_or("patch-snapshot: missing `patch`")?),
         "insert-sheet" => {
             let mut sheets = read_workbook_grid(input)?;
             sheets.push(sheet_of(params.get("sheet").ok_or("insert-sheet: missing `sheet`")?)?);
@@ -444,8 +438,7 @@ fn put_cell(sheets: &mut [GridSheet], sheet_name: &str, row: u32, col: u32, valu
 
 /// ↩️ Undoes `forward` on `mutated`, sourcing whatever it discarded from `original` (the package the forward kind ran on) —
 /// the algebra `XlsxMutation::inverse` defines, computed independently by the reference pairing. A cell address is
-/// lineage-bound to `original`, so it is resolved there and the undo applied to the rebuilt grid by coordinate; a
-/// `set-snapshot` or `patch-snapshot` is undone by rebuilding the original's own grid; the three pool kinds go through
+/// lineage-bound to `original`, so it is resolved there and the undo applied to the rebuilt grid by coordinate; the three pool kinds go through
 /// [`shared_string_inverse_spec`].
 #[cfg(feature = "oracles")]
 pub fn oracle_apply_inverse(original: &[u8], mutated: &[u8], forward: &Json) -> Result<Vec<u8>, String> {
@@ -459,7 +452,6 @@ pub fn oracle_apply_inverse(original: &[u8], mutated: &[u8], forward: &Json) -> 
         write_workbook_grid(&sheets)
     };
     match kind.as_str() {
-        "set-snapshot" | "patch-snapshot" => oracle_round_trip(original),
         "insert-sheet" => {
             let name = params.get("sheet").map(|sheet| string(sheet, "name")).unwrap_or_default();
             let mut sheets = read_workbook_grid(mutated)?;

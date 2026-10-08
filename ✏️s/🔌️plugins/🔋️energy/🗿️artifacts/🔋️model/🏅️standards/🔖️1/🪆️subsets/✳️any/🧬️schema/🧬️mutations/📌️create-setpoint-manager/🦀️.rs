@@ -21,6 +21,7 @@ pub struct CreateSetpointManager {
     pub high_setpoint_c: f64,
     pub schedule_present: bool,
     pub schedule_id: crate::model::ScheduleId,
+    pub index: Option<u32>,
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
@@ -34,8 +35,9 @@ pub fn create_setpoint_manager(
     high_setpoint_c: f64,
     schedule_present: bool,
     schedule_id: crate::model::ScheduleId,
+    index: Option<u32>,
 ) -> EnergyModelMutation {
-    EnergyModelMutation::CreateSetpointManager(CreateSetpointManager { id, name, kind, low_outdoor_c, high_outdoor_c, low_setpoint_c, high_setpoint_c, schedule_present, schedule_id })
+    EnergyModelMutation::CreateSetpointManager(CreateSetpointManager { id, name, kind, low_outdoor_c, high_outdoor_c, low_setpoint_c, high_setpoint_c, schedule_present, schedule_id, index })
 }
 
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for CreateSetpointManager {

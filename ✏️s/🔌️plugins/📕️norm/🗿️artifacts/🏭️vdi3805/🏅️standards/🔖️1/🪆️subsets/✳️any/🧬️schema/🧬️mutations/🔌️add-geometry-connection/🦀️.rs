@@ -12,6 +12,7 @@ use crate::{ConnectionPoint, Vdi3805Mutation, Vdi3805Snapshot};
 pub struct AddGeometryConnection {
     pub id: String,
     pub connection: ConnectionPoint,
+    pub index: Option<usize>,
 }
 
 impl protocol::MutationKind<Vdi3805Snapshot, Vdi3805Mutation> for AddGeometryConnection {

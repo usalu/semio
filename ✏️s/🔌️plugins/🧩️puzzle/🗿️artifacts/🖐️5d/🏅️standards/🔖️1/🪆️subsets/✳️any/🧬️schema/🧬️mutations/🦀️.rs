@@ -11,7 +11,7 @@
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
 use crate::Puzzle5dSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::{DiffAlgebra, Mutation, MutationDiff};
 use serde_json::Value;
 
 //#region 🔖️Mutations
@@ -169,24 +169,23 @@ pub use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::mutatio
 /// one world metre (the board's own default part box, `part_2d.width`/`height`).
 pub const PUZZLE5D_FLAT_TO_WORLD: f64 = 1.0 / 48.0;
 
-/// 🧭️ Shared diff of the four parametric selection leaves. `targets` is classified by document membership
-/// against `base`: a part id goes through `part` (its board projection for a 2d leaf, its world projection for
-/// a 3d one), a target-volume id through `volume` (`None` for the board, which paints no volume), each record
-/// transformed IN PLACE. An empty or repeated target set is the Fatal `mutation.invariant` the payload schema's
-/// `minItems`/`uniqueItems` forbid. Absent ids, locked records (a part's `2d.locked`) and records the leaf does
-/// not reach are skipped with one `mutation.partial` warning per reason (in that order, ids in payload order);
-/// nothing left is `mutation.target-missing`; an `identity` transform, or survivors that do not move, is
-/// `mutation.no-op`. Every moved record is patched whole from the base, in document order.
-pub fn puzzle5d_selection_diff(
-    base: &Puzzle5dSnapshot,
-    targets: &[String],
-    identity: bool,
-    part: impl Fn(&crate::Puzzle5dPart) -> crate::Puzzle5dPart,
-    volume: Option<&dyn Fn(&crate::Puzzle5dTargetVolume) -> crate::Puzzle5dTargetVolume>,
-) -> protocol::MutationOutcome<Puzzle5dDiff> {
-    use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dPartPatch, Puzzle5dPartPatchEntry, Puzzle5dPartsDelta, Puzzle5dTargetVolumePatch, Puzzle5dTargetVolumePatchEntry, Puzzle5dTargetVolumesDelta};
+/// 🧭️ The members of a parametric selection leaf's target set the transform acts on, in document order, with the
+/// `mutation.partial` warnings of the ones it skips. `targets` is classified by document membership against `base`: a
+/// part id goes through `parts` (its board projection for a 2d leaf, its world projection for a 3d one), a
+/// target-volume id through `volumes` (none for the board, which paints no volume), each record transformed IN PLACE.
+/// An empty or repeated target set is the Fatal `mutation.invariant` the payload schema's `minItems`/`uniqueItems`
+/// forbid. Absent ids, locked records (a part's `2d.locked`) and records the leaf does not reach are skipped with one
+/// warning per reason (in that order, ids in payload order); nothing left is `mutation.target-missing`.
+pub struct Puzzle5dSelection<'a> {
+    pub parts: Vec<&'a crate::Puzzle5dPart>,
+    pub volumes: Vec<&'a crate::Puzzle5dTargetVolume>,
+    pub warnings: Vec<protocol::MutationMessage>,
+}
+
+/// 🗃️ Classifies a selection leaf's `targets` against `base`; `Err` is the leaf's final refusal outcome.
+pub fn puzzle5d_selection<'a>(base: &'a Puzzle5dSnapshot, targets: &[String], volumes_reached: bool) -> Result<Puzzle5dSelection<'a>, protocol::MutationOutcome<Puzzle5dDiff>> {
     if let Err(reason) = puzzle5d_targets_invariant(targets) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
+        return Err(protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec()));
     }
     let (mut missing, mut locked, mut unreached, mut survivors) = (Vec::<String>::new(), Vec::<String>::new(), Vec::<String>::new(), std::collections::BTreeSet::<&str>::new());
     for id in targets {
@@ -196,7 +195,7 @@ pub fn puzzle5d_selection_diff(
             }
             (Some(_), _) => locked.push(id.clone()),
             (None, Some(entry)) if entry.locked => locked.push(id.clone()),
-            (None, Some(_)) if volume.is_none() => unreached.push(id.clone()),
+            (None, Some(_)) if !volumes_reached => unreached.push(id.clone()),
             (None, Some(_)) => {
                 survivors.insert(id.as_str());
             }
@@ -204,75 +203,38 @@ pub fn puzzle5d_selection_diff(
         }
     }
     if survivors.is_empty() {
-        return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is an unlocked part or target volume this transform reaches", targets.len()), targets.to_vec());
+        return Err(protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is an unlocked part or target volume this transform reaches", targets.len()), targets.to_vec()));
     }
-    let partial: Vec<protocol::MutationMessage> = [(missing, "not in this puzzle"), (locked, "locked"), (unreached, "target volumes live in the world, not on the board")]
+    let warnings = [(missing, "not in this puzzle"), (locked, "locked"), (unreached, "target volumes live in the world, not on the board")]
         .into_iter()
         .filter(|(ids, _)| !ids.is_empty())
         .map(|(ids, reason)| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", ids.len(), targets.len(), ids.join(", "))).at(ids))
         .collect();
-    let parts: Vec<Puzzle5dPartPatchEntry> = if identity {
-        Vec::new()
-    } else {
-        base.parts.iter().filter(|entry| survivors.contains(entry.id.as_str())).filter_map(|entry| Some(part(entry)).filter(|next| next != entry).map(|next| Puzzle5dPartPatchEntry { id: entry.id.clone(), patch: Puzzle5dPartPatch { replacement: Some(next) } })).collect()
-    };
-    let volumes: Vec<Puzzle5dTargetVolumePatchEntry> = match volume.filter(|_| !identity) {
-        Some(transform) => base
-            .target_volumes
-            .iter()
-            .filter(|entry| survivors.contains(entry.id.as_str()))
-            .filter_map(|entry| Some(transform(entry)).filter(|next| next != entry).map(|next| Puzzle5dTargetVolumePatchEntry { id: entry.id.clone(), patch: Puzzle5dTargetVolumePatch { replacement: Some(next) } }))
-            .collect(),
-        None => Vec::new(),
-    };
+    Ok(Puzzle5dSelection {
+        parts: base.parts.iter().filter(|entry| survivors.contains(entry.id.as_str())).collect(),
+        volumes: base.target_volumes.iter().filter(|entry| volumes_reached && survivors.contains(entry.id.as_str())).collect(),
+        warnings,
+    })
+}
+
+/// 📦️ The outcome of a selection leaf's per-member patches: the sparse diff plus the classification warnings, or the
+/// `mutation.no-op` warning (after them) when no surviving member changes.
+pub fn puzzle5d_selection_outcome(
+    selection: Puzzle5dSelection<'_>,
+    targets: &[String],
+    parts: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle5dPartPatchEntry>,
+    volumes: Vec<crate::standards::v1::subsets::any::schema::diff::Puzzle5dTargetVolumePatchEntry>,
+) -> protocol::MutationOutcome<Puzzle5dDiff> {
+    use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dPartsDelta, Puzzle5dTargetVolumesDelta};
     if parts.is_empty() && volumes.is_empty() {
-        return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(targets.to_vec())]));
+        return protocol::MutationOutcome::new(Puzzle5dDiff::default()).absorb_messages(selection.warnings.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no changes to apply").at(targets.to_vec())]));
     }
     protocol::MutationOutcome::new(Puzzle5dDiff {
         parts: (!parts.is_empty()).then(|| Puzzle5dPartsDelta { patched: parts, ..Default::default() }),
         target_volumes: (!volumes.is_empty()).then(|| Puzzle5dTargetVolumesDelta { patched: volumes, ..Default::default() }),
         ..Default::default()
     })
-    .absorb_messages(partial)
-}
-
-/// ↩️ Exact base-derived inverse of a selection transform: the absolute setters restoring every pose field its
-/// forward `outcome` changes — a part's board position, its world origin, orientation and scale, a target
-/// volume's origin, orientation and scale — so an undo never accumulates float error.
-pub fn puzzle5d_selection_inverse(base: &Puzzle5dSnapshot, outcome: protocol::MutationOutcome<Puzzle5dDiff>) -> Result<Vec<Puzzle5dMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    let (diff, _) = outcome.into_parts();
-    let mut steps = Vec::new();
-    for entry in diff.parts.iter().flat_map(|delta| &delta.patched) {
-        let (Some(before), Some(after)) = (base.parts.iter().find(|part| part.id == entry.id), entry.patch.replacement.as_ref()) else { continue };
-        if (before.part_2d.x, before.part_2d.y) != (after.part_2d.x, after.part_2d.y) {
-            steps.push(move_part_2d(before.id.clone(), before.part_2d.x, before.part_2d.y));
-        }
-        if before.part_3d.origin != after.part_3d.origin {
-            steps.push(move_part_3d(before.id.clone(), before.part_3d.origin));
-        }
-        if before.part_3d.orientation != after.part_3d.orientation {
-            steps.push(rotate_part_3d(before.id.clone(), before.part_3d.orientation));
-        }
-        if before.part_3d.scale != after.part_3d.scale {
-            steps.push(scale_part_3d(before.id.clone(), before.part_3d.scale));
-        }
-    }
-    for entry in diff.target_volumes.iter().flat_map(|delta| &delta.patched) {
-        let (Some(before), Some(after)) = (base.target_volumes.iter().find(|volume| volume.id == entry.id), entry.patch.replacement.as_ref()) else { continue };
-        if before.origin != after.origin {
-            steps.push(move_target_volume(before.id.clone(), before.origin));
-        }
-        if before.orientation != after.orientation {
-            steps.push(rotate_target_volume(before.id.clone(), before.orientation));
-        }
-        if before.scale != after.scale {
-            steps.push(scale_target_volume(before.id.clone(), before.scale));
-        }
-    }
-    steps
-
-    })())
+    .absorb_messages(selection.warnings)
 }
 
 /// 📏️ A pose scale multiplied per axis by `factors`, always as a per-axis triple: a uniform scalar broadcasts
@@ -374,7 +336,7 @@ pub fn puzzle5d_snapshot_mutations(before: &Puzzle5dSnapshot, after: &Puzzle5dSn
                 fastener.turn,
                 fastener.tilt,
                 fastener.x,
-                fastener.y,
+                fastener.y, None,
             )),
             Some(prior) if prior.source != fastener.source || prior.target != fastener.target => {
                 mutations.push(disconnect_grips(fastener.id.clone()));
@@ -390,7 +352,7 @@ pub fn puzzle5d_snapshot_mutations(before: &Puzzle5dSnapshot, after: &Puzzle5dSn
                     fastener.turn,
                     fastener.tilt,
                     fastener.x,
-                    fastener.y,
+                    fastener.y, None,
                 ));
             }
             Some(prior) => {
@@ -454,10 +416,10 @@ pub fn puzzle5d_snapshot_mutations(before: &Puzzle5dSnapshot, after: &Puzzle5dSn
     }
     for row in &after.kind_compatibility {
         match before.kind_compatibility.iter().find(|entry| entry.source == row.source && entry.target == row.target) {
-            None => mutations.push(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity)),
+            None => mutations.push(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, None)),
             Some(prior) if prior != row => {
                 mutations.push(disconnect_kind_compatibility(row.source.clone(), row.target.clone()));
-                mutations.push(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity));
+                mutations.push(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, None));
             }
             Some(_) => {}
         }
@@ -523,7 +485,7 @@ fn normalize_kind_catalogs_for_snapshot_value(value: &Value) -> Value {
 }
 
 impl MutationDiff<Value> for Puzzle5dDiff {
-    fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
+    fn apply(&self, projection: &Value, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Value> {
         // 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: routes
         // through `dsl::DslValue`/`dsl::ToValue`/`dsl::FromValue` instead of
         // `serde_json::from_value`/`to_value` on `Puzzle5dSnapshot` directly — that type only
@@ -531,11 +493,26 @@ impl MutationDiff<Value> for Puzzle5dDiff {
         // boundary type) and `normalize_kind_catalogs_for_snapshot_value` are untouched — this
         // call did not route through that helper before this change either, preserved as-is.
         let base: Puzzle5dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(projection)).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"]))?;
-        let next = MutationDiff::<Puzzle5dSnapshot>::apply(self, &base).map_err(|error| error.under(["document"]))?;
+        let next = MutationDiff::<Puzzle5dSnapshot>::apply(self, &base, capability).map_err(|error| error.under(["document"]))?;
         Ok(Value::from(semio_framework_value::ToValue::to_value(&next)))
     }
     fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle5dSnapshot>::absorb(self, other);
+    }
+}
+
+impl DiffAlgebra<Value> for Puzzle5dDiff {
+    fn inverse(&self, base: &Value) -> Self {
+        let base: Puzzle5dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(base)).unwrap_or_default();
+        DiffAlgebra::<Puzzle5dSnapshot>::inverse(self, &base)
+    }
+    fn between(base: &Value, other: &Value) -> Self {
+        let base: Puzzle5dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(base)).unwrap_or_default();
+        let other: Puzzle5dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(other)).unwrap_or_default();
+        <Self as DiffAlgebra<Puzzle5dSnapshot>>::between(&base, &other)
+    }
+    fn is_empty(&self) -> bool {
+        DiffAlgebra::<Puzzle5dSnapshot>::is_empty(self)
     }
 }
 
@@ -703,11 +680,23 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for Puzzle5dP
 
 
 impl MutationDiff<Puzzle5dPlaySnapshot> for Puzzle5dDiff {
-    fn apply(&self, projection: &Puzzle5dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle5dPlaySnapshot> {
-        MutationDiff::<Puzzle5dSnapshot>::apply(self, projection.typed()).map(Puzzle5dPlaySnapshot::from_typed).map_err(|error| error.under(["document"]))
+    fn apply(&self, projection: &Puzzle5dPlaySnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle5dPlaySnapshot> {
+        MutationDiff::<Puzzle5dSnapshot>::apply(self, projection.typed(), capability).map(Puzzle5dPlaySnapshot::from_typed).map_err(|error| error.under(["document"]))
     }
     fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle5dSnapshot>::absorb(self, other);
+    }
+}
+
+impl DiffAlgebra<Puzzle5dPlaySnapshot> for Puzzle5dDiff {
+    fn inverse(&self, base: &Puzzle5dPlaySnapshot) -> Self {
+        DiffAlgebra::<Puzzle5dSnapshot>::inverse(self, base.typed())
+    }
+    fn between(base: &Puzzle5dPlaySnapshot, other: &Puzzle5dPlaySnapshot) -> Self {
+        <Self as DiffAlgebra<Puzzle5dSnapshot>>::between(base.typed(), other.typed())
+    }
+    fn is_empty(&self) -> bool {
+        DiffAlgebra::<Puzzle5dSnapshot>::is_empty(self)
     }
 }
 

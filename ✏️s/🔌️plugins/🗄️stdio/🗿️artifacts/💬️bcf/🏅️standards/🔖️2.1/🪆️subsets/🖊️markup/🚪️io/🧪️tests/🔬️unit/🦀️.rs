@@ -1,7 +1,7 @@
 use super::*;
 use crate::schema::diff::BcfDiff;
 use crate::schema::mutations::{
-    apply_bcf_mutation, insert_comment, insert_topic, insert_viewpoint, remove_comment, remove_topic, remove_viewpoint, set_comment, set_snapshot, set_topic_markup, set_version, set_viewpoint_camera, set_viewpoint_components, set_viewpoint_snapshot,
+    apply_bcf_mutation, insert_comment, insert_topic, insert_viewpoint, remove_comment, remove_topic, remove_viewpoint, set_comment, set_topic_markup, set_version, set_viewpoint_camera, set_viewpoint_components, set_viewpoint_snapshot,
     BcfMutation,
 };
 use crate::standards::v2_1::subsets::any::schema::snapshot::{demo_bcf_snapshot, empty_bcf_snapshot};
@@ -182,7 +182,7 @@ async fn mutation_diff_law() {
     let base = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
     let mutations = vec![
         BcfMutation::SetVersion(set_version::SetVersion { version: "2.2".into() }),
-        BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t2") }),
+        BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t2"), index: None }),
         BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: "t1".into() }),
         BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup {
             guid: "t1".into(),
@@ -194,10 +194,10 @@ async fn mutation_diff_law() {
             creation_date: None,
             creation_author: None,
         }),
-        BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "t1".into(), comment: sample_comment("c2", None) }),
+        BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "t1".into(), comment: sample_comment("c2", None), index: None }),
         BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid: "t1".into(), guid: "c1".into() }),
         BcfMutation::SetComment(set_comment::SetComment { topic_guid: "t1".into(), guid: "c1".into(), date: None, author: None, text: Some("Updated".into()), viewpoint_ref: Some(None) }),
-        BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: "t1".into(), viewpoint: sample_viewpoint("vp2") }),
+        BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: "t1".into(), viewpoint: sample_viewpoint("vp2"), index: None }),
         BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() }),
         BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(orthogonal_camera()) }),
         BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid: "t1".into(), guid: "vp1".into(), components: None }),
@@ -208,7 +208,7 @@ async fn mutation_diff_law() {
         let returned = apply_bcf_mutation(&mut snap, &m);
         let expected_diff = m.diff(&base);
         assert_eq!(returned, expected_diff, "returned diff mismatch for {m:?}");
-        assert_eq!(snap, expected_diff.diff().apply(&base).expect("diff must apply to base"), "apply mismatch for {m:?}");
+        assert_eq!(snap, protocol::apply_diff(expected_diff.diff(), &base).expect("diff must apply to base"), "apply mismatch for {m:?}");
     }
 }
 //#endregion
@@ -221,13 +221,13 @@ async fn inverse_law() {
     let base = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
     let mutations = vec![
         BcfMutation::SetVersion(set_version::SetVersion { version: "2.2".into() }),
-        BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t2") }),
+        BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t2"), index: None }),
         BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: "t1".into() }),
         BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup { guid: "t1".into(), title: Some("Renamed".into()), description: Some("New desc".into()), status: None, priority: None, labels: None, creation_date: None, creation_author: None }),
-        BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "t1".into(), comment: sample_comment("c2", None) }),
+        BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "t1".into(), comment: sample_comment("c2", None), index: None }),
         BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid: "t1".into(), guid: "c1".into() }),
         BcfMutation::SetComment(set_comment::SetComment { topic_guid: "t1".into(), guid: "c1".into(), date: Some("2025-01-01T00:00:00+00:00".into()), author: None, text: None, viewpoint_ref: None }),
-        BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: "t1".into(), viewpoint: sample_viewpoint("vp2") }),
+        BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: "t1".into(), viewpoint: sample_viewpoint("vp2"), index: None }),
         BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() }),
         BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: None }),
         BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid: "t1".into(), guid: "vp1".into(), components: Some(sample_components()) }),
@@ -243,9 +243,9 @@ async fn inverse_law() {
         }
 
         let d = m.diff(&base);
-        let after = d.diff().apply(&base).expect("diff must apply to base");
+        let after = protocol::apply_diff(d.diff(), &base).expect("diff must apply to base");
         let d_inv = d.diff().inverse(&base);
-        assert_eq!(d_inv.apply(&after).expect("inverse diff must apply to after"), base, "diff-level inverse mismatch for {m:?}");
+        assert_eq!(protocol::apply_diff(&d_inv, &after).expect("inverse diff must apply to after"), base, "diff-level inverse mismatch for {m:?}");
     }
 }
 //#endregion
@@ -261,42 +261,42 @@ async fn absorb_law() {
 
     // Insert+Remove-before: insert t2, then remove t1 -- both survive independently (name-keyed,
     // no interaction), net effect must match sequential application.
-    let d1 = BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t2") }).diff(&base);
-    let mid = d1.diff().apply(&base).expect("d1 must apply to base");
+    let d1 = BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t2"), index: None }).diff(&base);
+    let mid = protocol::apply_diff(d1.diff(), &base).expect("d1 must apply to base");
     let d2 = BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: "t1".into() }).diff(&mid);
     assert_absorb_matches_sequential(&base, d1.clone(), d2.clone());
 
     // Add+SetField: insert a comment, then immediately edit that SAME comment -- the edit must
     // patch into the carried `added` payload, not become a dangling `modified` entry.
     let comment = sample_comment("c9", None);
-    let d1 = BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "t1".into(), comment: comment.clone() }).diff(&base);
-    let mid = d1.diff().apply(&base).expect("d1 must apply to base");
+    let d1 = BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "t1".into(), comment: comment.clone(), index: None }).diff(&base);
+    let mid = protocol::apply_diff(d1.diff(), &base).expect("d1 must apply to base");
     let d2 = BcfMutation::SetComment(set_comment::SetComment { topic_guid: "t1".into(), guid: "c9".into(), date: None, author: None, text: Some("edited after insert".into()), viewpoint_ref: None }).diff(&mid);
     let absorbed = assert_absorb_matches_sequential(&base, d1, d2);
     let topics_diff = absorbed.topics.as_ref().expect("topics diff");
-    let t1_diff = &topics_diff.modified.iter().find(|m| m.key == "t1").expect("t1 modified").diff;
+    let t1_diff = &topics_diff.modified.iter().find(|m| m.index == 0).expect("t1 modified").diff;
     let comments_diff = t1_diff.comments.as_ref().expect("comments diff");
     assert!(comments_diff.modified.is_empty(), "edit-after-insert must patch into added, not appear as modified");
-    let added_comment = comments_diff.added.iter().find(|c| c.guid == "c9").expect("c9 still in added");
-    assert_eq!(added_comment.text, "edited after insert");
+    let added_comment = comments_diff.added.iter().find(|c| c.item.guid == "c9").expect("c9 still in added");
+    assert_eq!(added_comment.item.text, "edited after insert");
 
     // Modify+Remove: edit a viewpoint's camera, then remove that same viewpoint -- must
     // annihilate to a plain removal, not a dangling modify+remove pair.
     let d1 = BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(orthogonal_camera()) }).diff(&base);
-    let mid = d1.diff().apply(&base).expect("d1 must apply to base");
+    let mid = protocol::apply_diff(d1.diff(), &base).expect("d1 must apply to base");
     let d2 = BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() }).diff(&mid);
     let absorbed = assert_absorb_matches_sequential(&base, d1, d2);
     let topics_diff = absorbed.topics.as_ref().expect("topics diff");
-    let t1_diff = &topics_diff.modified.iter().find(|m| m.key == "t1").expect("t1 modified").diff;
+    let t1_diff = &topics_diff.modified.iter().find(|m| m.index == 0).expect("t1 modified").diff;
     let viewpoints_diff = t1_diff.viewpoints.as_ref().expect("viewpoints diff");
-    assert_eq!(viewpoints_diff.removed, vec!["vp1".to_string()]);
+    assert_eq!(viewpoints_diff.removed, vec![0usize]);
     assert!(viewpoints_diff.modified.is_empty());
 
     // Associativity: absorb(absorb(d1,d2),d3) == absorb(d1,absorb(d2,d3)).
     let d1 = BcfMutation::SetVersion(set_version::SetVersion { version: "2.2".into() }).diff(&base);
-    let mid1 = d1.diff().apply(&base).expect("d1 must apply to base");
-    let d2 = BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t3") }).diff(&mid1);
-    let mid2 = d2.diff().apply(&mid1).expect("d2 must apply to mid1");
+    let mid1 = protocol::apply_diff(d1.diff(), &base).expect("d1 must apply to base");
+    let d2 = BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t3"), index: None }).diff(&mid1);
+    let mid2 = protocol::apply_diff(d2.diff(), &mid1).expect("d2 must apply to mid1");
     let d3 = BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup { guid: "t3".into(), title: Some("Renamed t3".into()), description: None, status: None, priority: None, labels: None, creation_date: None, creation_author: None }).diff(&mid2);
 
     let mut left = d1.diff().clone();
@@ -308,16 +308,16 @@ async fn absorb_law() {
     let mut right = d1.diff().clone();
     MutationDiff::absorb(&mut right, d2_d3);
 
-    assert_eq!(left.apply(&base).expect("left must apply to base"), right.apply(&base).expect("right must apply to base"), "absorb must be associative");
+    assert_eq!(protocol::apply_diff(&left, &base).expect("left must apply to base"), protocol::apply_diff(&right, &base).expect("right must apply to base"), "absorb must be associative");
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_absorb_matches_sequential(base: &BcfSnapshot, d1: protocol::MutationOutcome<BcfDiff>, d2: protocol::MutationOutcome<BcfDiff>) -> BcfDiff {
-    let mid = d1.diff().apply(base).expect("d1 must apply to base");
-    let sequential = d2.diff().apply(&mid).expect("d2 must apply to mid");
+    let mid = protocol::apply_diff(d1.diff(), base).expect("d1 must apply to base");
+    let sequential = protocol::apply_diff(d2.diff(), &mid).expect("d2 must apply to mid");
     let mut absorbed = d1.diff().clone();
     MutationDiff::absorb(&mut absorbed, d2.diff().clone());
-    assert_eq!(absorbed.apply(base).expect("absorbed diff must apply to base"), sequential, "absorb(d1,d2).apply(base) must equal sequential application");
+    assert_eq!(protocol::apply_diff(&absorbed, base).expect("absorbed diff must apply to base"), sequential, "absorb(d1,d2).apply(base) must equal sequential application");
     absorbed
 }
 //#endregion
@@ -335,9 +335,9 @@ async fn between_roundtrip_law() {
     b.parts.push(BcfRawPart { name: "extra.txt".into(), data: b"stray".to_vec() });
 
     let d = BcfDiff::between(&a, &b);
-    assert_eq!(d.apply(&a).expect("d must apply to a"), b);
+    assert_eq!(protocol::apply_diff(&d, &a).expect("d must apply to a"), b);
     let d_back = BcfDiff::between(&b, &a);
-    assert_eq!(d_back.apply(&b).expect("d_back must apply to b"), a);
+    assert_eq!(protocol::apply_diff(&d_back, &b).expect("d_back must apply to b"), a);
     assert!(BcfDiff::between(&a, &a).is_empty());
 }
 //#endregion
@@ -357,8 +357,8 @@ async fn codec_retention_law() {
 
 //#region 🧪️Law6_FieldSweep
 /// ⚖️ Law 6 — `field_sweep` (the acceptance criterion): `sweep_a`/`sweep_b` differ in EVERY
-/// mutable field, incl. per guid-keyed collection one removed/one modified-in-every-field/one
-/// added, and every tri-state field exercising `Some(None)`.
+/// mutable field, incl. per index-keyed collection one removed (forward) / added (backward) tail row and one
+/// modified-in-every-field row, and every tri-state field exercising `Some(None)`.
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sweep_a() -> BcfSnapshot {
     BcfSnapshot {
@@ -374,14 +374,6 @@ fn sweep_a() -> BcfSnapshot {
                 labels: vec!["before".into()],
                 creation_date: "2024-01-01T00:00:00+00:00".into(),
                 creation_author: "a@example.com".into(),
-                // 🩹 Comment/viewpoint order here is deliberate, not arbitrary: `apply_named`
-                // reconstructs a collection as "surviving items in THIS snapshot's original
-                // relative order, then added items appended" (docx's own `f4-docx-report.md`
-                // §5 documents the identical order-sensitivity gotcha for its `overrides`
-                // list). `between(b,a).apply(b)` must reproduce `a`'s exact order, so the
-                // survivor (`c-keep`/`vp-keep`) is listed FIRST here, matching where it sits
-                // in `sweep_b` below -- otherwise the law would spuriously "fail" on order
-                // alone despite every field being correct.
                 comments: vec![
                     BcfComment { guid: "c-keep".into(), date: "2024-01-01T00:00:00+00:00".into(), author: "a@example.com".into(), text: "before text".into(), viewpoint_ref: Some("vp-remove".into()) },
                     BcfComment { guid: "c-remove".into(), date: "2024-01-01T00:00:00+00:00".into(), author: "a@example.com".into(), text: "will be removed".into(), viewpoint_ref: Some("vp-keep".into()) },
@@ -404,7 +396,6 @@ fn sweep_a() -> BcfSnapshot {
                 viewpoints: Vec::new(),
             },
         ],
-        // 🩹 Same order-sensitivity as above: `part-keep.txt` (the survivor) listed first.
         parts: vec![BcfRawPart { name: "part-keep.txt".into(), data: b"before".to_vec() }, BcfRawPart { name: "part-remove.txt".into(), data: b"gone".to_vec() }],
     }
 }
@@ -426,27 +417,13 @@ fn sweep_b() -> BcfSnapshot {
                 creation_author: "b@example.com".into(),
                 comments: vec![
                     BcfComment { guid: "c-keep".into(), date: "2024-02-02T00:00:00+00:00".into(), author: "b@example.com".into(), text: "after text".into(), viewpoint_ref: None },
-                    BcfComment { guid: "c-add".into(), date: "2024-02-02T00:00:00+00:00".into(), author: "b@example.com".into(), text: "newly added".into(), viewpoint_ref: Some("vp-keep".into()) },
                 ],
                 viewpoints: vec![
                     BcfViewpoint { guid: "vp-keep".into(), camera: Some(orthogonal_camera()), components: None, snapshot: None },
-                    BcfViewpoint { guid: "vp-add".into(), camera: None, components: Some(sample_components()), snapshot: Some(vec![9]) },
                 ],
             },
-            BcfTopic {
-                guid: "topic-add".into(),
-                title: "Freshly added".into(),
-                description: "added desc".into(),
-                status: "Open".into(),
-                priority: "Medium".into(),
-                labels: vec!["fresh".into()],
-                creation_date: "2024-03-03T00:00:00+00:00".into(),
-                creation_author: "c@example.com".into(),
-                comments: Vec::new(),
-                viewpoints: Vec::new(),
-            },
         ],
-        parts: vec![BcfRawPart { name: "part-keep.txt".into(), data: b"after".to_vec() }, BcfRawPart { name: "part-add.txt".into(), data: b"new".to_vec() }],
+        parts: vec![BcfRawPart { name: "part-keep.txt".into(), data: b"after".to_vec() }],
     }
 }
 
@@ -456,17 +433,16 @@ async fn field_sweep() {
     let b = sweep_b();
 
     let forward = BcfDiff::between(&a, &b);
-    assert_eq!(forward.apply(&a).expect("forward must apply to a"), b, "between(a,b).apply(a) must equal b");
+    assert_eq!(protocol::apply_diff(&forward, &a).expect("forward must apply to a"), b, "between(a,b).apply(a) must equal b");
     let backward = BcfDiff::between(&b, &a);
-    assert_eq!(backward.apply(&b).expect("backward must apply to b"), a, "between(b,a).apply(b) must equal a");
+    assert_eq!(protocol::apply_diff(&backward, &b).expect("backward must apply to b"), a, "between(b,a).apply(b) must equal a");
     assert!(BcfDiff::between(&a, &a).is_empty(), "between(a,a) must be empty");
 
     // Every top-level field patched.
     assert!(forward.version.is_some(), "version field not swept");
     let topics_diff = forward.topics.as_ref().expect("topics diff present");
     assert!(!topics_diff.removed.is_empty(), "topics.removed not swept");
-    assert!(!topics_diff.added.is_empty(), "topics.added not swept");
-    let keep_diff = &topics_diff.modified.iter().find(|m| m.key == "keep").expect("keep topic modified").diff;
+    let keep_diff = &topics_diff.modified.iter().find(|m| m.index == 0).expect("keep topic modified").diff;
 
     // Every scalar field on the modified topic patched.
     assert!(keep_diff.title.is_some(), "topic.title not swept");
@@ -479,8 +455,7 @@ async fn field_sweep() {
 
     let comments_diff = keep_diff.comments.as_ref().expect("comments diff present");
     assert!(!comments_diff.removed.is_empty(), "comments.removed not swept");
-    assert!(!comments_diff.added.is_empty(), "comments.added not swept");
-    let kept_comment_diff = &comments_diff.modified.iter().find(|m| m.key == "c-keep").expect("c-keep modified").diff;
+    let kept_comment_diff = &comments_diff.modified.iter().find(|m| m.index == 0).expect("c-keep modified").diff;
     assert!(kept_comment_diff.date.is_some());
     assert!(kept_comment_diff.author.is_some());
     assert!(kept_comment_diff.text.is_some());
@@ -488,17 +463,22 @@ async fn field_sweep() {
 
     let viewpoints_diff = keep_diff.viewpoints.as_ref().expect("viewpoints diff present");
     assert!(!viewpoints_diff.removed.is_empty(), "viewpoints.removed not swept");
-    assert!(!viewpoints_diff.added.is_empty(), "viewpoints.added not swept");
-    let kept_vp_diff = &viewpoints_diff.modified.iter().find(|m| m.key == "vp-keep").expect("vp-keep modified").diff;
+    let kept_vp_diff = &viewpoints_diff.modified.iter().find(|m| m.index == 0).expect("vp-keep modified").diff;
     assert!(kept_vp_diff.camera.is_some(), "viewpoint.camera not swept");
     assert_eq!(kept_vp_diff.components, Some(None), "viewpoint.components tri-state Some(None) not swept");
     assert_eq!(kept_vp_diff.snapshot, Some(None), "viewpoint.snapshot tri-state Some(None) not swept");
 
     let parts_diff = forward.parts.as_ref().expect("parts diff present");
     assert!(!parts_diff.removed.is_empty(), "parts.removed not swept");
-    assert!(!parts_diff.added.is_empty(), "parts.added not swept");
-    let kept_part_diff = &parts_diff.modified.iter().find(|m| m.key == "part-keep.txt").expect("part-keep modified").diff;
+    let kept_part_diff = &parts_diff.modified.iter().find(|m| m.index == 0).expect("part-keep modified").diff;
     assert!(kept_part_diff.data.is_some(), "part.data not swept");
+
+    let grown = backward.topics.as_ref().expect("backward topics diff present");
+    assert!(!grown.added.is_empty(), "topics.added not swept");
+    let grown_topic = grown.modified.iter().find(|m| m.index == 0).expect("keep topic modified backward");
+    assert!(grown_topic.diff.comments.as_ref().is_some_and(|d| !d.added.is_empty()), "comments.added not swept");
+    assert!(grown_topic.diff.viewpoints.as_ref().is_some_and(|d| !d.added.is_empty()), "viewpoints.added not swept");
+    assert!(backward.parts.as_ref().is_some_and(|d| !d.added.is_empty()), "parts.added not swept");
 }
 //#endregion
 
@@ -511,9 +491,8 @@ async fn field_sweep() {
 #[semio_framework_async_macros::async_test]
 async fn op_text_binary_roundtrip_law() {
     let mutations = vec![
-        BcfMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: sample_snapshot() }),
         BcfMutation::SetVersion(set_version::SetVersion { version: "2.2".into() }),
-        BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t2") }),
+        BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t2"), index: None }),
         BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: "t1".into() }),
         BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup {
             guid: "t1".into(),
@@ -525,11 +504,11 @@ async fn op_text_binary_roundtrip_law() {
             creation_date: None,
             creation_author: None,
         }),
-        BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "t1".into(), comment: sample_comment("c2", Some("vp1")) }),
+        BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "t1".into(), comment: sample_comment("c2", Some("vp1")), index: None }),
         BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid: "t1".into(), guid: "c1".into() }),
         BcfMutation::SetComment(set_comment::SetComment { topic_guid: "t1".into(), guid: "c1".into(), date: None, author: None, text: Some("Updated".into()), viewpoint_ref: Some(None) }),
         BcfMutation::SetComment(set_comment::SetComment { topic_guid: "t1".into(), guid: "c1".into(), date: Some("2025-01-01T00:00:00+00:00".into()), author: Some("a@example.com".into()), text: None, viewpoint_ref: Some(Some("vp2".into())) }),
-        BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: "t1".into(), viewpoint: sample_viewpoint("vp2") }),
+        BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: "t1".into(), viewpoint: sample_viewpoint("vp2"), index: None }),
         BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: "t1".into(), guid: "vp1".into() }),
         BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(perspective_camera()) }),
         BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "t1".into(), guid: "vp1".into(), camera: Some(orthogonal_camera()) }),
@@ -691,3 +670,32 @@ mod conformance_laws {
 
 }
 //#endregion 🔖️ConformanceLaws
+
+/// ⚖️ `bcf_mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff; every ordered
+/// collection is exercised with a MIDDLE row so the inverse must restore the original position, not append.
+#[semio_framework_async_macros::async_test]
+async fn bcf_mutation_inverse_sum_law_holds_for_every_leaf() {
+    let mut base = sample_snapshot();
+    let mut middle = sample_topic("t2");
+    middle.comments = vec![sample_comment("c1", None), sample_comment("c2", Some("vp1")), sample_comment("c3", None)];
+    middle.viewpoints = vec![sample_viewpoint("vp1"), sample_viewpoint("vp2"), sample_viewpoint("vp3")];
+    base.topics.push(middle);
+    base.topics.push(sample_topic("t3"));
+    for mutation in [
+        BcfMutation::SetVersion(set_version::SetVersion { version: "2.2".into() }),
+        BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t9"), index: None }),
+        BcfMutation::InsertTopic(insert_topic::InsertTopic { topic: sample_topic("t9"), index: Some(1) }),
+        BcfMutation::RemoveTopic(remove_topic::RemoveTopic { guid: "t2".into() }),
+        BcfMutation::SetTopicMarkup(set_topic_markup::SetTopicMarkup { guid: "t2".into(), title: Some("Renamed".into()), description: None, status: Some("Closed".into()), priority: None, labels: Some(vec!["Only".into()]), creation_date: None, creation_author: None }),
+        BcfMutation::InsertComment(insert_comment::InsertComment { topic_guid: "t2".into(), comment: sample_comment("c9", None), index: Some(1) }),
+        BcfMutation::RemoveComment(remove_comment::RemoveComment { topic_guid: "t2".into(), guid: "c2".into() }),
+        BcfMutation::SetComment(set_comment::SetComment { topic_guid: "t2".into(), guid: "c2".into(), date: None, author: Some("b@example.com".into()), text: Some("Edited".into()), viewpoint_ref: Some(None) }),
+        BcfMutation::InsertViewpoint(insert_viewpoint::InsertViewpoint { topic_guid: "t2".into(), viewpoint: sample_viewpoint("vp9"), index: Some(2) }),
+        BcfMutation::RemoveViewpoint(remove_viewpoint::RemoveViewpoint { topic_guid: "t2".into(), guid: "vp2".into() }),
+        BcfMutation::SetViewpointCamera(set_viewpoint_camera::SetViewpointCamera { topic_guid: "t2".into(), guid: "vp2".into(), camera: Some(orthogonal_camera()) }),
+        BcfMutation::SetViewpointComponents(set_viewpoint_components::SetViewpointComponents { topic_guid: "t2".into(), guid: "vp2".into(), components: None }),
+        BcfMutation::SetViewpointSnapshot(set_viewpoint_snapshot::SetViewpointSnapshot { topic_guid: "t2".into(), guid: "vp2".into(), snapshot: Some(vec![1, 2]) }),
+    ] {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+}

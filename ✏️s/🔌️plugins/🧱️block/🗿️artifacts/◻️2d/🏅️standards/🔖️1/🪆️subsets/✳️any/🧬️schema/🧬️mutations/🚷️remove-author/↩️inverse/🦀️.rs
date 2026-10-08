@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::any::schema::mutations::Block2dMutation;
 pub fn inverse(payload: &super::RemoveAuthor, base: &Block2dSnapshot) -> Result<Vec<Block2dMutation>, semio_framework_value::ValueError> {
     Ok((|| {
     match base.authors.iter().find(|author| author.id == payload.id) {
-        Some(existing) => vec![super::super::add_author::add_author(existing.clone())],
+        Some((position, existing)) => vec![super::super::add_author::add_author_at(existing.clone(), position as u32)],
         None => Vec::new(),
     }
 

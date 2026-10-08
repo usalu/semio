@@ -4,7 +4,7 @@ use crate::schema::mutations::JpgMutation;
 use crate::schema::snapshot::*;
 
 //#region Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ReplacePixelsMutation {
@@ -23,15 +23,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ReplacePixelsMutation 
         protocol::MutationOutcome::new(contribute(base, pixels.clone()))
     }
     fn inverse(&self, base: &JpgSnapshot) -> Result<Vec<JpgMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<JpgSnapshot, JpgMutation>>::diff(self, base);
-        if <JpgDiff as protocol::DiffAlgebra<JpgSnapshot>>::is_empty(outcome.diff()) {
-            return Vec::new();
-        }
-        vec![JpgMutation::ReplacePixels(ReplacePixelsMutation { pixels: base.pixels.clone() })]
-    
-    })())
-}
+        Ok((base.image.pixels != self.pixels).then(|| JpgMutation::ReplacePixels(ReplacePixelsMutation { pixels: base.image.pixels.clone() })).into_iter().collect())
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Replace pixels", "Pixel ersetzen")
     }
@@ -40,8 +33,6 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ReplacePixelsMutation 
     }
 }
 pub fn contribute(base: &JpgSnapshot, pixels: Vec<u8>) -> JpgDiff {
-    JpgDiff { pixels: (base.pixels != pixels).then_some(pixels), ..Default::default() }
+    JpgDiff { pixels: (base.image.pixels != pixels).then_some(pixels), ..Default::default() }
 }
 //#endregion Semantics
-
-

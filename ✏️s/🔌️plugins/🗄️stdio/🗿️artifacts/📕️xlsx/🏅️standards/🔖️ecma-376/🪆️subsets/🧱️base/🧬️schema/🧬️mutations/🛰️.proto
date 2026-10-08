@@ -2,7 +2,6 @@ syntax = "proto3";
 package semio.s_stdio_xlsx.mutation;
 
 import "google/protobuf/empty.proto";
-import "s_stdio_xlsx/snapshot.proto";
 
 message XlsxCellValue {
   message Formula { string expr = 1; optional XlsxCellValue cached = 2; }
@@ -33,21 +32,17 @@ message XlsxWorksheetAddress {
   string revision = 5;
 }
 message XlsxCellVacancyAddress { XlsxWorksheetAddress worksheet = 1; uint32 row = 2; uint32 column = 3; }
-message SetSnapshot { semio.s_stdio_xlsx.snapshot.XlsxSnapshot snapshot = 1; }
-message PatchSnapshot { bytes patch = 1; }
-message InsertSheet { XlsxSheet sheet = 1; }
+message InsertSheet { XlsxSheet sheet = 1; optional uint64 index = 2; }
 message RemoveSheet { string name = 1; }
 message RenameSheet { string name = 1; string new_name = 2; }
 message SetCell { XlsxCellAddress address = 1; XlsxCellValue value = 2; }
 message InsertCell { XlsxCellVacancyAddress address = 1; XlsxCellValue value = 2; }
 message RemoveCell { XlsxCellAddress address = 1; }
-message InsertSharedString { string value = 1; }
+message InsertSharedString { string value = 1; optional uint64 index = 2; }
 message RemoveSharedString { uint64 index = 1; }
 message SetSharedString { uint64 index = 1; string value = 2; }
 message XlsxMutation {
   oneof mutation {
-    SetSnapshot set_snapshot = 1;
-    PatchSnapshot patch_snapshot = 2;
     InsertSheet insert_sheet = 3;
     RemoveSheet remove_sheet = 4;
     RenameSheet rename_sheet = 5;

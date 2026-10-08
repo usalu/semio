@@ -26,7 +26,7 @@
 //! instead of this oracle — the exact convention `gltf@2.0/📐️geometry` already uses for its own
 //! reader-blind kinds.
 //!
-//! The remaining 12 (`no-mutation`, `set-snapshot`, `set-vertex`, `set-texcoord`, `set-normal`,
+//! The remaining 12 (`no-mutation`, `set-vertex`, `set-texcoord`, `set-normal`,
 //! `insert-face`, `remove-face`, `set-face`, `set-group`, `remove-group`, `set-object`,
 //! `remove-object`) ARE witnessable — confirmed empirically: `set-vertex`/`set-texcoord`/
 //! `set-normal` target a row a face actually references (a clean in-place value change, no index
@@ -212,11 +212,6 @@ vt 0 0\nvt 1 0\nvt 1 1\nvt 0 1\n\
 vn 0 0 1\n\
 f 3/3/1 2/2/1 1/1/1\nf 1/1/1 3/3/1 4/4/1\n";
 
-const SET_SNAPSHOT_AFTER: &str = "\
-v 0 0 0\nv 2 0 0\nv 0 2 0\n\
-vt 0 0\nvt 1 0\nvt 0 1\n\
-vn 0 0 1\n\
-f 1/1/1 2/2/1 3/3/1\n";
 
 const BASE_GROUPED_ONE: &str = "\
 v 0 0 0\nv 1 0 0\nv 0 1 0\nv 2 2 2\nv 3 2 2\nv 2 3 2\n\
@@ -258,7 +253,6 @@ o\nf 4 5 6\n";
 
 const RECIPES: &[Recipe] = &[
     Recipe { id: "no-mutation-no-op", before: BASE_PLAIN, after: Some(BASE_PLAIN), notes: "Identity — the no-mutation scenario id applies nothing; before and after bytes are the same document, so the reader must witness zero difference." },
-    Recipe { id: "set-snapshot-applied", before: BASE_PLAIN, after: Some(SET_SNAPSHOT_AFTER), notes: "SetSnapshot{snapshot:<a wholly different 1-triangle document>} — every declared row and the sole face differ; tobj sees a different vertexCount/triangleCount/positions." },
     Recipe { id: "set-vertex-applied", before: BASE_PLAIN, after: Some(SET_VERTEX_AFTER), notes: "SetVertex{index:1, vertex:{x:1,y:0,z:5}} on a vertex BOTH faces reference (in-place replace, no index shift) — tobj's resolved position for that corner moves from (1,0,0) to (1,0,5)." },
     Recipe { id: "set-vertex-rejected-out-of-bounds", before: BASE_PLAIN, after: None, notes: "SetVertex{index:9, ...} — base.vertices.len() is 4; validate_indexed_targets's invalid-modify-index rejects (🧬️schema/🔺️diff/🦀️.rs:843)." },
     Recipe { id: "set-texcoord-applied", before: BASE_PLAIN, after: Some(SET_TEXCOORD_AFTER), notes: "SetTexcoord{index:1, texcoord:{u:0.9,v:0.1}} on a texcoord a face references — tobj's per-corner texcoords array moves." },

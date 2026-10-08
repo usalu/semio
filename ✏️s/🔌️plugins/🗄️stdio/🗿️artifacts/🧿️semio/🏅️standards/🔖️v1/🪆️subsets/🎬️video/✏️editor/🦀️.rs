@@ -4,7 +4,7 @@
 
 use crate::editor::semio_video::modes::edit;
 use crate::editor::semio_video::modes::edit::windows::main;
-use crate::standards::v1::subsets::video::schema::mutations::{patch_snapshot, set_snapshot as snapshot_edit_set_snapshot, SemioVideoMutation};
+use crate::standards::v1::subsets::video::schema::mutations::{SemioVideoMutation};
 use crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -166,6 +166,9 @@ impl ArtifactOwnedToolJobFactory for SemioVideoEditorExampleFactory {
     const DOCUMENT_SCHEMA: &'static str = SEMIO_VIDEO_DOCUMENT_SCHEMA;
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_VIDEO_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
+#[path = "🧮️net/🦀️.rs"]
+pub(crate) mod net;
+
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
 pub struct SemioVideoEditor;
@@ -288,7 +291,7 @@ impl editing::SnapshotEditingEditor for SemioVideoEditor {
         match command { SemioVideoEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_patch(event, snapshot, |patch| SemioVideoMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| SemioVideoMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot })))
+        editing::snapshot_edit_net(event, snapshot, net::net)
     }
 }
 

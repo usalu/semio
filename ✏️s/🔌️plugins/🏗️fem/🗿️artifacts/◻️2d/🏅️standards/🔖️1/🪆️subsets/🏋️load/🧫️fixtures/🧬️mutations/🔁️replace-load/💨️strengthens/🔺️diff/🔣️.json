@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "nodes": null,
   "elements": null,
   "regions": null,
@@ -12,25 +11,26 @@
     "patched": [
       {
         "id": "wind",
-        "item": {
-          "id": "wind",
-          "name": "Wind",
-          "loads": [
-            {
-              "kind": "nodal",
-              "id": "lw1",
-              "nodeId": "n5",
-              "dof": "Tx",
-              "value": 16000.0
-            },
-            {
-              "kind": "area",
-              "id": "lw2",
-              "regionId": "wall1",
-              "pressure": 640.0
-            }
-          ],
-          "selfWeight": false
+        "patch": {
+          "name": null,
+          "selfWeight": null,
+          "loads": {
+            "added": [],
+            "removed": [],
+            "patched": [
+              {
+                "id": "lw1",
+                "item": {
+                  "kind": "nodal",
+                  "id": "lw1",
+                  "nodeId": "n5",
+                  "dof": "Tx",
+                  "value": 16000.0
+                }
+              }
+            ],
+            "reordered": null
+          }
         }
       }
     ],

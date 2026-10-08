@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../.."
+workspace = "../.."
 name = "semio-s-artifact-stdio-docx"
 version.workspace = true
 edition.workspace = true
@@ -44,7 +44,7 @@ semio-s-artifact-stdio-zip = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
-semio-framework-os-kernel = { workspace = true, features = ["protocol-laws"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 quick-xml = "0.42"
 zip = { version = "6", default-features = false, features = ["deflate"] }
 semio-framework-async-macros = { workspace = true }

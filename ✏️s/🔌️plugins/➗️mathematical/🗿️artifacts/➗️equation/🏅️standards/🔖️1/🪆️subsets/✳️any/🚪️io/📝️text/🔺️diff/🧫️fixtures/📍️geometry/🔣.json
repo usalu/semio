@@ -1,15 +1,14 @@
 {
-  "graph": null,
-  "geometry": {
-    "points": [
+  "points": {
+    "edits": [
       {
-        "x": 2.0,
-        "y": 3.0
+        "op": "set",
+        "at": 0,
+        "point": {
+          "x": 2.0,
+          "y": 3.0
+        }
       }
     ]
-  },
-  "notation": null,
-  "results": null,
-  "computed": null,
-  "equation": null
+  }
 }

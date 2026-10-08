@@ -8,12 +8,6 @@
   },
   "publicationContracts": [
     {
-      "toolId": "setSnapshot",
-      "lanes": [
-        "artifact"
-      ]
-    },
-    {
       "toolId": "evaluate",
       "lanes": [
         "host-only"
@@ -23,12 +17,6 @@
       "toolId": "setSelectedCheckIndex",
       "lanes": [
         "window-config"
-      ]
-    },
-    {
-      "toolId": "setActiveExample",
-      "lanes": [
-        "artifact"
       ]
     },
     {
@@ -58,18 +46,6 @@
   ],
   "routes": [
     {
-      "id": "setSnapshot",
-      "emittedLanes": [
-        "artifact"
-      ],
-      "publicationLanes": [
-        "artifact"
-      ],
-      "execution": "bounded",
-      "admission": "migrated",
-      "reducer": "🎮️commands/📤️set-snapshot — XMutation::from_snapshot bundled as one described edit"
-    },
-    {
       "id": "evaluate",
       "emittedLanes": [],
       "publicationLanes": [
@@ -90,18 +66,6 @@
       "execution": "bounded",
       "admission": "migrated",
       "reducer": "🎮️commands/☑️selected-check — exact Results WindowConfigMutation::ChangeSelectedCheckIndex"
-    },
-    {
-      "id": "setActiveExample",
-      "emittedLanes": [
-        "artifact"
-      ],
-      "publicationLanes": [
-        "artifact"
-      ],
-      "execution": "bounded",
-      "admission": "migrated",
-      "reducer": "🎮️commands/🎨️set-active-example — loads PRIMARY_TEXT via set-snapshot decomposition"
     },
     {
       "id": "setField",
@@ -231,9 +195,9 @@
   ],
   "expected": {
     "apps": 15,
-    "routesPerApp": 8,
-    "identities": 120,
-    "retained": 120,
+    "routesPerApp": 6,
+    "identities": 90,
+    "retained": 90,
     "batchOnlyPendingRewrite": 0
   },
   "oracle": {

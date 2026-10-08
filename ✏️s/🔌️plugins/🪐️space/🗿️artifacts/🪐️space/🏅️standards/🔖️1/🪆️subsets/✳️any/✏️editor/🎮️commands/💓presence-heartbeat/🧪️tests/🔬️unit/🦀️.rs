@@ -1,5 +1,6 @@
 
 use super::*;
+use protocol::Mutation as _;
 
 fn empty_doc() -> (SSpaceSnapshot, semio_framework_plugin::HistoryView) {
     (SSpaceSnapshot::default(), semio_framework_plugin::HistoryView::empty())
@@ -13,8 +14,9 @@ async fn heartbeat_sets_presence_for_a_new_artifact() {
     let cfg = ConfigView { snapshot: &config_snapshot, window: None };
     let result = handle(&PresenceHeartbeat { artifact_id: "artifact-1".into(), actors_csv: "user:1,user:2".into() }, &doc, &cfg).expect("heartbeat");
     assert_eq!(result.config_mutations.len(), 1);
-    let SpaceIndexConfigMutation::Snapshot { config } = &result.config_mutations[0];
-    assert_eq!(config.presence_for("artifact-1"), vec!["user:1", "user:2"]);
+    assert_eq!(result.config_mutations[0], SpaceIndexConfigMutation::SetArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1,user:2".into() });
+    let after = protocol::apply_diff(result.config_mutations[0].diff(&config_snapshot).diff(), &config_snapshot).expect("the heartbeat applies");
+    assert_eq!(after.presence_for("artifact-1"), vec!["user:1", "user:2"]);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -24,7 +26,7 @@ async fn heartbeat_replaces_an_existing_artifacts_presence() {
     let seeded = SpaceIndexConfig { presence: vec![SpaceIndexArtifactPresence { artifact_id: "artifact-1".into(), actors_csv: "user:1".into() }], ..Default::default() };
     let cfg = ConfigView { snapshot: &seeded, window: None };
     let result = handle(&PresenceHeartbeat { artifact_id: "artifact-1".into(), actors_csv: "user:2".into() }, &doc, &cfg).expect("heartbeat");
-    let SpaceIndexConfigMutation::Snapshot { config } = &result.config_mutations[0];
+    let config = protocol::apply_diff(result.config_mutations[0].diff(&seeded).diff(), &seeded).expect("the heartbeat applies");
     assert_eq!(config.presence.len(), 1, "replaces, does not append, an existing artifact's row");
     assert_eq!(config.presence_for("artifact-1"), vec!["user:2"]);
 }

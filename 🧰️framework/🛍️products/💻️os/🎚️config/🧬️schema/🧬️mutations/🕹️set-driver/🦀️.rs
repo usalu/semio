@@ -22,7 +22,7 @@ impl protocol::MutationKind<UiPreferences, UiPreferencesConfigMutation> for SetD
     }
 
     fn inverse(&self, base: &UiPreferences) -> Result<Vec<UiPreferencesConfigMutation>, semio_framework_value::ValueError> {
-        Ok(vec![UiPreferencesConfigMutation::Driver(Self { driver_id: base.driver_id.clone() })])
+        Ok(vec![UiPreferencesConfigMutation::SetDriver(Self { driver_id: base.driver_id.clone() })])
     }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {

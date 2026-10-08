@@ -391,10 +391,8 @@ impl ArtifactEditor for JsonIJsonEditor {
         Ok(snapshot)
     }
 
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(JsonMutation::SetScalar(crate::schema::mutations::SetScalarMutation::Apply(
-            crate::schema::mutations::SetScalarPayload { path: Vec::new(), value: snapshot.value },
-        )))
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
@@ -572,7 +570,7 @@ impl semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor for JsonIJs
     }
 
     fn snapshot_edit_mutations(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        semio_s_artifact_stdio_contract::editing::snapshot_edit_patch(event, snapshot, |patch| JsonMutation::PatchSnapshot(crate::schema::mutations::patch_snapshot::PatchSnapshot { patch }), None)
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::schema::mutations::net_mutations)
     }
 }
 //#endregion 🔖️Editor

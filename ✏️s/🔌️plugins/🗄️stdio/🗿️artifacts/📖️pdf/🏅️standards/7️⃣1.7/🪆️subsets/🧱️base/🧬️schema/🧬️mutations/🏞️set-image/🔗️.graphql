@@ -1,4 +1,5 @@
 # 🏞️ Direct set-image GraphQL payload.
 input SetImageMutationInput {
   image: PdfImageInput
+  index: Int
 }

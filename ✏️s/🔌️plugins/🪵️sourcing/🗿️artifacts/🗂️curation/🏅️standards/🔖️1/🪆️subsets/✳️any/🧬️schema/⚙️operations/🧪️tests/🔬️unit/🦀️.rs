@@ -35,7 +35,7 @@ fn sample_snapshot() -> CurationSnapshot {
 /// iterate, mirroring `din16798`'s own `every_mutation()` fixture.
 fn every_mutation() -> Vec<SourcingMutation> {
     vec![
-        SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-kvh-c24".into(), count: 3 } }),
+        SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-kvh-c24".into(), count: 3 }, index: None }),
         SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }),
         SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 5 }),
     ]
@@ -76,10 +76,11 @@ async fn every_variant_round_trips_via_inverse() {
 #[semio_framework_async_macros::async_test]
 async fn create_curated_item_satisfies_the_inverse_and_absorb_laws() {
     let base = sample_snapshot();
-    let mutation = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-kvh-c24".into(), count: 2 } });
+    let mutation = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-kvh-c24".into(), count: 2 }, index: None });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let d1 = mutation.diff(&base).into_parts().0;
-    let mid = protocol::MutationDiff::apply(&d1, &base).expect("valid mutation diff");
+    let mid = protocol::apply_diff(&d1, &base).expect("valid mutation diff");
     let d2 = SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-kvh-c24".into(), new_count: 5 }).diff(&mid).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 }
@@ -90,9 +91,27 @@ async fn delete_curated_item_satisfies_the_inverse_and_absorb_laws() {
     base.curated.push(CuratedItem { object_id: "beam-steel-ipe200".into(), count: 4 });
     let mutation = SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-steel-ipe200".into() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let d1 = mutation.diff(&base).into_parts().0;
-    let d2 = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-steel-hea160".into(), count: 1 } }).diff(&base).into_parts().0;
+    let d2 = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-steel-hea160".into(), count: 1 }, index: None }).diff(&base).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn curated_item_edits_in_the_middle_of_the_list_restore_their_original_index() {
+    let mut base = sample_snapshot();
+    base.curated = ["a", "b", "c", "d"].map(|id| CuratedItem { object_id: id.into(), count: 1 }).to_vec();
+    let created = || CuratedItem { object_id: "x".into(), count: 2 };
+    for mutation in [
+        SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "b".into() }),
+        SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "a".into() }),
+        SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: created(), index: Some(0) }),
+        SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: created(), index: Some(2) }),
+        SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: created(), index: Some(9) }),
+    ] {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -100,6 +119,7 @@ async fn change_curated_item_count_satisfies_the_inverse_and_absorb_laws() {
     let base = sample_snapshot();
     let mutation = SourcingMutation::ChangeCuratedItemCount(ChangeCuratedItemCount { object_id: "beam-glulam-gl24h".into(), new_count: 6 });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let d1 = mutation.diff(&base).into_parts().0;
     let d2 = SourcingMutation::DeleteCuratedItem(DeleteCuratedItem { object_id: "beam-glulam-gl24h".into() }).diff(&base).into_parts().0;
     protocol::os_spr::protocol_laws::assert_mutation_diff_absorb_law(&base, d1, d2).await;
@@ -127,7 +147,7 @@ async fn change_curated_item_count_missing_target_is_an_error() {
 #[semio_framework_async_macros::async_test]
 async fn create_curated_item_duplicate_id_is_fatal_and_never_applies() {
     let base = sample_snapshot();
-    let mutation = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 1 } });
+    let mutation = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-glulam-gl24h".into(), count: 1 }, index: None });
     let outcome = mutation.diff(&base);
     assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
     protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
@@ -150,7 +170,7 @@ async fn change_curated_item_count_outcome_obeys_the_policy_matrix() {
 #[semio_framework_async_macros::async_test]
 async fn create_curated_item_outcome_obeys_the_policy_matrix() {
     let base = sample_snapshot();
-    let mutation = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-kvh-c24".into(), count: 3 } });
+    let mutation = SourcingMutation::CreateCuratedItem(CreateCuratedItem { item: CuratedItem { object_id: "beam-kvh-c24".into(), count: 3 }, index: None });
     protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &mutation).await;
 }
 //#endregion 🔖️OutcomeLaws

@@ -86,7 +86,7 @@ fn produces_committed_diff() {
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-node-visible/hides-a-capsule: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed["nodes"]["patched"][0]["id"].as_str(), Some("f1b5e882-0d34-40af-aa83-cca07919adab"), "change-node-visible/hides-a-capsule: the diff must patch exactly the addressed node");
-    assert!(committed["nodes"]["patched"][0]["patch"]["replacement"].is_object(), "change-node-visible/hides-a-capsule: a patch entry carries the whole replacement record");
+    assert!(committed["nodes"]["patched"][0]["patch"].is_object(), "change-node-visible/hides-a-capsule: a patch entry carries only the changed fields");
     assert!(committed["nodes"]["reordered"].is_null(), "change-node-visible/hides-a-capsule: a null index must leave reordered unset");
     assert!(committed["edges"].is_null(), "change-node-visible/hides-a-capsule: this mutation must never touch the edges delta");
     assert!(committed["meta"].is_null(), "change-node-visible/hides-a-capsule: this mutation must never touch the document meta");
@@ -106,6 +106,13 @@ fn committed_diff_is_canonical() {
 #[test]
 fn committed_diff_applies_to_after() {
     let decoded: crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <crate::standards::v1::subsets::any::schema::diff::Puzzle2dDiff as protocol::MutationDiff<Puzzle2dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-node-visible/hides-a-capsule: committed diff did not carry before to after");
+}
+
+/// ➕️ The concrete inverse rows' diffs sum to exactly the negative of the forward diff (law L3): replaying them restores `before`,
+/// the absorbed sum carries the applied state back, and it equals `diff.inverse(before)`.
+#[test]
+fn inverse_sums_to_the_negative_diff() {
+    ::semio_framework_async::poll::resolve_ready(protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()));
 }

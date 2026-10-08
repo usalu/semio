@@ -8,7 +8,7 @@ pub fn inverse(payload: &super::SetMapEntry, base: &SemioValueSnapshot) -> Resul
     let super::SetMapEntry { path, key, .. } = payload;
     Ok(match resolve(&base.root, path) {
         Some(SemioValue::Map { entries }) => match entries.iter().find(|e| &e.key == key) {
-            Some(existing) => vec![SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: path.clone(), key: key.clone(), value: existing.value.clone() })],
+            Some(existing) => vec![SemioValueMutation::SetMapEntry(set_map_entry::SetMapEntry { path: path.clone(), key: key.clone(), value: existing.value.clone(), at: None })],
             None => vec![SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path: path.clone(), key: key.clone() })],
         },
         _ => Vec::new(),

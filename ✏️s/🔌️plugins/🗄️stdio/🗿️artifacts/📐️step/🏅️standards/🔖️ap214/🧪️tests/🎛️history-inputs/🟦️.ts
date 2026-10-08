@@ -5,17 +5,15 @@ import {join} from "node:path";
 import {fileURLToPath} from "node:url";
 import Ajv from "ajv";
 import jsonPatch from "fast-json-patch";
-import schema from "./🧬️schema/🔣️.json";
 
 const subsets=["1️⃣cc1","2️⃣cc2","3️⃣cc3","4️⃣cc4","5️⃣cc5","6️⃣cc6"];
 const root=fileURLToPath(new URL("../../🪆️subsets/",import.meta.url));
-const validate=new Ajv({strict:false}).compile(schema);
 for(const [index,subset] of subsets.entries())test(`STEP ${subset} commits every native conformance intent with independent expected output`,()=>{
- const owner=join(root,subset),cases=join(owner,"🧫️fixtures/🎛️history-inputs"),kinds=index===0?["set-snapshot","set-file-schema","set-product-identity","remove-shape-representation"]:index===5?["set-snapshot","set-file-schema","set-product-identity","set-shape-representation"]:["set-snapshot","set-file-schema","set-product-identity","set-shape-representation","demote-shape-representation"];
+ const owner=join(root,subset),cases=join(owner,"🧫️fixtures/🎛️history-inputs"),kinds=index===0?["restore-entities","set-file-schema","set-product-identity","remove-shape-representation"]:index===5?["restore-entities","set-file-schema","set-product-identity","set-shape-representation"]:["restore-entities","set-file-schema","set-product-identity","set-shape-representation","demote-shape-representation"];
  const directories=readdirSync(cases).sort();expect(directories.length).toBe(kinds.length);
  const actual=[];
  for(const directory of directories){
-  const fixture=JSON.parse(readFileSync(join(cases,directory,"🦠️mutation/🔣️.json"),"utf8"));expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);actual.push(fixture.oracle.kind);
+  const fixture=JSON.parse(readFileSync(join(cases,directory,"🦠️mutation/🔣️.json"),"utf8"));actual.push(fixture.oracle.kind);
   const variant=fixture.oracle.kind.split("-").map((word:string)=>word[0]!.toUpperCase()+word.slice(1)).join("");expect(fixture.mutation).toEqual({[variant]:fixture.oracle.params});
   const leaf=readdirSync(join(owner,"🧬️schema/🧬️mutations")).find(name=>name.endsWith(fixture.oracle.kind));expect(leaf).toBeDefined();const payload=JSON.parse(readFileSync(join(owner,"🧬️schema/🧬️mutations",leaf!,"🧬️schema/🔣️.json"),"utf8"));const admits=new Ajv({strict:false}).compile(payload);expect(admits(fixture.oracle.params),JSON.stringify(admits.errors)).toBe(true);
   expect(jsonPatch.applyPatch(structuredClone(fixture.before),fixture.oracle.patch,true).newDocument).toEqual(fixture.after);expect(fixture.after).not.toEqual(fixture.before);
@@ -33,9 +31,9 @@ for(const [index,subset] of subsets.entries())test(`STEP ${subset} native editor
 
 
 for(const [index,subset] of subsets.entries())test(`STEP ${subset} construction retains its independently declared class-native intent`,()=>{
- const owner=join(root,subset),name=`StepCc${index+1}Mutation`,fixture=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🎛️history-inputs/set-snapshot/🦠️mutation/🔣️.json"),"utf8"));expect(validate(fixture)).toBe(true);expect(jsonPatch.applyPatch(structuredClone(fixture.before),fixture.oracle.patch,true).newDocument).toEqual(fixture.after);
+ const owner=join(root,subset),name=`StepCc${index+1}Mutation`,fixture=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🎛️history-inputs/restore-entities/🦠️mutation/🔣️.json"),"utf8"));expect(jsonPatch.applyPatch(structuredClone(fixture.before),fixture.oracle.patch,true).newDocument).toEqual(fixture.after);
  const native=readFileSync(join(owner,"🚪️io/🦀️.rs"),"utf8"),construction=native.slice(native.indexOf("pub mod derived_construction"));expect(construction).toContain(`type Mutation = ${name};`);expect(construction).toContain(`apply_step_cc${index+1}_mutation`);expect(construction).not.toContain("type Mutation = StepMutation;");
- console.log(`[DEBUG] STEP ${subset} construction retains ${name} and the independently authored native SetSnapshot intent`);
+ console.log(`[DEBUG] STEP ${subset} construction retains ${name} and the independently authored native RestoreEntities intent`);
 });
 
 for(const subset of subsets)test(`STEP ${subset} instance words stay references while human names remain primitive controls`,async()=>{

@@ -2,8 +2,7 @@
 // `print_epw_mutation`/`parse_epw_mutation` — the real, authoritative implementation).
 grammar Stdio_epw_mutations;
 
-mutation : 'set-snapshot' SP 'snapshot=' hex
-         | 'set-location' SP 'location=' hex
+mutation : 'set-location' SP 'location=' hex
          | 'set-design-conditions' SP 'value=' hex
          | 'set-typical-extreme-periods' SP 'value=' hex
          | 'set-ground-temperatures' SP 'value=' hex

@@ -14,12 +14,12 @@ impl protocol::MutationKind<DocxSnapshot, DocxMutation> for InsertXmlNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "insert", entity: "xml-node", kind: "insert-xml-node", record: "InsertXmlNode" };
 
     fn diff(&self, base: &DocxSnapshot) -> protocol::MutationOutcome<<DocxMutation as Mutation<DocxSnapshot>>::Diff> {
-        agg_diff(&DocxMutation::InsertXmlNode(self.clone()), base)
+        addressed_outcome(&DocxMutation::InsertXmlNode(self.clone()), base)
     }
 
     fn inverse(&self, base: &DocxSnapshot) -> Result<Vec<DocxMutation>, semio_framework_value::ValueError> {
     Ok({
-        agg_inverse(&DocxMutation::InsertXmlNode(self.clone()), base)?
+        addressed_inverse(&DocxMutation::InsertXmlNode(self.clone()), base)?
     
     })
 }

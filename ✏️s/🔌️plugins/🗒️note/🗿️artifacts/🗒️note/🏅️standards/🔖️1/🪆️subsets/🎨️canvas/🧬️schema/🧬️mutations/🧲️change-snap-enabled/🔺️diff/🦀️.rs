@@ -8,6 +8,6 @@ pub fn diff(payload: &ChangeSnapEnabled, base: &NoteSnapshot) -> protocol::Mutat
     if payload.new_enabled == base.snap_enabled {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Snap enabled already has this value.");
     }
-    protocol::MutationOutcome::new(NoteDiff { snap_enabled: Some(payload.new_enabled), ..Default::default() })
+    protocol::MutationOutcome::new(NoteDiff { snap_enabled: Some(crate::schema::diff::NoteAssigned::new(payload.new_enabled)), ..Default::default() })
 }
 //#endregion 🔖️Diff

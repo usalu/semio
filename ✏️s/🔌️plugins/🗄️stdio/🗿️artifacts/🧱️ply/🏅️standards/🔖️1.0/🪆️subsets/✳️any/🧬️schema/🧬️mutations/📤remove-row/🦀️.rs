@@ -1,6 +1,4 @@
-//! 📤️ `remove-row` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 📤️ `remove-row` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -17,14 +15,18 @@ impl protocol::MutationKind<PlySnapshot, PlyMutation> for RemoveRow {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "row", kind: "remove-row", record: "RemoveRow" };
 
     fn diff(&self, base: &PlySnapshot) -> protocol::MutationOutcome<<PlyMutation as Mutation<PlySnapshot>>::Diff> {
-        agg_diff(&PlyMutation::RemoveRow(self.clone()), base)
+        let Self { element_name, index } = self;
+        protocol::MutationOutcome::new(diff_remove_row(element_name, *index))
     }
     fn inverse(&self, base: &PlySnapshot) -> Result<Vec<PlyMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&PlyMutation::RemoveRow(self.clone()), base)?
-    
-    })
-}
+        let Self { element_name, index } = self;
+        Ok({
+            match base.elements.iter().find(|e| &e.name == element_name).and_then(|e| e.rows.get(*index)) {
+                Some(row) => vec![PlyMutation::InsertRow(insert_row::InsertRow { element_name: element_name.clone(), index: *index, row: row.clone() })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove row", "Zeile entfernen")
     }

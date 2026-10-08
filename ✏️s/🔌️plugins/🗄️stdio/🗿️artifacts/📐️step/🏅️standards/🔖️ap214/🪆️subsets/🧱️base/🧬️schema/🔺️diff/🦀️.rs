@@ -380,6 +380,16 @@ impl StepEntitiesDiff {
         Self { removed, modified, added }
     }
 
+    /// ↩️ The entity triple that undoes `self` on `base`: added ids are removed, modified entities get their base-relative inverse, and removed
+    /// entities are re-inserted at their base positions.
+    pub fn inverse(&self, base: &[StepEntity]) -> Self {
+        let removed = self.added.iter().rev().map(|added| added.entity.id).collect();
+        let modified = self.modified.iter().filter(|modified| !self.removed.contains(&modified.id)).filter_map(|modified| base.iter().find(|entity| entity.id == modified.id).map(|entity| StepEntityModified { id: modified.id, diff: modified.diff.inverse(entity) })).collect();
+        let mut added: Vec<StepEntityAdded> = base.iter().enumerate().filter(|(_, entity)| self.removed.contains(&entity.id)).map(|(index, entity)| StepEntityAdded { index, entity: entity.clone() }).collect();
+        added.sort_by_key(|added| added.index);
+        Self { removed, modified, added }
+    }
+
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn apply(&self, base: &[StepEntity]) -> Vec<StepEntity> {
         let mut entities: Vec<StepEntity> = base.to_vec();
@@ -621,12 +631,15 @@ impl MutationDiff<StepSnapshot> for StepDiff {
 }
 
 impl DiffAlgebra<StepSnapshot> for StepDiff {
-    /// 🔁️ Diff-level undo, derived generically (correct by construction): the state delta from
-    /// `self.apply(base)` back to `base` — `between` is the single source of truth for turning a
-    /// state pair into a diff.
+    /// 🔁️ Diff-level undo read off `base`: each header slot the diff writes is restored from `base`, and the entity triple inverts to
+    /// removing what was added, un-modifying what was modified, and re-inserting what was removed at its base position.
     fn inverse(&self, base: &StepSnapshot) -> Self {
-        let mutated = apply_step_diff_unchecked(self, base);
-        Self::between(&mutated, base)
+        Self {
+            file_description: self.file_description.as_ref().map(|_| base.header.file_description.clone()),
+            file_name: self.file_name.as_ref().map(|_| base.header.file_name.clone()),
+            file_schema: self.file_schema.as_ref().map(|_| base.header.file_schema.clone()),
+            entities: self.entities.as_ref().map(|entities| entities.inverse(&base.entities)).filter(|entities| !entities.is_empty()),
+        }
     }
 
     fn between(base: &StepSnapshot, other: &StepSnapshot) -> Self {
@@ -644,11 +657,6 @@ impl DiffAlgebra<StepSnapshot> for StepDiff {
     }
 }
 
-/// 🧩 Builds a set-snapshot diff — sparse field-by-field, never a full-replace slot.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &StepSnapshot, next: &StepSnapshot) -> StepDiff {
-    <StepDiff as DiffAlgebra<StepSnapshot>>::between(base, next)
-}
 //#endregion 🔖️Diff
 
 //#region 🔖️HandcraftedDiffCodec

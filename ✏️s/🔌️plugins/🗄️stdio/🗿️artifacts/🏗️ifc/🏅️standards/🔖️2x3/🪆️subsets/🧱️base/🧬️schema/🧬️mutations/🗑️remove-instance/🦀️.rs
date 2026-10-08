@@ -1,7 +1,4 @@
-//! 🗑️ `remove-instance` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 🗑️ `remove-instance` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,15 +12,14 @@ pub struct RemoveInstance {
 impl protocol::MutationKind<Ifc2x3Snapshot, Ifc2x3Mutation> for RemoveInstance {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "instance", kind: "remove-instance", record: "RemoveInstance" };
 
-    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<<Ifc2x3Mutation as Mutation<Ifc2x3Snapshot>>::Diff> {
-        agg_diff(&Ifc2x3Mutation::RemoveInstance(self.clone()), base)
+    fn diff(&self, base: &Ifc2x3Snapshot) -> protocol::MutationOutcome<Ifc2x3Diff> {
+        let Self { id } = self;
+        protocol::MutationOutcome::new(if base.document.instance(*id).is_some() { Ifc2x3Diff { removed_instances: vec![*id], ..Default::default() } } else { Ifc2x3Diff::default() })
     }
     fn inverse(&self, base: &Ifc2x3Snapshot) -> Result<Vec<Ifc2x3Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&Ifc2x3Mutation::RemoveInstance(self.clone()), base)?
-    
-    })
-}
+        let Self { id } = self;
+        Ok(base.document.instances.iter().position(|instance| instance.id == *id).map(|index| Ifc2x3Mutation::UpsertInstance(upsert_instance::UpsertInstance { instance: base.document.instances[index].clone(), index: Some(index) })).into_iter().collect())
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Remove instance", "Instanz entfernen")
     }

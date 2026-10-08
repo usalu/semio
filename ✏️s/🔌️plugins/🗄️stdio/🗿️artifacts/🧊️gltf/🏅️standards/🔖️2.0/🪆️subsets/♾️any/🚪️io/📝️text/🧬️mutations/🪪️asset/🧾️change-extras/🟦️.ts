@@ -4,7 +4,7 @@ export type * from "../../../../../🧬️schema/🧬️mutations/🪪️asset/�
 /** 🧾️ `change-asset-extra-data` wire twin: the flat `Apply` payload `GltfChangeAssetExtraDataPayload` and the phase wire `ChangeAssetExtraDataMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { type GltfJson, gltfWireObject, gltfWireRequired, parseGltfJson } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
 export const parseGltfChangeAssetExtraDataPayload = gltfWireObject<GltfChangeAssetExtraDataPayload>({ data: gltfWireRequired(parseGltfJson) });
-export const parseChangeAssetExtraDataMutation = gltfWirePhase(parseGltfChangeAssetExtraDataPayload, parseGltfDiff);
+export const parseChangeAssetExtraDataMutation = gltfWireApplyPhase(parseGltfChangeAssetExtraDataPayload);

@@ -26,7 +26,7 @@ impl MutationKind<PdfSnapshot, PdfMutation> for RemoveForm {
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         let _ = base;
-        base.forms.iter().find(|item| item.id == self.id).map(|item| PdfMutation::SetForm(super::set_form::SetForm { form: item.clone() })).into_iter().collect()
+        base.forms.iter().position(|item| item.id == self.id).map(|index| PdfMutation::SetForm(super::set_form::SetForm { form: base.forms[index].clone(), index: Some(index) })).into_iter().collect()
     
     })())
 }

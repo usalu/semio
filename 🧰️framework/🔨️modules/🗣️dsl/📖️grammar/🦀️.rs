@@ -114,6 +114,7 @@ pub enum CondOp {
     Le,
     Gt,
     Ge,
+    BitsSet,
 }
 
 /// 🔁️ P2-M2 item 1: one "repeated tag-dispatched block" — read a discriminator (+ optional
@@ -1016,9 +1017,11 @@ fn parse_cond(cursor: &mut Cursor) -> Result<Cond, TextError> {
         "le" => CondOp::Le,
         "gt" => CondOp::Gt,
         "ge" => CondOp::Ge,
-        other => return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown condition operator `{other}` (expected eq/ne/lt/le/gt/ge)"), cursor.peek().span)),
+        "bits" => CondOp::BitsSet,
+        other => return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown condition operator `{other}` (expected eq/ne/lt/le/gt/ge/bits)"), cursor.peek().span)),
     };
     let value = parse_u64_literal(cursor)?;
+    if matches!(op,CondOp::BitsSet)&&value==0{return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"bit condition requires a nonzero mask",cursor.peek().span));}
     Ok(Cond { field, op, value })
 }
 
@@ -1652,6 +1655,7 @@ fn print_cond(cond: &Cond, out: &mut String) {
         CondOp::Le => "le",
         CondOp::Gt => "gt",
         CondOp::Ge => "ge",
+        CondOp::BitsSet => "bits",
     });
     out.push(' ');
     out.push_str(&cond.value.to_string());
@@ -2335,6 +2339,7 @@ fn eval_cond(cond: &Cond, env: &std::collections::HashMap<String, u64>, offset: 
         CondOp::Le => actual <= cond.value,
         CondOp::Gt => actual > cond.value,
         CondOp::Ge => actual >= cond.value,
+        CondOp::BitsSet => actual & cond.value == cond.value,
     })
 }
 

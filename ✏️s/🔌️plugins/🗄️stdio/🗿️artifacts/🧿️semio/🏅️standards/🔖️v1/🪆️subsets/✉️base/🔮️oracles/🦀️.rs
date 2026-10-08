@@ -1,7 +1,7 @@
 //! 🔮️ Third-party reference for the `s.stdio.semio@v1/base` ENVELOPE: the committed JSON carrier
 //! (`../🧬️schema/📸️snapshot/🔣️.json`, `../🧬️schema/🧬️mutations/🔣️.json`) read by `json` (json-rust)
 //! 0.12 and routed by the envelope's own published law, so `✉️mutate-semio-base` compares this
-//! repository's `apply_semio_mutation` with an answer no line of the subject produced.
+//! repository's `diff_semio_mutation` and `apply_diff` with an answer no line of the subject produced.
 //!
 //! json-rust, not `serde_json`: the subject crate declares `serde_json` as a production dependency,
 //! and `🧾️json`'s own oracle records why a reference the implementation already links is no
@@ -9,9 +9,6 @@
 //! registered JSON reference of this crate, so the envelope adds no dependency.
 //!
 //! What the carrier can say, and therefore what this module answers:
-//! - `setSnapshot` REPLACES the envelope with its payload, whatever arm either side names;
-//! - `patchSnapshot` applies its one RFC 6901 pointer operation to the envelope as read
-//!   (`semio_repo_test_host::law::patched_snapshot`);
 //! - an `apply<Arm>` wrapper whose arm matches the envelope's `subset` REACHES that arm, and the
 //!   arm's own committed result (produced by that arm's independent implementation, never by this
 //!   repository's Rust) is the answer;
@@ -77,7 +74,7 @@ pub fn envelope_arm(envelope: &Json) -> Option<String> {
     }
 }
 
-/// 🏷️ The adjacently tagged verb of an envelope mutation — `setSnapshot`, `patchSnapshot` or an `apply<Arm>` wrapper.
+/// 🏷️ The adjacently tagged verb of an envelope mutation — an `apply<Arm>` wrapper.
 pub fn mutation_tag(mutation: &Json) -> Option<String> {
     match mutation.get("mutation")? {
         Json::String(tag) => Some(tag.clone()),
@@ -96,15 +93,7 @@ pub fn wrapped_arm(tag: &str) -> Option<String> {
 /// arm's own committed result, required only when the mutation reaches a matching arm.
 pub fn route(before: &Json, mutation: &Json, arm_result: Option<&Json>) -> Result<Routed, String> {
     let tag = mutation_tag(mutation).ok_or("the envelope mutation carries no string `mutation` tag")?;
-    if tag == "setSnapshot" {
-        let snapshot = mutation.get("payload").and_then(|payload| payload.get("snapshot")).ok_or("setSnapshot carries no payload.snapshot")?;
-        return Ok(Routed { envelope: snapshot.clone(), refused: Vec::new() });
-    }
-    if tag == "patchSnapshot" {
-        let patch = mutation.get("payload").and_then(|payload| payload.get("patch")).ok_or("patchSnapshot carries no payload.patch")?;
-        return Ok(Routed { envelope: semio_repo_test_host::law::patched_snapshot(before, patch)?, refused: Vec::new() });
-    }
-    let arm = wrapped_arm(&tag).ok_or_else(|| format!("the envelope mutation tag {tag} names neither setSnapshot, patchSnapshot nor an apply<Arm> wrapper"))?;
+    let arm = wrapped_arm(&tag).ok_or_else(|| format!("the envelope mutation tag {tag} is not an apply<Arm> wrapper"))?;
     if envelope_arm(before).as_deref() != Some(arm.as_str()) {
         return Ok(Routed { envelope: before.clone(), refused: vec![TARGET_MISSING.to_string()] });
     }

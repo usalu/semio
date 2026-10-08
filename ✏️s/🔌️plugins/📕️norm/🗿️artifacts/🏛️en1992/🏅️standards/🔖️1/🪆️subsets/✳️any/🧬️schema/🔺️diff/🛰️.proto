@@ -1,19 +1,93 @@
 syntax = "proto3";
 package semio.s.norm.en1992.diff;
 
-message En1992StringList {
-  repeated string values = 1;
+message En1992ConcreteGradesPatch {
+  string id = 1;
+  optional double f_ck = 2;
+}
+
+message En1992ConcreteGradesRows {
+  repeated string removed = 1;
+  repeated En1992ConcreteGradesPatch modified = 2;
+  repeated string order = 3;
+}
+
+message En1992ReinforcementGradesPatch {
+  string id = 1;
+  optional double f_yk = 2;
+}
+
+message En1992ReinforcementGradesRows {
+  repeated string removed = 1;
+  repeated En1992ReinforcementGradesPatch modified = 2;
+  repeated string order = 3;
+}
+
+message En1992PrestressSteelsRows {
+  repeated string removed = 1;
+  repeated string order = 2;
+}
+
+message En1992MembersLongitudinalPatch {
+  string id = 1;
+  optional double diameter = 2;
+  optional uint32 count = 3;
+}
+
+message En1992MembersLongitudinalRows {
+  repeated En1992MembersLongitudinalPatch modified = 1;
+}
+
+message En1992MembersActionsPatch {
+  string id = 1;
+  optional double m_k = 2;
+  optional double n_k = 3;
+  optional double v_k = 4;
+}
+
+message En1992MembersActionsRows {
+  repeated En1992MembersActionsPatch modified = 1;
+}
+
+message En1992MembersPatch {
+  string id = 1;
+  optional double width = 2;
+  optional double height = 3;
+  optional double effective_depth = 4;
+  optional double cover = 5;
+  optional double span = 6;
+  optional double fire_axis_distance = 7;
+  optional double stirrups_spacing = 8;
+  optional En1992MembersLongitudinalRows longitudinal = 9;
+  optional En1992MembersActionsRows actions = 10;
+}
+
+message En1992MembersRows {
+  repeated string removed = 1;
+  repeated En1992MembersPatch modified = 2;
+  repeated string order = 3;
+}
+
+message En1992AnchorsPatch {
+  string id = 1;
+  optional double h_ef = 2;
+  optional double a_s = 3;
+}
+
+message En1992AnchorsRows {
+  repeated string removed = 1;
+  repeated En1992AnchorsPatch modified = 2;
+  repeated string order = 3;
 }
 
 message En1992Diff {
-  // @state artifact
-  optional string annex = 1;
-  // @state artifact
-  optional string title = 2;
-  // @state artifact
-  optional double design_working_life_years = 3;
-  // @state artifact
-  optional double delta_c_dev = 4;
-  // @state artifact
-  optional string cement_type = 5;
+  optional string title = 1;
+  optional double design_working_life_years = 2;
+  optional double delta_c_dev = 3;
+  optional string cement_type = 4;
+  optional En1992ConcreteGradesRows concrete_grades = 5;
+  optional En1992ReinforcementGradesRows reinforcement_grades = 6;
+  optional En1992PrestressSteelsRows prestress_steels = 7;
+  optional En1992MembersRows members = 8;
+  optional En1992AnchorsRows anchors = 9;
 }

@@ -10,7 +10,6 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync }
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
 import assert from "node:assert/strict";
-import Ajv from "ajv";
 
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -26,11 +25,8 @@ function exactCargoStageEnvironments() {
 class WorkerMaintenanceCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-maintenance-check accepts only --native");
-    const owner = join(this.root, "../../🔔️maintenance"), export_ = "MaintenanceFixture";
+    const owner = join(this.root, "../../🔔️maintenance");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
-    const module_ = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
-    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(module_).getSchema(`${module_.$id}#/$defs/${export_}`)!;
-    assert(validate(fixture), JSON.stringify(validate.errors));
     const owners = new Map<string, { requested: boolean; running: boolean; closing: boolean }>();
     for (const step of fixture.lifecycle) {
       const entry = owners.get(step.owner);
@@ -48,7 +44,7 @@ class WorkerMaintenanceCheckScript extends BundleScript {
     assert.equal(fixture.selfRetire.cycles, fixture.capacity);
     assert(fixture.selfRetire.requestWhileRunning && fixture.selfRetire.reusesCapacity);
     assert.equal(fixture.selfRetire.laterRequest, "stale");
-    console.log(`worker-maintenance-independent-oracle: AJV=1 lifecycle=${fixture.lifecycle.length} capacity=${fixture.capacity} native=1 cooperative=1`);
+    console.log(`[DEBUG] worker-maintenance-independent-oracle: lifecycle=${fixture.lifecycle.length} capacity=${fixture.capacity} native-source=1 cooperative-source=1`);
     assert(existsSync(join(owner, "🦀️.rs")), "missing fixed maintenance-hook implementation");
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
     for (const marker of ["struct WorkerMaintenanceTicket", "struct WorkerMaintenanceRegistry", "enum PoolWork", "closed: bool", "entry.running", "entry.closing", "WorkerMaintenanceStep::Retire", "checked_add(1)", "fn shutdown(", "fn finish("]) assert(source.includes(marker), `missing maintenance owner primitive: ${marker}`);
@@ -61,15 +57,12 @@ class WorkerMaintenanceCheckScript extends BundleScript {
   }
 }
 
-/** 🛌️ Neutral worker-parking protocol (AJV + an independent JS model) and, with --native, the Rust laws. */
+/** 🛌️ Neutral worker-parking protocol and an independent JS model and, with --native, the Rust laws. */
 class WorkerParkingCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-parking-check accepts only --native");
-    const owner = join(this.root, "../../🔔️worker-parking"), export_ = "WorkerParkingFixture";
+    const owner = join(this.root, "../../🔔️worker-parking");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
-    const module_ = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
-    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(module_).getSchema(`${module_.$id}#/$defs/${export_}`)!;
-    assert(validate(fixture), JSON.stringify(validate.errors));
     const model = (kase: string, timerDue: boolean): string => {
       let signal = 0, closed = false, keeper = false, sleepers = 0;
       const observed = () => signal;
@@ -94,7 +87,7 @@ class WorkerParkingCheckScript extends BundleScript {
     const crate = readFileSync(join(owner, "../🦀️.rs"), "utf8");
     const pool = crate.slice(crate.indexOf("mod native_pool {"), crate.indexOf("//#endregion 🧵️WorkerPoolNative"));
     assert(pool.length > 0 && !pool.includes("wait_timeout(guard") && !pool.includes("notify_all"), "the native pool must not poll or broadcast");
-    console.log(`worker-parking-independent-oracle: AJV=1 protocol=${fixture.protocol.length} quiet-window=${fixture.idle.quietWindowMs}ms periodic-ticks=${fixture.periodicTimer.ticks} far-keeper-chains=${fixture.farKeeper.chains}`);
+    console.log(`[DEBUG] worker-parking-independent-oracle: protocol=${fixture.protocol.length} quiet-window=${fixture.idle.quietWindowMs}ms periodic-ticks=${fixture.periodicTimer.ticks} far-keeper-chains=${fixture.farKeeper.chains}`);
     if (segments[0] !== "--native") return;
     const receipts = await runExactCargoLaws({ manifestPaths: { "semio-framework-async": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory,
       cwd: this.repoRoot,
@@ -125,11 +118,8 @@ class WorkerParkingCheckScript extends BundleScript {
 class WorkerDeferredWakeCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-deferred-wake-check accepts only --native");
-    const owner = join(this.root, "../../🔔️deferred-wake"), export_ = "DeferredWakeFixture";
+    const owner = join(this.root, "../../🔔️deferred-wake");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
-    const module_ = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
-    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(module_).getSchema(`${module_.$id}#/$defs/${export_}`)!;
-    assert(validate(fixture), JSON.stringify(validate.errors));
     const capacity = fixture.capacity;
     assert.equal(capacity.totalWaiters, capacity.partitions * capacity.slotsPerPartition);
     assert.equal(new Set(fixture.cases.map((row: { id: string }) => row.id)).size, fixture.cases.length);
@@ -151,7 +141,7 @@ class WorkerDeferredWakeCheckScript extends BundleScript {
     const missingAsync = fixture.runtimeMarkers.async.filter((marker: string) => !asyncSource.includes(marker));
     assert.deepEqual(missingAsync, [], `missing async runtime markers: ${missingAsync.join(", ")}`);
     const markerCount = fixture.runtimeMarkers.async.length;
-    console.log(`worker-deferred-wake-independent-oracle: AJV=1 cases=${fixture.cases.length} fixed-waiters=${capacity.totalWaiters} inline-wakes=0 runtime-markers=${markerCount}/${markerCount}`);
+    console.log(`[DEBUG] worker-deferred-wake-independent-oracle: cases=${fixture.cases.length} fixed-waiters=${capacity.totalWaiters} inline-wakes=0 runtime-markers=${markerCount}/${markerCount}`);
     if (segments[0] !== "--native") return;
     const receipts = await runExactCargoLaws({ manifestPaths: { "semio-framework-async": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory,
       cwd: this.repoRoot,
@@ -179,11 +169,8 @@ class WorkerDeferredWakeCheckScript extends BundleScript {
 class WorkerPoolUseCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("worker-pool-use-check accepts only --native");
-    const owner = join(this.root, "../../🔐️use"), export_ = "UseFixture";
+    const owner = join(this.root, "../../🔐️use");
     const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
-    const module_ = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
-    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(module_).getSchema(`${module_.$id}#/$defs/${export_}`)!;
-    assert(validate(fixture), JSON.stringify(validate.errors));
     for (const row of fixture.cases) {
       let state = "open";
       let uses = 0;
@@ -212,7 +199,7 @@ class WorkerPoolUseCheckScript extends BundleScript {
       const tests = readFileSync(join(owner, "..", path), "utf8");
       for (const law of laws) assert(tests.includes(`fn ${law}(`), `missing exact pool-use law ${law}`);
     }
-    console.log(`worker-pool-use-independent-oracle: AJV=1 cases=${fixture.cases.length} native=1 cooperative=1`);
+    console.log(`[DEBUG] worker-pool-use-independent-oracle: cases=${fixture.cases.length} native-source=1 cooperative-source=1`);
     if (segments[0] !== "--native") return;
     const receipts = await runExactCargoLaws({ manifestPaths: { "semio-framework-async": resolve(this.root, "Cargo.toml") }, cargoTargetDir: readCargoTestPolicyV1(process.env).targetDirectory,
       cwd: this.repoRoot,

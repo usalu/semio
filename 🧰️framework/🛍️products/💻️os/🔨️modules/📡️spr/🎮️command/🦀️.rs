@@ -995,6 +995,7 @@ pub fn mutation_label_failures<P, M: SemanticMutation<P>>(ops: &[M]) -> Vec<Stri
 /// 🧫️ Every committed mutation fixture under `root` that decodes as `M` — a `…/🦠️mutation/🔣️.json` document, or the
 /// `mutation` member of a `{mutation, before, after}` case record — and the number of fixture files read. A fixture of a
 /// sibling aggregate under the same root does not decode and is left out. Build output and hidden directories are skipped.
+#[cfg(any(test, feature = "mutation-testing"))]
 pub fn mutation_fixture_ops<M: crate::FromValue>(root: &std::path::Path) -> (Vec<M>, usize) {
     fn walk(directory: &std::path::Path, found: &mut Vec<std::path::PathBuf>) {
         let Ok(entries) = std::fs::read_dir(directory) else { return };
@@ -1032,6 +1033,7 @@ pub fn mutation_fixture_ops<M: crate::FromValue>(root: &std::path::Path) -> (Vec
 /// never exceed the leaf's declared [`Mutation::inverse_rows`] — so `ArtifactStore::fold_batch_item` never refuses a
 /// footprint `ArtifactStoreOneItemFootprint::for_leaf` declared. Returns one line per breach and the number of cases checked. A
 /// decoded base is never dropped: a snapshot may own fail-closed roots that only its store retires.
+#[cfg(any(test, feature = "mutation-testing"))]
 pub fn mutation_inverse_rows_failures<P: crate::FromValue, M: Mutation<P> + crate::FromValue>(root: &std::path::Path) -> (Vec<String>, usize) {
     fn walk(directory: &std::path::Path, found: &mut Vec<std::path::PathBuf>) {
         let Ok(entries) = std::fs::read_dir(directory) else { return };

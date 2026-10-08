@@ -7,14 +7,11 @@ use crate::{RasterLayerNode, RasterSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::ChangeLayerAdjustmentKind, base: &RasterSnapshot) -> Result<Vec<RasterMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-    match find_layer(&base.layers, &payload.layer_id) {
+    Ok(match find_layer(&base.layers, &payload.layer_id) {
         Some(RasterLayerNode::Adjustment { adjustment_kind, .. }) => {
             vec![RasterMutation::ChangeLayerAdjustmentKind(super::ChangeLayerAdjustmentKind { layer_id: payload.layer_id.clone(), new_adjustment_kind: adjustment_kind.clone() })]
         }
         _ => Vec::new(),
-    }
-
-    })())
+    })
 }
 //#endregion 🔖️Inverse

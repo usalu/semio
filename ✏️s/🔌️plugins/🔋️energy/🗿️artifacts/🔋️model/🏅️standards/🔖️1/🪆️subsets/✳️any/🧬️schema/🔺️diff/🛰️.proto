@@ -2,14 +2,9 @@ syntax = "proto3";
 package semio.s.energy.model;
 
 message EnergyModelDiff {
-  optional EnergyModelArtifact artifact = 1;
-  optional string schema = 2;
-  optional bytes model = 3;
-  optional bytes structure = 4;
-  optional bytes zones = 5;
-  optional EnergyLinkSlotDelta referenced_model = 6;
-  optional EnergyLinkSlotDelta weather_link = 7;
-  optional string results_json = 8;
+  optional EnergyModelPatch model = 1;
+  optional EnergyLinkSlotDelta referenced_model = 2;
+  optional EnergyLinkSlotDelta weather_link = 3;
 }
 
 // 🔗️ A link slot delta; an absent field means the slot did not change at all.
@@ -18,12 +13,724 @@ message EnergyLinkSlotDelta {
   bytes link = 2;
 }
 
-message EnergyModelArtifact {
-  string schema = 1;
-  bytes model = 2;
-  bytes structure = 3;
-  bytes zones = 4;
-  bytes referenced_model = 5;
-  bytes weather_link = 6;
-  string results_json = 7;
+// 🎯️ A change of an optional field: `cleared`, or `assigned` with its value.
+message EnergyOptionChange {
+  string kind = 1;
+  bytes value = 2;
+}
+
+// 🔢️ One assigned slot of a fixed array.
+message EnergySlotEdit {
+  uint32 index = 1;
+  bytes value = 2;
+}
+
+// ✂️ One removed entry: its base index and key.
+message EnergyRowCut {
+  uint32 index = 1;
+  bytes key = 2;
+}
+
+// ➕️ One inserted entry: its after index and row.
+message EnergyRowPut {
+  uint32 index = 1;
+  bytes row = 2;
+}
+
+// 📋️ A positional edit of an ordered list.
+message EnergyListEdit {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+}
+
+message EnergyZonePatch {
+  uint32 id = 1;
+  optional string name = 2;
+  optional double volume_m3 = 3;
+  optional uint32 multiplier = 4;
+  optional bool conditioned = 5;
+  optional bool part_of_total_floor_area = 6;
+}
+
+message EnergyZoneRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyZonePatch modified = 3;
+}
+
+message EnergySpacePatch {
+  uint32 id = 1;
+  optional string name = 2;
+  optional uint32 zone_id = 3;
+  optional double floor_area_m2 = 4;
+}
+
+message EnergySpaceRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergySpacePatch modified = 3;
+}
+
+message EnergySurfacePatch {
+  uint32 id = 1;
+  optional string name = 2;
+  optional uint32 zone_id = 3;
+  optional string class = 4;
+  repeated repeated double vertices_m = 5;
+  optional uint32 construction_id = 6;
+  optional bytes outside_boundary_condition = 7;
+  optional bool sun_exposed = 8;
+  optional bool wind_exposed = 9;
+  optional uint32 multiplier = 10;
+}
+
+message EnergySurfaceRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergySurfacePatch modified = 3;
+}
+
+message EnergyFenestrationPatch {
+  uint32 id = 1;
+  optional string name = 2;
+  optional uint32 surface_id = 3;
+  optional double u_value_w_m2k = 4;
+  optional double shgc = 5;
+  optional double vlt = 6;
+  optional double area_m2 = 7;
+  optional double height_m = 8;
+  optional double sill_height_m = 9;
+  optional double frame_conductance_w_k = 10;
+  optional double divider_conductance_w_k = 11;
+  optional double overhang_depth_m = 12;
+  optional double overhang_offset_m = 13;
+  optional double fin_depth_m = 14;
+  optional double fin_offset_m = 15;
+  optional EnergyOptionChange glazing_construction_id = 16;
+  repeated repeated double vertices_m = 17;
+}
+
+message EnergyFenestrationRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyFenestrationPatch modified = 3;
+}
+
+message EnergyMaterialPatch {
+  uint32 id = 1;
+  optional string name = 2;
+  optional string roughness = 3;
+  optional double thickness_m = 4;
+  optional double conductivity_w_m_k = 5;
+  optional double density_kg_m3 = 6;
+  optional double specific_heat_j_kg_k = 7;
+  optional double thermal_absorptance = 8;
+  optional double solar_absorptance = 9;
+  optional double visible_absorptance = 10;
+}
+
+message EnergyMaterialRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyMaterialPatch modified = 3;
+}
+
+message EnergyGlazingMaterialPatch {
+  uint32 id = 1;
+  optional string name = 2;
+  optional double thickness_m = 3;
+  optional double conductivity_w_m_k = 4;
+  optional double solar_transmittance = 5;
+  optional double solar_reflectance_front = 6;
+  optional double solar_reflectance_back = 7;
+  optional double visible_transmittance = 8;
+  optional double visible_reflectance_front = 9;
+  optional double visible_reflectance_back = 10;
+  optional double infrared_transmittance = 11;
+  optional double infrared_emissivity_front = 12;
+  optional double infrared_emissivity_back = 13;
+}
+
+message EnergyGlazingMaterialRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyGlazingMaterialPatch modified = 3;
+}
+
+message EnergyGasMaterialPatch {
+  uint32 id = 1;
+  optional string name = 2;
+  optional double thickness_m = 3;
+  optional string gas = 4;
+}
+
+message EnergyGasMaterialRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyGasMaterialPatch modified = 3;
+}
+
+message EnergyConstructionPatch {
+  uint32 id = 1;
+  optional string name = 2;
+  optional EnergyListEdit layer_material_ids = 3;
+}
+
+message EnergyConstructionRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyConstructionPatch modified = 3;
+}
+
+message EnergyPeopleGainPatch {
+  uint32 id = 1;
+  optional uint32 zone_id = 2;
+  optional uint32 schedule_id = 3;
+  optional uint32 activity_schedule_id = 4;
+  optional double people_per_area = 5;
+  optional double sensible_fraction = 6;
+  optional double latent_fraction = 7;
+  optional double radiant_fraction = 8;
+}
+
+message EnergyPeopleGainRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyPeopleGainPatch modified = 3;
+}
+
+message EnergyLightingGainPatch {
+  uint32 id = 1;
+  optional uint32 zone_id = 2;
+  optional uint32 schedule_id = 3;
+  optional double watts_per_area = 4;
+  optional double radiant_fraction = 5;
+  optional double visible_fraction = 6;
+  optional double return_air_fraction = 7;
+}
+
+message EnergyLightingGainRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyLightingGainPatch modified = 3;
+}
+
+message EnergyEquipmentGainPatch {
+  uint32 id = 1;
+  optional uint32 zone_id = 2;
+  optional uint32 schedule_id = 3;
+  optional double watts_per_area = 4;
+  optional double radiant_fraction = 5;
+  optional double latent_fraction = 6;
+}
+
+message EnergyEquipmentGainRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyEquipmentGainPatch modified = 3;
+}
+
+message EnergyThermostatPatch {
+  uint32 id = 1;
+  optional uint32 zone_id = 2;
+  optional uint32 heating_setpoint_schedule_id = 3;
+  optional uint32 cooling_setpoint_schedule_id = 4;
+  optional double heating_throttle_range_k = 5;
+  optional double cooling_throttle_range_k = 6;
+}
+
+message EnergyThermostatRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyThermostatPatch modified = 3;
+}
+
+message EnergyHumidistatPatch {
+  uint32 id = 1;
+  optional uint32 zone_id = 2;
+  optional uint32 humidifying_setpoint_schedule_id = 3;
+  optional uint32 dehumidifying_setpoint_schedule_id = 4;
+  optional double humidifying_throttle_range = 5;
+  optional double dehumidifying_throttle_range = 6;
+}
+
+message EnergyHumidistatRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyHumidistatPatch modified = 3;
+}
+
+message EnergySetpointManagerPatch {
+  uint32 id = 1;
+  optional string name = 2;
+  optional bytes kind = 3;
+  optional EnergyOptionChange schedule_id = 4;
+}
+
+message EnergySetpointManagerRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergySetpointManagerPatch modified = 3;
+}
+
+message EnergyIdealLoadsSystemPatch {
+  uint32 id = 1;
+  optional uint32 zone_id = 2;
+  optional double max_heating_supply_air_temp_c = 3;
+  optional double min_cooling_supply_air_temp_c = 4;
+  optional EnergyOptionChange max_heating_capacity_w = 5;
+  optional EnergyOptionChange max_cooling_capacity_w = 6;
+  optional double outdoor_air_per_person_m3_s = 7;
+  optional double outdoor_air_per_area_m3_s_m2 = 8;
+}
+
+message EnergyIdealLoadsSystemRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyIdealLoadsSystemPatch modified = 3;
+}
+
+message EnergyZoneEquipmentPatch {
+  uint32 id = 1;
+  optional uint32 zone_id = 2;
+  optional string equipment_type = 3;
+  optional uint32 priority = 4;
+  optional double heating_capacity_w = 5;
+  optional double cooling_capacity_w = 6;
+}
+
+message EnergyZoneEquipmentRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyZoneEquipmentPatch modified = 3;
+}
+
+message EnergyAirLoopPatch {
+  uint32 id = 1;
+  optional string name = 2;
+  optional uint32 supply_node_id = 3;
+  optional uint32 return_node_id = 4;
+  optional double design_supply_air_flow_m3_s = 5;
+  optional EnergyListEdit terminal_zone_ids = 6;
+}
+
+message EnergyAirLoopRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyAirLoopPatch modified = 3;
+}
+
+message EnergyPlantLoopPatch {
+  uint32 id = 1;
+  optional string name = 2;
+  optional string loop_type = 3;
+  optional double supply_temperature_c = 4;
+  optional double return_temperature_c = 5;
+  optional double design_flow_kg_s = 6;
+  optional EnergyListEdit equipment_ids = 7;
+}
+
+message EnergyPlantLoopRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyPlantLoopPatch modified = 3;
+}
+
+message EnergyOutdoorAirSystemPatch {
+  uint32 id = 1;
+  optional uint32 air_loop_id = 2;
+  optional double min_oa_flow_m3_s = 3;
+  optional bool economizer_enabled = 4;
+}
+
+message EnergyOutdoorAirSystemRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyOutdoorAirSystemPatch modified = 3;
+}
+
+message EnergyInfiltrationPatch {
+  uint32 id = 1;
+  optional uint32 zone_id = 2;
+  optional uint32 schedule_id = 3;
+  optional string method = 4;
+  optional double design_flow_ach = 5;
+  optional double flow_per_exterior_area_m3_s_m2 = 6;
+  optional double effective_leakage_area_m2 = 7;
+  optional double discharge_coefficient = 8;
+  optional double stack_height_m = 9;
+  optional double constant_term_coefficient = 10;
+  optional double temperature_term_coefficient = 11;
+  optional double velocity_term_coefficient = 12;
+  optional double velocity_squared_term_coefficient = 13;
+}
+
+message EnergyInfiltrationRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyInfiltrationPatch modified = 3;
+}
+
+message EnergyMechanicalVentilationPatch {
+  uint32 id = 1;
+  optional uint32 zone_id = 2;
+  optional uint32 schedule_id = 3;
+  optional double design_flow_m3_s = 4;
+  optional double fan_total_efficiency = 5;
+  optional double fan_delta_pressure_pa = 6;
+}
+
+message EnergyMechanicalVentilationRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyMechanicalVentilationPatch modified = 3;
+}
+
+message EnergyShadingSurfacePatch {
+  uint32 id = 1;
+  optional string name = 2;
+  repeated repeated double vertices_m = 3;
+  optional EnergyOptionChange transmittance_schedule_id = 4;
+}
+
+message EnergyShadingSurfaceRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyShadingSurfacePatch modified = 3;
+}
+
+message EnergySpaceListPatch {
+  uint32 id = 1;
+  optional string name = 2;
+  optional EnergyListEdit space_ids = 3;
+}
+
+message EnergySpaceListRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergySpaceListPatch modified = 3;
+}
+
+message EnergyThermalEnclosurePatch {
+  uint32 id = 1;
+  optional string name = 2;
+  optional EnergyListEdit zone_ids = 3;
+}
+
+message EnergyThermalEnclosureRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyThermalEnclosurePatch modified = 3;
+}
+
+message EnergyAdjacencyPairPatch {
+  uint32 surface_a_id = 1;
+  uint32 surface_b_id = 2;
+}
+
+message EnergyAdjacencyPairRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyAdjacencyPairPatch modified = 3;
+}
+
+message EnergyElectricalLoadCenterPatch {
+  uint32 id = 1;
+  optional string name = 2;
+  optional EnergyListEdit generator_ids = 3;
+  optional EnergyListEdit pv_ids = 4;
+  optional EnergyListEdit battery_ids = 5;
+}
+
+message EnergyElectricalLoadCenterRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyElectricalLoadCenterPatch modified = 3;
+}
+
+message EnergyPvSystemPatch {
+  uint32 id = 1;
+  optional double dc_capacity_w = 2;
+  optional double area_m2 = 3;
+  optional double tilt_deg = 4;
+  optional double azimuth_deg = 5;
+  optional double module_efficiency = 6;
+  optional double inverter_efficiency = 7;
+}
+
+message EnergyPvSystemRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyPvSystemPatch modified = 3;
+}
+
+message EnergyBatteryPatch {
+  uint32 id = 1;
+  optional double capacity_kwh = 2;
+  optional double max_charge_w = 3;
+  optional double max_discharge_w = 4;
+  optional double round_trip_efficiency = 5;
+}
+
+message EnergyBatteryRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyBatteryPatch modified = 3;
+}
+
+message EnergyShwSystemPatch {
+  uint32 id = 1;
+  optional double heater_capacity_w = 2;
+  optional double storage_volume_m3 = 3;
+  optional double setpoint_c = 4;
+  optional uint32 schedule_id = 5;
+}
+
+message EnergyShwSystemRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyShwSystemPatch modified = 3;
+}
+
+message EnergySolarThermalPatch {
+  uint32 id = 1;
+  optional double collector_area_m2 = 2;
+  optional double efficiency = 3;
+  optional double storage_volume_m3 = 4;
+  optional double tilt_deg = 5;
+  optional double azimuth_deg = 6;
+}
+
+message EnergySolarThermalRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergySolarThermalPatch modified = 3;
+}
+
+message EnergyRefrigerationPatch {
+  uint32 id = 1;
+  optional uint32 case_count = 2;
+  optional double design_load_w = 3;
+  optional uint32 defrost_schedule_id = 4;
+}
+
+message EnergyRefrigerationRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyRefrigerationPatch modified = 3;
+}
+
+message EnergyWaterSystemPatch {
+  uint32 id = 1;
+  optional uint32 fixture_count = 2;
+  optional double peak_flow_l_s = 3;
+  optional uint32 schedule_id = 4;
+}
+
+message EnergyWaterSystemRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyWaterSystemPatch modified = 3;
+}
+
+message EnergyFaultPatch {
+  uint32 id = 1;
+  optional uint32 target_equipment_id = 2;
+  optional string fault_type = 3;
+  optional double severity = 4;
+  optional uint32 start_schedule_id = 5;
+}
+
+message EnergyFaultRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyFaultPatch modified = 3;
+}
+
+message EnergyOutputVariablePatch {
+  string name = 1;
+  string key = 2;
+  optional string reporting_frequency = 3;
+}
+
+message EnergyOutputVariableRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyOutputVariablePatch modified = 3;
+}
+
+message EnergySizingObjectPatch {
+  uint32 id = 1;
+  optional uint32 zone_id = 2;
+  optional string sizing_type = 3;
+  optional string design_day_type = 4;
+}
+
+message EnergySizingObjectRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergySizingObjectPatch modified = 3;
+}
+
+message EnergyDaylightZonePatch {
+  uint32 id = 1;
+  optional uint32 zone_id = 2;
+  optional double illuminance_target_lux = 3;
+  optional double glare_limit = 4;
+  optional double window_transmittance = 5;
+}
+
+message EnergyDaylightZoneRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyDaylightZonePatch modified = 3;
+}
+
+message EnergyRoomAirModelPatch {
+  uint32 zone_id = 1;
+  optional string model = 2;
+}
+
+message EnergyRoomAirModelRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyRoomAirModelPatch modified = 3;
+}
+
+message EnergyConstantSchedulePatch {
+  uint32 id = 1;
+  optional double value = 2;
+}
+
+message EnergyConstantScheduleRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyConstantSchedulePatch modified = 3;
+}
+
+message EnergyDailySchedulePatch {
+  uint32 id = 1;
+  repeated EnergySlotEdit hourly_values = 2;
+  optional string interpolation = 3;
+  optional EnergyOptionChange limits = 4;
+}
+
+message EnergyDailyScheduleRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyDailySchedulePatch modified = 3;
+}
+
+message EnergyWeeklySchedulePatch {
+  uint32 id = 1;
+  repeated EnergySlotEdit daily_schedule_ids = 2;
+}
+
+message EnergyWeeklyScheduleRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyWeeklySchedulePatch modified = 3;
+}
+
+message EnergyAnnualSchedulePatch {
+  uint32 id = 1;
+  optional EnergyListEdit rules = 2;
+  optional uint32 default_daily_schedule_id = 3;
+  optional EnergyOptionChange holiday_daily_schedule_id = 4;
+  optional EnergyListEdit holiday_dates = 5;
+}
+
+message EnergyAnnualScheduleRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyAnnualSchedulePatch modified = 3;
+}
+
+message EnergyTimeSeriesSchedulePatch {
+  uint32 id = 1;
+  repeated double values = 2;
+  optional uint32 timestep_seconds = 3;
+}
+
+message EnergyTimeSeriesScheduleRows {
+  repeated EnergyRowCut removed = 1;
+  repeated EnergyRowPut inserted = 2;
+  repeated EnergyTimeSeriesSchedulePatch modified = 3;
+}
+
+message EnergySitePatch {
+  optional double latitude_deg = 1;
+  optional double longitude_deg = 2;
+  optional double elevation_m = 3;
+  optional double time_zone_hours = 4;
+  optional double north_axis_deg = 5;
+}
+
+message EnergyGroundTemperaturePatch {
+  repeated EnergySlotEdit building_surface_c = 1;
+  repeated EnergySlotEdit shallow_c = 2;
+  optional double deep_c = 3;
+}
+
+message EnergyRunPeriodPatch {
+  optional uint32 start_month = 1;
+  optional uint32 start_day = 2;
+  optional uint32 end_month = 3;
+  optional uint32 end_day = 4;
+  optional uint32 year = 5;
+}
+
+message EnergyScheduleSetPatch {
+  optional EnergyConstantScheduleRows constants = 1;
+  optional EnergyDailyScheduleRows daily = 2;
+  optional EnergyWeeklyScheduleRows weekly = 3;
+  optional EnergyAnnualScheduleRows annual = 4;
+  optional EnergyTimeSeriesScheduleRows time_series = 5;
+}
+
+message EnergyModelPatch {
+  optional string name = 1;
+  optional string version = 2;
+  optional EnergySitePatch site = 3;
+  optional EnergyZoneRows zones = 4;
+  optional EnergySpaceRows spaces = 5;
+  optional EnergySurfaceRows surfaces = 6;
+  optional EnergyFenestrationRows fenestrations = 7;
+  optional EnergyMaterialRows materials = 8;
+  optional EnergyGlazingMaterialRows glazing_materials = 9;
+  optional EnergyGasMaterialRows gas_materials = 10;
+  optional EnergyConstructionRows constructions = 11;
+  optional EnergyPeopleGainRows people = 12;
+  optional EnergyLightingGainRows lighting = 13;
+  optional EnergyEquipmentGainRows equipment = 14;
+  optional EnergyThermostatRows thermostats = 15;
+  optional EnergyHumidistatRows humidistats = 16;
+  optional EnergySetpointManagerRows setpoint_managers = 17;
+  optional EnergyIdealLoadsSystemRows ideal_loads = 18;
+  optional EnergyZoneEquipmentRows zone_equipment = 19;
+  optional EnergyAirLoopRows air_loops = 20;
+  optional EnergyPlantLoopRows plant_loops = 21;
+  optional EnergyOutdoorAirSystemRows outdoor_air_systems = 22;
+  optional EnergyInfiltrationRows infiltrations = 23;
+  optional EnergyMechanicalVentilationRows mechanical_ventilations = 24;
+  optional EnergyShadingSurfaceRows shading_surfaces = 25;
+  optional EnergySpaceListRows space_lists = 26;
+  optional EnergyThermalEnclosureRows thermal_enclosures = 27;
+  optional EnergyAdjacencyPairRows adjacency_pairs = 28;
+  optional EnergyOptionChange airflow_network = 29;
+  optional EnergyElectricalLoadCenterRows electrical_load_centers = 30;
+  optional EnergyPvSystemRows pv_systems = 31;
+  optional EnergyBatteryRows battery_storage = 32;
+  optional EnergyShwSystemRows shw_systems = 33;
+  optional EnergySolarThermalRows solar_thermal_systems = 34;
+  optional EnergyRefrigerationRows refrigeration_systems = 35;
+  optional EnergyWaterSystemRows water_systems = 36;
+  optional EnergyFaultRows faults = 37;
+  optional EnergyOutputVariableRows output_variables = 38;
+  optional EnergySizingObjectRows sizing_objects = 39;
+  optional EnergyDaylightZoneRows daylight_zones = 40;
+  optional EnergyRoomAirModelRows room_air_models = 41;
+  optional EnergyGroundTemperaturePatch ground_temperature = 42;
+  optional EnergyRunPeriodPatch run_period = 43;
+  optional EnergyScheduleSetPatch schedules = 44;
 }

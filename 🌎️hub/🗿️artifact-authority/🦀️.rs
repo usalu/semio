@@ -395,7 +395,7 @@ pub trait TrustedArtifactReplayCodec: TrustedArtifactCodec {
 /// 🌱️ Creation is executable package authority, separate from ordinary codec registration.
 pub trait TrustedArtifactGenesisCodec: TrustedArtifactCodec {
     /// 🪺️ Creates the selected artifact's own initial snapshot with no accepted edit.
-    async fn initial_pair(&self, document_id: &str, dialect: &::directory::os_io::ArtifactDialect, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError>;
+    async fn initial_pair(&self, document_id: &str, dialect: &::semio_framework_artifact_reference::ArtifactDialect, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError>;
 }
 
 /// 🗂️ Trusted package-hash catalog port implemented by the production plugin-host adapter.

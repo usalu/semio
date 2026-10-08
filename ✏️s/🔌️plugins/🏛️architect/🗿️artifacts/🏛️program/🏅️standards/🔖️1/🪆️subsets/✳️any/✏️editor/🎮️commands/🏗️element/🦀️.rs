@@ -23,7 +23,7 @@ use semio_framework_value::ToValue;
     /// command's `Emit` (mirrors note's `add-block`).
     pub fn handle(payload: &AddElement, _doc: &ArtifactView<'_, ProgramSnapshot>, _cfg: &ConfigView<'_, ArchitectConfig>) -> Result<Emit<ProgramMutation, ArchitectConfigMutation>, Fault> {
         let element = default_element(payload.name.clone());
-        Ok(Emit::mutations(vec![ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element: element })]))
+        Ok(Emit::mutations(vec![ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element: element, index: None })]))
     }
 }
 

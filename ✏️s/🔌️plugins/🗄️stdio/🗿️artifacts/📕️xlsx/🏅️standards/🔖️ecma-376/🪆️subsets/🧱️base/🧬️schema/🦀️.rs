@@ -41,14 +41,6 @@ impl XlsxArtifact {
     pub fn from_snapshot(snapshot: XlsxSnapshot) -> Self {
         Self { schema: snapshot.schema, opc: snapshot.opc, xml_parts: snapshot.xml_parts }
     }
-
-    /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn set_snapshot(&mut self, snapshot: XlsxSnapshot) {
-        self.schema = snapshot.schema;
-        self.opc = snapshot.opc;
-        self.xml_parts = snapshot.xml_parts;
-    }
 }
 //#endregion Conversions
 

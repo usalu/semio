@@ -441,13 +441,7 @@ impl DiffAlgebra<SemioVideoSnapshot> for SemioVideoDiff {
 }
 //#endregion 🔖️DiffAlgebra
 
-//#region 🔖️SetSnapshot
-/// 🧩 Builds the sparse field-by-field diff for a `SetSnapshot` mutation. No `snapshot:
-/// Option<SemioVideoSnapshot>` full-replace slot -- this IS `SemioVideoDiff::between`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_set_snapshot(base: &SemioVideoSnapshot, next: &SemioVideoSnapshot) -> SemioVideoDiff {
-    SemioVideoDiff::between(base, next)
-}
+
 
 /// 🧩 Builds the diff for inserting `stream` at `index` (FINAL state).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

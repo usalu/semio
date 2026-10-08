@@ -143,11 +143,17 @@ async fn committed_diff_is_canonical() {
 async fn committed_diff_applies_to_after() {
     let decoded: RasterDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
     let base = before();
-    let produced = <RasterDiff as protocol::MutationDiff<RasterSnapshot>>::apply(&decoded, &base).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &base).expect("committed diff applies to the before-snapshot");
     let after = expected_after();
     assert_eq!(produced, after, "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: committed diff did not carry before to after");
     assert_eq!(produced.assets, base.assets, "add-layer-asset/declines-to-reattach-an-asset-already-on-the-document: applying the committed diff must not mint a handle either");
     retire(after);
     retire(produced);
     retire(base);
+}
+
+/// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    crate::mutations::sum_law::assert_raster_inverse_sum_law(&mutation(), &before()).await;
 }

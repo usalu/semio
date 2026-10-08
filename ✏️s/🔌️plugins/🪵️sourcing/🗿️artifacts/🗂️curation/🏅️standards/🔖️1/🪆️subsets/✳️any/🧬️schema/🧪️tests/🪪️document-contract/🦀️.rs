@@ -1,7 +1,6 @@
 //! 🧪 Curation's native record and transports agree with neutral JSON inputs.
 use crate::{CurationSnapshot, schema::{CurationArtifact, diff::CurationDiff}};
 use store::{ArtifactDsl, ArtifactPack};
-use protocol::MutationDiff;
 
 #[test]
 fn curation_document_contract_exact_children_and_native_transports() {
@@ -41,9 +40,9 @@ fn curation_document_contract_exact_children_and_native_transports() {
     let mut catalog = snapshot.catalog.clone();
     catalog.child_id = "foreign-child".into();
     let expected = catalog.clone();
-    assert_eq!(CurationDiff { catalog: Some(catalog.clone()), ..Default::default() }.apply(&snapshot).unwrap().catalog, expected);
+    assert_eq!(protocol::apply_diff(&CurationDiff { catalog: Some(catalog.clone()), ..Default::default() }, &snapshot).unwrap().catalog, expected);
     catalog.target.dialect.subset = "mesh".into();
-    assert!(CurationDiff { catalog: Some(catalog), ..Default::default() }.apply(&snapshot).is_err());
+    assert!(protocol::apply_diff(&CurationDiff { catalog: Some(catalog), ..Default::default() }, &snapshot).is_err());
     let text = snapshot.print_dsl();
     let (_, body) = text.split_once('\n').unwrap();
     for header in ["semio forms.form.dsl v1", "semio curation.curation.dsl v2", "semio curation.curation.pack v1"] { assert!(CurationSnapshot::parse_dsl(&format!("{header}\n{body}")).is_err(), "{header}"); }

@@ -1,6 +1,6 @@
 //! 🧬️ Sets camera on the addressed Rewriting window.
 
-use super::{RewritingWindowConfig, RewritingWindowConfigMutation};
+use super::{RewritingWindowConfig, RewritingWindowConfigDiff, RewritingWindowConfigMutation};
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf)]
 #[dsl(keyword = "set-camera")]
@@ -13,10 +13,11 @@ pub struct SetCamera {
 impl protocol::MutationKind<RewritingWindowConfig, RewritingWindowConfigMutation> for SetCamera {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "window-camera", kind: "set-camera", record: "SetCamera" };
 
-    fn diff(&self, base: &RewritingWindowConfig) -> protocol::MutationOutcome<RewritingWindowConfig> {
-        let mut next = base.clone();
-        next.camera.clone_from(&self.camera);
-        protocol::MutationOutcome::new(next)
+    fn diff(&self, base: &RewritingWindowConfig) -> protocol::MutationOutcome<RewritingWindowConfigDiff> {
+        if self.camera == base.camera {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The window camera is unchanged.");
+        }
+        protocol::MutationOutcome::new(RewritingWindowConfigDiff { camera: Some(self.camera.clone()), ..Default::default() })
     }
 
     fn inverse(&self, base: &RewritingWindowConfig) -> Result<Vec<RewritingWindowConfigMutation>, semio_framework_value::ValueError> {

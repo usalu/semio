@@ -42,13 +42,6 @@ impl IfcArtifact {
         Self { schema: snapshot.schema, header: snapshot.header, entities: snapshot.entities }
     }
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn set_snapshot(&mut self, snapshot: IfcSnapshot) {
-        self.schema = snapshot.schema;
-        self.header = snapshot.header;
-        self.entities = snapshot.entities;
-    }
-
     /// 🏛️ Derived spatial-structure/placement/pset analyzer view — computed on demand, never
     /// stored; builds the shared generic Part-21 graph on the fly via `to_part21_document`
     /// (the analyzer's own relationship-graph traversal still walks that generic shape).

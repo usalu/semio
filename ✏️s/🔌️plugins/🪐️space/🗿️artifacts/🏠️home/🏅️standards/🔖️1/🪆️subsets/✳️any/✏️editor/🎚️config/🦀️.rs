@@ -29,20 +29,6 @@ impl HomeConfig {
     pub fn is_local_studio_retired(&self, space_id: &str) -> bool {
         self.retired_local_studio_ids.binary_search_by(|retired| retired.as_str().cmp(space_id)).is_ok()
     }
-
-    /// 🪦️ The config with `space_id` retired (`true`) or restored (`false`); `None` when that is already its state.
-    pub fn with_local_studio_retired(&self, space_id: &str, retired: bool) -> Option<Self> {
-        let position = self.retired_local_studio_ids.binary_search_by(|entry| entry.as_str().cmp(space_id));
-        let mut next = self.clone();
-        match (position, retired) {
-            (Err(index), true) => next.retired_local_studio_ids.insert(index, space_id.to_owned()),
-            (Ok(index), false) => {
-                next.retired_local_studio_ids.remove(index);
-            }
-            _ => return None,
-        }
-        Some(next)
-    }
 }
 
 //#region 🔖️ArtifactCodec
@@ -95,7 +81,89 @@ impl Default for HomeConfig {
     }
 }
 
-store::impl_whole_record_config!(HomeConfig);
+impl store::ConfigRecord for HomeConfig {}
+
+/// 🪦️ Set delta over the sorted tombstone ids: the ids that join and the ids that leave.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct HomeTombstoneDelta {
+    pub added: Vec<String>,
+    pub removed: Vec<String>,
+}
+
+/// 🔺️ Sparse field delta over [`HomeConfig`]: the tombstone set delta, when the set changes.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct HomeConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub retired_local_studio_ids: Option<HomeTombstoneDelta>,
+}
+
+impl HomeTombstoneDelta {
+    fn canonical(mut self) -> Self {
+        self.added.sort();
+        self.added.dedup();
+        self.removed.sort();
+        self.removed.dedup();
+        self
+    }
+
+    /// ➕️ Composes `self` then `later` as set algebra: join∘leave and leave∘join cancel.
+    fn absorb(&self, later: &Self) -> Self {
+        Self {
+            added: self.added.iter().filter(|id| !later.removed.contains(id)).chain(later.added.iter().filter(|id| !self.removed.contains(id))).cloned().collect(),
+            removed: self.removed.iter().filter(|id| !later.added.contains(id)).chain(later.removed.iter().filter(|id| !self.added.contains(id))).cloned().collect(),
+        }
+        .canonical()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.added.is_empty() && self.removed.is_empty()
+    }
+}
+
+impl protocol::MutationDiff<HomeConfig> for HomeConfigDiff {
+    fn apply(&self, base: &HomeConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<HomeConfig> {
+        let mut next = base.clone();
+        if let Some(delta) = &self.retired_local_studio_ids {
+            if let Some(missing) = delta.removed.iter().find(|id| !base.is_local_studio_retired(id)) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", format!("tombstone {missing} does not exist")).at(["retiredLocalStudioIds", "removed"]));
+            }
+            if let Some(present) = delta.added.iter().find(|id| base.is_local_studio_retired(id) && !delta.removed.contains(id)) {
+                return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", format!("tombstone {present} already exists")).at(["retiredLocalStudioIds", "added"]));
+            }
+            next.retired_local_studio_ids.retain(|id| !delta.removed.contains(id));
+            next.retired_local_studio_ids.extend(delta.added.iter().cloned());
+            next.retired_local_studio_ids.sort();
+            next.retired_local_studio_ids.dedup();
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, other: Self) {
+        self.retired_local_studio_ids = match (self.retired_local_studio_ids.take(), other.retired_local_studio_ids) {
+            (Some(first), Some(later)) => Some(first.absorb(&later)).filter(|delta| !delta.is_empty()),
+            (first, later) => later.or(first),
+        };
+    }
+}
+
+impl protocol::DiffAlgebra<HomeConfig> for HomeConfigDiff {
+    fn inverse(&self, base: &HomeConfig) -> Self {
+        Self {
+            retired_local_studio_ids: self.retired_local_studio_ids.as_ref().map(|delta| HomeTombstoneDelta { added: delta.removed.iter().filter(|id| base.is_local_studio_retired(id)).cloned().collect(), removed: delta.added.clone() }.canonical()),
+        }
+    }
+    fn between(base: &HomeConfig, other: &HomeConfig) -> Self {
+        let delta = HomeTombstoneDelta {
+            added: other.retired_local_studio_ids.iter().filter(|id| !base.is_local_studio_retired(id)).cloned().collect(),
+            removed: base.retired_local_studio_ids.iter().filter(|id| !other.is_local_studio_retired(id)).cloned().collect(),
+        };
+        Self { retired_local_studio_ids: (!delta.is_empty()).then(|| delta.canonical()) }
+    }
+    fn is_empty(&self) -> bool {
+        self.retired_local_studio_ids.as_ref().is_none_or(HomeTombstoneDelta::is_empty)
+    }
+}
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
@@ -103,11 +171,6 @@ store::impl_whole_record_config!(HomeConfig);
 /// whole-record-diff design (see its doc comment for the full rationale).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum HomeConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: HomeConfig,
-    },
     /// 🪦️ Retires one local-only studio from Home — a tombstone event; the studio's catalog document is never erased.
     #[dsl(key = "retire-local-studio")]
     RetireLocalStudio {
@@ -181,34 +244,33 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
     /// aggregate's own provisional descriptors (`⚙️engine/🪐️space/🎚️config/🦀️.rs`) — no
     /// variant below has an authored leaf directory on disk yet.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set", semantic_kind: "set-snapshot", display_name: "Set Snapshot", emoji: "⚙️", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🪦️retire-local-studio", semantic_kind: "retire-local-studio", display_name: "Retire Local Studio", emoji: "🪦️", aggregate_variant: "RetireLocalStudio", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied, protocol::MutationOutcomeClass::NoOp, protocol::MutationOutcomeClass::Rejected], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/♻️restore-local-studio", semantic_kind: "restore-local-studio", display_name: "Restore Local Studio", emoji: "♻️", aggregate_variant: "RestoreLocalStudio", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied, protocol::MutationOutcomeClass::NoOp, protocol::MutationOutcomeClass::Rejected], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            HomeConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
-            HomeConfigMutation::RetireLocalStudio { .. } => &Self::DESCRIPTORS[1],
-            HomeConfigMutation::RestoreLocalStudio { .. } => &Self::DESCRIPTORS[2],
+            HomeConfigMutation::RetireLocalStudio { .. } => &Self::DESCRIPTORS[0],
+            HomeConfigMutation::RestoreLocalStudio { .. } => &Self::DESCRIPTORS[1],
         }
     }
 
-    type Diff = HomeConfig;
+    type Diff = HomeConfigDiff;
 
-    fn diff(&self, base: &HomeConfig) -> protocol::MutationOutcome<HomeConfig> {
-        match self {
-            HomeConfigMutation::Snapshot { config } => protocol::MutationOutcome::new(config.clone()),
-            HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::RestoreLocalStudio { space_id } => {
-                let retired = matches!(self, HomeConfigMutation::RetireLocalStudio { .. });
-                match base.with_local_studio_retired(space_id, retired) {
-                    Some(candidate) if local_studio_tombstones_are_admissible(&candidate) => protocol::MutationOutcome::new(candidate),
-                    Some(_) if !local_studio_id_is_admissible(space_id) => protocol::MutationOutcome::new(base.clone()).absorb_messages([protocol::MutationMessage::fatal("mutation.invariant", format!("Local studio id {space_id:?} is not admissible.")).at(["retiredLocalStudioIds"])]),
-                    Some(_) => protocol::MutationOutcome::new(base.clone()).absorb_messages([protocol::MutationMessage::error("mutation.target-mismatch", format!("Local studio {space_id} cannot be retired: {HOME_RETIRED_LOCAL_STUDIOS_MAXIMUM} studios are retired already.")).at(["retiredLocalStudioIds"])]),
-                    None => protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", format!("Local studio {space_id} is already {}.", if retired { "retired" } else { "listed" })),
-                }
-            }
+    fn diff(&self, base: &HomeConfig) -> protocol::MutationOutcome<HomeConfigDiff> {
+        let (HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::RestoreLocalStudio { space_id }) = self;
+        let retired = matches!(self, HomeConfigMutation::RetireLocalStudio { .. });
+        if base.is_local_studio_retired(space_id) == retired {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Local studio {space_id} is already {}.", if retired { "retired" } else { "listed" }));
         }
+        if retired && !local_studio_id_is_admissible(space_id) {
+            return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::fatal("mutation.invariant", format!("Local studio id {space_id:?} is not admissible.")).at(["retiredLocalStudioIds"])]);
+        }
+        if retired && base.retired_local_studio_ids.len() >= HOME_RETIRED_LOCAL_STUDIOS_MAXIMUM {
+            return protocol::MutationOutcome::empty().absorb_messages([protocol::MutationMessage::error("mutation.target-mismatch", format!("Local studio {space_id} cannot be retired: {HOME_RETIRED_LOCAL_STUDIOS_MAXIMUM} studios are retired already.")).at(["retiredLocalStudioIds"])]);
+        }
+        let delta = if retired { HomeTombstoneDelta { added: vec![space_id.clone()], removed: Vec::new() } } else { HomeTombstoneDelta { added: Vec::new(), removed: vec![space_id.clone()] } };
+        protocol::MutationOutcome::new(HomeConfigDiff { retired_local_studio_ids: Some(delta) })
     }
 
     fn inverse(&self, base: &HomeConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
@@ -222,7 +284,6 @@ impl protocol::Mutation<HomeConfig> for HomeConfigMutation {
                     vec![HomeConfigMutation::RestoreLocalStudio { space_id }]
                 }
             }
-            HomeConfigMutation::Snapshot { .. } => vec![HomeConfigMutation::Snapshot { config: base.clone() }],
         }
     
     })())
@@ -311,7 +372,7 @@ fn home_config_edit_bytes(edit: &protocol::Edit<HomeConfigMutation>) -> Result<u
 }
 
 /// 🛂️ The byte extent and ceiling of the config mutations the retained lane admits: one local-studio tombstone. Every
-/// other mutation (a whole-record `Snapshot`) never travels the retained lane.
+/// other mutation never travels the retained lane.
 fn home_config_retained_admission(mutation: &HomeConfigMutation) -> Option<(usize, usize)> {
     match mutation {
         HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::RestoreLocalStudio { space_id } if local_studio_id_is_admissible(space_id) => Some((space_id.len(), HOME_RETIRED_LOCAL_STUDIO_ID_BYTES)),
@@ -364,9 +425,11 @@ impl store::ArtifactStoreOneItemPreparation<HomeConfig, HomeConfigMutation> for 
             let mutation = self.mutation.take().ok_or_else(|| "Space Home config preparation lost its mutation owner".to_string())?;
             let (post, inverse) = match &mutation {
                 HomeConfigMutation::RetireLocalStudio { space_id } | HomeConfigMutation::RestoreLocalStudio { space_id } => {
-                    let post = base
-                        .with_local_studio_retired(space_id, matches!(mutation, HomeConfigMutation::RetireLocalStudio { .. }))
-                        .filter(|candidate| local_studio_tombstones_are_admissible(candidate))
+                    let outcome = <HomeConfigMutation as protocol::Mutation<HomeConfig>>::diff(&mutation, base);
+                    let post = (!protocol::DiffAlgebra::<HomeConfig>::is_empty(outcome.diff()))
+                        .then(|| protocol::apply_diff(outcome.diff(), base).ok())
+                        .flatten()
+                        .filter(local_studio_tombstones_are_admissible)
                         .ok_or_else(|| format!("Space Home config preparation refuses the tombstone of {space_id}: it changes nothing or exceeds its ceiling"))?;
                     let inverse = <HomeConfigMutation as protocol::Mutation<HomeConfig>>::inverse(&mutation, base).map_err(semio_framework_value::ValueError::into_message)?.into_iter().next().ok_or_else(|| "Space Home config preparation lost its tombstone inverse".to_string())?;
                     (post, inverse)

@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/replication/wire/local-interaction/root/retirement/schema.json",
+  "title": "Local Interaction Ownership Admission",
+  "$defs": {
+    "Grant": {"$ref": "https://json.schemas.assets.semio-tech.com/framework/value/ordered/retirement/schema.json#/$defs/Grant"},
+    "Demand": {
+      "type": "object",
+      "required": ["copyBytes", "capacityBytes", "releaseBytes", "depth"],
+      "properties": {"copyBytes": {"type":"integer","minimum":0},"capacityBytes":{"type":"integer","minimum":0},"releaseBytes":{"type":"integer","minimum":0},"depth":{"type":"integer","minimum":0}},
+      "additionalProperties": false,
+      "description": "The actual typed root, partial three-map candidate and admitted immutable input owners forward independent defining work, scaffold birth, whole physical release and current nested depth demands. Source String visits are logical work; their original backing is released only at terminal ownership. Partial candidates remain unreadable and cancellation never publishes them. Immutable input aliases preserve original payload pointers and expose no foreign Weak custody."
+    }
+  }
+}

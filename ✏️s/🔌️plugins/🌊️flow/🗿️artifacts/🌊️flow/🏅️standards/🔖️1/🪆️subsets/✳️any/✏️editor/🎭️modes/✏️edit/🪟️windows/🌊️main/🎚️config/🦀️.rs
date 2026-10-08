@@ -12,48 +12,9 @@ impl FlowMainWindowConfig {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "kebab-case")]
-pub enum FlowMainWindowConfigMutation {
-    Snapshot { config: FlowMainWindowConfig },
-}
 
-impl protocol::Mutation<FlowMainWindowConfig> for FlowMainWindowConfigMutation {
-    type Diff = FlowMainWindowConfig;
-    const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
-        schema_version: 1,
-        owner: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config",
-        semantic_kind: "set-window-config",
-        display_name: "Set Flow Main Window Configuration",
-        emoji: "🎚️",
-        aggregate_variant: "Snapshot",
-        payload_schema: "flow.mainwindowconfig",
-        text_opcode: None,
-        binary_tag: None,
-        invertibility: protocol::MutationInvertibility::ExplicitMutation,
-        diff_participation: protocol::MutationDiffParticipation::Detect,
-        outcome_classes: &[protocol::MutationOutcomeClass::Applied],
-        composition: protocol::MutationComposition::Atomic,
-        required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
-    }];
 
-    fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
-        &Self::DESCRIPTORS[0]
-    }
 
-    fn diff(&self, _base: &FlowMainWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
-        match self {
-            Self::Snapshot { config } => protocol::MutationOutcome::new(config.clone()),
-        }
-    }
-
-    fn inverse(&self, base: &FlowMainWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Self::Snapshot { config: base.clone() }]
-    
-    })())
-}
-}
 
 impl store::ArtifactDsl for FlowMainWindowConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
@@ -87,26 +48,30 @@ impl store::ArtifactPack for FlowMainWindowConfig {
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Self::__dsl_spec()) }
 }
 
-store::impl_whole_record_config!(FlowMainWindowConfig);
-
-impl protocol::OpText for FlowMainWindowConfigMutation {
-    fn print_op(&self) -> String {
-        semio_framework_pack_json::to_json_string(self)
-    }
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
+semio_framework_os_kernel::config_record! {
+    record: FlowMainWindowConfig,
+    diff: FlowMainWindowConfigDiff,
+    set: FlowMainWindowConfigMutation,
+    owner: "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main",
+    payload_schema: "flow.mainwindowconfig",
+    emoji: "🎚️",
+    replace: Snapshot { config } wire "snapshot" kind "set-window-config" name "Set Flow Main Window Configuration",
+    fields: {
+        preview_off_node_ids: Vec<String> => SetPreviewOffNodeIds "set-preview-off-node-ids",
+        camera: CameraJson => SetCamera "set-camera",
+        lod_mode: String => SetLodMode "set-lod-mode",
+        proximity_distance: f64 => SetProximityDistance "set-proximity-distance",
+        grid_visible: bool => SetGridVisible "set-grid-visible",
+        grid_snap_enabled: bool => SetGridSnapEnabled "set-grid-snap-enabled",
+        grid_factor: f64 => SetGridFactor "set-grid-factor",
+        catalogue_sections_json: String => SetCatalogueSectionsJson "set-catalogue-sections-json",
+        automation_enabled_json: String => SetAutomationEnabledJson "set-automation-enabled-json",
+    },
 }
 
-impl protocol::OpBinary for FlowMainWindowConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        Ok(protocol::OpText::print_op(self).into_bytes())
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
-        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
-    }
-}
+
+
+
 
 pub struct FlowMainWindowConfigOwner;
 

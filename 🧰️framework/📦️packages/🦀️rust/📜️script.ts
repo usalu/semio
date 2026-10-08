@@ -11,7 +11,7 @@ import { BundleScript, ScriptRouter } from "../../🔨️modules/🏃️process/
 import { runScriptMain } from "../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { seedGeneratedFile } from "../../🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts";
-import { basename, join, relative, resolve } from "node:path";
+import { basename, join, relative, resolve, isAbsolute } from "node:path";
 
 /** 🔐️ Selects a policy only for an explicitly declared owning package manifest. */
 function cargoPolicy(root:string,manifest:string){
@@ -49,7 +49,7 @@ class WireRetirementSourceScript extends BundleScript {
 class WireRetirementNativeScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await testCargo(this.repoRoot, "🧰️framework/📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], rest.length ? rest : ["--lib", "retained_wire_input_small_grants_retire_initialized_bytes_and_backing_allocation"]);
+    await testCargo(this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], rest.length ? rest : ["--lib", "retained_wire_input_small_grants_retire_initialized_bytes_and_backing_allocation"]);
   }
 }
 //#endregion 🧹️WireRetirement
@@ -58,7 +58,7 @@ class WireRetirementNativeScript extends BundleScript {
 class FixtureOwnershipSourceScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
  if(segments.length)throw Error("test-fixture-ownership-source accepts no arguments");
- await runBudgetedTestCommand(process.execPath,["test",join(this.repoRoot,"🧰️framework/🧪️tests/🧱️fixture-ownership/🟦️.ts")],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs()});
+ await runBudgetedTestCommand(process.execPath,["test",join(this.repoRoot,"🧪️tests/🧱️fixture-ownership/🟦️.ts")],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs()});
  }
 }
 
@@ -66,14 +66,14 @@ class FixtureOwnershipSourceScript extends BundleScript {
 class ArtifactKindSourceScript extends BundleScript {
  async run(segments:string[]):Promise<void>{
  if(segments.length)throw Error("test-artifact-kind-source accepts no arguments");
- await runBudgetedTestCommand(process.execPath,["test",join(this.repoRoot,"🧰️framework/🔨️modules/🚪️io/🧪️tests/🪪️artifact-kind/🟦️.ts")],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs()});
+ await runBudgetedTestCommand(process.execPath,["test",join(this.repoRoot,"🔨️modules/🚪️io/🧬️schema/🧪️tests/🪪️artifact-kind/🟦️.ts")],{cwd:this.repoRoot,budgetMs:testLevelBudgetMs()});
  }
 }
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await testCargo(this.repoRoot, "🧰️framework/📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], rest);
+    await testCargo(this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], rest);
     await runVitestV1(readVitestPolicyV1(process.env,this.root),rest,"../../🧪️tests/🎚️config/🟦️.ts",process.env);
   }
 }
@@ -82,7 +82,7 @@ class TestScript extends BundleScript {
 class ToolRunActionsTestScript extends BundleScript {
   async run(): Promise<void> {
     await runBudgetedTestCommand(process.execPath, ["test", join(this.root, "../../🔨️modules/🛂️manifest/🧪️tests/🔬️tool-run-actions/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
-    await testCargo(this.repoRoot, "🧰️framework/📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::tool_run_actions_tests"]);
+    await testCargo(this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::tool_run_actions_tests"]);
   }
 }
 
@@ -90,7 +90,7 @@ class ToolRunActionsTestScript extends BundleScript {
 class HistoryEditActionsTestScript extends BundleScript {
   async run(): Promise<void> {
     await runBudgetedTestCommand(process.execPath, ["test", join(this.root, "../../🔨️modules/🛂️manifest/🧪️tests/🧪️history-edit-actions/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
-    await testCargo(this.repoRoot, "🧰️framework/📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::history_edit_actions_tests"]);
+    await testCargo(this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::history_edit_actions_tests"]);
   }
 }
 
@@ -98,7 +98,7 @@ class HistoryEditActionsTestScript extends BundleScript {
 class HistoryProgressTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-history-progress accepts no arguments");
-    await testCargo(this.repoRoot, "🧰️framework/📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "-E", "test(kernel::history_patch_tests::every_valid_patch_decodes_identically_through_serde_and_value_and_round_trips) | test(kernel::history_reprojection_tests::)", "--status-level", "pass", "--final-status-level", "all", "--", "--nocapture"]);
+    await testCargo(this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "-E", "test(kernel::history_patch_tests::every_valid_patch_decodes_identically_through_serde_and_value_and_round_trips) | test(kernel::history_reprojection_tests::)", "--status-level", "pass", "--final-status-level", "all", "--", "--nocapture"]);
   }
 }
 
@@ -107,8 +107,8 @@ class MutationInputsTestScript extends BundleScript {
   async run(): Promise<void> {
     const testCase = join(this.root, "../../🔨️modules/🛂️manifest/🧪️tests/🧪️mutation-inputs");
     await runBudgetedTestCommand(process.execPath, ["test", join(testCase, "🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
-    await runBudgetedTestCommand(join(this.repoRoot, ".venv", process.platform === "win32" ? "Scripts/python.exe" : "bin/python"), [join(testCase, "🐍️.py")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
-    await testCargo(this.repoRoot, "🧰️framework/📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::mutation_inputs_tests"]);
+    await runBudgetedTestCommand(process.env.SEMIO_PYTHON!, [join(testCase, "🐍️.py")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
+    await testCargo(this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "manifest::mutation_inputs_tests"]);
   }
 }
 
@@ -122,14 +122,14 @@ class HostEffectInvocationTestScript extends BundleScript {
 /** 🔽️ Runs the shared neutral closed-choice fixture through the native implementation. */
 class ActionChoicesTestScript extends BundleScript {
   async run(): Promise<void> {
-    await testCargo(this.repoRoot, "🧰️framework/📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "unresolved_action_choices_follow_neutral_catalog_contract", "--", "--nocapture"]);
+    await testCargo(this.repoRoot, "📦️packages/🦀️rust/Cargo.toml", ["semio-framework"], ["--lib", "unresolved_action_choices_follow_neutral_catalog_contract", "--", "--nocapture"]);
   }
 }
 
 class CoreModulesTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    for(const [module,name] of [["🔏️hash","hash"],["🔲️pixels","pixels"],["📏️intrinsic-size","intrinsic-size"],["🏗️mesh-engine","mesh-engine"]])await testCargo(this.repoRoot,`🧰️framework/🔨️modules/${module}/📦️packages/🦀️rust/Cargo.toml`,[`semio-framework-${name}`],rest.length?rest:["--lib"]);
+    for(const [module,name] of [["🔏️hash","hash"],["🔲️pixels","pixels"],["📏️intrinsic-size","intrinsic-size"],["🏗️mesh-engine","mesh-engine"]])await testCargo(this.repoRoot,`🔨️modules/${module}/📦️packages/🦀️rust/Cargo.toml`,[`semio-framework-${name}`],rest.length?rest:["--lib"]);
   }
 }
 
@@ -137,7 +137,7 @@ class CoreModulesTestScript extends BundleScript {
 class DeflateEncodingTestScript extends BundleScript{
   async run(segments:string[]):Promise<void>{
     const {rest}=resolveTestLevel(segments);
-    await testCargo(this.repoRoot,"🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml",["semio-framework-deflate"],rest.length?rest:["--lib","deflate_controlled_"]);
+    await testCargo(this.repoRoot,"🔨️modules/🗜️deflate/📦️packages/🦀️rust/Cargo.toml",["semio-framework-deflate"],rest.length?rest:["--lib","deflate_controlled_"]);
   }
 }
 
@@ -153,8 +153,8 @@ class SnapshotSqliteTestScript extends BundleScript {
     const nativeOnly = segments[0] === "native";
     const tests = join(this.root, "../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests");
     if (!nativeOnly) await runBudgetedTestCommand(process.execPath, ["test", join(tests, "🔬️unit/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
-    await testCargo(this.repoRoot,"🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml",["semio-framework-io-sqlite-snapshot"],["--lib","--no-fail-fast"]);
-    await runBudgetedTestCommand("cargo", ["build", "--manifest-path",cargoPolicy(this.repoRoot,"🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml").manifestPath,"-p", "semio-framework-io-sqlite-snapshot", "--bin", "semio-io-sqlite-snapshot-oracle"], { cwd: this.repoRoot, budgetMs: buildBudgetMs() });
+    await testCargo(this.repoRoot,"🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml",["semio-framework-io-sqlite-snapshot"],["--lib","--no-fail-fast"]);
+    await runBudgetedTestCommand("cargo", ["build", "--manifest-path",cargoPolicy(this.repoRoot,"🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust/Cargo.toml").manifestPath,"-p", "semio-framework-io-sqlite-snapshot", "--bin", "semio-io-sqlite-snapshot-oracle"], { cwd: this.repoRoot, budgetMs: buildBudgetMs() });
     if (!nativeOnly) await runBudgetedTestCommand(process.execPath, ["test", join(tests, "🤝️interoperability/🟦️.ts")], { cwd: this.repoRoot, budgetMs: testLevelBudgetMs() });
   }
 }
@@ -169,7 +169,7 @@ class PackageDescriptorValueCodecTestScript extends BundleScript {
 /** 🧹️Zero-warning clippy gate: `cargo clippy -p semio-framework --all-targets -- -D warnings`. */
 class LintScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
-    const policy=cargoPolicy(this.repoRoot,"🧰️framework/📦️packages/🦀️rust/Cargo.toml");
+    const policy=cargoPolicy(this.repoRoot,"📦️packages/🦀️rust/Cargo.toml");
     await runCargoLintV1({manifestPath:policy.manifestPath,packages:["semio-framework"],cwd:this.root,extraArgs:segments,environment:{...process.env,CARGO_TARGET_DIR:policy.targetDirectory}},policy);
   }
 }
@@ -258,6 +258,8 @@ class SourceProjectionScript extends BundleScript {
  }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test-source-projection",SourceProjectionScript).register("test-directory-discovery",DirectoryDiscoveryScript).register("test-command-ingress-consumer",CommandIngressConsumerScript).register("test-artifact-kind-source", ArtifactKindSourceScript).register("test", TestScript).register("test-fixture-ownership-source", FixtureOwnershipSourceScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-history-edit-actions", HistoryEditActionsTestScript).register("test-history-progress", HistoryProgressTestScript).register("test-mutation-inputs", MutationInputsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-snapshot-sqlite", SnapshotSqliteTestScript).register("test-core-modules", CoreModulesTestScript).register("test-deflate-encoding",DeflateEncodingTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
+const workspace=process.env.SEMIO_COMMAND_WORKSPACE;
+if(!workspace||!isAbsolute(workspace))throw Error("Explicit General command workspace required");
+const router = new ScriptRouter(import.meta.dir,workspace).register("test-source-projection",SourceProjectionScript).register("test-directory-discovery",DirectoryDiscoveryScript).register("test-command-ingress-consumer",CommandIngressConsumerScript).register("test-artifact-kind-source", ArtifactKindSourceScript).register("test", TestScript).register("test-fixture-ownership-source", FixtureOwnershipSourceScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-history-edit-actions", HistoryEditActionsTestScript).register("test-history-progress", HistoryProgressTestScript).register("test-mutation-inputs", MutationInputsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-snapshot-sqlite", SnapshotSqliteTestScript).register("test-core-modules", CoreModulesTestScript).register("test-deflate-encoding",DeflateEncodingTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
 
 await runScriptMain(router, { defaultCommand: "test" });

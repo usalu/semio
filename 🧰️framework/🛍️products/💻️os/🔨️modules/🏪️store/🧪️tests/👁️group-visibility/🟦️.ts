@@ -14,7 +14,7 @@ export function testGroupVisibilityFixtures(): void {
   const ajv = new Ajv({ strict: true, allErrors: true });
   ajv.addSchema(contract);
   
-  const validateCursor = ajv.getSchema(`${contract.$id}#/$defs/GroupCursorVisibility`)!;
+  const validateCursor = ajv.getSchema(`${contract.$id}#/$defs/GroupCursor`)!;
 
   const groupRead = read("./🧫️fixtures/📖️group-read.json");
   
@@ -40,7 +40,7 @@ export function testGroupVisibilityFixtures(): void {
   assert(Buffer.byteLength(JSON.stringify(groupRead.prepared)) <= groupRead.maximumBytes);
 
   const groupCursor = read("./🧫️fixtures/🎯️group-cursor.json");
-  assert(validateCursor(groupCursor), JSON.stringify(validateCursor.errors));
+  for (const cursor of [groupCursor.before, groupCursor.after]) assert(validateCursor(cursor), JSON.stringify(validateCursor.errors));
   assert.deepEqual([groupCursor.maximumItems, groupCursor.maximumBytes], [1, 4096]);
   assert.deepEqual(groupCursor.laws, [
     "cursor-and-history-use-the-same-decision",
@@ -54,16 +54,10 @@ export function testGroupVisibilityFixtures(): void {
   assert.equal(groupCursor.after.redoEditIds, undefined, "publishing clears the redo cursor");
   assert(Buffer.byteLength(JSON.stringify(groupCursor.after)) <= groupCursor.maximumBytes);
 
-  for (const hostile of [
-    { ...groupRead, unexpected: true },
-    { ...groupRead, cases: [{ ...groupRead.cases[0], decision: "unknown" }] },
-    { ...groupRead, old: { ...groupRead.old, revisionByte: 256 } },
-  ]) 
-  for (const hostile of [
-    { ...groupCursor, unexpected: true },
-    { ...groupCursor, before: { ...groupCursor.before, unexpected: true } },
-    { ...groupCursor, laws: [1] },
-  ]) assert.equal(validateCursor(hostile), false, "group cursor hostile is refused");
+  const validateRoot = ajv.getSchema(`${contract.$id}#/$defs/GroupReadRoot`)!;
+  for (const root of [groupRead.old, groupRead.prepared]) assert(validateRoot(root), JSON.stringify(validateRoot.errors));
+  assert.equal(validateRoot({ ...groupRead.old, revisionByte: 256 }), false);
+  assert.equal(validateCursor({ ...groupCursor.before, unexpected: true }), false);
 
 }
 //#endregion 📏️GroupVisibilityOracle

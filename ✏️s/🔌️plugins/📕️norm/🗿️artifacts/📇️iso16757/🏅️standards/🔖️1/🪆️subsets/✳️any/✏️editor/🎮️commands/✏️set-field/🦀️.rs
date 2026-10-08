@@ -16,6 +16,6 @@ pub struct SetField {
 
 //#region 🔖️Handler
 pub fn handle(payload: &SetField, doc: &ArtifactView<'_, Iso16757Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Iso16757Mutation, NoConfigMutation>, Fault> {
-    crate::app_surface::dispatch_set_field(doc.snapshot, &payload.path, &payload.value_json, |base, target| Iso16757Mutation::from_snapshot(base, target))
+    crate::app_surface::dispatch_set_field(doc.snapshot, &payload.path, &payload.value_json, |document, edit| crate::mutations::resolve_edit(document, edit))
 }
 //#endregion 🔖️Handler

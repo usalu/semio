@@ -30,7 +30,11 @@ pub fn diff(payload: &super::CreatePlantLoop, base: &EnergyModelSnapshot) -> pro
     if payload.equipment_ids.iter().any(|entry| entry.0 == 0) {
         return protocol::MutationOutcome::fatal("mutation.invariant", "A plant equipment list carries no unset id.".to_string(), [payload.id.0.to_string()]);
     }
-    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { plant_loops: Rows::inserting(base.model.plant_loops.len(), crate::model::PlantLoopConfig {
+    let position = payload.index.map_or(base.model.plant_loops.len(), |index| index as usize);
+    if position > base.model.plant_loops.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} plant_loops.", position, base.model.plant_loops.len()), [payload.id.0.to_string()]);
+    }
+    protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { plant_loops: Rows::inserting(position, crate::model::PlantLoopConfig {
         id: payload.id,
         name: payload.name.clone(),
         loop_type: payload.loop_type,

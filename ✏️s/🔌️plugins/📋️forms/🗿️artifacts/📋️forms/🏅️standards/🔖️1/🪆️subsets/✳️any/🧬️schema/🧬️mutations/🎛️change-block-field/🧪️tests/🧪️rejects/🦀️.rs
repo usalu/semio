@@ -74,3 +74,9 @@ async fn inverse_restores_before() {
     }
     assert_eq!(snapshot, base, "change-block-field/rejects-a-field-of-a-question-the-scene-does-not-hold: inverse did not restore the before-snapshot");
 }
+
+/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+}

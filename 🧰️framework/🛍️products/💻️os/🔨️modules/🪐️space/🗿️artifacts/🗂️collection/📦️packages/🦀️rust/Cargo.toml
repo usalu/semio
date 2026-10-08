@@ -32,5 +32,5 @@ serde = { workspace = true }
 semio-framework-trace = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["mutation-testing"] }
 serde_json = { workspace = true }

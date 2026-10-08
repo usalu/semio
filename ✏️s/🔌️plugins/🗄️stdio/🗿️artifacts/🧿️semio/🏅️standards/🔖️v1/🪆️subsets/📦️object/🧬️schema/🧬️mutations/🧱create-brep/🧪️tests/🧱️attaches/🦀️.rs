@@ -34,7 +34,7 @@ fn mutation() -> SemioObjectMutation {
 async fn attaches_the_brep_handle_to_an_object_that_had_none() {
     let base = before();
     assert!(base.brep.is_none(), "the fixture's whole point is a base whose brep slot is empty");
-    let produced = mutation().diff(&base).diff().apply(&base).expect("🧱create-brep applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("🧱create-brep applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "🧱create-brep/attaches-a-brep-child-to-an-object-that-has-none: applied state differs from the committed after-snapshot");
     let handle = produced.brep.as_ref().expect("the brep slot must be populated afterwards");
     assert_eq!(handle.child_id, "kitchen-sink-brep", "the handle keeps the payload's own child id");
@@ -48,11 +48,12 @@ async fn attaches_the_brep_handle_to_an_object_that_had_none() {
 async fn the_undo_delete_brep_detaches_the_handle_again() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioObjectMutation::DeleteBrep(crate::standards::v1::subsets::object::schema::mutations::delete_brep::DeleteBrep {})], "creating a child into an EMPTY slot must undo as the matching delete, not as another create");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward 🧱create-brep applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo DeleteBrep applies to the object that now has a child");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward 🧱create-brep applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo DeleteBrep applies to the object that now has a child");
     }
     assert_eq!(current, base, "🧱create-brep/attaches-a-brep-child-to-an-object-that-has-none: the undo did not restore the before-snapshot");
 }
@@ -109,6 +110,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioObjectDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed 🧱create-brep diff decodes");
-    let produced = decoded.apply(&before()).expect("committed 🧱create-brep diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed 🧱create-brep diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "🧱create-brep/attaches-a-brep-child-to-an-object-that-has-none: committed diff did not carry before to after");
 }

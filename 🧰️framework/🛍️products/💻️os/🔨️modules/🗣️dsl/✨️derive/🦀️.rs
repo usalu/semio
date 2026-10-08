@@ -68,7 +68,7 @@ fn mutation_authority_common(source: &Path, compiler_cwd: &Path) -> Result<Mutat
     mutation_authority_no_follow(&workspace_root, &source_path, false)?;
     let taxonomy_path = mutation_authority_locator(&workspace_root, MUTATION_AUTHORITY_LOCATOR)?;
     mutation_authority_no_follow(&workspace_root, &taxonomy_path, false).map_err(|error| format!("mutation authority projection {MUTATION_AUTHORITY_LOCATOR}: {error}; run bun nx run @semio-tech/dsl-derive-rs:generate"))?;
-    let authority: serde_json::Value = serde_json::from_slice(&fs::read(&taxonomy_path).map_err(|error| error.to_string())?).map_err(|error| error.to_string())?;
+    let authority: serde_json::Value = serde_json::from_slice(&crate::compiler_resources::read(&taxonomy_path).map_err(|error| error.to_string())?).map_err(|error| error.to_string())?;
     if authority.get("schema").and_then(serde_json::Value::as_str) != Some(MUTATION_AUTHORITY_SCHEMA) { return Err("mutation authority projection declares another schema".to_string()); }
     let source_filename = mutation_authority_segment(&authority, "sourceFilename")?;
     let descriptor_filename = mutation_authority_segment(&authority, "descriptorFilename")?;
@@ -105,7 +105,7 @@ fn mutation_source_authority(source: &Path, compiler_cwd: &Path) -> Result<Mutat
     };
     let descriptor_path = owner_path.join(descriptor_filename);
     mutation_authority_no_follow(&workspace_root, &descriptor_path, false)?;
-    let descriptor = fs::read(&descriptor_path).map_err(|error| error.to_string())?;
+    let descriptor = crate::compiler_resources::read(&descriptor_path).map_err(|error| error.to_string())?;
     let authority = MutationSourceAuthority { workspace_root, mutation_root, owner, expected_semantic_kind, source_path, descriptor_path, taxonomy_path };
     parse_mutation_leaf_descriptor(&descriptor, &authority)?;
     Ok(authority)
@@ -576,7 +576,7 @@ pub fn expand_mutation_leaf(input: TokenStream) -> TokenStream {
     let source = match input.ident.span().unwrap().local_file() { Some(source) => source, None => return syn::Error::new_spanned(&input, "MutationLeaf requires a local source file").to_compile_error().into() };
     let compiler_cwd = match std::env::current_dir() { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, error.to_string()).to_compile_error().into() };
     let authority = match mutation_source_authority(&source, &compiler_cwd) { Ok(authority) => authority, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf source authority failed: {error}")).to_compile_error().into() };
-    let raw_descriptor = match fs::read(&authority.descriptor_path) { Ok(raw) => raw, Err(error) => return syn::Error::new_spanned(&input, error.to_string()).to_compile_error().into() };
+    let raw_descriptor = match crate::compiler_resources::read(&authority.descriptor_path) { Ok(raw) => raw, Err(error) => return syn::Error::new_spanned(&input, error.to_string()).to_compile_error().into() };
     let descriptor = match parse_mutation_leaf_descriptor(&raw_descriptor, &authority) { Ok(descriptor) => descriptor, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf descriptor failed: {error}")).to_compile_error().into() };
     let workspace_token = match mutation_leaf_workspace_token(&authority) { Ok(token) => token, Err(error) => return syn::Error::new_spanned(&input, format!("MutationLeaf provenance failed: {error}")).to_compile_error().into() };
     let mutation_root = match mutation_authority_relative(&authority.workspace_root, &authority.mutation_root) { Ok(path) => path, Err(error) => return syn::Error::new_spanned(&input, error).to_compile_error().into() };
@@ -647,7 +647,7 @@ struct MutationLeafInverseRows {
 
 /// 📖️ Reads `x-semio-inverse-rows` from the root of the payload schema at `payload_schema`.
 fn mutation_leaf_inverse_rows(payload_schema: &Path) -> Result<MutationLeafInverseRows, String> {
-    let raw = fs::read(payload_schema).map_err(|error| error.to_string())?;
+    let raw = crate::compiler_resources::read(payload_schema).map_err(|error| error.to_string())?;
     let value: serde_json::Value = serde_json::from_slice(&raw).map_err(|error| format!("malformed payload schema: {error}"))?;
     let Some(rows) = value.get("x-semio-inverse-rows") else { return Ok(MutationLeafInverseRows { fixed: 1, per_target: Vec::new() }) };
     let object = rows.as_object().filter(|object| !object.is_empty()).ok_or_else(|| "x-semio-inverse-rows must be a nonempty object".to_string())?;
@@ -745,21 +745,28 @@ fn mutation_schema_search_root(payload_schema: &Path) -> PathBuf {
     under("🔌️plugins").or_else(|| under("🔨️modules")).or(owner).or_else(|| payload_schema.parent()).unwrap_or(payload_schema).to_path_buf()
 }
 
-/// 🗂️ `$id` → path of every JSON document inside a `🧬️schema` directory of `root` (tests and build output skipped; a fixture
-/// aggregate's schemas count), built once per root per compiler process.
+/// 🧫️ Recognizes example collections while preserving domain modules whose names match collection roles.
+fn mutation_schema_example_collection(path: &Path) -> bool {
+    path.ancestors().any(|directory| directory.file_name().is_some_and(|name| ["🧫️fixtures", "🧪️fixtures", "🧪️tests"].iter().any(|collection| name == *collection)) && !directory.parent().and_then(Path::file_name).is_some_and(|name| name == "🔨️modules"))
+}
+
+/// 🗂️ Indexes production `$id` documents within schema scopes, excluding example collections before any directory read.
 fn mutation_schema_document_index(root: &Path) -> std::rc::Rc<BTreeMap<String, PathBuf>> {
+    if mutation_schema_example_collection(root) {
+        return std::rc::Rc::new(BTreeMap::new());
+    }
     thread_local! {
         static INDEX: std::cell::RefCell<BTreeMap<PathBuf, std::rc::Rc<BTreeMap<String, PathBuf>>>> = const { std::cell::RefCell::new(BTreeMap::new()) };
     }
     fn walk(directory: &Path, schema: bool, index: &mut BTreeMap<String, PathBuf>) {
-        let Ok(entries) = fs::read_dir(directory) else { return };
+        let Ok(entries) = crate::compiler_resources::read_dir(directory) else { return };
         for entry in entries.flatten() {
             let (path, name) = (entry.path(), entry.file_name().to_string_lossy().into_owned());
             let Ok(kind) = entry.file_type() else { continue };
-            if kind.is_dir() && !name.starts_with('.') && !["🧪️tests", "target", "node_modules", "dist", "🗑️generated", "📦️packages"].contains(&name.as_str()) {
+            if kind.is_dir() && !name.starts_with('.') && !mutation_schema_example_collection(&path) && !["target", "node_modules", "dist", "🗑️generated", "📦️packages"].contains(&name.as_str()) {
                 walk(&path, schema || name == "🧬️schema", index);
             } else if schema && kind.is_file() && name.ends_with(".json") {
-                let id = fs::read(&path).ok().and_then(|raw| serde_json::from_slice::<serde_json::Value>(&raw).ok()).and_then(|value| value.get("$id").and_then(serde_json::Value::as_str).map(str::to_string));
+                let id = crate::compiler_resources::read(&path).ok().and_then(|raw| serde_json::from_slice::<serde_json::Value>(&raw).ok()).and_then(|value| value.get("$id").and_then(serde_json::Value::as_str).map(str::to_string));
                 if let Some(id) = id {
                     index.entry(id).or_insert(path);
                 }
@@ -792,7 +799,7 @@ fn mutation_schema_document_references(path: &Path) -> Result<(Option<String>, V
             _ => {}
         }
     }
-    let raw = fs::read(path).map_err(|error| format!("{}: {error}", path.display()))?;
+    let raw = crate::compiler_resources::read(path).map_err(|error| format!("{}: {error}", path.display()))?;
     let document: serde_json::Value = serde_json::from_slice(&raw).map_err(|error| format!("{}: {error}", path.display()))?;
     let mut references = Vec::new();
     collect(&document, &mut references);
@@ -1224,7 +1231,7 @@ fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &syn::Type, authori
     let Some(relative) = mutation_relative_path(Path::new(&manifest), owner) else { return quote! {} };
     let subsets = owner.parent().filter(|subsets| subsets.file_name().and_then(|segment| segment.to_str()) == Some("🪆️subsets")).unwrap_or(owner);
     let Some(footprint_relative) = mutation_relative_path(Path::new(&manifest), subsets) else { return quote! {} };
-    let source = fs::read_to_string(authority.mutation_root.join(&authority.source_filename)).unwrap_or_default();
+    let source = crate::compiler_resources::read_to_string(authority.mutation_root.join(&authority.source_filename)).unwrap_or_default();
     let signature = format!("demo_mutation_cases() -> Vec<{name}>");
     let demo_cases = source.lines().any(|line| ["fn ", "pub fn ", "pub(crate) fn "].iter().any(|prefix| line.strip_prefix(prefix).is_some_and(|rest| rest.starts_with(&signature)))).then(|| quote! { ops.extend(demo_mutation_cases()); });
     let test_ident = syn::Ident::new(&format!("semio_payload_law_{}", to_kebab(&name.to_string()).replace('-', "_")), name.span());

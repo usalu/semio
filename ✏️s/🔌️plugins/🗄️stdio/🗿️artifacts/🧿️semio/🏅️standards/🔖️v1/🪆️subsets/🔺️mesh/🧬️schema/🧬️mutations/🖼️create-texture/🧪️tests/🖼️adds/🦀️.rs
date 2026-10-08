@@ -30,7 +30,7 @@ fn mutation() -> SemioMeshMutation {
 #[semio_framework_async_macros::async_test]
 async fn adds_the_second_texture_with_its_own_mime_and_bytes() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("create-texture applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("create-texture applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "create-texture/adds-a-second-texture-at-the-end: applied state differs from the committed after-snapshot");
     assert_eq!(produced.textures.len(), base.textures.len() + 1, "create-texture adds exactly one texture");
     assert_eq!(produced.textures[1].id, "tex-b", "the new texture occupies the index the NamedAdded entry recorded");
@@ -44,11 +44,12 @@ async fn adds_the_second_texture_with_its_own_mime_and_bytes() {
 async fn the_undo_delete_texture_removes_the_second_texture_again() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "create-texture undoes as exactly one delete-texture");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward create-texture applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo delete-texture applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward create-texture applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo delete-texture applies");
     }
     assert_eq!(current, base, "create-texture/adds-a-second-texture-at-the-end: the undo did not restore the before-snapshot");
 }
@@ -105,6 +106,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed create-texture diff decodes");
-    let produced = decoded.apply(&before()).expect("committed create-texture diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed create-texture diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-texture/adds-a-second-texture-at-the-end: committed diff did not carry before to after");
 }

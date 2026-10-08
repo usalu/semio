@@ -1,10 +1,7 @@
 /** 🧬️ LasMutation union. */
 import type { LasSnapshot, LasVlr, LasPoint, Binary64 } from '../📸️snapshot/🟦️.ts';
-import type { SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 
 export type LasMutation =
-  | { mutation: 'setSnapshot'; snapshot: LasSnapshot }
-  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
   | { mutation: 'setVersion'; major: number; minor: number }
   | { mutation: 'setSystemIdentifier'; systemIdentifier: string }
   | { mutation: 'setSoftwareInfo'; generatingSoftware: string }

@@ -268,7 +268,7 @@ impl ArtifactEditor for PngEditor {
     }
 
     fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(PngMutation::SetSnapshot(crate::schema::mutations::SetSnapshot { snapshot }))
+        Some(PngMutation::ReplaceImage(crate::schema::mutations::ReplaceImage { image:snapshot.image }))
     }
 
     fn bounded_first_step_tool_proofs() -> Vec<ArtifactBoundedFirstStepProof> {
@@ -375,7 +375,7 @@ impl editing::SnapshotEditingEditor for PngEditor {
         if let Some(mutation) = pngEditor_metadata_mutation(&next, snapshot) {
             return Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() });
         }
-        editing::snapshot_edit_patch(event, snapshot, |patch| PngMutation::PatchSnapshot(crate::schema::mutations::PatchSnapshot { patch }), Some(|snapshot| PngMutation::SetSnapshot(crate::schema::mutations::SetSnapshot { snapshot })))
+        editing::snapshot_edit_net_exact(event,snapshot,|before,after|if before.image==after.image{Vec::new()}else{vec![PngMutation::ReplaceImage(crate::schema::mutations::ReplaceImage{image:after.image.clone()})]})
     }
 }
 

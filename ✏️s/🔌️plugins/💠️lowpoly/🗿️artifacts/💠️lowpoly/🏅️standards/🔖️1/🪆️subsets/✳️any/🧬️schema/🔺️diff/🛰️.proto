@@ -8,11 +8,9 @@ import "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/�
 
 message LowpolyDiff {
   // @state artifact
-  optional semio.s.lowpoly.lowpoly.artifact.LowpolyArtifact artifact = 1;
+  optional string schema = 1;
   // @state artifact
-  optional string schema = 2;
-  // @state artifact
-  optional LowpolyObjectsDelta objects = 3;
+  optional LowpolyObjectsDelta objects = 2;
   // @state presence
   // @state config
 }
@@ -28,12 +26,15 @@ message LowpolyObjectPatchEntry {
   string id = 1;
   LowpolyObjectPatch patch = 2;
   optional LowpolyPaintLayersDelta paint_layers = 3;
+  repeated LowpolyMeshMotion mesh_motions = 4;
 }
 
 message LowpolyObjectPatch {
   optional string name = 1;
   optional bool smooth_shading = 2;
-  optional semio.s.lowpoly.lowpoly.artifact.LowpolyTransform transform = 3;
+  repeated float position = 3;
+  repeated float rotation = 7;
+  repeated float scale = 8;
   // absent = untouched; message-field presence = touched (still `null`-able via the wire's own
   // ArtifactChild-or-null convention, same as `LowpolyObject.mesh`).
   semio.os.store.ArtifactChild mesh = 4;
@@ -41,33 +42,41 @@ message LowpolyObjectPatch {
   optional LowpolyMeshStateSlot mesh_state = 6;
 }
 
-message LowpolyPaintLayersDelta {
-  repeated LowpolyIndexedPaintLayer added = 1;
-  repeated uint32 removed = 2;
-  repeated LowpolyIndexedPaintLayerPatch patched = 3;
-  repeated LowpolyPaintStrokeAt strokes = 4;
+message LowpolyPaintLayersDelta { repeated LowpolyPaintEdit edits = 1; }
+
+message LowpolyPaintEdit {
+  oneof edit {
+    LowpolyPaintInsert insert = 1;
+    LowpolyPaintRemove remove = 2;
+    LowpolyPaintReplace replace = 3;
+    LowpolyPaintPatch patch = 4;
+    LowpolyPaintStroke stroke = 5;
+  }
 }
 
-message LowpolyIndexedPaintLayer {
-  uint32 index = 1;
-  semio.s.lowpoly.lowpoly.artifact.LowpolyPaintLayer layer = 2;
+message LowpolyPaintInsert { uint32 index = 1; semio.s.lowpoly.lowpoly.artifact.LowpolyPaintLayer layer = 2; }
+message LowpolyPaintRemove { uint32 index = 1; }
+message LowpolyPaintReplace { uint32 index = 1; semio.s.lowpoly.lowpoly.artifact.LowpolyPaintLayer layer = 2; }
+message LowpolyPaintPatch { uint32 index = 1; LowpolyPaintLayerPatch patch = 2; }
+message LowpolyPaintStroke { uint32 index = 1; repeated PixelRun runs = 2; }
+
+message LowpolyMeshMotion {
+  oneof motion {
+    LowpolyMeshOffset offset = 1;
+    LowpolyMeshTurn turn = 2;
+    LowpolyMeshStretch stretch = 3;
+  }
 }
 
-message LowpolyIndexedPaintLayerPatch {
-  uint32 index = 1;
-  LowpolyPaintLayerPatch patch = 2;
-}
+message LowpolyMeshOffset { repeated uint32 vertex_ids = 1; repeated float offset = 2; }
+message LowpolyMeshTurn { repeated uint32 vertex_ids = 1; repeated float pivot = 2; repeated float axis = 3; float angle = 4; }
+message LowpolyMeshStretch { repeated uint32 vertex_ids = 1; repeated float pivot = 2; repeated float factor = 3; }
 
 message LowpolyPaintLayerPatch {
   optional string name = 1;
   optional bool visible = 2;
   optional float opacity = 3;
   optional string blend_mode = 4;
-}
-
-message LowpolyPaintStrokeAt {
-  uint32 layer_index = 1;
-  repeated PixelRun runs = 2;
 }
 
 message PixelRun {

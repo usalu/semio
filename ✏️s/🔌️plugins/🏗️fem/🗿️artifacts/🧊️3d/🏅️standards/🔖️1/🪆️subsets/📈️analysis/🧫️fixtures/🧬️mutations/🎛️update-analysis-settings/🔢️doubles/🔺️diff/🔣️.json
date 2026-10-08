@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "nodes": null,
   "elements": null,
   "materials": null,
@@ -9,8 +8,8 @@
   "loadCases": null,
   "combinations": null,
   "analysis": {
-    "modalCount": 3,
+    "modalCount": null,
     "bucklingCount": 6,
-    "deformationScale": 50.0
+    "deformationScale": null
   }
 }

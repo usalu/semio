@@ -102,6 +102,19 @@ fn inverse_restores_the_base() {
     assert_eq!(protocol::apply_diff(&inverse, &after).expect("inverse applies"), base);
 }
 
+/// 🎯️ Removing or creating a middle row is undone by the inverse diff at the row's original position.
+#[test]
+fn inverse_restores_middle_rows() {
+    let mut base = base();
+    base.tiles.insert(1, tile("c", 1.5));
+    base.tiles.push(tile("f", 3.0));
+    for diff in [rows(Grid2dRows { removed: vec!["c".into()], ..Default::default() }), rows(Grid2dRows { added: vec![tile("e", 4.0)], ..Default::default() })] {
+        let after = protocol::apply_diff(&diff, &base).expect("diff applies");
+        let inverse = DiffAlgebra::<Grid2dSnapshot>::inverse(&diff, &base);
+        assert_eq!(protocol::apply_diff(&inverse, &after).expect("inverse applies"), base);
+    }
+}
+
 /// 🧭️ `between` reaches the other document, and is empty between equal documents.
 #[test]
 fn between_reaches_the_other_document() {
@@ -116,4 +129,17 @@ fn between_reaches_the_other_document() {
 #[test]
 fn apply_refuses_a_missing_removal() {
     assert!(protocol::apply_diff(&rows(Grid2dRows { removed: vec!["ghost".into()], ..Default::default() }), &base()).is_err());
+}
+
+/// 📌️ Cells are keyed by their own coordinates and land in row-major order.
+#[test]
+fn cells_are_keyed_by_their_coordinates_and_land_row_major() {
+    assert_eq!(cell_id(3, 7), "3,7");
+    let pin = |x: u32, y: u32| WfcPinnedCell2d { x, y, tile_id: "b".into() };
+    let diff = Grid2dDiff { pinned: Grid2dRows { added: vec![pin(2, 1), pin(0, 0), pin(1, 1)], ..Default::default() }, ..Default::default() };
+    let next = protocol::apply_diff(&diff, &base()).expect("pins apply");
+    let order: Vec<(u32, u32)> = next.pinned.iter().map(|cell| (cell.x, cell.y)).collect();
+    assert_eq!(order, [(0, 0), (1, 1), (2, 1)]);
+    let removal = Grid2dDiff { pinned: Grid2dRows { removed: vec![cell_id(1, 1)], ..Default::default() }, ..Default::default() };
+    assert_eq!(protocol::apply_diff(&removal, &next).expect("unpin applies").pinned.len(), 2);
 }

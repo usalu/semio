@@ -38,7 +38,7 @@ pub use crate::schema::mutations::Process3dMutation;
 
 pub use crate::schema::diff::Process3dDiff;
 
-use crate::schema::diff::Process3dToolSolidChildList;
+use crate::schema::diff::{keyed_between, keyed_apply, keyed_is_empty, Process3dStepsDelta, Process3dToolSolidsDelta};
 
 pub const PROCESS_3D_SCHEMA: &str = "process.3d";
 
@@ -986,17 +986,19 @@ pub fn process_working_scene_from_snapshot(snapshot: &Process3dSnapshot) -> Proc
 }
 
 /// 🔁 Shared re-mint for every step-scoped mutation (`create`/`delete`/`rename`/`change-step-
-/// enabled`/`change-step-origin`/`replace-step-measure`/`reorder-steps`): given `base` and an
-/// already-edited step list, rebuilds `steps`/`step_payloads`/`tool_solids` by delegating to
+/// enabled`/`change-step-origin`/`replace-step-measure`/`reorder-steps`): given `base` and the kind's own step-row delta, derives
+/// the minted `steps` handle and the `tool_solids` delta by delegating to
 /// `process_working_scene_to_snapshot` — the one place real composed-child content is minted —
 /// so no mutation duplicates that minting logic. `stock`/`workshop` are carried
 /// through from `base` untouched; callers only ever splice the returned diff's `steps`/
 /// `step_payloads`/`tool_solids` fields into their own `Process3dDiff`.
-pub fn process3d_step_timeline_diff(base: &Process3dSnapshot, new_steps: Vec<ProcessStep>) -> Process3dDiff {
+pub fn process3d_step_timeline_diff(base: &Process3dSnapshot, steps: Process3dStepsDelta) -> Process3dDiff {
+    let after = keyed_apply(&base.step_payloads, &steps).unwrap_or_else(|_| base.step_payloads.clone());
     let mut scene = process_working_scene_from_snapshot(base);
-    scene.steps = new_steps;
+    scene.steps = after;
     let minted = process_working_scene_to_snapshot(&scene, base.workshop.clone());
-    Process3dDiff { steps: Some(minted.steps), step_payloads: Some(minted.step_payloads), tool_solids: Some(Process3dToolSolidChildList { values: minted.tool_solids }), ..Default::default() }
+    let tool_solids = keyed_between::<Process3dToolSolidsDelta>(&base.tool_solids, &minted.tool_solids);
+    Process3dDiff { steps: (minted.steps != base.steps).then_some(minted.steps), step_payloads: Some(steps), tool_solids: (!keyed_is_empty(&tool_solids)).then_some(tool_solids), ..Default::default() }
 }
 //#endregion 🔖️SceneConverters
 //#endregion 🔖️WorkingScene

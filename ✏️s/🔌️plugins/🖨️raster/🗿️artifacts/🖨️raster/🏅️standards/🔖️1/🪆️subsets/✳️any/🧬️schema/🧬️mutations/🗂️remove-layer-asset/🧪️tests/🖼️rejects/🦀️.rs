@@ -114,3 +114,9 @@ async fn declared_outcome_holds() {
     let declared_path: Vec<String> = outcome.get("path").and_then(semio_framework_pack_json::Value::as_array).expect("a rejected outcome declares a path").iter().map(|entry| entry.as_str().expect("path segments are strings").to_string()).collect();
     assert_eq!(declared_path, message.target, "remove-layer-asset/rejects-removing-an-asset-the-document-never-attached: the declared path must match the emitted target");
 }
+
+/// ⚖️ The concrete inverse's diffs sum to exactly the negative of the forward diff, restoring the committed before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_sums_to_the_negative_diff() {
+    crate::mutations::sum_law::assert_raster_inverse_sum_law(&mutation(), &before()).await;
+}

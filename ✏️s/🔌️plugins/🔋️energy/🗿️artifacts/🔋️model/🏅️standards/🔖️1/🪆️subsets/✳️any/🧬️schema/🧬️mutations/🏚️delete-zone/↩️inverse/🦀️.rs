@@ -8,7 +8,7 @@ use crate::EnergyModelSnapshot;
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
 pub fn inverse(payload: &super::DeleteZone, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    let Some(existing) = base.model.zones.iter().find(|item| item.id == payload.id) else {
+    let Some((index, existing)) = base.model.zones.iter().enumerate().find(|(_, item)| item.id == payload.id) else {
         return Vec::new();
     };
     if base.model.spaces.iter().any(|item| item.zone_id == payload.id)
@@ -32,7 +32,7 @@ pub fn inverse(payload: &super::DeleteZone, base: &EnergyModelSnapshot) -> Resul
     {
         return Vec::new();
     }
-    vec![vocabulary::create_zone(existing.id, existing.name.clone(), existing.volume_m3, existing.multiplier, existing.conditioned, existing.part_of_total_floor_area)]
+    vec![vocabulary::create_zone(existing.id, existing.name.clone(), existing.volume_m3, existing.multiplier, existing.conditioned, existing.part_of_total_floor_area, Some(index as u32))]
 
     })())
 }

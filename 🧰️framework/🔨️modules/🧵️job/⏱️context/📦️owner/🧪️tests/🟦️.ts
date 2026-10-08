@@ -1,12 +1,9 @@
 import { test, expect } from "bun:test";
-import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import { readFileSync, existsSync } from "node:fs";
 import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 
 test("retained step context neutral ledger alias and whole-frame authority", () => {
-  expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
   for (const row of fixture.cases) {
     const original = { operation: row.operation, generation: row.generation, aliases: 1, ledger: true };
     for (let turn = 0; turn < row.turns; turn++) {

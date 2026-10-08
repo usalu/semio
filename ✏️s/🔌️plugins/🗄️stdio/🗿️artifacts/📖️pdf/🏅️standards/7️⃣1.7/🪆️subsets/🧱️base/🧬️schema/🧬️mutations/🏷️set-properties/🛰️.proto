@@ -7,4 +7,5 @@ import "../../🔺️diff/🛰️.proto";
 // 🏷️ Direct set-properties protobuf payload.
 message SetPropertiesMutation {
   PdfNamedProperties properties = 1;
+  optional uint64 index = 2;
 }

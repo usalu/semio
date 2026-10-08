@@ -42,5 +42,5 @@ pub fn handle(payload: &AddBeam, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &C
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.elements.iter().map(|e| element_id(e).to_string()), "e");
     let element = FemElement::Beam { id, start: payload.start.clone(), end: payload.end.clone(), material_id: payload.material_id.clone(), section_id: payload.section_id.clone() };
-    Ok(Emit::mutations(vec![Fem2dMutation::CreateElement(crate::standards::v1::subsets::any::schema::mutations::create_element::CreateElement { element: Box::new(element) })]))
+    Ok(Emit::mutations(vec![Fem2dMutation::CreateElement(crate::standards::v1::subsets::any::schema::mutations::create_element::CreateElement { element: Box::new(element), index: None })]))
 }

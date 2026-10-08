@@ -30,7 +30,7 @@ async fn field_sweep() {
     let keep_relation = &relations.modified.iter().find(|m| m.key == "keep-relation").expect("keep-relation modified").diff;
     assert!(keep_relation.kind.is_some() && keep_relation.from.is_some() && keep_relation.to.is_some());
 
-    assert_eq!(d.apply(&a).expect("apply must succeed for a well-formed fixture"), b);
+    assert_eq!(protocol::apply_diff(&d, &a).expect("apply must succeed for a well-formed fixture"), b);
     assert!(SemioModelDiff::between(&a, &a).is_empty());
 }
 
@@ -39,8 +39,8 @@ async fn field_sweep() {
 async fn between_roundtrip_law() {
     let a = sweep_a();
     let b = sweep_b();
-    assert_eq!(SemioModelDiff::between(&a, &b).apply(&a).expect("apply must succeed for a well-formed fixture"), b);
-    assert_eq!(SemioModelDiff::between(&b, &a).apply(&b).expect("apply must succeed for a well-formed fixture"), a);
+    assert_eq!(protocol::apply_diff(&SemioModelDiff::between(&a, &b), &a).expect("apply must succeed for a well-formed fixture"), b);
+    assert_eq!(protocol::apply_diff(&SemioModelDiff::between(&b, &a), &b).expect("apply must succeed for a well-formed fixture"), a);
 }
 
 /// 🧪️ inverse_law: `d.inverse(base).apply(&d.apply(base)) == base`.
@@ -49,9 +49,9 @@ async fn inverse_law() {
     let a = sweep_a();
     let b = sweep_b();
     let d = SemioModelDiff::between(&a, &b);
-    let applied = d.apply(&a).expect("apply must succeed for a well-formed fixture");
+    let applied = protocol::apply_diff(&d, &a).expect("apply must succeed for a well-formed fixture");
     let inv = d.inverse(&a);
-    assert_eq!(inv.apply(&applied).expect("apply must succeed for a well-formed fixture"), a);
+    assert_eq!(protocol::apply_diff(&inv, &applied).expect("apply must succeed for a well-formed fixture"), a);
 }
 
 /// 🧪️ absorb_law: `absorb(d1,d2).apply(base) == d2.apply(&d1.apply(base))`, including the
@@ -66,17 +66,17 @@ async fn absorb_law() {
 
     let d1 = SemioModelDiff::between(&base, &mid);
     let d2 = SemioModelDiff::between(&mid, &after);
-    let sequential = d2.apply(&d1.apply(&base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
+    let sequential = protocol::apply_diff(&d2, &protocol::apply_diff(&d1, &base).expect("apply must succeed for a well-formed fixture")).expect("apply must succeed for a well-formed fixture");
 
     let mut absorbed = d1.clone();
     absorbed.absorb(d2.clone());
-    assert_eq!(absorbed.apply(&base).expect("apply must succeed for a well-formed fixture"), sequential);
-    assert_eq!(absorbed.apply(&base).expect("apply must succeed for a well-formed fixture"), after);
+    assert_eq!(protocol::apply_diff(&absorbed, &base).expect("apply must succeed for a well-formed fixture"), sequential);
+    assert_eq!(protocol::apply_diff(&absorbed, &base).expect("apply must succeed for a well-formed fixture"), after);
 
     // Canonical case: Insert(X) absorbed with Remove(X) annihilates the add.
     let mut with_add = SemioModelDiff::default();
     with_add.elements =
-        Some(NamedTripleDiff { removed: vec![], modified: vec![], added: vec![SemioModelElement { id: "temp".into(), class: ElementClass::Wall, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] }] });
+        Some(NamedTripleDiff { removed: vec![], modified: vec![], added: vec![NamedAdded { index: 0, item: SemioModelElement { id: "temp".into(), class: ElementClass::Wall, placement: SemioTransform::identity(), geometry: GeometryRef::None, spatial_id: None, psets: vec![] } }] });
     let mut with_remove = SemioModelDiff::default();
     with_remove.elements = Some(NamedTripleDiff { removed: vec!["temp".to_string()], modified: vec![], added: vec![] });
     let mut annihilated = with_add.clone();
@@ -91,7 +91,7 @@ async fn absorb_law() {
     patched_add.absorb(with_set);
     let patched = patched_add.elements.as_ref().expect("elements diff present after patch-into-added");
     assert_eq!(patched.added.len(), 1);
-    assert_eq!(patched.added[0].class, ElementClass::Door, "add-then-set-field must patch INTO the carried added payload");
+    assert_eq!(patched.added[0].item.class, ElementClass::Door, "add-then-set-field must patch INTO the carried added payload");
 }
 
 /// 🧪️ diff_codec_text_binary_roundtrip_law: hand-rolled `DiffCodec` text+binary round trip.

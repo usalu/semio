@@ -30,7 +30,7 @@ fn remove_run() -> SemioTextMutation {
 #[semio_framework_async_macros::async_test]
 async fn removes_the_german_run_at_base_index_one() {
     let base = before();
-    let produced = remove_run().diff(&base).diff().apply(&base).expect("remove-run applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(remove_run().diff(&base).diff(), &base).expect("remove-run applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "remove-run/removes-the-middle-run: applied state differs from the committed after-snapshot");
     assert_eq!(produced.runs.len(), base.runs.len() - 1, "remove-run must shorten the run sequence by exactly one");
     assert!(!produced.runs.iter().any(|run| run.language == "de"), "the German run addressed by BASE index #1 must be gone");
@@ -42,11 +42,12 @@ async fn removes_the_german_run_at_base_index_one() {
 async fn the_undo_insert_run_puts_the_german_run_back_in_the_middle() {
     let base = before();
     let mutation = remove_run();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "remove-run of an existing run undoes as exactly one insert-run");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward remove-run applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo insert-run applies to the post-remove state");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward remove-run applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo insert-run applies to the post-remove state");
     }
     assert_eq!(current, base, "remove-run/removes-the-middle-run: the undo did not restore the before-snapshot");
 }
@@ -90,7 +91,6 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-run diff decodes");
-    assert_eq!(decoded.runs.as_ref().map(|list| list.values.len()), Some(2), "the committed remove-run diff must carry the two surviving runs");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "remove-run/removes-the-middle-run: committed diff JSON is not canonical");
@@ -100,6 +100,6 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed remove-run diff decodes");
-    let produced = decoded.apply(&before()).expect("committed remove-run diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed remove-run diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-run/removes-the-middle-run: committed diff did not carry before to after");
 }

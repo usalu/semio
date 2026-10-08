@@ -1,10 +1,7 @@
-#[test]
-fn removes_first_wall() {
-    use crate::mutations::remove_wall::RemoveWall;
-    use crate::En1996Snapshot;
-    use protocol::MutationKind;
-    let base = En1996Snapshot::compliant_clay_wall();
-    let m = RemoveWall { index: 0 };
-    let outcome = <RemoveWall as MutationKind<En1996Snapshot, crate::En1996Mutation>>::diff(&m, &base);
-    assert!(outcome.diff().walls.as_ref().unwrap().values.is_empty());
+//! 🧪️ `remove-wall` — the committed applied vector's inverse diffs sum to the negative of its forward diff.
+
+#[semio_framework_async_macros::async_test]
+async fn remove_wall_inverse_diffs_sum_to_the_negative_diff() {
+    let (mutation, before) = crate::mutations::fixture_tests::applied_vector("remove-wall");
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
 }

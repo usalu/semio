@@ -60,62 +60,8 @@ fn natural_file_route_matches_independent_rotation_and_retains_other_pdf_objects
     assert_eq!(reopened.pages[index].rotate, i32::from(rotation));
     assert_eq!(reopened.pages[0].text(), original.pages[0].text());
     assert_eq!(reopened.info, original.info);
-    let operation = <Pdf17Editor as ArtifactEditor>::whole_document_operation(reopened.clone()).expect("natural Open publishes one mutation");
-    let mut fresh = <Pdf17Editor as ArtifactEditor>::initial_snapshot();
-    crate::schema::mutations::apply_pdf_mutation(&mut fresh, &operation);
-    assert_eq!(fresh, reopened);
     assert_eq!(snapshot.pages[0], original.pages[0], "an unedited page remains unchanged");
     assert!(<Pdf17Editor as ArtifactEditor>::decode_natural_file(fixture["invalidText"].as_str().unwrap().as_bytes()).is_err());
-}
-
-#[semio_framework_async_macros::async_test]
-async fn natural_file_route_uses_registered_media_and_isolates_reopened_history() {
-    use semio_framework_plugin::{artifact_app_laws, app::{MediaArtifact, MediaArtifactDescriptor}, EditorApp, MediaWireFormat, PluginApp, NATURAL_FILE_PORT};
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/📄️natural-file-edit/🔣️.json")).unwrap();
-    let input = include_bytes!("../../../🧫️fixtures/✏️edit-existing-pdf/2️⃣two-pages.pdf");
-    let artifact = |data: Vec<u8>| MediaArtifact {
-        descriptor: MediaArtifactDescriptor { edge_id: None, port_id: Some(NATURAL_FILE_PORT.into()), kind_id: Some("s.stdio.pdf@1.7".into()), media_type: None, wire: MediaWireFormat::Binary { format_kind: "s.stdio.pdf@1.7".into() }, blob_hash: None },
-        data,
-    };
-    let mut app = artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
-    app.consume_media(NATURAL_FILE_PORT, artifact(input.to_vec())).await.expect("registered PDF natural import");
-    artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.unwrap();
-    let opened = app.snapshot().unwrap().clone();
-    let refused = match app.consume_media(NATURAL_FILE_PORT, artifact(fixture["invalidText"].as_str().unwrap().as_bytes().to_vec())).await {
-        Err(_) => true,
-        Ok(_) => artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.is_err(),
-    };
-    assert!(refused, "malformed natural input must be refused before publication");
-    assert_eq!(app.snapshot().unwrap(), opened, "a refused natural import must preserve the document and history");
-    let index = fixture["mutation"]["params"]["index"].as_u64().unwrap() as usize;
-    let rotation = fixture["expected"]["rotation"].as_f64().unwrap();
-    let args = semio_framework_value::DslValue::object([("page".into(), semio_framework_value::DslValue::float(index as f64)), ("x".into(), semio_framework_value::DslValue::float(rotation))]);
-    app.handle_action("set-page-rotation", Some(&args), &artifact_app_laws::meta("local")).await.unwrap();
-    artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.unwrap();
-    let edited = app.snapshot().unwrap().clone();
-    assert_eq!(edited.pages[index].rotate, rotation as i32);
-    let saved = app.produce_media(NATURAL_FILE_PORT).await.expect("registered PDF natural save");
-    assert!(saved.data.starts_with(b"%PDF-"));
-    assert_eq!(saved.descriptor.port_id.as_deref(), Some(NATURAL_FILE_PORT));
-    let projected = semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::project_pdf_1_7(&saved.data).unwrap();
-    assert_eq!(serde_json::from_str::<serde_json::Value>(&projected.to_string()).unwrap()["pages"][index]["rotate"], fixture["expected"]["rotation"]);
-    let mut reopened = artifact_app_laws::new_registered_app::<EditorApp<Pdf17Editor>, _>(async { semio_framework_plugin::App { definition: create_pdf17_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
-    reopened.bind_instance_id(2).await;
-    reopened.consume_media(NATURAL_FILE_PORT, saved).await.expect("fresh owner imports exported bytes");
-    artifact_app_laws::settle_registered_typed_operation(&mut reopened, 2).await.unwrap();
-    let reopened_snapshot = reopened.snapshot().unwrap().clone();
-    assert_eq!(reopened_snapshot.pages[index].rotate, rotation as i32);
-    artifact_app_laws::settle_history_verb(&mut app, "undo", 1).await;
-    assert_eq!(app.snapshot().unwrap(), opened);
-    assert_eq!(reopened.snapshot().unwrap(), reopened_snapshot, "source Undo cannot change the reopened owner");
-    artifact_app_laws::settle_history_verb(&mut app, "redo", 1).await;
-    assert_eq!(app.snapshot().unwrap(), edited);
-    artifact_app_laws::settle_history_verb(&mut reopened, "undo", 2).await;
-    assert_eq!(app.snapshot().unwrap(), edited, "reopened Undo cannot change the source owner");
-    artifact_app_laws::settle_history_verb(&mut reopened, "redo", 2).await;
-    assert_eq!(reopened.snapshot().unwrap(), reopened_snapshot);
-    artifact_app_laws::close_registered_fixture_app(&mut reopened);
-    artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]

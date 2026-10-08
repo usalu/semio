@@ -58,12 +58,53 @@ impl store::ArtifactPack for CadWorldWindowConfig {
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Self::__dsl_spec()) }
 }
 
-store::impl_whole_record_config!(CadWorldWindowConfig);
+impl store::ConfigRecord for CadWorldWindowConfig {}
+
+/// 🔺️ Sparse delta of one world window's preferences: only the sub-records a mutation actually changes.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct CadWorldWindowConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera: Option<CadCamera>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub sun: Option<CadSunConfig>,
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub dislocate_options: Option<CadDislocateOptions>,
+}
+
+impl protocol::MutationDiff<CadWorldWindowConfig> for CadWorldWindowConfigDiff {
+    fn apply(&self, base: &CadWorldWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<CadWorldWindowConfig> {
+        Ok(CadWorldWindowConfig { camera: self.camera.clone().unwrap_or_else(|| base.camera.clone()), sun: self.sun.clone().unwrap_or_else(|| base.sun.clone()), dislocate_options: self.dislocate_options.unwrap_or(base.dislocate_options) })
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.camera.is_some() {
+            self.camera = other.camera;
+        }
+        if other.sun.is_some() {
+            self.sun = other.sun;
+        }
+        if other.dislocate_options.is_some() {
+            self.dislocate_options = other.dislocate_options;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<CadWorldWindowConfig> for CadWorldWindowConfigDiff {
+    fn inverse(&self, base: &CadWorldWindowConfig) -> Self {
+        Self { camera: self.camera.as_ref().map(|_| base.camera.clone()), sun: self.sun.as_ref().map(|_| base.sun.clone()), dislocate_options: self.dislocate_options.map(|_| base.dislocate_options) }
+    }
+    fn between(base: &CadWorldWindowConfig, other: &CadWorldWindowConfig) -> Self {
+        Self { camera: (base.camera != other.camera).then(|| other.camera.clone()), sun: (base.sun != other.sun).then(|| other.sun.clone()), dislocate_options: (base.dislocate_options != other.dislocate_options).then_some(other.dislocate_options) }
+    }
+    fn is_empty(&self) -> bool {
+        *self == Self::default()
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum)]
 pub enum CadWorldWindowConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
+    #[dsl(key = "set")]
+    Set {
         #[dsl(block)]
         config: Box<CadWorldWindowConfig>,
     },
@@ -93,14 +134,14 @@ impl protocol::OpBinary for CadWorldWindowConfigMutation {
 }
 
 impl Mutation<CadWorldWindowConfig> for CadWorldWindowConfigMutation {
-    type Diff = CadWorldWindowConfig;
+    type Diff = CadWorldWindowConfigDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎚️config",
         semantic_kind: "set-window-config",
         display_name: "Set CAD World Window Configuration",
         emoji: "🎚️",
-        aggregate_variant: "Snapshot",
+        aggregate_variant: "Set",
         payload_schema: "cad.worldwindowconfig",
         text_opcode: None,
         binary_tag: None,
@@ -112,15 +153,20 @@ impl Mutation<CadWorldWindowConfig> for CadWorldWindowConfigMutation {
     }];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
     fn diff(&self, base: &CadWorldWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
-        match self {
-            Self::Snapshot { config } if config.as_ref() == base => protocol::MutationOutcome::new(base.clone()).warning("mutation.no-op", "CAD world-window configuration is already up to date."),
-            Self::Snapshot { config } => protocol::MutationOutcome::new(config.as_ref().clone()),
+        let Self::Set { config } = self;
+        let diff = CadWorldWindowConfigDiff {
+            camera: (base.camera != config.camera).then(|| config.camera.clone()),
+            sun: (base.sun != config.sun).then(|| config.sun.clone()),
+            dislocate_options: (base.dislocate_options != config.dislocate_options).then_some(config.dislocate_options),
+        };
+        if diff == CadWorldWindowConfigDiff::default() {
+            return protocol::MutationOutcome::new(diff).warning("mutation.no-op", "CAD world-window configuration is already up to date.");
         }
+        protocol::MutationOutcome::new(diff)
     }
     fn inverse(&self, base: &CadWorldWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| { vec![Self::Snapshot { config: Box::new(base.clone()) }] 
-    })())
-}
+        Ok(vec![Self::Set { config: Box::new(base.clone()) }])
+    }
 }
 
 macro_rules! cad_world_window_config_owner {
@@ -156,7 +202,7 @@ pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> CadWorldW
 pub fn addressed(view: &semio_framework_plugin::ViewModel, config: CadWorldWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> {
     let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("cad.window.required: command has no addressed window instance"))?;
     let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("cad.window.stale: addressed window instance is not open"))?;
-    let mutation = CadWorldWindowConfigMutation::Snapshot { config: Box::new(config) };
+    let mutation = CadWorldWindowConfigMutation::Set { config: Box::new(config) };
     match kind {
         shape::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<shape::config::CadShapeWindowConfigOwner>(id, mutation)),
         building::WINDOW_KIND_ID => Ok(semio_framework_plugin::WindowConfigMutation::of::<building::config::CadBuildingWindowConfigOwner>(id, mutation)),

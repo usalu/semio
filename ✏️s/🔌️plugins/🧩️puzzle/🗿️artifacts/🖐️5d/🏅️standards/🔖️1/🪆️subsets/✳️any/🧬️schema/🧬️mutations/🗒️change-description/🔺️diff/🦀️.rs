@@ -1,12 +1,12 @@
 //! 🔺️ Sparse diff builder for `ChangeDescription` — patches the document `meta.description`.
-use crate::standards::v1::subsets::any::schema::diff::Puzzle5dDiff;
-use crate::{Puzzle5dMeta, Puzzle5dSnapshot};
+use crate::standards::v1::subsets::any::schema::diff::{Puzzle5dDiff, Puzzle5dMetaPatch};
+use crate::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeDescription, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
     if payload.new_description == base.meta.description {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Description is unchanged.");
     }
-    protocol::MutationOutcome::new(Puzzle5dDiff { meta: Some(Puzzle5dMeta { description: payload.new_description.clone() }), ..Default::default() })
+    protocol::MutationOutcome::new(Puzzle5dDiff { meta: Some(Puzzle5dMetaPatch { description: Some(payload.new_description.clone()) }), ..Default::default() })
 }
 //#endregion 🔖️Diff

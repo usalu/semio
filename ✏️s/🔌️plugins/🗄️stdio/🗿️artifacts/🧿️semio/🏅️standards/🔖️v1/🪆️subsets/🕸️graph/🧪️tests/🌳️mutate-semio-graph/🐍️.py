@@ -48,7 +48,7 @@ from __future__ import annotations
 import json
 import struct
 
-from semio_repo_test import Adapter, Context, Outcome, digest, patched_snapshot, snapshot_patch_inverse
+from semio_repo_test import Adapter, Context, Outcome, digest
 
 # endregion 🔖️Imports
 
@@ -678,7 +678,6 @@ TAG_OF_KIND = {
     "set-edge-property": "SetEdgeProperty",
     "add-edge-property": "AddEdgeProperty",
     "remove-edge-property": "RemoveEdgeProperty",
-    "patch-snapshot": "PatchSnapshot",
 }
 
 
@@ -749,8 +748,6 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     no-op — a quietly skipped mutation would report as a pass."""
     result = clone(document)
     tag, args = tagged(mutation)
-    if tag == "PatchSnapshot":
-        return patched_snapshot(document, args["patch"])
     if tag == "CreateNode":
         if any(node["id"] == args["id"] for node in result["nodes"]):
             raise AssertionError("CreateNode uses id %r, which the graph already carries" % args["id"])
@@ -836,8 +833,6 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
     meanings — an append is undone by the matching delete, an overwrite by an overwrite with the
     value it displaced, and a cascading delete by re-creating the node AND every edge it severed."""
     tag, args = tagged(mutation)
-    if tag == "PatchSnapshot":
-        return [{"PatchSnapshot": {"patch": snapshot_patch_inverse(document, args["patch"])}}]
     if tag == "CreateNode":
         return [{"DeleteNode": {"id": clone(args["id"])}}]
     if tag == "DeleteNode":

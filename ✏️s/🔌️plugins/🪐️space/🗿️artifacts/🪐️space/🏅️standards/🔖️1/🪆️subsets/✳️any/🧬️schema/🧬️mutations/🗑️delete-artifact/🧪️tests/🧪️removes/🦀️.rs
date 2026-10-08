@@ -37,7 +37,7 @@ fn built_outcome() -> protocol::MutationOutcome<SSpaceDiff> {
 /// ▶️ Deleting `artifact-2` filters that one row out and keeps `artifact-1` in place.
 #[semio_framework_async_macros::async_test]
 async fn filters_the_named_row_out_of_the_committed_after() {
-    let applied = protocol::MutationDiff::apply(built_outcome().diff(), &before()).expect("delete-artifact applies to its committed before-index");
+    let applied = protocol::apply_diff(built_outcome().diff(), &before()).expect("delete-artifact applies to its committed before-index");
     assert_eq!(applied, expected_after(), "delete-artifact/removes-artifact-2-from-the-index: the filtered index differs from the committed after-snapshot");
     assert!(!applied.artifacts.iter().any(|row| row.id == "artifact-2"), "delete-artifact/removes-artifact-2-from-the-index: artifact-2 survived its own deletion");
 }
@@ -48,12 +48,12 @@ async fn filters_the_named_row_out_of_the_committed_after() {
 async fn recreating_the_removed_row_restores_before() {
     let base = before();
     let forward = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::diff(&mutation(), &base);
-    let mut snapshot = protocol::MutationDiff::apply(forward.diff(), &base).expect("forward delete-artifact applies");
+    let mut snapshot = protocol::apply_diff(forward.diff(), &base).expect("forward delete-artifact applies");
     let inverse = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::inverse(&mutation(), &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse.len(), 1, "delete-artifact/removes-artifact-2-from-the-index: the inverse of one delete is exactly one create");
     for step in &inverse {
         let undo = <SSpaceMutation as protocol::Mutation<SSpaceSnapshot>>::diff(step, &snapshot);
-        snapshot = protocol::MutationDiff::apply(undo.diff(), &snapshot).expect("the create-artifact inverse step applies");
+        snapshot = protocol::apply_diff(undo.diff(), &snapshot).expect("the create-artifact inverse step applies");
     }
     assert_eq!(snapshot, base, "delete-artifact/removes-artifact-2-from-the-index: re-creating artifact-2 did not restore the before-index");
 }
@@ -106,6 +106,12 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded = decode_value::<SSpaceDiff>(DIFF);
-    let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-index");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-index");
     assert_eq!(produced, expected_after(), "delete-artifact/removes-artifact-2-from-the-index: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

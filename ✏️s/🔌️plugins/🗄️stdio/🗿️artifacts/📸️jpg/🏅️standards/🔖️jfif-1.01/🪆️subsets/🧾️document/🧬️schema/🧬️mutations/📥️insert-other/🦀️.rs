@@ -4,7 +4,7 @@ use crate::schema::mutations::JpgMutation;
 use crate::schema::snapshot::*;
 
 //#region Payload
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[derive(semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InsertOtherSegmentMutation {
@@ -24,18 +24,8 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for InsertOtherSegmentMuta
         protocol::MutationOutcome::new(contribute(base, *index, segment.clone()))
     }
     fn inverse(&self, base: &JpgSnapshot) -> Result<Vec<JpgMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let Self { index, .. } = self;
-        let outcome = <Self as protocol::MutationKind<JpgSnapshot, JpgMutation>>::diff(self, base);
-        if <JpgDiff as protocol::DiffAlgebra<JpgSnapshot>>::is_empty(outcome.diff()) {
-            return Vec::new();
-        }
-        {
-            vec![JpgMutation::RemoveOtherSegment(crate::schema::mutations::RemoveOtherSegmentMutation { index: (*index).min(base.other_segments.len()) })]
-        }
-    
-    })())
-}
+        Ok(vec![JpgMutation::RemoveOtherSegment(crate::schema::mutations::RemoveOtherSegmentMutation { index: self.index.min(base.image.other_segments.len()) })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Insert other segment", "Sonstiges Segment einfügen")
     }
@@ -44,9 +34,7 @@ impl protocol::MutationKind<JpgSnapshot, JpgMutation> for InsertOtherSegmentMuta
     }
 }
 pub fn contribute(base: &JpgSnapshot, index: usize, segment: JpgSegment) -> JpgDiff {
-    let at = index.min(base.other_segments.len());
+    let at = index.min(base.image.other_segments.len());
     JpgDiff { other_segments: Some(JpgOtherSegmentsDiff { removed: vec![], modified: vec![], added: vec![JpgSegmentAdded { index: at, item: segment }] }), ..Default::default() }
 }
 //#endregion Semantics
-
-

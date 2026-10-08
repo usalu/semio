@@ -8,7 +8,7 @@ use crate::EnergyModelSnapshot;
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
 pub fn inverse(payload: &super::DeleteSurface, base: &EnergyModelSnapshot) -> Result<Vec<EnergyModelMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    let Some(existing) = base.model.surfaces.iter().find(|item| item.id == payload.id) else {
+    let Some((index, existing)) = base.model.surfaces.iter().enumerate().find(|(_, item)| item.id == payload.id) else {
         return Vec::new();
     };
     if base.model.surfaces.iter().any(|item| item.outside_boundary_condition.interzone_partner() == Some(payload.id)) {
@@ -26,8 +26,9 @@ pub fn inverse(payload: &super::DeleteSurface, base: &EnergyModelSnapshot) -> Re
         existing.sun_exposed,
         existing.wind_exposed,
         existing.multiplier,
+        Some(index as u32),
     )];
-    for window in base.model.fenestrations.iter().filter(|item| item.surface_id == payload.id) {
+    for (window_index, window) in base.model.fenestrations.iter().enumerate().filter(|(_, item)| item.surface_id == payload.id) {
         steps.push(vocabulary::create_fenestration(
             window.id,
             window.name.clone(),
@@ -45,6 +46,7 @@ pub fn inverse(payload: &super::DeleteSurface, base: &EnergyModelSnapshot) -> Re
             window.fin_depth_m,
             window.fin_offset_m,
             window.glazing_construction_id,
+            Some(window_index as u32),
         ));
         // 🔶️ `create-fenestration` does not carry the aperture's own polygon, so a window that had
         // one gets it back with the step right after its re-creation. This list is reversed below
@@ -53,8 +55,8 @@ pub fn inverse(payload: &super::DeleteSurface, base: &EnergyModelSnapshot) -> Re
             steps.push(vocabulary::replace_fenestration_vertices(window.id, window.vertices_m.clone()));
         }
     }
-    for pair in base.model.adjacency_pairs.iter().filter(|item| item.surface_a_id == payload.id || item.surface_b_id == payload.id) {
-        steps.push(vocabulary::connect_surfaces(pair.surface_a_id, pair.surface_b_id));
+    for (pair_index, pair) in base.model.adjacency_pairs.iter().enumerate().filter(|(_, item)| item.surface_a_id == payload.id || item.surface_b_id == payload.id) {
+        steps.push(vocabulary::connect_surfaces(pair.surface_a_id, pair.surface_b_id, Some(pair_index as u32)));
     }
     // ↩️ The store replays an inverse in REVERSE order (`ArtifactStore::replay_mutations`'s
     // `back.reverse()`, pinned by `protocol_laws::assert_mutation_inverse_law`), so the parent step

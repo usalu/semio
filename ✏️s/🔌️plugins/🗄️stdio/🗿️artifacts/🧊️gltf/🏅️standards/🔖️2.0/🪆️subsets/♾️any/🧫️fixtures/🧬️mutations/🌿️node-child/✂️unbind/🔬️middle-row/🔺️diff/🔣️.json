@@ -1,0 +1,15 @@
+{
+  "nodes": {
+    "modified": [
+      {
+        "index": 0,
+        "diff": {
+          "children": [
+            1,
+            3
+          ]
+        }
+      }
+    ]
+  }
+}

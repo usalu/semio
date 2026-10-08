@@ -6,34 +6,201 @@
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "artifact": {
-      "$ref": "#/$defs/Generation2dArtifact",
+    "schema": {
+      "type": "string",
       "x-semio-state": "artifact"
     },
-    "hostSnapshot": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/artifact.json#/$defs/FlowHostSnapshot",
+    "camera": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/artifact.json#/$defs/CameraJson",
       "x-semio-state": "artifact"
     },
-    "generation": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/artifact.json#/$defs/GenerationPlayState",
+    "widgets": {
+      "$ref": "#/$defs/Generation2dWidgetsDelta",
+      "x-semio-state": "artifact"
+    },
+    "synapses": {
+      "$ref": "#/$defs/Generation2dSynapsesDelta",
+      "x-semio-state": "artifact"
+    },
+    "layout": {
+      "$ref": "#/$defs/Generation2dLayoutDelta",
+      "x-semio-state": "artifact"
+    },
+    "generations": {
+      "$ref": "#/$defs/Generation2dGenerationsDelta",
+      "x-semio-state": "artifact"
+    },
+    "selectedGeneration": {
+      "$ref": "#/$defs/Generation2dSelectionChange",
+      "x-semio-state": "artifact"
+    },
+    "previewText": {
+      "$ref": "#/$defs/Generation2dPreviewChange",
       "x-semio-state": "artifact"
     }
   },
   "$defs": {
-    "Generation2dArtifact": {
-      "title": "Generation2dArtifact",
+    "Generation2dWidgetsDelta": {
+      "title": "Generation2dWidgetsDelta",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "hostSnapshot",
-        "generation"
+        "added",
+        "removed",
+        "patched"
       ],
       "properties": {
-        "hostSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/artifact.json#/$defs/FlowHostSnapshot"
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
-        "generation": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/procedural/generation2d/artifact.json#/$defs/GenerationPlayState"
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Generation2dSynapsesDelta": {
+      "title": "Generation2dSynapsesDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Generation2dLayoutDelta": {
+      "title": "Generation2dLayoutDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "Generation2dGenerationsDelta": {
+      "title": "Generation2dGenerationsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Generation2dSelectionChange": {
+      "title": "Generation2dSelectionChange",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Generation2dPreviewChange": {
+      "title": "Generation2dPreviewChange",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }

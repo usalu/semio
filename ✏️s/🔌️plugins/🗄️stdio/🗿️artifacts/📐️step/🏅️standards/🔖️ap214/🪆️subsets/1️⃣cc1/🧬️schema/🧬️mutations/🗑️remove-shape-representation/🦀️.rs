@@ -1,9 +1,8 @@
-//! 🗑️ `remove-shape-representation` — one rule of CC1's conformance filter, authored as its own mutation leaf.
-//! The class-neutral edit is performed by the shared ladder module; this file only names the axis and
-//! routes to it, so each rule has ONE implementation and six class callers.
+//! 🗑️ `remove-shape-representation` -- deletes one `*_SHAPE_REPRESENTATION`; the instance is restored exactly at its position.
 
-use crate::standards::v_ap214::engine::ladder::ClassEdit;
-use crate::standards::v_ap214::subsets::cc1::schema::mutations::{class_diff, class_inverse, StepCc1Mutation};
+use crate::schema::diff::StepDiff;
+use crate::standards::v_ap214::engine::ladder;
+use crate::standards::v_ap214::subsets::cc1::schema::mutations::{rejected, restored, StepCc1Mutation, CLASS};
 use crate::StepSnapshot;
 
 //#region 🔖️Payload
@@ -16,18 +15,21 @@ pub struct RemoveShapeRepresentation {
 impl protocol::MutationKind<StepSnapshot, StepCc1Mutation> for RemoveShapeRepresentation {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "remove", entity: "shape-representation", kind: "remove-shape-representation", record: "RemovedShapeRepresentation" };
 
-    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<<StepCc1Mutation as protocol::Mutation<StepSnapshot>>::Diff> {
-        class_diff(base, &ClassEdit::Representation { id: self.id, row: None })
+    fn diff(&self, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
+        match ladder::remove_representation_diff(base, self.id) {
+            Ok(diff) => protocol::MutationOutcome::new(diff),
+            Err(message) => rejected(message),
+        }
     }
+
     fn inverse(&self, base: &StepSnapshot) -> Result<Vec<StepCc1Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        class_inverse(base, &ClassEdit::Representation { id: self.id, row: None })?
-    
-    })
-}
+        Ok(restored(ladder::restore_entity_rows(base, self.id)))
+    }
+
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove shape representation #{}", self.id), &format!("Formrepräsentation #{} entfernen", self.id))
     }
+
     fn target(&self) -> Vec<String> {
         vec![self.id.to_string()]
     }

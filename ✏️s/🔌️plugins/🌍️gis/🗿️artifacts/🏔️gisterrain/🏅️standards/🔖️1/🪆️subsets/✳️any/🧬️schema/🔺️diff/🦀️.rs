@@ -10,8 +10,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[artifact_schema(id = "s.gis.gisterrain")]
 pub struct GisTerrainDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::schema::GisTerrainArtifact>>,
-    #[state(artifact)]
     pub exaggeration: Option<f64>,
     #[state(artifact)]
     pub imported_map: Option<ImportedMapChange>,
@@ -25,38 +23,21 @@ pub struct ImportedMapChange{
 }
 //#endregion 🔹Diff
 
-use crate::schema::GisTerrainArtifact;
 use crate::GisTerrainSnapshot;
 use protocol::MutationDiff;
 
-impl GisTerrainDiff {
-    /// 🧬️ Applies sparse document changes to the artifact.
-    pub fn apply_to_artifact(&self, artifact: &GisTerrainArtifact) -> protocol::MutationApplyResult<GisTerrainArtifact> {
-        self.apply(&artifact.to_snapshot()).map(GisTerrainArtifact::from_snapshot)
-    }
-}
-
 impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
-    fn apply(&self, snapshot: &GisTerrainSnapshot) -> protocol::MutationApplyResult<GisTerrainSnapshot> {
-        Ok({
-            if let Some(replacement) = &self.artifact {
-                return Ok(replacement.to_snapshot());
-            }
-            let mut next = snapshot.clone();
-            if let Some(value) = self.exaggeration {
-                next.exaggeration = value;
-            }
-            if let Some(value) = &self.imported_map {
-                next.imported_map = value.value.clone();
-            }
-            next
-        })
+    fn apply(&self, snapshot: &GisTerrainSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GisTerrainSnapshot> {
+        let mut next = snapshot.clone();
+        if let Some(value) = self.exaggeration {
+            next.exaggeration = value;
+        }
+        if let Some(value) = &self.imported_map {
+            next.imported_map = value.value.clone();
+        }
+        Ok(next)
     }
     fn absorb(&mut self, other: Self) {
-        if other.artifact.is_some() {
-            *self = other;
-            return;
-        }
         macro_rules! take {
             ($field:ident) => {
                 if other.$field.is_some() {
@@ -69,6 +50,18 @@ impl MutationDiff<GisTerrainSnapshot> for GisTerrainDiff {
     }
 }
 
+impl protocol::DiffAlgebra<GisTerrainSnapshot> for GisTerrainDiff {
+    fn inverse(&self, base: &GisTerrainSnapshot) -> Self {
+        Self { exaggeration: self.exaggeration.map(|_| base.exaggeration), imported_map: self.imported_map.as_ref().map(|_| ImportedMapChange { value: base.imported_map.clone() }) }
+    }
+    fn between(base: &GisTerrainSnapshot, other: &GisTerrainSnapshot) -> Self {
+        Self { exaggeration: (base.exaggeration != other.exaggeration).then_some(other.exaggeration), imported_map: (base.imported_map != other.imported_map).then(|| ImportedMapChange { value: other.imported_map.clone() }) }
+    }
+    fn is_empty(&self) -> bool {
+        self.exaggeration.is_none() && self.imported_map.is_none()
+    }
+}
+
 /// ⚡️ Diff helpers used by mutations.
 pub fn diff_exaggeration(exaggeration: f64) -> GisTerrainDiff {
     GisTerrainDiff { exaggeration: Some(exaggeration), ..Default::default() }
@@ -76,10 +69,6 @@ pub fn diff_exaggeration(exaggeration: f64) -> GisTerrainDiff {
 
 pub fn diff_imported_map(value: Option<crate::schema::ImportedMap>) -> GisTerrainDiff {
     GisTerrainDiff { imported_map: Some(ImportedMapChange{value}), ..Default::default() }
-}
-
-pub fn diff_set_snapshot(snapshot: &GisTerrainSnapshot) -> GisTerrainDiff {
-    GisTerrainDiff { artifact: Some(Box::new(GisTerrainArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 
 #[cfg(test)]

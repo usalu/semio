@@ -296,8 +296,8 @@ impl ArtifactEditor for Mp4Editor {
         }
     }
 
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(Mp4Mutation::SetSnapshot(crate::standards::isobmff::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot }))
+    fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
+        semio_s_artifact_stdio_contract::import_media_as_load::<Self>(port, media)
     }
 
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
@@ -430,12 +430,7 @@ impl editing::SnapshotEditingEditor for Mp4Editor {
         if let Some(mutation) = mp4Editor_compact_mutation(event, &next, snapshot) {
             return Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() });
         }
-        editing::snapshot_edit_patch(
-            event,
-            snapshot,
-            |patch| Mp4Mutation::PatchSnapshot(crate::standards::isobmff::subsets::any::schema::mutations::patch_snapshot::PatchSnapshot { patch }),
-            Some(|snapshot| Mp4Mutation::SetSnapshot(crate::standards::isobmff::subsets::any::schema::mutations::set_snapshot::SetSnapshot { snapshot })),
-        )
+        semio_s_artifact_stdio_contract::editing::snapshot_edit_net_exact(event, snapshot, crate::standards::isobmff::subsets::any::schema::mutations::net_mutations)
     }
 }
 

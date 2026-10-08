@@ -8,30 +8,6 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
-      ],
-      "properties": {
-        "SetSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/set-snapshot/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "PatchSnapshot"
-      ],
-      "properties": {
-        "PatchSnapshot": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/patch-snapshot/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
         "StampBaseProfile"
       ],
       "properties": {
@@ -121,6 +97,18 @@
       "properties": {
         "StripNonTiny": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/strip-non-tiny/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RestoreNonTiny"
+      ],
+      "properties": {
+        "RestoreNonTiny": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/svg/1.1/tiny/mutation/restore-non-tiny/schema.json"
         }
       }
     }

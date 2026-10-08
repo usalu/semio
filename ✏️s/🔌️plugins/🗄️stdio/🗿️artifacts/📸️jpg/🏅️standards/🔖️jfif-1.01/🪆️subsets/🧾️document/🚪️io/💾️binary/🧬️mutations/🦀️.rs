@@ -13,17 +13,11 @@ pub struct Entry {
     pub decode: fn(&[u8]) -> Result<JpgMutation, protocol::ProtocolError>,
 }
 pub const REGISTRY: &[Entry] = &[
-    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::patch_snapshot::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::set_snapshot::CODEC,
     crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::change_jfif_header::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::replace_quant_table::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::remove_quant_table::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::replace_huffman_table::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::remove_huffman_table::CODEC,
-    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::change_restart_interval::CODEC,
     crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::insert_other_segment::CODEC,
     crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::remove_other_segment::CODEC,
     crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::replace_pixels::CODEC,
+    crate::standards::v_jfif_1_01::subsets::document::io::binary::mutations::replace_image::CODEC,
 ];
 //#endregion Registry
 
@@ -36,6 +30,9 @@ impl protocol::OpBinary for JpgMutation {
         Ok(result)
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        static SPEC:std::sync::OnceLock<Result<semio_framework_dsl::ProtocolFile,String>>=std::sync::OnceLock::new();
+        let spec=SPEC.get_or_init(||semio_framework_dsl::parse_protocol(COMPONENT_PROTOCOL_SEMIO).map_err(|error|error.to_string())).as_ref().map_err(|detail|protocol::ProtocolError::Malformed{what:"JPEG intent schema",offset:0,detail:detail.clone()})?;
+        semio_framework_dsl::walk_protocol(spec,bytes).map_err(|error|protocol::ProtocolError::Malformed{what:"JPEG intent framing",offset:error.offset as u64,detail:error.message})?;
         if bytes.len() < 2 || bytes[0] != store::pack_rt::OP_BINARY_FORMAT {
             return Err(protocol::ProtocolError::Malformed { what: "mutation frame", offset: 0, detail: "expected format byte and direct tag".into() });
         }
@@ -45,23 +42,11 @@ impl protocol::OpBinary for JpgMutation {
 }
 //#endregion Framing
 
-#[path = "📊️replace-quant/🦀️.rs"]
-pub mod replace_quant_table;
 
 #[path = "🪪️change-jfif/🦀️.rs"]
 pub mod change_jfif_header;
 
-#[path = "🧹️remove-quant/🦀️.rs"]
-pub mod remove_quant_table;
 
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-
-#[path = "🌳️replace-huffman/🦀️.rs"]
-pub mod replace_huffman_table;
 
 #[path = "🗑️remove-other/🦀️.rs"]
 pub mod remove_other_segment;
@@ -73,8 +58,7 @@ pub mod insert_other_segment;
 #[path = "🔲️replace-pixels/🦀️.rs"]
 pub mod replace_pixels;
 
-#[path = "🔁️change-restart/🦀️.rs"]
-pub mod change_restart_interval;
 
-#[path = "🪓️remove-huffman/🦀️.rs"]
-pub mod remove_huffman_table;
+
+#[path = "🖼️replace-image/🦀️.rs"]
+pub mod replace_image;

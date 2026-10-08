@@ -1,58 +1,25 @@
 {
-  "artifact": null,
-  "assets": null,
+  "schema": null,
+  "id": null,
+  "title": null,
   "blocks": {
-    "added": [
+    "rows": [
       {
-        "block": {
-          "color": [
-            0.0,
-            0.0,
-            0.0,
-            1.0
-          ],
-          "height": 40.0,
-          "id": "blk-ink",
-          "kind": "stroke",
-          "locked": false,
-          "name": "Sketch",
-          "points": [
-            [
-              0.0,
-              0.0
-            ],
-            [
-              10.0,
-              10.0
-            ]
-          ],
-          "rotation": 0.0,
-          "strokeWidth": 2.0,
-          "visible": true,
-          "width": 80.0,
-          "x": 20.0,
-          "y": 160.0
-        },
-        "index": 0,
-        "parentId": "blk-group"
+        "row": "move",
+        "id": "blk-ink",
+        "parentId": "blk-group",
+        "index": 0
       }
-    ],
-    "patched": [],
-    "removed": [
-      "blk-ink"
-    ],
-    "reordered": null
+    ]
   },
-  "eraserRadius": null,
-  "gridOpacity": null,
+  "gridVisible": null,
   "gridSpacing": null,
   "gridSubdivisions": null,
-  "gridVisible": null,
-  "id": null,
-  "linkedArtifact": null,
-  "pencilWidth": null,
-  "schema": null,
+  "gridOpacity": null,
   "snapEnabled": null,
   "snapGridSpacing": null,
-  "title": null
+  "pencilWidth": null,
+  "eraserRadius": null,
+  "assets": null,
+  "linkedArtifact": null
 }

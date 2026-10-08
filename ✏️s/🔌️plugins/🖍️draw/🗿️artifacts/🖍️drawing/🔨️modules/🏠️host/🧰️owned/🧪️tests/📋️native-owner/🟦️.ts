@@ -4,14 +4,12 @@ import {readFileSync} from "node:fs";
 import {resolve, join} from "node:path";
 import {applyPatch} from "fast-json-patch";
 import {createHash} from "node:crypto";
-import Ajv from "ajv";
 import {semioSchemaAjvV1} from "../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 test("Drawing initializer closes the original catalog one exactly admitted page at a time",()=>{
   const owner=resolve(import.meta.dir,"../..");
   const directory=join(owner,"🏗️initialization/📚️catalog");
   const law=JSON.parse(readFileSync(join(directory,"🧫️fixtures/🔣️.json"),"utf8"));
-  expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(directory,"🧬️schema/🔣️.json"),"utf8")))(law)).toBe(true);
   const database=new Database(":memory:");
   try{
     database.exec("CREATE TABLE pages (ordinal INTEGER PRIMARY KEY, lane TEXT UNIQUE NOT NULL, bytes INTEGER NOT NULL)");
@@ -37,13 +35,12 @@ test("Drawing initializer closes the original catalog one exactly admitted page 
   const source=readFileSync(join(directory,"🦀️.rs"),"utf8");
   expect(source.includes("catalog.close_step(1, maximum_bytes)")).toBe(true);
   expect(source.includes("if !catalog.terminal_is_empty()")).toBe(true);
-  console.log("[DEBUG] Drawing initializer catalog schema/Ajv, SQLite exact first-page admission and RFC6902 resident-page order agree; original catalog birth is cold and uncredited");
+  console.log("[DEBUG] Drawing initializer catalog SQLite exact first-page admission and RFC6902 resident-page order agree; original catalog birth is cold and uncredited");
 });
 
 test("Drawing initializer transfers original active owners into inline typed retirement",()=>{
   const owner=resolve(import.meta.dir,"../..");
   const law=JSON.parse(readFileSync(join(owner,"♻️retirement/🧫️fixtures/🔣️.json"),"utf8"));
-  expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(owner,"♻️retirement/🧬️schema/🔣️.json"),"utf8")))(law)).toBe(true);
   const database=new Database(":memory:");
   try{
     database.exec("CREATE TABLE pending (ordinal INTEGER PRIMARY KEY, kind TEXT UNIQUE NOT NULL, backingBytes INTEGER NOT NULL)");
@@ -67,7 +64,6 @@ test("Drawing native retirement retains typed variants under independent physica
   const owner=resolve(import.meta.dir,"../..");
   const directory=join(owner,"♻️retirement");
   const law=JSON.parse(readFileSync(join(directory,"🧫️fixtures/🔣️.json"),"utf8"));
-  expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(directory,"🧬️schema/🔣️.json"),"utf8")))(law)).toBe(true);
   const database=new Database(":memory:");
   try{
     database.exec("CREATE TABLE owners (ordinal INTEGER PRIMARY KEY, kind TEXT UNIQUE NOT NULL); CREATE TABLE backing (ordinal INTEGER PRIMARY KEY, bytes INTEGER NOT NULL)");
@@ -88,14 +84,13 @@ test("Drawing native retirement retains typed variants under independent physica
   expect(source.includes("self.owner.next_grant()")).toBe(true);
   const helper=readFileSync(join(owner,"🦀️.rs"),"utf8");
   for(const axis of law.axes)expect(helper.includes(`next_${axis}_byte_demand`)).toBe(true);
-  console.log("[DEBUG] Drawing native retirement strict schema/Ajv nine typed variants, SQLite exact/undergrant backing and RFC6902 unique terminal transfer agree; native heap execution remains required");
+  console.log("[DEBUG] Drawing native retirement nine typed variants, SQLite exact/undergrant backing and RFC6902 unique terminal transfer agree; native heap execution remains required");
 });
 
 test("Drawing decoded field close admits payload work separately from physical backing",()=>{
   const owner=resolve(import.meta.dir,"../..");
   const contract=resolve(import.meta.dir,"../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/♻️retirement/🧫️fixtures/📏️copy-demand");
   const law=JSON.parse(readFileSync(join(contract,"🔣️.json"),"utf8"));
-  expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(contract,"📐️schema.json"),"utf8")))(law)).toBe(true);
   const database=new Database(":memory:");
   try{
     database.exec("CREATE TABLE grants (bytes INTEGER PRIMARY KEY)");

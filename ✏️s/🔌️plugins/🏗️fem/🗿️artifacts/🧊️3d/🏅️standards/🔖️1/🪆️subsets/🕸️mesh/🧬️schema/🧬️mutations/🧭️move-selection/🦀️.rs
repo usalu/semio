@@ -202,6 +202,11 @@ pub mod laws {
         assert_eq!(<Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshot>>::semantics(&operation).kind, "move-selection");
     }
 
+    /// ⚖️ The inverse steps' diffs sum, by `absorb`, to the negative of the forward diff.
+    pub async fn inverse_sum(before: &str, operation: &str) {
+        protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(operation), &snapshot(before)).await;
+    }
+
     /// ↩️ The inverse restores `before` exactly, one whole-record replacement per moved node and solid.
     pub fn inverse_restores(before: &str, operation: &str) {
         let (base, operation) = (snapshot(before), mutation(operation));

@@ -6,13 +6,8 @@
   "additionalProperties": false,
   "required": [],
   "properties": {
-    "artifact": {
-      "title": "Process3dArtifact",
-      "type": "object",
-      "x-semio-state": "artifact"
-    },
     "workshop": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/Process3dWorkshop",
+      "$ref": "#/$defs/Process3dMachinesDelta",
       "x-semio-state": "artifact"
     },
     "stockId": {
@@ -40,23 +35,17 @@
       "x-semio-state": "artifact"
     },
     "stepPayloads": {
-      "type": "array",
-      "items": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/Process3dStep"
-      },
+      "$ref": "#/$defs/Process3dStepsDelta",
       "x-semio-state": "artifact"
     },
     "toolSolids": {
-      "type": "array",
-      "items": {
-        "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/ArtifactChildHandle"
-      },
+      "$ref": "#/$defs/Process3dToolSolidsDelta",
       "x-semio-state": "artifact"
     }
   },
   "$defs": {
-    "Process3dStepsDelta": {
-      "title": "Process3dStepsDelta",
+    "Process3dMachinesDelta": {
+      "title": "Process3dMachinesDelta",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -80,7 +69,7 @@
         "patched": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Process3dStepPatchEntry"
+            "$ref": "#/$defs/Process3dMachinePatch"
           }
         },
         "reordered": {
@@ -91,20 +80,152 @@
         }
       }
     },
-    "Process3dStepPatchEntry": {
-      "title": "Process3dStepPatchEntry",
+    "Process3dMachinePatch": {
+      "title": "Process3dMachinePatch",
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "id",
-        "patch"
+        "id"
       ],
       "properties": {
         "id": {
           "type": "string"
         },
-        "patch": {
+        "label": {
+          "type": "string"
+        },
+        "iconId": {
+          "type": "string"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "Process3dStepsDelta": {
+      "title": "Process3dStepsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/Process3dStep"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Process3dStepPatch"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Process3dStepPatch": {
+      "title": "Process3dStepPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "measure": {
           "type": "object"
+        },
+        "origin": {
+          "$ref": "#/$defs/Process3dOptionalOrigin"
+        }
+      }
+    },
+    "Process3dOptionalOrigin": {
+      "title": "Process3dOptionalOrigin",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "value": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      }
+    },
+    "Process3dToolSolidsDelta": {
+      "title": "Process3dToolSolidsDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "added",
+        "removed",
+        "patched"
+      ],
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/process/process3d/artifact.json#/$defs/ArtifactChildHandle"
+          }
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "patched": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Process3dToolSolidPatch"
+          }
+        },
+        "reordered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Process3dToolSolidPatch": {
+      "title": "Process3dToolSolidPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "childId"
+      ],
+      "properties": {
+        "childId": {
+          "type": "string"
         }
       }
     }

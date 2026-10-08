@@ -3,6 +3,10 @@
 use crate::diff::En1998Diff;
 use crate::En1998Snapshot;
 
+#[path = "🧭️edit-rules/🦀️.rs"]
+mod edit_rules;
+pub use edit_rules::EDIT_RULES;
+
 use super::change_annex;
 use super::update_site;
 use super::insert_building;

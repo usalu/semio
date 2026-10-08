@@ -1,5 +1,4 @@
 {
-  "artifact": null,
   "nodes": null,
   "elements": null,
   "materials": null,
@@ -12,19 +11,10 @@
     "patched": [
       {
         "id": "dead",
-        "item": {
-          "id": "dead",
-          "name": "Dead",
-          "loads": [
-            {
-              "kind": "nodal",
-              "id": "g1",
-              "nodeId": "n3",
-              "dof": "Tz",
-              "value": -15.0
-            }
-          ],
-          "selfWeight": false
+        "patch": {
+          "name": null,
+          "selfWeight": false,
+          "loads": null
         }
       }
     ],

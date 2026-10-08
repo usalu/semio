@@ -9,7 +9,7 @@ use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshot
 /// 🚪️ The explicitly authored native envelope-version coordinate for this builtin owner.
 pub const SQLITE_SNAPSHOT_DIALECT:semio_framework_artifact_reference::Dialect=semio_framework_artifact_reference::Dialect{artifact_kind:S_SPACE_SCHEMA,standard:semio_framework_artifact_reference::StandardId("1"),subset:semio_framework_artifact_reference::SubsetId("*")};
 /// 📣️ Registers the real bare native factory and its owned SQLite capability atomically.
-pub fn register_sqlite_snapshot()->Result<(),store::os_io::ArtifactAssemblyRegistryError>{store::os_io::register_native_snapshot_codec(SQLITE_SNAPSHOT_DIALECT,store::ArtifactCodec::bare::<SpaceSnapshot,crate::SpaceMutation>(S_SPACE_SCHEMA))}
+pub fn register_sqlite_snapshot()->Result<(),store::io::ArtifactAssemblyRegistryError>{store::io::register_native_snapshot_codec(SQLITE_SNAPSHOT_DIALECT,store::ArtifactCodec::bare::<SpaceSnapshot,crate::SpaceMutation>(S_SPACE_SCHEMA))}
 fn rows(value:&SpaceSnapshot)->Result<usize,ValueError>{let mut count=1;for length in[value.users.len(),value.collections.len(),value.programs.len(),value.extensions.len()]{count=fields::add(count,length)?;}Ok(count)}
 fn schema(control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{if SpaceSnapshot::SQLITE_SCHEMA.len()>control.limits().max_schema_bytes{Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "space authored schema byte limit exceeded"))}else{Ok(())}}
 #[path="./🛂️admission/🦀️.rs"]pub(crate)mod admission;
@@ -23,11 +23,11 @@ fn semantic(value:&SpaceSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSn
 impl store::ArtifactSqliteSnapshot for SpaceSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
  fn preflight_sqlite_snapshot_encoding(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{preflight::check(self,encoding,control)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::os_io::IoPayload,ValueError>{
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<store::io::IoPayload,ValueError>{
   semantic(self,SqliteSnapshotPhase::EncodeNative,control)?;
   store::encode_sqlite_snapshot_record_native(encoding,Self::__DSL_ENVELOPE_ID,Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)
  }
- fn decode_sqlite_snapshot_native(payload:&store::os_io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{
   control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;schema(control)?;let limits=control.limits();
   let maximum=control.reconstruction_remaining_bytes()?.min(control.allocation_remaining_bytes());
   let(result,owned)={

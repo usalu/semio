@@ -14,6 +14,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct CreateElement {
     #[dsl(statements)]
     pub element: Box<FemElement>,
+    /// 📍 Zero-based insertion position among the siblings; `None` or past the end appends.
+    pub index: Option<usize>,
 }
 
 impl MutationKind<Fem2dSnapshot, Fem2dMutation> for CreateElement {

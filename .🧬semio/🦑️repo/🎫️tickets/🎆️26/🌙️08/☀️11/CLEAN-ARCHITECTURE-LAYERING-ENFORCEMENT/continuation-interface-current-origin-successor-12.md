@@ -1,0 +1,5 @@
+# Current whole capture successor 12
+
+The epoch11 original whole command refused before Bun spawn when a noncandidate Pack JSON schema disappeared after census. Epoch12 keeps all 41 original laws, all candidate laws, long level, 60000 ms Bun timeout, and original explicit operation controls. It adds a closed withdrawal observation for an actual ENOENT only when the path is neither a candidate nor a required input. Required inputs include all physical caller frames, the fresh exact core joined TypeScript inspection frames, all law paths, all candidate endpoints, and root command manifests. Missing required inputs still refuse; no historical body is restored.
+
+The schema and language neutral portable vectors precede the runtime changes. Six identity vectors compare Ajv admission with the original transaction grammar in Node; four withdrawal vectors compare the closed schema with an independent Node predicate. A separate registered contract command runs these controls before expensive whole capture. This report records authored changes only; no epoch12 execution has occurred. Five further caller proposals remain outside this epoch and unaccepted.

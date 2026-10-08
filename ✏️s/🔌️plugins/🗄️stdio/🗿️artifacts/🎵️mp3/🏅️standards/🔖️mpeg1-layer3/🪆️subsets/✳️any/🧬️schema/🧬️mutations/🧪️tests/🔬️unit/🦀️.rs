@@ -19,8 +19,6 @@ fn base_snapshot() -> Mp3Snapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn variants(base: &Mp3Snapshot) -> Vec<Mp3Mutation> {
     vec![
-        Mp3Mutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: Mp3Snapshot { frames: vec![frame(), frame()], ..base.clone() } }),
-        Mp3Mutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
         Mp3Mutation::SetId3v2(set_id3v2::SetId3v2 { id3v2: Some(Id3v2Tag { major_version: 3, minor_version: 0, flags: 0, frames: vec![Id3Frame { id: "TIT2".into(), flags: 0, data: vec![0] }] }) }),
         Mp3Mutation::SetId3v2(set_id3v2::SetId3v2 { id3v2: None }),
         Mp3Mutation::SetFrames(set_frames::SetFrames { frames: vec![frame(), frame(), frame()] }),
@@ -57,7 +55,7 @@ async fn mutation_diff_law_every_variant() {
         let returned = apply_mp3_mutation(&mut via_apply, &m);
         let direct = m.diff(&base);
         assert_eq!(direct, returned, "diff mismatch for {m:?}");
-        assert_eq!(direct.diff().apply(&base).unwrap(), via_apply, "apply mismatch for {m:?}");
+        assert_eq!(protocol::apply_diff(direct.diff(), &base).unwrap(), via_apply, "apply mismatch for {m:?}");
     }
 }
 //#endregion mutation_diff_law
@@ -75,8 +73,8 @@ async fn inverse_law_mutation_and_diff_level() {
         assert_eq!(round, base, "mutation-level inverse failed for {m:?}");
 
         let d = m.diff(&base);
-        let applied = d.diff().apply(&base).unwrap();
-        let undone = d.diff().inverse(&base).apply(&applied).unwrap();
+        let applied = protocol::apply_diff(d.diff(), &base).unwrap();
+        let undone = protocol::apply_diff(d.diff().inverse(&base), &applied).unwrap();
         assert_eq!(undone, base, "diff-level inverse failed for {m:?}");
     }
 }
@@ -98,3 +96,19 @@ async fn op_text_binary_roundtrip_law() {
     }
 }
 //#endregion op_text_binary_roundtrip_law
+
+/// ⚖️ `mp3_mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff.
+#[semio_framework_async_macros::async_test]
+async fn mp3_mutation_inverse_sum_law_holds_for_every_leaf() {
+    let plain = base_snapshot();
+    let tagged = Mp3Snapshot {
+        id3v2: Some(Id3v2Tag { major_version: 4, minor_version: 0, flags: 0, frames: vec![Id3Frame { id: "TPE1".into(), flags: 0, data: vec![1, 2] }] }),
+        id3v1: Some(Id3v1Tag { raw: vec![b'T', b'A', b'G', 1] }),
+        ..base_snapshot()
+    };
+    for base in [&plain, &tagged] {
+        for mutation in variants(base) {
+            protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, base).await;
+        }
+    }
+}

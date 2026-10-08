@@ -19,9 +19,9 @@ message InsertFace { uint64 index = 1; semio.s_stdio_obj.snapshot.ObjFace face =
 message RemoveFace { uint64 index = 1; }
 message SetFace { uint64 index = 1; semio.s_stdio_obj.snapshot.ObjFace face = 2; }
 
-message SetGroup { string name = 1; repeated uint64 faces = 2; }
+message SetGroup { string name = 1; repeated uint64 faces = 2; optional uint64 index = 3; }
 message RemoveGroup { string name = 1; }
-message SetObject { string name = 1; repeated uint64 faces = 2; }
+message SetObject { string name = 1; repeated uint64 faces = 2; optional uint64 index = 3; }
 message RemoveObject { string name = 1; }
 
 message SetMtllib { optional string mtllib = 1; }
@@ -32,7 +32,6 @@ message SetUnknownStatements { repeated semio.s_stdio_obj.snapshot.ObjUnknownSta
 message ObjMutation {
   oneof mutation {
     bool no_mutation = 1;
-    semio.s_stdio_obj.snapshot.ObjSnapshot set_snapshot = 2;
     InsertVertex insert_vertex = 3;
     RemoveVertex remove_vertex = 4;
     SetVertex set_vertex = 5;

@@ -1,0 +1,34 @@
+{
+  "buildingCategory": null,
+  "attachment": null,
+  "useClass": null,
+  "method": null,
+  "netFloorAreaM2": null,
+  "heatedVolumeM3": null,
+  "gegQpFactor": null,
+  "deltaUWbWM2k": null,
+  "automationClass": null,
+  "zones": null,
+  "elements": {
+    "added": [],
+    "removed": [
+      "wall-e",
+      "wall-w",
+      "roof",
+      "floor",
+      "win-s",
+      "win-n",
+      "door"
+    ],
+    "modified": [],
+    "order": null
+  },
+  "heating": null,
+  "dhw": null,
+  "ventilation": null,
+  "cooling": null,
+  "lighting": null,
+  "renewables": null,
+  "climate": null,
+  "climateTable": null
+}

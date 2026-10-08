@@ -10,10 +10,8 @@ pub fn inverse(payload: &super::DeleteShell, base: &SemioBrepSnapshot) -> Result
     let Some(index) = base.shells.iter().position(|x| x.id == payload.id) else {
         return Vec::new();
     };
-    let tail = &base.shells[index..];
-    let mut undo: Vec<SemioBrepMutation> = tail.iter().skip(1).map(|x| SemioBrepMutation::DeleteShell(delete_shell::DeleteShell { id: x.id.clone() })).collect();
-    undo.extend(tail.iter().map(|x| SemioBrepMutation::CreateShell(create_shell::CreateShell { id: x.id.clone(), faces: x.faces.clone() })));
-    undo
+    let x = &base.shells[index];
+    vec![SemioBrepMutation::CreateShell(create_shell::CreateShell { id: x.id.clone(), faces: x.faces.clone(), at: Some(index) })]
 
     })())
 }

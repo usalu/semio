@@ -9,23 +9,8 @@
       {
         "id": "node-b",
         "patch": {
-          "replacement": {
-            "anchor": "fixed",
-            "handles": [
-              {
-                "angle": 3.0,
-                "handleKind": "handle-kind-b",
-                "id": "handle-2"
-              }
-            ],
-            "height": 12.0,
-            "id": "node-b",
-            "nodeKind": "node-kind-b",
-            "shape": "rectangle",
-            "width": 30.0,
-            "x": 42.0,
-            "y": 23.0
-          }
+          "x": 42.0,
+          "y": 23.0
         }
       }
     ],

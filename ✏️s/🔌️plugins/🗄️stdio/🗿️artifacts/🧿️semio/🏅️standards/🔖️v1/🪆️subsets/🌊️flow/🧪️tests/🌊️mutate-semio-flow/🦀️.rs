@@ -33,8 +33,9 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
+    use semio_s_artifact_stdio_semio::apply_diff;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{apply_semio_flow_mutation, inverse_semio_flow_mutation, set_snapshot, SemioFlowMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{diff_semio_flow_mutation, inverse_semio_flow_mutation, SemioFlowMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::io::text::mutations::{decode_semio_flow_mutation_json};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{SemioFlowSnapshot};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::io::binary::snapshot::{encode_semio_flow_pack};
@@ -66,13 +67,6 @@ mod subject {
 
     /// 📜️ The scenario's own committed mutation parameters — the feature owns the vector. `base` is
     /// the network this payload is about to be applied to.
-    ///
-    /// 🧭️ `noMutation` is no longer a real `SemioFlowMutation` variant (the stdio mutation-leaf
-    /// migration dropped `NoMutation`: `no` is not an approved semantic verb for
-    /// `#[derive(dsl::Mutations)]`), so — per the migration fleet's convention ruling — a
-    /// `{"mutation":"noMutation"}` payload decodes to the identity `set-snapshot(base)` mutation
-    /// here, ahead of `decode_semio_flow_mutation_json`, instead of failing to deserialize or
-    /// dropping the `no-mutation` scenario.
     fn mutation(ctx: &Context, base: &SemioFlowSnapshot) -> Result<SemioFlowMutation, String> {
         let text = ctx.doc_string()?;
         decode_mutation_or_identity(text, base)
@@ -80,9 +74,6 @@ mod subject {
 
     fn decode_mutation_or_identity(text: &str, base: &SemioFlowSnapshot) -> Result<SemioFlowMutation, String> {
         let probe = parse_json(text)?;
-        if matches!(probe.get("mutation"), Some(Json::String(tag)) if tag.as_str() == "noMutation") {
-            return Ok(SemioFlowMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() }));
-        }
         decode_semio_flow_mutation_json(text).map_err(|error| format!("the scenario's mutation payload must decode: {error}"))
     }
 
@@ -104,9 +95,10 @@ mod subject {
     }
 
     fn apply(current: &mut SemioFlowSnapshot, step: &SemioFlowMutation, what: &str) -> Result<(), String> {
-        let outcome = apply_semio_flow_mutation(current, step);
+        let outcome = diff_semio_flow_mutation(step, current);
         let refusals = semio_mutation_refusals(&outcome);
         if refusals.is_empty() {
+            *current = apply_diff(outcome.diff(), current).map_err(|error| format!("the diff could not be applied: {error:?}"))?;
             return Ok(());
         }
         Err(format!("{what}: the mutation was rejected: {refusals:?}"))
@@ -142,7 +134,7 @@ mod subject {
         let mut current = base.clone();
         apply(&mut current, &step, &ctx.scenario.id)?;
         let mutated = projection(&current)?;
-        for undo in inverse_semio_flow_mutation(&step, &base).expect("valid retained mutation inverse fixture") {
+        for undo in inverse_semio_flow_mutation(&step, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             apply(&mut current, &undo, &ctx.scenario.id)?;
         }
         if current != base {
@@ -165,7 +157,7 @@ mod subject {
             return Err(disagreement(&format!("{}: the applied flow does not match the vector's after-snapshot", ctx.scenario.id), &current, &expected));
         }
         let applied = projection(&current)?;
-        for undo in inverse_semio_flow_mutation(&step, &base).expect("valid retained mutation inverse fixture") {
+        for undo in inverse_semio_flow_mutation(&step, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             apply(&mut current, &undo, &ctx.scenario.id)?;
         }
         if current != base {
@@ -238,8 +230,8 @@ pub fn adapter() -> Adapter {
     #[cfg(feature = "sut")]
     {
         built = built
-            .subject("mutate", subject::mutate).subject("no-mutation-baseline-mutate", subject::mutate)
-            .subject("inverse", subject::inverse).subject("no-mutation-baseline-inverse", subject::inverse)
+            .subject("mutate", subject::mutate)
+            .subject("inverse", subject::inverse)
             .subject("spec-vector", subject::spec_vector);
         built = built.subject("identity-round-trip", subject::identity_round_trip);
     }

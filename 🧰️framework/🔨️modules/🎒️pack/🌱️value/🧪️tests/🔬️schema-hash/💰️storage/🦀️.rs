@@ -49,23 +49,23 @@ fn schema_hash_controlled_full_allocator_requests_and_same_caller_are_admitted()
     let(result,actual)=crate::test_allocation::observe(||crate::record::schema_hash_controlled(&spec,&mut exact));
     assert_eq!(result.unwrap(),expected);assert_eq!(actual,requested);assert_eq!(exact.owned_bytes(),requested);
     let mut accept=|_: $progress|true;let mut zero=$control::new(0,&mut accept);
-    let((kind,diagnostic),actual,released)=crate::test_allocation::observe_backing(||{let error=crate::record::schema_hash_controlled(&spec,&mut zero).unwrap_err().into_value_error();let summary=(error.kind,error.message.capacity());drop(error);summary});
+    let((kind,diagnostic),actual,released)=crate::test_allocation::observe_backing(||{let error=crate::record::schema_hash_controlled(&spec,&mut zero).unwrap_err().into_value_error();let summary=(error.kind,match &error.message { std::borrow::Cow::Borrowed(_) => 0, std::borrow::Cow::Owned(message) => message.capacity() });drop(error);summary});
     assert_eq!(kind,ValueRefusalKind::OwnershipLimit);
     assert_eq!(actual,diagnostic);assert_eq!(zero.owned_bytes(),0);assert_eq!(released,actual);
     let mut accept=|_: $progress|true;let mut short=$control::new(requested-1,&mut accept);
-    let((kind,diagnostic),actual,released)=crate::test_allocation::observe_backing(||{let error=crate::record::schema_hash_controlled(&spec,&mut short).unwrap_err().into_value_error();let summary=(error.kind,error.message.capacity());drop(error);summary});
+    let((kind,diagnostic),actual,released)=crate::test_allocation::observe_backing(||{let error=crate::record::schema_hash_controlled(&spec,&mut short).unwrap_err().into_value_error();let summary=(error.kind,match &error.message { std::borrow::Cow::Borrowed(_) => 0, std::borrow::Cow::Owned(message) => message.capacity() });drop(error);summary});
     assert_eq!(kind,ValueRefusalKind::OwnershipLimit);assert!(actual<=short.owned_bytes().checked_add(diagnostic).unwrap());assert!(short.owned_bytes()<requested);assert_eq!(released,actual);
     let combined=requested.checked_mul(2).unwrap();
     let mut accept=|_: $progress|true;let mut pair=$control::new(combined,&mut accept);
     let((first,second),actual)=crate::test_allocation::observe(||{let first=crate::record::schema_hash_controlled(&spec,&mut pair);let second=crate::record::schema_hash_controlled(&spec,&mut pair);(first,second)});
     assert_eq!(first.unwrap(),expected);assert_eq!(second.unwrap(),expected);assert_eq!(actual,combined);assert_eq!(pair.owned_bytes(),combined);
     let mut accept=|_: $progress|true;let mut pair=$control::new(combined-1,&mut accept);
-    let((first,kind,diagnostic),actual,released)=crate::test_allocation::observe_backing(||{let first=crate::record::schema_hash_controlled(&spec,&mut pair).unwrap();let error=crate::record::schema_hash_controlled(&spec,&mut pair).unwrap_err().into_value_error();let summary=(first,error.kind,error.message.capacity());drop(error);summary});
+    let((first,kind,diagnostic),actual,released)=crate::test_allocation::observe_backing(||{let first=crate::record::schema_hash_controlled(&spec,&mut pair).unwrap();let error=crate::record::schema_hash_controlled(&spec,&mut pair).unwrap_err().into_value_error();let summary=(first,error.kind,match &error.message { std::borrow::Cow::Borrowed(_) => 0, std::borrow::Cow::Owned(message) => message.capacity() });drop(error);summary});
     assert_eq!(first,expected);assert_eq!(kind,ValueRefusalKind::OwnershipLimit);assert!(actual<=pair.owned_bytes().checked_add(diagnostic).unwrap());assert!(pair.owned_bytes()<combined);assert_eq!(released,actual);
     for boundary in [0,1,2]{
      let mut reached=false;let mut cancel=|event:$progress|{if boundary==0||(event.owned_bytes>0&&(boundary==1||event.completed>0)){reached=true;false}else{true}};
      let mut canceled=$control::new(usize::MAX/4,&mut cancel);
-     let((kind,diagnostic),actual,released)=crate::test_allocation::observe_backing(||{let error=crate::record::schema_hash_controlled(&spec,&mut canceled).unwrap_err().into_value_error();let summary=(error.kind,error.message.capacity());drop(error);summary});
+     let((kind,diagnostic),actual,released)=crate::test_allocation::observe_backing(||{let error=crate::record::schema_hash_controlled(&spec,&mut canceled).unwrap_err().into_value_error();let summary=(error.kind,match &error.message { std::borrow::Cow::Borrowed(_) => 0, std::borrow::Cow::Owned(message) => message.capacity() });drop(error);summary});
      assert_eq!(kind,ValueRefusalKind::Canceled);assert!(actual<=canceled.owned_bytes().checked_add(diagnostic).unwrap());assert_eq!(released,actual);if boundary==0{assert_eq!(canceled.owned_bytes(),0);assert_eq!(actual,diagnostic);}if boundary==2{assert!(actual>diagnostic,"{name} actual materialized scratch cancellation");}drop(canceled);assert!(reached,"{name} real cancellation boundary");
     }
    }};

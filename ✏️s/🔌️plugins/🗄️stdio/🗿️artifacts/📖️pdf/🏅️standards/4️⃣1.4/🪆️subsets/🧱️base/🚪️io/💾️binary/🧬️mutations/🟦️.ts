@@ -5,7 +5,5 @@ export const PDF_MUTATION_TAGS = {
   "move-page": 2,
   "resize-page": 3,
   "replace-page-text": 4,
-  "set-snapshot": 5,
-  "patch-snapshot": 6,
 } as const;
 export type PdfMutationBinary = Uint8Array;

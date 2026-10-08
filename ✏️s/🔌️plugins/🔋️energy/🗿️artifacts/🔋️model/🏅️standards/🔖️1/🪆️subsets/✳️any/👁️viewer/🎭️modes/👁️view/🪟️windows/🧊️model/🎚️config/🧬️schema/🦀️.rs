@@ -52,3 +52,34 @@ pub struct EnergyModelViewerWindowConfig {
     #[dsl(block)]
     pub camera: EnergyModelViewerCameraPose,
 }
+
+/// 🔺️ Sparse field delta over [`EnergyModelViewerWindowConfig`]: every present slot is the new value of exactly that field.
+#[derive(Clone, Copy, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct EnergyModelViewerWindowConfigDiff {
+    #[value(skip_serializing_if = "Option::is_none")]
+    pub camera: Option<EnergyModelViewerCameraPose>,
+}
+
+impl protocol::MutationDiff<EnergyModelViewerWindowConfig> for EnergyModelViewerWindowConfigDiff {
+    fn apply(&self, base: &EnergyModelViewerWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<EnergyModelViewerWindowConfig> {
+        Ok(EnergyModelViewerWindowConfig { camera: self.camera.unwrap_or(base.camera) })
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.camera.is_some() {
+            self.camera = other.camera;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<EnergyModelViewerWindowConfig> for EnergyModelViewerWindowConfigDiff {
+    fn inverse(&self, base: &EnergyModelViewerWindowConfig) -> Self {
+        Self { camera: self.camera.map(|_| base.camera) }
+    }
+    fn between(base: &EnergyModelViewerWindowConfig, other: &EnergyModelViewerWindowConfig) -> Self {
+        Self { camera: (base.camera != other.camera).then_some(other.camera) }
+    }
+    fn is_empty(&self) -> bool {
+        self.camera.is_none()
+    }
+}

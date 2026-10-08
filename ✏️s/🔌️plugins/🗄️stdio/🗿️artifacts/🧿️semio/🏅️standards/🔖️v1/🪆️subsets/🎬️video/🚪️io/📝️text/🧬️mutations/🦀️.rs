@@ -11,7 +11,7 @@ mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::video::schema::mutations::*;
 use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::video::schema::diff::{diff_insert_sample, diff_insert_stream, diff_remove_sample, diff_remove_stream, diff_set_sample_data, diff_set_sample_flags, diff_set_snapshot, diff_set_stream_meta, SemioVideoDiff};
+use crate::standards::v1::subsets::video::schema::diff::{diff_insert_sample, diff_insert_stream, diff_remove_sample, diff_remove_stream, diff_set_sample_data, diff_set_sample_flags, diff_set_stream_meta, SemioVideoDiff};
 use crate::standards::v1::subsets::video::io::text::snapshot::{dec_stream};
 use crate::standards::v1::subsets::video::io::text::snapshot::{enc_stream};
 use crate::standards::v1::subsets::video::io::text::snapshot::{dec_sample};

@@ -7,7 +7,7 @@ fn expand_ycbcr(raw:&[u8],width:usize,height:usize,h:usize,v:usize,c:&mut Native
  let length=width.checked_mul(height).and_then(|n|n.checked_mul(3)).ok_or_else(||invalid("tiff: expanded chroma extent"))?;let mut output=c.allocate_vec::<u8>(length)?;output.resize(length,0);let unit=h*v+2;let mut at=0;c.begin_stage(width*height)?;
  for y in (0..height).step_by(v){for x in (0..width).step_by(h){let values=raw.get(at..at+unit).ok_or_else(||invalid("tiff: incomplete chroma unit"))?;for dy in 0..v.min(height-y){for dx in 0..h.min(width-x){let target=((y+dy)*width+x+dx)*3;output[target]=values[dy*h+dx];output[target+1]=values[h*v];output[target+2]=values[h*v+1];c.step()?;}}at+=unit;}}if at!=raw.len(){return Err(invalid("tiff: excess chroma units"))}Ok(output)
 }
-fn physical(tag:u16)->bool { matches!(tag,259|266|273|278|279|284|317|322|323|324|325|292|293|347|513|514|515|517|518|519|520|521|530) }
+fn physical(tag:u16)->bool { matches!(tag,259|266|273|278|279|284|317|322|323|324|325|292|293|347|512|513|514|515|517|518|519|520|521|530) }
 fn bits(ifd:&NativeIfd,channels:usize)->Result<Vec<u32>,ValueError>{
  let mut values=tag_u32_list(ifd,TAG_BITS_PER_SAMPLE);if values.is_empty(){values.push(1)}if values.len()==1{values.resize(channels,values[0]);}if values.len()!=channels||values.iter().any(|bits|*bits==0||*bits>64){return Err(invalid("tiff: unsupported sample precision"))}Ok(values)
 }

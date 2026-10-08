@@ -20,6 +20,10 @@
 
 use crate::{Iso16757Diff, Iso16757Snapshot};
 
+#[path = "🧭️edit-rules/🦀️.rs"]
+mod edit_rules;
+pub use edit_rules::{resolve_edit, EDIT_RULES};
+
 //#region 🔖️Mutations
 use super::add_selection_constraint;
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<Iso16757Snapshot, Iso16757Mutation>`
@@ -169,7 +173,7 @@ impl Iso16757Mutation {
             mutations.push(Iso16757Mutation::RemoveSelectionConstraint(remove_selection_constraint::mutation::RemoveSelectionConstraint { index }));
         }
         for constraint in target.selection.constraints.iter() {
-            mutations.push(Iso16757Mutation::AddSelectionConstraint(add_selection_constraint::mutation::AddSelectionConstraint { constraint: constraint.clone() }));
+            mutations.push(Iso16757Mutation::AddSelectionConstraint(add_selection_constraint::mutation::AddSelectionConstraint { constraint: constraint.clone(), index: None }));
         }
 
         for group in base.catalogue.product_groups.iter() {
@@ -248,13 +252,13 @@ mod tests;
 
 /// ▶️ Applies one mutation to `base`, returning the resulting document together with every
 /// diagnostic its own diff builder raised, rendered as `<severity>:<code>` so no framework type
-/// crosses this boundary. Built on the SYNC `Mutation::diff`/`MutationDiff::apply` pair this
+/// crosses this boundary. Built on the SYNC `Mutation::diff`/`protocol::apply_diff` pair this
 /// facet's own committed fixture tests already call, not on the async `vcs::apply_mutation` wrapper.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_iso16757_mutation(base: &Iso16757Snapshot, mutation: &Iso16757Mutation) -> Result<(Iso16757Snapshot, Vec<String>), String> {
     let raised = <Iso16757Mutation as protocol::Mutation<Iso16757Snapshot>>::diff(mutation, base);
     let messages = raised.messages().iter().map(|message| format!("{:?}:{}", message.level, message.code.0)).collect();
-    let applied = <Iso16757Diff as protocol::MutationDiff<Iso16757Snapshot>>::apply(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
+    let applied = protocol::apply_diff(raised.diff(), base).map_err(|error| format!("{error:?}"))?;
     Ok((applied, messages))
 }
 
@@ -282,3 +286,7 @@ mod kinds_catalog;
 #[path = "🧪️tests/🔬️fixture/🦀️.rs"]
 mod fixture_tests;
 //#endregion 🧫️Vectors
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
+mod middle_row;

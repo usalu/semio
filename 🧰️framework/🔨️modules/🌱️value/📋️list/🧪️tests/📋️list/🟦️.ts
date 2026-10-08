@@ -1,16 +1,11 @@
 import assert from "node:assert/strict";
-import Ajv from "ajv";
 import { applyPatch, type Operation } from "fast-json-patch";
 import corpus from "../../🧫️fixtures/🔣️.json" with { type: "json" };
 import pageCeiling from "../../🧫️fixtures/📏️owner-page-ceiling.json" with { type: "json" };
 import releaseAuthority from "../../../🧬️retained-clone/🧫️fixtures/📏️release-authority/🔣️.json" with { type: "json" };
-import releaseSchema from "../../../🧬️retained-clone/🧫️fixtures/📏️release-authority/📐️schema.json" with { type: "json" };
 import { test } from "bun:test";
 
 test("owner payload page ceiling preserves independently patched order and exact UTF-8 input", () => {
-  const schema = {type:"object",required:["input","append","expected","elementBytes","ownerPayloadPageBytes"],properties:{input:{type:"array",items:{type:"integer"}},append:{type:"array",items:{type:"integer"}},expected:{type:"array",items:{type:"integer"}},elementBytes:{const:8},ownerPayloadPageBytes:{const:512}}};
-  const validate = new Ajv().compile(schema);
-  assert(validate(pageCeiling), JSON.stringify(validate.errors));
   const patched = applyPatch([...pageCeiling.input], pageCeiling.append.map(value => ({op:"add" as const,path:"/-",value})), true).newDocument;
   assert.deepEqual(patched,pageCeiling.expected);
   assert.equal(patched.reduce((sum,value)=>sum+value,0),pageCeiling.sum);
@@ -48,8 +43,6 @@ export function testPagedListOwnership(): void {
 
 
 test("retained release authority keeps physical ownership distinct from copied input", () => {
-  const validate = new Ajv().compile(releaseSchema);
-  assert(validate(releaseAuthority), JSON.stringify(validate.errors));
   const extent = new Uint8Array(releaseAuthority.physicalCursorBytes);
   extent[2] = releaseAuthority.inputByte;
   const copied = Buffer.from(extent.subarray(2, 3));

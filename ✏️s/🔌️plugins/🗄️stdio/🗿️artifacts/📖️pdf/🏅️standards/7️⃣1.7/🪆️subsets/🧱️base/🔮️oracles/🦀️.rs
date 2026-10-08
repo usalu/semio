@@ -28,7 +28,7 @@ pub const KINDS: &[&str] = &["insert-page", "remove-page", "set-page-media-box",
 /// 👁️ The ONE declared kind whose forward effect no semantic projection of a PDF can carry, with
 /// the reason and the fix.
 ///
-/// `InsertObject { id, value }` adds an indirect object and links it to nothing. ISO 32000-1 §7.5.4
+/// `InsertObject { id, value, index: None }` adds an indirect object and links it to nothing. ISO 32000-1 §7.5.4
 /// makes a conforming reader reach objects only by following references from the trailer's `/Root`
 /// and `/Info`, so an object nothing references is unreachable and changes nothing readable: page
 /// count, page geometry, page content, metadata and the whole resolved object graph all stay where
@@ -300,27 +300,8 @@ mod oracles {
     /// routing) -- mutates `document` in place. Out-of-range indices / missing ids / unresolvable
     /// paths are no-ops, mirroring `apply_pdf_mutation`'s own "never panic on a stale reference"
     /// contract at the Rust-model level.
-    /// 🩹️ A `patch-snapshot` row as the declared kind its one pointer operation is in this oracle's reading: setting a
-    /// page's `mediaBox` or `cropBox` is `set-page-media-box` / `set-page-crop-box`; any other pointer has no reading here.
-    fn patch_as_kind(params: &Json) -> Result<(String, Json), String> {
-        let patch = params.get("patch").ok_or("patch-snapshot: missing `patch`")?;
-        let path = patch.str("path");
-        let segments: Vec<&str> = path.split('/').skip(1).collect();
-        match (patch.str("operation").as_str(), segments.as_slice()) {
-            ("set", ["pages", index, field @ ("mediaBox" | "cropBox")]) if index.parse::<usize>().is_ok() => {
-                let kind = if *field == "mediaBox" { "set-page-media-box" } else { "set-page-crop-box" };
-                Ok((kind.to_string(), object(vec![("index", Json::Number(index.parse::<usize>().unwrap_or(0) as f64)), (*field, patch.get("value").cloned().unwrap_or(Json::Null))])))
-            }
-            (operation, _) => Err(format!("patch-snapshot {operation} {path} has no reading in this oracle")),
-        }
-    }
-
     fn apply_kind(document: &mut Document, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "patch-snapshot" => {
-                let (kind, params) = patch_as_kind(params)?;
-                return apply_kind(document, &kind, &params);
-            }
             "insert-page" => {
                 let page = params.get("page").cloned().unwrap_or(Json::Null);
                 only_members(&page, &["mediaBox", "cropBox", "rotate", "content"], "PdfPage")?;
@@ -444,10 +425,6 @@ mod oracles {
     fn inverse_spec(document: &Document, kind: &str, params: &Json) -> Result<Json, String> {
         let spec = |inverse_kind: &str, inverse_params: Json| Json::Object(vec![("kind".to_string(), Json::String(inverse_kind.to_string())), ("params".to_string(), inverse_params)]);
         Ok(match kind {
-            "patch-snapshot" => {
-                let (kind, params) = patch_as_kind(params)?;
-                return inverse_spec(document, &kind, &params);
-            }
             "set-info" => {
                 let mut entries = Vec::new();
                 if let Some(title) = info_entry(document, b"Title") {
@@ -866,4 +843,20 @@ pub fn reference_text_operand(input:&[u8])->Result<String,String> {
     let content=lopdf::content::Content::decode(input).map_err(|error|error.to_string())?;
     let operand=content.operations.first().and_then(|operation|operation.operands.first()).ok_or("independent text operand absent")?;
     lopdf::decode_text_string(operand).map_err(|error|error.to_string())
+}
+
+/// 🧪️ Reads sampled-function native words' physical stream through the independent reader.
+#[cfg(feature = "oracles")]
+pub fn reference_sampled_function_streams(input:&[u8])->Result<Vec<(u32,Vec<u8>)>,String> {
+    let document=lopdf::Document::load_mem(input).map_err(|error|error.to_string())?;
+    let mut streams=Vec::new();
+    for object in document.objects.values(){
+        let Ok(stream)=object.as_stream() else{continue};
+        if stream.dict.get(b"FunctionType").ok().and_then(|value|value.as_i64().ok())!=Some(0){continue;}
+        let bits=stream.dict.get(b"BitsPerSample").and_then(|value|value.as_i64()).map_err(|error|error.to_string())?;
+        let bits=u32::try_from(bits).map_err(|error|error.to_string())?;
+        let data=if stream.dict.get(b"Filter").is_ok(){stream.decompressed_content().map_err(|error|error.to_string())?}else{stream.content.clone()};
+        streams.push((bits,data));
+    }
+    Ok(streams)
 }

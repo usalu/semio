@@ -3,8 +3,8 @@ import type {GltfCreateNodePayload,CreateNodeMutation} from "../../../../../🧬
 export type * from "../../../../../🧬️schema/🧬️mutations/🌳️node/🌱️create/🟦️.ts";
 /** 🌱️ `create-node` wire twin: the flat `Apply` payload `GltfCreateNodePayload` and the phase wire `CreateNodeMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
-import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸️snapshot/🔣️json/🟦️.ts";
-import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
+import { gltfWireIndex, gltfWireObject, gltfWireRequired, gltfWireOptional, parseGltfNode } from "../../../📸️snapshot/🔣️json/🟦️.ts";
+import { gltfWireApplyPhase } from "../../../🔺️diff/🟦️.ts";
 
-export const parseGltfCreateNodePayload = gltfWireObject<GltfCreateNodePayload>({ position: gltfWireRequired(gltfWireIndex) });
-export const parseCreateNodeMutation = gltfWirePhase(parseGltfCreateNodePayload, parseGltfDiff);
+export const parseGltfCreateNodePayload = gltfWireObject<GltfCreateNodePayload>({ position: gltfWireRequired(gltfWireIndex), node: gltfWireOptional(parseGltfNode) });
+export const parseCreateNodeMutation = gltfWireApplyPhase(parseGltfCreateNodePayload);

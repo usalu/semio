@@ -1,7 +1,7 @@
 //! 🔺️ `create-shape-model ` — sparse diff construction from an exact composed model child handle.
 
 use super::CreateShapeModel;
-use crate::diff::CadDiff;
+use crate::diff::{CadDiff, CadModelSlot};
 use crate::CadSnapshot;
 
 //#region 🔖️Diff
@@ -13,6 +13,6 @@ pub fn diff(payload: &CreateShapeModel, base: &CadSnapshot) -> protocol::Mutatio
     if base.shape_model.as_ref() == Some(&candidate) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Shape-model child is already {}.", payload.child_id));
     }
-    protocol::MutationOutcome::new(CadDiff { shape_model: Some(Some(candidate)), ..Default::default() })
+    protocol::MutationOutcome::new(CadDiff { shape_model: Some(CadModelSlot { child: Some(candidate) }), ..Default::default() })
 }
 //#endregion 🔖️Diff

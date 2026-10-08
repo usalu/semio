@@ -1,6 +1,5 @@
 syntax = "proto3";
 package stdio.svg.mutation;
-import "📸️set-snapshot/🛰️.proto";
 import "📣️set-declaration/🛰️.proto";
 import "📜️set-doctype/🛰️.proto";
 import "📥️insert-element/🛰️.proto";
@@ -10,5 +9,5 @@ import "🏷️set-attribute/🛰️.proto";
 import "✍️set-text/🛰️.proto";
 import "🖼️set-view-box/🛰️.proto";
 import "🔄️set-transform/🛰️.proto";
-message SvgMutation { oneof mutation { SetDeclarationPayload set_declaration = 1; SetDoctypePayload set_doctype = 2; InsertElementPayload insert_element = 3; RemoveElementPayload remove_element = 4; SetElementNamePayload set_element_name = 5; SetAttributePayload set_attribute = 6; SetTextPayload set_text = 7; SetViewBoxPayload set_view_box = 8; SetTransformPayload set_transform = 9;     SetSnapshot set_snapshot = 10;
+message SvgMutation { oneof mutation { SetDeclarationPayload set_declaration = 1; SetDoctypePayload set_doctype = 2; InsertElementPayload insert_element = 3; RemoveElementPayload remove_element = 4; SetElementNamePayload set_element_name = 5; SetAttributePayload set_attribute = 6; SetTextPayload set_text = 7; SetViewBoxPayload set_view_box = 8; SetTransformPayload set_transform = 9;
   } }

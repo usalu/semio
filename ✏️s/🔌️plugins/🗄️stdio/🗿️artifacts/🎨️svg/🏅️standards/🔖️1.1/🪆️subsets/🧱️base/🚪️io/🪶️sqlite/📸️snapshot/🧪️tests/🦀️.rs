@@ -123,7 +123,7 @@ fn sqlite_snapshot_svg_independent_geometry_queries_and_edits_preserve_native_st
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_svg_tiny_and_basic_io_validators_recheck_reconstructed_entities() {
-    use semio_framework_plugin::{IoPayload, Severity, SubsetValidator};
+    use semio_framework_plugin::{io::IoPayload, Severity, io::SubsetValidator};
     use crate::standards::v1_1::subsets::{tiny::io::SvgTinyValidator, basic::io::SvgBasicValidator};
     for (key, tiny) in [("tinyText", true), ("basicText", false)] {
         let source = SvgSnapshot::import_utf8(fixture()[key].as_str().unwrap().as_bytes()).unwrap(); let restored = restore(&project(&source)).unwrap(); assert_eq!(restored, source);

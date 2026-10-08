@@ -1,4 +1,8 @@
-# 🔺️ Sparse replacements own the complete typed graph and rule.
-# import Lhs, Rhs, JackSnapshot from "../🔗️.graphql"
+# 🔺️ Sparse typed delta: field patches for the rule's two sides, a sparse working-graph document diff and keyed map deltas.
+# import Pattern, Assignment, ParameterSpec from "../🔗️.graphql"
+# import JackDiff from "../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔗️.graphql"
 # import MapDelta from "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧬️schema/🔗️.graphql"
-type RewritingDiff { workingGraph: JackSnapshot @state(class: ARTIFACT), lhs: Lhs @state(class: ARTIFACT), rhs: Rhs @state(class: ARTIFACT), parameterBindings: MapDelta @state(class: ARTIFACT), ruleLayout: MapDelta @state(class: ARTIFACT) }
+type PatternPatch { leftVar: String leftKind: String edgeVar: String edgeKind: String rightVar: String rightKind: String }
+type LhsPatch { pattern: PatternPatch whereClause: String }
+type RhsPatch { create: [Pattern!] delete: [String!] set: [Assignment!] merge: [Pattern!] parameters: [ParameterSpec!] }
+type RewritingDiff { workingGraph: JackDiff @state(class: ARTIFACT), lhs: LhsPatch @state(class: ARTIFACT), rhs: RhsPatch @state(class: ARTIFACT), parameterBindings: MapDelta @state(class: ARTIFACT), ruleLayout: MapDelta @state(class: ARTIFACT) }

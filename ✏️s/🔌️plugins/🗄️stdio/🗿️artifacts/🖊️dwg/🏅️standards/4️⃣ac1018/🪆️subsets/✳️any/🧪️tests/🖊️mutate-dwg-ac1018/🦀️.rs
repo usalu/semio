@@ -10,9 +10,8 @@
 //! that an R2004 container was parsed.
 //!
 //! That is why this adapter's expectations are the mirror image of the AC1024 one's. There, the
-//! native `AC1024` stamp must SURVIVE a decode/re-encode. Here, `set-snapshot` drives the stamp TO
-//! `AC1018` on the empty preamble-only document and the handler asserts the R2004 label is what an
-//! independent preamble reader then reads back — the one AC1018-specific fact this fixture can carry.
+//! native `AC1024` stamp must SURVIVE a decode/re-encode. Here, only the refused request names
+//! `AC1018`, because the writer cannot lay an R2004 container out.
 //! Asking the R2010 container itself for `AC1018` is REFUSED: the writer lays a drawing with content
 //! out as R2010 object streams only, so an R2004 stamp over them would describe a file it did not
 //! write (`written-as-ac1024`). The identity round trip asserts the complementary thing: the reader
@@ -55,40 +54,26 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 //#endregion 🔖️Input
 
 //#region 🔖️Expectation
-/// 🎯️ The version stamp THIS standard is named for — the one `set-snapshot` drives the empty document to,
-/// and the only AC1018-specific fact the fixture can carry.
-const R2004_VERSION: &str = "AC1018";
-
 /// 🎯️ The stamp the committed container actually has. Named here so the identity scenario can
 /// assert the reader reports the file's own version rather than the case's filing.
 const FIXTURE_VERSION: &str = "AC1024";
 
 /// 🧭️ What the published offsets predict the projection must read after `kind` is applied with
-/// `params`: a stated field wins, an omitted one keeps what the input carried, and `set-snapshot`
-/// collapses the container to the 22-byte preamble-only document this artifact's own demo example
-/// already has. Derived from the specification's rules, never from the result being judged.
+/// `params`: a stated field wins, an omitted one keeps what the input carried, and the container length is
+/// unchanged. Derived from the specification's rules, never from the result being judged.
 fn predicted(kind: &str, params: &Json, input: &[u8]) -> Result<Json, String> {
     let before = project_dwg(input)?;
-    let stated = if kind == "set-snapshot" { params.get("snapshot").cloned().unwrap_or(Json::Null) } else { params.clone() };
-    let field = |key: &str| stated.get(key).cloned().unwrap_or_else(|| before.get(key).cloned().unwrap_or(Json::Null));
+    let field = |key: &str| params.get(key).cloned().unwrap_or_else(|| before.get(key).cloned().unwrap_or(Json::Null));
     let triple = vec![("version".to_string(), field("version")), ("maintenanceVersion".to_string(), field("maintenanceVersion")), ("codepage".to_string(), field("codepage"))];
-    let length = match kind {
-        "set-snapshot" => Json::Number(22.0),
-        _ => before.get("byteLength").cloned().unwrap_or(Json::Null),
-    };
+    let length = before.get("byteLength").cloned().unwrap_or(Json::Null);
     Ok(Json::Object(triple.into_iter().chain(std::iter::once(("byteLength".to_string(), length))).collect()))
 }
 
 /// ⚖️ Fails the scenario unless the projection reads exactly what [`predicted`] says, naming the
-/// first field that broke, and — for the whole-document replacement — unless the stamp actually
-/// landed on `AC1018`. The second half is what makes this an R2004 case rather than a rename of the
-/// R2010 one.
+/// first field that broke.
 fn conforms_as_r2004(kind: &str, projection: &Json, expected: &Json) -> Result<(), String> {
     if let Some(first) = divergence(projection, expected) {
         return Err(format!("{kind:?} did not produce the preamble the published offsets predict — {first}"));
-    }
-    if kind == "set-snapshot" && projection.get("version") != Some(&Json::String(R2004_VERSION.to_string())) {
-        return Err(format!("{kind:?} was supposed to leave the empty document stamped {R2004_VERSION}, the release this standard names; the preamble reads {:?}", projection.get("version")));
     }
     Ok(())
 }

@@ -2,7 +2,7 @@
 
 use super::insert_encryption_dictionary::InsertEncryptionDictionary;
 use super::PdfAMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::{PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation
@@ -23,11 +23,10 @@ impl MutationKind<PdfSnapshot, PdfAMutation> for RemoveEncryptionDictionary {
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfAMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        support::encryption_dictionary_with(base, self.version, self.revision).map(|_| PdfAMutation::InsertEncryptionDictionary(InsertEncryptionDictionary { version: self.version, revision: self.revision })).into_iter().collect()
-    
-    })())
-}
+        Ok({
+            support::encryption_dictionary_with(base, self.version, self.revision).map(|id| PdfAMutation::InsertEncryptionDictionary(InsertEncryptionDictionary { version: self.version, revision: self.revision, placements: support::placements_of(base, &[id]) })).into_iter().collect()
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Remove encryption dictionary V{} R{}", self.version, self.revision), &format!("Verschlüsselungswörterbuch V{} R{} entfernen", self.version, self.revision))

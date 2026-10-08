@@ -279,6 +279,17 @@ pub fn find_block_location(blocks: &[NoteBlockNode], target_id: &str) -> Option<
     None
 }
 
+/// 📏️ Number of children in `parent`'s container (`None` = the document root); `None` when `parent` names no group.
+pub fn container_len(blocks: &[NoteBlockNode], parent: Option<&str>) -> Option<usize> {
+    match parent {
+        None => Some(blocks.len()),
+        Some(id) => match find_block(blocks, id)? {
+            NoteBlockNode::Group { children, .. } => Some(children.len()),
+            _ => None,
+        },
+    }
+}
+
 pub fn flatten_blocks(blocks: &[NoteBlockNode]) -> Vec<&NoteBlockNode> {
     let mut out = Vec::new();
     fn visit<'a>(blocks: &'a [NoteBlockNode], out: &mut Vec<&'a NoteBlockNode>) {

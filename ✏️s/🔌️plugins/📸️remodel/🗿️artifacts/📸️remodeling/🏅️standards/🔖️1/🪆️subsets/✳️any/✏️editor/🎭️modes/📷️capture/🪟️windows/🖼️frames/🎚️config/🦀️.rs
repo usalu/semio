@@ -20,15 +20,26 @@ pub struct RemodelingFramesWindowConfig {
 pub enum RemodelingFramesWindowConfigMutation { Snapshot { config: RemodelingFramesWindowConfig } }
 
 impl protocol::Mutation<RemodelingFramesWindowConfig> for RemodelingFramesWindowConfigMutation {
-    type Diff = RemodelingFramesWindowConfig;
+    type Diff = RemodelingFramesWindowConfigDiff;
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1, owner: "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📷️capture/🪟️windows/🖼️frames/🎚️config", semantic_kind: "set-window-config", display_name: "Set Remodeling Frames Window Configuration", emoji: "🎚️", aggregate_variant: "Snapshot", payload_schema: "remodeling.frameswindowconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema],
     }];
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor { &Self::DESCRIPTORS[0] }
-    fn diff(&self, _base: &RemodelingFramesWindowConfig) -> protocol::MutationOutcome<Self::Diff> { match self { Self::Snapshot { config } => protocol::MutationOutcome::new(config.clone()) } }
+    fn diff(&self, base: &RemodelingFramesWindowConfig) -> protocol::MutationOutcome<Self::Diff> {
+        match self {
+            Self::Snapshot { config } => {
+                let diff = RemodelingFramesWindowConfigDiff {
+            frame_cursor: (base.frame_cursor != config.frame_cursor).then(|| config.frame_cursor.clone()),
+                };
+                match protocol::DiffAlgebra::<RemodelingFramesWindowConfig>::is_empty(&diff) {
+                    true => protocol::MutationOutcome::empty().warning("mutation.no-op", "Window configuration is unchanged."),
+                    false => protocol::MutationOutcome::new(diff),
+                }
+            }
+        }
+    }
     fn inverse(&self, base: &RemodelingFramesWindowConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| { vec![Self::Snapshot { config: base.clone() }] 
-    })())
+    Ok(vec![Self::Snapshot { config: base.clone() }])
 }
 }
 
@@ -74,7 +85,7 @@ impl store::ArtifactPack for RemodelingFramesWindowConfig {
 }
 } }
 impl_codecs!();
-store::impl_whole_record_config!(RemodelingFramesWindowConfig);
+impl store::ConfigRecord for RemodelingFramesWindowConfig {}
 impl protocol::OpText for RemodelingFramesWindowConfigMutation { fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) } fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> { semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1))) } }
 impl protocol::OpBinary for RemodelingFramesWindowConfigMutation { fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(protocol::OpText::print_op(self).into_bytes()) } fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> { let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?; semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error))) } }
 
@@ -89,3 +100,46 @@ impl semio_framework_plugin::WindowConfigOwner for RemodelingFramesWindowConfigO
 pub fn current<C>(view: &semio_framework_plugin::ConfigView<'_, C>) -> RemodelingFramesWindowConfig { view.window::<RemodelingFramesWindowConfigOwner>().cloned().unwrap_or_default() }
 pub fn from_snapshot(snapshot: Option<&semio_framework_plugin::WindowConfigSnapshot>) -> RemodelingFramesWindowConfig { snapshot.and_then(|snapshot| snapshot.get::<RemodelingFramesWindowConfigOwner>()).cloned().unwrap_or_default() }
 pub fn addressed(view: &semio_framework_plugin::ViewModel, config: RemodelingFramesWindowConfig) -> Result<semio_framework_plugin::WindowConfigMutation, semio_framework_plugin::Fault> { let id = view.window_id.as_deref().ok_or_else(|| semio_framework_plugin::Fault::from("remodeling-frames-window-required"))?; let kind = view.window_instances.iter().find(|window| window.id == id).map(|window| window.window_kind_id.as_str()).ok_or_else(|| semio_framework_plugin::Fault::from("remodeling-window-stale"))?; if kind != super::REMODELING_PLAY_WINDOW_FRAMES { return Err(semio_framework_plugin::Fault::from("remodeling-frames-window-kind-required")); } Ok(semio_framework_plugin::WindowConfigMutation::of::<RemodelingFramesWindowConfigOwner>(id, RemodelingFramesWindowConfigMutation::Snapshot { config })) }
+
+//#region 🔺️Diff
+/// 🔺️ Sparse field delta for the window configuration; an absent field is untouched.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct RemodelingFramesWindowConfigDiff {
+    pub frame_cursor: Option<RemodelingFrameCursor>,
+}
+
+impl protocol::MutationDiff<RemodelingFramesWindowConfig> for RemodelingFramesWindowConfigDiff {
+    fn apply(&self, base: &RemodelingFramesWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<RemodelingFramesWindowConfig> {
+        let mut next = base.clone();
+        if let Some(frame_cursor) = &self.frame_cursor {
+            next.frame_cursor = frame_cursor.clone();
+        }
+        Ok(next)
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.frame_cursor.is_some() {
+            self.frame_cursor = other.frame_cursor;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<RemodelingFramesWindowConfig> for RemodelingFramesWindowConfigDiff {
+    fn inverse(&self, base: &RemodelingFramesWindowConfig) -> Self {
+        Self {
+            frame_cursor: self.frame_cursor.as_ref().map(|_| base.frame_cursor.clone()),
+        }
+    }
+
+    fn between(base: &RemodelingFramesWindowConfig, other: &RemodelingFramesWindowConfig) -> Self {
+        Self {
+            frame_cursor: (base.frame_cursor != other.frame_cursor).then(|| other.frame_cursor.clone()),
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
+}
+//#endregion 🔺️Diff

@@ -105,7 +105,7 @@ mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{create_animation,delete_animation,move_animation,reorder_animations};
+    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{apply_gltf_mutation,create_animation,delete_animation,move_animation,reorder_animations};
 use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutations::{gltf_inverse_restored_document};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
     use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::project_gltf;
@@ -132,16 +132,16 @@ use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutati
     //#endregion 🔖️Params
 
     //#region 🔖️Dispatch
-    /// 📐️ Full parse → typed leaf `apply()` → re-serialize from the model alone — the
+    /// 📐️ Full parse → typed leaf mutation through the central applier → re-serialize from the model alone — the
     /// no-byte-pass-through rule this wave exists to enforce. Dispatches through each of the 4
     /// leaves' own real `apply()` directly, same shape `🎥️camera`'s/`🦴️skin`'s adapters already
     /// established.
     fn apply_kind(before: &GltfSnapshot, kind: &str, params: &Json) -> Result<GltfSnapshot, String> {
         match kind {
-            "create-animation" => create_animation::apply(&create_animation::GltfCreateAnimationPayload { position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "delete-animation" => delete_animation::apply(&delete_animation::GltfDeleteAnimationPayload { index: num(params, "index")? }, before).map_err(|error| error.detail),
-            "move-animation" => move_animation::apply(&move_animation::GltfMoveAnimationPayload { index: num(params, "index")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "reorder-animations" => reorder_animations::apply(&reorder_animations::GltfReorderAnimationsPayload { order: order(params, "order")? }, before).map_err(|error| error.detail),
+            "create-animation" => apply_gltf_mutation(before, &create_animation::mutation(create_animation::GltfCreateAnimationPayload { position: num(params, "position")?, animation: None })),
+            "delete-animation" => apply_gltf_mutation(before, &delete_animation::mutation(delete_animation::GltfDeleteAnimationPayload { index: num(params, "index")? })),
+            "move-animation" => apply_gltf_mutation(before, &move_animation::mutation(move_animation::GltfMoveAnimationPayload { index: num(params, "index")?, position: num(params, "position")? })),
+            "reorder-animations" => apply_gltf_mutation(before, &reorder_animations::mutation(reorder_animations::GltfReorderAnimationsPayload { order: order(params, "order")? })),
             other => Err(format!("unrecognised mutation kind {other:?}")),
         }
     }

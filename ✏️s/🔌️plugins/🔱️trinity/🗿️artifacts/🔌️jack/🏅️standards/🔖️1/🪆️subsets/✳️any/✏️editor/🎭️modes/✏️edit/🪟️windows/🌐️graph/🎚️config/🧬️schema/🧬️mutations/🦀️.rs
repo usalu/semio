@@ -1,6 +1,6 @@
 //! 🧬️ Mutations of one Jack graph-window configuration.
 
-use super::JackGraphWindowConfig;
+use super::{JackGraphWindowConfig, JackGraphWindowConfigDiff};
 #[path = "🎥️set-camera/🦀️.rs"]
 mod set_camera;
 pub use set_camera::SetCamera;
@@ -10,7 +10,7 @@ pub use set_lod_mode::SetLodMode;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations)]
 #[value(tag = "kind", rename_all = "kebab-case")]
-#[mutations(snapshot = JackGraphWindowConfig, diff = JackGraphWindowConfig, schema = "trinity.jackgraphwindowcfg")]
+#[mutations(snapshot = JackGraphWindowConfig, diff = JackGraphWindowConfigDiff, schema = "trinity.jackgraphwindowcfg")]
 pub enum JackGraphWindowConfigMutation {
     #[dsl(key = "set-camera")]
     SetCamera(SetCamera),

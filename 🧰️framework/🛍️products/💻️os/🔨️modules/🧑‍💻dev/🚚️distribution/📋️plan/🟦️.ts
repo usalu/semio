@@ -1,3 +1,4 @@
+import { runtimeFixturePathV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts";
 import { requirePlaygroundVariant } from "../../../🔌️plugin/📇️registry/🎮️playground/⭐️default/🟦️.ts";
 import { DEFAULT_PLAYGROUND_VARIANT, PLAYGROUND_BUILD_TARGETS } from "../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 import { loadDevContribution, resolveDevContributionFile } from "../../🧩️contribution/📥️loading/🟦️.ts";
@@ -93,6 +94,7 @@ async function renderDistributionBundle(workspace: string, artifactRoot: string)
     if (!existsSync(absolute) || !statSync(absolute).isFile()) return Promise.resolve();
     const canonical = realpathSync(absolute), path = relative(realpathSync(workspace), canonical).replaceAll("\\", "/").normalize("NFC");
     if (path === ".." || path.startsWith("..")) throw new Error(`Compiler input escapes workspace: ${id}`);
+    if (runtimeFixturePathV1(path)) throw new Error("Production compiler input belongs to a testing fixture collection: " + path);
     if (path.startsWith(relative(workspace, join(playDirectory, DISTRIBUTION_LAYOUT.directory)).replaceAll("\\", "/") + "/")) throw new Error(`Compiler input consumes its own output: ${path}`);
     const current = pending.get(path);
     if (current) return current;

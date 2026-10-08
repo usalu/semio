@@ -100,7 +100,7 @@ async fn committed_diff_is_canonical() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: NoteDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed diff decodes");
-    let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-block/removes-the-math-block: committed diff did not carry before to after");
 }
 
@@ -114,4 +114,10 @@ async fn non_last_block_is_removed_and_siblings_shift_left() {
     assert_eq!(applied.blocks.len(), base.blocks.len() - 1, "delete-block must shrink the root list by exactly one");
     assert_eq!(find_block_location(&applied.blocks, "blk-image"), Some((None, 3)), "the sibling after the deleted block must shift left into index 3");
     assert!(find_block(&applied.blocks, "blk-nested").is_some(), "deleting a root block must not disturb the group's nested subtree");
+}
+
+/// ⚖️ The inverse rows' diffs sum (`MutationDiff::absorb`) to the negative of this mutation's diff, and replaying them restores the before-snapshot.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

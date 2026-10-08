@@ -15,6 +15,9 @@ use protocol::{MutationKind, SemanticDescriptor};
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CreateSiteContext {
     pub site_context: SiteContext,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    pub index: Option<usize>,
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateSiteContext {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "site-context", kind: "create-site-context", record: "CreatedSiteContext" };

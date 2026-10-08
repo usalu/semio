@@ -50,19 +50,6 @@ pub(crate) fn dec_ifc_header_bin(reader: &mut store::ByteReader<'_>) -> Result<I
     Ok(IfcHeader { file_description, file_name, file_schema })
 }
 
-pub(crate) fn enc_ifc_snapshot_bin(s: &IfcSnapshot, out: &mut Vec<u8>) {
-    write_str_bin(out, &s.schema);
-    enc_ifc_header_bin(&s.header, out);
-    enc_entity_list_bin(&s.entities, out);
-}
-
-pub(crate) fn dec_ifc_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcSnapshot, String> {
-    let schema = read_str_bin(reader)?;
-    let header = dec_ifc_header_bin(reader)?;
-    let entities = dec_entity_list_bin(reader)?;
-    Ok(IfcSnapshot { schema, header, entities })
-}
-
 /// 🧪️ P2-FG1: REAL binary op frame (`format u8 | tag u8 | variant payload`), matching
 /// `../💾️binary/📡️.protocol.semio`'s `header fixed 2` + `chain payload bytes` shape —
 /// upgraded from F6's `print_op().into_bytes()` text-as-binary shortcut (`IfcMutation` was one of 4
@@ -75,8 +62,6 @@ pub(crate) fn dec_ifc_snapshot_bin(reader: &mut store::ByteReader<'_>) -> Result
 impl OpBinary for IfcMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         let tag: u8 = match self {
-            IfcMutation::SetSnapshot(..) => TAG_SET_SNAPSHOT,
-            IfcMutation::PatchSnapshot(_) => TAG_PATCH_SNAPSHOT,
             IfcMutation::SetFileDescription(..) => TAG_SET_FILE_DESCRIPTION,
             IfcMutation::SetFileName(..) => TAG_SET_FILE_NAME,
             IfcMutation::SetFileSchema(..) => TAG_SET_FILE_SCHEMA,
@@ -89,8 +74,6 @@ impl OpBinary for IfcMutation {
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
-            IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => enc_ifc_snapshot_bin(snapshot, &mut out),
-            IfcMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }) => out.extend(protocol::OpBinary::encode_op(patch)?),
             IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values }) => enc_ifc_value_list_bin(values, &mut out),
             IfcMutation::SetFileName(set_file_name::SetFileName { values }) => enc_ifc_value_list_bin(values, &mut out),
             IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values }) => enc_ifc_value_list_bin(values, &mut out),
@@ -127,11 +110,6 @@ impl OpBinary for IfcMutation {
         let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
         match tag {
-            TAG_PATCH_SNAPSHOT => Ok(IfcMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: <semio_s_artifact_stdio_contract::editing::SnapshotPatch as protocol::OpBinary>::decode_op(reader.read_bytes(reader.remaining()).map_err(|e| protocol::ProtocolError::Malformed { what: "patch-snapshot payload", offset: reader.position() as u64, detail: e.to_string() })?)? })),
-            TAG_SET_SNAPSHOT => {
-                let snapshot = dec_ifc_snapshot_bin(&mut reader).map_err(|e| malformed("op snapshot", reader.position(), e))?;
-                Ok(IfcMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
-            }
             TAG_SET_FILE_DESCRIPTION => {
                 let values = dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("op values", reader.position(), e))?;
                 Ok(IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values }))
@@ -185,8 +163,6 @@ pub use mutations_codec::*;
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `IfcMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.
 const WIRE_PROTOCOL: &str = include_str!("📡️.protocol.semio");
-const TAG_SET_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-snapshot");
-const TAG_PATCH_SNAPSHOT: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "patch-snapshot");
 const TAG_SET_FILE_DESCRIPTION: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-description");
 const TAG_SET_FILE_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-name");
 const TAG_SET_FILE_SCHEMA: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-file-schema");

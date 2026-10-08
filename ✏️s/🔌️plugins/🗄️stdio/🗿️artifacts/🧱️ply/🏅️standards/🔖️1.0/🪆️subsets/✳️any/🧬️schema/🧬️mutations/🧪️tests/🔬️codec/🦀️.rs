@@ -26,8 +26,6 @@ async fn op_text_binary_roundtrip_law() {
 async fn kinds_cover_every_variant() {
     fn kind_of(mutation: &PlyMutation) -> &'static str {
         match mutation {
-            PlyMutation::SetSnapshot(..) => "set-snapshot",
-            PlyMutation::PatchSnapshot(_) => "patch-snapshot",
             PlyMutation::SetFormat(..) => "set-format",
             PlyMutation::InsertComment(..) => "insert-comment",
             PlyMutation::RemoveComment(..) => "remove-comment",

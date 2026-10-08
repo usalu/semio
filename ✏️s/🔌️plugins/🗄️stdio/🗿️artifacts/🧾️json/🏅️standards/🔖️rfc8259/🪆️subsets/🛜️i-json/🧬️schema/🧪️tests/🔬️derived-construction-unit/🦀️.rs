@@ -14,12 +14,10 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn unsafe_integer_injected_via_raw_mutate_still_fails_build() {
+    async fn unsafe_integer_in_a_snapshot_still_fails_build() {
         use crate::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonMember, JsonValue};
         let violating = JsonSnapshot { value: JsonValue::Object { members: vec![JsonMember { key: "n".into(), value: JsonValue::Number { lexeme: "9007199254740993".into() } }] }, ..JsonSnapshot::default() };
-        let (mutated, _diff) =
-            JsonIJsonBuilderConstruction::from_snapshot(JsonSnapshot::default()).mutate(JsonIJsonMutation::SetSnapshot(crate::standards::v_rfc8259::subsets::i_json::schema::mutations::set_snapshot::SetSnapshot { snapshot: violating }));
-        let err = mutated.build().expect_err("an unsafe integer must fail build()");
+        let err = JsonIJsonBuilderConstruction::from_snapshot(violating).build().expect_err("an unsafe integer must fail build()");
         assert!(err.iter().any(|d| d.code.0 == "stdio.json.i-json.unsafe-integer"));
     }
 }

@@ -99,14 +99,6 @@ impl Dictionary {
     }
 }
 
-impl Drop for Dictionary {
-    fn drop(&mut self) {
-        if let Err(_retirement) = std::mem::take(&mut self.pairs).release_shared() {
-            assert!(std::thread::panicking(), "final Dictionary ownership must be explicitly retired or owned by a cold boundary");
-        }
-    }
-}
-
 /// 🧊️ Test-only oracle mirror of the hand-written `Deserialize` below; manual (not derived) for the
 /// same reason `Deserialize` is hand-written rather than delegating to `OrderedMap`'s own — see
 /// `Dictionary`'s struct docstring above. Serializes each entry directly over `Value: Serialize`.
@@ -182,10 +174,10 @@ impl FromValue for Dictionary {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let mut input=retirement::RetainedDictionaryInput::new(value);
         loop {
-            match input.step(4096,4096) {
+            match input.step(1,input.next_step_byte_demand(4096).expect("cold dictionary input demand")) {
                 Ok(Some(dictionary))=>return Ok(dictionary),
                 Ok(None)=>{},
-                Err(error)=>{input.cancel();while !input.terminal_is_empty() {input.close_step(1,4096);}return Err(error);},
+                Err(error)=>{input.cancel();while !input.terminal_is_empty() {input.close_step(1,input.next_step_byte_demand(4096).expect("cold dictionary input close demand"));}return Err(error);},
             }
         }
     }

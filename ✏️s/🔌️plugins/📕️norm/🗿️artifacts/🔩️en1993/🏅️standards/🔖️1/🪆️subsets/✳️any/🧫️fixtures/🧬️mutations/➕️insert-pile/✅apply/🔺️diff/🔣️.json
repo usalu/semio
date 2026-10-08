@@ -1,53 +1,102 @@
 {
-  "artifact": null,
   "annex": null,
-  "materials": null,
-  "sections": null,
-  "members": null,
-  "loadCases": null,
-  "memberActions": null,
-  "joints": null,
-  "fatigueDetails": null,
-  "fireExposures": null,
-  "coldFormedMembers": null,
-  "platedPanels": null,
-  "siloShells": null,
-  "tensionComponents": null,
-  "bridgeFatigue": null,
-  "towerLegs": null,
-  "piles": {
-    "values": [
-      {
-        "id": "pile-1",
-        "sectionId": "sec-heb240",
-        "materialId": "mat-s355",
-        "drivingStress": 200000000.0,
-        "embeddedLength": 8.0,
-        "shaftPerimeter": 0.96,
-        "actions": [
-          {
-            "id": "pile-g",
-            "loadCaseId": "g-permanent",
-            "force": 800000.0
-          }
-        ]
-      },
-      {
-        "id": "pile-1-2",
-        "sectionId": "sec-heb240",
-        "materialId": "mat-s355",
-        "drivingStress": 200000000.0,
-        "embeddedLength": 8.0,
-        "shaftPerimeter": 0.96,
-        "actions": [
-          {
-            "id": "pile-g",
-            "loadCaseId": "g-permanent",
-            "force": 800000.0
-          }
-        ]
-      }
-    ]
+  "materials": {
+    "removed": [],
+    "added": [],
+    "modified": []
   },
-  "craneRunways": null
+  "sections": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "loadCases": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "memberActions": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "joints": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "fatigueDetails": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "fireExposures": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "coldFormedMembers": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "platedPanels": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "siloShells": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "tensionComponents": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "bridgeFatigue": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "towerLegs": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "piles": {
+    "removed": [],
+    "added": [
+      {
+        "after": "pile-1",
+        "row": {
+          "id": "pile-1-2",
+          "sectionId": "sec-heb240",
+          "materialId": "mat-s355",
+          "drivingStress": 200000000.0,
+          "embeddedLength": 8.0,
+          "shaftPerimeter": 0.96,
+          "actions": [
+            {
+              "id": "pile-g",
+              "loadCaseId": "g-permanent",
+              "force": 800000.0
+            }
+          ]
+        }
+      }
+    ],
+    "modified": []
+  },
+  "craneRunways": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  }
 }

@@ -1,39 +1,14 @@
 {
-  "artifact": null,
-  "hostSnapshot": {
-    "schema": "flow.hostSnapshot",
-    "camera": {
-      "x": -4.0,
-      "y": 6.0,
-      "zoom": 2.0
-    },
-    "widgets": [
-      {
-        "kind": "inputNote",
-        "id": "node-a",
-        "text": "Base plate"
-      },
-      {
-        "kind": "inputNote",
-        "id": "node-b",
-        "text": "Column"
-      }
-    ],
-    "synapses": [
-      {
-        "id": "wire-ab",
-        "from": "node-a",
-        "to": "node-b",
-        "fromPort": "solid",
-        "toPort": "base"
-      }
-    ],
-    "layout": {
-      "node-a": {
-        "x": 0.0,
-        "y": 0.0
-      }
-    }
+  "schema": null,
+  "camera": {
+    "x": -4.0,
+    "y": 6.0,
+    "zoom": 2.0
   },
-  "generation": null
+  "widgets": null,
+  "synapses": null,
+  "layout": null,
+  "generations": null,
+  "selectedGeneration": null,
+  "previewText": null
 }

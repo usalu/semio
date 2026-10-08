@@ -33,7 +33,7 @@
       "version": "0.1.0",
     },
     "../🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/s-2d-js",
+      "name": "@semio-tech/framework-2d-js",
       "version": "0.1.0",
     },
     "../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust": {
@@ -244,7 +244,7 @@
       "version": "0.1.0",
     },
     "../🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/s-3d-js",
+      "name": "@semio-tech/framework-3d-js",
       "version": "0.1.0",
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -1672,9 +1672,9 @@
 
     "@semio-tech/repo-test": ["@semio-tech/repo-test@workspace:../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript"],
 
-    "@semio-tech/s-2d-js": ["@semio-tech/s-2d-js@workspace:../🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript"],
+    "@semio-tech/framework-2d-js": ["@semio-tech/framework-2d-js@workspace:../🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript"],
 
-    "@semio-tech/s-3d-js": ["@semio-tech/s-3d-js@workspace:../🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript"],
+    "@semio-tech/framework-3d-js": ["@semio-tech/framework-3d-js@workspace:../🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript"],
 
     "@semio-tech/schema-composition-rs": ["@semio-tech/schema-composition-rs@workspace:../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust"],
 

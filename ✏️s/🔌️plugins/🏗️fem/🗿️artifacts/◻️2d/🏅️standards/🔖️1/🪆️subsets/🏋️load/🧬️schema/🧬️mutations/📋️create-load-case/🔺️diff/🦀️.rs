@@ -5,7 +5,7 @@
 //! (`mutation.target-missing`, Error). `add-load` calls the SAME guard, so the two doors into a
 //! case's `loads` cannot drift apart.
 use super::CreateLoadCase;
-use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Fem2dDiff, Fem2dLoadCasesDelta, insertion_order};
 use crate::standards::v1::subsets::any::schema::mutations::guards;
 use crate::Fem2dSnapshot;
 
@@ -19,6 +19,6 @@ pub fn diff(payload: &CreateLoadCase, base: &Fem2dSnapshot) -> protocol::Mutatio
             return rejection;
         }
     }
-    protocol::MutationOutcome::new(Fem2dDiff { load_cases: Some(Fem2dLoadCasesDelta { added: vec![payload.load_case.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem2dDiff { load_cases: Some(Fem2dLoadCasesDelta { added: vec![payload.load_case.clone()], reordered: insertion_order(base.load_cases.iter().map(|item| item.id.as_str()), &payload.load_case.id, payload.index), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

@@ -5,7 +5,7 @@
 
 use crate::editor::jpg_baseline::modes::edit;
 use crate::editor::jpg_baseline::modes::edit::windows::main;
-use crate::standards::v_jfif_1_01::subsets::baseline::schema::mutations::{patch_snapshot, set_arithmetic, set_sample_precision, set_snapshot, set_sof_marker, JpgBaselineMutation};
+use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::{JpgMutation,ReplaceImage,ReplacePixelsMutation,ChangeJfifHeaderMutation};
 use crate::standards::v_jfif_1_01::subsets::baseline::schema::snapshot::JpgSnapshot;
 use crate::{JPG_BASELINE_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA};
 use semio_framework_2d::compute::EngineHandles;
@@ -122,7 +122,7 @@ fn jpgBaselineEditor_retained_reduce(
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<JpgBaselineEditor>>>,
     _operation: &AppOperationContext,
-) -> Result<Emit<JpgBaselineMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+) -> Result<Emit<JpgMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
         JpgBaselineEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&jpgBaselineEditor_example_snapshot(example_id), STDIO_JPG_DOCUMENT_SCHEMA)], ..Default::default() }),
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
@@ -137,14 +137,12 @@ fn jpgBaselineEditor_bounded_edit(event: &editing::SnapshotEditEvent, snapshot: 
 }
 /// 🎯️ The domain leaf exactly as granular as a set of one field — SOF marker, arithmetic coding flag, sample precision;
 /// any other edit commits a path-scoped snapshot patch (design §19.3/§20.3).
-fn jpgBaselineEditor_compact_mutation(event: &editing::SnapshotEditEvent, next: &JpgSnapshot) -> Option<JpgBaselineMutation> {
-    let editing::SnapshotEditEvent::SetValue { path, .. } = event else { return None };
-    match path.as_str() {
-        "/sofMarker" => Some(JpgBaselineMutation::SetSofMarker(set_sof_marker::SetSofMarker { marker: next.sof_marker })),
-        "/arithmetic" => Some(JpgBaselineMutation::SetArithmetic(set_arithmetic::SetArithmetic { arithmetic: next.arithmetic })),
-        "/frame/precision" => next.frame.as_ref().map(|frame| JpgBaselineMutation::SetSamplePrecision(set_sample_precision::SetSamplePrecision { precision: frame.precision })),
-        _ => None,
-    }
+fn jpgBaselineEditor_compact_mutation(event:&editing::SnapshotEditEvent,next:&JpgSnapshot)->Option<JpgMutation>{
+ match event{
+ editing::SnapshotEditEvent::SetValue{path,..} if path=="/image/pixels"=>Some(JpgMutation::ReplacePixels(ReplacePixelsMutation{pixels:next.image.pixels.clone()})),
+ editing::SnapshotEditEvent::SetValue{path,..} if path.starts_with("/image/jfif")=>Some(JpgMutation::ChangeJfifHeader(ChangeJfifHeaderMutation{version:next.image.jfif_version,density_units:next.image.jfif_density_units,x_density:next.image.jfif_x_density,y_density:next.image.jfif_y_density,thumbnail:next.image.jfif_thumbnail.clone()})),
+ _=>None
+}
 }
 struct JpgBaselineEditorExampleFactory {
     keys: Vec<ToolFactoryKey>,
@@ -202,7 +200,7 @@ impl ArtifactEditor for JpgBaselineEditor {
         vec![crate::examples::demo::source()]
     }
     type Snapshot = JpgSnapshot;
-    type Mutation = JpgBaselineMutation;
+    type Mutation = JpgMutation;
     type Config = NoConfig;
     type ConfigMutation = NoConfigMutation;
     type Draft = NoDraft;
@@ -221,7 +219,7 @@ impl ArtifactEditor for JpgBaselineEditor {
     }
 
     fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        let hard = crate::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance(snapshot)
+        let hard = crate::standards::v_jfif_1_01::subsets::baseline::io::check_baseline_content(snapshot)
             .into_iter()
             .filter(|diagnostic| matches!(diagnostic.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal))
             .map(|diagnostic| diagnostic.message)
@@ -229,28 +227,28 @@ impl ArtifactEditor for JpgBaselineEditor {
         if !hard.is_empty() {
             return Err(semio_framework_plugin::MediaError::Payload("artifact:natural".into(), hard.join("; ")));
         }
-        crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(snapshot, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::from_frame(snapshot.frame.as_ref())).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))
+        crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(snapshot, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))
     }
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
         if !bytes.ends_with(&[0xff, 0xd9]) {
             return Err(semio_framework_plugin::MediaError::Payload("artifact:natural".into(), "JPEG input must end at its EOI marker".into()));
         }
-        let snapshot = crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))?;
-        let hard = crate::standards::v_jfif_1_01::subsets::baseline::schema::check_baseline_conformance(&snapshot)
+        let admitted = crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg_with_observations(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:natural".into(), error.to_string()))?;
+        let hard = crate::standards::v_jfif_1_01::subsets::baseline::schema::conformance::check_baseline_facts(&admitted.observations.baseline_facts())
             .into_iter()
             .filter(|diagnostic| matches!(diagnostic.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal))
             .map(|diagnostic| diagnostic.message)
             .collect::<Vec<_>>();
         if hard.is_empty() {
-            Ok(snapshot)
+            Ok(admitted.snapshot)
         } else {
             Err(semio_framework_plugin::MediaError::Payload("artifact:natural".into(), hard.join("; ")))
         }
     }
 
     fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(JpgBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }))
+        Some(JpgMutation::ReplaceImage(ReplaceImage { image:snapshot.image }))
     }
 
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
@@ -339,9 +337,7 @@ impl ArtifactEditor for JpgBaselineEditor {
             JpgBaselineEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),
             JpgBaselineEditCommand::SetActiveExample { example_id } => Ok(Emit { effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&jpgBaselineEditor_example_snapshot(example_id), STDIO_JPG_DOCUMENT_SCHEMA)], ..Default::default() }),
             JpgBaselineEditCommand::SetPixelRegion { pixels } => {
-                let mut snapshot = doc.snapshot.clone();
-                snapshot.pixels = pixels.clone();
-                Ok(Emit::mutations(vec![JpgBaselineMutation::SetSnapshot(crate::standards::v_jfif_1_01::subsets::baseline::schema::mutations::set_snapshot::SetSnapshot { snapshot })]))
+                Ok(Emit::mutations(vec![JpgMutation::ReplacePixels(ReplacePixelsMutation { pixels:pixels.clone() })]))
             }
         }
     }
@@ -364,12 +360,10 @@ impl editing::SnapshotEditingEditor for JpgBaselineEditor {
             _ => None,
         }
     }
-    fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        let next = jpgBaselineEditor_bounded_edit(event, snapshot)?;
-        if let Some(mutation) = jpgBaselineEditor_compact_mutation(event, &next) {
-            return Ok(Emit { artifact_mutations: vec![mutation], ..Default::default() });
-        }
-        editing::snapshot_edit_patch(event, snapshot, |patch| JpgBaselineMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| JpgBaselineMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot })))
+    fn snapshot_edit_mutations(event:&editing::SnapshotEditEvent,snapshot:&Self::Snapshot)->Result<Emit<Self::Mutation,Self::ConfigMutation,Self::DraftMutation>,Fault>{
+        let next=jpgBaselineEditor_bounded_edit(event,snapshot)?;
+        if next.schema!=snapshot.schema{return Err(jpgBaselineEditor_edit_fault("stdio.jpg.identity-edit","JPEG image edits cannot change schema identity"));}
+        Ok(Emit::mutations(vec![jpgBaselineEditor_compact_mutation(event,&next).unwrap_or_else(||JpgMutation::ReplaceImage(ReplaceImage{image:next.image}))]))
     }
 }
 

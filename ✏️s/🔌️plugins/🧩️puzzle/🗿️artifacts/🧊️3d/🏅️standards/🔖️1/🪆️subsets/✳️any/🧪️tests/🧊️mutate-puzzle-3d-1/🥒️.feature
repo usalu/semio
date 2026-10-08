@@ -28,19 +28,12 @@ Feature: Apply every typed puzzle3d scene mutation twice — once in Rust, once 
   naming: `scale` is per-axis on an object and uniform on a target volume, and each verb writes the
   other shape over the one the before-snapshot holds.
 
-  🚧️ THREE REFUSALS THE REFERENCE ARGUES BY CLAUSE, and reports rather than works around. First,
-  `replace-object-vortex` in both roles. Its ONLY committed vector, `⏸️rekind`,
-  supplies a genuinely different vortex — `vortex-1` moves from `vortex-kind-a` to `vortex-kind-c` —
-  and yet its committed outcome declares `mutation.no-op` and its after-snapshot is identical to its
-  before-snapshot. At least three rules produce exactly that and no committed document distinguishes
-  them: the verb is unimplemented; it refuses a vortex an attraction is addressed to, which
-  `vortex-1` is; or it refuses a vortex kind the `kindCompatibility` relation does not admit, which
-  `vortex-kind-c` is. `📓️derivation-rules.md` rule 2 says `replace-<singular>-<member>` replaces the
-  addressed record, so a second implementation written from the specification would move the
-  document. ONE more vector, on an unattracted vortex, decides it. Second,
+  🚧️ ONE REFUSAL THE REFERENCE ARGUES BY CLAUSE, and reports rather than works around.
   `inverse-replace-kind-catalogs`: the committed vector INSTALLS a catalogue where the before-snapshot
   carried none, so undoing it means REMOVING the member, and nothing committed says whether the verb
-  accepts a null argument. The sibling `◻️mutate-puzzle-2d-1` reports both gaps identically.
+  accepts a null argument. The sibling `◻️mutate-puzzle-2d-1` reports the same gap. `replace-object-vortex`
+  is no longer refused: its builder replaces the addressed vortex record (rule 2), and its committed vector
+  `⏸️rekind` moves `vortex-1` from `vortex-kind-a` to `vortex-kind-c`.
 
   📌️ A FINDING MADE WHILE THE REFERENCE WAS BEING WRITTEN.
   `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️.json` is not a mutation schema at

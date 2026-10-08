@@ -485,50 +485,60 @@ pub(crate) mod part21 {
         Ok(Record { name: "FILE_SCHEMA".to_string(), parameter: Parameter::List(vec![string_list(&schemas)]) })
     }
 
-    fn header_to_wire(exchange: &Exchange) -> Json {
-        let arguments = |name: &str| header_record(exchange, name).and_then(|record| args(record).ok()).cloned().unwrap_or_default();
-        let text = |items: &[Parameter], index: usize| Json::String(items.get(index).and_then(as_text).unwrap_or_default().to_string());
-        let texts = |items: &[Parameter], index: usize| {
-            Json::Array(match items.get(index) {
-                Some(Parameter::List(values)) => values.iter().filter_map(as_text).map(|value| Json::String(value.to_string())).collect(),
-                _ => Vec::new(),
-            })
-        };
-        let object = |members: Vec<(&str, Json)>| Json::Object(members.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
-        let (description, name, schema) = (arguments("FILE_DESCRIPTION"), arguments("FILE_NAME"), arguments("FILE_SCHEMA"));
-        object(vec![
-            ("fileDescription", object(vec![("description", texts(&description, 0)), ("implementationLevel", text(&description, 1))])),
-            (
-                "fileName",
-                object(vec![
-                    ("name", text(&name, 0)),
-                    ("timestamp", text(&name, 1)),
-                    ("author", texts(&name, 2)),
-                    ("organization", texts(&name, 3)),
-                    ("preprocessorVersion", text(&name, 4)),
-                    ("originatingSystem", text(&name, 5)),
-                    ("authorization", text(&name, 6)),
-                ]),
-            ),
-            ("fileSchema", object(vec![("schemas", texts(&schema, 0))])),
-        ])
+    /// 🔎️ The `id` of every row of a `restore-entities` payload.
+    pub fn entity_ids(params: &Json) -> Vec<u64> {
+        params.array("entities").iter().filter_map(|row| u64_field(row, "id").ok()).collect()
     }
 
-    /// 📸️ `set-snapshot`: the whole document becomes the `StepSnapshot` wire record — its typed header and its entities,
-    /// in the record's own order.
-    pub fn replace_with_snapshot(exchange: &mut Exchange, snapshot: &Json) -> Result<(), String> {
-        let header = snapshot.get("header").ok_or("a STEP snapshot carries `header`")?;
-        let member = |key: &str| header.get(key).ok_or_else(|| format!("a STEP header carries `{key}`"));
-        exchange.header = vec![file_description_record(member("fileDescription")?)?, file_name_record(member("fileName")?)?, file_schema_record(member("fileSchema")?)?];
-        exchange.data = vec![DataSection { meta: Vec::new(), entities: snapshot.array("entities").iter().map(entity_from_wire).collect::<Result<Vec<_>, String>>()? }];
+    /// ↩️ `restore-entities`: applies every row of the payload as ONE step against the document as it stood before the step -- removals first,
+    /// then in-place writes, then new entities at their final index (last by default) in ascending index order.
+    pub fn restore_entities(exchange: &mut Exchange, params: &Json) -> Result<(), String> {
+        let section = exchange.data.first_mut().ok_or("input carries no DATA section")?;
+        let rows = params.array("entities");
+        let present = |section: &DataSection, id: u64| section.entities.iter().position(|existing| entity_id(existing) == id);
+        for row in &rows {
+            let id = u64_field(row, "id")?;
+            let entity = row.get("entity").filter(|value| !matches!(value, Json::Null));
+            match (present(section, id), entity) {
+                (Some(at), None) => {
+                    section.entities.remove(at);
+                }
+                (Some(at), Some(entity)) => section.entities[at] = entity_from_wire(entity)?,
+                _ => {}
+            }
+        }
+        let mut added: Vec<(Option<usize>, EntityInstance)> = Vec::new();
+        for row in &rows {
+            let id = u64_field(row, "id")?;
+            if let Some(entity) = row.get("entity").filter(|value| !matches!(value, Json::Null)) {
+                if present(section, id).is_none() {
+                    added.push((opt_u64_field(row, "index").map(|index| index as usize), entity_from_wire(entity)?));
+                }
+            }
+        }
+        let (mut placed, unplaced): (Vec<_>, Vec<_>) = added.into_iter().partition(|(index, _)| index.is_some());
+        placed.sort_by_key(|(index, _)| *index);
+        for (index, entity) in placed {
+            let at = index.unwrap_or_default().min(section.entities.len());
+            section.entities.insert(at, entity);
+        }
+        section.entities.extend(unplaced.into_iter().map(|(_, entity)| entity));
         Ok(())
     }
 
-    /// 📸️ The document as a `set-snapshot` payload `{snapshot}` — what restores it through [`replace_with_snapshot`].
-    pub fn snapshot_payload(exchange: &Exchange) -> Result<Json, String> {
-        let entities = exchange.data.iter().flat_map(|section| section.entities.iter()).map(entity_to_wire).collect::<Result<Vec<_>, String>>()?;
-        let snapshot = Json::Object(vec![("schema".to_string(), Json::String("stdio.step".to_string())), ("header".to_string(), header_to_wire(exchange)), ("entities".to_string(), Json::Array(entities))]);
-        Ok(Json::Object(vec![("snapshot".to_string(), snapshot)]))
+    /// ↩️ The `restore-entities` payload that puts every entity of `ids` back as `exchange` holds it.
+    pub fn restore_entities_payload(exchange: &Exchange, ids: &[u64]) -> Result<Json, String> {
+        let entities: Vec<&EntityInstance> = exchange.data.iter().flat_map(|section| section.entities.iter()).collect();
+        let mut rows = Vec::new();
+        for id in ids {
+            let at = entities.iter().position(|entity| entity_id(entity) == *id);
+            let entity = match at {
+                Some(at) => entity_to_wire(entities[at])?,
+                None => Json::Null,
+            };
+            rows.push(Json::Object(vec![("id".to_string(), Json::Number(*id as f64)), ("entity".to_string(), entity), ("index".to_string(), at.map_or(Json::Null, |at| Json::Number(at as f64)))]));
+        }
+        Ok(Json::Object(vec![("entities".to_string(), Json::Array(rows))]))
     }
     //#endregion 🧾️Wire
 }

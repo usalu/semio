@@ -15,6 +15,9 @@ use protocol::{MutationKind, SemanticDescriptor};
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct CreateUserProfile {
     pub user_profile: UserProfile,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    pub index: Option<usize>,
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for CreateUserProfile {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "user-profile", kind: "create-user-profile", record: "CreatedUserProfile" };

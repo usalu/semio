@@ -1,0 +1,994 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/repo/discovery/runtime/graph.json",
+  "title": "Runtime Graph",
+  "$defs": {
+    "RuntimeGraphEdgeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to",
+        "kind"
+      ],
+      "properties": {
+        "from": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "module",
+            "import",
+            "resource",
+            "dependency",
+            "generated"
+          ]
+        }
+      }
+    },
+    "RuntimeGraphFindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "path",
+        "detail"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "runtime-fixture-edge",
+            "runtime-unresolved-edge",
+            "runtime-input-mismatch"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        }
+      }
+    },
+    "RuntimeGraphEvidenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "roots",
+        "nodes",
+        "edges",
+        "findings"
+      ],
+      "properties": {
+        "roots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nodes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeGraphEdgeV1"
+          }
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeGraphFindingV1"
+          }
+        }
+      }
+    },
+    "RuntimeDynamicImportOwnerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "sourceSha256",
+        "callsiteIndex"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "sourceSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "SHA256 of the exact active parsed caller source, including its production test exclusion transformation."
+        },
+        "callsiteIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Zero-based lexical ordinal among computed import and require calls in that exact parsed source."
+        }
+      }
+    },
+    "RuntimeCargoInputDigestV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory"
+          ]
+        }
+      }
+    },
+    "RuntimeCargoBuildScriptV1": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "reason",
+        "package_id",
+        "cfgs",
+        "env",
+        "out_dir"
+      ],
+      "properties": {
+        "reason": {
+          "const": "build-script-executed"
+        },
+        "package_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cfgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "env": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "out_dir": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "RuntimeBuildResourceObservationV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "entries",
+            "operation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "directory"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/RuntimeCompilerResourceEntryV1"
+              }
+            },
+            "operation": {
+              "$ref": "#/$defs/RuntimeCompilerResourceOperationV1"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "output"
+          ],
+          "properties": {
+            "kind": {
+              "const": "copy"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "output": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "output",
+            "operation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "read"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "output": {
+              "type": "string",
+              "minLength": 1
+            },
+            "operation": {
+              "$ref": "#/$defs/RuntimeCompilerResourceOperationV1"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "operation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "failed"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "operation": {
+              "$ref": "#/$defs/RuntimeCompilerResourceOperationV1"
+            }
+          }
+        }
+      ]
+    },
+    "RuntimeCargoBuildResourceSnapshotV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "sha256",
+        "outputSha256"
+      ],
+      "properties": {
+        "input": {
+          "$ref": "#/$defs/RuntimeBuildResourceObservationV1"
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "outputSha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "observedEntries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeCompilerResourceEntryV1"
+          }
+        }
+      }
+    },
+    "RuntimeCargoBuildResourcesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package_id",
+        "out_dir",
+        "path",
+        "text",
+        "sha256",
+        "observedAtMs",
+        "resources"
+      ],
+      "properties": {
+        "package_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "out_dir": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "observedAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeCargoBuildResourceSnapshotV1"
+          }
+        }
+      }
+    },
+    "RuntimeCargoInvocationInputV1": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "RuntimeCargoDepInfoV1": {
+      "type": "object",
+      "required": [
+        "path",
+        "text",
+        "baseDirectory"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "baseDirectory": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "RuntimeBrowserArtifactV1": {
+      "type": "object",
+      "required": [
+        "path",
+        "compiledSha256",
+        "mountedSha256",
+        "current"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "compiledSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "mountedSha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "current": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RuntimeTrunkCompilationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rawSha256",
+        "querySha256",
+        "outputs"
+      ],
+      "properties": {
+        "rawSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "querySha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "outputs": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "RuntimeTrunkObservationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "profile",
+        "manifest",
+        "outputDirectory",
+        "builtAtMs",
+        "observedAtMs",
+        "owner",
+        "compiler",
+        "raw",
+        "configuration",
+        "toolVersions",
+        "outputs"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "wgpu-trunk"
+        },
+        "profile": {
+          "enum": [
+            "dev",
+            "release"
+          ]
+        },
+        "manifest": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outputDirectory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "builtAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "observedAtMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "owner": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "compiler": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "raw": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "configuration": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "html",
+            "toml"
+          ],
+          "properties": {
+            "html": {
+              "type": "string",
+              "minLength": 1
+            },
+            "toml": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "toolVersions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bindgen",
+            "binaryen",
+            "trunk"
+          ],
+          "properties": {
+            "bindgen": {
+              "type": "string",
+              "minLength": 1
+            },
+            "binaryen": {
+              "type": "string",
+              "minLength": 1
+            },
+            "trunk": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "RuntimeCompilerChecksumV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "blake3",
+        "length"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "blake3": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "RuntimeCompilerResourceEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "kind",
+        "symlinkTarget"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory",
+            "symlink",
+            "other"
+          ]
+        },
+        "symlinkTarget": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "RuntimeCompilerResourceReadV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path",
+        "output",
+        "callsite",
+        "operation",
+        "snapshotOperation"
+      ],
+      "properties": {
+        "kind": {
+          "const": "read"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "output": {
+          "type": "string",
+          "minLength": 1
+        },
+        "callsite": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "line"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "operation": {
+          "$ref": "#/$defs/RuntimeCompilerResourceOperationV1"
+        },
+        "snapshotOperation": {
+          "$ref": "#/$defs/RuntimeCompilerResourceOperationV1"
+        }
+      }
+    },
+    "RuntimeCompilerResourceDirectoryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path",
+        "entries",
+        "callsite",
+        "operation"
+      ],
+      "properties": {
+        "kind": {
+          "const": "directory"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeCompilerResourceEntryV1"
+          }
+        },
+        "callsite": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "line"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "minLength": 1
+            },
+            "line": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "operation": {
+          "$ref": "#/$defs/RuntimeCompilerResourceOperationV1"
+        }
+      }
+    },
+    "RuntimeCompilerResourceObservationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "producer",
+        "caller",
+        "builtAtMs",
+        "observedAtMs",
+        "completed",
+        "resources"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "compiler-resource"
+        },
+        "producer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "manifest",
+            "source"
+          ],
+          "properties": {
+            "manifest": {
+              "type": "string",
+              "minLength": 1
+            },
+            "source": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "caller": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "manifest",
+            "crate",
+            "source"
+          ],
+          "properties": {
+            "manifest": {
+              "type": "string",
+              "minLength": 1
+            },
+            "crate": {
+              "type": "string",
+              "minLength": 1
+            },
+            "source": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "builtAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "observedAtMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "completed": {
+          "const": true
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/RuntimeCompilerResourceReadV1"
+              },
+              {
+                "$ref": "#/$defs/RuntimeCompilerResourceDirectoryV1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "RuntimeCompilerResourceOperationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "line",
+        "name"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "name": {
+          "enum": [
+            "read",
+            "read_dir"
+          ]
+        }
+      }
+    },
+    "RuntimeResourceReadInputV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "kind"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory"
+          ]
+        }
+      }
+    },
+    "RuntimeResourceReadOwnerV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceSha256",
+        "callsiteOffset",
+        "inputs"
+      ],
+      "properties": {
+        "sourceSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "callsiteOffset": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Exact zero-based UTF-16 source offset of the original Rust filesystem reader operation token."
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeResourceReadInputV1"
+          }
+        }
+      }
+    },
+    "RuntimeActorCargoSelectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cargoPackage",
+        "componentPath",
+        "componentSha256"
+      ],
+      "properties": {
+        "cargoPackage": {
+          "type": "string",
+          "minLength": 1
+        },
+        "componentPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "componentSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  }
+}

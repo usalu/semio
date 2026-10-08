@@ -27,7 +27,6 @@ async fn kinds_match_enum_variants_and_catalog() {
     // 🚫️async: E1 pure inherent helper, no I/O — see R9
     fn kebab_of(mutation: &MdMutation) -> &'static str {
         match mutation {
-            MdMutation::SetSnapshot(_) => "set-snapshot",
             MdMutation::InsertBlock(_) => "insert-block",
             MdMutation::RemoveBlock(_) => "remove-block",
             MdMutation::ReplaceBlock(_) => "replace-block",

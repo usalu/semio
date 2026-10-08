@@ -15,6 +15,9 @@ use protocol::{MutationKind, SemanticDescriptor};
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct ConnectTrace {
     pub trace: TraceLink,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    pub index: Option<usize>,
 }
 impl MutationKind<ProgramSnapshot, ProgramMutation> for ConnectTrace {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "connect", entity: "trace", kind: "connect-trace", record: "ConnectedTrace" };

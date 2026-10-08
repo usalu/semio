@@ -1,8 +1,9 @@
 /** 🧬️ Canonical PresentationML mutation union. */
-import { parsePptxSnapshot, parsePptxTransform, parseXmlNode } from '../📸️snapshot/🟦️.ts';
-import type { PptxSnapshot, PptxTransform, XmlNode } from '../📸️snapshot/🟦️.ts';
+import { parsePptxTransform, parseXmlNode } from '../📸️snapshot/🟦️.ts';
+import type { PptxTransform, XmlNode } from '../📸️snapshot/🟦️.ts';
 import {
   parsePptxShapeAddress,
+  parsePptxXmlAddress,
   parsePptxSlideAddress,
   parsePptxXmlVacancyAddress,
 } from './🧭️xml-address/🟦️.ts';
@@ -12,19 +13,17 @@ import type {
   PptxXmlAddress,
   PptxXmlVacancyAddress,
 } from './🧭️xml-address/🟦️.ts';
-import { parseSnapshotPatch, type SnapshotPatch } from '../../../../../../../../📇️registry/🧬️contract/✏️editing/🩹️patch/🟦️.ts';
 export type { PptxShapeAddress, PptxSlideAddress, PptxXmlAddress, PptxXmlVacancyAddress } from './🧭️xml-address/🟦️.ts';
 
 export type PptxMutation =
-  | { mutation: 'setSnapshot'; snapshot: PptxSnapshot }
-  | { readonly mutation: 'patchSnapshot'; readonly patch: SnapshotPatch }
   | { mutation: 'insertSlide'; vacancy: PptxXmlVacancyAddress; entry: XmlNode }
   | { mutation: 'removeSlide'; address: PptxSlideAddress }
   | { mutation: 'moveSlide'; address: PptxSlideAddress; destinationIndex: number }
   | { mutation: 'insertShape'; vacancy: PptxXmlVacancyAddress; shape: XmlNode }
   | { mutation: 'removeShape'; address: PptxShapeAddress }
   | { mutation: 'setShapeText'; address: PptxShapeAddress; text: string }
-  | { mutation: 'setShapePosition'; address: PptxShapeAddress; position: PptxTransform };
+  | { mutation: 'setShapePosition'; address: PptxShapeAddress; position: PptxTransform }
+  | { mutation: 'replaceXmlNode'; address: PptxXmlAddress; node: XmlNode };
 
 /** 🚪️ A precise position and reason for refusing a malformed PPTX mutation. */
 export class stdioPptxEcma376BaseMutationGuardRefusal extends Error {
@@ -38,8 +37,6 @@ const integer = (value: unknown, at: string): number => Number.isSafeInteger(val
 /** 🚪️ Parses every revision-addressed PPTX mutation. */
 export function parsePptxMutation(value: unknown, at = '$'): PptxMutation {
   const row = object(value, at), mutation = text(row.mutation, `${at}.mutation`);
-  if (mutation === 'setSnapshot') return { mutation, snapshot: parsePptxSnapshot(row.snapshot, `${at}.snapshot`) };
-  if (mutation === 'patchSnapshot') return { mutation, patch: parseSnapshotPatch(row.patch) };
   if (mutation === 'insertSlide') return { mutation, vacancy: parsePptxXmlVacancyAddress(row.vacancy, `${at}.vacancy`), entry: parseXmlNode(row.entry, `${at}.entry`) };
   if (mutation === 'removeSlide') return { mutation, address: parsePptxSlideAddress(row.address, `${at}.address`) };
   if (mutation === 'moveSlide') return { mutation, address: parsePptxSlideAddress(row.address, `${at}.address`), destinationIndex: integer(row.destinationIndex, `${at}.destinationIndex`) };
@@ -47,5 +44,6 @@ export function parsePptxMutation(value: unknown, at = '$'): PptxMutation {
   if (mutation === 'removeShape') return { mutation, address: parsePptxShapeAddress(row.address, `${at}.address`) };
   if (mutation === 'setShapeText') return { mutation, address: parsePptxShapeAddress(row.address, `${at}.address`), text: text(row.text, `${at}.text`) };
   if (mutation === 'setShapePosition') return { mutation, address: parsePptxShapeAddress(row.address, `${at}.address`), position: parsePptxTransform(row.position, `${at}.position`) };
+  if (mutation === 'replaceXmlNode') return { mutation, address: parsePptxXmlAddress(row.address, `${at}.address`), node: parseXmlNode(row.node, `${at}.node`) };
   return reject(`${at}.mutation`, `unknown PPTX mutation ${mutation}`);
 }

@@ -1877,6 +1877,45 @@ fn accepted_event_feed_rows_publish_tabbable_buttons_read_only_text_and_exact_ac
 }
 
 #[test]
+fn accepted_world3d_overlay_controls_publish_read_only_nodes_and_a_polite_mismatch_status() {
+    let window_id = "accepted-world3d-overlay-controls";
+    let scene_node = component_scene_ui("world-ax-host", ui_wgpu::wgpu::SurfaceKind::World3d);
+    let node = seed_scene_window_with(window_id, scene_node);
+    assert!(crate::scenes::mount_scene_identity(&retained_scene_target(window_id, node).expect("retained World3d target")));
+    let host = retained_scene_host_id(window_id, node);
+    let control = |key: &str, role: &'static str, label: &str, depth: u8, polite: bool| crate::scenes::World3dAccessibilityControl { key: format!("{host}::{key}"), role, label: label.into(), depth, polite };
+    crate::scenes::stage_world3d_accessibility_controls(
+        &host,
+        vec![
+            control("annotations", "list", "Messungen", 0, false),
+            control("annotation::dim-width", "listitem", "Bemaßung: Breite 40 mm", 1, false),
+            control("scalar-field-mismatch", "status", "Das Skalarfeld passt nicht zum Netz", 0, true),
+        ],
+    );
+    crate::scenes::seal_world3d_accessibility_candidates(811);
+    crate::scenes::acknowledge_world3d_accessibility_candidates(811);
+    begin_accessibility_visible_documents();
+    note_accessibility_visible_document(window_id);
+    publish_accessibility_visible_documents();
+    let nodes = published_accessibility_nodes_for_test(window_id);
+    let find = |key: &str| nodes.iter().find(|entry| entry.key == format!("{host}::{key}")).unwrap_or_else(|| panic!("published {key}"));
+    let list = find("annotations");
+    let item = find("annotation::dim-width");
+    let status = find("scalar-field-mismatch");
+    assert_eq!((list.role.as_str(), list.label.as_deref(), list.live.as_str()), ("list", Some("Messungen"), "off"));
+    assert_eq!((item.role.as_str(), item.label.as_deref(), item.depth, list.depth + 1 == item.depth), ("listitem", Some("Bemaßung: Breite 40 mm"), item.depth, true));
+    assert_eq!((status.role.as_str(), status.live.as_str()), ("status", "polite"), "the mismatch is announced politely");
+    assert!(nodes.iter().filter(|entry| entry.key.starts_with(&host)).all(|entry| !entry.focusable && !entry.actionable), "the overlay text is read-only");
+    crate::scenes::stage_world3d_accessibility_controls(&host, Vec::new());
+    crate::scenes::seal_world3d_accessibility_candidates(812);
+    crate::scenes::acknowledge_world3d_accessibility_candidates(812);
+    begin_accessibility_visible_documents();
+    note_accessibility_visible_document(window_id);
+    publish_accessibility_visible_documents();
+    assert!(published_accessibility_nodes_for_test(window_id).iter().all(|entry| entry.key != format!("{host}::annotations")), "retired overlay nodes leave the tree");
+}
+
+#[test]
 fn accepted_table_row_button_publishes_one_tabbable_exact_action_and_rejects_stale_addresses() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧱️elements/📊️Table/🧫️fixtures/🔘️button-accessibility/🔣️.json"))).expect("Table button accessibility fixture");
     let window_id = "accepted-table-row-button";

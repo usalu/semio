@@ -10,13 +10,12 @@ pub struct Entry {
     pub parse: fn(&str) -> Result<TiffMutation, semio_framework_diagnostic::TextError>,
 }
 pub const REGISTRY: &[Entry] = &[
-    crate::standards::v6_0::subsets::document::io::text::mutations::patch_snapshot::CODEC,
-    crate::standards::v6_0::subsets::document::io::text::mutations::set_snapshot::CODEC,
     crate::standards::v6_0::subsets::document::io::text::mutations::insert_ifd::CODEC,
     crate::standards::v6_0::subsets::document::io::text::mutations::remove_ifd::CODEC,
     crate::standards::v6_0::subsets::document::io::text::mutations::replace_tag::CODEC,
     crate::standards::v6_0::subsets::document::io::text::mutations::remove_tag::CODEC,
     crate::standards::v6_0::subsets::document::io::text::mutations::paint_region::CODEC,
+    crate::standards::v6_0::subsets::document::io::text::mutations::replace_samples::CODEC,
 ];
 //#endregion Registry
 
@@ -34,12 +33,6 @@ impl protocol::OpText for TiffMutation {
 //#endregion Framing
 
 
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-
 #[path = "🗑️remove-tag/🦀️.rs"]
 pub mod remove_tag;
 
@@ -54,6 +47,9 @@ pub mod remove_ifd;
 
 #[path = "🎨️paint-region/🦀️.rs"]
 pub mod paint_region;
+
+#[path = "🧮️replace-samples/🦀️.rs"]
+pub mod replace_samples;
 
 #[allow(unused_imports)]
 mod mutations_codec {
@@ -116,13 +112,18 @@ pub use mutations_wire3_codec::*;
 
 
 #[cfg(test)]
+pub(crate) fn replace_samples_test_case() -> TiffMutation {
+    semio_framework_pack_json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🧮️replace-samples/🎯️direct-behavior/🦠️mutation/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed replace-samples payload")
+}
+
+#[cfg(test)]
 pub(crate) fn demo_mutation_cases() -> Vec<TiffMutation> {
     vec![
-        crate::schema::mutations::patch_snapshot::test_case(),
         insert_ifd_test_case(),
         remove_ifd_test_case(),
         replace_tag_test_case(),
         remove_tag_test_case(),
         crate::schema::mutations::paint_region::test_case(),
+        replace_samples_test_case(),
     ]
 }

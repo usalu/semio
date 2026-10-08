@@ -1,7 +1,7 @@
 //! 🔺️ Sparse diff builder for `PinCell` — an id-keyed delta over `Grid3dSnapshot`, never a
 //! whole-snapshot capture.
 
-use crate::diff::Grid3dDiff;
+use crate::diff::{Grid3dDiff, Grid3dPinnedPatch, Grid3dRowPatch, Grid3dRows};
 use crate::schema::snapshot::*;
 
 pub fn diff(payload: &super::PinCell, base: &Grid3dSnapshot) -> protocol::MutationOutcome<Grid3dDiff> {
@@ -18,6 +18,8 @@ pub fn diff(payload: &super::PinCell, base: &Grid3dSnapshot) -> protocol::Mutati
     if base.pinned.iter().any(|cell| cell == &payload.pinned) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Cell {key} already carries that pin."));
     }
-    let at = crate::mutations::ordered_index(&base.pinned, &key, |cell| cell_key(cell.x, cell.y, cell.z));
-    protocol::MutationOutcome::new(Grid3dDiff { pinned_upserted: vec![(at, payload.pinned.clone())], ..Default::default() })
+    match pinned_index(base, payload.pinned.x, payload.pinned.y, payload.pinned.z) {
+        Some(_) => protocol::MutationOutcome::new(Grid3dDiff { pinned: Grid3dRows { patched: vec![Grid3dRowPatch { id: key, patch: Grid3dPinnedPatch { tile_id: Some(payload.pinned.tile_id.clone()) } }], ..Default::default() }, ..Default::default() }),
+        None => protocol::MutationOutcome::new(Grid3dDiff { pinned: Grid3dRows { added: vec![payload.pinned.clone()], ..Default::default() }, ..Default::default() }),
+    }
 }

@@ -42,13 +42,6 @@ impl PptxArtifact {
     pub fn from_snapshot(snapshot: PptxSnapshot) -> Self {
         Self { schema: snapshot.schema, opc: snapshot.opc, xml_parts: snapshot.xml_parts }
     }
-
-    /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: PptxSnapshot) {
-        self.schema = snapshot.schema;
-        self.opc = snapshot.opc;
-        self.xml_parts = snapshot.xml_parts;
-    }
 }
 //#endregion Conversions
 

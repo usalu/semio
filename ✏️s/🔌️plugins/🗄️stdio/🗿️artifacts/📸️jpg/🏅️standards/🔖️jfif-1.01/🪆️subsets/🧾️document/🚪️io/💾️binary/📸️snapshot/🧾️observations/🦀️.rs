@@ -26,7 +26,8 @@ pub struct JpgFrameHeader {
 /// 🎯 One SOS scan component: which DC/AC Huffman table (of up to 4 each) it decodes with.
 /// Transient decode/encode state — not persisted on `JpgSnapshot` (the persisted per-component
 /// table binding is `JpgFrameComponent.quant_table_id` plus `JpgSnapshot.huffman_tables`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all="camelCase")]
 pub struct JpgScanComponent {
     pub id: u8,
     pub dc_table_id: u8,
@@ -95,6 +96,9 @@ pub struct JpgNativeObservations {
     pub frame:JpgFrameHeader,
     pub sof_marker:u8,
     pub arithmetic:bool,
+    pub arithmetic_conditioning:Vec<JpgArithmeticConditioning>,
+    pub scan_components:Vec<JpgScanComponent>,
+    pub scan_parameters:[u8;3],
     pub quant_tables:Vec<JpgQuantTable>,
     pub huffman_tables:Vec<JpgHuffmanTable>,
     pub restart_interval:Option<u16>,
@@ -103,8 +107,13 @@ impl JpgNativeObservations {
     /// 🧮️ Projects native observations into immutable first-party conformance facts.
     pub fn baseline_facts(&self)->crate::standards::v_jfif_1_01::subsets::baseline::schema::conformance::JpgBaselineFacts {
         use crate::standards::v_jfif_1_01::subsets::baseline::schema::conformance::{JpgBaselineFacts,JpgSamplingFact};
-        JpgBaselineFacts{has_frame:true,baseline_sequential:self.sof_marker==0xc0,sample_precision:self.frame.precision,arithmetic_conditioning:self.arithmetic,dc_table_count:self.huffman_tables.iter().filter(|table|table.class==JpgHuffmanClass::Dc).count(),ac_table_count:self.huffman_tables.iter().filter(|table|table.class==JpgHuffmanClass::Ac).count(),components:self.frame.components.iter().map(|component|JpgSamplingFact{id:component.id,horizontal:component.h_sampling,vertical:component.v_sampling}).collect()}
+        JpgBaselineFacts{has_frame:true,baseline_sequential:self.sof_marker==0xc0,sample_precision:self.frame.precision,arithmetic_conditioning:self.arithmetic,dc_table_count:self.huffman_tables.iter().filter(|table|table.class==JpgHuffmanClass::Dc).map(|table|table.id).collect::<std::collections::HashSet<_>>().len(),ac_table_count:self.huffman_tables.iter().filter(|table|table.class==JpgHuffmanClass::Ac).map(|table|table.id).collect::<std::collections::HashSet<_>>().len(),components:self.frame.components.iter().map(|component|JpgSamplingFact{id:component.id,horizontal:component.h_sampling,vertical:component.v_sampling}).collect()}
     }
 }
 /// 📦️ One physical admission with independent logical and native observation owners.
 pub struct JpgDecodedDocument {pub snapshot:crate::JpgSnapshot,pub observations:JpgNativeObservations}
+
+/// 🎛️ Exact DAC selector and conditioning value in native encounter order.
+#[derive(Clone,Copy,Debug,PartialEq,Eq,value_derive::ToValue,value_derive::FromValue)]
+#[value(rename_all="camelCase")]
+pub struct JpgArithmeticConditioning{pub selector:u8,pub value:u8}

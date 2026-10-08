@@ -1300,7 +1300,7 @@ export function initialShellState(_props: {
 //#endregion 🧮️ShellStore
 
 //#region Boot
-export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}, execution: FrameworkOsBootExecution = {}): Promise<void> {
+export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}, execution: FrameworkOsBootExecution = {}): Promise<{ dispose(): void }> {
   const root = document.getElementById(options.rootId ?? "root");
   if (!root) throw new Error("missing #root");
   const locks = resolveShellLocks(mergeShellLockSources(options.brand?.locks, options.locks));
@@ -1315,7 +1315,9 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}, exec
   // 🐢️ No hardcoded fallback app — an omitted `plugins` list boots the shell with an explicit
   // "no plugins available" state rather than silently picking one app.
   const appRole = resolveBootAppRole(options.appRole);
-  createRoot(root).render(<FrameworkOsShell backboneWorkerFactory={execution.backboneWorkerFactory} documentServices={execution.documentServices} pluginFilter={options.plugin} plugins={options.plugins ?? []} surfaceSessionFactories={options.surfaceSessionFactories} appId={options.appId} appRole={appRole} locks={locks} defaults={defaults} brand={options.brand} ownsPage />);
+  const mounted = createRoot(root);
+  mounted.render(<FrameworkOsShell backboneWorkerFactory={execution.backboneWorkerFactory} documentServices={execution.documentServices} pluginFilter={options.plugin} plugins={options.plugins ?? []} surfaceSessionFactories={options.surfaceSessionFactories} appId={options.appId} appRole={appRole} locks={locks} defaults={defaults} brand={options.brand} ownsPage />);
+  return { dispose: () => mounted.unmount() };
 }
 //#endregion Boot
 

@@ -30,8 +30,19 @@ impl From<GisTerrainWindowConfigDelta> for GisTerrainWindowConfigDiff {
     }
 }
 
+impl GisTerrainWindowConfigDiff {
+    fn folded(&self) -> GisTerrainWindowConfigDelta {
+        self.steps.iter().fold(GisTerrainWindowConfigDelta::default(), |mut folded, step| {
+            if step.camera_json.is_some() {
+                folded.camera_json = step.camera_json.clone();
+            }
+            folded
+        })
+    }
+}
+
 impl protocol::MutationDiff<GisTerrainWindowConfig> for GisTerrainWindowConfigDiff {
-    fn apply(&self, base: &GisTerrainWindowConfig) -> protocol::MutationApplyResult<GisTerrainWindowConfig> {
+    fn apply(&self, base: &GisTerrainWindowConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<GisTerrainWindowConfig> {
         let mut next = base.clone();
         for step in &self.steps {
             if let Some(value) = &step.camera_json {
@@ -41,7 +52,23 @@ impl protocol::MutationDiff<GisTerrainWindowConfig> for GisTerrainWindowConfigDi
         Ok(next)
     }
     fn absorb(&mut self, other: Self) {
-        self.steps.extend(other.steps);
+        let mut folded = self.folded();
+        if let Some(camera) = other.folded().camera_json {
+            folded.camera_json = Some(camera);
+        }
+        *self = Self::from(folded);
+    }
+}
+
+impl protocol::DiffAlgebra<GisTerrainWindowConfig> for GisTerrainWindowConfigDiff {
+    fn inverse(&self, base: &GisTerrainWindowConfig) -> Self {
+        Self::from(GisTerrainWindowConfigDelta { camera_json: self.folded().camera_json.map(|_| base.camera_json.clone()) })
+    }
+    fn between(base: &GisTerrainWindowConfig, other: &GisTerrainWindowConfig) -> Self {
+        Self::from(GisTerrainWindowConfigDelta { camera_json: (base.camera_json != other.camera_json).then(|| other.camera_json.clone()) })
+    }
+    fn is_empty(&self) -> bool {
+        self.steps.iter().all(|step| *step == GisTerrainWindowConfigDelta::default())
     }
 }
 //#endregion 🔺️Diff

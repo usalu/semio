@@ -73,19 +73,29 @@ pub(crate) fn hex_decode(value: &str) -> Result<Vec<u8>, String> {
     (0..value.len()).step_by(2).map(|index| u8::from_str_radix(&value[index..index + 2], 16).map_err(|error| error.to_string())).collect()
 }
 
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn enc_at(at: Option<usize>) -> String {
+    at.map(|at| format!(" at={at}")).unwrap_or_default()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn dec_at(args: &std::collections::BTreeMap<&str, &str>) -> Result<Option<usize>, String> {
+    args.get("at").map(|at| at.parse::<usize>().map_err(|error| error.to_string())).transpose()
+}
+
 pub(crate) fn print_brep_mutation(m: &SemioBrepMutation) -> String {
     match m {
-        SemioBrepMutation::CreateVertex(p) => format!("create-vertex id={} point={} tol={}", enc_str(&p.id), enc_point3(&p.point), NativeF64(p.tol)),
+        SemioBrepMutation::CreateVertex(p) => format!("create-vertex id={} point={} tol={}{}", enc_str(&p.id), enc_point3(&p.point), NativeF64(p.tol), enc_at(p.at)),
         SemioBrepMutation::DeleteVertex(p) => format!("delete-vertex id={}", enc_str(&p.id)),
-        SemioBrepMutation::CreateEdge(p) => format!("create-edge id={} start={} end={} curve={} tol={}", enc_str(&p.id), enc_str(&p.start_vertex), enc_str(&p.end_vertex), enc_curve(&p.curve), NativeF64(p.tol)),
+        SemioBrepMutation::CreateEdge(p) => format!("create-edge id={} start={} end={} curve={} tol={}{}", enc_str(&p.id), enc_str(&p.start_vertex), enc_str(&p.end_vertex), enc_curve(&p.curve), NativeF64(p.tol), enc_at(p.at)),
         SemioBrepMutation::DeleteEdge(p) => format!("delete-edge id={}", enc_str(&p.id)),
         SemioBrepMutation::CreateFace(p) => {
-            format!("create-face id={} outer={} inner={} surface={} orientation={} tol={}", enc_str(&p.id), enc_str(&p.outer_loop), enc_list(&p.inner_loops, |s: &String| crate::standards::v1::subsets::brep::io::text::snapshot::enc_loop_id(s)), enc_surface(&p.surface), enc_bool(p.orientation), NativeF64(p.tol))
+            format!("create-face id={} outer={} inner={} surface={} orientation={} tol={}{}", enc_str(&p.id), enc_str(&p.outer_loop), enc_list(&p.inner_loops, |s: &String| crate::standards::v1::subsets::brep::io::text::snapshot::enc_loop_id(s)), enc_surface(&p.surface), enc_bool(p.orientation), NativeF64(p.tol), enc_at(p.at))
         }
         SemioBrepMutation::DeleteFace(p) => format!("delete-face id={}", enc_str(&p.id)),
-        SemioBrepMutation::CreateShell(p) => format!("create-shell id={} faces={}", enc_str(&p.id), enc_list(&p.faces, enc_shell_face)),
+        SemioBrepMutation::CreateShell(p) => format!("create-shell id={} faces={}{}", enc_str(&p.id), enc_list(&p.faces, enc_shell_face), enc_at(p.at)),
         SemioBrepMutation::DeleteShell(p) => format!("delete-shell id={}", enc_str(&p.id)),
-        SemioBrepMutation::CreateSolid(p) => format!("create-solid id={} shells={}", enc_str(&p.id), enc_list(&p.shells, enc_solid_shell)),
+        SemioBrepMutation::CreateSolid(p) => format!("create-solid id={} shells={}{}", enc_str(&p.id), enc_list(&p.shells, enc_solid_shell), enc_at(p.at)),
         SemioBrepMutation::DeleteSolid(p) => format!("delete-solid id={}", enc_str(&p.id)),
         SemioBrepMutation::ReplaceCurve(p) => format!("replace-curve edge={} curve={}", enc_str(&p.edge_id), enc_curve(&p.new_curve)),
         SemioBrepMutation::ReplaceSurface(p) => format!("replace-surface face={} surface={}", enc_str(&p.face_id), enc_surface(&p.new_surface)),
@@ -95,20 +105,14 @@ pub(crate) fn print_brep_mutation(m: &SemioBrepMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_brep_mutation(line: &str) -> Result<SemioBrepMutation, String> {
-    if let Some(payload) = line.strip_prefix("set-snapshot snapshot=") {
-        let bytes = hex_decode(payload)?;
-        let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
-        let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-        let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
-    }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args: std::collections::BTreeMap<&str, &str> = rest.split(' ').filter(|s| !s.is_empty()).map(|tok| tok.split_once('=').ok_or_else(|| format!("brep mutation: bad arg token {tok:?}"))).collect::<Result<Vec<_>, String>>()?.into_iter().collect();
     let arg = |k: &str| args.get(k).copied().ok_or_else(|| format!("brep mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
-        "create-vertex" => Ok(SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: dec_str(arg("id")?)?, point: dec_point3(arg("point")?)?, tol: parse_f64(arg("tol")?)? })),
+        "create-vertex" => Ok(SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: dec_str(arg("id")?)?, point: dec_point3(arg("point")?)?, tol: parse_f64(arg("tol")?)?, at: dec_at(&args)? })),
         "delete-vertex" => Ok(SemioBrepMutation::DeleteVertex(delete_vertex::DeleteVertex { id: dec_str(arg("id")?)? })),
         "create-edge" => {
-            Ok(SemioBrepMutation::CreateEdge(create_edge::CreateEdge { id: dec_str(arg("id")?)?, start_vertex: dec_str(arg("start")?)?, end_vertex: dec_str(arg("end")?)?, curve: dec_curve(arg("curve")?)?, tol: parse_f64(arg("tol")?)? }))
+            Ok(SemioBrepMutation::CreateEdge(create_edge::CreateEdge { id: dec_str(arg("id")?)?, start_vertex: dec_str(arg("start")?)?, end_vertex: dec_str(arg("end")?)?, curve: dec_curve(arg("curve")?)?, tol: parse_f64(arg("tol")?)?, at: dec_at(&args)? }))
         }
         "delete-edge" => Ok(SemioBrepMutation::DeleteEdge(delete_edge::DeleteEdge { id: dec_str(arg("id")?)? })),
         "create-face" => Ok(SemioBrepMutation::CreateFace(create_face::CreateFace {
@@ -118,11 +122,12 @@ pub(crate) fn parse_brep_mutation(line: &str) -> Result<SemioBrepMutation, Strin
             surface: dec_surface(arg("surface")?)?,
             orientation: crate::standards::v1::subsets::brep::io::text::diff::parse_bool(arg("orientation")?)?,
             tol: parse_f64(arg("tol")?)?,
+            at: dec_at(&args)?,
         })),
         "delete-face" => Ok(SemioBrepMutation::DeleteFace(delete_face::DeleteFace { id: dec_str(arg("id")?)? })),
-        "create-shell" => Ok(SemioBrepMutation::CreateShell(create_shell::CreateShell { id: dec_str(arg("id")?)?, faces: dec_list(arg("faces")?, dec_shell_face)? })),
+        "create-shell" => Ok(SemioBrepMutation::CreateShell(create_shell::CreateShell { id: dec_str(arg("id")?)?, faces: dec_list(arg("faces")?, dec_shell_face)?, at: dec_at(&args)? })),
         "delete-shell" => Ok(SemioBrepMutation::DeleteShell(delete_shell::DeleteShell { id: dec_str(arg("id")?)? })),
-        "create-solid" => Ok(SemioBrepMutation::CreateSolid(create_solid::CreateSolid { id: dec_str(arg("id")?)?, shells: dec_list(arg("shells")?, dec_solid_shell)? })),
+        "create-solid" => Ok(SemioBrepMutation::CreateSolid(create_solid::CreateSolid { id: dec_str(arg("id")?)?, shells: dec_list(arg("shells")?, dec_solid_shell)?, at: dec_at(&args)? })),
         "delete-solid" => Ok(SemioBrepMutation::DeleteSolid(delete_solid::DeleteSolid { id: dec_str(arg("id")?)? })),
         "replace-curve" => Ok(SemioBrepMutation::ReplaceCurve(replace_curve::ReplaceCurve { edge_id: dec_str(arg("edge")?)?, new_curve: dec_curve(arg("curve")?)? })),
         "replace-surface" => Ok(SemioBrepMutation::ReplaceSurface(replace_surface::ReplaceSurface { face_id: dec_str(arg("face")?)?, new_surface: dec_surface(arg("surface")?)? })),

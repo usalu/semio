@@ -262,3 +262,136 @@ fn the_builder_validates_what_it_sets() {
     assert!(base().with_scalar_field(field.clone()).is_ok());
     assert!(base().with_scalar_field(World3dScalarField { range: World3dScalarRange { min: 1.0, max: 1.0 }, ..field }).is_err());
 }
+
+//#region 🔖️Overlay
+fn number(value: &Value) -> f64 {
+    value.as_f64().unwrap_or_else(|| panic!("{value} is a number"))
+}
+
+fn camera_view_proj(fixture: &Value) -> ([f32; 16], f32, f32) {
+    use crate::math::{Camera3d, CameraProjection3d, Mat4Math, Vec3};
+    let camera = &fixture["camera"];
+    let point = |key: &str| Vec3 { x: number(&camera[key][0]) as f32, y: number(&camera[key][1]) as f32, z: number(&camera[key][2]) as f32 };
+    let (width, height) = (number(&fixture["size"]["width"]) as f32, number(&fixture["size"]["height"]) as f32);
+    let camera = Camera3d { position: point("position"), target: point("target"), up: point("up"), fov_y: (number(&camera["fovYDegrees"]) as f32).to_radians(), near: number(&camera["near"]) as f32, far: number(&camera["far"]) as f32, projection: CameraProjection3d::Perspective, zoom: 1.0 };
+    (camera.view_proj(width, height).to_cols_array_m(), width, height)
+}
+
+fn near(left: f64, right: f64, tolerance: f64, what: &str) {
+    assert!((left - right).abs() <= tolerance, "{what}: {left} differs from {right} by more than {tolerance}");
+}
+
+#[test]
+fn the_annotation_projection_reproduces_the_three_js_screen_geometry() {
+    let fixture = &fixture()["annotationProjection"];
+    let (view_proj, width, height) = camera_view_proj(fixture);
+    let layer: World3dAnnotationLayer = decode(&fixture["layer"]).expect("fixture layer decodes");
+    let projected = project_world3d_annotations(&layer, &view_proj, width, height);
+    let expected = fixture["expected"].as_array().unwrap();
+    assert_eq!(projected.len(), expected.len());
+    for (got, want) in projected.iter().zip(expected) {
+        let id = want["id"].as_str().unwrap();
+        assert_eq!((got.id.as_str(), got.kind, got.tone.as_str(), got.visible), (id, want["kind"].as_str().unwrap(), want["tone"].as_str().unwrap(), want["visible"].as_bool().unwrap()), "{id}");
+        let lines = want["lines"].as_array().unwrap();
+        assert_eq!(got.lines.len(), lines.len(), "{id} lines");
+        for (line, row) in got.lines.iter().zip(lines) {
+            for axis in 0..4 {
+                near(line[axis], number(&row[axis]), 0.05, &format!("{id} line"));
+            }
+        }
+        let arrows = want["arrows"].as_array().unwrap();
+        assert_eq!(got.arrows.len(), arrows.len(), "{id} arrows");
+        for (arrow, row) in got.arrows.iter().zip(arrows) {
+            near(arrow.x, number(&row["x"]), 0.05, &format!("{id} arrow x"));
+            near(arrow.y, number(&row["y"]), 0.05, &format!("{id} arrow y"));
+            near(arrow.angle, number(&row["angle"]), 1e-3, &format!("{id} arrow angle"));
+        }
+        assert_eq!(got.arc.is_some(), want.get("arc").is_some(), "{id} arc");
+        if let (Some(arc), Some(row)) = (got.arc, want.get("arc")) {
+            for (value, key) in [(arc.cx, "cx"), (arc.cy, "cy"), (arc.radius, "radius")] {
+                near(value, number(&row[key]), 0.05, &format!("{id} arc {key}"));
+            }
+            near(arc.start, number(&row["start"]), 1e-3, &format!("{id} arc start"));
+            near(arc.sweep, number(&row["sweep"]), 1e-3, &format!("{id} arc sweep"));
+        }
+        assert_eq!(got.marker.is_some(), want.get("marker").is_some(), "{id} marker");
+        if let (Some(marker), Some(row)) = (got.marker, want.get("marker")) {
+            near(marker.x, number(&row["x"]), 0.05, &format!("{id} marker x"));
+            near(marker.y, number(&row["y"]), 0.05, &format!("{id} marker y"));
+            assert_eq!(marker.shape.as_str(), row["shape"].as_str().unwrap(), "{id} marker shape");
+        }
+        assert_eq!(got.label.is_some(), want.get("label").is_some(), "{id} label");
+        if let (Some(label), Some(row)) = (got.label, want.get("label")) {
+            near(label.x, number(&row["x"]), 0.05, &format!("{id} label x"));
+            near(label.y, number(&row["y"]), 0.05, &format!("{id} label y"));
+            let align = match label.align {
+                World3dLabelAlign::Middle => "middle",
+                World3dLabelAlign::Start => "start",
+                World3dLabelAlign::End => "end",
+            };
+            assert_eq!(align, row["align"].as_str().unwrap(), "{id} label align");
+        }
+    }
+    assert!(expected.iter().any(|row| row["visible"] == false) && expected.iter().any(|row| row["visible"] == true), "the fixture exercises visible and clipped annotations");
+}
+
+#[test]
+fn legend_values_match_the_intl_number_format_fixture() {
+    for row in fixture()["legendValues"]["rows"].as_array().unwrap() {
+        let (locale, value, text) = (row["locale"].as_str().unwrap(), number(&row["value"]), row["text"].as_str().unwrap());
+        assert_eq!(format_world3d_legend_value(value, locale), text, "{value} in {locale}");
+    }
+}
+
+#[test]
+fn legend_lines_match_the_react_legend_text_in_both_languages() {
+    for row in fixture()["legendLines"]["rows"].as_array().unwrap() {
+        let field: World3dScalarField = decode(&row["field"]).expect("legend fixture field");
+        let locale = row["locale"].as_str().unwrap();
+        let lines = field.legend_lines(locale);
+        let want = &row["lines"];
+        assert_eq!(lines.title, want["title"].as_str().unwrap(), "title in {locale}");
+        let ticks = want["ticks"].as_array().unwrap();
+        assert_eq!(lines.ticks.len(), ticks.len());
+        for (tick, row) in lines.ticks.iter().zip(ticks) {
+            assert_eq!(tick.text, row["text"].as_str().unwrap(), "tick in {locale}");
+            assert_eq!(format!("#{:02x}{:02x}{:02x}", tick.rgb[0], tick.rgb[1], tick.rgb[2]), row["hex"].as_str().unwrap(), "tick colour in {locale}");
+        }
+        assert_eq!(lines.no_data, want["noData"].as_str(), "no-data caption in {locale}");
+    }
+}
+
+#[test]
+fn annotation_accessible_names_follow_the_active_language() {
+    let layer: World3dAnnotationLayer = decode(&fixture()["annotationProjection"]["layer"]).unwrap();
+    let names = |locale: &str| layer.items.iter().map(|item| item.accessible_name(locale)).collect::<Vec<_>>();
+    assert_eq!(names("en")[0], "Dimension: Edge 4 mm");
+    assert_eq!(names("de")[0], "Bemaßung: Kante 4 mm");
+    assert_eq!(names("de-CH")[1], "Winkel: Rechter Winkel");
+    assert_eq!(names("fr")[3], "Marker: Centre");
+}
+
+#[test]
+fn sub_element_paint_lets_a_token_override_exactly_its_granularity() {
+    let leak = |text: &str| -> &'static str { Box::leak(text.to_string().into_boxed_str()) };
+    let rows = fixture()["subElementPaint"]["rows"].clone();
+    for row in rows.as_array().unwrap() {
+        let name = row["name"].as_str().unwrap();
+        let highlight: Option<World3dHighlight> = (!row["highlight"].is_null()).then(|| serde_json::from_value(row["highlight"].clone()).expect("fixture highlight"));
+        let defaults = &row["defaults"];
+        let defaults = World3dSubElementDefaults { select: leak(defaults["select"].as_str().unwrap()), hover: leak(defaults["hover"].as_str().unwrap()), edge_hover: leak(defaults["edgeHover"].as_str().unwrap()), edge_width: number(&defaults["edgeWidth"]), vertex_mark_px: number(&defaults["vertexMarkPx"]) };
+        let paint = world3d_sub_element_paint(highlight.as_ref(), |tone| leak(&format!("tone:{}", tone.as_str())), defaults);
+        let want = &row["expected"];
+        let text = |key: &str| want[key].as_str().unwrap();
+        assert_eq!((paint.face_select, paint.face_hover, paint.edge_select, paint.edge_hover, paint.vertex_select, paint.vertex_hover), (text("faceSelect"), text("faceHover"), text("edgeSelect"), text("edgeHover"), text("vertexSelect"), text("vertexHover")), "{name}");
+        assert_eq!((paint.edge_width, paint.vertex_mark_px), (number(&want["edgeWidth"]), number(&want["vertexMarkPx"])), "{name}");
+    }
+}
+
+#[test]
+fn a_section_unit_normal_points_to_the_removed_side() {
+    let section = World3dSection::new([1.0, 2.0, 3.0], [0.0, 0.0, 2.0]);
+    assert_eq!(section.unit_normal(), [0.0, 0.0, 1.0]);
+    assert_eq!(section.clip_plane(), [-0.0, -0.0, -1.0, 3.0]);
+}
+//#endregion 🔖️Overlay

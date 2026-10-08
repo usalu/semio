@@ -61,8 +61,9 @@ fn plan_mutations(ctx: &Context) -> Result<(Vec<Json>, Json), String> {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
+    use semio_s_artifact_stdio_semio::apply_diff;
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::mutations::{apply_semio_kit_mutation, inverse_semio_kit_mutation, SemioKitMutation};
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::mutations::{diff_semio_kit_mutation, inverse_semio_kit_mutation, SemioKitMutation};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::io::text::mutations::{decode_kit_mutation_json};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot};
     use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::io::binary::snapshot::{decode_semio_kit_pack};
@@ -81,9 +82,10 @@ mod subject {
 
     /// 🧬️ Applies one mutation, turning a refusal into a failure rather than a silent no-op.
     fn apply(snapshot: &mut SemioKitSnapshot, mutation: &SemioKitMutation, scenario: &str) -> Result<(), String> {
-        let outcome = apply_semio_kit_mutation(snapshot, mutation);
+        let outcome = diff_semio_kit_mutation(mutation, snapshot);
         let refusals = semio_mutation_refusals(&outcome);
         if refusals.is_empty() {
+            *snapshot = apply_diff(outcome.diff(), snapshot).map_err(|error| format!("the diff could not be applied: {error:?}"))?;
             return Ok(());
         }
         Err(format!("{scenario}: the mutation was rejected: {refusals:?}"))
@@ -135,7 +137,7 @@ mod subject {
         let mut current = base.clone();
         apply(&mut current, &mutation, &ctx.scenario.id)?;
         let mutated = projection(&current)?;
-        for step in inverse_semio_kit_mutation(&mutation, &base).expect("valid retained mutation inverse fixture") {
+        for step in inverse_semio_kit_mutation(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
             apply(&mut current, &step, &ctx.scenario.id)?;
         }
         if current != base {

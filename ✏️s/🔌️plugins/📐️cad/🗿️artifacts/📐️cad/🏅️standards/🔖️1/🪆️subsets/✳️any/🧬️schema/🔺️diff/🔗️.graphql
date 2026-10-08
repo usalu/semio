@@ -1,21 +1,29 @@
 # 🔺️ Sparse CAD document diff over composed model, drawing and topology child identities.
 # import ArtifactChild from "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"
-# import CadArtifact from "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
+# import CadReference from "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
+# import CadNode from "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔗️.graphql"
 type CadDiff {
-  artifact: CadArtifact @state(class: ARTIFACT)
   schema: String @state(class: ARTIFACT)
   id: String @state(class: ARTIFACT)
-  shapeModel: ArtifactChild @state(class: ARTIFACT)
-  buildingModel: ArtifactChild @state(class: ARTIFACT)
-  energyModel: ArtifactChild @state(class: ARTIFACT)
-  structureClassicModel: ArtifactChild @state(class: ARTIFACT)
-  drawings: CadDrawingChildList @state(class: ARTIFACT)
-  breps: CadBrepChildList @state(class: ARTIFACT)
-  referencesByModelDefinitionId: [CadReferenceListEntry!] @state(class: ARTIFACT)
+  shapeModel: CadModelSlot @state(class: ARTIFACT)
+  buildingModel: CadModelSlot @state(class: ARTIFACT)
+  energyModel: CadModelSlot @state(class: ARTIFACT)
+  structureClassicModel: CadModelSlot @state(class: ARTIFACT)
+  drawings: CadDrawingsDelta @state(class: ARTIFACT)
+  breps: CadBrepsDelta @state(class: ARTIFACT)
+  referencesByModelDefinitionId: [CadReferencesDeltaEntry!] @state(class: ARTIFACT)
   nodes: CadNodesDelta @state(class: ARTIFACT)
 }
-type CadDrawingChildList { values: [ArtifactChild!]! }
-type CadBrepChildList { values: [ArtifactChild!]! }
+type CadModelSlot { child: ArtifactChild }
+type CadDrawingsDelta { added: [ArtifactChild!]! removed: [String!]! reordered: [String!] }
+type CadBrepsDelta { added: [ArtifactChild!]! removed: [String!]! reordered: [String!] }
+type CadOrientationSet { value: [Float!] }
+type CadScaleSet { value: Float }
+type CadOpacitySet { value: Float }
+type CadReferencePatch { sourceUrl: String mediaKind: String origin: [Float!] orientation: CadOrientationSet scale: CadScaleSet widthWorld: Float hidden: Boolean locked: Boolean opacity: CadOpacitySet }
+type CadReferencePatchEntry { id: String! patch: CadReferencePatch! }
+type CadReferencesDelta { added: [CadReference!]! removed: [String!]! patched: [CadReferencePatchEntry!]! reordered: [String!] }
+type CadReferencesDeltaEntry { key: String! value: CadReferencesDelta! }
 type CadNodePatch { label: String }
 type CadNodePatchEntry { id: String! patch: CadNodePatch! }
 type CadNodesDelta { added: [CadNode!]! removed: [String!]! patched: [CadNodePatchEntry!]! reordered: [String!] }

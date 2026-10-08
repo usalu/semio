@@ -31,7 +31,7 @@ fn mutation() -> SemioMeshMutation {
 #[semio_framework_async_macros::async_test]
 async fn repaints_the_material_and_keeps_both_pbr_factors() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("change-material-base-color applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("change-material-base-color applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "change-material-base-color/repaints-the-material-from-red-to-blue: applied state differs from the committed after-snapshot");
     let edited = &produced.materials[0];
     assert_eq!((edited.base_color.r, edited.base_color.b), (0.0, 1.0), "the color is replaced as ONE value — every channel takes the payload's");
@@ -45,13 +45,14 @@ async fn repaints_the_material_and_keeps_both_pbr_factors() {
 async fn the_undo_change_material_base_color_restores_the_red() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "change-material-base-color undoes as exactly one change-material-base-color");
     let SemioMeshMutation::ChangeMaterialBaseColor(restore) = &undo[0] else { panic!("change-material-base-color must undo as itself") };
     assert_eq!(restore.new_base_color, base.materials[0].base_color, "the undo must recapture BASE's own color");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward change-material-base-color applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo change-material-base-color applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward change-material-base-color applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo change-material-base-color applies");
     }
     assert_eq!(current, base, "change-material-base-color/repaints-the-material-from-red-to-blue: the undo did not restore the before-snapshot");
 }
@@ -109,6 +110,6 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioMeshDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-material-base-color diff decodes");
-    let produced = decoded.apply(&before()).expect("committed change-material-base-color diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed change-material-base-color diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-material-base-color/repaints-the-material-from-red-to-blue: committed diff did not carry before to after");
 }

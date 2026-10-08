@@ -1,25 +1,17 @@
 {
   "models": {
-    "values": [
+    "added": [
       {
-        "childId": "mod-1",
-        "target": {
-          "artifactId": "mod-1",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "model"
-          }
-        }
-      },
-      {
-        "childId": "mod-2",
-        "target": {
-          "artifactId": "mod-2",
-          "dialect": {
-            "artifactKind": "s.stdio.semio",
-            "standard": "v1",
-            "subset": "model"
+        "index": 1,
+        "item": {
+          "childId": "mod-2",
+          "target": {
+            "artifactId": "mod-2",
+            "dialect": {
+              "artifactKind": "s.stdio.semio",
+              "standard": "v1",
+              "subset": "model"
+            }
           }
         }
       }

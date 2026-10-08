@@ -64,6 +64,7 @@ pub(crate) enum Generation2dOperationDsl {
     CreateGeneration {
         #[dsl(block)]
         generation: FormGenerationDsl,
+        index: Option<usize>,
     },
     DeleteGeneration {
         id: String,
@@ -120,7 +121,7 @@ pub(crate) fn generation2d_operation_to_dsl(operation: &Generation2dMutation) ->
         Generation2dMutation::ClearWidgetLayout(payload) => Generation2dOperationDsl::ClearWidgetLayout { id: payload.id.clone() },
         Generation2dMutation::UpdateCamera(payload) => Generation2dOperationDsl::UpdateCamera { camera: camera_to_dsl(&payload.camera) },
         Generation2dMutation::ChangeSchema(payload) => Generation2dOperationDsl::ChangeSchema { schema: payload.schema.clone() },
-        Generation2dMutation::CreateGeneration(payload) => Generation2dOperationDsl::CreateGeneration { generation: form_generation_to_dsl(&payload.generation) },
+        Generation2dMutation::CreateGeneration(payload) => Generation2dOperationDsl::CreateGeneration { generation: form_generation_to_dsl(&payload.generation), index: payload.index },
         Generation2dMutation::DeleteGeneration(payload) => Generation2dOperationDsl::DeleteGeneration { id: payload.id.clone() },
         Generation2dMutation::RenameGeneration(payload) => Generation2dOperationDsl::RenameGeneration { id: payload.id.clone(), name: payload.name.clone() },
         Generation2dMutation::ChangeGenerationValue(payload) => Generation2dOperationDsl::ChangeGenerationValue { id: payload.id.clone(), question_id: payload.question_id.clone(), value: payload.value.clone() },
@@ -143,7 +144,7 @@ pub(crate) fn generation2d_operation_from_dsl(operation: Generation2dOperationDs
         Generation2dOperationDsl::ClearWidgetLayout { id } => clear_widget_layout(id),
         Generation2dOperationDsl::UpdateCamera { camera } => update_camera(camera_from_dsl(&camera)),
         Generation2dOperationDsl::ChangeSchema { schema } => change_schema(schema),
-        Generation2dOperationDsl::CreateGeneration { generation } => create_generation(form_generation_from_dsl(generation)),
+        Generation2dOperationDsl::CreateGeneration { generation, index } => Generation2dMutation::CreateGeneration(create_generation::CreateGeneration { generation: form_generation_from_dsl(generation), index, index: None }),
         Generation2dOperationDsl::DeleteGeneration { id } => delete_generation(id),
         Generation2dOperationDsl::RenameGeneration { id, name } => rename_generation(id, name),
         Generation2dOperationDsl::ChangeGenerationValue { id, question_id, value } => change_generation_value(id, question_id, value),

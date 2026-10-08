@@ -310,7 +310,124 @@ impl store::ArtifactPack for Puzzle5dConfig {
     }
 }
 
-store::impl_whole_record_config!(Puzzle5dConfig);
+impl store::ConfigRecord for Puzzle5dConfig {}
+
+/// 🔺️ Sparse typed delta of the shared Puzzle 5D configuration: names only the fields a mutation changes.
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase", default)]
+pub struct Puzzle5dConfigDiff {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub fill_count: Option<u32>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub contact_tolerance: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub proximity_radius: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub chunk_size: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub object_kind_weights: Option<HashMap<String, f64>>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub vortex_kind_weights: Option<HashMap<String, f64>>,
+}
+
+impl Puzzle5dConfigDiff {
+    /// 🎯️ Every field set to `state`'s value.
+    pub fn of(state: &Puzzle5dConfig) -> Self {
+        Self { fill_count: Some(state.fill_count), contact_tolerance: Some(state.contact_tolerance), proximity_radius: Some(state.proximity_radius), chunk_size: Some(state.chunk_size), object_kind_weights: Some(state.object_kind_weights.clone()), vortex_kind_weights: Some(state.vortex_kind_weights.clone()) }
+    }
+    /// ✂️ The named fields that differ from `base`.
+    pub fn changed(&self, base: &Puzzle5dConfig) -> Self {
+        Self { fill_count: self.fill_count.as_ref().filter(|value| **value != base.fill_count).cloned(), contact_tolerance: self.contact_tolerance.as_ref().filter(|value| **value != base.contact_tolerance).cloned(), proximity_radius: self.proximity_radius.as_ref().filter(|value| **value != base.proximity_radius).cloned(), chunk_size: self.chunk_size.as_ref().filter(|value| **value != base.chunk_size).cloned(), object_kind_weights: self.object_kind_weights.as_ref().filter(|value| **value != base.object_kind_weights).cloned(), vortex_kind_weights: self.vortex_kind_weights.as_ref().filter(|value| **value != base.vortex_kind_weights).cloned() }
+    }
+    /// ↩️ The named fields at the values `base` holds.
+    pub fn restoring(&self, base: &Puzzle5dConfig) -> Self {
+        Self { fill_count: self.fill_count.as_ref().map(|_| base.fill_count), contact_tolerance: self.contact_tolerance.as_ref().map(|_| base.contact_tolerance), proximity_radius: self.proximity_radius.as_ref().map(|_| base.proximity_radius), chunk_size: self.chunk_size.as_ref().map(|_| base.chunk_size), object_kind_weights: self.object_kind_weights.as_ref().map(|_| base.object_kind_weights.clone()), vortex_kind_weights: self.vortex_kind_weights.as_ref().map(|_| base.vortex_kind_weights.clone()) }
+    }
+}
+
+impl protocol::MutationDiff<Puzzle5dConfig> for Puzzle5dConfigDiff {
+    fn apply(&self, base: &Puzzle5dConfig, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle5dConfig> {
+        let mut next = base.clone();
+        if let Some(value) = &self.fill_count {
+            next.fill_count = *value;
+        }
+        if let Some(value) = &self.contact_tolerance {
+            next.contact_tolerance = *value;
+        }
+        if let Some(value) = &self.proximity_radius {
+            next.proximity_radius = *value;
+        }
+        if let Some(value) = &self.chunk_size {
+            next.chunk_size = *value;
+        }
+        if let Some(value) = &self.object_kind_weights {
+            next.object_kind_weights = value.clone();
+        }
+        if let Some(value) = &self.vortex_kind_weights {
+            next.vortex_kind_weights = value.clone();
+        }
+        Ok(next)
+    }
+    fn absorb(&mut self, other: Self) {
+        if other.fill_count.is_some() {
+            self.fill_count = other.fill_count;
+        }
+        if other.contact_tolerance.is_some() {
+            self.contact_tolerance = other.contact_tolerance;
+        }
+        if other.proximity_radius.is_some() {
+            self.proximity_radius = other.proximity_radius;
+        }
+        if other.chunk_size.is_some() {
+            self.chunk_size = other.chunk_size;
+        }
+        if other.object_kind_weights.is_some() {
+            self.object_kind_weights = other.object_kind_weights;
+        }
+        if other.vortex_kind_weights.is_some() {
+            self.vortex_kind_weights = other.vortex_kind_weights;
+        }
+    }
+}
+
+impl protocol::DiffAlgebra<Puzzle5dConfig> for Puzzle5dConfigDiff {
+    fn inverse(&self, base: &Puzzle5dConfig) -> Self {
+        self.restoring(base)
+    }
+    fn between(base: &Puzzle5dConfig, other: &Puzzle5dConfig) -> Self {
+        Self { fill_count: (base.fill_count != other.fill_count).then(|| other.fill_count), contact_tolerance: (base.contact_tolerance != other.contact_tolerance).then(|| other.contact_tolerance), proximity_radius: (base.proximity_radius != other.proximity_radius).then(|| other.proximity_radius), chunk_size: (base.chunk_size != other.chunk_size).then(|| other.chunk_size), object_kind_weights: (base.object_kind_weights != other.object_kind_weights).then(|| other.object_kind_weights.clone()), vortex_kind_weights: (base.vortex_kind_weights != other.vortex_kind_weights).then(|| other.vortex_kind_weights.clone()) }
+    }
+    fn is_empty(&self) -> bool {
+        self.fill_count.is_none() && self.contact_tolerance.is_none() && self.proximity_radius.is_none() && self.chunk_size.is_none() && self.object_kind_weights.is_none() && self.vortex_kind_weights.is_none()
+    }
+}
+
+impl Puzzle5dConfig {
+    /// 🔁️ One field mutation per field `next` changes — the config's event vocabulary, never a whole-config restore.
+    pub fn mutations_to(&self, next: &Puzzle5dConfig) -> Vec<Puzzle5dConfigMutation> {
+        let mut mutations = Vec::new();
+        if self.fill_count != next.fill_count {
+            mutations.push(Puzzle5dConfigMutation::SetFillCount { value: next.fill_count });
+        }
+        if self.contact_tolerance != next.contact_tolerance {
+            mutations.push(Puzzle5dConfigMutation::SetContactTolerance { value: next.contact_tolerance });
+        }
+        if self.proximity_radius != next.proximity_radius {
+            mutations.push(Puzzle5dConfigMutation::SetProximityRadius { value: next.proximity_radius });
+        }
+        if self.chunk_size != next.chunk_size {
+            mutations.push(Puzzle5dConfigMutation::SetChunkSize { value: next.chunk_size });
+        }
+        if self.object_kind_weights != next.object_kind_weights {
+            mutations.push(Puzzle5dConfigMutation::SetObjectKindWeights { value: next.object_kind_weights.clone() });
+        }
+        if self.vortex_kind_weights != next.vortex_kind_weights {
+            mutations.push(Puzzle5dConfigMutation::SetVortexKindWeights { value: next.vortex_kind_weights.clone() });
+        }
+        mutations
+    }
+}
+
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigMutation
@@ -318,51 +435,62 @@ store::impl_whole_record_config!(Puzzle5dConfig);
 /// after this edit"; `backwards()` is the same one-liner regardless of what changed.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 pub enum Puzzle5dConfigMutation {
-    Snapshot { config: Puzzle5dConfig },
+    SetFillCount { value: u32 },
     SetContactTolerance { value: f64 },
+    SetProximityRadius { value: f64 },
+    SetChunkSize { value: f64 },
     SetObjectKindWeights { value: HashMap<String, f64> },
     SetVortexKindWeights { value: HashMap<String, f64> },
 }
 
 impl protocol::Mutation<Puzzle5dConfig> for Puzzle5dConfigMutation {
-    type Diff = Puzzle5dConfig;
+    type Diff = Puzzle5dConfigDiff;
 
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📄snapshot", semantic_kind: "snapshot", display_name: "Snapshot", emoji: "📄", aggregate_variant: "Snapshot", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🖌️set-contact-tolerance", semantic_kind: "set-contact-tolerance", display_name: "Set Overlap Budget", emoji: "🖌️", aggregate_variant: "SetContactTolerance", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🖌️set-object-kind-weights", semantic_kind: "set-object-kind-weights", display_name: "Set Object Kind Weights", emoji: "🖌️", aggregate_variant: "SetObjectKindWeights", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🖌️set-vortex-kind-weights", semantic_kind: "set-vortex-kind-weights", display_name: "Set Vortex Kind Weights", emoji: "🖌️", aggregate_variant: "SetVortexKindWeights", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-fill-count", display_name: "Set Puzzle 5D Fill Count", emoji: "🎚️", aggregate_variant: "SetFillCount", payload_schema: "puzzle.5dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-contact-tolerance", display_name: "Set Puzzle 5D Contact Tolerance", emoji: "🎚️", aggregate_variant: "SetContactTolerance", payload_schema: "puzzle.5dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-proximity-radius", display_name: "Set Puzzle 5D Proximity Radius", emoji: "🎚️", aggregate_variant: "SetProximityRadius", payload_schema: "puzzle.5dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-chunk-size", display_name: "Set Puzzle 5D Chunk Size", emoji: "🎚️", aggregate_variant: "SetChunkSize", payload_schema: "puzzle.5dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-object-kind-weights", display_name: "Set Puzzle 5D Object Kind Weights", emoji: "🎚️", aggregate_variant: "SetObjectKindWeights", payload_schema: "puzzle.5dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
+        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config", semantic_kind: "set-vortex-kind-weights", display_name: "Set Puzzle 5D Vortex Kind Weights", emoji: "🎚️", aggregate_variant: "SetVortexKindWeights", payload_schema: "puzzle.5dconfig", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
         match self {
-            Puzzle5dConfigMutation::Snapshot { .. } => &Self::DESCRIPTORS[0],
-            Puzzle5dConfigMutation::SetContactTolerance { .. } => &Self::DESCRIPTORS[1],
-            Puzzle5dConfigMutation::SetObjectKindWeights { .. } => &Self::DESCRIPTORS[2],
-            Puzzle5dConfigMutation::SetVortexKindWeights { .. } => &Self::DESCRIPTORS[3],
+            Self::SetFillCount { .. } => &Self::DESCRIPTORS[0],
+            Self::SetContactTolerance { .. } => &Self::DESCRIPTORS[1],
+            Self::SetProximityRadius { .. } => &Self::DESCRIPTORS[2],
+            Self::SetChunkSize { .. } => &Self::DESCRIPTORS[3],
+            Self::SetObjectKindWeights { .. } => &Self::DESCRIPTORS[4],
+            Self::SetVortexKindWeights { .. } => &Self::DESCRIPTORS[5],
         }
     }
 
-    fn diff(&self, base: &Puzzle5dConfig) -> protocol::MutationOutcome<Puzzle5dConfig> {
-        if let Puzzle5dConfigMutation::Snapshot { config } = self {
-            return protocol::MutationOutcome::new(config.clone());
+    fn diff(&self, base: &Puzzle5dConfig) -> protocol::MutationOutcome<Puzzle5dConfigDiff> {
+        let diff = match self {
+            Self::SetFillCount { value } => Puzzle5dConfigDiff { fill_count: (value != &base.fill_count).then_some(*value), ..Default::default() },
+            Self::SetContactTolerance { value } => Puzzle5dConfigDiff { contact_tolerance: (value != &base.contact_tolerance).then_some(*value), ..Default::default() },
+            Self::SetProximityRadius { value } => Puzzle5dConfigDiff { proximity_radius: (value != &base.proximity_radius).then_some(*value), ..Default::default() },
+            Self::SetChunkSize { value } => Puzzle5dConfigDiff { chunk_size: (value != &base.chunk_size).then_some(*value), ..Default::default() },
+            Self::SetObjectKindWeights { value } => Puzzle5dConfigDiff { object_kind_weights: (value != &base.object_kind_weights).then(|| value.clone()), ..Default::default() },
+            Self::SetVortexKindWeights { value } => Puzzle5dConfigDiff { vortex_kind_weights: (value != &base.vortex_kind_weights).then(|| value.clone()), ..Default::default() },
+        };
+        if protocol::DiffAlgebra::<Puzzle5dConfig>::is_empty(&diff) {
+            return protocol::MutationOutcome::empty().warning("mutation.no-op", "The configuration already holds this value.");
         }
-        let mut next = base.clone();
-        match self {
-            Puzzle5dConfigMutation::Snapshot { .. } => {}
-            Puzzle5dConfigMutation::SetContactTolerance { value } => next.contact_tolerance = *value,
-            Puzzle5dConfigMutation::SetObjectKindWeights { value } => next.object_kind_weights = value.clone(),
-            Puzzle5dConfigMutation::SetVortexKindWeights { value } => next.vortex_kind_weights = value.clone(),
-        }
-        protocol::MutationOutcome::new(next)
+        protocol::MutationOutcome::new(diff)
     }
 
     fn inverse(&self, base: &Puzzle5dConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-    Ok((|| {
-        vec![Puzzle5dConfigMutation::Snapshot { config: base.clone() }]
-    
-    })())
-}
+        Ok(vec![match self {
+            Self::SetFillCount { .. } => Self::SetFillCount { value: base.fill_count },
+            Self::SetContactTolerance { .. } => Self::SetContactTolerance { value: base.contact_tolerance },
+            Self::SetProximityRadius { .. } => Self::SetProximityRadius { value: base.proximity_radius },
+            Self::SetChunkSize { .. } => Self::SetChunkSize { value: base.chunk_size },
+            Self::SetObjectKindWeights { .. } => Self::SetObjectKindWeights { value: base.object_kind_weights.clone() },
+            Self::SetVortexKindWeights { .. } => Self::SetVortexKindWeights { value: base.vortex_kind_weights.clone() },
+        }])
+    }
 }
 
 impl protocol::OpBinary for Puzzle5dConfigMutation {

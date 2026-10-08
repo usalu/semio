@@ -12,22 +12,55 @@
   "inspectionLevel": null,
   "kFiDeclared": null,
   "betaComputed": null,
-  "permanents": [
-    {
-      "id": "G-sup",
-      "kind": "g_sup",
-      "gk": 95000.0
-    },
-    {
-      "id": "G-inf",
-      "kind": "g_inf",
-      "gk": 20000.0
-    }
-  ],
-  "variables": null,
-  "accidentals": null,
-  "seismics": null,
-  "members": null,
-  "bridgeSls": null,
-  "effects": null
+  "permanents": {
+    "removed": [
+      "G-sup",
+      "G-inf"
+    ],
+    "added": [
+      {
+        "after": null,
+        "row": {
+          "id": "G-sup",
+          "kind": "g_sup",
+          "gk": 95000.0
+        }
+      },
+      {
+        "after": "G-sup",
+        "row": {
+          "id": "G-inf",
+          "kind": "g_inf",
+          "gk": 20000.0
+        }
+      }
+    ],
+    "modified": []
+  },
+  "variables": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "accidentals": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "seismics": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "bridgeSls": {
+    "removed": [],
+    "added": [],
+    "modified": []
+  },
+  "effects": []
 }

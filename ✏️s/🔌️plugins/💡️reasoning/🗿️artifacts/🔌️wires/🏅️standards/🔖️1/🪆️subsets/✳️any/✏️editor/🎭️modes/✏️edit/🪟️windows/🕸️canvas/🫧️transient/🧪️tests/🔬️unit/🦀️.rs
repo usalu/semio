@@ -266,7 +266,7 @@ async fn window_transient_backwards_restores_the_same_field_from_base() {
     let inverse = forward.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(inverse, vec![WiresCanvasTransientMutation::SetDrag(SetDrag { node_id: base.drag_node_id.clone(), start_x: base.drag_start_x, start_y: base.drag_start_y, last_x: base.drag_last_x, last_y: base.drag_last_y, zoom: base.drag_zoom })]);
     assert_eq!(forward.diff(&base).diff().clone(), WiresCanvasTransientDiff { drag_node_id: Some(WiresCanvasOptionalNode { value: Some("node-2".into()) }), drag_start_x: Some(3.0), drag_start_y: Some(4.0), drag_last_x: Some(5.0), drag_last_y: Some(6.0), drag_zoom: Some(2.0) });
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&forward, &base);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&forward, &base).await;
 }
 //#endregion 🔖️ConfigOperationTests
 

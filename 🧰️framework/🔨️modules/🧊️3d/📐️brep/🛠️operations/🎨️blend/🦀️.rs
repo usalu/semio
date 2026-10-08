@@ -1034,7 +1034,6 @@ const SEAMS: usize = 5;
 const FACES: usize = 6;
 const PATCH_FACES: usize = 7;
 const CORNER_FACES: usize = 8;
-const ASSEMBLE: usize = 9;
 
 /// ⏱️ The blend engine as a resumable job: one unit builds one patch (per selected edge), classifies
 /// one corner (per reached vertex), trims one patch, mints one corner's vertices, carries one

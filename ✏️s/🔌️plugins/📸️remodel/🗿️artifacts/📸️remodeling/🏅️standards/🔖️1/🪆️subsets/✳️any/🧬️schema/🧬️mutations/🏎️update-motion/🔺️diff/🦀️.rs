@@ -2,7 +2,7 @@
 //! possible (a struct field, not an id-keyed collection). The invariant is checked BEFORE the
 //! identical-resubmission warning, the one guard order the whole vocabulary follows —
 //! non-finite track quality ⇒ Fatal.
-use crate::diff::RemodelingDiff;
+use crate::diff::{RemodelingDiff, RemodelingParamsDiff};
 use crate::RemodelingSnapshot;
 
 //#region 🔖️Diff
@@ -13,8 +13,6 @@ pub fn diff(payload: &super::UpdateMotionParams, base: &RemodelingSnapshot) -> p
     if payload.params == base.params.motion {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Motion params are already up to date.".to_string());
     }
-    let mut params = base.params.clone();
-    params.motion = payload.params.clone();
-    protocol::MutationOutcome::new(RemodelingDiff { params: Some(params), ..Default::default() })
+    protocol::MutationOutcome::new(RemodelingDiff { params: Some(RemodelingParamsDiff { motion: Some(payload.params.clone()), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

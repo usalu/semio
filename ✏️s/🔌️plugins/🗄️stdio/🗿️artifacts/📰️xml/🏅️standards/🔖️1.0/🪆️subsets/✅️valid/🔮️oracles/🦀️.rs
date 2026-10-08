@@ -220,23 +220,6 @@ mod live {
     /// silent no-op: a quietly skipped mutation reports as a passing test.
     pub fn apply(doc: &mut MarkupDoc, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
-            "patch-snapshot" => {
-                let patched = patched_markup(doc, "stdio.xml", &member(params, "patch"))?;
-                if !matches!(verdicts(&patched)?.get("doctypeNameMatchesDocumentElement"), Some(Json::Bool(true))) {
-                    return Err("patch-snapshot: the patched document is not XML 1.0 valid — §2.8 requires the DOCTYPE Name to be the document element's name".to_string());
-                }
-                *doc = patched;
-                Ok(())
-            }
-            "set-snapshot" => {
-                let replacement = doc_from_wire(&member(&member(params, "snapshot"), "doc"))?;
-                let verdict = verdicts(&replacement)?;
-                if !matches!(verdict.get("doctypePresent"), Some(Json::Bool(true))) || !matches!(verdict.get("doctypeNameMatchesDocumentElement"), Some(Json::Bool(true))) {
-                    return Err("set-snapshot: the replacement document is not XML 1.0 valid — §2.8 requires a DOCTYPE whose Name is the document element's name".to_string());
-                }
-                *doc = replacement;
-                Ok(())
-            }
             "declare-doctype" => {
                 let name = document_element_name(doc).ok_or("declare-doctype: the document has no document element, so §2.8 gives the DOCTYPE no Name to carry")?.to_string();
                 let declarations = doc.doctype.as_deref().map(parse_doctype).transpose()?.map(|declared| declared.declarations).unwrap_or_default();
@@ -316,7 +299,6 @@ mod live {
     /// the name would silently reorder the subset.
     pub fn invert(base: &MarkupDoc, mut mutated: MarkupDoc, kind: &str, params: &Json) -> Result<MarkupDoc, String> {
         match kind {
-            "set-snapshot" | "patch-snapshot" => Ok(base.clone()),
             "declare-doctype" => match base.doctype.as_deref().map(parse_doctype).transpose()? {
                 Some(prior) => {
                     let name = document_element_name(&mutated).ok_or("inverse declare-doctype: the document has no document element")?.to_string();

@@ -1,7 +1,7 @@
 use super::*;
 use crate::schema::diff::{diff_at_path, MdBlockAdded, MdBlockDiff, MdBlockModified, MdBlocksDiff, MdListItemAdded, MdListItemModified, MdListItemsDiff};
 use crate::schema::mutations::MdPathStep;
-use crate::schema::mutations::{insert_block::InsertBlock, remove_block::RemoveBlock, replace_block::ReplaceBlock, set_inlines::SetInlines, set_snapshot::SetSnapshot};
+use crate::schema::mutations::{insert_block::InsertBlock, remove_block::RemoveBlock, replace_block::ReplaceBlock, set_inlines::SetInlines};
 use crate::schema::snapshot::{MdBlock, MdInline};
 use crate::standards::v_commonmark::subsets::any::io::export::serializers::render_markdown_blocks;
 use crate::standards::v_commonmark::subsets::any::io::import::deserializers::{parse_inline, parse_markdown_blocks};
@@ -372,7 +372,6 @@ fn sweep_b() -> MdSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_mutations() -> Vec<MdMutation> {
     vec![
-        MdMutation::SetSnapshot(SetSnapshot { snapshot: sweep_b() }),
         MdMutation::InsertBlock(InsertBlock { path: vec![], index: 1, block: MdBlock::ThematicBreak }),
         MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 0 }),
         MdMutation::ReplaceBlock(ReplaceBlock { path: vec![], index: 1, block: MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "replaced".into() }] } }),
@@ -385,7 +384,7 @@ async fn mutation_diff_law() {
     for mutation in sample_mutations() {
         let base = sample_snapshot();
         let diff_direct = Mutation::diff(&mutation, &base);
-        let applied_via_diff = MutationDiff::apply(diff_direct.diff(), &base).unwrap();
+        let applied_via_diff = protocol::apply_diff(diff_direct.diff(), &base).unwrap();
 
         let mut via_apply = base.clone();
         let diff_from_apply = crate::schema::mutations::apply_md_mutation(&mut via_apply, &mutation);
@@ -410,9 +409,9 @@ async fn inverse_law() {
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
         let diff = Mutation::diff(&mutation, &base);
-        let next = MutationDiff::apply(diff.diff(), &base).unwrap();
+        let next = protocol::apply_diff(diff.diff(), &base).unwrap();
         let inverse_diff = DiffAlgebra::inverse(diff.diff(), &base);
-        let restored = MutationDiff::apply(&inverse_diff, &next).unwrap();
+        let restored = protocol::apply_diff(&inverse_diff, &next).unwrap();
         assert_eq!(restored, base, "inverse_law (diff-level).await failed for {mutation:?}");
     }
 }
@@ -426,10 +425,10 @@ fn two_para_root(a: &str, b: &str) -> MdSnapshot {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn assert_absorb_matches_sequential(base: &MdSnapshot, d1: &MdDiff, d2: &MdDiff) -> MdDiff {
-    let sequential = MutationDiff::apply(d2, &MutationDiff::apply(d1, base).unwrap()).unwrap();
+    let sequential = protocol::apply_diff(d2, &protocol::apply_diff(d1, base).unwrap()).unwrap();
     let mut absorbed = d1.clone();
     MutationDiff::absorb(&mut absorbed, d2.clone());
-    assert_eq!(MutationDiff::apply(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
+    assert_eq!(protocol::apply_diff(&absorbed, base).unwrap(), sequential, "absorb_law: apply(absorb(d1,d2), base) != sequential");
     absorbed
 }
 
@@ -444,7 +443,7 @@ async fn absorb_law() {
     {
         let base = two_para_root("a", "b");
         let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
-        let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 0 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_blocks_diff(&absorbed);
@@ -458,7 +457,7 @@ async fn absorb_law() {
     {
         let base = two_para_root("a", "b");
         let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
-        let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_blocks_diff(&absorbed);
@@ -469,7 +468,7 @@ async fn absorb_law() {
     {
         let base = two_para_root("a", "b");
         let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 1, block: MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "f".into() }] } }), &base);
-        let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&MdMutation::SetInlines(SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "v".into() }] }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_blocks_diff(&absorbed);
@@ -485,7 +484,7 @@ async fn absorb_law() {
     {
         let base = two_para_root("a", "b");
         let d1 = Mutation::diff(&MdMutation::SetInlines(SetInlines { path: vec![], index: 1, inlines: vec![MdInline::Text { text: "v".into() }] }), &base);
-        let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 1 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let triple = root_blocks_diff(&absorbed);
@@ -497,11 +496,11 @@ async fn absorb_law() {
     {
         let base = two_para_root("a", "b");
         let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::ThematicBreak }), &base);
-        let mid1 = MutationDiff::apply(d1.diff(), &base).unwrap();
+        let mid1 = protocol::apply_diff(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: vec![], index: 2, block: MdBlock::HtmlBlock { raw: "<hr/>".into() } }), &mid1);
-        let mid2 = MutationDiff::apply(d2.diff(), &mid1).unwrap();
+        let mid2 = protocol::apply_diff(d2.diff(), &mid1).unwrap();
         let d3 = Mutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 0 }), &mid2);
-        let sequential = MutationDiff::apply(d3.diff(), &mid2).unwrap();
+        let sequential = protocol::apply_diff(d3.diff(), &mid2).unwrap();
 
         let mut left = d1.diff().clone();
         MutationDiff::absorb(&mut left, d2.diff().clone());
@@ -512,8 +511,8 @@ async fn absorb_law() {
         let mut right = d1.diff().clone();
         MutationDiff::absorb(&mut right, d2_then_d3);
 
-        assert_eq!(MutationDiff::apply(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
-        assert_eq!(MutationDiff::apply(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
+        assert_eq!(protocol::apply_diff(&left, &base).unwrap(), sequential, "absorb associativity (left) failed");
+        assert_eq!(protocol::apply_diff(&right, &base).unwrap(), sequential, "absorb associativity (right) failed");
     }
 
     // Nested (BlockQuote) canonical: Insert-inside-quote + Remove-before-it-inside-quote.
@@ -524,7 +523,7 @@ async fn absorb_law() {
         };
         let path = [MdPathStep::BlockQuote { index: 0 }];
         let d1 = Mutation::diff(&MdMutation::InsertBlock(InsertBlock { path: path.to_vec(), index: 2, block: MdBlock::ThematicBreak }), &base);
-        let mid = MutationDiff::apply(d1.diff(), &base).unwrap();
+        let mid = protocol::apply_diff(d1.diff(), &base).unwrap();
         let d2 = Mutation::diff(&MdMutation::RemoveBlock(RemoveBlock { path: path.to_vec(), index: 0 }), &mid);
         let absorbed = assert_absorb_matches_sequential(&base, d1.diff(), d2.diff());
         let MdBlockDiff::BlockQuote { blocks: Some(inner) } = &absorbed.blocks.as_ref().unwrap().modified[0].diff else {
@@ -541,11 +540,11 @@ async fn absorb_law() {
 async fn between_roundtrip_law() {
     let a = sweep_a();
     let b = sweep_b();
-    assert_eq!(MutationDiff::apply(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&a, &b), &a).unwrap(), b);
-    assert_eq!(MutationDiff::apply(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&b, &a), &b).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&a, &b), &a).unwrap(), b);
+    assert_eq!(protocol::apply_diff(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&b, &a), &b).unwrap(), a);
 
     let sample = sample_snapshot();
-    assert_eq!(MutationDiff::apply(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&sample, &sample), &sample).unwrap(), sample);
+    assert_eq!(protocol::apply_diff(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&sample, &sample), &sample).unwrap(), sample);
 
     // Real fixture (the demo's `📝️example.md`) diffed against a mutated variant.
     let fixture_text = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🧪️example/📝️.md");
@@ -554,8 +553,8 @@ async fn between_roundtrip_law() {
     let mut mutated = fixture.clone();
     crate::schema::mutations::apply_md_mutation(&mut mutated, &MdMutation::InsertBlock(InsertBlock { path: vec![], index: 0, block: MdBlock::ThematicBreak }));
     assert_ne!(fixture, mutated);
-    assert_eq!(MutationDiff::apply(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&fixture, &mutated), &fixture).unwrap(), mutated);
-    assert_eq!(MutationDiff::apply(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&mutated, &fixture), &mutated).unwrap(), fixture);
+    assert_eq!(protocol::apply_diff(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&fixture, &mutated), &fixture).unwrap(), mutated);
+    assert_eq!(protocol::apply_diff(&<MdDiff as DiffAlgebra<MdSnapshot>>::between(&mutated, &fixture), &mutated).unwrap(), fixture);
 }
 //#endregion 🔖️BetweenRoundtripLaw
 
@@ -588,9 +587,9 @@ async fn field_sweep_covers_every_mutable_field() {
     let b = sweep_b();
 
     let diff_ab = <MdDiff as DiffAlgebra<MdSnapshot>>::between(&a, &b);
-    assert_eq!(MutationDiff::apply(&diff_ab, &a).unwrap(), b);
+    assert_eq!(protocol::apply_diff(&diff_ab, &a).unwrap(), b);
     let diff_ba = <MdDiff as DiffAlgebra<MdSnapshot>>::between(&b, &a);
-    assert_eq!(MutationDiff::apply(&diff_ba, &b).unwrap(), a);
+    assert_eq!(protocol::apply_diff(&diff_ba, &b).unwrap(), a);
     assert!(<MdDiff as DiffAlgebra<MdSnapshot>>::between(&a, &a).is_empty());
 
     // Direction a->b: top-level `removed` (a's trailing paragraph, beyond b's length) +
@@ -631,3 +630,22 @@ async fn field_sweep_covers_every_mutable_field() {
     let _ = MdBlockModified { index: 0, diff: MdBlockDiff::ThematicBreak };
 }
 //#endregion 🔖️FieldSweep
+
+/// ⚖️ `md_mutation_inverse_sum_law`: for every leaf the inverse diffs sum to the negative forward diff.
+#[semio_framework_async_macros::async_test]
+async fn md_mutation_inverse_sum_law_holds_for_every_leaf() {
+    let base = sample_snapshot();
+    for mutation in sample_mutations() {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
+    }
+    let nested = sweep_a();
+    for mutation in [
+        MdMutation::InsertBlock(InsertBlock { path: vec![MdPathStep::ListItem { index: 0, item: 0 }], index: 1, block: MdBlock::ThematicBreak }),
+        MdMutation::RemoveBlock(RemoveBlock { path: vec![MdPathStep::ListItem { index: 0, item: 1 }], index: 0 }),
+        MdMutation::SetInlines(SetInlines { path: vec![MdPathStep::ListItem { index: 0, item: 0 }], index: 0, inlines: vec![MdInline::Text { text: "nested".into() }] }),
+        MdMutation::ReplaceBlock(ReplaceBlock { path: vec![], index: 1, block: MdBlock::ThematicBreak }),
+        MdMutation::RemoveBlock(RemoveBlock { path: vec![], index: 2 }),
+    ] {
+        protocol::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &nested).await;
+    }
+}

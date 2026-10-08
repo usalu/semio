@@ -34,7 +34,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
             None,
             true,
             true,
-            1,
+            1, None,
         ),
     )
 }

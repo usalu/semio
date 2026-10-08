@@ -9,7 +9,7 @@ use super::*;
 use crate::standards::v1::subsets::cad::schema::diff::*;
 use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_triple, enc_named_triple};
+use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_added, dec_named_triple, enc_named_added, enc_named_triple};
 use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
 use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
 use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
@@ -130,13 +130,13 @@ fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
     }
     let mut out = vec![DIFF_BINARY_FORMAT, presence];
     if let Some(v) = &self.layers {
-        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_layer_diff, enc_layer));
+        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_layer_diff, |a| enc_named_added(a, enc_layer)));
     }
     if let Some(v) = &self.blocks {
-        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_block_diff, enc_block));
+        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_block_diff, |a| enc_named_added(a, enc_block)));
     }
     if let Some(v) = &self.entities {
-        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_entity_record_diff, enc_entity_record));
+        write_str_lp(&mut out, &enc_named_triple(v, |k: &String| enc_str(k), enc_entity_record_diff, |a| enc_named_added(a, enc_entity_record)));
     }
     Ok(out)
 }
@@ -152,17 +152,17 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     let mut reader = store::ByteReader::new(&bytes[2..]);
     let mut next_blob = |what: &'static str| -> Result<String, protocol::ProtocolError> { read_str_lp(&mut reader).map_err(|e| protocol::ProtocolError::Malformed { what, offset: 2, detail: e }) };
     let layers = if presence & 0b0000_0001 != 0 {
-        Some(dec_named_triple(&next_blob("diff layers blob")?, dec_str, dec_layer_diff, dec_layer).map_err(|e| protocol::ProtocolError::Malformed { what: "diff layers text", offset: 2, detail: e })?)
+        Some(dec_named_triple(&next_blob("diff layers blob")?, dec_str, dec_layer_diff, |t| dec_named_added(t, dec_layer)).map_err(|e| protocol::ProtocolError::Malformed { what: "diff layers text", offset: 2, detail: e })?)
     } else {
         None
     };
     let blocks = if presence & 0b0000_0010 != 0 {
-        Some(dec_named_triple(&next_blob("diff blocks blob")?, dec_str, dec_block_diff, dec_block).map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks text", offset: 2, detail: e })?)
+        Some(dec_named_triple(&next_blob("diff blocks blob")?, dec_str, dec_block_diff, |t| dec_named_added(t, dec_block)).map_err(|e| protocol::ProtocolError::Malformed { what: "diff blocks text", offset: 2, detail: e })?)
     } else {
         None
     };
     let entities = if presence & 0b0000_0100 != 0 {
-        Some(dec_named_triple(&next_blob("diff entities blob")?, dec_str, dec_entity_record_diff, dec_entity_record).map_err(|e| protocol::ProtocolError::Malformed { what: "diff entities text", offset: 2, detail: e })?)
+        Some(dec_named_triple(&next_blob("diff entities blob")?, dec_str, dec_entity_record_diff, |t| dec_named_added(t, dec_entity_record)).map_err(|e| protocol::ProtocolError::Malformed { what: "diff entities text", offset: 2, detail: e })?)
     } else {
         None
     };

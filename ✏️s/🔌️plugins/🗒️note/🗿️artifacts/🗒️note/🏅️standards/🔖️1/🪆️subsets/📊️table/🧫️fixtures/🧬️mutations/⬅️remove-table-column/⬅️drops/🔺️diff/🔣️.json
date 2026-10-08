@@ -1,46 +1,40 @@
 {
-  "artifact": null,
   "schema": null,
   "id": null,
   "title": null,
   "blocks": {
-    "added": [],
-    "removed": [],
-    "patched": [
+    "rows": [
       {
+        "row": "patch",
         "id": "blk-table",
         "patch": {
-          "block": {
-            "kind": "table",
-            "id": "blk-table",
-            "name": "Samples",
-            "x": 0.0,
-            "y": 220.0,
-            "width": 320.0,
-            "height": 160.0,
-            "rotation": 0.0,
-            "visible": true,
-            "locked": false,
-            "columns": [
-              "A"
-            ],
-            "rows": [
-              [
-                {
-                  "content": "Alpha"
-                }
-              ],
-              [
-                {
-                  "content": ""
-                }
-              ]
-            ]
-          }
+          "name": null,
+          "x": null,
+          "y": null,
+          "width": null,
+          "height": null,
+          "rotation": null,
+          "visible": null,
+          "locked": null,
+          "content": null,
+          "fontSize": null,
+          "fontWeight": null,
+          "align": null,
+          "imageKey": null,
+          "table": [
+            {
+              "edit": "removeColumn",
+              "index": 1
+            }
+          ],
+          "tex": null,
+          "displayMode": null,
+          "points": null,
+          "strokeWidth": null,
+          "color": null
         }
       }
-    ],
-    "reordered": null
+    ]
   },
   "gridVisible": null,
   "gridSpacing": null,

@@ -1,3 +1,26 @@
 SPINE-API-LANDED 01:45:15 protocol::ApplyCapability, protocol::apply_diff(&diff, &base) -> MutationApplyResult<P>, MutationDiff::apply(&self, base, capability: protocol::ApplyCapability), MutationDiff: PartialEq + DiffAlgebra<P>; MutationOutcome::apply_to DELETED. (cargo check -p semio-framework-replication green; os spr facade re-exports `os_spr::{ApplyCapability, apply_diff}` written, os-kernel compile pending; law helper assert_mutation_inverse_sum_law pending)
 
 SPINE-KERNEL-GREEN 02:07 `cargo check -p semio-framework-os-kernel` (lib, non-test) green via gate. Extra helpers: `store::apply_operation(state,&op,idx) -> (MutationApplyResult<P>, msgs)`, `store::apply_outcome(&base, outcome) -> (P, outcome)` (refusal -> unchanged base + empty diff + Fatal message; replaces `MutationOutcome::apply_to` semantics), law helper `protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await`. `impl_whole_record_config!` / `transient_root!` now require `$ty: PartialEq`.
+
+# 📓️ fw-spine report
+
+## Done (all compile-verified unless listed under "Unverified")
+- `replication/🎮️mutation/🦀️.rs`: `ApplyCapability` (private field, minted only in `apply_diff`), `apply_diff`, `MutationDiff: PartialEq + DiffAlgebra<P>`, `apply(&self, base, capability)`, `MutationOutcome::apply_to` deleted. `cargo check -p semio-framework-replication` green (01:44).
+- Façade: `os_spr::{ApplyCapability, apply_diff}` explicit list in `📡️spr/🦀️.rs`; `command` façade already `pub use protocol::mutation::*`. `cargo check -p semio-framework-os-kernel` (lib) green 02:06; `cargo test --lib --no-run` (incl. all framework tests + new law tests) green 02:48.
+- Central routing: `store::apply_operation` (new, the one store step) -> `fold_operation`, replay (`replay_mutations`), `ReplayMode::Merge`, presence/transient/hover lanes (`apply_operation`), `derive_*_snapshot` (`apply_diff`), `os_vcs::apply_mutation`, `Planner::call`, `fold_plan_diff`, plugin transaction folds x3, `SnapshotBuilder` (`store::apply_outcome`, new, replaces `apply_to` semantics), bounded config prep, window config, transient publication, tool-machine `fold_leaf`, tool-run `fold_one`, db `envelope_from_operation`, store `test_support::mutation_report_json`.
+- Framework diff impls given the new signature + concrete `DiffAlgebra` (+`PartialEq` where missing): macros `impl_whole_record_config!` and `transient_root!` (whole-record algebra; `$ty` now needs `PartialEq`), `SpaceHistoryDiff`, `ChartDiff` (inverse = swapped before/after edits, no apply), `SpaceDiff`, `CollectionDiff`, `FlowDiff` (sequential projection inverse, exact), `DagDiff` (atomised exact inverse), `NoConfig/NoPresence/NoTransient`, `InteractionConfigMutation`, mcp `ProbeDiff`, wgpu `NativeSocketProbeDiff`, and ~25 test-local fixtures (store, db, plugin tests, causal).
+- Config leaves, spr counter laws, Workflow/Run diffs: done by `fw-os-leaves` (found already converted); not touched by me.
+- Derive (`🗣️dsl/✨️derive`): generates no apply -> no change needed.
+- Law helper `assert_mutation_inverse_sum_law(&mutation, &base).await` in `📡️spr/🧪️tests/⚖️protocol-laws/🦀️.rs`; plugins reach it as `protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law`. Unit tests in `⚖️protocol-laws-unit/🦀️.rs` (`mutation_inverse_sum_law_*`): lawful passes; wrong inverse, restoring-but-not-summing inverse, and empty inverse each panic with the expected message.
+- Deleted generic `CollectionMutation`/`apply_collection_mutation`/`inverse_collection_mutation`/`collection_diff_from_mutation` (vcs + re-exports in spr/command/store + their tests; zero production callers incl. `✏️s`). `Identified`/`Patchable`/`ItemPatch`/`CollectionDiff` kept.
+- Framework test call sites of `.apply(` converted for flow/dag/space tests.
+
+## Open issues
+- `CollectionDiff`/`SpaceDiff`/`DagDelta`-style single-slot diffs cannot represent cascade inverses: `CollectionDiff::inverse` of a cascading `DeleteFolder` restores only the first deleted folder/entry (one `created_*` slot). `SpaceDiff` inverse collides when one diff holds both upsert+remove of the same slot. Needs the sparse keyed-row redesign by the space/collection owner (fw-os-leaves).
+- `WorkflowDiff::SyncNodePorts` has no representable inverse (Empty); node/edge order is not restored by append-style Add inverses (peer's implementation).
+- `impl_whole_record_config!` algebra `is_empty()` is constantly false (whole record has no base-free empty form); ~33 plugin configs using it need `PartialEq` and should migrate to sparse per-field diffs.
+- `db::envelope_from_operation` still stores whole post/base values (snapshot-based envelope), only its apply routing changed.
+- Policy gate rules (L5 textual loopholes in `📜️script.ts`) not part of this scope; not implemented.
+
+## Unverified / test status
+- Not yet run to completion: `cargo test -p semio-framework-os-kernel --lib -- mutation_ diff_algebra operation_diff space_history remove_space_alternative flow dag collection --skip canonical_edit`. First attempt (03:07) aborted in `canonical_edit::borrowed_tests::borrowed_map_rebound_root...` (pre-existing fail-closed drop panic, unrelated, now skipped); the retry fails to build because of a peer's in-flight edit in `replication/📡️wire/🏠️local-interaction/🌳️root/🩹️update/🦀️.rs` (12 E0308, not my files). 87 tests ran green before the abort.

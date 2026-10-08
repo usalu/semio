@@ -79,6 +79,7 @@ serde_json = "1.0.140"
 semio-framework-hash = { path = "../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-effects-async): `testkit` (unions with the
 # plain dependency above for test builds only) brings in `semio-framework-async::testkit::

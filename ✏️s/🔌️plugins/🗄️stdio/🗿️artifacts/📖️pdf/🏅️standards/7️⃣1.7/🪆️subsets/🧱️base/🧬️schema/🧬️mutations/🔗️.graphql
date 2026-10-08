@@ -60,4 +60,5 @@ input PdfMutationInput {
   setEncryption: SetEncryptionMutationInput
   setCatalogEntry: SetCatalogEntryMutationInput
   removeCatalogEntry: RemoveCatalogEntryMutationInput
+  replacePage: ReplacePageMutationInput
 }

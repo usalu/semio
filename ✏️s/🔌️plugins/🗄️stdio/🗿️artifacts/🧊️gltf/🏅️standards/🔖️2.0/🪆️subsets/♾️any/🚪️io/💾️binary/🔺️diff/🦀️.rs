@@ -444,7 +444,7 @@ pub(crate) fn read_bin_mesh(r: &mut dsl::ByteReader<'_>) -> Result<GltfMesh, dsl
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_bin_mesh_diff(w: &mut dsl::ByteWriter, d: &GltfMeshDiff) {
-    write_bin_option(w, &d.primitives, |w, v| write_bin_primitive_vec(w, v));
+    write_bin_option(w, &d.primitives, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_primitive, write_bin_primitive_diff)));
     write_bin_option(w, &d.weights, |w, v| write_bin_f64_vec(w, v));
     write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
     write_bin_tri(w, &d.extensions, write_bin_json);
@@ -454,7 +454,10 @@ pub(crate) fn write_bin_mesh_diff(w: &mut dsl::ByteWriter, d: &GltfMeshDiff) {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn read_bin_mesh_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfMeshDiff, dsl::PackRefusal> {
     Ok(GltfMeshDiff {
-        primitives: read_bin_option(r, read_bin_primitive_vec)?,
+        primitives: read_bin_option(r, |r| {
+            let b = read_bin_blob(r)?;
+            read_bin_collection_blob(&b, read_bin_primitive, read_bin_primitive_diff)
+        })?,
         weights: read_bin_option(r, read_bin_f64_vec)?,
         name: read_bin_tri(r, read_bin_str)?,
         extensions: read_bin_tri(r, read_bin_json)?,
@@ -964,6 +967,140 @@ pub(crate) fn read_bin_collection<T, D>(
     Ok(GltfCollectionDiff { removed, modified, added })
 }
 
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_primitive_diff(w: &mut dsl::ByteWriter, d: &GltfPrimitiveDiff) {
+    write_bin_option(w, &d.attributes, |w, v| write_bin_attr_pairs(w, &v.0));
+    write_bin_tri(w, &d.indices, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_tri(w, &d.material, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_tri(w, &d.mode, |w, v| w.write_varint_u64(*v));
+    write_bin_option(w, &d.targets, |w, v| write_bin_vec(w, v, |w, target| write_bin_attr_pairs(w, &target.0)));
+    write_bin_tri(w, &d.extensions, write_bin_json);
+    write_bin_tri(w, &d.extras, write_bin_json);
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_primitive_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfPrimitiveDiff, dsl::PackRefusal> {
+    Ok(GltfPrimitiveDiff {
+        attributes: read_bin_option(r, |r| read_bin_attr_pairs(r).map(GltfMorphTarget))?,
+        indices: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        material: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        mode: read_bin_tri(r, |r| r.read_varint_u64())?,
+        targets: read_bin_option(r, |r| read_bin_vec(r, |r| read_bin_attr_pairs(r).map(GltfMorphTarget)))?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
+    })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_texture_diff(w: &mut dsl::ByteWriter, d: &GltfTextureDiff) {
+    write_bin_tri(w, &d.sampler, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_tri(w, &d.source, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.extensions, write_bin_json);
+    write_bin_tri(w, &d.extras, write_bin_json);
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_texture_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfTextureDiff, dsl::PackRefusal> {
+    Ok(GltfTextureDiff {
+        sampler: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        source: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        name: read_bin_tri(r, read_bin_str)?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
+    })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_image_diff(w: &mut dsl::ByteWriter, d: &GltfImageDiff) {
+    write_bin_tri(w, &d.uri, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.mime_type, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.buffer_view, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.extensions, write_bin_json);
+    write_bin_tri(w, &d.extras, write_bin_json);
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_image_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfImageDiff, dsl::PackRefusal> {
+    Ok(GltfImageDiff {
+        uri: read_bin_tri(r, read_bin_str)?,
+        mime_type: read_bin_tri(r, read_bin_str)?,
+        buffer_view: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        name: read_bin_tri(r, read_bin_str)?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
+    })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_buffer_view_diff(w: &mut dsl::ByteWriter, d: &GltfBufferViewDiff) {
+    write_bin_option(w, &d.buffer, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &d.byte_offset, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &d.byte_length, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_tri(w, &d.byte_stride, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_tri(w, &d.target, |w, v| w.write_varint_u64(*v));
+    write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.extensions, write_bin_json);
+    write_bin_tri(w, &d.extras, write_bin_json);
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_buffer_view_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfBufferViewDiff, dsl::PackRefusal> {
+    Ok(GltfBufferViewDiff {
+        buffer: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        byte_offset: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        byte_length: read_bin_option(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        byte_stride: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        target: read_bin_tri(r, |r| r.read_varint_u64())?,
+        name: read_bin_tri(r, read_bin_str)?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
+    })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_skin_diff(w: &mut dsl::ByteWriter, d: &GltfSkinDiff) {
+    write_bin_tri(w, &d.inverse_bind_matrices, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_tri(w, &d.skeleton, |w, v| w.write_varint_u64(*v as u64));
+    write_bin_option(w, &d.joints, |w, v| write_bin_usize_vec(w, v));
+    write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.extensions, write_bin_json);
+    write_bin_tri(w, &d.extras, write_bin_json);
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_skin_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfSkinDiff, dsl::PackRefusal> {
+    Ok(GltfSkinDiff {
+        inverse_bind_matrices: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        skeleton: read_bin_tri(r, |r| Ok(r.read_varint_u64()? as usize))?,
+        joints: read_bin_option(r, read_bin_usize_vec)?,
+        name: read_bin_tri(r, read_bin_str)?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
+    })
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn write_bin_animation_diff(w: &mut dsl::ByteWriter, d: &GltfAnimationDiff) {
+    write_bin_option(w, &d.channels, |w, v| write_bin_vec(w, v, write_bin_animation_channel));
+    write_bin_option(w, &d.samplers, |w, v| write_bin_vec(w, v, write_bin_animation_sampler));
+    write_bin_tri(w, &d.name, |w, v| write_bin_str(w, v));
+    write_bin_tri(w, &d.extensions, write_bin_json);
+    write_bin_tri(w, &d.extras, write_bin_json);
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn read_bin_animation_diff(r: &mut dsl::ByteReader<'_>) -> Result<GltfAnimationDiff, dsl::PackRefusal> {
+    Ok(GltfAnimationDiff {
+        channels: read_bin_option(r, |r| read_bin_vec(r, read_bin_animation_channel))?,
+        samplers: read_bin_option(r, |r| read_bin_vec(r, read_bin_animation_sampler))?,
+        name: read_bin_tri(r, read_bin_str)?,
+        extensions: read_bin_tri(r, read_bin_json)?,
+        extras: read_bin_tri(r, read_bin_json)?,
+    })
+}
+
 /// 🧵 A single opaque length-prefixed blob wrapping one collection's real binary encoding --
 /// matches `../💾️binary/📡️.protocol.semio`'s `Array(u8, Field(<name>_len))` fields (the
 /// blob's OWN internal removed/modified/added shape isn't further protocol-walkable,
@@ -1129,15 +1266,15 @@ fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
     write_bin_option(&mut w, &self.nodes, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_node, write_bin_node_diff)));
     write_bin_option(&mut w, &self.meshes, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_mesh, write_bin_mesh_diff)));
     write_bin_option(&mut w, &self.accessors, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_accessor, write_bin_accessor_diff)));
-    write_bin_option(&mut w, &self.buffer_views, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_buffer_view, write_bin_buffer_view)));
+    write_bin_option(&mut w, &self.buffer_views, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_buffer_view, write_bin_buffer_view_diff)));
     write_bin_option(&mut w, &self.buffers, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_buffer, write_bin_buffer_diff)));
     write_bin_option(&mut w, &self.buffer_bytes, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, |w, b: &Vec<u8>| write_bin_blob(w, b), |w, b: &Vec<u8>| write_bin_blob(w, b))));
     write_bin_option(&mut w, &self.materials, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_material, write_bin_material_diff)));
-    write_bin_option(&mut w, &self.textures, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_texture, write_bin_texture)));
-    write_bin_option(&mut w, &self.images, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_image, write_bin_image)));
+    write_bin_option(&mut w, &self.textures, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_texture, write_bin_texture_diff)));
+    write_bin_option(&mut w, &self.images, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_image, write_bin_image_diff)));
     write_bin_option(&mut w, &self.samplers, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_sampler, write_bin_sampler)));
-    write_bin_option(&mut w, &self.skins, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_skin, write_bin_skin)));
-    write_bin_option(&mut w, &self.animations, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_animation, write_bin_animation)));
+    write_bin_option(&mut w, &self.skins, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_skin, write_bin_skin_diff)));
+    write_bin_option(&mut w, &self.animations, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_animation, write_bin_animation_diff)));
     write_bin_option(&mut w, &self.cameras, |w, v| write_bin_blob(w, &write_bin_collection_blob(v, write_bin_camera, write_bin_camera)));
     write_bin_option(&mut w, &self.extensions_used, |w, v| {
         write_bin_blob(w, &{
@@ -1201,7 +1338,7 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     .map_err(|error| gltf_bin_err(&error))?;
     let buffer_views = read_bin_option(&mut r, |r| {
         let b = read_bin_blob(r)?;
-        read_bin_collection_blob(&b, read_bin_buffer_view, read_bin_buffer_view)
+        read_bin_collection_blob(&b, read_bin_buffer_view, read_bin_buffer_view_diff)
     })
     .map_err(|error| gltf_bin_err(&error))?;
     let buffers = read_bin_option(&mut r, |r| {
@@ -1221,12 +1358,12 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     .map_err(|error| gltf_bin_err(&error))?;
     let textures = read_bin_option(&mut r, |r| {
         let b = read_bin_blob(r)?;
-        read_bin_collection_blob(&b, read_bin_texture, read_bin_texture)
+        read_bin_collection_blob(&b, read_bin_texture, read_bin_texture_diff)
     })
     .map_err(|error| gltf_bin_err(&error))?;
     let images = read_bin_option(&mut r, |r| {
         let b = read_bin_blob(r)?;
-        read_bin_collection_blob(&b, read_bin_image, read_bin_image)
+        read_bin_collection_blob(&b, read_bin_image, read_bin_image_diff)
     })
     .map_err(|error| gltf_bin_err(&error))?;
     let samplers = read_bin_option(&mut r, |r| {
@@ -1236,12 +1373,12 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     .map_err(|error| gltf_bin_err(&error))?;
     let skins = read_bin_option(&mut r, |r| {
         let b = read_bin_blob(r)?;
-        read_bin_collection_blob(&b, read_bin_skin, read_bin_skin)
+        read_bin_collection_blob(&b, read_bin_skin, read_bin_skin_diff)
     })
     .map_err(|error| gltf_bin_err(&error))?;
     let animations = read_bin_option(&mut r, |r| {
         let b = read_bin_blob(r)?;
-        read_bin_collection_blob(&b, read_bin_animation, read_bin_animation)
+        read_bin_collection_blob(&b, read_bin_animation, read_bin_animation_diff)
     })
     .map_err(|error| gltf_bin_err(&error))?;
     let cameras = read_bin_option(&mut r, |r| {

@@ -8,8 +8,8 @@ use crate::ProgramSnapshot;
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::DeleteDocument, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-    match base.artifacts.iter().find(|row| row.header.id == payload.id) {
-        Some(existing) => vec![ProgramMutation::CreateDocument(super::super::create_document::CreateDocument { document: existing.clone() })],
+    match base.artifacts.iter().position(|row| row.header.id == payload.id) {
+        Some(position) => vec![ProgramMutation::CreateDocument(super::super::create_document::CreateDocument { document: base.artifacts[position].clone(), index: Some(position) })],
         None => Vec::new(),
     }
 

@@ -1,1 +1,28 @@
-{"schema":null,"seed":null,"slotsRemoved":[],"slotsUpserted":[],"edgesRemoved":[],"edgesUpserted":[],"tilesRemoved":["corridor"],"tilesUpserted":[],"rulesRemoved":["rule-room-corridor"],"rulesUpserted":[]}
+{
+  "schema": null,
+  "seed": null,
+  "slots": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "edges": {
+    "removed": [],
+    "added": [],
+    "patched": []
+  },
+  "tiles": {
+    "removed": [
+      "corridor"
+    ],
+    "added": [],
+    "patched": []
+  },
+  "rules": {
+    "removed": [
+      "rule-room-corridor"
+    ],
+    "added": [],
+    "patched": []
+  }
+}

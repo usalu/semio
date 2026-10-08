@@ -11,24 +11,25 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 #[value(rename_all = "camelCase")]
 pub struct SetMarkInfo {
     pub marked: bool,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub entry_index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfUaMutation> for SetMarkInfo {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "mark-info", kind: "set-mark-info", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::graph_edit(support::set_catalog_entry_rows(base, "MarkInfo", support::single_entry_dict("Marked", PdfObject::Bool(self.marked)))))
+        MutationOutcome::new(diff::graph_edit(support::set_catalog_entry_rows(base, "MarkInfo", support::single_entry_dict("Marked", PdfObject::Bool(self.marked)), self.entry_index)))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfUaMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        match support::catalog_flag(base, "MarkInfo", "Marked") {
-            Some(marked) => vec![PdfUaMutation::SetMarkInfo(SetMarkInfo { marked })],
-            None => vec![PdfUaMutation::RemoveMarkInfo(RemoveMarkInfo {})],
-        }
-    
-    })())
-}
+        Ok({
+            match support::catalog_flag(base, "MarkInfo", "Marked") {
+                Some(marked) => vec![PdfUaMutation::SetMarkInfo(SetMarkInfo { marked, entry_index: None })],
+                None => vec![PdfUaMutation::RemoveMarkInfo(RemoveMarkInfo {})],
+            }
+        })
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set PDF/UA marked flag to {}", self.marked), &format!("PDF/UA-Markierungskennung auf {} setzen", self.marked))

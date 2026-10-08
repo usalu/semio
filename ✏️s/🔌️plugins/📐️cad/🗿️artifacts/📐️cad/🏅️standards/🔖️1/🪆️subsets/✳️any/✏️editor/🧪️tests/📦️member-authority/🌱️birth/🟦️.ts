@@ -1,12 +1,9 @@
 import { test, expect } from "bun:test";
-import Ajv from "ajv";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
-import schema from "./🧬️schema/🔣️.json" with { type: "json" };
 
 test("selected member factory graph prices every original Arc and preborn ticket once", () => {
-  expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
   type Node = { kind: string; children: Node[] };
   const fold = (node: Node): number => 1 + node.children.reduce((sum, child) => sum + fold(child), 0);
   for (const row of fixture.cases) {

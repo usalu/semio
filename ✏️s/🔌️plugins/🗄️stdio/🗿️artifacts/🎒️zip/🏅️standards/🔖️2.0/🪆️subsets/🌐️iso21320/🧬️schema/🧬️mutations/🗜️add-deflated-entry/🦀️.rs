@@ -1,7 +1,4 @@
-//! 🗜️ `add-deflated-entry` — authored as its own mutation leaf. The aggregate's original
-//! `diff`/`inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf
-//! reconstructs its aggregate value and delegates, so the semantics are preserved by
-//! construction rather than re-derived.
+//! 🗜️ `add-deflated-entry` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -18,14 +15,13 @@ impl protocol::MutationKind<ZipSnapshot, ZipIso21320Mutation> for AddDeflatedEnt
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "deflated-entry", kind: "add-deflated-entry", record: "AddDeflatedEntry" };
 
     fn diff(&self, base: &ZipSnapshot) -> protocol::MutationOutcome<<ZipIso21320Mutation as protocol::Mutation<ZipSnapshot>>::Diff> {
-        agg_diff(&ZipIso21320Mutation::AddDeflatedEntry(self.clone()), base)
+        let Self { entry, before } = self;
+        added_entry_diff(base, entry, before.as_deref(), ZipIso21320Method::Deflate)
     }
     fn inverse(&self, base: &ZipSnapshot) -> Result<Vec<ZipIso21320Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&ZipIso21320Mutation::AddDeflatedEntry(self.clone()), base)?
-    
-    })
-}
+        let Self { entry, .. } = self;
+        Ok(vec![ZipIso21320Mutation::RemoveEntry(remove_entry::RemoveEntry { name: entry.name.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Add deflated entry", "Komprimierten Eintrag hinzufügen")
     }

@@ -94,7 +94,7 @@ fn sqlite_snapshot_zip_named_guard_independent_sqlite_edits_and_bounded_cancel()
 
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_zip_named_registered_payload_validator_reads_typed_pack_and_text(){
- use semio_framework_plugin::SubsetValidator;
+ use semio_framework_plugin::io::SubsetValidator;
  let mut snapshot=ZipSnapshot::default();snapshot.entries.push(ZipEntry{name:"guard.bin".into(),..Default::default()});snapshot.entries[0].metadata.local.flags=1;
  let payloads=[store::io_schema::IoPayload::Binary(<ZipSnapshot as store::ArtifactPack>::encode_pack(&snapshot)),store::io_schema::IoPayload::Text(<ZipSnapshot as store::ArtifactDsl>::print_dsl(&snapshot))];
  for payload in payloads{let diagnostics=crate::standards::v2_0::subsets::iso21320::io::ZipIso21320Validator::validate(&payload).await;assert_eq!(diagnostics.len(),1,"{diagnostics:?}");assert_eq!(diagnostics[0].code.0,"stdio.zip.iso21320.entry-encrypted");assert_eq!(diagnostics[0].severity,semio_framework_diagnostic::Severity::Error);}

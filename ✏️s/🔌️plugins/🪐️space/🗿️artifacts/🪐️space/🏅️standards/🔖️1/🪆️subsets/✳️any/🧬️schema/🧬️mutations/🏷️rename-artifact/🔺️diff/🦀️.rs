@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `RenameArtifact` — target-missing ⇒ Error, same name ⇒ no-op Warning
 //! with an empty diff, name collision with a DIFFERENT id ⇒ Fatal duplicate-id.
-use crate::standards::v1::subsets::any::schema::diff::SSpaceDiff;
+use crate::standards::v1::subsets::any::schema::diff::{SSpaceArtifactPatch, SSpaceArtifactsDelta, SSpaceDiff};
 use crate::standards::v1::subsets::any::schema::snapshot::SSpaceSnapshot;
 
 //#region 🔖️Diff
@@ -14,17 +14,6 @@ pub fn diff(payload: &super::RenameArtifact, base: &SSpaceSnapshot) -> protocol:
     if base.artifacts.iter().any(|row| row.id != payload.id && row.name == payload.new_name) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An artifact named \"{}\" already exists.", payload.new_name), [payload.new_name.clone()]);
     }
-    let artifacts: Vec<_> = base
-        .artifacts
-        .iter()
-        .cloned()
-        .map(|mut row| {
-            if row.id == payload.id {
-                row.name = payload.new_name.clone();
-            }
-            row
-        })
-        .collect();
-    protocol::MutationOutcome::new(SSpaceDiff { artifacts: Some(artifacts), ..Default::default() })
+    protocol::MutationOutcome::new(SSpaceDiff { artifacts: Some(SSpaceArtifactsDelta { patched: vec![SSpaceArtifactPatch { id: payload.id.clone(), name: Some(payload.new_name.clone()), ..Default::default() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

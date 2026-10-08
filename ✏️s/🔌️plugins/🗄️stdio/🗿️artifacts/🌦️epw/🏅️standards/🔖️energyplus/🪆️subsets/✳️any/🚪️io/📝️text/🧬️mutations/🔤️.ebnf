@@ -1,7 +1,6 @@
 (* Hand-rolled `stdio.epw.mutations` wire text (see 🦀️.rs `print_epw_mutation`/
    `parse_epw_mutation` for the real, authoritative implementation). *)
-mutation = "set-snapshot", sp, "snapshot=", hex
-         | "set-location", sp, "location=", hex
+mutation = "set-location", sp, "location=", hex
          | "set-design-conditions", sp, "value=", hex
          | "set-typical-extreme-periods", sp, "value=", hex
          | "set-ground-temperatures", sp, "value=", hex

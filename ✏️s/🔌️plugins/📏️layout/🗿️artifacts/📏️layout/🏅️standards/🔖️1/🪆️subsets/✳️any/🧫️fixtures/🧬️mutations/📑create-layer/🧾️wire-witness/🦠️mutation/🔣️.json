@@ -3,6 +3,7 @@
     "pageId": "page-1",
     "id": "layer-notes",
     "name": "Notes",
+    "index": null,
     "remove": false
   }
 }

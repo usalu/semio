@@ -12,6 +12,7 @@ import { buildCargoArtifacts , readCargoArtifactBuildPolicyV1 } from "../../../�
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
+    await runRetainedIntrinsicSource(this.root,this.repoRoot);
     await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-pack"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
   }
 }
@@ -74,6 +75,38 @@ class BuildScript extends BundleScript {
   }
 }
 
+/** 🎞️ Exercises bounded reconstruction and partial ownership of canonical intrinsic Body values. */
+class RetainedIntrinsicNativeScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{
+    if(segments.length)throw Error("test-retained-intrinsic-native accepts no arguments");
+    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--lib","retained_intrinsic_","--no-fail-fast","--success-output","immediate"]},readCargoTestPolicyV1(process.env));
+  }
+}
+
+/** 🧱️ Measures schema constructor admission at the defining intrinsic Document boundary. */
+class IntrinsicSchemaNativeScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{
+    if(segments.length)throw Error("test-intrinsic-schema-native accepts no arguments");
+    await runCargoTestsV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-pack"],cwd:this.root,extraArgs:["--lib","intrinsic_document_schema_refusal_","--no-fail-fast"]},readCargoTestPolicyV1(process.env));
+  }
+}
+
+/** 🌐️ Validates the neutral Body vectors and actual variable request contract. */
+class RetainedIntrinsicSourceScript extends BundleScript {
+  async run(segments:string[]):Promise<void>{
+    if(segments.length)throw Error("test-retained-intrinsic-source accepts no arguments");
+    await runRetainedIntrinsicSource(this.root,this.repoRoot);
+  }
+}
+
+async function runRetainedIntrinsicSource(root:string,repoRoot:string):Promise<void>{
+  const test=resolve(root,"../../🌱️intrinsic/🎮️retained/🧪️tests/🟦️.ts");
+  await runBudgetedTestCommand(process.execPath,["test",test],{cwd:repoRoot,budgetMs:30000,throwOnFailure:true});
+}
+
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("build", BuildScript).register("test-absolute-varint-source", AbsoluteVarintSourceScript).register("test-absolute-varint-native", AbsoluteVarintNativeScript).register("test-borrowed-preflight-source",BorrowedPreflightSourceScript).register("test-borrowed-preflight-native",BorrowedPreflightNativeScript).register("test-schema-hash-native",SchemaHashNativeScript).register("test-schema-storage-native",SchemaStorageNativeScript);
 
+router.register("test-retained-intrinsic-native",RetainedIntrinsicNativeScript);
+router.register("test-intrinsic-schema-native",IntrinsicSchemaNativeScript);
+router.register("test-retained-intrinsic-source",RetainedIntrinsicSourceScript);
 await runScriptMain(router, { defaultCommand: "test" });

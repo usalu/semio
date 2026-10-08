@@ -1,17 +1,9 @@
 {
   "artifact": null,
-  "schema": null,
   "camera": null,
-  "nodes": {
-    "added": [],
-    "removed": [
-      "17d5dec8-87b2-44a9-84ff-93b7e7419bdd"
-    ],
-    "patched": [],
-    "reordered": null
-  },
   "edges": {
     "added": [],
+    "patched": [],
     "removed": [
       "015032e9-67ed-4736-adab-a6e10351079b",
       "13c6ff51-664b-46a2-a291-9cf044bef338",
@@ -24,9 +16,17 @@
       "f38996aa-33cd-433c-8217-fb6c55262b20",
       "feba8972-394f-4ecc-923c-9f1701881fd0"
     ],
-    "patched": [],
     "reordered": null
   },
-  "targetRegions": null,
-  "meta": null
+  "meta": null,
+  "nodes": {
+    "added": [],
+    "patched": [],
+    "removed": [
+      "17d5dec8-87b2-44a9-84ff-93b7e7419bdd"
+    ],
+    "reordered": null
+  },
+  "schema": null,
+  "targetRegions": null
 }

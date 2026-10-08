@@ -1,6 +1,6 @@
 //! 🔍️ Shared Jack graph detail scale for Jack and Rewriting app surfaces.
 
-use semio_framework_os_infinite::canvas::lod::{Lod, LodScale};
+use semio_framework_canvas::lod::{Lod, LodScale};
 
 const TRINITY_LODS: &[Lod; 6] = &[
     Lod { id: "minimap", name: "Minimap", description: "Whole-graph silhouette; edges and node fills only.", max_zoom: 0.15 },

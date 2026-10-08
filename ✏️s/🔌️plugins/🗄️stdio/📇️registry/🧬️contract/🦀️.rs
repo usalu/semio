@@ -72,7 +72,7 @@ pub fn apply_mutation_checked<P, M: kernel::Mutation<P>>(snapshot: &mut P, opera
     if let Some(message) = outcome.messages().first() {
         return Err(MutationRefusal { code: message.code.0.to_string(), message: message.message.to_string() });
     }
-    *snapshot = kernel::MutationDiff::apply(outcome.diff(), snapshot).map_err(|error| MutationRefusal { code: error.code.to_string(), message: error.message.to_string() })?;
+    *snapshot = kernel::apply_diff(outcome.diff(), snapshot).map_err(|error| MutationRefusal { code: error.code.to_string(), message: error.message.to_string() })?;
     Ok(())
 }
 
@@ -1523,6 +1523,37 @@ pub fn load_example_effect<P: kernel::ArtifactPack>(document: &P, schema: &'stat
     let pack = document.encode_pack();
     let spr = ::semio_framework_async::poll::resolve_ready(kernel::empty_document_spr(schema, schema));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
+}
+
+/// 📂️ A natural-file or document-pack import as the whole-document load it is: the imported snapshot replaces the open document
+/// through [`load_example_effect`] (no stdio subset mints a whole-snapshot mutation), decoded by the editor's own natural-file
+/// codec on the reserved port or from the structured base64 pack on `artifact:in`. Any other port is not implemented.
+pub fn import_media_as_load<E>(port: &str, media: &semio_framework_plugin::app::Media) -> Result<semio_framework_plugin::Emit<E::Mutation, E::ConfigMutation, E::DraftMutation>, semio_framework_plugin::MediaError>
+where
+    E: semio_framework_plugin::ArtifactEditor,
+    E::Snapshot: kernel::ArtifactPack,
+{
+    use semio_framework_plugin::app::MediaPayload;
+    use semio_framework_plugin::MediaError;
+    let snapshot = if port == semio_framework_plugin::NATURAL_FILE_PORT {
+        let codec = E::natural_file_codec().ok_or(MediaError::NotImplemented)?;
+        let MediaPayload::Intrinsic { schema, value: value::DslValue::Bytes(bytes) } = &media.payload else {
+            return Err(MediaError::Payload(port.to_string(), "natural file importer requires intrinsic owned bytes".into()));
+        };
+        if schema != codec.format_kind {
+            return Err(MediaError::Payload(port.to_string(), format!("natural file schema mismatch: expected {}, found {schema}", codec.format_kind)));
+        }
+        E::decode_natural_file(bytes)?
+    } else if port == "artifact:in" {
+        let MediaPayload::Structured { json, .. } = &media.payload else {
+            return Err(MediaError::Payload(port.to_string(), "document importer only accepts a Structured (base64 pack) payload".into()));
+        };
+        let bytes = kernel::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        <E::Snapshot as kernel::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?
+    } else {
+        return Err(MediaError::NotImplemented);
+    };
+    Ok(semio_framework_plugin::Emit { effects: vec![load_example_effect(&snapshot, E::DOCUMENT_SCHEMA)], ..Default::default() })
 }
 
 /// 📇️ The picker's own action declaration — one row per stdio editor, so the nine editors cannot

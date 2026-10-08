@@ -344,7 +344,7 @@ pub fn puzzle5d_selection_yields(base: &Puzzle5dSnapshot, records: &[Puzzle5dSel
                 continue;
             }
             let id = puzzle5d_minted_fastener_id(state, source, target);
-            let connect = connect_grips(id.clone(), source.clone(), target.clone(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+            let connect = connect_grips(id.clone(), source.clone(), target.clone(), None, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, None);
             if apply_puzzle5d_mutation(state, &connect).is_ok() {
                 yields.push((format!("fastener:{id}"), connect));
             }

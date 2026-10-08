@@ -34,7 +34,7 @@ fn mutation() -> SemioBrepMutation {
 #[semio_framework_async_macros::async_test]
 async fn moves_only_the_addressed_vertex() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("move-vertex applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("move-vertex applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "move-vertex/lifts-the-third-corner-off-the-base-plane: applied state differs from the committed after-snapshot");
     let moved = produced.vertices.iter().find(|vertex| vertex.id == "v3").expect("the moved vertex is still there — a move is not a delete");
     assert_eq!((moved.point.x, moved.point.y, moved.point.z), (2.0, 1.0, 0.5), "the point must become the payload's absolute coordinates");
@@ -47,11 +47,12 @@ async fn moves_only_the_addressed_vertex() {
 async fn the_undo_move_vertex_restores_the_original_point() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "move-vertex of an existing vertex undoes as exactly one move-vertex");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward move-vertex applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo move-vertex applies");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward move-vertex applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo move-vertex applies");
     }
     assert_eq!(current, base, "move-vertex/lifts-the-third-corner-off-the-base-plane: the undo did not restore the before-snapshot");
 }
@@ -93,7 +94,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded = decode_semio_brep_diff_json(DIFF).expect("committed move-vertex diff decodes");
-    let produced = decoded.apply(&before()).expect("committed move-vertex diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed move-vertex diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "move-vertex/lifts-the-third-corner-off-the-base-plane: committed diff did not carry before to after");
 }
 

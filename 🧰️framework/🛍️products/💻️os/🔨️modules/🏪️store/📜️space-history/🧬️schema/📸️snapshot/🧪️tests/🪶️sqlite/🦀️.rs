@@ -92,28 +92,28 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     assert_eq!(semio_framework_artifact_reference::ArtifactDialect::from(store::space_history_sqlite::SQLITE_SNAPSHOT_DIALECT), dialect());
     let limits = SqliteDatabaseLimits::default();
     let mut independent = database();
-    store::os_io::io_mechanism::attach_sqlite_snapshot_metadata(&mut independent, &dialect(), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
+    store::io::io_mechanism::attach_sqlite_snapshot_metadata(&mut independent, &dialect(), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits)).unwrap();
     let independent_bytes = export_sqlite_database(&independent, limits, &mut |_| true).unwrap();
-    let export_refusal = store::os_io::io_mechanism::io_export_sqlite_snapshot(&dialect(), live.snapshot_ref(), encoding, limits, &mut |_| true).await.unwrap_err();
+    let export_refusal = store::io::io_mechanism::io_export_sqlite_snapshot(&dialect(), live.snapshot_ref(), encoding, limits, &mut |_| true).await.unwrap_err();
     assert_eq!(export_refusal.cause.kind, semio_framework_value::ValueRefusalKind::UnsupportedOwner);
     assert!(export_refusal.diagnostics.is_empty());
-    let import_refusal = store::os_io::io_mechanism::io_import_sqlite_snapshot::<SpaceHistorySnapshot>(&dialect(), &independent_bytes, limits, &mut |_| true).await.unwrap_err();
+    let import_refusal = store::io::io_mechanism::io_import_sqlite_snapshot::<SpaceHistorySnapshot>(&dialect(), &independent_bytes, limits, &mut |_| true).await.unwrap_err();
     assert_eq!(import_refusal.cause.kind, semio_framework_value::ValueRefusalKind::UnsupportedOwner);
     assert!(import_refusal.diagnostics.is_empty());
     assert_eq!(live.envelope().dialect, expected_envelope_dialect);
     assert_eq!(*live.snapshot_ref(), source);
     store::space_history_sqlite::register_sqlite_snapshot().unwrap();
-    let output = store::os_io::io_mechanism::io_export_sqlite_snapshot(&dialect(), live.snapshot_ref(), encoding, limits, &mut |_| true).await.unwrap();
+    let output = store::io::io_mechanism::io_export_sqlite_snapshot(&dialect(), live.snapshot_ref(), encoding, limits, &mut |_| true).await.unwrap();
     assert!(output.diagnostics.is_empty());
     let bytes = output.value;
     let relational = import_sqlite_database(&bytes, limits, &mut |_| true).unwrap();
     assert_eq!(relational, independent);
-    assert_eq!(store::os_io::io_mechanism::sqlite_snapshot_metadata(&relational).unwrap(), (dialect(), encoding));
-    let imported = store::os_io::io_mechanism::io_import_sqlite_snapshot::<SpaceHistorySnapshot>(&dialect(), &bytes, limits, &mut |_| true).await.unwrap();
+    assert_eq!(store::io::io_mechanism::sqlite_snapshot_metadata(&relational).unwrap(), (dialect(), encoding));
+    let imported = store::io::io_mechanism::io_import_sqlite_snapshot::<SpaceHistorySnapshot>(&dialect(), &bytes, limits, &mut |_| true).await.unwrap();
     assert!(imported.diagnostics.is_empty());
     assert_eq!(imported.value, source);
-    assert_eq!(store::os_io::io_mechanism::io_import_sqlite_snapshot::<SpaceHistorySnapshot>(&dialect(), &independent_bytes, limits, &mut |_| true).await.unwrap().value, source);
-    let route = store::os_io::io_mechanism::io_route(&dialect(), &semio_framework_artifact_reference::ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT), 1).await.unwrap().value;
+    assert_eq!(store::io::io_mechanism::io_import_sqlite_snapshot::<SpaceHistorySnapshot>(&dialect(), &independent_bytes, limits, &mut |_| true).await.unwrap().value, source);
+    let route = store::io::io_mechanism::io_route(&dialect(), &semio_framework_artifact_reference::ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT), 1).await.unwrap().value;
     assert_eq!(route.hops.len(), sample["routeHops"].as_u64().unwrap() as usize);
     assert_eq!(route.hops[0].from, dialect());
     assert_eq!(route.hops[0].into, semio_framework_artifact_reference::ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT));
@@ -143,12 +143,12 @@ async fn sqlite_snapshot_framework_space_history_actual_typed_io_file_metadata_a
     let source = fixture();
     let limits = SqliteDatabaseLimits::default();
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-        let bytes = store::os_io::io_mechanism::io_export_sqlite_snapshot(&dialect(), &source, encoding, limits, &mut |_| true).await.unwrap().value;
+        let bytes = store::io::io_mechanism::io_export_sqlite_snapshot(&dialect(), &source, encoding, limits, &mut |_| true).await.unwrap().value;
         let database = import_sqlite_database(&bytes, limits, &mut |_| true).unwrap();
-        assert_eq!(store::os_io::io_mechanism::sqlite_snapshot_metadata(&database).unwrap(), (dialect(), encoding));
-        assert_eq!(store::os_io::io_mechanism::io_import_sqlite_snapshot::<SpaceHistorySnapshot>(&dialect(), &bytes, limits, &mut |_| true).await.unwrap().value, source);
+        assert_eq!(store::io::io_mechanism::sqlite_snapshot_metadata(&database).unwrap(), (dialect(), encoding));
+        assert_eq!(store::io::io_mechanism::io_import_sqlite_snapshot::<SpaceHistorySnapshot>(&dialect(), &bytes, limits, &mut |_| true).await.unwrap().value, source);
     }
-    let route = store::os_io::io_mechanism::io_route(&dialect(), &semio_framework_artifact_reference::ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT), 1).await.unwrap().value;
+    let route = store::io::io_mechanism::io_route(&dialect(), &semio_framework_artifact_reference::ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT), 1).await.unwrap().value;
     assert_eq!(route.hops.len(), 1);
 }
 #[test]
@@ -191,16 +191,16 @@ fn dialect() -> semio_framework_artifact_reference::ArtifactDialect {
 fn codec() -> store::ArtifactSqliteSnapshotCodec {
     store::ArtifactCodec::bare::<SpaceHistorySnapshot, SpaceHistoryMutation>(S_SPACE_HISTORY_SCHEMA).snapshot_sqlite.expect("actual builtin native factory requires its owned semantic SQLite capability")
 }
-fn payload(value: &SpaceHistorySnapshot, encoding: SnapshotEncoding) -> store::os_io::IoPayload {
+fn payload(value: &SpaceHistorySnapshot, encoding: SnapshotEncoding) -> store::io::IoPayload {
     match encoding {
-        SnapshotEncoding::Binary => store::os_io::IoPayload::Binary(store::ArtifactPack::encode_pack(value)),
-        SnapshotEncoding::Text => store::os_io::IoPayload::Text(store::ArtifactDsl::print_dsl(value)),
+        SnapshotEncoding::Binary => store::io::IoPayload::Binary(store::ArtifactPack::encode_pack(value)),
+        SnapshotEncoding::Text => store::io::IoPayload::Text(store::ArtifactDsl::print_dsl(value)),
     }
 }
-fn decode(value: store::os_io::IoPayload) -> SpaceHistorySnapshot {
+fn decode(value: store::io::IoPayload) -> SpaceHistorySnapshot {
     match value {
-        store::os_io::IoPayload::Binary(bytes) => store::ArtifactPack::decode_pack(&bytes).unwrap(),
-        store::os_io::IoPayload::Text(text) => store::ArtifactDsl::parse_dsl(&text).unwrap(),
+        store::io::IoPayload::Binary(bytes) => store::ArtifactPack::decode_pack(&bytes).unwrap(),
+        store::io::IoPayload::Text(text) => store::ArtifactDsl::parse_dsl(&text).unwrap(),
     }
 }
 #[test]

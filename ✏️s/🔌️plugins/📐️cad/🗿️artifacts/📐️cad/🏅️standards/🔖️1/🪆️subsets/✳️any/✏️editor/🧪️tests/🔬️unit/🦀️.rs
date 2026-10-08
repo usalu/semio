@@ -73,7 +73,7 @@ pub(crate) mod context {
     //! 🧪️ The one cad-app test harness — every other taxonomy node's `🧪️Tests` region builds on it
     //! instead of re-deriving a store/dispatch/render scaffold of its own.
     use super::super::*;
-    use protocol::{Mutation, MutationDiff};
+    use protocol::Mutation;
     use semio_framework_plugin::app::EditorApp;
     use semio_framework_plugin::{ActionMeta, HistoryView, PluginApp, UiMenuRef, VcsArtifactApp};
     
@@ -237,7 +237,7 @@ pub(crate) mod context {
     pub fn apply_mutations(scene: &CadSnapshot, operations: &[CadMutation]) -> CadSnapshot {
         let mut next = scene.clone();
         for operation in operations {
-            next = operation.diff(&next).diff().apply(&next).expect("valid mutation diff");
+            next = protocol::apply_diff(operation.diff(&next).diff(), &next).expect("valid mutation diff");
         }
         next
     }
@@ -590,12 +590,12 @@ fn retained_config_store_preparation_is_bounded_exact_and_reversible() {
     let base = CadConfig::default();
     let mut next = base.clone();
     next.selected_node_ids.push("node-retained".into());
-    let mutation = CadConfigMutation::Snapshot { config: Box::new(next.clone()) };
+    let mutation = CadConfigMutation::Set { config: Box::new(next.clone()) };
     let footprint = admit_cad_config_mutation(&mutation).expect("bounded CAD config mutation");
     let (post, inverse, forward) = prepare_cad_config(&base, mutation.clone()).expect("exact CAD config preparation");
     assert_eq!(post, next);
     assert_eq!(forward, mutation);
-    assert_eq!(inverse, vec![CadConfigMutation::Snapshot { config: Box::new(base.clone()) }]);
+    assert_eq!(inverse, vec![CadConfigMutation::Set { config: Box::new(base.clone()) }]);
     assert_eq!(footprint.work_items, 1 + inverse.len(), "config footprint must cover forward + inverse rows");
     assert_eq!(footprint, store::ArtifactStoreOneItemFootprint::for_leaf(&mutation, footprint.retained_bytes));
     let oversized = CadConfigMutation::SetContributions { json: "x".repeat(CAD_CONFIG_STORE_MAXIMUM_BYTES + 1) };
@@ -628,7 +628,7 @@ fn every_cad_mutation_inverse_fits_the_one_invertible_item_footprint() {
 fn retained_artifact_store_preparation_is_bounded_exact_and_reversible() {
     let base = empty_cad_snapshot();
     let node = CadNode { id: "node-retained".into(), label: "Retained".into(), kind: "group".into() };
-    let mutation = CadMutation::CreateNode(crate::mutations::create_node::CreateNode { node: node.clone() });
+    let mutation = CadMutation::CreateNode(crate::mutations::create_node::CreateNode { node: node.clone() , index: None });
     let footprint = admit_cad_artifact_mutation(&mutation).expect("bounded CAD Artifact mutation");
     let (post, inverse, forward) = prepare_cad_artifact(&base, mutation.clone()).expect("exact CAD Artifact preparation");
     assert_eq!(post.nodes, vec![node]);
@@ -638,7 +638,7 @@ fn retained_artifact_store_preparation_is_bounded_exact_and_reversible() {
     let mut restored = post;
     for operation in inverse {
         let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&operation, &restored);
-        restored = protocol::MutationDiff::apply(outcome.diff(), &restored).expect("exact inverse");
+        restored = protocol::apply_diff(outcome.diff(), &restored).expect("exact inverse");
     }
     assert_eq!(restored, base);
 }
@@ -1211,7 +1211,7 @@ fn reference_set_verbs_are_idempotent_by_value_and_refuse_a_missing_value() {
         let first = command.dispatch(&ArtifactView::new(&scene, &history), &cfg, &mut ctx).unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
         assert_eq!(first.artifact_mutations.len(), 1, "{verb} with the inverse value is exactly one reference edit");
         let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&first.artifact_mutations[0], &scene);
-        let edited = protocol::MutationDiff::apply(outcome.diff(), &scene).expect("the reference edit applies");
+        let edited = protocol::apply_diff(outcome.diff(), &scene).expect("the reference edit applies");
         let flagged = edited.references_by_model_definition_id.get(CAD_MODEL_DEFINITION_ENERGY).and_then(|references| references.iter().find(|entry| entry.id == reference.id)).expect("the reference survives its flag edit");
         assert_eq!(state(flagged), !state(&reference), "{verb} reaches the value the row asked for");
         let replay = command.dispatch(&ArtifactView::new(&edited, &history), &cfg, &mut ctx).unwrap_or_else(|fault| panic!("{verb} replay: {fault:?}"));

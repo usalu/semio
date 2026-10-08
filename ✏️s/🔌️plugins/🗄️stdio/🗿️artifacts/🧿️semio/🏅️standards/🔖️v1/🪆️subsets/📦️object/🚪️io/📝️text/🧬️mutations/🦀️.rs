@@ -68,12 +68,6 @@ fn print_object_mutation(m: &SemioObjectMutation) -> String {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn parse_object_mutation(line: &str) -> Result<SemioObjectMutation, String> {
-    if let Some(payload) = line.strip_prefix("setSnapshot:") {
-        let bytes = hex_decode(payload)?;
-        let json = String::from_utf8(bytes).map_err(|error| error.to_string())?;
-        let parsed = semio_framework_pack_json::parse(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-        let snapshot = semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).map_err(|error| error.to_string())?;
-    }
     if line == "deleteBrep" {
         return Ok(SemioObjectMutation::DeleteBrep(DeleteBrep {}));
     }
@@ -172,7 +166,7 @@ use crate::standards::v1::subsets::object::schema::mutations::scale_object;
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
 /// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is
 /// exactly the shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors
-/// carry — into a real [`SemioObjectMutation`]. `create-brep`/`create-mesh`/`create-properties` carry a `store::os_io::ArtifactRef` `target`
+/// carry — into a real [`SemioObjectMutation`]. `create-brep`/`create-mesh`/`create-properties` carry a `semio_framework_artifact_reference::ArtifactRef` `target`
 /// field, the exact value an external caller cannot construct by hand; decoding the committed vector
 /// is what turns those six child-lifecycle kinds from unreachable into exercisable.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -2494,7 +2494,7 @@ fn creation_prefers_the_owners_editor_over_a_hosts() {
 /// `artifact_codec_owner` answers `codec.*` by — for the candidates as listed and reversed (order never decides).
 #[test]
 fn the_most_general_dialect_rule_answers_the_shared_fixture() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🔨️modules/🚪️io/🧫️fixtures/🌳️most-general-dialect/🔣️.json")).expect("shared most-general-dialect fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🧫️fixtures/🌳️most-general-dialect/🔣️.json")).expect("shared most-general-dialect fixture");
     let cases = fixture["cases"].as_array().expect("fixture cases");
     assert!(cases.len() >= 10, "the shared fixture keeps its cases");
     for case in cases {

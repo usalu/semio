@@ -15,19 +15,21 @@ use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 pub struct SetObjectValue {
     pub id: ObjRef,
     pub value: PdfObject,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub index: Option<usize>,
 }
 
 impl MutationKind<PdfSnapshot, PdfMutation> for SetObjectValue {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "object-value", kind: "set-object-value", record: "Set" };
 
     fn diff(&self, base: &PdfSnapshot) -> MutationOutcome<PdfDiff> {
-        MutationOutcome::new(diff::graph_edit(diff::diff_set_object_value(base, self.id, self.value.clone())))
+        MutationOutcome::new(diff::graph_edit(diff::diff_set_object_value(base, self.id, self.value.clone(), self.index)))
     }
 
     fn inverse(&self, base: &PdfSnapshot) -> Result<Vec<PdfMutation>, semio_framework_value::ValueError> {
     Ok((|| {
         match base.objects.iter().find(|object| object.id == self.id) {
-            Some(object) => vec![PdfMutation::SetObjectValue(SetObjectValue { id: self.id, value: object.value.clone() })],
+            Some(object) => vec![PdfMutation::SetObjectValue(SetObjectValue { id: self.id, value: object.value.clone(), index: None })],
             None => vec![PdfMutation::RemoveObject(RemoveObject { id: self.id })],
         }
     

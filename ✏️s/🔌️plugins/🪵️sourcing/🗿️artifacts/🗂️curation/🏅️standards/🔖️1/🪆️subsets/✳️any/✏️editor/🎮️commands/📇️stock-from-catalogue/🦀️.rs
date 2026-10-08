@@ -20,7 +20,7 @@ pub struct StockFromCatalogue {}
 pub fn handle(_payload: &StockFromCatalogue, doc: &ArtifactView<'_, CurationSnapshot>, cfg: &ConfigView<'_, SourcingCurationConfig>) -> Result<Emit<SourcingMutation, SourcingCurationConfigMutation>, Fault> {
     let mut stock = crate::stock_of(doc.snapshot);
     let existing: HashSet<String> = stock.iter().map(|kind| kind.id.clone()).collect();
-    for module in available_modules(&cfg.snapshot.contributions_json) {
+    for module in available_modules(crate::standards::v1::subsets::any::io::text::snapshot::sourcing_modules(&cfg.snapshot.contributions_json)) {
         for kind in module.kinds {
             if !existing.contains(&kind.id) {
                 stock.push(kind);

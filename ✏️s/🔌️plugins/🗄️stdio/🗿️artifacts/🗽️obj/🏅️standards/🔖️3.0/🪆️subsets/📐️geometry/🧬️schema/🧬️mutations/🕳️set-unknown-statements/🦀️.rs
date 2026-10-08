@@ -1,6 +1,4 @@
-//! 🕳️ `set-unknown-statements` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🕳️ `set-unknown-statements` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 //! `#[derive(dsl::DslRecord)]` gives this leaf its own `DslField` impl with the SAME field spec
 //! `record_codegen` built when these fields lived inline in the enum variant — the aggregate's
 //! tuple variant is a single-field newtype, so `#[derive(dsl::DslOps)]`'s `DslVariants` derive
@@ -23,14 +21,12 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetUnknownStatements {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "unknown-statements", kind: "set-unknown-statements", record: "SetUnknownStatements" };
 
     fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
-        agg_diff(&ObjMutation::SetUnknownStatements(self.clone()), base)
+        let Self { unknown_statements } = self;
+        protocol::MutationOutcome::new(diff_set_unknown_statements(unknown_statements.clone()))
     }
     fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&ObjMutation::SetUnknownStatements(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![ObjMutation::SetUnknownStatements(set_unknown_statements::SetUnknownStatements { unknown_statements: base.unknown_statements.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set unknown statements", "Unbekannte Anweisungen setzen")
     }

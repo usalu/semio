@@ -9,7 +9,7 @@ pub struct Entry {
     pub print: fn(&BmpMutation) -> Option<String>,
     pub parse: fn(&str) -> Result<BmpMutation, semio_framework_diagnostic::TextError>,
 }
-pub const REGISTRY: &[Entry] = &[crate::standards::v_v3::subsets::any::io::text::mutations::set_snapshot::CODEC, crate::standards::v_v3::subsets::any::io::text::mutations::patch_snapshot::CODEC, crate::standards::v_v3::subsets::any::io::text::mutations::paint_indexed_region::CODEC, crate::standards::v_v3::subsets::any::io::text::mutations::paint_direct_region::CODEC];
+pub const REGISTRY: &[Entry] = &[crate::standards::v_v3::subsets::any::io::text::mutations::paint_indexed_region::CODEC, crate::standards::v_v3::subsets::any::io::text::mutations::paint_direct_region::CODEC];
 //#endregion Registry
 
 //#region Framing
@@ -27,12 +27,6 @@ impl protocol::OpText for BmpMutation {
     }
 }
 //#endregion Framing
-
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 
 #[path = "🖌️paint-direct-region/🦀️.rs"]
 pub mod paint_direct_region;

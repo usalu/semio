@@ -1,7 +1,4 @@
-//! 🎚️ `set-record-field` — authored as its own mutation leaf. The aggregate's original `diff`/
-//! `inverse` bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its
-//! aggregate value and delegates, so the semantics are preserved by construction rather than
-//! re-derived.
+//! 🎚️ `set-record-field` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -19,14 +16,22 @@ impl protocol::MutationKind<EpwSnapshot, EpwMutation> for SetRecordField {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "record-field", kind: "set-record-field", record: "SetRecordField" };
 
     fn diff(&self, base: &EpwSnapshot) -> protocol::MutationOutcome<<EpwMutation as Mutation<EpwSnapshot>>::Diff> {
-        agg_diff(&EpwMutation::SetRecordField(self.clone()), base)
+        let Self { record_index, field_index, value } = self;
+        protocol::MutationOutcome::new({
+            let mut fdiff = EpwRecordDiff::default();
+            fdiff.set_at(*field_index, Some(value.clone()));
+            EpwDiff { records: Some(EpwRecordsDiff { removed: Vec::new(), modified: vec![EpwRecordModified { index: *record_index, diff: fdiff }], added: Vec::new() }), ..EpwDiff::default() }
+        })
     }
     fn inverse(&self, base: &EpwSnapshot) -> Result<Vec<EpwMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&EpwMutation::SetRecordField(self.clone()), base)?
-    
-    })
-}
+        let Self { record_index, field_index, .. } = self;
+        Ok({
+            match base.records.get(*record_index).and_then(|r| r.field_at(*field_index)) {
+                Some(prior) => vec![EpwMutation::SetRecordField(set_record_field::SetRecordField { record_index: *record_index, field_index: *field_index, value: prior.to_string() })],
+                None => Vec::new(),
+            }
+        })
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set record field", "Datensatzfeld setzen")
     }

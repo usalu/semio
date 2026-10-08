@@ -218,7 +218,8 @@ export function world3dModellingStrings(locale: string | undefined): Strings {
   return (locale ?? "en").toLowerCase().split(/[-_]/)[0] === "de" ? STRINGS.de : STRINGS.en;
 }
 
-function formatValue(value: number, locale: string | undefined): string {
+/** 🏷️ A legend value in the locale's number format with at most four significant digits; the wgpu twin `format_world3d_legend_value` is pinned against the same fixture rows. */
+export function formatWorld3dLegendValue(value: number, locale: string | undefined): string {
   try {
     return new Intl.NumberFormat(locale, { maximumSignificantDigits: 4 }).format(value);
   } catch {
@@ -449,6 +450,25 @@ export function world3dRampGradient(ramp: World3dScalarField["ramp"]): string {
   return `linear-gradient(to top, ${stops.map((hex, index) => `${hex} ${Math.round((index / (stops.length - 1)) * 100)}%`).join(", ")})`;
 }
 
+export type World3dLegendLines = {
+  readonly title: string;
+  readonly ticks: readonly { readonly text: string; readonly hex: string }[];
+  readonly noData: string | null;
+};
+
+/** 🏷️ The text of a scalar-field legend for a locale: the title with its unit, one line per tick (value and unit, bottom to top) and the no-data caption when any value is missing.
+ * Pure: the DOM legend below and the wgpu legend paint exactly these strings. */
+export function world3dLegendLines(field: World3dScalarField, locale: string | undefined): World3dLegendLines {
+  const language = locale ?? "en";
+  const title = resolveWorld3dText(field.legend.title, language);
+  const unit = field.legend.unit;
+  return {
+    title: unit ? `${title} (${unit})` : title,
+    ticks: world3dScalarLegend(field).map((tick) => ({ text: `${formatWorld3dLegendValue(tick.value, language)}${unit ? ` ${unit}` : ""}`, hex: tick.hex })),
+    noData: field.values.some((value) => value === null) ? world3dModellingStrings(locale).noData : null,
+  };
+}
+
 /** 🏷️ The on-screen legend of a scalar field: title, unit, a ramp gradient and the evenly spaced tick values as an accessible list
  * (the gradient is decorative; the list carries the scale). */
 export function World3dScalarLegendView({ field, locale, className }: { readonly field: World3dScalarField; readonly locale?: string; readonly className?: string }): ReactElement {
@@ -468,7 +488,7 @@ export function World3dScalarLegendView({ field, locale, className }: { readonly
         <ol aria-label={strings.scale} data-slot="world-scalar-legend-ticks" className="flex flex-col-reverse justify-between">
           {ticks.map((tick, index) => (
             <li key={index} data-slot="world-scalar-legend-tick" data-hex={tick.hex}>
-              {formatValue(tick.value, language)}
+              {formatWorld3dLegendValue(tick.value, language)}
               {unit ? ` ${unit}` : ""}
             </li>
           ))}
@@ -611,6 +631,89 @@ export function World3dSectionClip({ section, groupRef, capHex, extent }: { read
   );
 }
 //#endregion ✂️Section
+
+//#region 🪪️GlbSubElementIds
+/** 🪪️ The custom per-vertex glTF attributes a B-Rep export carries so a mesh viewer can resolve a triangle or a vertex to its topology id.
+ * The wgpu renderer reads the same two attributes (`_FACE_ID` at the triangle's first corner, `_VERTEX_ID` per vertex), so both renderers pick from one source. */
+export const WORLD3D_GLB_FACE_ID_ATTRIBUTE = "_FACE_ID";
+export const WORLD3D_GLB_VERTEX_ID_ATTRIBUTE = "_VERTEX_ID";
+
+type GlbAttributeLike = { readonly count: number; getX(index: number): number };
+type GlbGeometryLike = { readonly index: GlbAttributeLike | null; getAttribute(name: string): GlbAttributeLike | undefined };
+
+export type World3dGlbSubElementIds = {
+  /** One topology id per triangle, read at the triangle's first corner; `null` when the geometry carries no `_FACE_ID`. */
+  readonly faceIds: readonly number[] | null;
+  /** One topology id per vertex; `null` when the geometry carries no `_VERTEX_ID`. */
+  readonly vertexIds: readonly number[] | null;
+};
+
+function glbAttribute(geometry: GlbGeometryLike, name: string): GlbAttributeLike | undefined {
+  return geometry.getAttribute(name) ?? geometry.getAttribute(name.toLowerCase());
+}
+
+/** 🪪️ Reads the sub-element ids of one loaded GLB primitive. three's `GLTFLoader` lower-cases custom attribute names, so `_face_id` is accepted beside `_FACE_ID`. */
+export function world3dGlbSubElementIds(geometry: GlbGeometryLike): World3dGlbSubElementIds {
+  const face = glbAttribute(geometry, WORLD3D_GLB_FACE_ID_ATTRIBUTE);
+  const vertex = glbAttribute(geometry, WORLD3D_GLB_VERTEX_ID_ATTRIBUTE);
+  const corners = geometry.index?.count ?? geometry.getAttribute("position")?.count ?? 0;
+  const faceIds = face
+    ? Array.from({ length: Math.floor(corners / 3) }, (_, triangle) => face.getX(geometry.index ? geometry.index.getX(triangle * 3) : triangle * 3))
+    : null;
+  const vertexIds = vertex ? Array.from({ length: vertex.count }, (_, index) => vertex.getX(index)) : null;
+  return { faceIds, vertexIds };
+}
+
+const GLB_HIT_IDS = new WeakMap<object, World3dGlbSubElementIds>();
+
+/** 🪪️ The topology face id of a pointer hit on a loaded GLB mesh, or `undefined` when the hit primitive carries no `_FACE_ID` (the hit then selects the whole shape). */
+export function world3dGlbHitFaceId(object: Object3D | undefined, faceIndex: number | null | undefined): number | undefined {
+  const geometry = (object as Mesh | undefined)?.geometry as unknown as GlbGeometryLike | undefined;
+  if (!geometry || faceIndex === null || faceIndex === undefined) return undefined;
+  let ids = GLB_HIT_IDS.get(geometry);
+  if (!ids) {
+    ids = world3dGlbSubElementIds(geometry);
+    GLB_HIT_IDS.set(geometry, ids);
+  }
+  return ids.faceIds?.[faceIndex];
+}
+
+type GlbPositionLike = GlbAttributeLike & { getY(index: number): number; getZ(index: number): number };
+
+/** 🪪️ The merged picking mesh of a loaded GLB scene: positions in the scene's own frame, indices into them and the sub-element ids,
+ * each id table present only when EVERY primitive carries it (a mixed bank would leave anonymous gaps). `null` when the scene has no triangles. */
+export function world3dGlbSubElementMeshData(root: Object3D): { readonly positions: readonly number[]; readonly indices: readonly number[]; readonly faceIds?: readonly number[]; readonly vertexIds?: readonly number[] } | null {
+  root.updateMatrixWorld(true);
+  const inverse = root.matrixWorld.clone().invert();
+  const positions: number[] = [];
+  const indices: number[] = [];
+  const faceIds: number[] = [];
+  const vertexIds: number[] = [];
+  let everyFace = true;
+  let everyVertex = true;
+  const scratch = new Vector3();
+  root.traverse((object) => {
+    const geometry = (object as Mesh).isMesh ? ((object as Mesh).geometry as unknown as GlbGeometryLike) : null;
+    const position = geometry?.getAttribute("position") as GlbPositionLike | undefined;
+    if (!geometry || !position) return;
+    const to = inverse.clone().multiply(object.matrixWorld);
+    const base = positions.length / 3;
+    for (let index = 0; index < position.count; index += 1) {
+      scratch.set(position.getX(index), position.getY(index), position.getZ(index)).applyMatrix4(to);
+      positions.push(scratch.x, scratch.y, scratch.z);
+    }
+    const count = geometry.index?.count ?? position.count;
+    for (let corner = 0; corner < count; corner += 1) indices.push(base + (geometry.index ? geometry.index.getX(corner) : corner));
+    const ids = world3dGlbSubElementIds(geometry);
+    if (ids.faceIds) faceIds.push(...ids.faceIds);
+    else everyFace = false;
+    if (ids.vertexIds && ids.vertexIds.length === position.count) vertexIds.push(...ids.vertexIds);
+    else everyVertex = false;
+  });
+  if (indices.length === 0) return null;
+  return { positions, indices, ...(everyFace ? { faceIds } : {}), ...(everyVertex ? { vertexIds } : {}) };
+}
+//#endregion 🪪️GlbSubElementIds
 
 //#region 🔎️Data
 /** 🔎️ DOM data attributes for probes and tests: the pick filter, the section state and the heatmap status. */

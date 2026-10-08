@@ -1,7 +1,7 @@
 import { buildBoxInteractionSpec } from "../../../🗿️artifact/🟦️.ts";
 import { preciseSpatialKernelMath } from "../../../../../../../../../../../../../🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts";
 import type { ActionsTestDependencies } from "../../🟦️.ts";
-import type { Vec3 } from "@semio-tech/s-3d-js";
+import type { Vec3 } from "@semio-tech/framework-3d-js";
 
 type TestSource = { readonly url: string };
 

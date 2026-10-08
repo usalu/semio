@@ -5,8 +5,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 
 /// 🧾️ Each record kind's text-grammar tag, the head `decode_op` re-prefixes onto the argument tail before `parse_op`.
-pub(crate) const TEXT_KEYWORDS: [(&str, &str); 12] = [
-    ("set-snapshot", "S"),
+pub(crate) const TEXT_KEYWORDS: [(&str, &str); 11] = [
     ("insert-timeline", "IT"),
     ("remove-timeline", "RT"),
     ("set-timeline-name", "TN"),
@@ -24,7 +23,7 @@ pub(crate) const TEXT_KEYWORDS: [(&str, &str); 12] = [
 mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::animation::schema::mutations::*;
-use crate::standards::v1::subsets::animation::schema::diff::{diff_set_snapshot, AnimChannelDiff, AnimKeyframeDiff, AnimTimelineDiff, SemioAnimationDiff};
+use crate::standards::v1::subsets::animation::schema::diff::{AnimChannelDiff, AnimKeyframeDiff, AnimTimelineDiff, SemioAnimationDiff};
 use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};
 use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 use protocol::Mutation;

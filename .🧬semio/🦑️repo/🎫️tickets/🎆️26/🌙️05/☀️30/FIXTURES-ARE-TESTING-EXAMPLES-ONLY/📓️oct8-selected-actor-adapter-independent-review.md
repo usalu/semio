@@ -1,0 +1,19 @@
+# Selected Actor Adapter Independent Source Review
+
+Read the current `runtimeSelectedActorsV1` implementation and its default CLI integration without executing it. The adapter obtains the actual Dev package roster and storage root from their existing owners, joins a single current publication to the exact closed profile/package selection, and checks component/descriptor generation coordinates, lengths and hashes against the same package producer. The original retained Cargo invocations must remain current; testing-feature units refuse. The component selector and exact descriptor emitter command are separate proofs, and retained physical compiler inputs are checked for fixture ancestry.
+
+For each actual closed actor, the factory observation must agree with actor/component/descriptor custody. The original compiler, runtime and complete physical input roster remain original claims; current verification compares them through the factory owner rather than generating replacement evidence. Component import interfaces are independently admitted. The worker owner binds one actual production-transformed `import(moduleUrl)` operation by source SHA and ordinal. The actor/compiler source graph must have no unresolved edges. A final reread checks the publication record, original actor factory inputs and current Cargo/resource observations. The default acquisition uses the registered Hub bootstrap and production storage context; this source contains no ticket receipt prerequisite.
+
+The low-level byte reader rejects final symlink files and checks bounded length/hash; ancestor and companion-root custody is supplied by the publication helper and current factory verifier. Preserve that composition rather than treating this reader alone as a full path-custody verifier. The adapter deliberately refuses missing/stale evidence, including a selected generation without any closed actors. The default catch triggers producer acquisition; it does not convert a refusal to a pass.
+
+No new concrete unsafe waiver was identified in this bounded source reading. This does not establish actual current actor publication, default adapter execution, or end-to-end runtime exclusion. Neutral run 94408 and real production execution were pending when this source was read; earlier 98-law evidence remains separate. Current original Cargo source/resource receipt validation and final pointer custody must succeed at actual execution.
+
+
+## Settled Neutral Receipt
+
+Independently read the complete retained actor-adapter-settled.log: 237872 bytes, SHA256 `688eac546f9c6e7b3f619aff6352476797a407eff7a78d6372290c4f2284b10f`. Its footer reports 99 pass, 0 fail, 1133 expect calls, 99 tests in one file, Bun15.36s and Nx success15.4s with cache skipped. This is actual neutral source/schema/adapter evidence; selected production Hub/compiler/actor acquisition and full runtime execution remain separate pending proof. Exact four newly reported leaf scope identities are being confirmed with the owner rather than inferred by their titles.
+
+
+## Four Genuine Leaf Exports
+
+Independently read the exact current definitions after owner confirmation. Browser bundle `🧬️schema/🔣️.json` exports `BrowserActorPhysicalClaimV1` (one observed path/SHA/byteLength), `BrowserActorPhysicalInputV1` (same plus logicalPath), and `BrowserActorProducerInputsV1` (one canonical policy/hash, original runtime/compiler claims and a variable bounded physical-input array). Runtime `🧬️schema/🔣️.json` exports `RuntimeActorCargoSelectionV1` (one cargoPackage/componentPath/componentSHA). These are variable per-value producer/selection contracts consumed by the current production adapter and factory verifier. None fixes cases, expected results or a separate test corpus roster. The neutral Ajv admission exercises their actual leaf contracts; they remain legitimate schema authority.

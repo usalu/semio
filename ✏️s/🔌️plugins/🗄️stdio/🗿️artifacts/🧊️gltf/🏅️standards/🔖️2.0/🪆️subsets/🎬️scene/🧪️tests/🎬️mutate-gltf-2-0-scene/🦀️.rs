@@ -4,7 +4,7 @@
 //!
 //! The oracle performs each kind by independent GLB/JSON-tree manipulation
 //! (`../../../♾️any/🔮️oracles/🦀️.rs`); the subject fully parses the committed `⬅️before.gltf` into
-//! `GltfSnapshot`, dispatches through the leaf's own typed `apply()`, and re-serializes from the
+//! `GltfSnapshot`, dispatches through the central applier, and re-serializes from the
 //! model alone. The feature's spec names the input fixture and the inverse: either the kinds that
 //! undo the mutation, applied the same way on both sides, or — for a kind whose payload cannot
 //! carry what it removed — the top-level members restored from the original document.
@@ -79,7 +79,7 @@ mod subject {
     use super::{inverse_specs, mutable_input, restored_members};
     use semio_repo_test_host::{Context, Json, Outcome};
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{bind_default_scene,bind_node_camera,bind_node_child,bind_node_mesh,bind_node_skin,bind_scene_root_node,change_node_extension_data,change_node_extra_data,change_node_morph_weights,change_node_name,change_node_transform,change_scene_extension_data,change_scene_extra_data,change_scene_name,create_node,create_scene,delete_node,delete_scene,move_node,move_node_child,move_node_parent,move_scene,move_scene_root_node,reorder_node_children,reorder_nodes,reorder_scene_root_nodes,reorder_scenes,unbind_default_scene,unbind_node_camera,unbind_node_child,unbind_node_mesh,unbind_node_skin,unbind_scene_root_node};
+    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{apply_gltf_mutation,bind_default_scene,bind_node_camera,bind_node_child,bind_node_mesh,bind_node_skin,bind_scene_root_node,change_node_extension_data,change_node_extra_data,change_node_morph_weights,change_node_name,change_node_transform,change_scene_extension_data,change_scene_extra_data,change_scene_name,create_node,create_scene,delete_node,delete_scene,move_node,move_node_child,move_node_parent,move_scene,move_scene_root_node,reorder_node_children,reorder_nodes,reorder_scene_root_nodes,reorder_scenes,unbind_default_scene,unbind_node_camera,unbind_node_child,unbind_node_mesh,unbind_node_skin,unbind_scene_root_node};
 
     use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::{GltfJson, GltfSnapshot};
     use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::project_gltf;
@@ -191,42 +191,42 @@ mod subject {
     //#endregion 🔖️Transform
 
     //#region 🔖️Dispatch
-    /// 📐️ One kind through its leaf's own typed `apply()`.
+    /// 📐️ One kind through the central applier.
     fn apply_kind(before: &GltfSnapshot, kind: &str, params: &Json) -> Result<GltfSnapshot, String> {
         match kind {
-            "bind-default-scene" => bind_default_scene::apply(&bind_default_scene::GltfBindDefaultScenePayload { scene: num(params, "scene")? }, before).map_err(|error| error.detail),
-            "bind-node-camera" => bind_node_camera::apply(&bind_node_camera::GltfBindNodeCameraPayload { node: num(params, "node")?, camera: num(params, "camera")? }, before).map_err(|error| error.detail),
-            "bind-node-child" => bind_node_child::apply(&bind_node_child::GltfBindNodeChildPayload { parent: num(params, "parent")?, child: num(params, "child")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "bind-node-mesh" => bind_node_mesh::apply(&bind_node_mesh::GltfBindNodeMeshPayload { node: num(params, "node")?, mesh: num(params, "mesh")? }, before).map_err(|error| error.detail),
-            "bind-node-skin" => bind_node_skin::apply(&bind_node_skin::GltfBindNodeSkinPayload { node: num(params, "node")?, skin: num(params, "skin")? }, before).map_err(|error| error.detail),
-            "bind-scene-root-node" => bind_scene_root_node::apply(&bind_scene_root_node::GltfBindSceneRootNodePayload { scene: num(params, "scene")?, node: num(params, "node")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "change-node-extension-data" => change_node_extension_data::apply(&change_node_extension_data::GltfChangeNodeExtensionDataPayload { node: num(params, "node")?, data: match presence(params)? { Some(value) => change_node_extension_data::GltfDataPresence::Present { value }, None => change_node_extension_data::GltfDataPresence::Absent } }, before).map_err(|error| error.detail),
-            "change-node-extra-data" => change_node_extra_data::apply(&change_node_extra_data::GltfChangeNodeExtraDataPayload { node: num(params, "node")?, data: match presence(params)? { Some(value) => change_node_extra_data::GltfDataPresence::Present { value }, None => change_node_extra_data::GltfDataPresence::Absent } }, before).map_err(|error| error.detail),
-            "change-node-morph-weights" => change_node_morph_weights::apply(&change_node_morph_weights::GltfChangeNodeMorphWeightsPayload { node: num(params, "node")?, weights: floats(params, "weights")? }, before).map_err(|error| error.detail),
-            "change-node-name" => change_node_name::apply(&change_node_name::GltfChangeNodeNamePayload { node: num_u32(params, "node")?, value: optional_text(params, "value")? }, before).map_err(|error| error.detail),
-            "change-node-transform" => change_node_transform::apply(&change_node_transform::GltfTransformNodePayload { node: num(params, "node")?, transform: transform::<change_node_transform::GltfNodeTransform>(params, |matrix| change_node_transform::GltfNodeTransform::Matrix { matrix }, |translation, rotation, scale| change_node_transform::GltfNodeTransform::Trs { translation, rotation, scale })? }, before).map_err(|error| error.detail),
-            "change-scene-extension-data" => change_scene_extension_data::apply(&change_scene_extension_data::GltfChangeSceneExtensionDataPayload { scene: num(params, "scene")?, data: match presence(params)? { Some(value) => change_scene_extension_data::GltfDataPresence::Present { value }, None => change_scene_extension_data::GltfDataPresence::Absent } }, before).map_err(|error| error.detail),
-            "change-scene-extra-data" => change_scene_extra_data::apply(&change_scene_extra_data::GltfChangeSceneExtraDataPayload { scene: num(params, "scene")?, data: match presence(params)? { Some(value) => change_scene_extra_data::GltfDataPresence::Present { value }, None => change_scene_extra_data::GltfDataPresence::Absent } }, before).map_err(|error| error.detail),
-            "change-scene-name" => change_scene_name::apply(&change_scene_name::GltfChangeSceneNamePayload { scene: num(params, "scene")?, value: optional_text(params, "value")? }, before).map_err(|error| error.detail),
-            "create-node" => create_node::apply(&create_node::GltfCreateNodePayload { position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "create-scene" => create_scene::apply(&create_scene::GltfCreateScenePayload { position: num_u32(params, "position")? }, before).map_err(|error| error.detail),
-            "delete-node" => delete_node::apply(&delete_node::GltfDeleteNodePayload { index: num(params, "index")? }, before).map_err(|error| error.detail),
-            "delete-scene" => delete_scene::apply(&delete_scene::GltfDeleteScenePayload { index: num(params, "index")? }, before).map_err(|error| error.detail),
-            "move-node" => move_node::apply(&move_node::GltfMoveNodePayload { index: num(params, "index")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "move-node-child" => move_node_child::apply(&move_node_child::GltfMoveNodeChildPayload { parent: num(params, "parent")?, child: num(params, "child")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "move-node-parent" => move_node_parent::apply(&move_node_parent::GltfReparentNodePayload { parent: num(params, "parent")?, child: num(params, "child")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "move-scene" => move_scene::apply(&move_scene::GltfMoveScenePayload { index: num(params, "index")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "move-scene-root-node" => move_scene_root_node::apply(&move_scene_root_node::GltfMoveSceneRootNodePayload { scene: num(params, "scene")?, node: num(params, "node")?, position: num(params, "position")? }, before).map_err(|error| error.detail),
-            "reorder-node-children" => reorder_node_children::apply(&reorder_node_children::GltfReorderNodeChildrenPayload { parent: num(params, "parent")?, order: order(params, "order")? }, before).map_err(|error| error.detail),
-            "reorder-nodes" => reorder_nodes::apply(&reorder_nodes::GltfReorderNodesPayload { order: order(params, "order")? }, before).map_err(|error| error.detail),
-            "reorder-scene-root-nodes" => reorder_scene_root_nodes::apply(&reorder_scene_root_nodes::GltfReorderSceneRootNodesPayload { scene: num(params, "scene")?, order: order(params, "order")? }, before).map_err(|error| error.detail),
-            "reorder-scenes" => reorder_scenes::apply(&reorder_scenes::GltfReorderScenesPayload { order: order(params, "order")? }, before).map_err(|error| error.detail),
-            "unbind-default-scene" => unbind_default_scene::apply(&unbind_default_scene::GltfUnbindDefaultScenePayload {}, before).map_err(|error| error.detail),
-            "unbind-node-camera" => unbind_node_camera::apply(&unbind_node_camera::GltfUnbindNodeCameraPayload { node: num(params, "node")? }, before).map_err(|error| error.detail),
-            "unbind-node-child" => unbind_node_child::apply(&unbind_node_child::GltfUnbindNodeChildPayload { parent: num(params, "parent")?, child: num(params, "child")? }, before).map_err(|error| error.detail),
-            "unbind-node-mesh" => unbind_node_mesh::apply(&unbind_node_mesh::GltfUnbindNodeMeshPayload { node: num(params, "node")? }, before).map_err(|error| error.detail),
-            "unbind-node-skin" => unbind_node_skin::apply(&unbind_node_skin::GltfUnbindNodeSkinPayload { node: num(params, "node")? }, before).map_err(|error| error.detail),
-            "unbind-scene-root-node" => unbind_scene_root_node::apply(&unbind_scene_root_node::GltfUnbindSceneRootNodePayload { scene: num(params, "scene")?, node: num(params, "node")? }, before).map_err(|error| error.detail),
+            "bind-default-scene" => apply_gltf_mutation(before, &bind_default_scene::mutation(bind_default_scene::GltfBindDefaultScenePayload { scene: num(params, "scene")? })),
+            "bind-node-camera" => apply_gltf_mutation(before, &bind_node_camera::mutation(bind_node_camera::GltfBindNodeCameraPayload { node: num(params, "node")?, camera: num(params, "camera")? })),
+            "bind-node-child" => apply_gltf_mutation(before, &bind_node_child::mutation(bind_node_child::GltfBindNodeChildPayload { parent: num(params, "parent")?, child: num(params, "child")?, position: num(params, "position")? })),
+            "bind-node-mesh" => apply_gltf_mutation(before, &bind_node_mesh::mutation(bind_node_mesh::GltfBindNodeMeshPayload { node: num(params, "node")?, mesh: num(params, "mesh")? })),
+            "bind-node-skin" => apply_gltf_mutation(before, &bind_node_skin::mutation(bind_node_skin::GltfBindNodeSkinPayload { node: num(params, "node")?, skin: num(params, "skin")? })),
+            "bind-scene-root-node" => apply_gltf_mutation(before, &bind_scene_root_node::mutation(bind_scene_root_node::GltfBindSceneRootNodePayload { scene: num(params, "scene")?, node: num(params, "node")?, position: num(params, "position")? })),
+            "change-node-extension-data" => apply_gltf_mutation(before, &change_node_extension_data::mutation(change_node_extension_data::GltfChangeNodeExtensionDataPayload { node: num(params, "node")?, data: match presence(params)? { Some(value) => change_node_extension_data::GltfDataPresence::Present { value }, None => change_node_extension_data::GltfDataPresence::Absent } })),
+            "change-node-extra-data" => apply_gltf_mutation(before, &change_node_extra_data::mutation(change_node_extra_data::GltfChangeNodeExtraDataPayload { node: num(params, "node")?, data: match presence(params)? { Some(value) => change_node_extra_data::GltfDataPresence::Present { value }, None => change_node_extra_data::GltfDataPresence::Absent } })),
+            "change-node-morph-weights" => apply_gltf_mutation(before, &change_node_morph_weights::mutation(change_node_morph_weights::GltfChangeNodeMorphWeightsPayload { node: num(params, "node")?, weights: floats(params, "weights")? })),
+            "change-node-name" => apply_gltf_mutation(before, &change_node_name::mutation(change_node_name::GltfChangeNodeNamePayload { node: num_u32(params, "node")?, value: optional_text(params, "value")? })),
+            "change-node-transform" => apply_gltf_mutation(before, &change_node_transform::mutation(change_node_transform::GltfTransformNodePayload { node: num(params, "node")?, transform: transform::<change_node_transform::GltfNodeTransform>(params, |matrix| change_node_transform::GltfNodeTransform::Matrix { matrix }, |translation, rotation, scale| change_node_transform::GltfNodeTransform::Trs { translation, rotation, scale })? })),
+            "change-scene-extension-data" => apply_gltf_mutation(before, &change_scene_extension_data::mutation(change_scene_extension_data::GltfChangeSceneExtensionDataPayload { scene: num(params, "scene")?, data: match presence(params)? { Some(value) => change_scene_extension_data::GltfDataPresence::Present { value }, None => change_scene_extension_data::GltfDataPresence::Absent } })),
+            "change-scene-extra-data" => apply_gltf_mutation(before, &change_scene_extra_data::mutation(change_scene_extra_data::GltfChangeSceneExtraDataPayload { scene: num(params, "scene")?, data: match presence(params)? { Some(value) => change_scene_extra_data::GltfDataPresence::Present { value }, None => change_scene_extra_data::GltfDataPresence::Absent } })),
+            "change-scene-name" => apply_gltf_mutation(before, &change_scene_name::mutation(change_scene_name::GltfChangeSceneNamePayload { scene: num(params, "scene")?, value: optional_text(params, "value")? })),
+            "create-node" => apply_gltf_mutation(before, &create_node::mutation(create_node::GltfCreateNodePayload { position: num(params, "position")?, node: None })),
+            "create-scene" => apply_gltf_mutation(before, &create_scene::mutation(create_scene::GltfCreateScenePayload { position: num_u32(params, "position")?, scene: None })),
+            "delete-node" => apply_gltf_mutation(before, &delete_node::mutation(delete_node::GltfDeleteNodePayload { index: num(params, "index")? })),
+            "delete-scene" => apply_gltf_mutation(before, &delete_scene::mutation(delete_scene::GltfDeleteScenePayload { index: num(params, "index")? })),
+            "move-node" => apply_gltf_mutation(before, &move_node::mutation(move_node::GltfMoveNodePayload { index: num(params, "index")?, position: num(params, "position")? })),
+            "move-node-child" => apply_gltf_mutation(before, &move_node_child::mutation(move_node_child::GltfMoveNodeChildPayload { parent: num(params, "parent")?, child: num(params, "child")?, position: num(params, "position")? })),
+            "move-node-parent" => apply_gltf_mutation(before, &move_node_parent::mutation(move_node_parent::GltfReparentNodePayload { parent: num(params, "parent")?, child: num(params, "child")?, position: num(params, "position")? })),
+            "move-scene" => apply_gltf_mutation(before, &move_scene::mutation(move_scene::GltfMoveScenePayload { index: num(params, "index")?, position: num(params, "position")? })),
+            "move-scene-root-node" => apply_gltf_mutation(before, &move_scene_root_node::mutation(move_scene_root_node::GltfMoveSceneRootNodePayload { scene: num(params, "scene")?, node: num(params, "node")?, position: num(params, "position")? })),
+            "reorder-node-children" => apply_gltf_mutation(before, &reorder_node_children::mutation(reorder_node_children::GltfReorderNodeChildrenPayload { parent: num(params, "parent")?, order: order(params, "order")? })),
+            "reorder-nodes" => apply_gltf_mutation(before, &reorder_nodes::mutation(reorder_nodes::GltfReorderNodesPayload { order: order(params, "order")? })),
+            "reorder-scene-root-nodes" => apply_gltf_mutation(before, &reorder_scene_root_nodes::mutation(reorder_scene_root_nodes::GltfReorderSceneRootNodesPayload { scene: num(params, "scene")?, order: order(params, "order")? })),
+            "reorder-scenes" => apply_gltf_mutation(before, &reorder_scenes::mutation(reorder_scenes::GltfReorderScenesPayload { order: order(params, "order")? })),
+            "unbind-default-scene" => apply_gltf_mutation(before, &unbind_default_scene::mutation(unbind_default_scene::GltfUnbindDefaultScenePayload {})),
+            "unbind-node-camera" => apply_gltf_mutation(before, &unbind_node_camera::mutation(unbind_node_camera::GltfUnbindNodeCameraPayload { node: num(params, "node")? })),
+            "unbind-node-child" => apply_gltf_mutation(before, &unbind_node_child::mutation(unbind_node_child::GltfUnbindNodeChildPayload { parent: num(params, "parent")?, child: num(params, "child")? })),
+            "unbind-node-mesh" => apply_gltf_mutation(before, &unbind_node_mesh::mutation(unbind_node_mesh::GltfUnbindNodeMeshPayload { node: num(params, "node")? })),
+            "unbind-node-skin" => apply_gltf_mutation(before, &unbind_node_skin::mutation(unbind_node_skin::GltfUnbindNodeSkinPayload { node: num(params, "node")? })),
+            "unbind-scene-root-node" => apply_gltf_mutation(before, &unbind_scene_root_node::mutation(unbind_scene_root_node::GltfUnbindSceneRootNodePayload { scene: num(params, "scene")?, node: num(params, "node")? })),
             other => Err(format!("unrecognised mutation kind {other:?}")),
         }
     }

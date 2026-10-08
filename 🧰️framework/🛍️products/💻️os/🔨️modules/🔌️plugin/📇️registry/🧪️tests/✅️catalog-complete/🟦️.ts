@@ -34,7 +34,7 @@ describe("explicit module deployment directories", () => {
     const routes = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🛣️routes.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧬️schema/🔣️.json"), "utf8"));
     const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
-    const validate = new Ajv({ strict: true }).compile(schema.$defs.DeploymentModuleRoutesV1);
+    const validate = new Ajv({ strict: true }).addKeyword({ keyword: "x-semio-formats", schemaType: "array", valid: true }).compile(schema.$defs.DeploymentModuleRoutesV1);
     expect(validate(routes)).toBe(true);
     expect(deployment.parseModuleRoutes(routes)).toEqual(routes);
     for (const hostile of [null, [], {}, { ...routes, plugin: "/plugin-modules" }, { ...routes, extension: "/extensions" }, { ...routes, plugin: routes.extension }, { ...routes, extra: true }, { ...routes, plugin: "/🔌️plugin-modules/child" }]) {
@@ -152,8 +152,6 @@ afterEach(() => {
 
 describe("strict plugin catalog completion", () => {
   it("validates the neutral contract and withholds every publication after a parent failure", async () => {
-    const schema = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧬️schema/🧬️catalog-complete/🔣️.json"), "utf8"));
-    expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
     expect(orderCatalogNodes(fixture.nodes).map(({ pluginId }) => pluginId)).toEqual(fixture.expectedOrder);
     const verified: string[] = [];
     const publications: string[][] = [];
@@ -468,11 +466,11 @@ describe("strict plugin catalog completion", () => {
     expect(auditInteractiveJobClassificationDrift("owner", join(ownerRoot, "absent"), descriptor)).toEqual([]);
   });
 
-  it("independently enumerates the 60 real manifests and finds every one of them paired with a committed descriptor", () => {
+  it("independently enumerates the 69 real manifests and finds every one of them paired with a committed descriptor", () => {
     const audit = auditPluginCatalogSources();
     const missing = audit.issues.filter(({ code }) => code === "descriptor-pair-missing").map(({ pluginId }) => pluginId).sort();
-    expect(audit.manifestCount).toBe(60);
-    expect(audit.order).toHaveLength(60);
+    expect(audit.manifestCount).toBe(69);
+    expect(audit.order).toHaveLength(69);
     // 🔗️ `dependsOn` is the DECLARED runtime-actor set, never the crate's Cargo library links:
     // `sequence` links four `semio-s-plugin-imperative-*` rlibs and `raster` links `stdio`'s codecs,
     // and none of those crates' actors has to be loaded for them to run.

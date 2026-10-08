@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "chunkBytes": 1048576,
+  "cases": [
+    {
+      "id": "empty",
+      "seed": "",
+      "repeat": 0,
+      "cancelled": false,
+      "expectedHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "binary",
+      "seed": "00f080ff",
+      "repeat": 17,
+      "cancelled": false,
+      "expectedHash": "3be682c77b2bb6973a08622d2866c6b7564f770e6d7b3027ff367f4eb626c0b1"
+    },
+    {
+      "id": "chunk-boundary",
+      "seed": "00f080ff",
+      "repeat": 262149,
+      "cancelled": false,
+      "expectedHash": "64e39b982b0c5a5d4b833ca1718b1378a04caab90bc54cc829bd5e2449f99114"
+    },
+    {
+      "id": "pre-cancelled",
+      "seed": "00ff",
+      "repeat": 1,
+      "cancelled": true,
+      "expectedHash": "06eb7d6a69ee19e5fbdf749018d3d2abfa04bcbd1365db312eb86dc7169389b8"
+    }
+  ]
+}

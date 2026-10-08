@@ -12,7 +12,7 @@ pub struct Entry {
     pub encode: BmpMutationPayloadEncoder,
     pub decode: fn(&[u8]) -> Result<BmpMutation, protocol::ProtocolError>,
 }
-pub const REGISTRY: &[Entry] = &[crate::standards::v_v3::subsets::any::io::binary::mutations::set_snapshot::CODEC, crate::standards::v_v3::subsets::any::io::binary::mutations::patch_snapshot::CODEC, crate::standards::v_v3::subsets::any::io::binary::mutations::paint_indexed_region::CODEC, crate::standards::v_v3::subsets::any::io::binary::mutations::paint_direct_region::CODEC];
+pub const REGISTRY: &[Entry] = &[crate::standards::v_v3::subsets::any::io::binary::mutations::paint_indexed_region::CODEC, crate::standards::v_v3::subsets::any::io::binary::mutations::paint_direct_region::CODEC];
 //#endregion Registry
 
 //#region Framing
@@ -32,12 +32,6 @@ impl protocol::OpBinary for BmpMutation {
     }
 }
 //#endregion Framing
-
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
 
 #[path = "🖌️paint-direct-region/🦀️.rs"]
 pub mod paint_direct_region;

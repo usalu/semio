@@ -6,7 +6,7 @@ pub const BINARY_MAGIC: &str = "stdio.mp3.mutations";
 mod mutations_codec {
 use super::*;
 use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::*;
-use crate::standards::mpeg1_layer3::subsets::any::schema::diff::{diff_set_frames, diff_set_id3v1, diff_set_id3v2, diff_set_snapshot, Mp3Diff};
+use crate::standards::mpeg1_layer3::subsets::any::schema::diff::{diff_set_frames, diff_set_id3v1, diff_set_id3v2, Mp3Diff};
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::{Id3v1Tag, Id3v2Tag, Mp3Frame, Mp3Snapshot};
 use protocol::Mutation;
 use protocol::{OpBinary, OpText};

@@ -13,6 +13,6 @@ pub fn diff(payload: &ChangeGridSubdivisions, base: &NoteSnapshot) -> protocol::
     if payload.new_subdivisions == base.grid_subdivisions {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Grid subdivisions already has this value.");
     }
-    protocol::MutationOutcome::new(NoteDiff { grid_subdivisions: Some(payload.new_subdivisions), ..Default::default() })
+    protocol::MutationOutcome::new(NoteDiff { grid_subdivisions: Some(crate::schema::diff::NoteAssigned::new(payload.new_subdivisions)), ..Default::default() })
 }
 //#endregion 🔖️Diff

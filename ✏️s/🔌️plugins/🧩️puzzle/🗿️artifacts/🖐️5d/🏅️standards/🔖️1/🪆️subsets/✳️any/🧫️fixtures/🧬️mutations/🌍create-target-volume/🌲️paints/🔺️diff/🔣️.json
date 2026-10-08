@@ -1,40 +1,37 @@
 {
   "artifact": null,
-  "schema": null,
   "domain": null,
-  "label": null,
-  "meta": null,
-  "kindCatalogs": null,
-  "kindCatalogsExtra": null,
-  "kindCompatibility": null,
-  "parts": null,
   "fasteners": null,
+  "kindCompatibility": null,
+  "meta": null,
+  "parts": null,
+  "schema": null,
   "targetVolumes": {
     "added": [
       {
+        "hidden": false,
         "id": "seed-bay",
-        "origin": [
-          5.4,
-          2.338269,
-          1.5
-        ],
+        "locked": false,
         "orientation": [
           0.0,
           0.0,
           0.0,
           1.0
         ],
+        "origin": [
+          5.4,
+          2.338269,
+          1.5
+        ],
         "scale": [
           8.1,
           4.676537,
           3.0
-        ],
-        "hidden": false,
-        "locked": false
+        ]
       }
     ],
-    "removed": [],
     "patched": [],
+    "removed": [],
     "reordered": null
   }
 }

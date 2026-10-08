@@ -12,7 +12,7 @@
 //! ruststep is not a second PRODUCER, so nothing here is typed `@mode-differential`).
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
-use semio_s_artifact_stdio_step_test_oracle::standards::v_ap214::subsets::base::{oracle_apply_mutation, oracle_round_trip, oracle_snapshot_payload, project_step_ap214_any};
+use semio_s_artifact_stdio_step_test_oracle::standards::v_ap214::subsets::base::{oracle_apply_mutation, oracle_round_trip, project_step_ap214_any};
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🌲️hexagonal-cut-concrete-forest-left-ap214/📐️.stp";
@@ -28,11 +28,9 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 //#region 🔖️Inverse
 /// ↩️ The inverse spec of one forward row against the pristine fixture's own real header and entity
 /// values, id/index-aware and spoken in the same `StepValue` leaf wire the rows use — computed
-/// independently of `StepMutation::inverse()`; for `set-snapshot` the untouched model itself, read by
-/// `ruststep`.
+/// independently of `StepMutation::inverse()`.
 fn inverse_spec(kind: &str, input: &[u8]) -> Result<Json, String> {
     let spec = match kind {
-        "set-snapshot" | "patch-snapshot" => return Ok(Json::Object(vec![("kind".to_string(), Json::String("set-snapshot".to_string())), ("params".to_string(), oracle_snapshot_payload(input)?)])),
         "set-file-description" => r#"{"kind": "set-file-description", "params": {"fileDescription": {"description": [""], "implementationLevel": "2;1"}}}"#,
         "set-file-name" => r#"{"kind": "set-file-name", "params": {"fileName": {"name": "hexagonal-cut-concrete-forest-left", "timestamp": "2026-06-06T18:37:11+02:00", "author": [""], "organization": [""], "preprocessorVersion": "ST-DEVELOPER v19.2", "originatingSystem": "Rhino 8.31", "authorization": ""}}}"#,
         "set-file-schema" => r#"{"kind": "set-file-schema", "params": {"fileSchema": {"schemas": ["AUTOMOTIVE_DESIGN"]}}}"#,

@@ -41,13 +41,6 @@ impl Ifc2x3Artifact {
     pub fn from_snapshot(snapshot: Ifc2x3Snapshot) -> Self {
         Self { schema: snapshot.schema, document: snapshot.document, edm_preamble: snapshot.edm_preamble }
     }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn set_snapshot(&mut self, snapshot: Ifc2x3Snapshot) {
-        self.schema = snapshot.schema;
-        self.document = snapshot.document;
-        self.edm_preamble = snapshot.edm_preamble;
-    }
 }
 //#endregion 🔖️Conversions
 

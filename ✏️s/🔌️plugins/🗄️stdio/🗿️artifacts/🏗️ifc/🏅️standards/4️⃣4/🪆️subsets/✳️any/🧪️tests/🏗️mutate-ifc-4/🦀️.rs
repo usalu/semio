@@ -12,7 +12,7 @@
 //! PRODUCER, so nothing here is typed `@mode-differential`).
 
 use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
-use semio_s_artifact_stdio_ifc_test_oracle::standards::v4::subsets::any::{oracle_apply_mutation, oracle_round_trip, oracle_snapshot_payload, project_ifc_4_any};
+use semio_s_artifact_stdio_ifc_test_oracle::standards::v4::subsets::any::{oracle_apply_mutation, oracle_round_trip, project_ifc_4_any};
 
 //#region 🔖️Input
 const INPUT: &str = "shared://🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc";
@@ -28,11 +28,9 @@ fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
 //#region 🔖️Inverse
 /// ↩️ The inverse spec of one forward row against the pristine Nakagin Capsule Tower fixture's own
 /// real header and entity values, id/index-aware and spoken in the same `IfcValue` leaf wire the rows
-/// use — computed independently of `IfcMutation::inverse()`; for `set-snapshot` the untouched model
-/// itself, read by `ruststep`.
+/// use — computed independently of `IfcMutation::inverse()`.
 fn inverse_spec(kind: &str, input: &[u8]) -> Result<Json, String> {
     let params = match kind {
-        "set-snapshot" | "patch-snapshot" => return Ok(Json::Object(vec![("kind".to_string(), Json::String("set-snapshot".to_string())), ("params".to_string(), oracle_snapshot_payload(input)?)])),
         "set-file-description" => r#"{"kind": "set-file-description", "params": {"values": [{"kind": "aggregate", "value": [{"kind": "string", "value": "ViewDefinition[DesignTransferView]"}]}, {"kind": "string", "value": "2;1"}]}}"#,
         "set-file-name" => r#"{"kind": "set-file-name", "params": {"values": [{"kind": "string", "value": "/dev/null"}, {"kind": "string", "value": "2026-03-20T21:51:27+00:00"}, {"kind": "aggregate", "value": [{"kind": "string", "value": ""}]}, {"kind": "aggregate", "value": [{"kind": "string", "value": ""}]}, {"kind": "string", "value": "IfcOpenShell 0.8.4.post1"}, {"kind": "string", "value": "IfcOpenShell 0.8.4.post1"}, {"kind": "string", "value": "Nobody"}]}}"#,
         "set-file-schema" => r#"{"kind": "set-file-schema", "params": {"values": [{"kind": "aggregate", "value": [{"kind": "string", "value": "IFC4"}]}]}}"#,

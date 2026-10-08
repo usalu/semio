@@ -100,7 +100,6 @@ fn inverse_spec(original: &[u8], forward: &Json) -> Result<Json, String> {
             let old = read_at(original, &path, &[])?.ok_or("set-scalar inverse: path does not resolve")?;
             Ok(kind_spec("set-scalar", json_object(vec![("path", path), ("value", wire_value(&old))])))
         }
-        "patch-snapshot" => Ok(kind_spec("restore-snapshot", json_object(vec![("snapshot", snapshot_wire(original)?)]))),
         other => Err(format!("no inverse rule for kind {other:?}")),
     }
 }

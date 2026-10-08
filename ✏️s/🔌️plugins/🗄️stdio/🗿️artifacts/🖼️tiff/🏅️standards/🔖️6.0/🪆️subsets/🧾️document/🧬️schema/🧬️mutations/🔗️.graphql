@@ -1,4 +1,3 @@
-# set-snapshot/SetSnapshot: 📸️set-snapshot/🔗️.graphql
 # 🧬️ Transparent TiffMutation descriptor assembly.
 # change-byte-order/ChangeByteOrder: 🧭️change-byte-order/🔗️.graphql
 # insert-ifd/InsertIfd: 📥️insert-ifd/🔗️.graphql
@@ -6,5 +5,6 @@
 # replace-tag/ReplaceTag: 🏷️replace-tag/🔗️.graphql
 # remove-tag/RemoveTag: 🗑️remove-tag/🔗️.graphql
 # paint-region/PaintRegion: 🎨️paint-region/🔗️.graphql
-enum TiffMutationKind { CHANGE_BYTE_ORDER INSERT_IFD REMOVE_IFD REPLACE_TAG REMOVE_TAG PAINT_REGION SET_SNAPSHOT }
-input TiffMutation { change_byte_order: ChangeByteOrderMutation insert_ifd: InsertIfdMutation remove_ifd: RemoveIfdMutation replace_tag: ReplaceTagMutation remove_tag: RemoveTagMutation paint_region: PaintRegionMutation set_snapshot: SetSnapshot }
+# replace-samples/ReplaceSamples: 🧮️replace-samples/🔗️.graphql
+enum TiffMutationKind { CHANGE_BYTE_ORDER INSERT_IFD REMOVE_IFD REPLACE_TAG REMOVE_TAG PAINT_REGION REPLACE_SAMPLES }
+input TiffMutation { change_byte_order: ChangeByteOrderMutation insert_ifd: InsertIfdMutation remove_ifd: RemoveIfdMutation replace_tag: ReplaceTagMutation remove_tag: RemoveTagMutation paint_region: PaintRegionMutation replace_samples: ReplaceSamplesMutation }

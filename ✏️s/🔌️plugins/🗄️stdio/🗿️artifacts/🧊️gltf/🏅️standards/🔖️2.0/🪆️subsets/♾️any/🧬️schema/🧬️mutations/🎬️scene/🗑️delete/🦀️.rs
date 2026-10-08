@@ -1,4 +1,6 @@
 //! 🧬️ Direct delete-scene mutation owner: payload, validation, typed diff, inverse, and outcomes.
+use crate::schema::diff::*;
+use crate::schema::modules::mutation_support::top_level_collections::*;
 use crate::schema::modules::mutation_support::top_level::rejection_outcome;
 use crate::schema::modules::mutation_support::top_level_collections::{reject, scenes_op, GltfTopLevelFamily, GltfTopLevelMutationRejection};
 use crate::GltfSnapshot;
@@ -16,14 +18,28 @@ pub fn validate(payload: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Result
     if base.document.scene.is_some_and(|scene| scene >= base.document.scenes.len()) {
         return Err(reject("gltf.reference.invalid-default-scene", "document/scene", "default scene must address an existing scene"));
     }
+    require_unreferenced(base, GltfTopLevelFamily::Scenes, payload.index)?;
     Ok(())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(payload: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Result<GltfSnapshot, GltfTopLevelMutationRejection> {
-    validate(payload, base)?;
-    let mut next = base.clone();
-    scenes_op(&mut next, GltfTopLevelFamily::Scenes, payload.index, None, None)?;
-    Ok(next)
+pub fn plan(p: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Result<GltfDiff, GltfTopLevelMutationRejection> {
+    validate(p, base)?;
+    let mut diff = rewire(base, GltfTopLevelFamily::Scenes, &mut after_delete(p.index));
+    let slot = diff.scenes.get_or_insert_with(Default::default);
+    slot.removed.push(p.index);
+    Ok(diff)
+}
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn inverse(p: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Vec<super::GltfMutation> {
+    if validate(p, base).is_err() {
+        return Vec::new();
+    }
+    let mut rows = vec![super::create_scene::mutation(super::create_scene::GltfCreateScenePayload { position: u32::try_from(p.index).unwrap_or(u32::MAX), scene: Some(Box::new(base.document.scenes[p.index].clone())) })];
+    if base.document.scene == Some(p.index) {
+        rows.push(super::bind_default_scene::mutation(super::bind_default_scene::GltfBindDefaultScenePayload { scene: p.index }));
+    }
+    rows.reverse();
+    rows
 }
 
 //#region 🧬️DirectMutation
@@ -32,7 +48,11 @@ pub fn apply(payload: &GltfDeleteScenePayload, base: &GltfSnapshot) -> Result<Gl
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum DeleteSceneMutation {
     Apply(GltfDeleteScenePayload),
-    Restore(Box<crate::schema::diff::GltfDiff>),
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn mutation(payload: GltfDeleteScenePayload) -> super::GltfMutation {
+    super::GltfMutation::DeleteScene(DeleteSceneMutation::Apply(payload))
 }
 
 impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteSceneMutation {
@@ -40,28 +60,18 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteSceneMu
 
     fn diff(&self, base: &GltfSnapshot) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
         match self {
-            Self::Apply(payload) => match apply(payload, base) {
-                Ok(next) => protocol::MutationOutcome::new(<crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::between(base, &next)),
+            Self::Apply(payload) => match plan(payload, base) {
+                Ok(diff) => protocol::MutationOutcome::new(diff),
                 Err(error) => rejection_outcome(&error.code, &error.path, error.detail),
-            },
-            Self::Restore(diff) => match protocol::MutationDiff::apply(diff.as_ref(), base) {
-                Ok(_) => protocol::MutationOutcome::new(diff.as_ref().clone()),
-                Err(error) => protocol::MutationOutcome::fatal("mutation.invariant", error.to_string(), error.target),
             },
         }
     }
 
     fn inverse(&self, base: &GltfSnapshot) -> Result<Vec<super::GltfMutation>, semio_framework_value::ValueError> {
-    Ok((|| {
-        let outcome = <Self as protocol::MutationKind<GltfSnapshot, super::GltfMutation>>::diff(self, base);
-        if !outcome.messages().is_empty() || outcome.diff().is_empty_diff() {
-            return Vec::new();
+        match self {
+            Self::Apply(payload) => Ok(inverse(payload, base)),
         }
-        let inverse = <crate::schema::diff::GltfDiff as protocol::DiffAlgebra<GltfSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::GltfMutation::DeleteScene(Self::Restore(Box::new(inverse)))]
-    
-    })())
-}
+    }
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Delete Scene", "Szene löschen")
@@ -77,6 +87,9 @@ impl protocol::MutationKind<GltfSnapshot, super::GltfMutation> for DeleteSceneMu
 #[cfg(test)]
 #[path = "🧪️tests/🚫️removes-the-af9666/🦀️.rs"]
 mod case_removes_the_af9666;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️middle-row/🦀️.rs"]
+mod case_middle_row;
 //#endregion 🧪️Tests
 
 #[cfg(test)]

@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import type { Mp4Mutation } from "../🟦️.ts";
 import type { Mp4Mutation as BinaryMp4Mutation } from "../../../🚪️io/💾️binary/🧬️mutations/🟦️.ts";
 import type { Mp4Mutation as TextMp4Mutation } from "../../../🚪️io/📝️text/🧬️mutations/🟦️.ts";
-import {parseMp4Snapshot,type Mp4Snapshot,type Mp4Track} from "../../📸️snapshot/🟦️.ts";
+import {parseMp4Movie,type Mp4Snapshot,type Mp4Track} from "../../📸️snapshot/🟦️.ts";
 
 type Equal<Left, Right> = (<Value>() => Value extends Left ? 1 : 2) extends <Value>() => Value extends Right ? 1 : 2 ? true : false;
 
@@ -31,9 +31,8 @@ const snapshot: Mp4Snapshot = {
   tracks: [track],
 };
 const operations = [
-  { mutation: "setSnapshot", snapshot },
-  { mutation: "patchSnapshot", patch: { operation: "set", path: "/tracks/0/width", value: 32 } },
   { mutation: "setFtyp", ftyp },
+  { mutation: "setMovie", movie: snapshot.movie },
   { mutation: "insertTrack", index: 0, track },
   { mutation: "removeTrack", index: 0 },
   { mutation: "setTrackDimensions", trackIndex: 0, width: 32, height: 24 },
@@ -42,9 +41,9 @@ const operations = [
   { mutation: "removeSample", trackIndex: 0, index: 0 },
   { mutation: "setSampleSync", trackIndex: 0, index: 0, sync: false },
 ] satisfies readonly Mp4Mutation[];
-const tags = ["setSnapshot", "patchSnapshot", "setFtyp", "insertTrack", "removeTrack", "setTrackDimensions", "setTrackCodec", "insertSample", "removeSample", "setSampleSync"] as const satisfies readonly Mp4Mutation["mutation"][];
+const tags = ["setFtyp", "setMovie", "insertTrack", "removeTrack", "setTrackDimensions", "setTrackCodec", "insertSample", "removeSample", "setSampleSync"] as const satisfies readonly Mp4Mutation["mutation"][];
 const fields: Readonly<Record<Mp4Mutation["mutation"], readonly string[]>> = {
-  setSnapshot: ["mutation", "snapshot"], patchSnapshot: ["mutation", "patch"], setFtyp: ["mutation", "ftyp"], insertTrack: ["mutation", "index", "track"], removeTrack: ["mutation", "index"], setTrackDimensions: ["mutation", "trackIndex", "width", "height"], setTrackCodec: ["mutation", "trackIndex", "codec"], insertSample: ["mutation", "trackIndex", "index", "sample"], removeSample: ["mutation", "trackIndex", "index"], setSampleSync: ["mutation", "trackIndex", "index", "sync"],
+  setFtyp: ["mutation", "ftyp"], setMovie: ["mutation", "movie"], insertTrack: ["mutation", "index", "track"], removeTrack: ["mutation", "index"], setTrackDimensions: ["mutation", "trackIndex", "width", "height"], setTrackCodec: ["mutation", "trackIndex", "codec"], insertSample: ["mutation", "trackIndex", "index", "sample"], removeSample: ["mutation", "trackIndex", "index"], setSampleSync: ["mutation", "trackIndex", "index", "sync"],
 };
 
 describe("MP4 mutation TypeScript facets", () => {
@@ -53,7 +52,7 @@ describe("MP4 mutation TypeScript facets", () => {
     expect(operations.map(({ mutation }) => mutation)).toEqual(Array.from(tags));
     for (const operation of operations) expect(Object.keys(operation)).toEqual(Array.from(fields[operation.mutation]));
     const json=JSON.parse(JSON.stringify(operations,(_key,value:unknown)=>typeof value==="bigint"?value.toString():value));
-    expect(parseMp4Snapshot(json[0].snapshot)).toEqual(snapshot);
+    expect(parseMp4Movie(json[1].movie)).toEqual(snapshot.movie);
     expect(json.map(({mutation}:{mutation:string})=>mutation)).toEqual(tags);
   });
 });

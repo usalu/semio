@@ -200,17 +200,17 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
 /// the same side-effect-free `subset_validator_entry_of::<V>()` constructor each subset's own
 /// `🚪️io/🦀️.rs` (module-private) `validator_entry()` calls.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pdf_1_7_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
-    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
+fn pdf_1_7_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
     ENTRIES
         .get_or_init(|| {
             vec![
-                semio_framework_plugin::subset_validator_entry_of::<standards::v1_7::subsets::a::io::PdfAValidator>(),
-                semio_framework_plugin::subset_validator_entry_of::<standards::v1_7::subsets::x::io::PdfXValidator>(),
-                semio_framework_plugin::subset_validator_entry_of::<standards::v1_7::subsets::e::io::PdfEValidator>(),
-                semio_framework_plugin::subset_validator_entry_of::<standards::v1_7::subsets::ua::io::PdfUaValidator>(),
-                semio_framework_plugin::subset_validator_entry_of::<standards::v1_7::subsets::vt::io::PdfVtValidator>(),
-                semio_framework_plugin::subset_validator_entry_of::<standards::v1_7::subsets::h::io::PdfHValidator>(),
+                semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_7::subsets::a::io::PdfAValidator>(),
+                semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_7::subsets::x::io::PdfXValidator>(),
+                semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_7::subsets::e::io::PdfEValidator>(),
+                semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_7::subsets::ua::io::PdfUaValidator>(),
+                semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_7::subsets::vt::io::PdfVtValidator>(),
+                semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_7::subsets::h::io::PdfHValidator>(),
             ]
         })
         .as_slice()
@@ -219,9 +219,9 @@ fn pdf_1_7_subset_validators() -> &'static [semio_framework_plugin::SubsetValida
 /// 🛡️ `standards::v1_4`'s two real subsets (`a`/`x`), re-derived (not moved) the same way as
 /// `pdf_1_7_subset_validators` above.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pdf_1_4_subset_validators() -> &'static [semio_framework_plugin::SubsetValidatorEntry] {
-    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::SubsetValidatorEntry>> = std::sync::OnceLock::new();
-    ENTRIES.get_or_init(|| vec![semio_framework_plugin::subset_validator_entry_of::<standards::v1_4::subsets::a::io::PdfAValidator>(), semio_framework_plugin::subset_validator_entry_of::<standards::v1_4::subsets::x::io::PdfXValidator>()]).as_slice()
+fn pdf_1_4_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
+    static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
+    ENTRIES.get_or_init(|| vec![semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_4::subsets::a::io::PdfAValidator>(), semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_4::subsets::x::io::PdfXValidator>()]).as_slice()
 }
 
 /// 📌️ `standards::v1_7`'s five `LanguageSpec` rows, copied verbatim from that standard's own
@@ -375,7 +375,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 pub mod io_registry {
     use crate::standards::v1_4::subsets::base::io::io_registry as v1_4;
     use crate::standards::v1_7::subsets::base::io::io_registry as v1_7;
-    use {semio_framework_plugin::register_composer_entries,semio_framework_plugin::ComposeError,semio_framework_plugin::ComposedArtifact,semio_framework_plugin::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ErasedComposeSource};
+    use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<&'static ComposerEntry>> = OnceLock::new();

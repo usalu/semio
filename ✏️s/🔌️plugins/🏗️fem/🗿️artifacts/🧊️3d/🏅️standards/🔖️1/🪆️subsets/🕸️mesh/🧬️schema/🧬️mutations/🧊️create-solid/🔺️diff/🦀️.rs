@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateSolid`.
 use super::CreateSolid;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSolidsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dSolidsDelta, insertion_order};
 use crate::standards::v1::subsets::any::schema::mutations::{invariant,solid_breach};
 
 use crate::Fem3dSnapshot;
@@ -16,6 +16,6 @@ pub fn diff(payload: &CreateSolid, base: &Fem3dSnapshot) -> protocol::MutationOu
     if let Some(breach) = solid_breach(&payload.solid) {
         return invariant(breach, vec![payload.solid.id.clone()]);
     }
-    protocol::MutationOutcome::new(Fem3dDiff { solids: Some(Fem3dSolidsDelta { added: vec![payload.solid.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem3dDiff { solids: Some(Fem3dSolidsDelta { added: vec![payload.solid.clone()], reordered: insertion_order(base.solids.iter().map(|item| item.id.as_str()), &payload.solid.id, payload.index), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

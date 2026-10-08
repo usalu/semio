@@ -1,5 +1,5 @@
 //#region 📦️Imports
-use super::{DemoDiff, DemoSnapshot, AssignN, ValidatedMutation};
+use super::{DemoDiff, DemoSnapshot, RestoreN, ValidatedMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 //#endregion 📦️Imports
@@ -26,7 +26,7 @@ impl crate::os_spr::MutationKind<DemoSnapshot, ValidatedMutation> for SetN {
     }
     fn inverse(&self, base: &DemoSnapshot) -> Result<Vec<ValidatedMutation>, semio_framework_value::ValueError> {
     Ok((|| {
-        vec![ValidatedMutation::AssignN(AssignN { n: base.n })]
+        vec![ValidatedMutation::RestoreN(RestoreN { n: base.n })]
     
     })())
 }

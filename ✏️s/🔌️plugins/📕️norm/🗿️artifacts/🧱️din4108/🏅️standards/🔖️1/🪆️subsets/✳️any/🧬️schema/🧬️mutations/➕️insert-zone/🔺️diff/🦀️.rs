@@ -2,8 +2,7 @@
 //! `mutation.clamped` warning, and an id the document already holds is a `mutation.duplicate-id`.
 
 use super::InsertZone;
-use crate::diff::Din4108RowEdit as _;
-use crate::diff::{Din4108Diff, Din4108ZoneEdit};
+use crate::diff::{Din4108Diff, Din4108ZoneDelta};
 use crate::Din4108Snapshot;
 
 pub fn diff(payload: &InsertZone, base: &Din4108Snapshot) -> protocol::MutationOutcome<Din4108Diff> {
@@ -11,7 +10,7 @@ pub fn diff(payload: &InsertZone, base: &Din4108Snapshot) -> protocol::MutationO
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A zone with id '{}' already exists.", payload.zone.id), [payload.zone.id.clone()]);
     }
     let index = payload.index.min(base.zones.len());
-    let outcome = protocol::MutationOutcome::new(Din4108Diff { zones: vec![Din4108ZoneEdit::insert(index, payload.zone.clone())], ..Default::default() });
+    let outcome = protocol::MutationOutcome::new(Din4108Diff { zones: Din4108ZoneDelta::insertion(&base.zones, index, payload.zone.clone()), ..Default::default() });
     if index == payload.index {
         return outcome;
     }

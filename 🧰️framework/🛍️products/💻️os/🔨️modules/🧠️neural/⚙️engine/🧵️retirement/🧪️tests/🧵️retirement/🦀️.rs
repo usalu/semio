@@ -3,6 +3,90 @@
 use super::*;
 use std::mem::size_of;
 
+#[test]
+fn recursive_dictionary_owns_typed_retirement_under_independent_grants() {
+    use semio_framework_value::{retirement::{RetireOwned, controlled::ControlledRetirement}, retained_clone::{RetainedCloneGrant, RetainedCloneStep}};
+    use super::super::registry::tests::observe_ownership;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎮️typed-owners/🔣️.json")).unwrap();
+    assert!(Dictionary::controlled_retirement_supported());
+    assert!(Value::controlled_retirement_supported());
+    assert!(Atom::controlled_retirement_supported());
+    for row in fixture["cases"].as_array().unwrap() {
+        for copy in fixture["grants"].as_array().unwrap() {
+            let ((source,pointer),original_born,original_freed)=observe_ownership(||{
+                let mut text=String::with_capacity(row["reservedCapacity"].as_u64().unwrap() as usize);
+                text.push_str(row["text"].as_str().unwrap());let pointer=text.as_ptr();
+                (Dictionary::new().insert("nested",Value::Dictionary(Dictionary::new().insert("value",Value::Atom(Atom::String(text))))),pointer)
+            });
+            assert_eq!(source.get("nested").unwrap().as_dictionary().unwrap().get("value").unwrap().as_atom().unwrap().as_str().unwrap().as_ptr(),pointer);
+            assert_eq!(serde_json::to_value(&source).unwrap(),serde_json::json!({"nested":{"value":row["text"]}}));
+            let mut owner=ControlledRetirement::new(source).map_err(|(error,_)|error).unwrap();
+            let mut copied=0;let mut released=0;let mut born=0;
+            for turn in 0..100000 {
+                if owner.terminal_is_empty(){break;}
+                let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy.as_u64().unwrap() as usize,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy.as_u64().unwrap() as usize).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
+                let (inert,a,r)=observe_ownership(||owner.step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap());assert_eq!(inert.progress().copied_items,0);assert_eq!((a,r),(0,0));
+                if grant.maximum_capacity_bytes!=0 {let (denied,a,r)=observe_ownership(||owner.step(RetainedCloneGrant {maximum_capacity_bytes:grant.maximum_capacity_bytes-1,..grant}).unwrap());assert_eq!(denied.progress().copied_items,0);assert_eq!((a,r),(0,0));}
+                if grant.maximum_release_bytes!=0 && owner.next_copy_byte_demand()==0 {let (denied,a,r)=observe_ownership(||owner.step(RetainedCloneGrant {maximum_release_bytes:grant.maximum_release_bytes-1,..grant}).unwrap());assert_eq!(denied.progress().copied_items,0);assert_eq!((a,r),(0,0));}
+                let (step,a,r)=observe_ownership(||owner.step(grant).unwrap());let progress=step.progress();assert_eq!(progress.retained_capacity_bytes,a);assert_eq!(progress.released_bytes,r);assert!(progress.copied_items<=1);assert!(progress.copied_bytes<=grant.maximum_copy_bytes);assert!(progress.retained_capacity_bytes<=grant.maximum_capacity_bytes);assert!(progress.released_bytes<=grant.maximum_release_bytes);copied+=progress.copied_bytes;released+=progress.released_bytes;born+=progress.retained_capacity_bytes;
+                assert!(progress.copied_items!=0 || matches!(step,RetainedCloneStep::Complete(_)),"exact Neural owner grant blocked on turn {turn}");
+            }
+            assert!(owner.terminal_is_empty());assert_eq!(copied,"nestedvalue".len()+row["text"].as_str().unwrap().len());assert_eq!(released,original_born-original_freed+born);
+            eprintln!("[DEBUG] Recursive Neural original-pointer typed owner copied={copied} born={born} physical={released}");
+        }
+    }
+}
+
+#[test]
+fn finite_schema_operator_fields_preserve_typed_work_and_physical_custody() {
+    use semio_framework_value::{retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::RetainedCloneGrant};
+    use super::super::registry::tests::observe_ownership;
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧬️finite-fields/🔣️.json")).unwrap();
+    fn close<T:RetireOwned>(value:T,original:usize,copy:usize,expected:usize) {
+        let mut owner=ControlledRetirement::new(value).map_err(|(error,_)|error).unwrap();let mut births=0;let mut released=0;let mut copied=0;
+        for turn in 0..1000000 {
+            if owner.terminal_is_empty(){break;}
+            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
+            let (zero,a,r)=observe_ownership(||owner.step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap());assert_eq!(zero.progress().copied_items,0);assert_eq!((a,r),(0,0));
+            let (step,a,r)=observe_ownership(||owner.step(grant).unwrap());let progress=step.progress();assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(a,r));assert!(progress.copied_items<=1);assert!(progress.copied_bytes<=copy);assert!(a<=grant.maximum_capacity_bytes);assert!(r<=grant.maximum_release_bytes);births+=a;released+=r;copied+=progress.copied_bytes;assert!(progress.copied_items!=0,"exact finite Neural field grant blocked on turn {turn}");
+        }
+        assert!(owner.terminal_is_empty());assert_eq!(copied,expected);assert_eq!(released,original+births);
+        eprintln!("[DEBUG] Actual Neural finite fields copy={copy} work={copied} original={original} scaffolds={births} physical={released}");
+    }
+    for copy in fixture["copyGrants"].as_array().unwrap() {
+        let (schema,a,r)=observe_ownership(||serde_json::from_value::<Schema>(fixture["schema"].clone()).unwrap());assert_eq!(serde_json::to_value(&schema).unwrap(),fixture["schema"]);close(schema,a-r,copy.as_u64().unwrap() as usize,fixture["expected"]["schemaStringBytes"].as_u64().unwrap() as usize);
+        let (operator,a,r)=observe_ownership(||serde_json::from_value::<OperatorInfo>(fixture["operator"].clone()).unwrap());assert_eq!(serde_json::to_value(&operator).unwrap(),fixture["operator"]);close(operator,a-r,copy.as_u64().unwrap() as usize,fixture["expected"]["operatorStringBytes"].as_u64().unwrap() as usize);
+    }
+}
+
+#[test]
+fn original_typed_owner_demands_propagate_without_false_fixed_page_progress() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📏️owned-demand/🔣️.json")).unwrap();
+    let mut source = String::with_capacity(fixture["reservedCapacity"].as_u64().unwrap() as usize);
+    source.push_str(fixture["text"].as_str().unwrap());
+    assert_eq!(serde_json::from_str::<String>(&serde_json::to_string(&source).unwrap()).unwrap(), source);
+    let mut owner = ValueRetirement::default();
+    owner.push_owned(source);
+    let first_demand = owner.next_close_byte_demand().unwrap();
+    assert!(first_demand > fixture["logicalPage"].as_u64().unwrap() as usize);
+    assert_eq!(owner.close_step(0, first_demand), ValueRetirementStep::Blocked);
+    assert_eq!(owner.close_step(1, first_demand - 1), ValueRetirementStep::Blocked);
+    assert_eq!(owner.next_close_byte_demand().unwrap(), first_demand);
+    let mut released = 0;
+    for turn in 0..fixture["maximumTurns"].as_u64().unwrap() {
+        if owner.terminal_is_empty() { break; }
+        let grant = owner.next_step_byte_demand(fixture["logicalPage"].as_u64().unwrap() as usize).unwrap();
+        match owner.close_step(1, grant) {
+            ValueRetirementStep::Pending { released_items, released_bytes } => { assert!(released_items <= 1 && released_bytes <= grant); released += released_bytes; },
+            ValueRetirementStep::Complete => {},
+            ValueRetirementStep::Blocked => panic!("exact typed owner grant blocked on turn {turn} with demand {grant}"),
+        }
+    }
+    assert!(owner.terminal_is_empty());
+    assert!(released >= fixture["reservedCapacity"].as_u64().unwrap() as usize);
+    eprintln!("[DEBUG] Original Neural typed owner borrowed exact demands, retained undersized grant, physical release={released}");
+}
+
 //#region 🔣️FixtureLaws
 /// 🎟️ An emptied element-vector backing is accounted PHYSICALLY by `allocated_bytes` — the number a
 /// terminal-empty proof and a frontier reservation need — and freed in one turn under any positive

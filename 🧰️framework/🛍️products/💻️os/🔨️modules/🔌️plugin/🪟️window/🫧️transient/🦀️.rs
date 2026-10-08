@@ -424,53 +424,12 @@ impl WindowTransientOwnerRegistry {
 #[path = "🧪️tests/🪟️retained-window-input/🦀️.rs"]
 mod retained_window_input_tests;
 
-//#region 🔖️TransientDiff
-/// 🫧️ The diff of a whole-root transient replacement: the new root, or nothing when the root already holds the requested value.
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-#[value(rename_all = "camelCase", default)]
-pub struct TransientDiff<S> {
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub replacement: Option<S>,
-}
-
-impl<S> Default for TransientDiff<S> {
-    fn default() -> Self {
-        Self { replacement: None }
-    }
-}
-
-impl<S: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue> protocol::MutationDiff<S> for TransientDiff<S> {
-    fn apply(&self, base: &S, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<S> {
-        Ok(self.replacement.clone().unwrap_or_else(|| base.clone()))
-    }
-
-    fn absorb(&mut self, other: Self) {
-        if other.replacement.is_some() {
-            self.replacement = other.replacement;
-        }
-    }
-}
-
-impl<S: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue> protocol::DiffAlgebra<S> for TransientDiff<S> {
-    fn inverse(&self, base: &S) -> Self {
-        Self { replacement: self.replacement.as_ref().map(|_| base.clone()) }
-    }
-
-    fn between(base: &S, other: &S) -> Self {
-        Self { replacement: (base != other).then(|| other.clone()) }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.replacement.is_none()
-    }
-}
-//#endregion 🔖️TransientDiff
-
 //#region 🔖️TransientRoot
 /// 🫧️ Declares a whole-root transient state's one mutation and codecs (audit K3: the ~150 lines flow, fem, remodel, cad,
 /// lowpoly, layout, forms, draw, raster, wfc each re-wrote): `$mutation::Snapshot { transient }` (wire
 /// `{"kind":"snapshot","transient":…}`) replacing the whole root, its leaf descriptor (`$owner`, `$kind`, `$display`,
-/// `$schema`), diff and inverse (the root before), JSON op text and binary, and the state's DSL and pack in the semio envelope
+/// `$schema`), its sparse per-field diff `$diff` (`fields` lists the state's fields, see [`sparse_record_diff!`]: the slots where the
+/// requested root differs from the base) and inverse (the root before), JSON op text and binary, and the state's DSL and pack in the semio envelope
 /// `$envelope` (`$extension`). The state stays the plugin's own type: `Clone + Default + PartialEq + ToValue + FromValue`. An
 /// artifact-level transient stops here; a window transient adds [`window_transient_owners!`].
 #[macro_export]
@@ -478,13 +437,17 @@ macro_rules! transient_root {
     (
         state: $state:ident,
         mutation: $mutation:ident,
+        diff: $diff:ident,
         owner: $owner:literal,
         kind: $kind:literal,
         display_name: $display:literal,
         payload_schema: $schema:literal,
         envelope: $envelope:literal,
-        extension: $extension:literal $(,)?
+        extension: $extension:literal,
+        $($fields:tt)+
     ) => {
+        $crate::__kernel::sparse_record_diff! { record: $state, diff: $diff, $($fields)+ }
+
         #[doc = concat!("🫧️ The one mutation of [`", stringify!($state), "`]: replace the whole root.")]
         #[derive(Clone, Debug, PartialEq, $crate::ToValue, $crate::FromValue)]
         #[value(tag = "kind", rename_all = "kebab-case")]
@@ -493,7 +456,7 @@ macro_rules! transient_root {
         }
 
         impl $crate::__kernel::Mutation<$state> for $mutation {
-            type Diff = $crate::TransientDiff<$state>;
+            type Diff = $diff;
 
             const DESCRIPTORS: &'static [$crate::__kernel::MutationLeafDescriptor] = &[$crate::__kernel::MutationLeafDescriptor {
                 schema_version: 1,
@@ -516,12 +479,13 @@ macro_rules! transient_root {
                 &Self::DESCRIPTORS[0]
             }
 
-            fn diff(&self, base: &$state) -> $crate::__kernel::MutationOutcome<$crate::TransientDiff<$state>> {
+            fn diff(&self, base: &$state) -> $crate::__kernel::MutationOutcome<$diff> {
                 let Self::Snapshot { transient } = self;
-                if transient == base {
+                let changed = <$diff>::changing(base, transient);
+                if changed == <$diff as Default>::default() {
                     return $crate::__kernel::MutationOutcome::empty();
                 }
-                $crate::__kernel::MutationOutcome::new($crate::TransientDiff { replacement: Some(transient.clone()) })
+                $crate::__kernel::MutationOutcome::new(changed)
             }
 
             fn inverse(&self, base: &$state) -> Result<Vec<Self>, $crate::__value::ValueError> {

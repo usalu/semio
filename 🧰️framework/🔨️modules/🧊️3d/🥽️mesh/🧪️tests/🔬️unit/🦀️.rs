@@ -840,3 +840,80 @@ fn bulk_read_accessors_expose_a_pure_consumers_view_and_rebuild_the_mesh() {
     let rebuilt = HalfedgeMesh::from_faces(&positions, &polygons).unwrap();
     assert_eq!((rebuilt.positions(), rebuilt.polygons(), rebuilt.edge_ids().len()), (positions, polygons, edges.len()));
 }
+
+fn rebuild_from_source(source: semio_framework_mesh_engine::PolygonMeshSource) -> HalfedgeMesh {
+    let mut job = HalfedgeMesh::polygon_source_job(source).unwrap();
+    loop {
+        if let MeshModelingStep::Done(mesh) = job.step(4096).unwrap() {
+            return mesh;
+        }
+    }
+}
+
+#[test]
+fn polygon_source_reconstructs_an_equal_mesh_for_every_primitive() {
+    let meshes = [
+        HalfedgeMesh::box_prim(1.0, 2.0, 3.0).unwrap(),
+        HalfedgeMesh::cylinder_prim(1.0, 2.0, 12).unwrap(),
+        HalfedgeMesh::ico_sphere_prim(1.0, 1).unwrap(),
+        rebuild_from_source(semio_framework_mesh_engine::PolygonMeshSource::uv_sphere(1.0, 12, 6).unwrap()),
+        rebuild_from_source(semio_framework_mesh_engine::PolygonMeshSource::torus(2.0, 0.5, 12, 8).unwrap()),
+    ];
+    for mesh in meshes {
+        let rebuilt = rebuild_from_source(mesh.polygon_source().unwrap());
+        assert_eq!(rebuilt.positions(), mesh.positions());
+        assert_eq!(rebuilt.polygons(), mesh.polygons());
+        assert_eq!(rebuilt.edge_count(), mesh.edge_count());
+    }
+}
+
+#[test]
+fn parametric_polygon_sources_build_closed_edge_manifold_meshes() {
+    let sphere = rebuild_from_source(semio_framework_mesh_engine::PolygonMeshSource::uv_sphere(1.0, 16, 8).unwrap());
+    assert_eq!((sphere.vertex_count(), sphere.face_count(), sphere.edge_count()), (2 + 16 * 7, 16 * 8, 16 * 7 + 16 * 8));
+    let torus = rebuild_from_source(semio_framework_mesh_engine::PolygonMeshSource::torus(2.0, 0.5, 16, 8).unwrap());
+    assert_eq!((torus.vertex_count(), torus.face_count(), torus.edge_count()), (16 * 8, 16 * 8, 2 * 16 * 8));
+}
+
+#[test]
+fn obj_export_cursor_writes_the_same_text_in_any_slicing_and_in_bounded_units() {
+    let mesh = HalfedgeMesh::ico_sphere_prim(1.0, 3).unwrap();
+    let whole = mesh.to_obj().unwrap();
+    assert!(whole.starts_with("# kernel_3d_mesh OBJ export\nv "));
+    assert_eq!(whole.lines().filter(|line| line.starts_with("v ")).count(), mesh.vertex_count());
+    assert_eq!(whole.lines().filter(|line| line.starts_with("f ")).count(), mesh.face_count());
+    let mut export = MeshObjExport::new();
+    let mut units = 0;
+    let sliced = loop {
+        units += 1;
+        if let Some(text) = export.step(&mesh, 1).unwrap() {
+            break text;
+        }
+        let (done, total) = export.progress(&mesh);
+        assert!(done <= total);
+    };
+    assert_eq!(sliced, whole);
+    assert!(units >= mesh.face_count() / 256 + mesh.vertex_count() / 256, "{units}");
+}
+
+#[test]
+fn obj_export_writes_texture_coordinates_per_corner_once_the_mesh_is_unwrapped() {
+    let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+    assert!(!mesh.to_obj().unwrap().contains("vt "));
+    mesh.unwrap_uv().unwrap();
+    let text = mesh.to_obj().unwrap();
+    assert_eq!(text.lines().filter(|line| line.starts_with("vt ")).count(), mesh.halfedge_count());
+    assert!(text.lines().filter(|line| line.starts_with("f ")).all(|line| line.split_whitespace().skip(1).all(|corner| corner.contains('/'))));
+}
+
+#[test]
+fn the_seam_set_encodes_in_ascending_order() {
+    use protocol::value::ToValue;
+    let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+    mesh.mark_uv_seam(&[EdgeId(10), EdgeId(0), EdgeId(4), EdgeId(2)], true);
+    let first = mesh.to_value();
+    for _ in 0..4 {
+        assert_eq!(HalfedgeMesh::from_json(&mesh.to_json().unwrap()).unwrap().to_json().unwrap(), mesh.to_json().unwrap());
+        assert_eq!(mesh.to_value(), first);
+    }
+}

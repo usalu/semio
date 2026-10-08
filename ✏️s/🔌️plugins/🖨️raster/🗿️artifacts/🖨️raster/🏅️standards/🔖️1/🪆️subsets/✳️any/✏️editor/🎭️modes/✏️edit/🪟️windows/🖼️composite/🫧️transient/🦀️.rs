@@ -37,12 +37,14 @@ semio_framework_value::artifact_retire_struct!(RasterCompositeWindowTransient { 
 semio_framework_plugin::transient_root! {
     state: RasterCompositeWindowTransient,
     mutation: RasterCompositeWindowTransientMutation,
+    diff: RasterCompositeWindowTransientDiff,
     owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️composite/🫧️transient",
     kind: "set-window-transient",
     display_name: "Set Raster Composite Window Transient",
     payload_schema: "raster.compositewindowtransient",
     envelope: "s.raster.raster.compositewindowtransient",
     extension: "rastercompositewindowtransient",
+    fields: { stroke: Option<Box<RasterStrokeToolState>>, closed: Option<String> },
 }
 
 semio_framework_plugin::window_transient_owners! {

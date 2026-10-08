@@ -23,8 +23,6 @@ fn natural_file_route_round_trips_svg_with_an_independent_xml_oracle_and_fresh_s
     let independent = semio_s_artifact_stdio_svg_test_oracle::standards::v1_1::subsets::base::oracle_round_trip(&exported).expect("quick-xml reopens SVG export");
     let independent = SvgSnapshot::import_utf8(&independent).expect("independent SVG output reopens");
     assert_eq!(independent.doc.root, imported.doc.root);
-    let Some(SvgMutation::SetSnapshot(set)) = <SvgAnyEditor as ArtifactEditor>::whole_document_operation(imported.clone()) else { panic!("natural SVG opens through one event-sourced snapshot mutation") };
-    assert_eq!(set.snapshot, imported);
     assert_eq!(current, <SvgAnyEditor as ArtifactEditor>::initial_snapshot(), "opening does not replace the selected owner before publication");
 }
 

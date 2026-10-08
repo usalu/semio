@@ -1,0 +1,13 @@
+# Current General Workspace Resolution
+
+Actual registered resolve4 completed Nx0/Cargo0 against the new Framework workspace. Parsed Cargo metadata reports67 workspace members and67 local packages, all under the General owner with no Specific local package. Independent Iarna lock comparison against the admitted original full Root lock seed found no new foreign source/version identity. Later product resolution pruned unused General-only dependencies from the separate Root lock; comparing to that later lock would misclassify removals as additions.
+
+All18 selected defining source bodies and the producer remained exact. Root Cargo.lock stayed exact during General resolution. This finite join does not establish atomic source admission, source/tooling closure or a deletion build. Source4 separately ran all3 laws326 assertions with73 joined bodies/absence plus producer. Source3 retained both original laws and failed the missing-workspace law.
+
+Registered product resolve1 completed Nx0/Cargo0 after partition. Frozen3 childBun0 but owningNx1 because frozen install normalized bun.lock during its selected source interval; it is not accepted as a source-stable operation. A sequential stable successor is required.
+
+Frozen4 actual registered stable successor completed Nx0/Bun0. All18 selected bodies and producer remained exact; Root Cargo.lock stayed exact. It accepts the frozen Bun graph at this finite source interval only.
+
+Registered General all-target check1 reached actual Cargo and failed101 with exact18 source bodies and producer. Original native test compilation exposed an unimported cylinder constructor in the 3D differential fixture and compiler resource code source-mounting Hash implementation (including its foreign differential oracle laws) inside ValueDerive. Root corrected the single missing constructor import and replaced the compiler resource Hash source mount with its actual defining first-party crate; Generic ValueDerive now explicitly inherits the neutral Hash dependency, and Specific DSL derive already had it. All original Hash oracle laws remain at their defining owner, with no new foreign runtime dependency. Fresh locks and actual successor checks remain pending.
+
+Registered General all-target check3 completed owningNx0/Cargo0 after the actual direct Hash provider and SQL diagnostic observation fixes. All25 selected source bodies and producer were exact. This checks the complete actual67-member General native workspace without deleting products; it does not run all workspace laws or qualify browser/tooling/optional-feature closure. Full four-package owning runtime and current General-only source corpus successors are separately pending.

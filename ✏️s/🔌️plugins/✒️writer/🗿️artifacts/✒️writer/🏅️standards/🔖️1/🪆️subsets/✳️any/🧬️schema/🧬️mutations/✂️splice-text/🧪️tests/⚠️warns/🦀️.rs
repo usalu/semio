@@ -99,6 +99,12 @@ async fn produces_committed_diff() {
     assert_eq!(produced, committed, "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: produced diff differs from the committed 🔺️diff/🔣️.json");
     let decoded: WriterDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed splice-text diff decodes");
     assert_eq!(decoded, WriterDiff::default(), "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: a no-op's committed diff must be the type's own default");
-    let applied = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-document");
+    let applied = protocol::apply_diff(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(applied, expected_after(), "splice-text/warns-that-an-already-removed-run-leaves-the-brief-unchanged: committed diff did not carry before to after");
+}
+
+/// ⚖️ The inverse diffs sum to the negative of the forward diff: `Σ.apply(after) == before` and `canon(Σ) == canon(d.inverse(before))`.
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
 }

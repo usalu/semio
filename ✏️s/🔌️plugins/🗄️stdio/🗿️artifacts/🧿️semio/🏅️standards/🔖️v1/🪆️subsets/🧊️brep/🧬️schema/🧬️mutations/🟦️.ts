@@ -17,6 +17,7 @@ export interface CreateVertex {
   id: string;
   point: SemioPoint3;
   tol: BrepVertex["tol"];
+  at?: number;
 }
 
 export interface DeleteVertex {
@@ -29,6 +30,7 @@ export interface CreateEdge {
   end_vertex: string;
   curve: BrepCurve;
   tol: BrepVertex["tol"];
+  at?: number;
 }
 
 export interface DeleteEdge {
@@ -42,6 +44,7 @@ export interface CreateFace {
   surface: BrepSurface;
   orientation: boolean;
   tol: BrepVertex["tol"];
+  at?: number;
 }
 
 export interface DeleteFace {
@@ -51,6 +54,7 @@ export interface DeleteFace {
 export interface CreateShell {
   id: string;
   faces?: BrepShellFace[];
+  at?: number;
 }
 
 export interface DeleteShell {
@@ -60,6 +64,7 @@ export interface DeleteShell {
 export interface CreateSolid {
   id: string;
   shells?: BrepSolidShell[];
+  at?: number;
 }
 
 export interface DeleteSolid {

@@ -1,6 +1,4 @@
-//! 📜️ `set-doctype` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse` bodies
-//! were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate value and
-//! delegates, so the semantics are preserved by construction rather than re-derived.
+//! 📜️ `set-doctype` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,14 +13,12 @@ impl protocol::MutationKind<HtmlSnapshot, HtmlMutation> for SetDoctype {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "doctype", kind: "set-doctype", record: "SetDoctype" };
 
     fn diff(&self, base: &HtmlSnapshot) -> protocol::MutationOutcome<<HtmlMutation as Mutation<HtmlSnapshot>>::Diff> {
-        agg_diff(&HtmlMutation::SetDoctype(self.clone()), base)
+        let Self { doctype } = self;
+        protocol::MutationOutcome::new(HtmlDiff { doctype: Some(doctype.clone()), root: None })
     }
     fn inverse(&self, base: &HtmlSnapshot) -> Result<Vec<HtmlMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&HtmlMutation::SetDoctype(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![HtmlMutation::SetDoctype(set_doctype::SetDoctype { doctype: base.doctype.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set doctype", "Dokumenttyp setzen")
     }

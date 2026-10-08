@@ -13,11 +13,9 @@ fn map_document_contract_preserves_all_children_and_dynamic_feature_payloads() {
     assert_eq!(store::ChildRestoreProjection::from_snapshot(&snapshot).unwrap().len(), 3);
     assert_eq!(GisMapSnapshot::parse_dsl(&snapshot.print_dsl()).unwrap(), snapshot);
     assert_eq!(GisMapSnapshot::decode_pack(&snapshot.encode_pack()).unwrap(), snapshot);
-    assert_eq!(protocol::MutationDiff::apply(&GisMapDiff::default(), &snapshot).unwrap(), snapshot);
-    let replacement = GisMapDiff { artifact: Some(Box::new(artifact)), ..Default::default() };
-    assert_eq!(protocol::MutationDiff::apply(&replacement, &GisMapSnapshot::default()).unwrap(), snapshot);
+    assert_eq!(protocol::apply_diff(&GisMapDiff::default(), &snapshot).unwrap(), snapshot);
     let delta = GisMapDiff { positions: Some(GisMapFeaturesDelta { added: vec![MapFeature { id: "scalar".into(), data: semio_framework_value::DslValue::Null }], ..Default::default() }), ..Default::default() };
-    let changed = protocol::MutationDiff::apply(&delta, &snapshot).unwrap();
+    let changed = protocol::apply_diff(&delta, &snapshot).unwrap();
     assert_eq!((&changed.drawing, &changed.image, &changed.value), (&snapshot.drawing, &snapshot.image, &snapshot.value));
     let mut mutated = snapshot.clone();
     let mutation = crate::mutations::GisMapMutation::CreatePosition(crate::mutations::create_position::CreatePosition {

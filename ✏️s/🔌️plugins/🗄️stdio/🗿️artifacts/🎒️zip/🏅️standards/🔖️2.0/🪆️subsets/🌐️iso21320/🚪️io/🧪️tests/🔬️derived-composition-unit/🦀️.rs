@@ -2,7 +2,7 @@ mod tests {
     use super::*;
     use crate::standards::v2_0::subsets::iso21320::io::ZipIso21320BuilderConstruction as ZipIso21320Builder;
     use crate::standards::v2_0::subsets::iso21320::io::{CODE_ENCRYPTED, FLAG_ENCRYPTED};
-    use semio_framework_plugin::AnalyzeSource;
+    use semio_framework_plugin::io::AnalyzeSource;
     use semio_framework_plugin::ArtifactBuilder as _;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

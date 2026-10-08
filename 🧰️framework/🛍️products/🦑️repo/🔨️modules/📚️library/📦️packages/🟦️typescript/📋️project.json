@@ -136,6 +136,16 @@
     ]
   },
   "targets": {
+    "test-cargo-nextest-configuration": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test cargo-nextest-configuration"
+      }
+    },
     "test-general-execution-ownership": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -1084,6 +1094,13 @@
         "command": "bun ./📜️script.ts test exhaustive"
       }
     },
+    "test-cargo-native-owner-discovery": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test cargo-native-owner-discovery"
+      }
+    },
     "test-workspace-publication-source": {
       "executor": "nx:run-commands",
       "cache": true,
@@ -1902,6 +1919,19 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test cargo-library-search-path"
       }
+    },
+    "test-runtime-fixture-graph": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test runtime-fixture-graph"
+      },
+      "dependsOn": [
+        "workspace:deps-cargo",
+        "workspace:deps-trunk",
+        "workspace:deps-wasm-opt"
+      ]
     }
   }
 }

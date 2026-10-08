@@ -3440,6 +3440,18 @@ pub mod standards {
                                     }
                                 }
                                 #[path = "."]
+                                pub mod tsv {
+                                    #[path = "."]
+                                    pub mod v_iana {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📑️tsv/🔖️iana/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
                                 pub mod xlsx {
                                     #[path = "."]
                                     pub mod v_ecma_376 {

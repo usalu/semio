@@ -5,10 +5,8 @@
 
 use crate::editor::svg_any::modes::edit;
 use crate::editor::svg_any::modes::edit::windows::main;
-use crate::standards::v1_1::subsets::base::schema::mutations::{patch_snapshot, set_snapshot as snapshot_edit_set_snapshot,
-    InsertElementMutation, InsertElementPayload, RemoveElementMutation, RemoveElementPayload, SetAttributeMutation, SetAttributePayload, SetDeclarationMutation, SetDeclarationPayload, SetDoctypeMutation, SetDoctypePayload, SetElementNameMutation,
-    SetElementNamePayload, SvgMutation,
-};
+use crate::standards::v1_1::subsets::base::schema::mutations::net_mutations;
+
 use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
 use crate::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_ANY_DIALECT};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -163,10 +161,6 @@ impl ArtifactEditor for SvgAnyEditor {
         SvgSnapshot::import_utf8(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error))
     }
 
-    fn whole_document_operation(snapshot: Self::Snapshot) -> Option<Self::Mutation> {
-        Some(SvgMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot }))
-    }
-
     semio_s_artifact_stdio_contract::snapshot_editing_bounded_first_step_tool_proofs! {
         owner: EditorApp<SvgAnyEditor>,
         owner_file: "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/✏️editor/🦀️.rs",
@@ -219,29 +213,7 @@ impl ArtifactEditor for SvgAnyEditor {
             }),
             SvgAnyEditCommand::SetPixelRegion { source } => {
                 let Ok(snapshot) = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(source) else { return Ok(Emit::default()) };
-                if snapshot.doc.prolog != doc.snapshot.doc.prolog || snapshot.doc.epilog != doc.snapshot.doc.epilog {
-                    return Ok(Emit::default());
-                }
-                let (Some(SvgNode::Element { name: current_name, attrs: current_attrs, children: current_children }), Some(SvgNode::Element { name, attrs, children })) = (&doc.snapshot.doc.root, &snapshot.doc.root) else {
-                    return Ok(Emit::default());
-                };
-                let mut mutations = vec![
-                    SvgMutation::SetDeclaration(SetDeclarationMutation::Apply(SetDeclarationPayload { declaration: snapshot.doc.declaration.clone() })),
-                    SvgMutation::SetDoctype(SetDoctypeMutation::Apply(SetDoctypePayload { doctype: snapshot.doc.doctype.clone() })),
-                ];
-                if current_name != name {
-                    mutations.push(SvgMutation::SetElementName(SetElementNameMutation::Apply(SetElementNamePayload { path: Vec::new(), name: name.clone() })));
-                }
-                mutations.extend(
-                    current_attrs
-                        .iter()
-                        .filter(|current| !attrs.iter().any(|target| target.name == current.name))
-                        .map(|current| SvgMutation::SetAttribute(SetAttributeMutation::Apply(SetAttributePayload { path: Vec::new(), name: current.name.clone(), value: None }))),
-                );
-                mutations.extend(attrs.iter().map(|attribute| SvgMutation::SetAttribute(SetAttributeMutation::Apply(SetAttributePayload { path: Vec::new(), name: attribute.name.clone(), value: Some(attribute.value.clone()) }))));
-                mutations.extend((0..current_children.len()).rev().map(|index| SvgMutation::RemoveElement(RemoveElementMutation::Apply(RemoveElementPayload { parent: Vec::new(), index }))));
-                mutations.extend(children.iter().cloned().enumerate().map(|(index, node)| SvgMutation::InsertElement(InsertElementMutation::Apply(InsertElementPayload { parent: Vec::new(), index, node }))));
-                Ok(Emit::mutations(mutations))
+                Ok(net_mutations(doc.snapshot, &snapshot).map_or_else(Emit::default, Emit::mutations))
             }
         }
     }
@@ -262,7 +234,9 @@ impl editing::SnapshotEditingEditor for SvgAnyEditor {
         match command { SvgAnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
     fn snapshot_edit_mutations(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
-        editing::snapshot_edit_patch(event, snapshot, |patch| SvgMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch }), Some(|snapshot| SvgMutation::SetSnapshot(snapshot_edit_set_snapshot::SetSnapshot { snapshot: snapshot })))
+        let next = editing::apply_snapshot_edit(snapshot, event).map_err(|error| Fault::from(error.to_string()))?;
+        let leaves = net_mutations(snapshot, &next).ok_or_else(|| Fault::from("svg: the edit changes prolog or epilog nodes or the root element's kind, which no mutation leaf addresses"))?;
+        Ok(Emit { artifact_mutations: leaves, ..Default::default() })
     }
 }
 

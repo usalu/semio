@@ -1,0 +1,59 @@
+{
+  "cases": [
+    {
+      "id": "unicode-at-1",
+      "prefixUnits": 1,
+      "scalar": "🔨",
+      "members": [
+        "owned/🧪️crate"
+      ],
+      "exclude": [
+        "absent/🌍️child"
+      ]
+    },
+    {
+      "id": "unicode-at-1022",
+      "prefixUnits": 1022,
+      "scalar": "🔨",
+      "members": [
+        "owned/🧪️crate"
+      ],
+      "exclude": [
+        "absent/🌍️child"
+      ]
+    },
+    {
+      "id": "unicode-at-1023",
+      "prefixUnits": 1023,
+      "scalar": "🔨",
+      "members": [
+        "owned/🧪️crate"
+      ],
+      "exclude": [
+        "absent/🌍️child"
+      ]
+    },
+    {
+      "id": "unicode-at-1024",
+      "prefixUnits": 1024,
+      "scalar": "🔨",
+      "members": [
+        "owned/🧪️crate"
+      ],
+      "exclude": [
+        "absent/🌍️child"
+      ]
+    },
+    {
+      "id": "unicode-at-8191",
+      "prefixUnits": 8191,
+      "scalar": "🔨",
+      "members": [
+        "owned/🧪️crate"
+      ],
+      "exclude": [
+        "absent/🌍️child"
+      ]
+    }
+  ]
+}

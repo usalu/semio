@@ -55,16 +55,22 @@ function sextet(byte: number, index: number): number {
 }
 
 /** 🧮️ Validates one standard-alphabet quartet and writes at most three bytes without allocation. */
-export function decodeBase64Quad(quad:ArrayLike<number>,index:number,last:boolean,output:Uint8Array,at=0):number {
-  if(quad.length!==4)throw new Base64DecodeError({kind:"invalidLength"});
-  if(quad[0]===61||quad[1]===61)throw new Base64DecodeError({kind:"invalidPadding"});
-  const a=sextet(quad[0]!,index),b=sextet(quad[1]!,index+1),pad2=quad[2]===61,pad1=quad[3]===61;
+function standardQuadValue(first:number,second:number,third:number,fourth:number,index:number,last:boolean):number {
+  if(first===61||second===61)throw new Base64DecodeError({kind:"invalidPadding"});
+  const a=sextet(first,index),b=sextet(second,index+1),pad2=third===61,pad1=fourth===61;
   if((pad1||pad2)&&!last||pad2&&!pad1)throw new Base64DecodeError({kind:"invalidPadding"});
-  const c=pad2?0:sextet(quad[2]!,index+2),d=pad1?0:sextet(quad[3]!,index+3);
+  const c=pad2?0:sextet(third,index+2),d=pad1?0:sextet(fourth,index+3);
   if(pad2&&(b&15)!==0||pad1&&!pad2&&(c&3)!==0)throw new Base64DecodeError({kind:"nonCanonicalTrailingBits"});
   const count=pad2?1:pad1?2:3;
+  return (count<<24)|((a<<2)|(b>>>4))|((((b<<4)|(c>>>2))&255)<<8)|((((c<<6)|d)&255)<<16);
+}
+
+/** 🧮️ Validates a quartet before writing to caller storage, using only one packed scalar cell. */
+export function decodeBase64Quad(quad:ArrayLike<number>,index:number,last:boolean,output:Uint8Array,at=0):number {
+  if(quad.length!==4)throw new Base64DecodeError({kind:"invalidLength"});
+  const value=standardQuadValue(quad[0]!,quad[1]!,quad[2]!,quad[3]!,index,last),count=value>>>24;
   if(!(output instanceof Uint8Array)||!Number.isSafeInteger(at)||at<0||at+count>output.length)throw new RangeError("Base64 quartet output is too small");
-  output[at]=(a<<2)|(b>>>4);if(count>1)output[at+1]=(b<<4)|(c>>>2);if(count>2)output[at+2]=(c<<6)|d;
+  output[at]=value&255;if(count>1)output[at+1]=(value>>>8)&255;if(count>2)output[at+2]=(value>>>16)&255;
   return count;
 }
 
@@ -103,22 +109,118 @@ export function base64StandardEncodeControlled(bytes:Uint8Array,control:Base64Co
 }
 /** 🔤️ Validates canonical padding and unused bits before allocating the owned result. */
 export function base64StandardDecodeControlled(text:string,control:Base64Control):Uint8Array{
-  if(text.length%4)throw new Base64DecodeError({kind:"invalidLength"});
-  const padding=text.endsWith("==")?2:text.endsWith("=")?1:0;
-  const size=text.length/4*3-padding;admit(size,control);checkpoint(control,"validate",0,text.length);
-  const quad=new Array<number>(4),scratch=new Uint8Array(3);
-  for(let offset=0;offset<text.length;offset+=4){
-    for(let i=0;i<4;i++)quad[i]=text.charCodeAt(offset+i);
-    const last=offset+4===text.length;decodeBase64Quad(quad,offset,last,scratch);
-    if((offset+4)%4096===0||last)checkpoint(control,"validate",offset+4,text.length);
+  const cursor=new Base64DecodeCursor(text);
+  while(cursor.step(cursor.nextWorkDemand(),control)!=="complete"){}
+  return cursor.takeOutput()!;
+}
+
+/** 🫴️ Withdrawal transfers the original buffer with its valid prefix and first refusal. */
+export interface Base64DecodeParts {
+  readonly input:string;
+  readonly range:Base64InputRange;
+  readonly output:Uint8Array|null;
+  readonly written:number;
+  readonly outcome:Base64DecodeOutcome;
+}
+
+/** 🚪️ The tag preserves even a callback refusal whose original value is null or undefined. */
+export type Base64DecodeOutcome={readonly kind:"pending"}|{readonly kind:"complete"}|{readonly kind:"refused";readonly refusal:unknown};
+
+/** 📐️ Half-open UTF-16 storage indices select a payload without slicing original text. */
+export interface Base64InputRange {readonly start:number;readonly end:number;}
+
+/** 🪜️ Immutable input and exact phase positions survive bounded event-loop turns without payload copies. */
+export class Base64DecodeCursor {
+  private output:Uint8Array|null=null;
+  private written=0;
+  private offset=0;
+  private phase:"validate"|"decode"="validate";
+  private started=false;
+  private complete=false;
+  private refused=false;
+  private refusal:unknown=null;
+  private withdrawn=false;
+  private stepping=false;
+  private readonly outputLength:number;
+  private readonly start:number;
+  private readonly end:number;
+  private readonly length:number;
+
+  constructor(private text:string,range:Base64InputRange={start:0,end:text.length}){
+    this.start=range.start;this.end=range.end;
+    const boundary=(at:number)=>at===0||at===text.length||!(text.charCodeAt(at)>=0xdc00&&text.charCodeAt(at)<=0xdfff&&text.charCodeAt(at-1)>=0xd800&&text.charCodeAt(at-1)<=0xdbff);
+    const valid=Number.isSafeInteger(this.start)&&Number.isSafeInteger(this.end)&&this.start>=0&&this.start<=this.end&&this.end<=text.length&&boundary(this.start)&&boundary(this.end);
+    this.length=valid?this.end-this.start:0;
+    if(!valid){this.refused=true;this.refusal=new RangeError("base64 input range is invalid");}
+    else if(this.length%4){this.refused=true;this.refusal=new Base64DecodeError({kind:"invalidLength"});}
+    const padding=this.length&&text.charCodeAt(this.end-1)===61?(this.length>1&&text.charCodeAt(this.end-2)===61?2:1):0;
+    this.outputLength=this.refused?0:this.length/4*3-padding;
   }
-  checkpoint(control,"decode",0,text.length);const bytes=new Uint8Array(size);let output=0;
-  for(let offset=0;offset<text.length;offset+=4){
-    for(let i=0;i<4;i++)quad[i]=text.charCodeAt(offset+i);
-    output+=decodeBase64Quad(quad,offset,offset+4===text.length,bytes,output);
-    if((offset+4)%4096===0||offset+4===text.length)checkpoint(control,"decode",offset+4,text.length);
+  private active():void{if(this.withdrawn)throw Error("base64 cursor ownership withdrawn");}
+  private mutable():void{this.active();if(this.stepping)throw Error("base64 cursor is already stepping");}
+  private checkpoint(control:Base64Control,completed:number):void{
+    checkpoint(control,this.phase,completed,this.length);
+    if(this.refused)throw this.refusal;
   }
-  return bytes;
+  /** 📊️ Reports input units already validated or reconstructed in the current phase. */
+  progress():Base64Progress{this.active();return{phase:this.phase,completed:this.offset,total:this.length};}
+  /** 📏️ Admits both visits of a nonfinal validation chunk or one stage transition. */
+  nextWorkDemand():number{
+    this.active();if(this.complete||this.refused)return 0;
+    if(!this.started||this.offset===this.length)return 1;
+    const bytes=Math.min(this.length-this.offset,4096);
+    return bytes+(this.phase==="validate"&&this.offset+bytes<this.length?bytes:0);
+  }
+  private advance(control:Base64Control):void{
+    admit(this.outputLength,control);
+    if(!this.started){
+      this.checkpoint(control,0);
+      if(this.phase==="decode")this.output=new Uint8Array(this.outputLength);
+      this.started=true;
+    }else if(this.offset===this.length){
+      if(this.phase==="validate"){this.phase="decode";this.offset=0;this.started=false;}else this.complete=true;
+    }else{
+      const end=Math.min(this.offset+4096,this.length);
+      if(this.phase==="validate"&&end<this.length)for(let at=this.offset;at<end;at++)if(this.text.charCodeAt(this.start+at)===61)throw new Base64DecodeError({kind:"invalidPadding"});
+      for(let at=this.offset;at<end;at+=4){
+        const value=standardQuadValue(this.text.charCodeAt(this.start+at),this.text.charCodeAt(this.start+at+1),this.text.charCodeAt(this.start+at+2),this.text.charCodeAt(this.start+at+3),at,at+4===this.length),count=value>>>24;
+        if(this.phase==="decode"){
+          this.output![this.written++]=value&255;
+          if(count>1)this.output![this.written++]=(value>>>8)&255;
+          if(count>2)this.output![this.written++]=(value>>>16)&255;
+        }
+      }
+      this.offset=end;this.checkpoint(control,end);
+    }
+  }
+  /** 🚦️ Inert undersized grants never call progress; any first thrown refusal freezes later work. */
+  step(maximumWorkUnits:number,control:Base64Control):"pending"|"complete"{
+    this.mutable();if(this.refused)throw this.refusal;if(this.complete)return"complete";
+    if(!Number.isSafeInteger(maximumWorkUnits)||maximumWorkUnits<0){this.refused=true;this.refusal=RangeError("invalid base64 work grant");throw this.refusal;}
+    let remaining=maximumWorkUnits;
+    this.stepping=true;
+    try{
+      while(!this.complete){
+        const demand=this.nextWorkDemand();if(remaining<demand)return"pending";remaining-=demand;
+        try{this.advance(control);}catch(error){if(!this.refused){this.refused=true;this.refusal=error;}throw this.refusal;}
+      }
+      return"complete";
+    }finally{this.stepping=false;}
+  }
+  /** 🛑️ Cancellation preserves source and partial output for explicit withdrawal. */
+  cancel():boolean{this.active();if(this.complete||this.refused)return false;this.refused=true;this.refusal=Error("intrinsic bytes cancelled");return true;}
+  /** ✅️ Completion is successful only after both strict passes finish. */
+  isComplete():boolean{this.active();return this.complete;}
+  /** 📏️ Borrows exact retained typed-array storage without transferring its owner. */
+  outputCapacity():number{this.active();return this.output?.byteLength??0;}
+  /** 📤️ Moves the original result once after complete reconstruction. */
+  takeOutput():Uint8Array|null{this.mutable();if(!this.complete||this.refused)return null;const output=this.output;this.output=null;return output;}
+  /** 🫴️ Consumes the handle and transfers the original typed array without slicing its prefix. */
+  intoParts():Base64DecodeParts{
+    this.mutable();const outcome:Base64DecodeOutcome=this.refused?{kind:"refused",refusal:this.refusal}:this.complete?{kind:"complete"}:{kind:"pending"};
+    const parts={input:this.text,range:{start:this.start,end:this.end},output:this.output,written:this.written,outcome};
+    this.text="";this.output=null;this.refusal=null;this.withdrawn=true;return parts;
+  }
 }
 
 const BASE64_URL_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";

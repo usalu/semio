@@ -81,3 +81,9 @@ fn committed_json_is_canonical() {
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("payload reparses");
     assert_eq!(json_value(&mutation()), original, "set-driver/keeps-driver: committed payload JSON is not canonical");
 }
+
+/// ➕️ The concrete inverse's diffs sum to the negative of the forward diff (L3).
+#[semio_framework_async_macros::async_test]
+async fn inverse_diffs_sum_to_the_negative_diff() {
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation(), &before()).await;
+}

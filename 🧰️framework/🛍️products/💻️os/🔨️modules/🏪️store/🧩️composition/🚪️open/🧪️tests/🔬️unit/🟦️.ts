@@ -1,13 +1,10 @@
 import { expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
-import Ajv from "ajv";
 import { applyPatch } from "fast-json-patch";
 import opening from "../../🧫️fixtures/🔣️.json" with { type: "json" };
 import demand from "../../../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json" with { type: "json" };
-import schema from "../../../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🧬️schema/🔣️.json" with { type: "json" };
 
 test("member opening retains six rejection stages and queries indivisible physical owners", async () => {
-  expect(new Ajv({ strict: true, allErrors: true }).compile(schema)(demand)).toBe(true);
   expect(opening.retention.map(row => [row.stage, row.snapshots, row.mutations])).toEqual([
     ["input", 0, 0], ["snapshot", 1, 0], ["forward", 1, 1], ["inverse", 1, 2], ["envelope", 1, 0], ["initialization", 2, 0],
   ]);

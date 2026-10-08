@@ -313,6 +313,51 @@ async fn finish_run_node_replacement_inverse_restores_the_original_node_order() 
     assert_eq!(restored, document);
 }
 
+/// ➕️ L3 for every run kind: the concrete inverse's diffs sum to the negative of the forward diff.
+#[semio_framework_async_macros::async_test]
+async fn every_run_kind_inverse_diffs_sum_to_the_negative_diff() {
+    use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law as law;
+    let fresh = empty_run_document().await;
+    law(
+        &RunMutation::StartRun(StartRun {
+            workflow_ref: "space.space".into(),
+            workflow_checkpoint_id: "ck-1".into(),
+            input_collection_ref: "collections/in".into(),
+            input_snapshot_id: "snap-1".into(),
+            parameter_values: vec![RunParameterValue { parameter_id: "p1".into(), value: "10".into() }],
+            output_collection_ref: "collections/out".into(),
+            trigger: RunTrigger::Manual { actor: "dev".into() },
+        }),
+        &fresh,
+    )
+    .await;
+    let started = sample_run_document().await;
+    law(&RunMutation::StartRunNode(StartRunNode { node_id: "b".into() }), &started).await;
+    law(&RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("b", RunNodeStatus::Computed).await }), &started).await;
+    law(&RunMutation::FinishRunNode(FinishRunNode { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit).await }), &started).await;
+    law(&RunMutation::AppendRunLog(AppendRunLog { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "2".into() }), &started).await;
+    law(&RunMutation::SealRun(SealRun { status: RunStatus::Succeeded }), &started).await;
+    let sealed = apply_run_operation(&started, &RunMutation::SealRun(SealRun { status: RunStatus::Succeeded }));
+    law(&RunMutation::SetRunSeal(SetRunSeal { sealed: false, status: RunStatus::Running, finished_at: None }), &sealed).await;
+    law(&RunMutation::SetRunHeader(SetRunHeader { status: RunStatus::Pending, started_at: String::new(), ..set_run_header_of(&started) }), &started).await;
+    law(&RunMutation::RetractRunLog(RetractRunLog { count: 1 }), &started).await;
+    law(&RunMutation::RetractRunNode(RetractRunNode { node_id: "a".into() }), &started).await;
+}
+
+fn set_run_header_of(document: &RunArtifact) -> SetRunHeader {
+    SetRunHeader {
+        workflow_ref: document.workflow_ref.clone(),
+        workflow_checkpoint_id: document.workflow_checkpoint_id.clone(),
+        input_collection_ref: document.input_collection_ref.clone(),
+        input_snapshot_id: document.input_snapshot_id.clone(),
+        parameter_values: document.parameter_values.clone(),
+        output_collection_ref: document.output_collection_ref.clone(),
+        trigger: document.trigger.clone(),
+        status: document.status,
+        started_at: document.started_at.clone(),
+    }
+}
+
 #[semio_framework_async_macros::async_test]
 async fn run_node_record_dsl_pack_round_trips_nested_tables() {
     let record = sample_run_node_record("a", RunNodeStatus::Failed).await;

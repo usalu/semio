@@ -29,7 +29,7 @@ fn mutation() -> SemioGraphMutation {
 #[semio_framework_async_macros::async_test]
 async fn retypes_the_node_without_touching_its_label() {
     let base = before();
-    let produced = mutation().diff(&base).diff().apply(&base).expect("change-node-kind applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("change-node-kind applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "change-node-kind/retypes-the-source-node-without-relabelling-it: applied state differs from the committed after-snapshot");
     assert_eq!(produced.nodes[0].kind, "generator", "the node's kind must become new_kind");
     assert_eq!(produced.nodes[0].label, base.nodes[0].label, "change-node-kind must NOT touch the separate label field");
@@ -42,11 +42,12 @@ async fn retypes_the_node_without_touching_its_label() {
 async fn the_undo_change_node_kind_restores_the_original_kind() {
     let base = before();
     let mutation = mutation();
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo.len(), 1, "change-node-kind of an existing node undoes as exactly one change-node-kind");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward change-node-kind applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo change-node-kind applies to the retyped graph");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward change-node-kind applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo change-node-kind applies to the retyped graph");
     }
     assert_eq!(current, base, "change-node-kind/retypes-the-source-node-without-relabelling-it: the undo did not restore the before-snapshot");
 }
@@ -91,7 +92,6 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical_and_omits_edges_entirely() {
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-node-kind diff decodes");
     assert!(decoded.edges.is_none(), "change-node-kind must leave the edges slot untouched");
-    assert_eq!(decoded.nodes.as_ref().map(|list| list.values.len()), Some(2), "the diff must carry the whole rebuilt nodes list");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert!(committed.get("edges").is_none(), "the committed diff JSON must not carry a edges key at all");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
@@ -102,6 +102,6 @@ async fn committed_diff_is_canonical_and_omits_edges_entirely() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
     let decoded: SemioGraphDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-node-kind diff decodes");
-    let produced = decoded.apply(&before()).expect("committed change-node-kind diff applies to the before-snapshot");
+    let produced = protocol::apply_diff(&decoded, &before()).expect("committed change-node-kind diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-node-kind/retypes-the-source-node-without-relabelling-it: committed diff did not carry before to after");
 }

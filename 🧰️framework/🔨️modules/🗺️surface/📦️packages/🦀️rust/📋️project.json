@@ -2,6 +2,20 @@
   "name": "@semio-tech/framework-surface-rs",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "test-scene-wire-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-scene-wire-native"
+      }
+    },
+    "test-scene-wire-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-scene-wire-source"
+      }
+    },
     "wasm": {
       "executor": "nx:run-commands",
       "options": {
@@ -60,6 +74,13 @@
         "^production",
         "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
       ]
+    },
+    "test-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-source"
+      }
     }
   }
 }

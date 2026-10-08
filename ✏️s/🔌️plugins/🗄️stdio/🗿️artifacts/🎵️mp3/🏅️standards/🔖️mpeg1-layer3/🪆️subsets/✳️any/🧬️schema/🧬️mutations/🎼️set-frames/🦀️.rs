@@ -1,6 +1,4 @@
-//! 🎼️ `set-frames` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🎼️ `set-frames` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
 
@@ -15,14 +13,12 @@ impl protocol::MutationKind<Mp3Snapshot, Mp3Mutation> for SetFrames {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "frames", kind: "set-frames", record: "SetFrames" };
 
     fn diff(&self, base: &Mp3Snapshot) -> protocol::MutationOutcome<<Mp3Mutation as Mutation<Mp3Snapshot>>::Diff> {
-        agg_diff(&Mp3Mutation::SetFrames(self.clone()), base)
+        let Self { frames } = self;
+        protocol::MutationOutcome::new(diff_set_frames(frames.clone()))
     }
     fn inverse(&self, base: &Mp3Snapshot) -> Result<Vec<Mp3Mutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&Mp3Mutation::SetFrames(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![Mp3Mutation::SetFrames(set_frames::SetFrames { frames: base.frames.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set frames", "Frames setzen")
     }

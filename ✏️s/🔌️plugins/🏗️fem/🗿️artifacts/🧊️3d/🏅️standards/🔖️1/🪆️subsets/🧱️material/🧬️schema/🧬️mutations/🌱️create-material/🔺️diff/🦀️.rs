@@ -1,6 +1,6 @@
 //! 🔺️ Sparse diff builder for `CreateMaterial`.
 use super::CreateMaterial;
-use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dMaterialsDelta};
+use crate::standards::v1::subsets::any::schema::diff::{Fem3dDiff, Fem3dMaterialsDelta, insertion_order};
 use crate::standards::v1::subsets::any::schema::mutations::{invariant,material_breach};
 
 use crate::Fem3dSnapshot;
@@ -13,6 +13,6 @@ pub fn diff(payload: &CreateMaterial, base: &Fem3dSnapshot) -> protocol::Mutatio
     if let Some(breach) = material_breach(&payload.material) {
         return invariant(breach, vec![payload.material.id.clone()]);
     }
-    protocol::MutationOutcome::new(Fem3dDiff { materials: Some(Fem3dMaterialsDelta { added: vec![payload.material.clone()], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(Fem3dDiff { materials: Some(Fem3dMaterialsDelta { added: vec![payload.material.clone()], reordered: insertion_order(base.materials.iter().map(|item| item.id.as_str()), &payload.material.id, payload.index), ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

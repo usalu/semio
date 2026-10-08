@@ -28,7 +28,7 @@ fn json(text: &str) -> serde_json::Value {
 #[semio_framework_async_macros::async_test]
 async fn resizes_the_node() {
     let base = snapshot(BEFORE);
-    let produced = decode::<SemioGraphMutation>(MUTATION).diff(&base).diff().apply(&base).expect("resize-node applies to its committed before-snapshot");
+    let produced = protocol::apply_diff(decode::<SemioGraphMutation>(MUTATION).diff(&base).diff(), &base).expect("resize-node applies to its committed before-snapshot");
     assert_eq!(produced, snapshot(AFTER), "resize-node/resizes: applied state differs from the committed after-snapshot");
     assert_eq!(produced.edges, base.edges, "resizing a node must not disturb any edge");
 }
@@ -38,11 +38,12 @@ async fn resizes_the_node() {
 async fn the_undo_resizes_back() {
     let base = snapshot(BEFORE);
     let mutation: SemioGraphMutation = decode(MUTATION);
+    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("resize-node inverse");
     assert!(matches!(undo.as_slice(), [SemioGraphMutation::ResizeNode(_)]), "{undo:?}");
-    let mut current = mutation.diff(&base).diff().apply(&base).expect("forward resize-node applies");
-    for step in &undo {
-        current = step.diff(&current).diff().apply(&current).expect("the undo applies to the resized graph");
+    let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward resize-node applies");
+    for step in undo.iter().rev() {
+        current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo applies to the resized graph");
     }
     assert_eq!(current, base, "resize-node/resizes: the undo did not restore the before-snapshot");
 }
@@ -64,7 +65,7 @@ async fn declared_outcome_and_diff_hold() {
     let outcome = <SemioGraphMutation as Mutation<SemioGraphSnapshot>>::diff(&decode(MUTATION), &base);
     assert!(outcome.messages().is_empty(), "{:?}", outcome.messages());
     assert_eq!(json(&semio_framework_pack_json::to_json_string(outcome.diff())), json(DIFF), "resize-node/resizes: produced diff differs from the committed diff");
-    assert_eq!(decode::<SemioGraphDiff>(DIFF).apply(&base).expect("committed diff applies"), snapshot(AFTER));
+    assert_eq!(protocol::apply_diff(&decode::<SemioGraphDiff>(DIFF), &base).expect("committed diff applies"), snapshot(AFTER));
 }
 
 /// 🚧️ The guard branches report their frozen codes.

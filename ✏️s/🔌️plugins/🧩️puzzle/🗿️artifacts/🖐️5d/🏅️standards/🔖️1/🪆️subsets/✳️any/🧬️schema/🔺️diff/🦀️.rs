@@ -642,7 +642,7 @@ impl ItemPatch<Puzzle5dPart3d> for Puzzle5dPart3dPatch {
             item.orientation = *value;
         }
         if let Some(value) = &self.scale {
-            item.scale = value.clone();
+            item.scale = *value;
         }
         if let Some(value) = &self.label {
             item.label = value.clone();
@@ -671,7 +671,7 @@ impl ItemPatch<Puzzle5dPart3d> for Puzzle5dPart3dPatch {
             origin: self.origin.as_ref().map(|_| base.origin),
             mesh_url: self.mesh_url.as_ref().map(|_| base.mesh_url.clone()),
             orientation: self.orientation.as_ref().map(|_| base.orientation),
-            scale: self.scale.as_ref().map(|_| base.scale.clone()),
+            scale: self.scale.as_ref().map(|_| base.scale),
             label: self.label.as_ref().map(|_| base.label.clone()),
         }
     }
@@ -680,7 +680,7 @@ impl ItemPatch<Puzzle5dPart3d> for Puzzle5dPart3dPatch {
             origin: (base.origin != other.origin).then(|| other.origin),
             mesh_url: (base.mesh_url != other.mesh_url).then(|| other.mesh_url.clone()),
             orientation: (base.orientation != other.orientation).then(|| other.orientation),
-            scale: (base.scale != other.scale).then(|| other.scale.clone()),
+            scale: (base.scale != other.scale).then(|| other.scale),
             label: (base.label != other.label).then(|| other.label.clone()),
         }
     }
@@ -1017,7 +1017,7 @@ impl ItemPatch<Puzzle5dTargetVolume> for Puzzle5dTargetVolumePatch {
             item.orientation = *value;
         }
         if let Some(value) = &self.scale {
-            item.scale = value.clone();
+            item.scale = *value;
         }
         if let Some(value) = &self.hidden {
             item.hidden = *value;
@@ -1048,7 +1048,7 @@ impl ItemPatch<Puzzle5dTargetVolume> for Puzzle5dTargetVolumePatch {
         Self {
             origin: self.origin.as_ref().map(|_| base.origin),
             orientation: self.orientation.as_ref().map(|_| base.orientation),
-            scale: self.scale.as_ref().map(|_| base.scale.clone()),
+            scale: self.scale.as_ref().map(|_| base.scale),
             hidden: self.hidden.as_ref().map(|_| base.hidden),
             locked: self.locked.as_ref().map(|_| base.locked),
         }
@@ -1057,7 +1057,7 @@ impl ItemPatch<Puzzle5dTargetVolume> for Puzzle5dTargetVolumePatch {
         Self {
             origin: (base.origin != other.origin).then(|| other.origin),
             orientation: (base.orientation != other.orientation).then(|| other.orientation),
-            scale: (base.scale != other.scale).then(|| other.scale.clone()),
+            scale: (base.scale != other.scale).then(|| other.scale),
             hidden: (base.hidden != other.hidden).then(|| other.hidden),
             locked: (base.locked != other.locked).then(|| other.locked),
         }

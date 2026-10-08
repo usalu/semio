@@ -36,23 +36,10 @@
       "capability": "mp4-isobmff-mutate",
       "standardDirectoryName": "🔖️isobmff",
       "subsetDirectoryName": "✳️any",
-      "vectors": [
-        {
-          "mutationId": "set-snapshot",
-          "sourceMutationDirectoryName": "📸️set-snapshot",
-          "mutationDirectoryName": "📸️set-snapshot",
-          "scenarios": [
-            {
-              "id": "promotes-the-second-sample-to-a-sync-frame",
-              "directoryName": "🔑️promotes"
-            }
-          ]
-        }
-      ],
+      "vectors": [],
       "kinds": [
-        "set-snapshot",
-        "patch-snapshot",
         "set-ftyp",
+        "set-movie",
         "insert-track",
         "remove-track",
         "set-track-dimensions",
@@ -121,26 +108,6 @@
           ]
         },
         {
-          "id": "patch-snapshot",
-          "capability": "mp4-isobmff-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "rejected"
-          ],
-          "productionDispatch": {
-            "operation": "patch-snapshot",
-            "bridgeVersion": 1,
-            "variant": "PatchSnapshot"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "mp4-isobmff-mutate",
-              "qualifyingKind": "third-party-library"
-            }
-          ]
-        },
-        {
           "id": "remove-sample",
           "capability": "mp4-isobmff-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
@@ -200,6 +167,25 @@
           ]
         },
         {
+          "id": "set-movie",
+          "capability": "mp4-isobmff-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-movie",
+            "bridgeVersion": 1,
+            "variant": "SetMovie"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "mp4-isobmff-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
           "id": "set-sample-sync",
           "capability": "mp4-isobmff-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
@@ -211,25 +197,6 @@
             "operation": "set-sample-sync",
             "bridgeVersion": 1,
             "variant": "SetSampleSync"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "mp4-isobmff-mutate",
-              "qualifyingKind": "third-party-library"
-            }
-          ]
-        },
-        {
-          "id": "set-snapshot",
-          "capability": "mp4-isobmff-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied"
-          ],
-          "productionDispatch": {
-            "operation": "set-snapshot",
-            "bridgeVersion": 1,
-            "variant": "SetSnapshot"
           },
           "oracleRequirements": [
             {
@@ -322,7 +289,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "mp4-carrier",
-      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). InsertSample{trackIndex:0,index:1,sample} inserts a real NAL-unit-shaped H.264 sample between the two existing samples, matching the committed set-snapshot leaf's own AVC track."
+      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's committed leaf fixtures (a real single-track AVC/H.264 document). InsertSample{trackIndex:0,index:1,sample} inserts a real NAL-unit-shaped H.264 sample between the two existing samples in the same single-track AVC document."
     },
     {
       "id": "insert-track-applied",
@@ -364,7 +331,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "mp4-carrier",
-      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). InsertTrack{index:1,track} appends a second, identically-shaped video track and bumps movie.nextTrackId — the field the box header itself must stay consistent with."
+      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's committed leaf fixtures (a real single-track AVC/H.264 document). InsertTrack{index:1,track} appends a second, identically-shaped video track and bumps movie.nextTrackId — the field the box header itself must stay consistent with."
     },
     {
       "id": "remove-track-applied",
@@ -406,7 +373,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "mp4-carrier",
-      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). RemoveTrack{index:1} drops the second track, restoring the single-track document."
+      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's committed leaf fixtures (a real single-track AVC/H.264 document). RemoveTrack{index:1} drops the second track, restoring the single-track document."
     },
     {
       "id": "set-sample-sync-applied",
@@ -448,7 +415,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "mp4-carrier",
-      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). SetSampleSync{trackIndex:0,index:1,sync:true} promotes the second sample to a sync (key) frame in place — the exact mutation this subset's own committed set-snapshot fixture's scenario name describes."
+      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's committed leaf fixtures (a real single-track AVC/H.264 document). SetSampleSync{trackIndex:0,index:1,sync:true} promotes the second sample to a sync (key) frame in place."
     },
     {
       "id": "set-track-codec-applied",
@@ -490,7 +457,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "mp4-carrier",
-      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). SetTrackCodec{trackIndex:0,codec} replaces the SPS/PPS NAL units in place with a different real High-profile AVC parameter set, leaving nalLengthSize (the ISOBMFF avcC length-prefix size) unchanged."
+      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's committed leaf fixtures (a real single-track AVC/H.264 document). SetTrackCodec{trackIndex:0,codec} replaces the SPS/PPS NAL units in place with a different real High-profile AVC parameter set, leaving nalLengthSize (the ISOBMFF avcC length-prefix size) unchanged."
     },
     {
       "id": "set-ftyp-applied",
@@ -532,7 +499,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "mp4-carrier",
-      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). SetFtyp replaces the whole ftyp box — major brand, minor version and compatible-brands list — with a different real ISOBMFF brand combination."
+      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's committed leaf fixtures (a real single-track AVC/H.264 document). SetFtyp replaces the whole ftyp box — major brand, minor version and compatible-brands list — with a different real ISOBMFF brand combination."
     },
     {
       "id": "set-track-dimensions-applied",
@@ -574,7 +541,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "mp4-carrier",
-      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). SetTrackDimensions{trackIndex:0,width:32,height:24} overwrites the track header's presentation width/height (tkhd) in place."
+      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's committed leaf fixtures (a real single-track AVC/H.264 document). SetTrackDimensions{trackIndex:0,width:32,height:24} overwrites the track header's presentation width/height (tkhd) in place."
     },
     {
       "id": "remove-sample-applied",
@@ -616,17 +583,17 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "mp4-carrier",
-      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's own committed set-snapshot leaf fixture (a real single-track AVC/H.264 document). RemoveSample{trackIndex:0,index:0} drops the first (sync) sample, leaving the second."
+      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's committed leaf fixtures (a real single-track AVC/H.264 document). RemoveSample{trackIndex:0,index:0} drops the first (sync) sample, leaving the second."
     },
     {
-      "id": "patch-snapshot-applied",
+      "id": "set-movie-applied",
       "class": "handcrafted",
       "target": {
         "artifact": "s.stdio.mp4",
         "standard": "isobmff",
         "subset": "any"
       },
-      "mutation": "patch-snapshot",
+      "mutation": "set-movie",
       "outcome": "applied",
       "units": {
         "length": "unitless",
@@ -635,17 +602,17 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🩹️patch-snapshot/⬅️before.json",
+          "path": "../🧫️fixtures/🎬set-movie/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:b934a19ee9a35cbd07b9d4d2ff48b445d987681f7949ded6acb56b265086e393",
           "bytes": 2460
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🩹️patch-snapshot/➡️after.json",
+          "path": "../🧫️fixtures/🎬set-movie/➡️after.json",
           "mediaType": "application/json",
-          "sha256": "sha256:a7ca68deb69be6a70689aeb1dca9ae3db79f41058733f966fcd809aa97e32d3f",
-          "bytes": 2460
+          "sha256": "sha256:d6e3dec860726f8d0b6f4e1887c982ce2c61e51464f8fc7f3eb4c15da7f4ad21",
+          "bytes": 2462
         }
       ],
       "provenance": {
@@ -658,7 +625,7 @@
       "comparisonProfile": "ordered-json-v1",
       "reproducible": true,
       "family": "mp4-carrier",
-      "notes": "Handcrafted Mp4Snapshot before/after pair on the same committed single-track AVC/H.264 base as set-sample-sync. PatchSnapshot{set /tracks/0/width = 32} is the editor's compact path-addressed patch: the tkhd width changes in place and every sample, the codec and the movie header stay untouched."
+      "notes": "Handcrafted Mp4Snapshot before/after pair, schema and base track data taken from this subset's committed leaf fixtures (a real single-track AVC/H.264 document). SetMovie replaces the movie header (mvhd) — its timescale and its title — leaving ftyp and every track untouched."
     }
   ],
   "oracleHostPackages": []

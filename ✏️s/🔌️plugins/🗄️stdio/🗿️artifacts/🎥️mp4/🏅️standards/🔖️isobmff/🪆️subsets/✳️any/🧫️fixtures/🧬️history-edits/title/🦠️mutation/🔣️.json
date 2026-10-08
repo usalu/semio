@@ -1,10 +1,27 @@
 {
   "mutation": {
-    "mutation": "patchSnapshot",
-    "patch": {
-      "operation": "set",
-      "path": "/movie/title",
-      "value": "Two"
+    "mutation": "setMovie",
+    "movie": {
+      "creationTime": 0,
+      "modificationTime": 0,
+      "timescale": 1000,
+      "duration": 0,
+      "rate": 65536,
+      "volume": 256,
+      "matrix": [
+        65536,
+        0,
+        0,
+        0,
+        65536,
+        0,
+        0,
+        0,
+        1073741824
+      ],
+      "nextTrackId": 1,
+      "title": "Two",
+      "encoder": null
     }
   },
   "before": {

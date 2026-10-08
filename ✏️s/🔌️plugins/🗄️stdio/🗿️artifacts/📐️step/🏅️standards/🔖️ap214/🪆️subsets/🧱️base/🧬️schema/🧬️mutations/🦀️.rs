@@ -1,8 +1,7 @@
-//! 🧬️ StepMutation — document mutation dispatch. Every variant's `diff()` is handcrafted
-//! (constructs the sparse `StepDiff` directly — apply-and-capture is banned by the recipe) and
-//! `inverse()` is handcrafted per variant, key/index-aware.
+//! 🧬️ StepMutation — document mutation dispatch. Every leaf builds its sparse `StepDiff` directly and a concrete,
+//! key/index-aware inverse from its payload and reads of `base`.
 
-use crate::schema::diff::{diff_set_snapshot, StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified};
+use crate::schema::diff::{StepArgAdded, StepArgModified, StepArgsDiff, StepDiff, StepEntitiesDiff, StepEntityAdded, StepEntityDiff, StepEntityModified};
 
 
 
@@ -36,7 +35,7 @@ use crate::schema::diff::{diff_set_snapshot, StepArgAdded, StepArgModified, Step
 use crate::schema::snapshot::{StepEntity, StepFileDescription, StepFileName, StepFileSchema, StepValue};
 use crate::StepSnapshot;
 
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 //#region 🔖️Mutations
 #[path = "🧩insert-entity/🦀️.rs"]
@@ -57,13 +56,6 @@ pub mod set_file_description;
 pub mod set_file_name;
 #[path = "🏷️set-file-schema/🦀️.rs"]
 pub mod set_file_schema;
-/// 📐️ Typed content mutation for `stdio.step`.
-//#region 🔖️Leaves
-#[path = "🩹️patch-snapshot/🦀️.rs"]
-pub mod patch_snapshot;
-#[path = "📸️set-snapshot/🦀️.rs"]
-pub mod set_snapshot;
-//#endregion 🔖️Leaves
 
 /// 📐️ Typed mutation for this artifact. `NoMutation` was dropped: `#[derive(dsl::Mutations)]`
 /// requires every variant to wrap exactly one leaf payload and a unit variant wraps none.
@@ -71,8 +63,6 @@ pub mod set_snapshot;
 #[mutations(snapshot = StepSnapshot, diff = StepDiff, schema = "StepMutation")]
 #[value(tag = "mutation", rename_all = "camelCase")]
 pub enum StepMutation {
-    SetSnapshot(set_snapshot::SetSnapshot),
-    PatchSnapshot(patch_snapshot::PatchSnapshot),
     SetFileDescription(set_file_description::SetFileDescription),
     SetFileName(set_file_name::SetFileName),
     SetFileSchema(set_file_schema::SetFileSchema),
@@ -88,7 +78,7 @@ pub enum StepMutation {
 /// mutation catalog `../🔣️oracle.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself).
-pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-file-description", "set-file-name", "set-file-schema", "insert-entity", "remove-entity", "set-entity-name", "set-entity-arg", "insert-entity-arg", "remove-entity-arg"];
+pub const KINDS: &[&str] = &["set-file-description", "set-file-name", "set-file-schema", "insert-entity", "remove-entity", "set-entity-name", "set-entity-arg", "insert-entity-arg", "remove-entity-arg"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -97,7 +87,7 @@ pub const KINDS: &[&str] = &["set-snapshot", "patch-snapshot", "set-file-descrip
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation) -> protocol::MutationOutcome<StepDiff> {
     let outcome = <StepMutation as Mutation<StepSnapshot>>::diff(mutation, snapshot);
-    match MutationDiff::apply(outcome.diff(), snapshot) {
+    match protocol::apply_diff(outcome.diff(), snapshot) {
         Ok(next) => {
             *snapshot = next;
             outcome
@@ -105,103 +95,102 @@ pub fn apply_step_mutation(snapshot: &mut StepSnapshot, mutation: &StepMutation)
         Err(error) => protocol::MutationOutcome::fatal(error.code, error.message, error.target).absorb_messages(outcome.messages().to_vec()),
     }
 }
+
+/// 🔗️ Every entity id `value` references, through aggregates and typed values.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn value_references(value: &StepValue, out: &mut Vec<u64>) {
+    match value {
+        StepValue::Reference(id) => out.push(*id),
+        StepValue::Aggregate(items) => items.iter().for_each(|item| value_references(item, out)),
+        StepValue::TypedValue { value, .. } => value_references(value, out),
+        _ => {}
+    }
+}
+
+/// 🔗️ Every entity id `entity` references, in its leading record and its complex constituents.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn entity_references(entity: &StepEntity) -> Vec<u64> {
+    let mut out = Vec::new();
+    entity.args.iter().for_each(|value| value_references(value, &mut out));
+    entity.complex.iter().flat_map(|part| part.args.iter()).for_each(|value| value_references(value, &mut out));
+    out
+}
+
+/// 🧭️ How `next`'s entities follow from `base`'s without any intermediate dangling reference: `inserts` (dependencies first, each at the
+/// index it takes among the entities present when it is applied), then the `kept` entities whose values are edited in place, then the
+/// `removes` (dependents first).
+pub struct NetEntityPlan<'a> {
+    pub inserts: Vec<(usize, &'a StepEntity)>,
+    pub kept: Vec<(&'a StepEntity, &'a StepEntity)>,
+    pub removes: Vec<u64>,
+}
+
+/// 🧭️ Plans the entity edits that carry `base` to `next`. `None` when the retained entities change their relative order, or when the references
+/// among added (or among removed) entities form a cycle, neither of which a stepwise edit can express.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn net_entity_plan<'a>(base: &'a StepSnapshot, next: &'a StepSnapshot) -> Option<NetEntityPlan<'a>> {
+    let next_position = |id: u64| next.entities.iter().position(|entity| entity.id == id);
+    let kept: Vec<(&StepEntity, &StepEntity)> = base.entities.iter().filter_map(|before| next.entities.iter().find(|after| after.id == before.id).map(|after| (before, after))).collect();
+    if kept.windows(2).any(|pair| next_position(pair[0].1.id) > next_position(pair[1].1.id)) {
+        return None;
+    }
+    let mut working: Vec<u64> = base.entities.iter().map(|entity| entity.id).collect();
+    let mut pending: Vec<&StepEntity> = next.entities.iter().filter(|entity| !working.contains(&entity.id)).collect();
+    let mut inserts = Vec::new();
+    while !pending.is_empty() {
+        let ready = pending.iter().position(|entity| entity_references(entity).iter().all(|id| *id == entity.id || working.contains(id) || !pending.iter().any(|other| other.id == *id)))?;
+        let entity = pending.remove(ready);
+        let position = next_position(entity.id)?;
+        let index = working.iter().rposition(|id| next_position(*id).is_some_and(|at| at < position)).map_or(0, |at| at + 1);
+        working.insert(index, entity.id);
+        inserts.push((index, entity));
+    }
+    let mut doomed: Vec<&StepEntity> = base.entities.iter().filter(|entity| next_position(entity.id).is_none()).collect();
+    let mut removes = Vec::new();
+    while !doomed.is_empty() {
+        let free = doomed.iter().position(|entity| !doomed.iter().any(|other| other.id != entity.id && entity_references(other).contains(&entity.id)))?;
+        removes.push(doomed.remove(free).id);
+    }
+    Some(NetEntityPlan { inserts, kept, removes })
+}
+
+/// 🧮️ The leaf mutations that carry `base` to `next`, ordered so no intermediate snapshot holds a dangling reference: header slots become their
+/// `set-file-*` leaf, then the [`net_entity_plan`] as `insert-entity`, in-place name and argument edits, and `remove-entity`. `None` when `next`
+/// changes the document `schema`, a retained entity's complex constituents, or what [`net_entity_plan`] cannot plan.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn net_mutations(base: &StepSnapshot, next: &StepSnapshot) -> Option<Vec<StepMutation>> {
+    if base.schema != next.schema {
+        return None;
+    }
+    let plan = net_entity_plan(base, next)?;
+    if plan.kept.iter().any(|(before, after)| before.complex != after.complex) {
+        return None;
+    }
+    let mut leaves = Vec::new();
+    if base.header.file_description != next.header.file_description {
+        leaves.push(StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: next.header.file_description.clone() }));
+    }
+    if base.header.file_name != next.header.file_name {
+        leaves.push(StepMutation::SetFileName(set_file_name::SetFileName { file_name: next.header.file_name.clone() }));
+    }
+    if base.header.file_schema != next.header.file_schema {
+        leaves.push(StepMutation::SetFileSchema(set_file_schema::SetFileSchema { file_schema: next.header.file_schema.clone() }));
+    }
+    leaves.extend(plan.inserts.iter().map(|(index, entity)| StepMutation::InsertEntity(insert_entity::InsertEntity { index: *index, entity: (*entity).clone() })));
+    for (before, after) in &plan.kept {
+        if before.name != after.name {
+            leaves.push(StepMutation::SetEntityName(set_entity_name::SetEntityName { id: after.id, name: after.name.clone() }));
+        }
+        let shared = before.args.len().min(after.args.len());
+        leaves.extend((0..shared).filter(|arg_index| before.args[*arg_index] != after.args[*arg_index]).map(|arg_index| StepMutation::SetEntityArg(set_entity_arg::SetEntityArg { id: after.id, arg_index, value: after.args[arg_index].clone() })));
+        leaves.extend((shared..after.args.len()).map(|arg_index| StepMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id: after.id, arg_index, value: after.args[arg_index].clone() })));
+        leaves.extend((shared..before.args.len()).rev().map(|arg_index| StepMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id: after.id, arg_index })));
+    }
+    leaves.extend(plan.removes.iter().map(|id| StepMutation::RemoveEntity(remove_entity::RemoveEntity { id: *id })));
+    Some(leaves)
+}
 //#endregion 🔖️Apply
 
-//#region 🔖️MutationTrait
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_diff(this: &StepMutation, base: &StepSnapshot) -> protocol::MutationOutcome<StepDiff> {
-    protocol::MutationOutcome::new(match this {
-        StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot }) => diff_set_snapshot(base, snapshot),
-        StepMutation::PatchSnapshot(patch) => return <patch_snapshot::PatchSnapshot as protocol::MutationKind<StepSnapshot, StepMutation>>::diff(patch, base),
-
-        StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description }) => StepDiff { file_description: (base.header.file_description != *file_description).then(|| file_description.clone()), ..Default::default() },
-        StepMutation::SetFileName(set_file_name::SetFileName { file_name }) => StepDiff { file_name: (base.header.file_name != *file_name).then(|| file_name.clone()), ..Default::default() },
-        StepMutation::SetFileSchema(set_file_schema::SetFileSchema { file_schema }) => StepDiff { file_schema: (base.header.file_schema != *file_schema).then(|| file_schema.clone()), ..Default::default() },
-
-        StepMutation::InsertEntity(insert_entity::InsertEntity { index, entity }) => StepDiff { entities: Some(StepEntitiesDiff { added: vec![StepEntityAdded { index: *index, entity: entity.clone() }], ..Default::default() }), ..Default::default() },
-
-        // 🎯️ A target that does NOT exist must be REJECTED, not silently dropped: the diff is
-        // emitted as written and `validate_entities_diff` (../🔺️diff) refuses it with the target
-        // path the caller asked for (`["entities", "<id>"]`, `["entities", "<id>", "args", "<i>"]`),
-        // which `apply_step_mutation` above turns into the outcome's messages. Pre-checking here and
-        // returning an EMPTY diff instead made every impossible edit look like a successful no-op,
-        // and left `missing_and_out_of_range_targets_are_rejected_without_mutating` reading
-        // `messages()[0]` of an empty message list. A target that EXISTS and already carries the
-        // requested value is the genuine no-op, and still yields the empty diff below.
-        StepMutation::RemoveEntity(remove_entity::RemoveEntity { id }) => StepDiff { entities: Some(StepEntitiesDiff { removed: vec![*id], ..Default::default() }), ..Default::default() },
-
-        StepMutation::SetEntityName(set_entity_name::SetEntityName { id, name }) => match base.entities.iter().find(|e| e.id == *id) {
-            Some(e) if e.name == *name => StepDiff::default(),
-            _ => StepDiff { entities: Some(StepEntitiesDiff { modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { name: Some(name.clone()), ..Default::default() } }], ..Default::default() }), ..Default::default() },
-        },
-
-        StepMutation::SetEntityArg(set_entity_arg::SetEntityArg { id, arg_index, value }) => match base.entities.iter().find(|e| e.id == *id) {
-            Some(e) if e.args.get(*arg_index).is_some_and(|v| v == value) => StepDiff::default(),
-            _ => StepDiff {
-                entities: Some(StepEntitiesDiff {
-                    modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { args: Some(StepArgsDiff { modified: vec![StepArgModified { index: *arg_index, value: value.clone() }], ..Default::default() }), ..Default::default() } }],
-                    ..Default::default()
-                }),
-                ..Default::default()
-            },
-        },
-
-        StepMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id, arg_index, value }) => StepDiff {
-            entities: Some(StepEntitiesDiff {
-                modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { args: Some(StepArgsDiff { added: vec![StepArgAdded { index: *arg_index, value: value.clone() }], ..Default::default() }), ..Default::default() } }],
-                ..Default::default()
-            }),
-            ..Default::default()
-        },
-
-        StepMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id, arg_index }) => StepDiff {
-            entities: Some(StepEntitiesDiff { modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { args: Some(StepArgsDiff { removed: vec![*arg_index], ..Default::default() }), ..Default::default() } }], ..Default::default() }),
-            ..Default::default()
-        },
-    })
-}
-
-// 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
-pub(crate) fn agg_inverse(this: &StepMutation, base: &StepSnapshot) -> Result<Vec<StepMutation>, semio_framework_value::ValueError> {
-    Ok({
-    match this {
-        StepMutation::SetSnapshot(_) => vec![StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
-        StepMutation::PatchSnapshot(patch) => return Ok(<patch_snapshot::PatchSnapshot as protocol::MutationKind<StepSnapshot, StepMutation>>::inverse(patch, base)?),
-
-        StepMutation::SetFileDescription(_) => {
-            vec![StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: base.header.file_description.clone() })]
-        }
-        StepMutation::SetFileName(_) => vec![StepMutation::SetFileName(set_file_name::SetFileName { file_name: base.header.file_name.clone() })],
-        StepMutation::SetFileSchema(_) => vec![StepMutation::SetFileSchema(set_file_schema::SetFileSchema { file_schema: base.header.file_schema.clone() })],
-
-        StepMutation::InsertEntity(insert_entity::InsertEntity { entity, .. }) => vec![StepMutation::RemoveEntity(remove_entity::RemoveEntity { id: entity.id })],
-
-        StepMutation::RemoveEntity(remove_entity::RemoveEntity { id }) => match base.entities.iter().position(|e| e.id == *id) {
-            Some(idx) => vec![StepMutation::InsertEntity(insert_entity::InsertEntity { index: idx, entity: base.entities[idx].clone() })],
-            None => Vec::new(),
-        },
-
-        StepMutation::SetEntityName(set_entity_name::SetEntityName { id, .. }) => match base.entities.iter().find(|e| e.id == *id) {
-            Some(e) => vec![StepMutation::SetEntityName(set_entity_name::SetEntityName { id: *id, name: e.name.clone() })],
-            None => Vec::new(),
-        },
-
-        StepMutation::SetEntityArg(set_entity_arg::SetEntityArg { id, arg_index, .. }) => match base.entities.iter().find(|e| e.id == *id).and_then(|e| e.args.get(*arg_index)) {
-            Some(v) => vec![StepMutation::SetEntityArg(set_entity_arg::SetEntityArg { id: *id, arg_index: *arg_index, value: v.clone() })],
-            None => Vec::new(),
-        },
-
-        StepMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id, arg_index, .. }) => vec![StepMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id: *id, arg_index: *arg_index })],
-
-        StepMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id, arg_index }) => match base.entities.iter().find(|e| e.id == *id).and_then(|e| e.args.get(*arg_index)) {
-            Some(v) => vec![StepMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id: *id, arg_index: *arg_index, value: v.clone() })],
-            None => Vec::new(),
-        },
-    }
-
-    })
-}
-//#endregion 🔖️MutationTrait
 
 //#region OpCodecs
 
@@ -225,8 +214,6 @@ pub(crate) fn demo_mutation_cases() -> Vec<StepMutation> {
     use crate::schema::snapshot::{StepFileDescription, StepFileName, StepFileSchema, StepValue as SV};
     let demo_entity = |id: u64, name: &str, args: Vec<StepValue>| StepEntity { id, name: name.into(), args, complex: Vec::new() };
     vec![
-        StepMutation::PatchSnapshot(patch_snapshot::PatchSnapshot { patch: semio_s_artifact_stdio_contract::editing::SnapshotPatch::Set { path: "/schema".into(), value: semio_framework_value::DslValue::String("stdio.patch-snapshot.witness".into()) } }),
-        StepMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: crate::engine::demo_step_snapshot() }),
         StepMutation::SetFileDescription(set_file_description::SetFileDescription { file_description: StepFileDescription { description: vec!["demo".into()], implementation_level: "2;1".into() } }),
         StepMutation::SetFileName(set_file_name::SetFileName {
             file_name: StepFileName {

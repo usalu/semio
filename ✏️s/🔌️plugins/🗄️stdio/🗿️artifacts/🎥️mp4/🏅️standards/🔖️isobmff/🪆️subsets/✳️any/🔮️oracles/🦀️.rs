@@ -27,8 +27,8 @@ use semio_repo_test_host::Json;
 pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
     let params = spec.get("params").cloned().unwrap_or(Json::Object(Vec::new()));
     match spec.str("kind").as_str() {
-        "set-snapshot" => reference::mutate_set_snapshot(input, &params),
         "set-ftyp" => reference::mutate_set_ftyp(input, &params),
+        "set-movie" => reference::mutate_set_movie(input, &params),
         "insert-track" => reference::mutate_insert_track(input, &params),
         "remove-track" => reference::mutate_remove_track(input, &params),
         "set-track-dimensions" => reference::mutate_set_track_dimensions(input, &params),
@@ -36,7 +36,6 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
         "insert-sample" => reference::mutate_insert_sample(input, &params),
         "remove-sample" => reference::mutate_remove_sample(input, &params),
         "set-sample-sync" => reference::mutate_set_sample_sync(input, &params),
-        "patch-snapshot" => reference::mutate_patch_snapshot(input, &params),
         "" => Err("mutation spec carries no `kind`".to_string()),
         kind => Err(format!("mutation kind {:?} has no oracle implementation ({} input byte(s))", kind, input.len())),
     }
@@ -277,6 +276,13 @@ mod reference {
         write_movie(&movie)
     }
 
+    /// 🎬 `SetMovie` — replaces the movie timescale (`mvhd`); `mp4` 0.14's model has no member for the movie title.
+    pub fn mutate_set_movie(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
+        let mut movie = read_movie(input)?;
+        movie.timescale = number(params.get("movie").ok_or("mp4: set-movie carries no movie")?, "timescale", movie.timescale as f64) as u32;
+        write_movie(&movie)
+    }
+
     /// ➕️ `InsertTrack` — inserts the wire track at `index`; the real track is untouched.
     pub fn mutate_insert_track(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
         let mut movie = read_movie(input)?;
@@ -355,63 +361,6 @@ mod reference {
         sample.is_sync = boolean(params, "sync", sample.is_sync);
         write_movie(&movie)
     }
-
-    /// 🧭️ The one `SnapshotPatch` operation as `(decoded pointer segments, operation, patch object)`.
-    fn patch_edits(params: &Json) -> Vec<(Vec<String>, String, Json)> {
-        params
-            .get("patch")
-            .into_iter()
-            .map(|patch| {
-                let path = patch.str("path").split('/').skip(1).map(|segment| segment.replace("~1", "/").replace("~0", "~")).collect();
-                (path, patch.str("operation"), patch.clone())
-            })
-            .collect()
-    }
-
-    /// 🔢️ A path segment addressing an array element.
-    fn segment_index(segment: &str) -> Result<usize, String> {
-        segment.parse::<usize>().map_err(|_| format!("mp4: patch-snapshot index {segment:?} is not a number"))
-    }
-
-    /// 🩹️ `PatchSnapshot` — every `SnapshotPatch` edit, in order, interpreted independently over `DecodedMovie`:
-    /// `set` of one sample's `sync` flag or of a track's `width`/`height`. A path `mp4` 0.14's model has no member
-    /// for is refused, never skipped.
-    pub fn mutate_patch_snapshot(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
-        let mut movie = read_movie(input)?;
-        for (path, operation, edit) in patch_edits(params) {
-            match (path.iter().map(String::as_str).collect::<Vec<_>>().as_slice(), operation.as_str()) {
-                (["tracks", track, "samples", sample, "sync"], "set") => {
-                    let (track, sample) = (segment_index(track)?, segment_index(sample)?);
-                    let target = movie.tracks.get_mut(track).and_then(|decoded| decoded.samples.get_mut(sample)).ok_or_else(|| format!("mp4: patch-snapshot sample {track}/{sample} out of range"))?;
-                    target.is_sync = match edit.get("value") {
-                        Some(Json::Bool(sync)) => *sync,
-                        other => return Err(format!("mp4: patch-snapshot sync value {other:?} is not a boolean")),
-                    };
-                }
-                (["tracks", track, field @ ("width" | "height")], "set") => {
-                    let track = segment_index(track)?;
-                    let target = movie.tracks.get_mut(track).ok_or_else(|| format!("mp4: patch-snapshot track {track} out of range"))?;
-                    let value = number(&edit, "value", -1.0);
-                    if !(0.0..=u16::MAX as f64).contains(&value) {
-                        return Err(format!("mp4: patch-snapshot {field} value {value} does not fit a tkhd dimension"));
-                    }
-                    if *field == "width" { target.width = value as u16 } else { target.height = value as u16 }
-                }
-                (other, operation) => return Err(format!("mp4: patch-snapshot {operation} at {other:?} has no oracle implementation")),
-            }
-        }
-        write_movie(&movie)
-    }
-
-    /// 🔁️ `SetSnapshot` — a real whole-document replace: `ftyp`, the movie timescale and every track all come
-    /// from the wire `snapshot`, and nothing of the input survives.
-    pub fn mutate_set_snapshot(_input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
-        let snapshot = params.get("snapshot").ok_or("mp4: set-snapshot carries no snapshot")?;
-        let timescale = number(snapshot.get("movie").ok_or("mp4: set-snapshot carries no movie header")?, "timescale", 0.0) as u32;
-        let mut movie = DecodedMovie { major_brand: String::new(), minor_version: 0, compatible_brands: Vec::new(), timescale, tracks: snapshot.array("tracks").iter().map(wire_track).collect::<Result<_, _>>()? };
-        apply_wire_ftyp(&mut movie, snapshot.get("ftyp").ok_or("mp4: set-snapshot carries no ftyp")?);
-        write_movie(&movie)
-    }
     //#endregion 🔖️Mutate
 
     //#region 🔖️Inverse
@@ -435,11 +384,14 @@ mod reference {
     pub fn apply_inverse(original_input: &[u8], kind: &str, params: &Json, mutated: &[u8]) -> Result<Vec<u8>, String> {
         let original = read_movie(original_input)?;
         match kind {
-            "set-snapshot" | "insert-sample" | "remove-sample" => return write_movie(&original),
+            "insert-sample" | "remove-sample" => return write_movie(&original),
             _ => {}
         }
         let mut movie = read_movie(mutated)?;
         match kind {
+            "set-movie" => {
+                movie.timescale = original.timescale;
+            }
             "set-ftyp" => {
                 movie.major_brand = original.major_brand.clone();
                 movie.minor_version = original.minor_version;
@@ -472,27 +424,6 @@ mod reference {
                     target.pps = source.pps.clone();
                 }
             }
-            "patch-snapshot" => {
-                for (path, _, _) in patch_edits(params) {
-                    match path.iter().map(String::as_str).collect::<Vec<_>>().as_slice() {
-                        ["tracks", track, "samples", sample, "sync"] => {
-                            let (track, sample) = (segment_index(track)?, segment_index(sample)?);
-                            let restored = original.tracks.get(track).and_then(|decoded| decoded.samples.get(sample)).map(|decoded| decoded.is_sync);
-                            if let (Some(sync), Some(target)) = (restored, movie.tracks.get_mut(track).and_then(|decoded| decoded.samples.get_mut(sample))) {
-                                target.is_sync = sync;
-                            }
-                        }
-                        ["tracks", track, "width" | "height"] => {
-                            let track = segment_index(track)?;
-                            if let (Some(source), Some(target)) = (original.tracks.get(track), movie.tracks.get_mut(track)) {
-                                target.width = source.width;
-                                target.height = source.height;
-                            }
-                        }
-                        other => return Err(format!("mp4: patch-snapshot edit {other:?} has no oracle inverse")),
-                    }
-                }
-            }
             "set-sample-sync" => {
                 let track_index = number(params, "trackIndex", 0.0) as usize;
                 let index = number(params, "index", 0.0) as usize;
@@ -518,6 +449,7 @@ mod reference {
             ("majorBrand".to_string(), Json::String(movie.major_brand)),
             ("minorVersion".to_string(), Json::Number(movie.minor_version as f64)),
             ("compatibleBrands".to_string(), Json::Array(movie.compatible_brands.into_iter().map(Json::String).collect())),
+            ("movieTimescale".to_string(), Json::Number(movie.timescale as f64)),
             ("trackCount".to_string(), Json::Number(movie.tracks.len() as f64)),
             (
                 "tracks".to_string(),

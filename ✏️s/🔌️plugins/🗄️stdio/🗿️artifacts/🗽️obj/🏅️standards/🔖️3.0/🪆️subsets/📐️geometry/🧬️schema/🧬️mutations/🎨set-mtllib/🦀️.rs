@@ -1,6 +1,4 @@
-//! 🎨️ `set-mtllib` — authored as its own mutation leaf. The aggregate's original `diff`/`inverse`
-//! bodies were lifted verbatim into `agg_diff`/`agg_inverse`; this leaf reconstructs its aggregate
-//! value and delegates, so the semantics are preserved by construction rather than re-derived.
+//! 🎨️ `set-mtllib` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 //! `#[derive(dsl::DslRecord)]` gives this leaf its own `DslField` impl with the SAME field spec
 //! `record_codegen` built when these fields lived inline in the enum variant — the aggregate's
 //! tuple variant is a single-field newtype, so `#[derive(dsl::DslOps)]`'s `DslVariants` derive
@@ -22,14 +20,12 @@ impl protocol::MutationKind<ObjSnapshot, ObjMutation> for SetMtllib {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "set", entity: "mtllib", kind: "set-mtllib", record: "SetMtllib" };
 
     fn diff(&self, base: &ObjSnapshot) -> protocol::MutationOutcome<<ObjMutation as Mutation<ObjSnapshot>>::Diff> {
-        agg_diff(&ObjMutation::SetMtllib(self.clone()), base)
+        let Self { mtllib } = self;
+        protocol::MutationOutcome::new(diff_set_mtllib(mtllib.clone()))
     }
     fn inverse(&self, base: &ObjSnapshot) -> Result<Vec<ObjMutation>, semio_framework_value::ValueError> {
-    Ok({
-        agg_inverse(&ObjMutation::SetMtllib(self.clone()), base)?
-    
-    })
-}
+        Ok(vec![ObjMutation::SetMtllib(set_mtllib::SetMtllib { mtllib: base.mtllib.clone() })])
+    }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native("Set mtllib", "mtllib setzen")
     }

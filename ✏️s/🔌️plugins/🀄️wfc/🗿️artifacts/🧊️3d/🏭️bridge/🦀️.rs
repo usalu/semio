@@ -1,0 +1,40 @@
+//! 🏭️ Owner-local production mutation inventory; all coordinates and descriptors belong to this artifact.
+use semio_framework_os_kernel as protocol;
+use protocol::Mutation;
+use semio_framework_test_mutation_inventory::{inventory_for_command, replication_inventory_leaves, MutationInventoryContribution, MutationInventoryCoordinate, MutationInventoryError, MutationInventoryLeaf, MutationInventoryProgress};
+use std::io::Write;
+
+const PRODUCED_BY: &str = "semio-wfc-mutation-bridge";
+const LEAVES_0: [MutationInventoryLeaf<'static>; <semio_s_artifact_wfc_3d::editor::wfc3d::config::mutations::Wfc3dConfigMutation as Mutation<semio_s_artifact_wfc_3d::editor::wfc3d::config::Wfc3dConfig>>::DESCRIPTORS.len()] = replication_inventory_leaves(<semio_s_artifact_wfc_3d::editor::wfc3d::config::mutations::Wfc3dConfigMutation as Mutation<semio_s_artifact_wfc_3d::editor::wfc3d::config::Wfc3dConfig>>::DESCRIPTORS);
+const LEAVES_1: [MutationInventoryLeaf<'static>; <semio_s_artifact_wfc_3d::editor::wfc3d::transient::mutations::Wfc3dTransientMutation as Mutation<semio_s_artifact_wfc_3d::editor::wfc3d::transient::Wfc3dTransient>>::DESCRIPTORS.len()] = replication_inventory_leaves(<semio_s_artifact_wfc_3d::editor::wfc3d::transient::mutations::Wfc3dTransientMutation as Mutation<semio_s_artifact_wfc_3d::editor::wfc3d::transient::Wfc3dTransient>>::DESCRIPTORS);
+const LEAVES_2: [MutationInventoryLeaf<'static>; <semio_s_artifact_wfc_3d::standards::v1::subsets::any::schema::mutations::Wfc3dMutation as Mutation<semio_s_artifact_wfc_3d::standards::v1::subsets::any::schema::snapshot::Wfc3dSnapshot>>::DESCRIPTORS.len()] = replication_inventory_leaves(<semio_s_artifact_wfc_3d::standards::v1::subsets::any::schema::mutations::Wfc3dMutation as Mutation<semio_s_artifact_wfc_3d::standards::v1::subsets::any::schema::snapshot::Wfc3dSnapshot>>::DESCRIPTORS);
+
+const CONTRIBUTIONS: &[MutationInventoryContribution<'static>] = &[
+    MutationInventoryContribution { coordinate: MutationInventoryCoordinate { artifact: "s.wfc.wfc3d", standard: "1", subset: "any", surface: None, owner: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any" }, aggregates: &[&LEAVES_0, &LEAVES_1, &LEAVES_2], excluded_owner_segments: &["👁️viewer", "✏️editor"] },
+    MutationInventoryContribution { coordinate: MutationInventoryCoordinate { artifact: "s.wfc.wfc3d", standard: "1", subset: "any", surface: Some("✏️editor/🎚️config"), owner: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config" }, aggregates: &[&LEAVES_0, &LEAVES_1, &LEAVES_2], excluded_owner_segments: &[] },
+    MutationInventoryContribution { coordinate: MutationInventoryCoordinate { artifact: "s.wfc.wfc3d", standard: "1", subset: "any", surface: Some("✏️editor/🫧️transient"), owner: "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient" }, aggregates: &[&LEAVES_0, &LEAVES_1, &LEAVES_2], excluded_owner_segments: &[] },
+ ];
+
+fn run() -> Result<(), MutationInventoryError> {
+    let arguments: Vec<String> = std::env::args().skip(1).collect();
+    let mut last = std::time::Instant::now();
+    let mut observe = |progress: MutationInventoryProgress| {
+        if last.elapsed().as_secs() >= 1 {
+            eprintln!("[mutation-inventory] units={} bytes={}", progress.completed_units, progress.emitted_bytes);
+            last = std::time::Instant::now();
+        }
+        Ok(())
+    };
+    let output = inventory_for_command(PRODUCED_BY, CONTRIBUTIONS, &arguments, &mut observe)?;
+    let mut stdout = std::io::stdout().lock();
+    stdout.write_all(&output).map_err(|_| MutationInventoryError::Output)?;
+    stdout.write_all(b"\n").map_err(|_| MutationInventoryError::Output)
+}
+
+fn main() {
+    if let Err(error) = run() { eprintln!("[mutation-inventory] {error}"); std::process::exit(1); }
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;

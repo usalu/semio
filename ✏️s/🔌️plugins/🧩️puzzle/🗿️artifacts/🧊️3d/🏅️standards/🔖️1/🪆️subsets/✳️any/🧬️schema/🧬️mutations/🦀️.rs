@@ -11,7 +11,7 @@
 
 use crate::standards::v1::subsets::any::schema::diff::Puzzle3dDiff;
 use crate::Puzzle3dSnapshot;
-use protocol::{Mutation, MutationDiff};
+use protocol::{DiffAlgebra, Mutation, MutationDiff};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -221,7 +221,7 @@ pub fn puzzle3d_selection_outcome(
             let patch = Puzzle3dObjectPatch {
                 origin: (pose.origin != entry.origin).then_some(pose.origin),
                 orientation: (pose.orientation != entry.orientation).then_some(pose.orientation),
-                scale: (pose.scale != entry.scale).then(|| pose.scale.clone()),
+                scale: (pose.scale != entry.scale).then_some(pose.scale),
                 ..Default::default()
             };
             (!patch.is_empty()).then(|| Puzzle3dObjectPatchEntry { id: entry.id.clone(), patch })
@@ -383,13 +383,13 @@ pub fn puzzle3d_selection_follow(base: &Puzzle3dSnapshot, targets: &[String], se
                 attraction.turn,
                 attraction.tilt,
             );
-            solved.poses[to.0] = Some(Puzzle3dPose { origin, orientation: Some(orientation), scale: attracted.scale.clone() });
+            solved.poses[to.0] = Some(Puzzle3dPose { origin, orientation: Some(orientation), scale: attracted.scale });
             solved.followers.push(attracted.id.clone());
             placing[index] = true;
             queue.push_back(to.0);
         }
     }
-    let current = |at: usize| solved.poses[at].clone().unwrap_or_else(|| Puzzle3dPose { origin: base.objects[at].origin, orientation: base.objects[at].orientation, scale: base.objects[at].scale.clone() });
+    let current = |at: usize| solved.poses[at].clone().unwrap_or_else(|| Puzzle3dPose { origin: base.objects[at].origin, orientation: base.objects[at].orientation, scale: base.objects[at].scale });
     solved.attractions = base
         .attractions
         .iter()
@@ -699,7 +699,7 @@ pub fn puzzle3d_snapshot_mutations(before: &Puzzle3dSnapshot, after: &Puzzle3dSn
                 attraction.turn,
                 attraction.tilt,
                 attraction.x,
-                attraction.y,
+                attraction.y, None,
             )),
             Some(prior) if prior.attracting != attraction.attracting || prior.attracted != attraction.attracted => {
                 mutations.push(disconnect_vortices(attraction.id.clone()));
@@ -714,7 +714,7 @@ pub fn puzzle3d_snapshot_mutations(before: &Puzzle3dSnapshot, after: &Puzzle3dSn
                     attraction.turn,
                     attraction.tilt,
                     attraction.x,
-                    attraction.y,
+                    attraction.y, None,
                 ));
             }
             Some(prior) => {
@@ -796,10 +796,10 @@ pub fn puzzle3d_snapshot_mutations(before: &Puzzle3dSnapshot, after: &Puzzle3dSn
     }
     for row in &after.meta.kind_compatibility {
         match before.meta.kind_compatibility.iter().find(|entry| entry.source == row.source && entry.target == row.target) {
-            None => mutations.push(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity)),
+            None => mutations.push(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, None)),
             Some(prior) if prior != row => {
                 mutations.push(disconnect_kind_compatibility(row.source.clone(), row.target.clone()));
-                mutations.push(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity));
+                mutations.push(connect_kind_compatibility(row.source.clone(), row.target.clone(), row.bidirectional, row.important, row.specificity, None));
             }
             Some(_) => {}
         }
@@ -832,18 +832,33 @@ pub fn inverse_puzzle3d_mutation(projection: &Puzzle3dSnapshot, mutation: &Puzzl
 // boundary round-trips through the typed `Puzzle3dSnapshot` (`serde_json::from_value`/`to_value`)
 // rather than hand-splicing JSON per mutation kind — mirrors `puzzle2d`/`puzzle5d`'s bridge exactly.
 impl MutationDiff<Value> for Puzzle3dDiff {
-    fn apply(&self, projection: &Value) -> protocol::MutationApplyResult<Value> {
+    fn apply(&self, projection: &Value, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Value> {
         // 🩹️ Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: routes
         // through `dsl::DslValue`/`dsl::ToValue`/`dsl::FromValue` instead of
         // `serde_json::from_value`/`to_value` on `Puzzle3dSnapshot` directly — that type only
         // derives `Serialize`/`Deserialize` under `#[cfg(test)]` now. `Value` (this bridge's own
         // boundary type) is untouched.
         let base: Puzzle3dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(projection)).map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-base", error.to_string()).at(["document"]))?;
-        let next = MutationDiff::<Puzzle3dSnapshot>::apply(self, &base).map_err(|error| error.under(["document"]))?;
+        let next = MutationDiff::<Puzzle3dSnapshot>::apply(self, &base, capability).map_err(|error| error.under(["document"]))?;
         Ok(Value::from(semio_framework_value::ToValue::to_value(&next)))
     }
     fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle3dSnapshot>::absorb(self, other);
+    }
+}
+
+impl DiffAlgebra<Value> for Puzzle3dDiff {
+    fn inverse(&self, base: &Value) -> Self {
+        let base: Puzzle3dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(base)).unwrap_or_default();
+        DiffAlgebra::<Puzzle3dSnapshot>::inverse(self, &base)
+    }
+    fn between(base: &Value, other: &Value) -> Self {
+        let base: Puzzle3dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(base)).unwrap_or_default();
+        let other: Puzzle3dSnapshot = semio_framework_value::FromValue::from_value(semio_framework_value::DslValue::from(other)).unwrap_or_default();
+        <Self as DiffAlgebra<Puzzle3dSnapshot>>::between(&base, &other)
+    }
+    fn is_empty(&self) -> bool {
+        DiffAlgebra::<Puzzle3dSnapshot>::is_empty(self)
     }
 }
 
@@ -1020,11 +1035,23 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for Puzzle3dP
 
 
 impl MutationDiff<Puzzle3dPlaySnapshot> for Puzzle3dDiff {
-    fn apply(&self, projection: &Puzzle3dPlaySnapshot) -> protocol::MutationApplyResult<Puzzle3dPlaySnapshot> {
-        MutationDiff::<Puzzle3dSnapshot>::apply(self, projection.typed.as_ref()).map(Puzzle3dPlaySnapshot::from_typed)
+    fn apply(&self, projection: &Puzzle3dPlaySnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<Puzzle3dPlaySnapshot> {
+        MutationDiff::<Puzzle3dSnapshot>::apply(self, projection.typed(), capability).map(Puzzle3dPlaySnapshot::from_typed)
     }
     fn absorb(&mut self, other: Self) {
         MutationDiff::<Puzzle3dSnapshot>::absorb(self, other);
+    }
+}
+
+impl DiffAlgebra<Puzzle3dPlaySnapshot> for Puzzle3dDiff {
+    fn inverse(&self, base: &Puzzle3dPlaySnapshot) -> Self {
+        DiffAlgebra::<Puzzle3dSnapshot>::inverse(self, base.typed())
+    }
+    fn between(base: &Puzzle3dPlaySnapshot, other: &Puzzle3dPlaySnapshot) -> Self {
+        <Self as DiffAlgebra<Puzzle3dSnapshot>>::between(base.typed(), other.typed())
+    }
+    fn is_empty(&self) -> bool {
+        DiffAlgebra::<Puzzle3dSnapshot>::is_empty(self)
     }
 }
 

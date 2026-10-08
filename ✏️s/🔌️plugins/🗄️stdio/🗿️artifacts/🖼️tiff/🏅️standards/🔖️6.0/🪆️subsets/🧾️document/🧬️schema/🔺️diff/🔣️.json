@@ -68,7 +68,7 @@
     },
     "TiffIfdDiff": {
       "type": "object",
-      "description": "One IFD's own delta: the recursive tag triple plus a whole-value slot for that directory's raw strip payload.",
+      "description": "One IFD's own delta: the recursive tag triple, a whole-value slot for the block list and the sparse sample runs applied after it.",
       "properties": {
         "entries": {
           "$ref": "#/$defs/TiffTagsDiff"
@@ -77,6 +77,12 @@
           "type": "array",
           "items": {
             "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/document/snapshot.json#/$defs/TiffSampleBlock"
+          }
+        },
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TiffSampleRun"
           }
         }
       },
@@ -138,6 +144,49 @@
           }
         }
       }
+    },
+    "TiffSampleRun": {
+      "type": "object",
+      "description": "One contiguous run of replacement words inside a block, starting at the given word offset of the block's pixel-major sample list.",
+      "required": [
+        "block",
+        "offset",
+        "samples"
+      ],
+      "properties": {
+        "block": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "samples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "lo",
+              "hi"
+            ],
+            "properties": {
+              "lo": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              },
+              "hi": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4294967295
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
     }
   },
   "description": "Sparse diff for stdio.tiff. Every field present = changed to a value. No tri-state fields at this level.",
